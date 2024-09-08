@@ -6,6 +6,8 @@
 #include <sstream>
 #include <typeinfo>
 #include <typeindex>
+#include <variant>
+#include <cstdint>
 
 template <typename... Ts>
 std::type_index get_variant_type(const std::variant<Ts...> &v)
@@ -73,4 +75,9 @@ namespace UUID
         };
         return ss.str();
     }
+}
+
+auto deref_mem_address(uintptr_t p)
+{
+    return *reinterpret_cast<int *>(p);
 }

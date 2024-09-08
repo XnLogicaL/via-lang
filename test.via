@@ -1,0 +1,7 @@
+local !var = 10
+
+local !add = function(a: int, b: int) {
+
+}
+
+add(var, 15)

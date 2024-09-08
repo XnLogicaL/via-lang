@@ -36,65 +36,45 @@ enum TokenType
     COLON,
     SEMICOLON,
     KEYWORD,
+    ASTERISK,
+    F_SLASH,
+    EXCLAMATION
 };
 
 std::string token_to_string(TokenType enum_token)
 {
     switch (enum_token)
     {
-    case KEYWORD:
-        return "KEYWORD";
-    case IDENTIFIER:
-        return "IDENTIFIER";
-    case TYPE:
-        return "TYPE";
-    case INT_LIT:
-        return "INT_LIT";
-    case FLOAT_LIT:
-        return "FLOAT_LIT";
-    case PLUS:
-        return "PLUS";
-    case MINUS:
-        return "MINUS";
-    case START:
-        return "START";
-    case END:
-        return "END";
-    case ERROR:
-        return "ERROR";
-    case EQUALS:
-        return "EQUALS";
-    case DB_EQUALS:
-        return "DOUBLE_EQUALS";
-    case L_PAR:
-        return "L_PAR";
-    case R_PAR:
-        return "R_PAR";
-    case L_CR_BRACKET:
-        return "L_CR_BRACKET";
-    case R_CR_BRACKET:
-        return "R_CR_BRACKET";
-    case L_SQ_BRACKET:
-        return "L_SQ_BRACKET";
-    case R_SQ_BRACKET:
-        return "R_SQ_BRACKET";
-    case COMMA:
-        return "COMMA";
-    case COLON:
-        return "COLON";
-    default:
-        return "UNKNOWN";
+    case KEYWORD:       return "KEYWORD";
+    case IDENTIFIER:    return "IDENTIFIER";
+    case TYPE:          return "TYPE";
+    case INT_LIT:       return "INT_LIT";
+    case FLOAT_LIT:     return "FLOAT_LIT";
+    case PLUS:          return "PLUS";
+    case MINUS:         return "MINUS";
+    case START:         return "START";
+    case END:           return "END";
+    case ERROR:         return "ERROR";
+    case EQUALS:        return "EQUALS";
+    case DB_EQUALS:     return "DOUBLE_EQUALS";
+    case L_PAR:         return "L_PAR";
+    case R_PAR:         return "R_PAR";
+    case L_CR_BRACKET:  return "L_CR_BRACKET";
+    case R_CR_BRACKET:  return "R_CR_BRACKET";
+    case L_SQ_BRACKET:  return "L_SQ_BRACKET";
+    case R_SQ_BRACKET:  return "R_SQ_BRACKET";
+    case COMMA:         return "COMMA";
+    case COLON:         return "COLON";
+    case ASTERISK:      return "ASTERISK";
+    case F_SLASH:       return "F_SLASH";
+    case EXCLAMATION:   return "EXCLAMATION";
+    default:            return "UNKNOWN";
     }
 }
 
 bool is_literal(TokenType type)
 {
     return type == INT_LIT || type == FLOAT_LIT;
-}
-
-bool is_operator(TokenType type)
-{
-    return type == PLUS || type == MINUS || type == EQUALS || type == DB_EQUALS;
 }
 
 class Token
@@ -105,23 +85,23 @@ public:
     int line;
     int column;
 
-    // Marking to_string as const since it doesn't modify the object
-    std::string to_string() const
+    friend std::ostream &operator<<(std::ostream &os, const Token &tok)
     {
-        std::ostringstream oss;
-        oss << "[\n  TokenType: " << token_to_string(type)
-            << "\n  Value: " << value
-            << "\n  Line: " << line
-            << "\n  Column: " << column
-            << "\n]";
-        return oss.str(); // Return the formatted string
+        os << "Token("
+           << "Type: " << token_to_string(tok.type)
+           << ", Value: " << tok.value
+           << ", Line: " << tok.line
+           << ", Column: " << tok.column
+           << ")";
+
+        return os;
     }
 };
 
 class Lexer
 {
 public:
-    Lexer(const std::string &src) : src(src), pos(0), line(1), column(1) {}
+    Lexer(const std::string &src) : src(src), pos(-2), line(1), column(1) {}
 
     Token get_next_token(Token last_tok)
     {
@@ -145,42 +125,43 @@ public:
             case '=':   return create_token(TokenType::EQUALS, "=");
             case '==':  return create_token(TokenType::DB_EQUALS, "==");
             case '{':   return create_token(TokenType::L_CR_BRACKET, "{");
-            case '}':   return create_token(TokenType::L_CR_BRACKET, "}");
+            case '}':   return create_token(TokenType::R_CR_BRACKET, "}");
             case '[':   return create_token(TokenType::L_CR_BRACKET, "[");
             case ']':   return create_token(TokenType::L_CR_BRACKET, "]");
             case '(':   return create_token(TokenType::L_PAR, "(");
             case ')':   return create_token(TokenType::R_PAR, ")");
             case ',':   return create_token(TokenType::COMMA, ",");
             case ':':   return create_token(TokenType::COLON, ":");
+            case '*':   return create_token(TokenType::ASTERISK, "*");
+            case '/':   return create_token(TokenType::F_SLASH, "/");
+            case '!':   return create_token(TokenType::EXCLAMATION, "!");
             default:    return create_token(TokenType::ERROR, std::string(1, current));
             }
         }
 
-        return create_token(TokenType::END, "<EOF>");
+        return create_token(TokenType::ERROR, "<error-token>");
     }
 
     std::vector<Token> tokenize()
     {
         Token tok;
         std::vector<Token> tokens;
+        Token last_token = create_token(TokenType::START, "");
+        tokens.push_back(create_token(TokenType::L_CR_BRACKET, "{"));
 
-        // Start with an initial token if needed, or define how to handle the start
-        Token last_token = create_token(TokenType::START, ""); // Using an empty string instead of NULL
-
-        while (tok.type != TokenType::END) // Assuming TokenType::END is the sentinel value for the end of the stream
+        while (tok.type != TokenType::END)
         {
-            // Get the next token based on the last token or the current state
             tok = get_next_token(last_token);
 
-            if (tok.type == TokenType::END)
+            if (tok.type == TokenType::ERROR)
                 break;
 
-            // Store the token
             tokens.push_back(tok);
-
-            // Update last_token for the next iteration
             last_token = tok;
         }
+
+        tokens.push_back(create_token(TokenType::R_CR_BRACKET, "}"));
+        tokens.push_back(create_token(TokenType::END, "<eof>"));
 
         return tokens;
     }
@@ -242,10 +223,8 @@ private:
             if (src.at(pos) == '.')
             {
                 if (tok_type == TokenType::INT_LIT) 
-                    // Check if the number is a float literal
                     tok_type = TokenType::FLOAT_LIT;
                 else 
-                    // If there is a second decimal point then the token is invalid
                     tok_type = TokenType::ERROR;
             }
 
