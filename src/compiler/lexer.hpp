@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <sstream> // Removed <format> since we're using ostringstream
+#include <sstream>
 #include <map>
 
 const char* Keywords[] = {
@@ -38,7 +38,7 @@ enum TokenType
     KEYWORD,
     ASTERISK,
     F_SLASH,
-    EXCLAMATION
+    EXCLAMATION,
 };
 
 std::string token_to_string(TokenType enum_token)

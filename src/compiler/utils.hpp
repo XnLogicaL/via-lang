@@ -9,34 +9,29 @@
 #include <variant>
 #include <cstdint>
 
-template <typename... Ts>
-std::type_index get_variant_type(const std::variant<Ts...> &v)
-{
-    return std::visit([](const auto &val) -> std::type_index
-    { return typeid(val); }, v);
-}
+#include "../include/color.hpp"
 
-struct Console
+namespace Console
 {
 
-    static void info(std::string msg)
+    void CompilerError(std::string message)
     {
-        std::cout << "[INFO] " << msg << std::endl;
+        std::cerr << dye::red("Compile error") << ": " << message << std::endl;
     }
 
-    static void warning(std::string msg)
+    void CompilerInfo(std::string message)
     {
-        std::cout << "[WARNING] " << msg << std::endl;
+        std::cout << dye::aqua("Compile info") << ": " << message << std::endl;
     }
 
-    static void error(std::string msg)
+    void CompilerWarning(std::string message)
     {
-        std::cerr << "[ERROR] " << msg << std::endl;
+        std::cout << dye::red_on_yellow("Compile warning") << ": " << message << std::endl;
     }
 
 };
 
-namespace UUID
+namespace UUID_
 {
     static std::random_device rd;
     static std::mt19937 gen(rd());

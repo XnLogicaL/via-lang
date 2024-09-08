@@ -6,6 +6,7 @@
 
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "utils.hpp"
 
 class Command
 {
@@ -57,33 +58,36 @@ int main(int argc, char* argv[])
     std::string via_src;
     std::string via_src_ln;
 
+    int i = 1;
+
     while (std::getline(viaSourceFile, via_src_ln))
     {
         if (via_src_ln.starts_with("##"))
             continue;
 
-        via_src += via_src_ln;
+        via_src += via_src_ln + "\n";
+        i += 1;
     }
 
     viaSourceFile.close();
 
-    std::cout << command.has_flag("--flag");
-    
-    /*
     Lexer lexer(via_src);
     auto tokens = lexer.tokenize();
-
-    for (const auto &tok : tokens)
-        std::cout << tok << std::endl;
-
-    std::cout << "\n";
 
     Parser parser(tokens);
     auto global = parser.parse_scope("__global");
 
-    std::cout << Debug::get_scope_string(global.value()) << std::endl;
-    std::cout << "Successfuly compiled " << argv[1] << std::endl;
-    */
+    if (parser.is_success())
+    {
+        // std::cout << Debug::get_scope_string(global.value()) << std::endl;
+        Console::CompilerInfo("Successfuly compiled");
+    }
+    else
+    {
+        Console::CompilerError("Failed to compile\n  compiler return exit code 1 (EXIT_FAIL)");
+
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

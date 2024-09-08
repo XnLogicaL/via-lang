@@ -8,13 +8,38 @@
 #include <memory>
 #include <any>
 
+#include "../include/color.hpp"
+
 #include "utils.hpp"
 
-enum DeclarationType
+enum class ValueType
+{
+    INT_LIT,
+    REFERENCE,
+    PLACEHOLDER,
+};
+
+enum class DeclarationEnvironment
+{
+    LOCAL,
+    GLOBAL
+};
+
+enum class DeclarationType
 {
     VAR,
     FUNCTION,
+    PLACEHOLDER
 };
+
+class FunctionCall;
+class Declaration;
+class Value;
+
+typedef std::vector<std::any> ScopeType;
+typedef std::variant<std::shared_ptr<Declaration>, std::shared_ptr<ScopeType>, std::shared_ptr<FunctionCall>> ScopeContent;
+
+typedef std::variant<std::shared_ptr<std::string>, std::shared_ptr<int>> ValueValue;
 
 std::ostream &operator<<(std::ostream &os, const DeclarationType &obj)
 {
@@ -33,12 +58,6 @@ std::ostream &operator<<(std::ostream &os, const DeclarationType &obj)
     return os << ss;
 }
 
-enum DeclarationEnvironment
-{
-    LOCAL,
-    GLOBAL
-};
-
 std::ostream &operator<<(std::ostream &os, const DeclarationEnvironment &obj)
 {
     std::string ss;
@@ -56,19 +75,12 @@ std::ostream &operator<<(std::ostream &os, const DeclarationEnvironment &obj)
     return os << ss;
 }
 
-enum ValueType
-{
-    INT,
-    REFERENCE,
-    PLACEHOLDER,
-};
-
 std::ostream &operator<<(std::ostream &os, const ValueType &obj)
 {
     std::string ss;
     switch (obj)
     {
-    case ValueType::INT:
+    case ValueType::INT_LIT:
         ss = "INT";
         break;
     case ValueType::PLACEHOLDER:
@@ -82,15 +94,6 @@ std::ostream &operator<<(std::ostream &os, const ValueType &obj)
     }
     return os << ss;
 }
-
-class FunctionCall;
-class Declaration;
-class Value;
-
-typedef std::vector<std::any> ScopeType;
-typedef std::variant<std::shared_ptr<Declaration>, std::shared_ptr<ScopeType>, std::shared_ptr<FunctionCall>> ScopeContent;
-
-typedef std::variant<std::shared_ptr<std::string>, std::shared_ptr<int>> ValueValue;
 
 ScopeType nullscope = {};
 ScopeType* p_nullscope = &nullscope;
@@ -254,9 +257,6 @@ namespace Scope
 
             if (current_ancestor == nullptr)
                 break;
-
-            std::cout << "Next ancestor address: " << current_ancestor << std::endl;
-            std::cout << "Next ancestor ID: " << Scope::get_scope_id(current_ancestor) << std::endl;
         }
 
         return ancestors;
@@ -292,8 +292,14 @@ class Parser
 public:
     std::vector<Token> toks;
     int i = 0;
+    std::optional<ScopeType> global;
 
     Parser(std::vector<Token> tokens) : toks(tokens) {}
+
+    bool is_success()
+    {
+        return global.has_value();
+    }
 
     std::optional<ScopeType> parse_scope(std::string scope_id, ScopeType *parent = nullptr)
     {
@@ -312,8 +318,6 @@ public:
         {
             Token current_token = peek();
 
-            std::cout << current_token << std::endl;
-
             if (current_token.type == TokenType::END)
             {
                 unexpected_token_error(current_token, "Unexpected end of input inside scope");
@@ -326,7 +330,7 @@ public:
             }
             else if (current_token.type == TokenType::L_CR_BRACKET)
             {
-                auto nested_scope = parse_scope(UUID::generate_uuid_v4(), &new_scope);
+                auto nested_scope = parse_scope(UUID_::generate_uuid_v4(), &new_scope);
 
                 if (nested_scope.has_value())
                 {
@@ -379,6 +383,9 @@ public:
             consume();
         }
 
+        if (scope_id == "__global")
+            global = new_scope;
+
         return new_scope;
     }
 
@@ -419,7 +426,7 @@ public:
                 std::string current_type = peek().value;
                 consume();
 
-                ValueType arg_type = (current_type == "int") ? ValueType::INT : ValueType::PLACEHOLDER;
+                ValueType arg_type = (current_type == "int") ? ValueType::INT_LIT : ValueType::PLACEHOLDER;
                 args.push_back(Declaration(current_identifier, nullptr, true, DeclarationType::VAR, DeclarationEnvironment::LOCAL, Value(arg_type)));
 
                 if (peek().type == TokenType::COMMA)
@@ -506,7 +513,7 @@ public:
             }
             else if (peek().type == TokenType::INT_LIT)
             {
-                Value var_val(ValueType::INT, std::make_shared<int>(std::stoi(peek().value)));
+                Value var_val(ValueType::INT_LIT, std::make_shared<int>(std::stoi(peek().value)));
                 consume();
 
                 return std::make_shared<Declaration>(Declaration(var_id, parent, is_const, DeclarationType::VAR, env, var_val));
@@ -548,7 +555,7 @@ public:
             Value value;
             if (peek().type == TokenType::INT_LIT)
             {
-                value.value_type = ValueType::INT;
+                value.value_type = ValueType::INT_LIT;
                 value.value = std::make_shared<int>(std::stoi(peek().value));
             }
             else if (peek().type == TokenType::IDENTIFIER)
@@ -594,13 +601,13 @@ private:
 
     void unexpected_token_error(const Token &token, const std::string &message)
     {
-        std::cout << "Parse error: " << message << " got '" << token.value << "' Token(" << token.type << ")" << std::endl;
+        std::cout << dye::red("Parse error") << ": " << message << " got '" << token.value << "' Token(" << token.type << ")" << std::endl;
         std::cerr << "  at line " << token.line << " column " << token.column << std::endl;
     }
 
     void parse_failed_error(const std::string message)
     {
-        std::cout << "Parse error: cannot parse scope: " << message << std::endl;
+        std::cout << dye::red("Parse error") << ": cannot parse scope: " << message << std::endl;
         std::cerr << "  at line " << peek().line << " column " << peek().column << std::endl;
     }
 };
@@ -637,8 +644,6 @@ namespace Debug
                 using T = std::decay_t<decltype(obj)>;
                 std::ostringstream output_stream;
 
-                std::cout << typeid(obj).name() << std::endl;
-
                 if constexpr (std::is_same_v<T, std::shared_ptr<Declaration>>)
                 {
                     std::cout << "is a declaration\n";
@@ -661,8 +666,6 @@ namespace Debug
                 {
                     return "<unknown content>";
                 } return output_stream.str(); }, content);
-
-            std::cout << object_string << std::endl;
 
             scope_stream << content_white_space << object_string << "\n";
         }

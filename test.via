@@ -1,7 +1,7 @@
 local !var = 10
 
 local !add = function(a: int, b: int) {
-
+    local sum = 1
 }
 
 add(var, 15)
