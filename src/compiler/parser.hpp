@@ -2,677 +2,593 @@
 
 #include <iostream>
 #include <string>
+#include <variant>
 #include <vector>
 #include <optional>
-#include <variant>
-#include <memory>
-#include <any>
+#include <cassert>
 
-#include "../include/color.hpp"
+#include "lexer.hpp"
 
-#include "utils.hpp"
+#include "../include/arena_alloc.hpp"
 
-enum class ValueType
+const size_t M_ALLOC_SIZE = 8 * 1024 * 1024;
+
+// Forward node declarations
+struct StmtNode;
+struct ExprNode;
+struct IfPredNode;
+
+struct IntLitNode
 {
-    INT_LIT,
-    REFERENCE,
-    PLACEHOLDER,
+    Token int_lit;
 };
 
-enum class DeclarationEnvironment
+struct IdentNode
 {
-    LOCAL,
-    GLOBAL
+    Token ident;
 };
 
-enum class DeclarationType
+struct TermParenNode
 {
-    VAR,
-    FUNCTION,
-    PLACEHOLDER
+    ExprNode *expr;
 };
 
-class FunctionCall;
-class Declaration;
-class Value;
-
-typedef std::vector<std::any> ScopeType;
-typedef std::variant<std::shared_ptr<Declaration>, std::shared_ptr<ScopeType>, std::shared_ptr<FunctionCall>> ScopeContent;
-
-typedef std::variant<std::shared_ptr<std::string>, std::shared_ptr<int>> ValueValue;
-
-std::ostream &operator<<(std::ostream &os, const DeclarationType &obj)
+struct AddBinExprNode
 {
-    std::string ss;
-    switch (obj)
-    {
-    case DeclarationType::VAR:
-        ss = "VAR";
-        break;
-    case DeclarationType::FUNCTION:
-        ss = "FUNCTION";
-        break;
-    default:
-        ss = "<error-type>";
-    }
-    return os << ss;
-}
-
-std::ostream &operator<<(std::ostream &os, const DeclarationEnvironment &obj)
-{
-    std::string ss;
-    switch (obj)
-    {
-    case DeclarationEnvironment::LOCAL:
-        ss = "LOCAL";
-        break;
-    case DeclarationEnvironment::GLOBAL:
-        ss = "GLOBAL";
-        break;
-    default:
-        ss = "<error-env>";
-    }
-    return os << ss;
-}
-
-std::ostream &operator<<(std::ostream &os, const ValueType &obj)
-{
-    std::string ss;
-    switch (obj)
-    {
-    case ValueType::INT_LIT:
-        ss = "INT";
-        break;
-    case ValueType::PLACEHOLDER:
-        ss = "PLACEHOLDER";
-        break;
-    case ValueType::REFERENCE:
-        ss = "REFERENCE";
-        break;
-    default:
-        ss = "<error-value-type>";
-    }
-    return os << ss;
-}
-
-ScopeType nullscope = {};
-ScopeType* p_nullscope = &nullscope;
-
-class Value
-{
-public:
-    ValueType value_type;
-    ValueValue value;
-
-    Value(ValueType v_type = ValueType::PLACEHOLDER, ValueValue v_value = std::make_shared<int>(0))
-        : value_type(v_type), value(v_value) {}
-
-    friend std::ostream &operator<<(std::ostream &os, const Value &obj)
-    {
-        std::string value_string = std::visit([&](const auto &_value) -> std::string
-                                              {
-        using T = std::decay_t<decltype(_value)>;
-        if constexpr (std::is_same_v<T, std::shared_ptr<std::string>>)
-            return *_value;
-        else if constexpr (std::is_same_v<T, std::shared_ptr<int>>)
-            return std::to_string(*_value);
-        return "<error-value>"; }, obj.value);
-
-        os << "Value(Type: " << obj.value_type << ", Value: ";
-        switch (obj.value_type)
-        {
-        case ValueType::PLACEHOLDER:
-            os << "<placeholder>";
-            break;
-        default:
-            os << value_string;
-        }
-        os << ")";
-        return os;
-    }
+    ExprNode *lhs;
+    ExprNode *rhs;
 };
 
-class Declaration
+struct SubBinExprNode
 {
-public:
-    std::string id;
-    DeclarationType type;
-    DeclarationEnvironment env;
-    Value val;
+    ExprNode *lhs;
+    ExprNode *rhs;
+};
+
+struct MulBinExprNode
+{
+    ExprNode *lhs;
+    ExprNode *rhs;
+};
+
+struct DivBinExprNode
+{
+    ExprNode *lhs;
+    ExprNode *rhs;
+};
+
+struct ModBinExprNode
+{
+    ExprNode *lhs;
+    ExprNode *rhs;
+};
+
+struct BinExprNode
+{
+    std::variant<AddBinExprNode *, SubBinExprNode *, MulBinExprNode *, DivBinExprNode *> node;
+};
+
+struct TermExprNode
+{
+    ExprNode *expr;
+};
+
+struct TermNode
+{
+    std::variant<TermParenNode*, TermExprNode*, IntLitNode*, IdentNode*> node;
+};
+
+struct ExprNode
+{
+    std::variant<TermNode *, BinExprNode *> node;
+};
+
+struct StmtExitNode
+{
+    ExprNode *node;
+};
+
+struct LocalDeclrNode
+{
+    Token ident;
+    ExprNode *expr{};
     bool is_const;
-    std::vector<Declaration> parameters;
-    std::optional<std::shared_ptr<ScopeType>> body;
-    ScopeType *parent; // Parent scope, initialized as nullptr
-
-    Declaration(
-        const std::string &declr_id = "<error-id>",
-        ScopeType *parent = nullptr, // Initialize the parent as nullptr by default
-        bool is_const = false,
-        DeclarationType declr_type = DeclarationType::VAR,
-        DeclarationEnvironment declr_env = DeclarationEnvironment::LOCAL,
-        Value declr_val = Value())
-        : id(declr_id), parent(parent), is_const(is_const), type(declr_type), env(declr_env), val(declr_val)
-    {
-    }
-
-    Declaration(
-        const std::string &declr_id = "<error-id>",
-        ScopeType *parent = nullptr, // Initialize the parent as nullptr by default
-        bool is_const = false,
-        DeclarationEnvironment declr_env = DeclarationEnvironment::LOCAL,
-        const std::vector<Declaration> &params = std::vector<Declaration>(),
-        std::shared_ptr<ScopeType> func_body = std::make_shared<ScopeType>(std::vector<std::any>()))
-        : id(declr_id), parent(parent), is_const(is_const), type(DeclarationType::FUNCTION), env(declr_env), parameters(params), body(func_body)
-    {
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, const Declaration &obj)
-    {
-        os << "Declaration(ID: " << obj.id
-           << ", Type: " << obj.type
-           << ", Env: " << obj.env;
-
-        if (obj.type == DeclarationType::FUNCTION)
-        {
-            os << ", Parameters: [";
-            for (const auto &param : obj.parameters)
-            {
-                os << param.id << " ";
-            }
-            os << "], Body: " << (obj.body ? "defined" : "null");
-        }
-        else
-        {
-            os << ", Val: " << obj.val;
-        }
-
-        os << ", Parent: " << (obj.parent ? std::any_cast<std::string>((*obj.parent).at(0)) : "<null>") << ")";
-        return os;
-    }
 };
 
-class FunctionCall
+struct GlobalDeclrNode
 {
-public:
-    std::string id;
-    std::vector<Value> args;
-
-    FunctionCall(std::string func_id, std::vector<Value> args)
-        : id(func_id), args(args) {}
-
-    friend std::ostream &operator<<(std::ostream &os, const FunctionCall &obj)
-    {
-        os << "FunctionCall(Func: " + obj.id + ", Args: [";
-        for (const auto &arg : obj.args)
-        {
-            os << arg << ", ";
-        }
-        os << "<args-end>])";
-        return os;
-    }
+    Token ident;
+    ExprNode *expr{};
+    bool is_const;
 };
 
-namespace Scope
+struct ScopeNode
 {
-    ScopeType create_scope(std::string id, std::vector<ScopeContent> contents, ScopeType *parent = nullptr)
-    {
-        ScopeType scope;
-        scope.push_back(id);
-        scope.push_back(parent);
-        scope.push_back(contents);
-        return scope;
-    }
+    std::vector<StmtNode *> scope;
+};
 
-    std::string get_scope_id(ScopeType &scope)
-    {
-        return std::any_cast<std::string>(scope.at(0));
-    }
+struct IfPredElifNode
+{
+    ExprNode *expr{};
+    ScopeNode *scope{};
+    std::optional<IfPredNode *> pred;
+};
 
-    std::string get_scope_id(ScopeType* scope)
-    {
-        return std::any_cast<std::string>(scope->at(0));
-    }
+struct IfPredElseNode
+{
+    ScopeNode *scope;
+};
 
-    ScopeType *get_scope_parent(ScopeType &scope)
-    {
-        auto parent = std::any_cast<ScopeType *>(scope.at(1));
-        return parent;
-    }
+struct IfPredNode
+{
+    std::variant<IfPredElifNode *, IfPredElseNode *> var;
+};
 
-    std::vector<ScopeContent> *get_scope_contents(ScopeType &scope)
-    {
-        auto &content = std::any_cast<std::vector<ScopeContent> &>(scope.at(2));
-        return &content;
-    }
+struct NodeStmtIf
+{
+    ExprNode *expr{};
+    ScopeNode *scope{};
+    std::optional<IfPredNode *> pred;
+};
 
-    std::vector<ScopeType *> get_scope_ancestry(ScopeType &scope)
-    {
-        std::vector<ScopeType *> ancestors;
-        ScopeType *current_ancestor = &scope;
+struct FuncCallNode
+{
+    Token ident;
+    std::vector<IdentNode *> args;
+};
 
-        while (current_ancestor != nullptr)
-        {
-            ancestors.push_back(current_ancestor);
-            current_ancestor = Scope::get_scope_parent(*current_ancestor);
+struct StmtAssignNode
+{
+    Token ident;
+    ExprNode *expr{};
+};
 
-            if (current_ancestor == nullptr)
-                break;
-        }
+struct StmtNode
+{
+    std::variant<
+        StmtExitNode *, 
+        LocalDeclrNode *, 
+        GlobalDeclrNode *, 
+        ScopeNode *, 
+        NodeStmtIf *, 
+        StmtAssignNode *, 
+        FuncCallNode *> stmt;
+};
 
-        return ancestors;
-    }
-
-    std::optional<ScopeContent> get_scope_child(ScopeType scope, std::string id)
-    {
-        for (const auto &content : *Scope::get_scope_contents(scope))
-        {
-            bool is_valid = std::visit([&id](auto &obj) -> bool
-                                       {
-                using T = std::decay_t<decltype(obj)>;
-
-                if constexpr (std::is_same_v<T, std::shared_ptr<Declaration>>)
-                    return obj->id == id;
-                else if constexpr (std::is_same_v<T, std::shared_ptr<ScopeType>>)
-                    return Scope::get_scope_id(*obj) == id;
-                else if constexpr (std::is_same_v<T, std::shared_ptr<FunctionCall>>)
-                    return obj->id == id;
-
-                return false; }, content);
-
-            if (is_valid)
-                return content;
-        }
-
-        return std::nullopt;
-    }
-}
+struct ProgNode
+{
+    std::vector<StmtNode *> prog_scope;
+    std::string prog_name;
+};
 
 class Parser
 {
 public:
-    std::vector<Token> toks;
-    int i = 0;
-    std::optional<ScopeType> global;
+    explicit Parser(std::vector<Token> toks)
+        : m_tokens(std::move(toks)), m_allocator(M_ALLOC_SIZE) {}
 
-    Parser(std::vector<Token> tokens) : toks(tokens) {}
-
-    bool is_success()
+    std::optional<TermNode *> parse_term()
     {
-        return global.has_value();
-    }
-
-    std::optional<ScopeType> parse_scope(std::string scope_id, ScopeType *parent = nullptr)
-    {
-        if (peek().type != TokenType::L_CR_BRACKET)
+        if (auto int_lit = non_strict_consume(TokenType::INT_LIT))
         {
-            unexpected_token_error(peek(), "Expected '{' to start scope body");
-            return std::nullopt;
+            auto term_int_lit = m_allocator.emplace<IntLitNode>(int_lit.value());
+            auto term = m_allocator.emplace<TermNode>(term_int_lit);
+            return term;
         }
 
-        consume();
-
-        ScopeType new_scope = Scope::create_scope(scope_id, {}, parent);
-        auto scope_contents = Scope::get_scope_contents(new_scope);
-
-        while (true)
+        if (auto ident = non_strict_consume(TokenType::IDENTIFIER))
         {
-            Token current_token = peek();
-
-            if (current_token.type == TokenType::END)
-            {
-                unexpected_token_error(current_token, "Unexpected end of input inside scope");
-                return std::nullopt;
-            }
-            else if (current_token.type == TokenType::R_CR_BRACKET)
-            {
-                consume();
-                break;
-            }
-            else if (current_token.type == TokenType::L_CR_BRACKET)
-            {
-                auto nested_scope = parse_scope(UUID_::generate_uuid_v4(), &new_scope);
-
-                if (nested_scope.has_value())
-                {
-                    scope_contents->push_back((ScopeContent)std::make_shared<ScopeType>(nested_scope.value()));
-                    continue;
-                }
-                else
-                {
-                    parse_failed_error("malformed or invalid scope body");
-                    return std::nullopt;
-                }
-            }
-            else if (current_token.type == TokenType::IDENTIFIER && peek(1).type == TokenType::L_PAR)
-            {
-                auto func_call = parse_func_call(&new_scope);
-                if (func_call.has_value())
-                {
-                    scope_contents->push_back((ScopeContent)func_call.value());
-                    continue;
-                }
-                else
-                {
-                    parse_failed_error("malformed or invalid function call");
-                    return std::nullopt;
-                }
-            }
-            else if (
-                current_token.type == TokenType::KEYWORD && current_token.value == "local" 
-                && (peek(1).type == TokenType::IDENTIFIER || peek(1).type == TokenType::EXCLAMATION))
-            {
-                auto declaration = parse_declr(&new_scope);
-
-                if (declaration.has_value())
-                {
-                    scope_contents->push_back((ScopeContent)declaration.value());
-                    continue;
-                }
-                else
-                {
-                    parse_failed_error("malformed or invalid declaration");
-                    return std::nullopt;
-                }
-            }
-            else
-            {
-                unexpected_token_error(current_token, "expected expression or declaration");
-                return std::nullopt;
-            }
-
-            consume();
+            auto term_ident = m_allocator.emplace<IdentNode>(ident.value());
+            auto term = m_allocator.emplace<TermNode>(term_ident);
+            return term;
         }
 
-        if (scope_id == "__global")
-            global = new_scope;
-
-        return new_scope;
-    }
-
-    std::optional<std::vector<Declaration>> get_arguments()
-    {
-        std::vector<Declaration> args;
-        bool expecting_identifier = true;
-
-        if (peek().type != TokenType::L_PAR)
+        if (auto parent = non_strict_consume(TokenType::L_PAR))
         {
-            unexpected_token_error(peek(), "Expected '(' for argument list");
-            return std::nullopt;
-        }
+            auto expr = parse_expr();
 
-        consume();
+            if (!expr.has_value())
+                parse_err("Expected expression");
 
-        while (peek().type != TokenType::R_PAR)
-        {
-            if (peek().type == TokenType::IDENTIFIER && expecting_identifier)
-            {
-                std::string current_identifier = peek().value;
-                consume();
+            strict_consume(TokenType::R_PAR);
 
-                if (peek().type != TokenType::COLON)
-                {
-                    unexpected_token_error(peek(), "Expected ':' after argument identifier");
-                    return std::nullopt;
-                }
+            auto term_paren = m_allocator.emplace<TermParenNode>(expr.value());
+            auto term = m_allocator.emplace<TermNode>(term_paren);
 
-                consume();
-
-                if (peek().type != TokenType::TYPE)
-                {
-                    unexpected_token_error(peek(), "Expected type after ':' in argument");
-                    return std::nullopt;
-                }
-
-                std::string current_type = peek().value;
-                consume();
-
-                ValueType arg_type = (current_type == "int") ? ValueType::INT_LIT : ValueType::PLACEHOLDER;
-                args.push_back(Declaration(current_identifier, nullptr, true, DeclarationType::VAR, DeclarationEnvironment::LOCAL, Value(arg_type)));
-
-                if (peek().type == TokenType::COMMA)
-                    consume();
-            }
-            else
-            {
-                unexpected_token_error(peek(), "Unexpected token in argument list");
-                return std::nullopt;
-            }
-        }
-
-        consume();
-
-        return args;
-    }
-
-    std::optional<std::shared_ptr<Declaration>> parse_declr(ScopeType *parent = nullptr)
-    {
-        if (peek().type != TokenType::KEYWORD || (peek().value != "local" && peek().value != "global"))
-        {
-            unexpected_token_error(peek(), "Expected environment specifier keyword");
-            return std::nullopt;
-        }
-
-        DeclarationEnvironment env = (peek().value == "local") ? DeclarationEnvironment::LOCAL : DeclarationEnvironment::GLOBAL;
-        consume();
-
-        bool is_const = false;
-        if (peek().type == TokenType::EXCLAMATION)
-        {
-            is_const = true;
-            consume();
-        }
-
-        if (peek().type != TokenType::IDENTIFIER)
-        {
-            unexpected_token_error(peek(), "Expected an identifier");
-            return std::nullopt;
-        }
-
-        std::string var_id = peek().value;
-        consume();
-
-        if (peek().type == TokenType::COLON)
-        {
-            consume();
-
-            if (peek().type != TokenType::TYPE)
-            {
-                unexpected_token_error(peek(), "Expected a type identifier after ':'");
-                return std::nullopt;
-            }
-
-            consume();
-        }
-
-        if (peek().type == TokenType::EQUALS)
-        {
-            consume();
-
-            if (peek().type == TokenType::KEYWORD && peek().value == "function")
-            {
-                consume();
-                std::vector<Declaration> params = get_arguments().value_or(std::vector<Declaration>());
-
-                if (peek().type != TokenType::L_CR_BRACKET)
-                {
-                    unexpected_token_error(peek(), "Expected '{' for function body");
-                    return std::nullopt;
-                }
-
-                auto body_scope_opt = parse_scope("__func_" + var_id, parent);
-
-                if (!body_scope_opt.has_value())
-                {
-                    parse_failed_error("malformed or invalid function body");
-                    return std::nullopt;
-                }
-
-                auto func_body_ptr = std::make_shared<ScopeType>(body_scope_opt.value());
-
-                return std::make_shared<Declaration>(Declaration(var_id, parent, is_const, env, params, func_body_ptr));
-            }
-            else if (peek().type == TokenType::INT_LIT)
-            {
-                Value var_val(ValueType::INT_LIT, std::make_shared<int>(std::stoi(peek().value)));
-                consume();
-
-                return std::make_shared<Declaration>(Declaration(var_id, parent, is_const, DeclarationType::VAR, env, var_val));
-            }
+            return term;
         }
 
         return std::nullopt;
     }
 
-    std::optional<std::shared_ptr<FunctionCall>> parse_func_call(ScopeType *parent = nullptr)
+    std::optional<ExprNode *> parse_expr(const int min_prec = 0)
     {
-        if (peek().type != TokenType::IDENTIFIER)
+        auto term_lhs = parse_term();
+
+        if (!term_lhs.has_value())
         {
-            unexpected_token_error(peek(), "Expected identifier for function call");
+            parse_err("bad lvalue in expression\n");
             return std::nullopt;
         }
 
-        std::string func_id = peek().value;
-        consume();
+        auto expr_lhs = m_allocator.emplace<ExprNode>(term_lhs.value());
 
-        if (peek().type != TokenType::L_PAR)
+        while (1)
         {
-            unexpected_token_error(peek(), "Expected '(' to open function arguments");
-            return std::nullopt;
-        }
+            auto current_tok = peek();
+            std::optional<int> prec;
 
-        consume();
-
-        std::vector<Value> func_args;
-
-        while (peek().type != TokenType::R_PAR)
-        {
-            if (peek().type == TokenType::END)
+            if (current_tok.has_value())
             {
-                unexpected_token_error(peek(), "Expected ')' to close function arguments");
-                return std::nullopt;
-            }
+                prec = bin_prec(current_tok.value().type);
 
-            Value value;
-            if (peek().type == TokenType::INT_LIT)
-            {
-                value.value_type = ValueType::INT_LIT;
-                value.value = std::make_shared<int>(std::stoi(peek().value));
-            }
-            else if (peek().type == TokenType::IDENTIFIER)
-            {
-                value.value_type = ValueType::REFERENCE;
-                value.value = std::make_shared<std::string>(peek().value);
+                if (!prec.has_value() || prec < min_prec)
+                    break;
             }
             else
-            {
-                unexpected_token_error(peek(), "Unexpected token in function arguments");
-                return std::nullopt;
-            }
+                break;
 
-            func_args.push_back(value);
-            consume();
+            const auto token = consume();
+            const auto type = token.type;
 
-            if (peek().type == TokenType::COMMA)
+            const int next_min_prec = prec.value() + 1;
+            auto rhs_expr = parse_expr(next_min_prec);
+
+            if (!rhs_expr)
+                parse_err("bad rvalue in expression");
+
+            auto bin_expr = m_allocator.emplace<BinExprNode>();
+
+            if (type == TokenType::PLUS)
             {
-                consume();
+                auto add = m_allocator.emplace<AddBinExprNode>();
+                add->lhs = expr_lhs;
+                add->rhs = rhs_expr.value();
+                bin_expr->node = add;
             }
-            else if (peek().type != TokenType::R_PAR)
+            else if (type == TokenType::MINUS)
             {
-                unexpected_token_error(peek(), "Expected ',' or ')' after argument");
-                return std::nullopt;
+                auto sub = m_allocator.emplace<SubBinExprNode>();
+                sub->lhs = expr_lhs;
+                sub->rhs = rhs_expr.value();
+                bin_expr->node = sub;
             }
+            else if (type == TokenType::ASTERISK)
+            {
+                auto mul = m_allocator.emplace<MulBinExprNode>();
+                mul->lhs = expr_lhs;
+                mul->rhs = rhs_expr.value();
+                bin_expr->node = mul;
+            }
+            else if (type == TokenType::F_SLASH)
+            {
+                auto div = m_allocator.emplace<DivBinExprNode>();
+                div->lhs = expr_lhs;
+                div->rhs = rhs_expr.value();
+                bin_expr->node = div;
+            }
+            else unreachable(); // Unhandled binary operator
+
+            expr_lhs = m_allocator.emplace<ExprNode>(bin_expr);
         }
 
-        consume();
+        return expr_lhs;
+    }
 
-        return std::make_shared<FunctionCall>(FunctionCall(func_id, func_args));
+    std::optional<ScopeNode *> parse_scope() // NOLINT(*-no-recursion)
+    {
+        if (!non_strict_consume(TokenType::L_CR_BRACKET).has_value())
+            return std::nullopt;
+
+        auto scope = m_allocator.emplace<ScopeNode>();
+
+        while (auto stmt = parse_stmt())
+            scope->scope.push_back(stmt.value());
+
+        strict_consume(TokenType::R_CR_BRACKET);
+
+        return scope;
+    }
+
+    std::optional<IfPredNode *> parse_if_pred() // NOLINT(*-no-recursion)
+    {
+        if (peek().value().value == "if" && non_strict_consume(TokenType::KEYWORD))
+        {
+            strict_consume(TokenType::L_PAR);
+
+            const auto elif = m_allocator.alloc<IfPredElifNode>();
+
+            if (const auto expr = parse_expr())
+                elif->expr = expr.value();
+            else
+                parse_err("Expected expression");
+
+            strict_consume(TokenType::R_PAR);
+
+            if (const auto scope = parse_scope())
+                elif->scope = scope.value();
+            else
+                parse_err("Expected scope for if statement body");
+
+            elif->pred = parse_if_pred();
+
+            return m_allocator.emplace<IfPredNode>(elif);
+        }
+
+        if (peek().value().value == "else" && non_strict_consume(TokenType::KEYWORD))
+        {
+            auto else_ = m_allocator.alloc<IfPredElseNode>();
+
+            if (const auto scope = parse_scope())
+                else_->scope = scope.value();
+            else
+                parse_err("Expected scope for else statement body");
+
+            return m_allocator.emplace<IfPredNode>(else_);
+        }
+
+        return {};
+    }
+
+    std::optional<StmtNode *> parse_stmt() // NOLINT(*-no-recursion)
+    {
+        if (peek().has_value() 
+            && peek().value().type == TokenType::END 
+            && peek(1).has_value() 
+            && peek(1).value().type == TokenType::L_PAR)
+        {
+            consume();
+            consume();
+
+            auto stmt_exit = m_allocator.emplace<StmtExitNode>();
+
+            if (const auto node_expr = parse_expr())
+                stmt_exit->node = node_expr.value();
+            else
+                parse_err("Expected expression");
+
+            strict_consume(TokenType::R_PAR);
+
+            auto stmt = m_allocator.emplace<StmtNode>();
+            stmt->stmt = stmt_exit;
+
+            return stmt;
+        }
+
+        if (peek().has_value()
+            && peek().value().type == TokenType::IDENTIFIER
+            && peek(1).has_value() && peek(1).value().type == TokenType::L_PAR
+        )
+        {
+
+            auto func_call = m_allocator.emplace<FuncCallNode>();
+            func_call->ident = strict_consume(TokenType::IDENTIFIER);
+
+            strict_consume(TokenType::L_PAR);
+
+            bool expecting_ident = true;
+            bool expecting_comma = false;
+
+            std::vector<IdentNode*> args{};
+
+            while (true)
+            {
+                auto current_tok = peek();
+                auto token = current_tok.value();
+
+                if (!current_tok.has_value())
+                    unreachable();
+
+                if (current_tok.value().type == TokenType::END)
+                    parse_err("Expected ')' to close argument list, got <eof>");
+                else if (current_tok.value().type == TokenType::R_PAR)
+                    break;
+
+                if (expecting_comma)
+                    strict_consume(TokenType::COMMA);
+                else if (expecting_ident)
+                {
+                    std::string prefix = "";
+
+                    if (peek().value().type == TokenType::DOUBLE_QUOTE)
+                        prefix = "'";
+
+                    non_strict_consume(TokenType::DOUBLE_QUOTE);
+
+                    auto arg = m_allocator.emplace<IdentNode>();
+                    arg->ident = consume();
+                    arg->ident.value = prefix + arg->ident.value + prefix;
+
+                    args.push_back(arg);
+
+                    non_strict_consume(TokenType::DOUBLE_QUOTE);
+                }
+                else unreachable();
+
+                expecting_ident = !expecting_ident;
+                expecting_comma = !expecting_comma;
+            }
+
+            strict_consume(TokenType::R_PAR);
+
+            func_call->args = args;
+
+            auto stmt = m_allocator.emplace<StmtNode>();
+            stmt->stmt = func_call;
+
+            return stmt;
+        }
+
+        if (
+            peek().has_value() && (peek().value().type == TokenType::KEYWORD && peek().value().value == "local") 
+            && peek(1).has_value() && peek(1).value().type == TokenType::IDENTIFIER 
+            && peek(2).has_value() && peek(2).value().type == TokenType::EQUALS)
+        {
+            consume();
+
+            auto declr = m_allocator.emplace<LocalDeclrNode>();
+            declr->is_const = false;
+
+            if (peek().value().type == TokenType::EXCLAMATION)
+            {
+                declr->is_const = true;
+                consume();
+            }
+
+            declr->ident = consume();
+
+            consume();
+
+            if (const auto expr = parse_expr())
+                declr->expr = expr.value();
+            else
+                parse_err("Expected expression");
+
+            auto stmt = m_allocator.emplace<StmtNode>();
+            stmt->stmt = declr;
+
+            return stmt;
+        }
+
+        if (
+            peek().has_value() && peek().value().type == TokenType::IDENTIFIER 
+            && peek(1).has_value() && peek(1).value().type == TokenType::DB_EQUALS)
+        {
+            const auto assign = m_allocator.alloc<StmtAssignNode>();
+            assign->ident = consume();
+
+            consume();
+
+            if (const auto expr = parse_expr())
+                assign->expr = expr.value();
+            else
+                parse_err("Expected expression");
+
+            return m_allocator.emplace<StmtNode>(assign);
+        }
+
+        if (peek().has_value() && peek().value().type == TokenType::L_CR_BRACKET)
+        {
+            if (auto scope = parse_scope())
+                return m_allocator.emplace<StmtNode>(scope.value());
+
+            parse_err("Expected scope");
+        }
+
+        if (auto if_ = non_strict_consume(TokenType::KEYWORD) && peek().value().value == "if")
+        {
+            strict_consume(TokenType::L_PAR);
+
+            auto stmt_if = m_allocator.emplace<NodeStmtIf>();
+
+            if (const auto expr = parse_expr())
+                stmt_if->expr = expr.value();
+            else
+                parse_err("Expected expression");
+
+            strict_consume(TokenType::R_PAR);
+
+            if (const auto scope = parse_scope())
+                stmt_if->scope = scope.value();
+            else
+                parse_err("Expected scope");
+
+            stmt_if->pred = parse_if_pred();
+            return m_allocator.emplace<StmtNode>(stmt_if);
+        }
+
+        return {};
+    }
+
+    std::optional<ProgNode> parse_prog()
+    {
+        ProgNode prog;
+
+        while (peek().has_value())
+        {
+            if (peek().value().type == TokenType::END)
+                break; 
+
+            if (auto stmt = parse_stmt())
+                prog.prog_scope.push_back(stmt.value());
+            else
+                parse_err("Expected statement");
+        }
+
+        return prog;
     }
 
 private:
-    Token peek(int ahead = 0)
+    ArenaAllocator m_allocator;
+    const std::vector<Token> m_tokens;
+    size_t m_index = 0;
+
+    bool parse_complete = false;
+    bool parse_success = true;
+
+    void unreachable()
     {
-        return toks.at(i + ahead);
+        assert(false);
     }
 
-    void consume(int ahead = 1)
+    void parse_err(std::string msg)
     {
-        i += ahead;
+        std::cerr << "[ERROR] [Parser]: " << msg << std::endl;
+        std::cerr << "  thrown at line " 
+            << std::to_string(peek().value().line) << ", column " 
+            << std::to_string(peek().value().column) << std::endl;
+        exit(1);
     }
 
-    void unexpected_token_error(const Token &token, const std::string &message)
+    void parse_warn(std::string msg) const
     {
-        std::cout << dye::red("Parse error") << ": " << message << " got '" << token.value << "' Token(" << token.type << ")" << std::endl;
-        std::cerr << "  at line " << token.line << " column " << token.column << std::endl;
+        std::cout << "[WARNING] [Parser]: " << msg << std::endl;
     }
 
-    void parse_failed_error(const std::string message)
+    std::optional<Token> peek(const int offset = 0) const
     {
-        std::cout << dye::red("Parse error") << ": cannot parse scope: " << message << std::endl;
-        std::cerr << "  at line " << peek().line << " column " << peek().column << std::endl;
+        if (m_index + offset >= m_tokens.size())
+            return std::nullopt;
+
+        return m_tokens.at(m_index + offset);
     }
-};
 
-namespace Debug
-{
-    std::string get_scope_string(ScopeType &scope)
+    Token consume()
     {
-        const int TAB_SIZE = 2;
-
-        const auto ancestry = Scope::get_scope_ancestry(scope);
-        const int ancestry_size = ancestry.size();
-
-        std::string tab(TAB_SIZE, ' ');
-
-        std::string scope_white_space(ancestry_size * TAB_SIZE, ' ');
-        std::string member_white_space = scope_white_space + tab;
-        std::string content_white_space = member_white_space + tab;
-
-        std::ostringstream scope_stream;
-
-        scope_stream << scope_white_space << "Scope(\n"
-                     << member_white_space << "ID: " << Scope::get_scope_id(scope) << "\n"
-                     << member_white_space << "Parent: ";
-
-        //auto parent_scope = Scope::get_scope_parent(scope);
-        scope_stream << "<undefined>" << "\n";
-        scope_stream << member_white_space << "Contents: {\n";
-
-        for (const auto &content : (*Scope::get_scope_contents(scope)))
+        if (m_index >= m_tokens.size())
         {
-            auto object_string = std::visit([](auto &obj)
-                                            {
-                using T = std::decay_t<decltype(obj)>;
-                std::ostringstream output_stream;
-
-                if constexpr (std::is_same_v<T, std::shared_ptr<Declaration>>)
-                {
-                    std::cout << "is a declaration\n";
-                    output_stream << *obj;
-                    std::cout << *obj << std::endl;
-                }
-                else if constexpr (std::is_same_v<T, std::shared_ptr<ScopeType>>)
-                {
-                    std::cout << "is a scope\n";
-                    output_stream << get_scope_string(*obj);
-                    std::cout << get_scope_string(*obj) << std::endl;
-                }
-                else if constexpr (std::is_same_v<T, std::shared_ptr<FunctionCall>>)
-                {
-                    std::cout << "is a func call\n";
-                    output_stream << *obj;
-                    std::cout << *obj << std::endl;
-                }
-                else
-                {
-                    return "<unknown content>";
-                } return output_stream.str(); }, content);
-
-            scope_stream << content_white_space << object_string << "\n";
+            parse_err("Attempted to consume a token when no more tokens are available");
         }
 
-        scope_stream << member_white_space << "}\n"
-                     << scope_white_space << ")";
-
-        return scope_stream.str();
+        return m_tokens.at(m_index++);
     }
-}
+
+    Token strict_consume(TokenType expected_type)
+    {
+        if (peek().has_value() && (peek().value().type == expected_type))
+            return consume();
+        else
+        {
+            parse_err("Expected token of type " 
+                + token_to_string(expected_type) + " got token of type " 
+                + token_to_string(peek().value().type) + "\n  at line " 
+                + std::to_string(peek().value().line) + ", column " 
+                + std::to_string(peek().value().column) + "\n"
+            );
+        }
+
+        unreachable();
+
+        return {};
+    }
+
+    std::optional<Token> non_strict_consume(TokenType expected_type)
+    {
+        if (peek().has_value() && (peek().value().type == expected_type))
+            return consume();
+        else
+            return std::nullopt;
+
+        unreachable();
+    }
+};

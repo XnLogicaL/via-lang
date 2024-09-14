@@ -9,24 +9,23 @@
 #include <variant>
 #include <cstdint>
 
-#include "../include/color.hpp"
-
 namespace Console
 {
 
     void CompilerError(std::string message)
     {
-        std::cerr << dye::red("Compile error") << ": " << message << std::endl;
+        std::cerr << "Compile error: " << message << std::endl;
+        exit(1);
     }
 
     void CompilerInfo(std::string message)
     {
-        std::cout << dye::aqua("Compile info") << ": " << message << std::endl;
+        std::cout << "Compile info: " << message << std::endl;
     }
 
     void CompilerWarning(std::string message)
     {
-        std::cout << dye::red_on_yellow("Compile warning") << ": " << message << std::endl;
+        std::cout << "Compile warning: " << message << std::endl;
     }
 
 };
@@ -72,7 +71,26 @@ namespace UUID_
     }
 }
 
-auto deref_mem_address(uintptr_t p)
+namespace str_util
 {
-    return *reinterpret_cast<int *>(p);
+    bool replace(std::string &str, const std::string &from, const std::string &to)
+    {
+        size_t start_pos = str.find(from);
+        if (start_pos == std::string::npos)
+            return false;
+        str.replace(start_pos, from.length(), to);
+        return true;
+    }
+
+    void replaceAll(std::string &str, const std::string &from, const std::string &to)
+    {
+        if (from.empty())
+            return;
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+        {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+        }
+    }
 }

@@ -3,10 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cstdlib>
 
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "utils.hpp"
+#include "generator.hpp"
+
+const auto VERSION = "0.1.0";
 
 class Command
 {
@@ -45,13 +48,19 @@ int main(int argc, char* argv[])
 {
     if (argc < 2)
     {
-        std::cerr << "incorrect usage: no input file specified" << std::endl;
-        std::cerr << "  correct usage: via <file.via> <out>" << std::endl;
+        std::cerr << "error: incorrect usage: no input file specified" << std::endl;
+        std::cerr << "  correct usage: via <...args>" << std::endl;
 
         return EXIT_FAILURE;
     }
 
     auto command = Command(argc, argv);
+
+    if (command.has_flag("--version") || command.has_flag("-v"))
+    {
+        std::cout << "via " + std::string(VERSION) << std::endl;
+        return EXIT_SUCCESS;
+    }
 
     std::ifstream viaSourceFile(argv[1]);
 
@@ -74,20 +83,27 @@ int main(int argc, char* argv[])
     Lexer lexer(via_src);
     auto tokens = lexer.tokenize();
 
+    if (command.has_flag("--debug"))
+        lexer.print_tokens(tokens);
+
     Parser parser(tokens);
-    auto global = parser.parse_scope("__global");
+    auto prog_node = parser.parse_prog();
+    prog_node->prog_name = std::string(argv[1]);
 
-    if (parser.is_success())
+    if (!prog_node.has_value())
     {
-        // std::cout << Debug::get_scope_string(global.value()) << std::endl;
-        Console::CompilerInfo("Successfuly compiled");
-    }
-    else
-    {
-        Console::CompilerError("Failed to compile\n  compiler return exit code 1 (EXIT_FAIL)");
-
+        Console::CompilerError("Failed to parse program");
         return EXIT_FAILURE;
     }
+
+    Generator generator(prog_node.value());
+    generator.generate();
+
+    system("nasm -f elf64 out.asm -o out.o");
+    system("ld out.o -o out.out");
+
+    if (command.has_flag("--run"))
+        system("./out.out");
 
     return EXIT_SUCCESS;
 }

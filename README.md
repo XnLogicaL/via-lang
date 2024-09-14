@@ -1,12 +1,15 @@
 # via
 
 **Disclaimer**
-This project is no where near completion.
-"Core features" have not yet been implemented.
+This project is heavilty being worked on and currently is not able to execute code.
  
 A compiled, fast, statically typed general purpose language.
+via encompasses different features from a variety of different languages such as Lua, Go, TypeScript, etc.
 This project is mainly for learning & improving in C++ and making for a valuable portfolio asset.
 Feel free to code stuff with it.
+
+# Credits
+- Thanks to @OrosMatthew for parser code inspiration, make sure to check his YouTube series out!
 
 # Examples
 Planned/completed features for via.

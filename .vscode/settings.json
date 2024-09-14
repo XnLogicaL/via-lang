@@ -64,6 +64,9 @@
         "unordered_set": "cpp",
         "list": "cpp",
         "set": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "functional": "cpp",
+        "unordered_map": "cpp",
+        "cassert": "cpp"
     }
 }

@@ -5,12 +5,16 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <optional>
 
-const char* Keywords[] = {
+const char *Keywords[] = {
     "function",
     "local",
     "global",
     "return",
+    "if",
+    "elseif",
+    "else",
 };
 
 enum TokenType
@@ -19,6 +23,7 @@ enum TokenType
     TYPE,
     INT_LIT,
     FLOAT_LIT,
+    STRING_LIT,
     EQUALS,
     DB_EQUALS,
     PLUS,
@@ -39,42 +44,83 @@ enum TokenType
     ASTERISK,
     F_SLASH,
     EXCLAMATION,
+    DOUBLE_QUOTE,
 };
 
 std::string token_to_string(TokenType enum_token)
 {
     switch (enum_token)
     {
-    case KEYWORD:       return "KEYWORD";
-    case IDENTIFIER:    return "IDENTIFIER";
-    case TYPE:          return "TYPE";
-    case INT_LIT:       return "INT_LIT";
-    case FLOAT_LIT:     return "FLOAT_LIT";
-    case PLUS:          return "PLUS";
-    case MINUS:         return "MINUS";
-    case START:         return "START";
-    case END:           return "END";
-    case ERROR:         return "ERROR";
-    case EQUALS:        return "EQUALS";
-    case DB_EQUALS:     return "DOUBLE_EQUALS";
-    case L_PAR:         return "L_PAR";
-    case R_PAR:         return "R_PAR";
-    case L_CR_BRACKET:  return "L_CR_BRACKET";
-    case R_CR_BRACKET:  return "R_CR_BRACKET";
-    case L_SQ_BRACKET:  return "L_SQ_BRACKET";
-    case R_SQ_BRACKET:  return "R_SQ_BRACKET";
-    case COMMA:         return "COMMA";
-    case COLON:         return "COLON";
-    case ASTERISK:      return "ASTERISK";
-    case F_SLASH:       return "F_SLASH";
-    case EXCLAMATION:   return "EXCLAMATION";
-    default:            return "UNKNOWN";
+    case KEYWORD:
+        return "KEYWORD";
+    case IDENTIFIER:
+        return "IDENTIFIER";
+    case TYPE:
+        return "TYPE";
+    case INT_LIT:
+        return "INT_LIT";
+    case FLOAT_LIT:
+        return "FLOAT_LIT";
+    case STRING_LIT:
+        return "STRING_LIT";
+    case PLUS:
+        return "PLUS";
+    case MINUS:
+        return "MINUS";
+    case START:
+        return "START";
+    case END:
+        return "END";
+    case ERROR:
+        return "ERROR";
+    case EQUALS:
+        return "EQUALS";
+    case DB_EQUALS:
+        return "DOUBLE_EQUALS";
+    case L_PAR:
+        return "L_PAR";
+    case R_PAR:
+        return "R_PAR";
+    case L_CR_BRACKET:
+        return "L_CR_BRACKET";
+    case R_CR_BRACKET:
+        return "R_CR_BRACKET";
+    case L_SQ_BRACKET:
+        return "L_SQ_BRACKET";
+    case R_SQ_BRACKET:
+        return "R_SQ_BRACKET";
+    case COMMA:
+        return "COMMA";
+    case SEMICOLON:
+        return "SEMICOLON";
+    case COLON:
+        return "COLON";
+    case ASTERISK:
+        return "ASTERISK";
+    case F_SLASH:
+        return "F_SLASH";
+    case EXCLAMATION:
+        return "EXCLAMATION";
+    case DOUBLE_QUOTE:
+        return "DOUBLE_QUOTE";
+    default:
+        return "UNKNOWN(" + std::to_string(enum_token) + ")";
     }
 }
 
-bool is_literal(TokenType type)
+inline std::optional<int> bin_prec(const TokenType type)
 {
-    return type == INT_LIT || type == FLOAT_LIT;
+    switch (type)
+    {
+    case TokenType::MINUS:
+    case TokenType::PLUS:
+        return 0;
+    case TokenType::F_SLASH:
+    case TokenType::ASTERISK:
+        return 1;
+    default:
+        return {};
+    }
 }
 
 class Token
@@ -101,53 +147,62 @@ public:
 class Lexer
 {
 public:
-    Lexer(const std::string &src) : src(src), pos(-2), line(1), column(1) {}
+    Lexer(const std::string &src) : src(src), pos(-1), line(1), column(1) {}
 
     Token get_next_token(Token last_tok)
     {
-        while (pos < src.length())
+        if (pos >= src.length())
+            return create_token(TokenType::END, "<eof>");
+
+        char current = src.at(pos);
+
+        while (isspace(current))
         {
-            char current = src.at(pos);
+            consume_white_space();
 
-            if (isspace(current))
-            {
-                consume_white_space();
-                continue;
-            }
+            if (pos >= src.length())
+                return create_token(TokenType::END, "<eof>");
 
-            if (isalpha(current)) return read_identifier(last_tok);
-            if (isdigit(current)) return read_number(last_tok);
-
-            switch (current)
-            {
-            case '+':   return create_token(TokenType::PLUS, "+");
-            case '-':   return create_token(TokenType::MINUS, "-");
-            case '=':   return create_token(TokenType::EQUALS, "=");
-            case '==':  return create_token(TokenType::DB_EQUALS, "==");
-            case '{':   return create_token(TokenType::L_CR_BRACKET, "{");
-            case '}':   return create_token(TokenType::R_CR_BRACKET, "}");
-            case '[':   return create_token(TokenType::L_CR_BRACKET, "[");
-            case ']':   return create_token(TokenType::L_CR_BRACKET, "]");
-            case '(':   return create_token(TokenType::L_PAR, "(");
-            case ')':   return create_token(TokenType::R_PAR, ")");
-            case ',':   return create_token(TokenType::COMMA, ",");
-            case ':':   return create_token(TokenType::COLON, ":");
-            case '*':   return create_token(TokenType::ASTERISK, "*");
-            case '/':   return create_token(TokenType::F_SLASH, "/");
-            case '!':   return create_token(TokenType::EXCLAMATION, "!");
-            default:    return create_token(TokenType::ERROR, std::string(1, current));
-            }
+            current = src.at(pos);
         }
 
-        return create_token(TokenType::ERROR, "<error-token>");
+        if (isalpha(current)) return read_identifier(last_tok);
+        if (isdigit(current)) return read_number(last_tok);
+
+        switch (current)
+        {   
+        case '+': return create_token(TokenType::PLUS, "+");
+        case '-': return create_token(TokenType::MINUS, "-");
+        case '=':
+            if (peek() == '=')
+            {
+                pos++;
+                return create_token(TokenType::DB_EQUALS, "==");
+            }
+            return create_token(TokenType::EQUALS, "=");
+        case '{': return create_token(TokenType::L_CR_BRACKET, "{");
+        case '}': return create_token(TokenType::R_CR_BRACKET, "}");
+        case '[': return create_token(TokenType::L_SQ_BRACKET, "[");
+        case ']': return create_token(TokenType::R_SQ_BRACKET, "]");
+        case '(': return create_token(TokenType::L_PAR, "(");
+        case ')': return create_token(TokenType::R_PAR, ")");
+        case ',': return create_token(TokenType::COMMA, ",");
+        case ':': return create_token(TokenType::COLON, ":");
+        case '*': return create_token(TokenType::ASTERISK, "*");
+        case '/': return create_token(TokenType::F_SLASH, "/");
+        case '!': return create_token(TokenType::EXCLAMATION, "!");
+        case ';': return create_token(TokenType::SEMICOLON, ";");
+        case '"': return read_string();
+        default:
+            return create_token(TokenType::ERROR, std::string(1, current));
+        }
     }
 
     std::vector<Token> tokenize()
     {
         Token tok;
         std::vector<Token> tokens;
-        Token last_token = create_token(TokenType::START, "");
-        tokens.push_back(create_token(TokenType::L_CR_BRACKET, "{"));
+        Token last_token = create_token(TokenType::START, "<sof>");
 
         while (tok.type != TokenType::END)
         {
@@ -160,10 +215,26 @@ public:
             last_token = tok;
         }
 
-        tokens.push_back(create_token(TokenType::R_CR_BRACKET, "}"));
-        tokens.push_back(create_token(TokenType::END, "<eof>"));
-
         return tokens;
+    }
+
+    void print_tokens(const std::vector<Token> toks)
+    {
+        std::cout << std::endl;
+        std::cout << "Token count: " << toks.size() << std::endl;
+
+        for (const auto &tok : toks)
+            std::cout << tok << std::endl;
+
+        std::cout << std::endl;
+    }
+
+    Token create_token(TokenType type, const std::string &value)
+    {
+        Token token = {type, value, line, column};
+        pos++;
+        column++;
+        return token;
     }
 
 private:
@@ -200,10 +271,13 @@ private:
             column++;
         }
 
-        for (const char* keyword : Keywords)
+        for (const char *keyword : Keywords)
         {
             if (tok_value == keyword)
+            {
                 tok_type = TokenType::KEYWORD;
+                break;
+            }
         }
 
         if (last_tok.type == TokenType::COLON)
@@ -222,25 +296,50 @@ private:
         {
             if (src.at(pos) == '.')
             {
-                if (tok_type == TokenType::INT_LIT) 
+                if (tok_type == TokenType::INT_LIT)
                     tok_type = TokenType::FLOAT_LIT;
-                else 
+                else
                     tok_type = TokenType::ERROR;
             }
 
             tok_value += src.at(pos);
-            pos++;
+            consume();
             column++;
         }
 
         return {tok_type, tok_value, line, start_column};
     }
 
-    Token create_token(TokenType type, const std::string &value)
+    Token read_string()
     {
-        Token token = {type, value, line, column};
-        pos++;
-        column++;
-        return token;
+        consume();
+
+        std::string str;
+
+        while (true)
+        {
+            if (src.at(pos) == '"')
+            {
+                consume();
+                break;
+            }
+            
+            str += src.at(pos);
+            consume();
+        }
+
+        return {TokenType::STRING_LIT, str, line, column};
+    }
+
+    char peek()
+    {
+        if (pos + 1 >= src.length())
+            return '\0';
+        return src.at(pos + 1);
+    }
+
+    char consume()
+    {
+        return src.at(pos++);
     }
 };
