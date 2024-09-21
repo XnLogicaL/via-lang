@@ -5,44 +5,14 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "generator.hpp"
+#include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
+// #include "generator.hpp"
+//#include "interpreter/default/interpreter.hpp"
+
+#include "utils/command.hpp"
 
 const auto VERSION = "0.1.0";
-
-class Command
-{
-public:
-
-    int argc;
-    char** argv;
-
-    Command(auto _Ac, auto _Av)
-    : argc(_Ac), argv(_Av) {}
-
-    std::vector<std::string> get_flags()
-    {
-        std::vector<std::string> flags = {};
-
-        for (int i = 0; i < argc; i++)
-        {
-            auto arg_string = std::string(argv[i]);
-
-            if (arg_string.starts_with("--"))
-                flags.push_back(arg_string);
-        }
-
-        return flags;
-    }
-
-    bool has_flag(std::string flag)
-    {
-        auto flags = get_flags();
-        return std::find(flags.begin(), flags.end(), flag) != flags.end();
-    }
-
-};
 
 int main(int argc, char* argv[])
 {
@@ -86,24 +56,32 @@ int main(int argc, char* argv[])
     if (command.has_flag("--debug"))
         lexer.print_tokens(tokens);
 
-    Parser parser(tokens);
+    Parser parser(tokens, argv[1]);
     auto prog_node = parser.parse_prog();
     prog_node->prog_name = std::string(argv[1]);
 
     if (!prog_node.has_value())
-    {
-        Console::CompilerError("Failed to parse program");
         return EXIT_FAILURE;
+
+    if (command.has_flag("-c"))
+    {
+        /*Generator generator(prog_node.value());
+        generator.generate();
+
+        system("nasm -f elf64 out.asm -o out.o -gdwarf");
+        system("ld out.o -o out.out");
+
+        if (command.has_flag("--run"))
+            system("./out.out");*/
+
+        std::cerr << "compiler not available\n";
+        exit(1);
     }
-
-    Generator generator(prog_node.value());
-    generator.generate();
-
-    system("nasm -f elf64 out.asm -o out.o");
-    system("ld out.o -o out.out");
-
-    if (command.has_flag("--run"))
-        system("./out.out");
+    else if (command.has_flag("-i"))
+    {
+        /*Interpreter interpreter(prog_node.value());
+        interpreter.run();*/
+    }
 
     return EXIT_SUCCESS;
 }

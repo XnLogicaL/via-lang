@@ -7,147 +7,14 @@
 #include <map>
 #include <optional>
 
-const char *Keywords[] = {
-    "function",
-    "local",
-    "global",
-    "return",
-    "if",
-    "elseif",
-    "else",
-};
-
-enum TokenType
-{
-    IDENTIFIER,
-    TYPE,
-    INT_LIT,
-    FLOAT_LIT,
-    STRING_LIT,
-    EQUALS,
-    DB_EQUALS,
-    PLUS,
-    MINUS,
-    END,
-    START,
-    ERROR,
-    L_CR_BRACKET,
-    R_CR_BRACKET,
-    L_SQ_BRACKET,
-    R_SQ_BRACKET,
-    L_PAR,
-    R_PAR,
-    COMMA,
-    COLON,
-    SEMICOLON,
-    KEYWORD,
-    ASTERISK,
-    F_SLASH,
-    EXCLAMATION,
-    DOUBLE_QUOTE,
-};
-
-std::string token_to_string(TokenType enum_token)
-{
-    switch (enum_token)
-    {
-    case KEYWORD:
-        return "KEYWORD";
-    case IDENTIFIER:
-        return "IDENTIFIER";
-    case TYPE:
-        return "TYPE";
-    case INT_LIT:
-        return "INT_LIT";
-    case FLOAT_LIT:
-        return "FLOAT_LIT";
-    case STRING_LIT:
-        return "STRING_LIT";
-    case PLUS:
-        return "PLUS";
-    case MINUS:
-        return "MINUS";
-    case START:
-        return "START";
-    case END:
-        return "END";
-    case ERROR:
-        return "ERROR";
-    case EQUALS:
-        return "EQUALS";
-    case DB_EQUALS:
-        return "DOUBLE_EQUALS";
-    case L_PAR:
-        return "L_PAR";
-    case R_PAR:
-        return "R_PAR";
-    case L_CR_BRACKET:
-        return "L_CR_BRACKET";
-    case R_CR_BRACKET:
-        return "R_CR_BRACKET";
-    case L_SQ_BRACKET:
-        return "L_SQ_BRACKET";
-    case R_SQ_BRACKET:
-        return "R_SQ_BRACKET";
-    case COMMA:
-        return "COMMA";
-    case SEMICOLON:
-        return "SEMICOLON";
-    case COLON:
-        return "COLON";
-    case ASTERISK:
-        return "ASTERISK";
-    case F_SLASH:
-        return "F_SLASH";
-    case EXCLAMATION:
-        return "EXCLAMATION";
-    case DOUBLE_QUOTE:
-        return "DOUBLE_QUOTE";
-    default:
-        return "UNKNOWN(" + std::to_string(enum_token) + ")";
-    }
-}
-
-inline std::optional<int> bin_prec(const TokenType type)
-{
-    switch (type)
-    {
-    case TokenType::MINUS:
-    case TokenType::PLUS:
-        return 0;
-    case TokenType::F_SLASH:
-    case TokenType::ASTERISK:
-        return 1;
-    default:
-        return {};
-    }
-}
-
-class Token
-{
-public:
-    TokenType type;
-    std::string value;
-    int line;
-    int column;
-
-    friend std::ostream &operator<<(std::ostream &os, const Token &tok)
-    {
-        os << "Token("
-           << "Type: " << token_to_string(tok.type)
-           << ", Value: " << tok.value
-           << ", Line: " << tok.line
-           << ", Column: " << tok.column
-           << ")";
-
-        return os;
-    }
-};
+#include "keywords.hpp"
+#include "token.hpp"
+#include "tokentype.hpp"
 
 class Lexer
 {
 public:
-    Lexer(const std::string &src) : src(src), pos(-1), line(1), column(1) {}
+    Lexer(const std::string& src) : src(src), pos(-1), line(1), column(1) {}
 
     Token get_next_token(Token last_tok)
     {
@@ -170,7 +37,7 @@ public:
         if (isdigit(current)) return read_number(last_tok);
 
         switch (current)
-        {   
+        {
         case '+': return create_token(TokenType::PLUS, "+");
         case '-': return create_token(TokenType::MINUS, "-");
         case '=':
@@ -223,15 +90,15 @@ public:
         std::cout << std::endl;
         std::cout << "Token count: " << toks.size() << std::endl;
 
-        for (const auto &tok : toks)
-            std::cout << tok << std::endl;
+        for (const auto& tok : toks)
+            std::cout << tok.to_string() << std::endl;
 
         std::cout << std::endl;
     }
 
-    Token create_token(TokenType type, const std::string &value)
+    Token create_token(TokenType type, const std::string& value)
     {
-        Token token = {type, value, line, column};
+        Token token = { type, value, line, column };
         pos++;
         column++;
         return token;
@@ -264,14 +131,14 @@ private:
         TokenType tok_type = TokenType::IDENTIFIER;
         int start_column = column;
 
-        while (pos < src.length() && isalnum(src.at(pos)))
+        while (pos < src.length() && (isalnum(src.at(pos)) || src.at(pos) == '_'))
         {
             tok_value += src.at(pos);
             pos++;
             column++;
         }
 
-        for (const char *keyword : Keywords)
+        for (const char* keyword : Keywords)
         {
             if (tok_value == keyword)
             {
@@ -283,7 +150,10 @@ private:
         if (last_tok.type == TokenType::COLON)
             tok_type = TokenType::TYPE;
 
-        return {tok_type, tok_value, line, start_column};
+        if (tok_value == "false" || tok_value == "true")
+            tok_type = TokenType::BOOL_ALPHA;
+
+        return { tok_type, tok_value, line, start_column };
     }
 
     Token read_number(Token last_tok)
@@ -307,7 +177,7 @@ private:
             column++;
         }
 
-        return {tok_type, tok_value, line, start_column};
+        return { tok_type, tok_value, line, start_column };
     }
 
     Token read_string()
@@ -323,12 +193,12 @@ private:
                 consume();
                 break;
             }
-            
+
             str += src.at(pos);
             consume();
         }
 
-        return {TokenType::STRING_LIT, str, line, column};
+        return { TokenType::STRING_LIT, str, line, column };
     }
 
     char peek()

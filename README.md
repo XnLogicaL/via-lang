@@ -1,65 +1,192 @@
+
+![Logo](https://i.imgur.com/Nyp3nLb.png)
+
+[![GitHub Releases](https://img.shields.io/github/release/xnlogical/json.svg)](https://github.com/xnlgoical/via-lang/releases)
+
 # via
 
-**Disclaimer**
-This project is heavilty being worked on and currently is not able to execute code.
- 
-A compiled, fast, statically typed general purpose language.
-via encompasses different features from a variety of different languages such as Lua, Go, TypeScript, etc.
-This project is mainly for learning & improving in C++ and making for a valuable portfolio asset.
-Feel free to code stuff with it.
+A fast, statically and dynamically typed programming language.
 
-# Credits
-- Thanks to @OrosMatthew for parser code inspiration, make sure to check his YouTube series out!
+via has inherited many features from a variety of different languages including but not limited to: `Luau`, `GoLang`, `TypeScript`, `C`, etc.
 
-# Examples
-Planned/completed features for via.
+(via has a compiled, interpreted and jit compiled versions in the works/available)
 
-Declare variables with `local` or `global`
+#### Big thanks to [@orosmatthew](https://github.com/orosmatthew) for the parser structure
+
+## Disclaimers
+
+#### THIS IS A PASSION PROJECT!
+via is a passion project which means that it might have security flaws, missing features and a lot more issues.
+We heavily discourage you to use via in a production environment.
+
+## Features
+
+- Classes (no inheritance/polymorphism)
+- Verbose debugging functions: `error` and `warn`
+- Simple curly syntax
+- Simple type semantics
+- Scoped declarations (possible via the  "local" keyword)
+- Global declarations (possible via the "global" keyword)
+- All default types are primitive (they will have corresponding wrappers in the std library, this allows for better low level control)
+- Modules & libraries
+    - 1: Make a via module file with the `.viam` extension (files that don't have this ext cannot be imported)
+    - 2: Declare a module with `module <moudle_name>`
+    - 3: Export the module with `export <module_name>`
+    - 4: Import your module with `using "path/to/module.viam"`
+
+
+
+**Planned**:
+- Package manager
+- Extensive std library
+- Interpreted version (W.I.P)
+- JIT (compiled & interpreted) version
+- Embedding support
+- Rust version
+- LLVM version
+
+## Usage/Examples
+
+#### Comments
 ```
-local var: int = 10
+## This is a comment that will be ignored by the compiler
 ```
 
-Add an exclamation mark after the `local` keyword to make it a constant
+#### Variables
 ```
-local! var: int = 10
-```
-
-Add comments with `##`
-```
-## this is a comment
+local var = 10 ## Automatically assigned type "int"
 ```
 
-All functions are lambda functions in via
+#### Constants
 ```
-local! add: function = function(a: int, b: int) {
-  return a + b
+local! var = 10 ## Cannot be reassigned
+```
+
+#### Type annotations
+```
+local myInt: int = 10
+local myInt: char = 10 ## This will error during compile time
+```
+
+#### If statements
+```
+if (true) {
+    print("This will print")
+} else {
+    print("This won't print")
 }
 ```
-(Note: the `function` type is a placeholder for semantics) 
 
-Create classes with the `class` keyword
-And constructors with `new`
-And destructors with `destroy`
+#### Loops
+```
+for (i, v in {...}) {
+    print(i) ## 0, 1, 2, 3, 4, etc.
+
+    if (i == 1) {
+        break
+    } else {
+        continue
+    }
+}
+
+while (true) {
+    break
+}
+```
+
+#### Functions
+```
+local! myFunction = function() {
+    print("Hello from function!")
+}
+
+myFunction() ## "Hello from function!"
+```
+
+#### Scopes
+```
+do {
+    ## Do stuff inside Scopes
+    local! funcInsideScope = function() {
+        print("Hello from scope")
+    }
+
+    funcInsideScope() ## "Hello from scope"
+}
+```
+
+#### Tables
+*Tables are primtive data structures that can represent arrays, dictionaries, structs, etc.*
+```
+local myDict = {
+    ["ten"] = 10,
+    ["nine"] = 9
+}
+
+local myArray = {
+    1,
+    2,
+    [2] = 3,
+    [3] = 4,
+}
+```
+
+#### Error handling
+```
+try {
+    ## ...
+} catch(err: string) {
+    print("failed because: " .. err)
+}
+```
+
+#### Classes
 ```
 class MyClass {
-  myProperty: int = 10
+    local! value: int
 
-  new() {
-    print("This class is quite cool")
-  }
-  destroy() {
-    print("Not so cool anymore")
-  }
+    new(value: int) {
+        self:value = value
+    }
+
+    destroy() {
+        print("Destroying class!")
+    }
+
+    print_value() {
+        print(self:value)
+    }
 }
+
+local classInstance = new MyClass(0)
+classInstance:print_value() ## "0"
+
+destroy classInstance ## "Destroying class!"
 ```
 
-Access methods/properties of a class using colons
+#### Modules
 ```
-local myClass: auto = new MyClass() ## "This class is quite cool!"
+## module.viam
+module MyModule ## Start module scope
 
-print(myClass:myProperty) ## "10"
+print("This will print!")
 
-destroy myClass ## "Not so cool anymore"
+local var = "This will be exported as module:var"
+
+export MyModule ## End module scope
 ```
 
-Don't worry about inheritance as via doesn't have dumb features like that. A class should have it's own methods and it's own methods only.
+```
+using "path/to/module.viam" ## as MyModule <- optional
+
+print(MyModule:var) ## "This will print!"
+```
+
+#### Pointers
+```
+local pInt: ptr<int> = &10
+local Int = *pInt
+
+local pNull = 00000000 ## nullptr
+local Null = *pNull ## "error:  attempt to dereference nullptr"
+```

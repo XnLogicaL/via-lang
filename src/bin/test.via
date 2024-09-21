@@ -1,7 +1,0 @@
-local var = 10
-
-warn("next line will throw an error")
-error("error message")
-print("thiswontprint")
-
-exit(0)

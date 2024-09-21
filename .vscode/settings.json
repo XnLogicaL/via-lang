@@ -67,6 +67,13 @@
         "xhash": "cpp",
         "functional": "cpp",
         "unordered_map": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "stack": "cpp",
+        "filesystem": "cpp",
+        "chrono": "cpp"
     }
 }
