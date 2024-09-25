@@ -6,6 +6,8 @@
 
 #include "tokentype.hpp"
 
+#include "../include/magic_enum/magic_enum.hpp"
+
 class Token
 {
 public:
@@ -20,7 +22,7 @@ public:
         auto col_cpy = column;
 
         std::string token_string = "Token("
-            + ("Type: " + TokenType_to_string(type))
+            + ("Type: " + std::string(magic_enum::enum_name(type)))
             + (", Value: " + value)
             + (", Line: " + std::to_string(line_cpy))
             + (", Column: " + std::to_string(col_cpy))
@@ -34,12 +36,12 @@ inline std::optional<int> bin_prec(const TokenType type)
 {
     switch (type)
     {
-    case TokenType::DB_EQUALS:
-    case TokenType::MINUS:
-    case TokenType::PLUS:
+    case TokenType::EQU:
+    case TokenType::SUB:
+    case TokenType::ADD:
         return 0;
-    case TokenType::F_SLASH:
-    case TokenType::ASTERISK:
+    case TokenType::DIV:
+    case TokenType::MUL:
         return 1;
     default:
         return {};

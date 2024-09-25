@@ -74,6 +74,12 @@
         "span": "cpp",
         "stack": "cpp",
         "filesystem": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp",
+        "numeric": "cpp",
+        "ratio": "cpp",
+        "valarray": "cpp"
     }
 }

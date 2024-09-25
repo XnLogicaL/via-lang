@@ -8,7 +8,7 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 // #include "generator.hpp"
-//#include "interpreter/default/interpreter.hpp"
+#include "VM/default/interpreter.hpp"
 
 #include "utils/command.hpp"
 
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     if (argc < 2)
     {
         std::cerr << "error: incorrect usage: no input file specified" << std::endl;
-        std::cerr << "  correct usage: via <...args>" << std::endl;
+        std::cerr << "  correct usage: via <file.via> <flags...>" << std::endl;
 
         return EXIT_FAILURE;
     }
@@ -61,7 +61,10 @@ int main(int argc, char* argv[])
     prog_node->prog_name = std::string(argv[1]);
 
     if (!prog_node.has_value())
+    {
+        std::cerr << "via compiler error: failed to parse program\n";
         return EXIT_FAILURE;
+    }
 
     if (command.has_flag("-c"))
     {
@@ -73,14 +76,21 @@ int main(int argc, char* argv[])
 
         if (command.has_flag("--run"))
             system("./out.out");*/
-
-        std::cerr << "compiler not available\n";
-        exit(1);
     }
     else if (command.has_flag("-i"))
     {
-        /*Interpreter interpreter(prog_node.value());
-        interpreter.run();*/
+        try
+        {
+            Interpreter interpreter(prog_node.value());
+            interpreter.init();
+            interpreter.run();
+        }
+        catch(const std::exception &e)
+        {
+            std::cout << "via VM error: " << e.what() << std::endl;
+            std::cout << "  terminating VM" << std::endl;
+            return EXIT_FAILURE;
+        }
     }
 
     return EXIT_SUCCESS;

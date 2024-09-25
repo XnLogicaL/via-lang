@@ -38,15 +38,15 @@ public:
 
         switch (current)
         {
-        case '+': return create_token(TokenType::PLUS, "+");
-        case '-': return create_token(TokenType::MINUS, "-");
+        case '+': return create_token(TokenType::ADD, "+");
+        case '-': return create_token(TokenType::SUB, "-");
         case '=':
             if (peek() == '=')
             {
                 pos++;
-                return create_token(TokenType::DB_EQUALS, "==");
+                return create_token(TokenType::EQU, "==");
             }
-            return create_token(TokenType::EQUALS, "=");
+            return create_token(TokenType::ASSIGN, "=");
         case '{': return create_token(TokenType::L_CR_BRACKET, "{");
         case '}': return create_token(TokenType::R_CR_BRACKET, "}");
         case '[': return create_token(TokenType::L_SQ_BRACKET, "[");
@@ -55,8 +55,8 @@ public:
         case ')': return create_token(TokenType::R_PAR, ")");
         case ',': return create_token(TokenType::COMMA, ",");
         case ':': return create_token(TokenType::COLON, ":");
-        case '*': return create_token(TokenType::ASTERISK, "*");
-        case '/': return create_token(TokenType::F_SLASH, "/");
+        case '*': return create_token(TokenType::MUL, "*");
+        case '/': return create_token(TokenType::DIV, "/");
         case '!': return create_token(TokenType::EXCLAMATION, "!");
         case ';': return create_token(TokenType::SEMICOLON, ";");
         case '"': return read_string();

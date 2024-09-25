@@ -7,13 +7,15 @@
 #include <optional>
 #include <cassert>
 
+#include "../include/arena_allocator.hpp"
+#include "../include/magic_enum/magic_enum.hpp"
+
 #include "../lexer/lexer.hpp"
-#include "../utils/arena.hpp"
 #include "../utils/error.hpp"
 
-#include "ast/Literals.hpp"
-#include "ast/ProgNode.hpp"
-#include "ast/StmtNode.hpp"
+#include "AST/Literals.hpp"
+#include "AST/ProgNode.hpp"
+#include "AST/StmtNode.hpp"
 
 const size_t M_ALLOC_SIZE = 8 * 1024 * 1024;
 
@@ -37,19 +39,19 @@ public:
 
     std::optional<ExprNode*> parse_term() 
     {
-        if (auto int_lit = non_strict_consume(TokenType::INT_LIT))
+        if (auto int_lit = attempt_consume(TokenType::INT_LIT))
             return visit_lit<IntLitNode>(int_lit);
 
-        if (auto ident = non_strict_consume(TokenType::IDENTIFIER))
+        if (auto ident = attempt_consume(TokenType::IDENTIFIER))
             return visit_lit<IdentNode>(ident);
 
-        if (auto bool_alpha = non_strict_consume(TokenType::BOOL_ALPHA))
+        if (auto bool_alpha = attempt_consume(TokenType::BOOL_ALPHA))
             return visit_lit<BoolLitNode>(bool_alpha);
 
-        if (auto string_lit = non_strict_consume(TokenType::STRING_LIT))
+        if (auto string_lit = attempt_consume(TokenType::STRING_LIT))
             return visit_lit<StringLitNode>(string_lit);
 
-        if (non_strict_consume(TokenType::L_PAR)) 
+        if (attempt_consume(TokenType::L_PAR)) 
         {
             auto expr = parse_expr();
 
@@ -97,7 +99,7 @@ public:
             auto bin_expr = m_allocator.emplace<BinExprNode>();
             bin_expr->lhs = expr_lhs;
             bin_expr->rhs = term_rhs.value();
-            bin_expr->op = token.type;
+            bin_expr->op = token;
 
             expr_lhs = m_allocator.emplace<ExprNode>(bin_expr);
         }
@@ -107,13 +109,14 @@ public:
 
     std::optional<ScopeNode*> parse_scope()
     {
-        if (!non_strict_consume(TokenType::L_CR_BRACKET)) return std::nullopt;
+        if (!attempt_consume(TokenType::L_CR_BRACKET)) return std::nullopt;
 
         auto scope = m_allocator.emplace<ScopeNode>();
         while (auto stmt = parse_stmt())
             scope->stmts.push_back(stmt.value());
 
         strict_consume(TokenType::R_CR_BRACKET);
+
         return scope;
     }
 
@@ -142,8 +145,7 @@ public:
             peek_check_type(0, TokenType::END) && 
             peek_check_type(1, TokenType::L_PAR))
         {
-            consume();
-            consume();
+            consume_ahead(2);
 
             auto stmt_exit = m_allocator.emplace<StmtExitNode>();
 
@@ -185,26 +187,53 @@ public:
 
         if (peek_check_type_value(0, TokenType::KEYWORD, "local") &&
             peek_check_type(1, TokenType::IDENTIFIER) &&
-            peek_check_type(2, TokenType::EQUALS)) 
+            peek_check_type(2, TokenType::ASSIGN)) 
         {
             consume();
 
             auto declr = m_allocator.emplace<LocalDeclNode>();
             declr->ident = consume();
 
-            strict_consume(TokenType::EQUALS);
+            strict_consume(TokenType::ASSIGN);
+
             if (peek_check_type_value(0, TokenType::KEYWORD, "function")) {
                 consume();
 
                 strict_consume(TokenType::L_PAR);
-                // TODO: Parse function parameters
+
+                std::vector<ParamNode> params;
+
+                bool expecting_ident = true;
+                bool expecting_comma = false;
+
+                /*while (true)
+                {
+                    if (peek_check_type(0, TokenType::R_PAR))
+                        break;
+                    else if (peek_check_type(0, TokenType::END))
+                        parse_err("unexpected token 'END' while parsing function call arguments");
+
+                    if (peek_check_type(0, TokenType::IDENTIFIER))
+                        if (expecting_ident)
+                        {
+
+                        }
+                        else parse_err("expected identifier");
+                    else if (peek_check_type(0, TokenType::SEMICOLON))
+                        if (expecting_comma)
+                        {
+
+                        }
+                        else parse_err("expected comma or type identifier");
+                }*/
+                
                 strict_consume(TokenType::R_PAR);
 
                 if (const auto func_scope = parse_scope()) 
                 {
                     auto func_node = m_allocator.emplace<FuncNode>();
                     func_node->body = func_scope.value();
-                    func_node->params = {}; // Temporary
+                    func_node->params = {};
 
                     declr->expr = m_allocator.emplace<ExprNode>(func_node);
                 }
@@ -222,7 +251,7 @@ public:
             return m_allocator.emplace<StmtNode>(declr);
         }
 
-        if (peek_check_type(0, TokenType::IDENTIFIER) && peek_check_type(1, TokenType::DB_EQUALS)) 
+        if (peek_check_type(0, TokenType::IDENTIFIER) && peek_check_type(1, TokenType::EQU)) 
         {
             const auto assign = m_allocator.emplace<StmtAssignNode>();
             assign->ident = consume();
@@ -324,22 +353,31 @@ private:
         return m_tokens[m_index++];
     }
 
+    void consume_ahead(int ahead)
+    {
+        for (int i = 0; i < ahead; i++)
+            consume();
+    }
+
     Token strict_consume(TokenType expected_type) 
     {
-        if (peek() && peek()->type == expected_type) return consume();
+        if (peek() && peek()->type == expected_type) 
+            return consume();
         
         m_error_provider.log(Error::Severity::Fatal, __LINE__,
-            "Expected token of type " + TokenType_to_string(expected_type) +
-            " got token of type " + TokenType_to_string(peek().value().type) + "\n", peek().value().line);
+            "Expected token of type " + std::string(magic_enum::enum_name(expected_type)) +
+            " got token of type " + std::string(magic_enum::enum_name(peek().value().type)) + "\n", peek().value().line);
 
         unreachable();
 
         return {};
     }
 
-    std::optional<Token> non_strict_consume(TokenType expected_type) 
+    std::optional<Token> attempt_consume(TokenType expected_type) 
     {
-        if (peek() && peek()->type == expected_type) return consume();
+        if (peek() && peek()->type == expected_type) 
+            return consume();
+            
         return std::nullopt;
     }
 

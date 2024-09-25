@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <vector>
+#include <functional>
 
 #include "Literals.hpp"
 #include "../../lexer/token.hpp"
@@ -10,8 +11,8 @@ struct ExprNode;
 struct StmtNode;
 struct IfStmtNode;
 
-struct StmtExitNode { ExprNode* expr; };
-struct ScopeNode { std::vector<StmtNode*> stmts; };
+struct StmtExitNode { Token val = NULL_TOKEN; ExprNode* expr; };
+struct ScopeNode { Token val = NULL_TOKEN; std::vector<StmtNode*> stmts; };
 
 struct LocalDeclNode
 {
@@ -37,9 +38,10 @@ struct FuncCallNode
 
 struct FuncNode {
     Token ident;
-    std::vector<Token> params;
+    std::vector<ParamNode> params;
     ScopeNode* body;
     Token val = NULL_TOKEN;
+    std::function<void(std::vector<ExprNode*>)> c_hook;
 };
 
 struct StmtNode {
@@ -58,7 +60,7 @@ struct StmtNode {
 struct BinExprNode
 {
     Token val = NULL_TOKEN;
-    TokenType op;
+    Token op;
     ExprNode* lhs;
     ExprNode* rhs;
 };
@@ -78,8 +80,17 @@ struct ExprNode {
         FuncCallNode*,
         ParenExprNode*,
         BinExprNode*,
-        FuncNode*
+        FuncNode*,
+        NilNode*
     > node;
+    Token val = NULL_TOKEN;
+
+    size_t get_line()
+    {
+        return std::visit([](const auto& _expr) {
+            return _expr->val.line;
+        }, this->node);
+    }
 };
 
 /* IfStmts */
@@ -100,4 +111,5 @@ struct IfPredNode
 struct IfStmtNode
 {
     IfPredNode* if_pred;
+    Token val = NULL_TOKEN;
 };
