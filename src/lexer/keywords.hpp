@@ -1,7 +1,7 @@
 #pragma once
 
 const char* Keywords[] = {
-    "function",
+    "fn",
     "local",
     "global",
     "return",
@@ -9,4 +9,13 @@ const char* Keywords[] = {
     "elseif",
     "else",
     "do",
+    "in",
+    "class",
+    "module",
+    "export",
+    "using",
+    "as",
+    "and",
+    "not",
+    "or"
 };

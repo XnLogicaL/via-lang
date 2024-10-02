@@ -1,22 +1,2 @@
-print("Hello, world!")
+local integer: i32 = 100
 
-local! PrintMessage = function(message: BasicString) {
-    print("PrintMessage:")
-    print(message)
-}
-
-if (10 - 5 == 5) {
-    PrintMessage("Math is mathing!")
-} else {
-    PrintMessage("Math ain't mathing :skull:")
-}
-
-local! BinExpr = (10 - 6) * (18513 - (1951 * 0.6))
-
-print(BinExpr)
-
-local! Boolean = BinExpr == 0
-
-if (Boolean) {
-    PrintMessage("WTF???")
-}

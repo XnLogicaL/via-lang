@@ -5,28 +5,32 @@
 
 # via
 
-A fast, statically and dynamically typed programming language.
+A fast, dynamically typed, jit compiled scripting language.
 
-via has inherited many features from a variety of different languages including but not limited to: `Luau`, `GoLang`, `TypeScript`, `C`, etc.
+via inherits many features from a variety of different languages including but not limited to:
+`Luau`, `GoLang`, `TypeScript`, `C`, etc.
 
-(via has a compiled, interpreted and jit compiled versions in the works/available)
-
-#### Big thanks to [@orosmatthew](https://github.com/orosmatthew) for the parser structure
+via uses a JIT (Just-in-time) compiler to compile your code into bytecode and interprets it in the via virtual machine.
+via has a lot more runtime errors compared to compilation errors due to the interpreted and highly dynamic nature of the language.
 
 ## Disclaimers
 
 #### THIS IS A PASSION PROJECT!
-via is a passion project which means that it might have security flaws, missing features and a lot more issues.
-We heavily discourage you to use via in a production environment.
+via is a passion project which means that it might have security flaws, missing features and a lot more issues
+given the small amount of people who develop and maintain via.
+We don't encourage you to use via in a production environment. 
+If done so, we are not responsible for any damages caused by the unstable nature of the language.
 
 ## Features
 
-- Classes (no inheritance/polymorphism)
+- Classes
+- Lambdas (has the same type as functions)
 - Verbose debugging functions: `error` and `warn`
 - Simple curly syntax
 - Simple type semantics
 - Scoped declarations (possible via the  "local" keyword)
 - Global declarations (possible via the "global" keyword)
+- Constant variables (using the "!" "operator")
 - All default types are primitive (they will have corresponding wrappers in the std library, this allows for better low level control)
 - Modules & libraries
     - 1: Make a via module file with the `.viam` extension (files that don't have this ext cannot be imported)
@@ -34,16 +38,15 @@ We heavily discourage you to use via in a production environment.
     - 3: Export the module with `export <module_name>`
     - 4: Import your module with `using "path/to/module.viam"`
 
-
-
 **Planned**:
 - Package manager
 - Extensive std library
-- Interpreted version (W.I.P)
-- JIT (compiled & interpreted) version
-- Embedding support
+- Embedding API
 - Rust version
-- LLVM version
+
+## Contributing
+
+via isn't currently open for public contribution.
 
 ## Usage/Examples
 
@@ -65,7 +68,7 @@ local! var = 10 ## Cannot be reassigned
 #### Type annotations
 ```
 local myInt: int = 10
-local myInt: char = 10 ## This will error during compile time
+local myInt: char = 10 ## You can do this, but it's not good practice!
 ```
 
 #### If statements
@@ -75,6 +78,15 @@ if (true) {
 } else {
     print("This won't print")
 }
+
+## Alternatively;
+
+if (true):
+    print("This will print")
+else:
+    print("This won't print")
+
+## This syntax can only be used for 1-line statements
 ```
 
 #### Loops
@@ -96,8 +108,8 @@ while (true) {
 
 #### Functions
 ```
-local! myFunction = function() {
-    print("Hello from function!")
+fn! myFunction() {
+    print("Hello from myFunction!")
 }
 
 myFunction() ## "Hello from function!"
@@ -107,7 +119,7 @@ myFunction() ## "Hello from function!"
 ```
 do {
     ## Do stuff inside Scopes
-    local! funcInsideScope = function() {
+    fn! funcInsideScope() {
         print("Hello from scope")
     }
 
@@ -116,11 +128,13 @@ do {
 ```
 
 #### Tables
-*Tables are primtive data structures that can represent arrays, dictionaries, structs, etc.*
+*Tables are primtive data structures that can represent arrays, dictionaries, etc.*
 ```
 local myDict = {
     ["ten"] = 10,
-    ["nine"] = 9
+    ["nine"] = 9,
+    eight = 8,
+    seven = 7
 }
 
 local myArray = {
@@ -145,20 +159,21 @@ try {
 class MyClass {
     local! value: int
 
-    new(value: int) {
+    fn! new(value: int) {
         self:value = value
     }
 
-    destroy() {
+    fn! destroy() {
         print("Destroying class!")
     }
 
-    print_value() {
+    fn! print_value() {
+        ## `self` is automatically declared in every function inside a class
         print(self:value)
     }
 }
 
-local classInstance = new MyClass(0)
+local classInstance = new MyClass(0) ## Calls the constructor (class:new) automatically
 classInstance:print_value() ## "0"
 
 destroy classInstance ## "Destroying class!"
@@ -177,7 +192,7 @@ export MyModule ## End module scope
 ```
 
 ```
-using "path/to/module.viam" ## as MyModule <- optional
+using "path/to/module.viam" ## as MyModule <- optional, will automatically be assigned an identifier
 
 print(MyModule:var) ## "This will print!"
 ```
@@ -188,5 +203,5 @@ local pInt: ptr<int> = &10
 local Int = *pInt
 
 local pNull = 00000000 ## nullptr
-local Null = *pNull ## "error:  attempt to dereference nullptr"
+local Null = *pNull ## "error: attempt to dereference nullptr"
 ```

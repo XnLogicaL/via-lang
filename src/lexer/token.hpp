@@ -6,7 +6,7 @@
 
 #include "tokentype.hpp"
 
-#include "../include/magic_enum/magic_enum.hpp"
+#include "../../include/magic_enum/magic_enum.hpp"
 
 class Token
 {
@@ -30,6 +30,23 @@ public:
 
         return token_string;
     }
+
+    bool is_operator() const
+    {
+        return type == TokenType::PLUS 
+            && type == TokenType::MINUS 
+            && type == TokenType::ASTER
+            && type == TokenType::FSLASH
+            && type == TokenType::EQU;
+    }
+
+    bool is_literal() const
+    {
+        return type == TokenType::STRING_LIT
+            && type == TokenType::INT_LIT
+            && type == TokenType::BOOL_LIT
+            && type == TokenType::FLOAT_LIT;
+    }
 };
 
 inline std::optional<int> bin_prec(const TokenType type)
@@ -37,11 +54,11 @@ inline std::optional<int> bin_prec(const TokenType type)
     switch (type)
     {
     case TokenType::EQU:
-    case TokenType::SUB:
-    case TokenType::ADD:
+    case TokenType::MINUS:
+    case TokenType::PLUS:
         return 0;
-    case TokenType::DIV:
-    case TokenType::MUL:
+    case TokenType::FSLASH:
+    case TokenType::ASTER:
         return 1;
     default:
         return {};

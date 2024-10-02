@@ -14,70 +14,21 @@
 class Lexer
 {
 public:
-    Lexer(const std::string& src) : src(src), pos(-1), line(1), column(1) {}
-
-    Token get_next_token(Token last_tok)
-    {
-        if (pos >= src.length())
-            return create_token(TokenType::END, "<eof>");
-
-        char current = src.at(pos);
-
-        while (isspace(current))
-        {
-            consume_white_space();
-
-            if (pos >= src.length())
-                return create_token(TokenType::END, "<eof>");
-
-            current = src.at(pos);
-        }
-
-        if (isalpha(current)) return read_identifier(last_tok);
-        if (isdigit(current)) return read_number(last_tok);
-
-        switch (current)
-        {
-        case '+': return create_token(TokenType::ADD, "+");
-        case '-': return create_token(TokenType::SUB, "-");
-        case '=':
-            if (peek() == '=')
-            {
-                pos++;
-                return create_token(TokenType::EQU, "==");
-            }
-            return create_token(TokenType::ASSIGN, "=");
-        case '{': return create_token(TokenType::L_CR_BRACKET, "{");
-        case '}': return create_token(TokenType::R_CR_BRACKET, "}");
-        case '[': return create_token(TokenType::L_SQ_BRACKET, "[");
-        case ']': return create_token(TokenType::R_SQ_BRACKET, "]");
-        case '(': return create_token(TokenType::L_PAR, "(");
-        case ')': return create_token(TokenType::R_PAR, ")");
-        case ',': return create_token(TokenType::COMMA, ",");
-        case ':': return create_token(TokenType::COLON, ":");
-        case '*': return create_token(TokenType::MUL, "*");
-        case '/': return create_token(TokenType::DIV, "/");
-        case '!': return create_token(TokenType::EXCLAMATION, "!");
-        case ';': return create_token(TokenType::SEMICOLON, ";");
-        case '"': return read_string();
-        default:
-            return create_token(TokenType::ERROR, std::string(1, current));
-        }
-    }
+    Lexer(const std::string& src)
+        : src(src)
+        , pos(-1)
+        , line(1)
+        , column(1) {}
 
     std::vector<Token> tokenize()
     {
-        Token tok;
         std::vector<Token> tokens;
         Token last_token = create_token(TokenType::START, "<sof>");
+        Token tok = last_token;
 
         while (tok.type != TokenType::END)
         {
             tok = get_next_token(last_token);
-
-            if (tok.type == TokenType::ERROR)
-                break;
-
             tokens.push_back(tok);
             last_token = tok;
         }
@@ -85,7 +36,7 @@ public:
         return tokens;
     }
 
-    void print_tokens(const std::vector<Token> toks)
+    void print_tokens(const std::vector<Token>& toks) const
     {
         std::cout << std::endl;
         std::cout << "Token count: " << toks.size() << std::endl;
@@ -120,7 +71,9 @@ private:
                 column = 1;
             }
             else
+            {
                 column++;
+            }
             pos++;
         }
     }
@@ -134,24 +87,19 @@ private:
         while (pos < src.length() && (isalnum(src.at(pos)) || src.at(pos) == '_'))
         {
             tok_value += src.at(pos);
-            pos++;
-            column++;
+            consume();
         }
 
-        for (const char* keyword : Keywords)
+        if (is_keyword(tok_value))
         {
-            if (tok_value == keyword)
-            {
-                tok_type = TokenType::KEYWORD;
-                break;
-            }
+            tok_type = TokenType::KEYWORD;
         }
 
         if (last_tok.type == TokenType::COLON)
             tok_type = TokenType::TYPE;
 
         if (tok_value == "false" || tok_value == "true")
-            tok_type = TokenType::BOOL_ALPHA;
+            tok_type = TokenType::BOOL_LIT;
 
         return { tok_type, tok_value, line, start_column };
     }
@@ -169,12 +117,11 @@ private:
                 if (tok_type == TokenType::INT_LIT)
                     tok_type = TokenType::FLOAT_LIT;
                 else
-                    tok_type = TokenType::ERROR;
+                    tok_type = TokenType::ERROR; // Multiple dots detected
             }
 
             tok_value += src.at(pos);
             consume();
-            column++;
         }
 
         return { tok_type, tok_value, line, start_column };
@@ -182,26 +129,73 @@ private:
 
     Token read_string()
     {
-        consume();
+        consume();  // Skip opening "
 
         std::string str;
+        int start_column = column;
 
-        while (true)
+        while (pos < src.length() && src.at(pos) != '"')
         {
-            if (src.at(pos) == '"')
-            {
-                consume();
-                break;
-            }
-
-            str += src.at(pos);
-            consume();
+            str += consume();
         }
 
-        return { TokenType::STRING_LIT, str, line, column };
+        if (pos >= src.length() || src.at(pos) != '"')
+        {
+            return { TokenType::ERROR, str, line, start_column };
+        }
+
+        consume();  // Skip closing "
+        return { TokenType::STRING_LIT, str, line, start_column };
     }
 
-    char peek()
+    Token get_next_token(Token last_tok)
+    {
+        if (pos >= src.length())
+            return create_token(TokenType::END, "<eof>");
+
+        char current = src.at(pos);
+
+        while (isspace(current))
+        {
+            consume_white_space();
+            if (pos >= src.length())
+                return create_token(TokenType::END, "<eof>");
+            current = src.at(pos);
+        }
+
+        if (isalpha(current)) return read_identifier(last_tok);
+        if (isdigit(current)) return read_number(last_tok);
+
+        switch (current)
+        {
+        case '+': return create_token(TokenType::PLUS, "+");
+        case '-': return create_token(TokenType::MINUS, "-");
+        case '=':
+            if (peek() == '=')
+            {
+                consume();  // Move past second '='
+                return create_token(TokenType::EQU, "==");
+            }
+            return create_token(TokenType::ASSIGN, "=");
+        case '{': return create_token(TokenType::LCURLY, "{");
+        case '}': return create_token(TokenType::RCURLY, "}");
+        case '[': return create_token(TokenType::LSQU, "[");
+        case ']': return create_token(TokenType::RSQU, "]");
+        case '(': return create_token(TokenType::LPAR, "(");
+        case ')': return create_token(TokenType::RPAR, ")");
+        case ',': return create_token(TokenType::COMMA, ",");
+        case ':': return create_token(TokenType::COLON, ":");
+        case '*': return create_token(TokenType::ASTER, "*");
+        case '/': return create_token(TokenType::FSLASH, "/");
+        case '!': return create_token(TokenType::EXCLAM, "!");
+        case ';': return create_token(TokenType::SEMICOL, ";");
+        case '"': return read_string();
+        default:
+            return create_token(TokenType::ERROR, std::string(1, current));
+        }
+    }
+
+    char peek() const
     {
         if (pos + 1 >= src.length())
             return '\0';
@@ -210,6 +204,19 @@ private:
 
     char consume()
     {
-        return src.at(pos++);
+        char current = src.at(pos);
+        pos++;
+        column++;
+        return current;
+    }
+
+    bool is_keyword(const std::string& word) const
+    {
+        for (const auto& keyword : Keywords)
+        {
+            if (word == keyword)
+                return true;
+        }
+        return false;
     }
 };
