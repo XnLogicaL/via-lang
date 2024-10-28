@@ -1,0 +1,13 @@
+namespace MathUtils {
+    property PI: Number = 3.14159
+
+    func square(x: Number): Number {
+        return x * x
+    }
+
+    func circle_area(radius: Number): Number {
+        return PI * square(radius)
+    }
+}
+
+return MathUtils

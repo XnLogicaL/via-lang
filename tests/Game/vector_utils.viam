@@ -1,0 +1,23 @@
+local MathUtils = require("math_utils.viam")
+
+struct Vec2 {
+    property x: Number = 0.0
+    property y: Number = 0.0
+
+    func magnitude(): Number {
+        return MathUtils.square(self.x) + MathUtils.square(self.y)
+    }
+
+    func normalized(): Vector2D {
+        local mag = self.magnitude()
+
+        if mag == 0 {
+            return Vec2 { x = 0, y = 0 }
+        }
+        
+        return Vec2 { x = self.x / mag, y = self.y / mag }
+    }
+}
+
+// Return the Vector2D struct for direct use in other files
+return Vec2

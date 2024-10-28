@@ -1,0 +1,61 @@
+local MathUtils = require("math_utils.viam")
+local Vec2 = require("vector_utils.viam")
+
+type Player {
+    name: String;
+    position: Vec2;
+    health: Number;
+
+    move: (new_x: Number, new_y: Number) -> void;
+    heal: (amount: Number) -> void;
+}
+
+struct Player {
+    property name: String
+    property position: Vec2
+    property health: Number = 100.0
+
+    func move(new_x: Number, new_y: Number) {
+        self.position = Vec2 { x = new_x, y = new_y }
+    }
+
+    func heal(amount: Number) {
+        if self.health < 100 {
+            self.health += amount
+
+            if self.health > 100 {
+                self.health = 100
+            }
+        }
+    }
+}
+
+func main() {
+    local Players: {Player} = {}
+
+    local player = Player { name = "Alice", position = Vector2D { x = 0, y = 0 } }
+    player.move(5, 10)
+
+    std.table.insert(Players, player)
+
+    local steps = 0
+    
+    while steps < 5 {
+        steps++
+        print("Step", steps)
+
+        switch steps {
+            case 1 { print("Started moving...") }
+            case 3 { print("Halfway there!") }
+            case 5 { print("Arrived!") }
+            default { print("Still moving...") }
+        }
+    }
+
+    local radius = 3.0
+    local area = MathUtils.circle_area(radius)
+    
+    print("Area of circle with radius", radius, "is", area)
+}
+
+main()

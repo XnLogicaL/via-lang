@@ -80,6 +80,11 @@
         "iomanip": "cpp",
         "numeric": "cpp",
         "ratio": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "stacktrace": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     }
 }
