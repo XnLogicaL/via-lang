@@ -97,11 +97,13 @@ struct Token {
     std::string value;
     size_t line;
     size_t offset;
+    bool has_thrown_error = false;
 
     std::string to_string() const noexcept;
     
     bool is_literal() const noexcept;
     bool is_operator() const noexcept;
+    int bin_prec() const noexcept;
 };
 
 } // namespace name

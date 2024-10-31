@@ -7,33 +7,33 @@ using namespace via::Tokenization;
 using namespace via::Parsing;
 
 template <typename T>
-AST::ExprNode* cast_expr_ptr(T* v)
+AST::ExprNode* Parser::cast_expr_ptr(T* v)
 {
-    return new AST::ExprNode(*v);
+    return m_alloc.emplace<AST::ExprNode>(*v);
 }
 
 template <typename T>
-AST::StmtNode* cast_stmt_ptr(T* v)
+AST::StmtNode* Parser::cast_stmt_ptr(T* v)
 {
-    return new AST::StmtNode(*v);
+    return m_alloc.emplace<AST::StmtNode>(*v);
 }
 
 template <typename T>
-AST::TypeNode* cast_type_ptr(T* v)
+AST::TypeNode* Parser::cast_type_ptr(T* v)
 {
-    return new AST::TypeNode(*v);
+    return m_alloc.emplace<AST::TypeNode>(*v);
 }
 
-Token Parser::consume()
+inline Token Parser::consume()
 {
     return toks.at(pos++);
 }
 
-Token Parser::peek(size_t ahead)
+inline Token Parser::peek(size_t ahead)
 {
-    if (pos + ahead > toks.size() - 1)
+    if ((pos + ahead) > toks.size())
     {
-        throw std::out_of_range(std::format("peek({}): Position out of range", ahead));
+        throw std::out_of_range(std::format("peek({}): Position out of range (pos={})", ahead, pos));
     }
 
     return toks.at(pos + ahead);
@@ -229,177 +229,148 @@ AST::TypeNode* Parser::parse_type()
     return nullptr;
 }
 
+AST::ExprNode* Parser::parse_ident_expr(const Token& current)
+{
+    AST::ExprNode* expr;
+
+    auto next = peek();
+
+    if (next.type == TokenType::DOT)
+    {
+        consume(); // Consume "."
+
+        auto ident = consume();
+        auto next = peek();
+
+        if (next.type == TokenType::PAREN_OPEN)
+        {
+            auto index_call_expr_node = m_alloc.emplace<AST::IndexCallExprNode>();
+            index_call_expr_node->ident = current;
+            index_call_expr_node->index = ident;
+            index_call_expr_node->args = get_call_args();
+            index_call_expr_node->type_args = {};
+
+            expr = cast_expr_ptr(index_call_expr_node);
+        }
+        else
+        {
+            auto index_expr_node = m_alloc.emplace<AST::IndexExprNode>();
+            index_expr_node->ident = current;
+            index_expr_node->index = ident;
+
+            expr = cast_expr_ptr(index_expr_node);
+        }
+    }
+    else if (next.type == TokenType::BRACKET_OPEN)
+    {
+        consume(); // Consume "["
+
+        auto index = parse_expr();
+
+        consume(); // Consume "]"
+
+        auto next = peek();
+
+        if (next.type == TokenType::PAREN_OPEN)
+        {
+            auto index_call_expr_node = m_alloc.emplace<AST::BracketIndexCallExprNode>();
+            index_call_expr_node->ident = current;
+            index_call_expr_node->index = index;
+            index_call_expr_node->args = get_call_args();
+            index_call_expr_node->type_args = {};
+
+            expr = cast_expr_ptr(index_call_expr_node);
+        }
+        else
+        {
+            auto index_expr_node = m_alloc.emplace<AST::BracketIndexExprNode>();
+            index_expr_node->ident = current;
+            index_expr_node->index = index;
+
+            expr = cast_expr_ptr(index_expr_node);
+        }
+    }
+    else
+    {
+        auto lit_expr_node = m_alloc.emplace<AST::LitExprNode>();
+        lit_expr_node->val = current;
+
+        expr = cast_expr_ptr(lit_expr_node);
+    }
+
+    return expr;
+}
+
 AST::ExprNode* Parser::parse_expr()
 {
+    return parse_bin_expr(0);
+}
+
+AST::ExprNode* Parser::parse_bin_expr(int precedence)
+{
+    AST::ExprNode* lhs = parse_primary_expr();
+
+    while (true)
+    {
+        Token op = peek();
+        int op_prec = op.bin_prec();
+
+        if (op_prec < precedence)
+        {
+            break;
+        }
+
+        consume();
+
+        AST::ExprNode* rhs = parse_bin_expr(op_prec + 1);
+
+        auto bin_expr_node = m_alloc.emplace<AST::BinExprNode>();
+        bin_expr_node->op = op;
+        bin_expr_node->lhs = lhs;
+        bin_expr_node->rhs = rhs;
+
+        lhs = cast_expr_ptr(bin_expr_node);
+    }
+
+    return lhs;
+}
+
+AST::ExprNode* Parser::parse_primary_expr()
+{
     auto current = consume();
-    AST::ExprNode* expr;
 
     if (current.is_literal())
     {
         auto lit_expr = m_alloc.emplace<AST::LitExprNode>();
         lit_expr->val = current;
 
-        expr = cast_expr_ptr(lit_expr);
+        return cast_expr_ptr(lit_expr);
     }
 
     switch (current.type)
     {
-
     case TokenType::OP_SUB: {
         auto un_expr = m_alloc.emplace<AST::UnExprNode>();
         un_expr->expr = parse_expr();
 
-        expr = cast_expr_ptr(un_expr);
-
-        break;
+        return cast_expr_ptr(un_expr);
     }
 
     case TokenType::PAREN_OPEN: {
         auto group_expr_node = m_alloc.emplace<AST::GroupExprNode>();
         group_expr_node->expr = parse_expr();
 
-        expr = cast_expr_ptr(group_expr_node);
+        consume();
 
-        break;
+        return cast_expr_ptr(group_expr_node);
     }
 
-    case TokenType::IDENTIFIER: {
-        auto next = peek();
+    case TokenType::IDENTIFIER:
+        return parse_ident_expr(current);
 
-        if (next.type == TokenType::DOT)
-        {
-            consume(); // Consume .
-
-            auto ident = consume();
-            auto next = peek();
-
-            if (next.type == TokenType::PAREN_OPEN)
-            {
-                auto index_call_expr_node = m_alloc.emplace<AST::IndexCallExprNode>();
-                index_call_expr_node->ident = current;
-                index_call_expr_node->index = ident;
-                index_call_expr_node->args = get_call_args();
-                index_call_expr_node->type_args = {};
-
-                expr = cast_expr_ptr(index_call_expr_node);
-            }
-            else if (next.type == TokenType::OP_LT)
-            {
-                auto type_args = get_call_type_args();
-                auto index_call_expr_node = m_alloc.emplace<AST::IndexCallExprNode>();
-                index_call_expr_node->ident = current;
-                index_call_expr_node->index = ident;
-                index_call_expr_node->args = get_call_args();
-                index_call_expr_node->type_args = type_args;
-
-                expr = cast_expr_ptr(index_call_expr_node);
-            }
-            else
-            {
-                auto index_expr_node = m_alloc.emplace<AST::IndexExprNode>();
-                index_expr_node->ident = current;
-                index_expr_node->index = ident;
-
-                expr = cast_expr_ptr(index_expr_node);
-            }
-
-            break;
-        }
-        else if (next.type == TokenType::BRACKET_OPEN)
-        {
-            consume(); // Consume [
-
-            auto index = parse_expr();
-
-            consume(); // Consume ]
-
-            auto next = peek();
-
-            if (next.type == TokenType::PAREN_OPEN)
-            {
-                auto index_call_expr_node = m_alloc.emplace<AST::BracketIndexCallExprNode>();
-                index_call_expr_node->ident = current;
-                index_call_expr_node->index = index;
-                index_call_expr_node->args = get_call_args();
-                index_call_expr_node->type_args = {};
-
-                expr = cast_expr_ptr(index_call_expr_node);
-            }
-            else if (next.type == TokenType::OP_LT)
-            {
-                auto type_args = get_call_type_args();
-                auto index_call_expr_node = m_alloc.emplace<AST::BracketIndexCallExprNode>();
-                index_call_expr_node->ident = current;
-                index_call_expr_node->index = index;
-                index_call_expr_node->args = get_call_args();
-                index_call_expr_node->type_args = type_args;
-
-                expr = cast_expr_ptr(index_call_expr_node);
-            }
-            else
-            {
-                auto index_expr_node = m_alloc.emplace<AST::BracketIndexExprNode>();
-                index_expr_node->ident = current;
-                index_expr_node->index = index;
-
-                expr = cast_expr_ptr(index_expr_node);
-            }
-
-            break;
-        }
-        else if (next.type == TokenType::PAREN_OPEN)
-        {
-            auto call_expr_node = m_alloc.emplace<AST::CallExprNode>();
-            call_expr_node->args = get_call_args();
-            call_expr_node->ident = current;
-            call_expr_node->type_args = {};
-
-            expr = cast_expr_ptr(call_expr_node);
-
-            break;
-        }
-        else if (next.type == TokenType::OP_LT)
-        {
-            auto call_types = get_call_type_args();
-            auto call_expr_node = m_alloc.emplace<AST::CallExprNode>();
-            call_expr_node->args = get_call_args();
-            call_expr_node->ident = current;
-            call_expr_node->type_args = call_types;
-
-            expr = cast_expr_ptr(call_expr_node);
-
-            break;
-        }
-        else
-        {
-            auto lit_expr_node = m_alloc.emplace<AST::LitExprNode>();
-            lit_expr_node->val = current;
-
-            expr = cast_expr_ptr(lit_expr_node);
-
-            break;
-        }
+    default:
+        return nullptr;
     }
-
-    }
-
-    if (check_type(TokenType::KW_AS))
-    {
-        auto type_cast_expr_node = m_alloc.emplace<AST::TypeCastExprNode>();
-        type_cast_expr_node->expr = expr;
-        type_cast_expr_node->type = parse_type();
-
-        return cast_expr_ptr(type_cast_expr_node);
-    }
-
-    return expr;
-}
-
-AST::BinExprNode* Parser::parse_bin_expr()
-{
-    // Implement binary expression parsing logic here.
-    // For example, handling operators based on precedence.
-    return nullptr; // Replace with actual implementation
 }
 
 AST::TypedParamStmtNode* Parser::parse_param()
@@ -414,15 +385,14 @@ AST::TypedParamStmtNode* Parser::parse_param()
         param->type = parse_type(); // Consume the type
     }
 
-    return cast_stmt_ptr(param);
+    return param;
 }
 
 AST::LocalDeclStmtNode* Parser::parse_local_decl_stmt()
 {
-    auto decl_stmt = m_alloc.emplace<AST::LocalDeclStmtNode>();
-
     consume();
 
+    auto decl_stmt = m_alloc.emplace<AST::LocalDeclStmtNode>();
     decl_stmt->ident = consume(); // Parse identifier
 
     if (check_type(TokenType::COLON))
@@ -437,7 +407,7 @@ AST::LocalDeclStmtNode* Parser::parse_local_decl_stmt()
         decl_stmt->val = parse_expr(); // Parse expression
     }
 
-    return cast_stmt_ptr(decl_stmt);
+    return decl_stmt;
 }
 
 AST::GlobDeclStmtNode* Parser::parse_glob_decl_stmt()
@@ -456,7 +426,7 @@ AST::GlobDeclStmtNode* Parser::parse_glob_decl_stmt()
 
     decl_stmt->val = parse_expr();
 
-    return cast_stmt_ptr(decl_stmt);
+    return decl_stmt;
 }
 
 AST::CallStmtNode* Parser::parse_call_stmt()
@@ -471,7 +441,7 @@ AST::CallStmtNode* Parser::parse_call_stmt()
 
     call_stmt->args = get_call_args();
 
-    return cast_stmt_ptr(call_stmt);
+    return call_stmt;
 }
 
 AST::ReturnStmtNode* Parser::parse_ret_stmt()
@@ -483,7 +453,7 @@ AST::ReturnStmtNode* Parser::parse_ret_stmt()
     // TODO: Make multi-expr return statements
     return_stmt->vals.push_back(parse_expr());
 
-    return cast_stmt_ptr(return_stmt);
+    return return_stmt;
 }
 
 AST::IndexCallStmtNode* Parser::parse_index_call_stmt()
@@ -509,7 +479,7 @@ AST::IndexCallStmtNode* Parser::parse_index_call_stmt()
 
         bracket_index_call_stmt_node->args = get_call_args();
 
-        return cast_stmt_ptr(bracket_index_call_stmt_node);
+        return nullptr;
     }
     else if (next.type == TokenType::DOT)
     {
@@ -524,8 +494,11 @@ AST::IndexCallStmtNode* Parser::parse_index_call_stmt()
 
         index_call_stmt_node->args = get_call_args();
 
-        return cast_stmt_ptr(index_call_stmt_node);
+        return index_call_stmt_node;
     }
+
+    // Fallback
+    return nullptr;
 }
 
 AST::AssignStmtNode* Parser::parse_assign_stmt()
@@ -687,7 +660,7 @@ AST::FuncDeclStmtNode* Parser::parse_func_decl_stmt()
 
     consume(); // Consume (
 
-    while (check_type(TokenType::PAREN_CLOSE))
+    while (!check_type(TokenType::PAREN_CLOSE))
     {
         if (check_type(TokenType::COMMA))
         {
@@ -707,7 +680,7 @@ AST::FuncDeclStmtNode* Parser::parse_func_decl_stmt()
     }
 
     consume(); // Consume )
-    
+
     func_decl_stmt->body = parse_scope_stmt();
 
     return func_decl_stmt;
@@ -789,7 +762,7 @@ AST::ScopeStmtNode* Parser::parse_scope_stmt()
 
     auto scope_stmt_node = m_alloc.emplace<AST::ScopeStmtNode>();
 
-    while (!check_type(TokenType::BRACKET_CLOSE))
+    while (!check_type(TokenType::BRACE_CLOSE))
     {
         scope_stmt_node->stmts.push_back(parse_stmt());        
     }
@@ -845,6 +818,8 @@ AST::StmtNode* Parser::parse_stmt()
                 return cast_stmt_ptr(parse_index_call_stmt());
             }
         }
+
+        return nullptr;
     }
     case TokenType::KW_RETURN:
         return cast_stmt_ptr(parse_ret_stmt());
@@ -864,29 +839,25 @@ AST::StmtNode* Parser::parse_stmt()
         return cast_stmt_ptr(parse_namesp_decl_stmt());
     case TokenType::KW_STRUCT:
         return cast_stmt_ptr(parse_struct_decl_stmt());
-    case TokenType::BRACE_OPEN:
+    case TokenType::KW_DO:
+        consume();
         return cast_stmt_ptr(parse_scope_stmt());
+    default:
+        break;
     }
+
+    // Fallback
+    return nullptr;
 }
 
 AST::AST* Parser::parse_prog()
 {
     auto ast = m_alloc.emplace<AST::AST>();
-    
+
     while (!check_type(TokenType::EOF_))
     {
         ast->stmts.push_back(parse_stmt());
     }
-    
-    return ast;
-}
-
-AST::AST* via::Parsing::parse(std::vector<Token> toks)
-{
-    auto parser = new Parser(toks);
-    auto ast = parser->parse_prog();
-
-    delete parser;
 
     return ast;
 }

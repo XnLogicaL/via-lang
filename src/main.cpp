@@ -9,45 +9,76 @@
 
 */
 
-#include <fstream>
-#include <iostream>
-#include <string>
+#include "common.h"
+
+#include "Utils/reader.hpp"
+
 #include "Lexer/lexer.h"
 #include "Lexer/analysis/syntax.h"
-#include "Lexer/util/highlighter.hpp"
+#include "Lexer/analysis/semantic.h"
 
-using namespace via::Tokenization;
+#include "Parser/parser.h"
+#include "Parser/print.h"
+
+/*
+Define custom allocation sizes using these macros:
+
+#define __VIA_LEXER_ALLOC_SIZE
+#define __VIA_PARSER_ALLOC_SIZE
+
+Define before the main() function!
+*/
+
+#define ERROR(message) \
+    { \
+        std::cerr << message << std::endl; \
+        std::cerr << "Compilation aborted\n"; \
+        exit(1); \
+    } \
+
+#define RUN_CLEANUP() \
+    delete tokenizer; \
+    delete syntax_analyzer; \
+    delete parser; \
 
 int main(int argc, char* argv[])
 {
     if (argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <filename>\n";
-        return 1;
+        ERROR("Incorrect usage.\n  Correct usage: via <file> <flags>");
     }
 
-    // Open the file
-    std::ifstream file(argv[1]);
-    if (!file)
+    std::string code;
+
+    try {
+        code = reader::read_file(argv[1]);
+    } catch(const reader::BadFileException& e) {
+        ERROR(std::format("Failed to read file '{}'\n  No such file or directory", e.file_path));
+    }
+
+    auto tokenizer = new via::Tokenization::Tokenizer(code);
+    auto vsc = tokenizer->tokenize();
+    vsc.file_name = std::string(argv[1]);
+
+    for (const auto &tok : vsc.tokens)
     {
-        std::cerr << "Error opening file: " << argv[1] << "\n";
-        return 1;
+        std::cout << tok.to_string() << std::endl;
     }
 
-    // Read file contents
-    std::string code((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    auto syntax_analyzer = new via::Tokenization::SyntaxAnalysis::SyntaxAnalyzer(vsc);
+    auto syntax_fail = syntax_analyzer->analyze();
 
-    // Tokenize and analyze the code
-    auto vsc = tokenize_code(code);
-    vsc.file_name = "file.via";
-
-    auto fail = SyntaxAnalysis::analyze(vsc);
-
-    if (fail)
+    if (syntax_fail)
     {
-        std::cout << "Compilation aborted\n";
-        return 1;
+        ERROR("Syntax analysis failed");
     }
+
+    auto parser = new via::Parsing::Parser(vsc.tokens);
+    auto ast = parser->parse_prog();
+
+    via::Parsing::AST::print_ast(ast);
+
+    RUN_CLEANUP();
 
     return 0;
 }

@@ -1,59 +1,142 @@
-#include "common.h"
 #include "syntax.h"
+#include "highlighter.h" // Have to do this because ld is fucking retarded
 
-#include "../util/highlighter.hpp"
+#define REPORT_ERROR(message) \
+    { \
+        SourceLineHighlighter::token_error( \
+            container, pos, message, \
+            SourceLineHighlighter::Severity::ERROR); \
+        failed = true; \
+    } while (0)
+
+#define EXPECT_TOKEN(expected_type) \
+    do { \
+        if (peek().type == expected_type) { \
+            consume(); \
+        } else { \
+            REPORT_ERROR(std::format( \
+                "Unexpected token '{}', Expected type {}", \
+                peek().value, magic_enum::enum_name(expected_type))); \
+            return; \
+        } \
+    } while (0)
 
 using namespace via::Tokenization;
 using namespace SyntaxAnalysis;
+
+inline std::string get_value_type(Token tok)
+{
+    switch (tok.type)
+    {
+    case TokenType::LIT_INT:
+    case TokenType::LIT_FLOAT:
+        return "Number";
+    case TokenType::LIT_BOOL:
+        return "Bool";
+    case TokenType::LIT_CHAR:
+    case TokenType::LIT_STRING:
+        return "String";
+    default:
+        return "any";
+    }
+}
 
 Token SyntaxAnalyzer::peek(size_t ahead)
 {
     if (pos + ahead >= container.tokens.size())
     {
-        return Token(TokenType::EOF_);  // Return a special token if out of bounds
+        return Token(TokenType::EOF_, "", 0, 0);  // Return a special token if out of bounds
     }
-
     return container.tokens.at(pos + ahead);
 }
 
 Token SyntaxAnalyzer::consume(size_t ahead)
 {
     pos += ahead;
-
     if (pos >= container.tokens.size())
     {
-        return Token(TokenType::EOF_);  // Return a special token if out of bounds
+        return Token(TokenType::EOF_, "", 0, 0);  // Return a special token if out of bounds
     }
-
     return container.tokens.at(pos);
 }
 
 bool SyntaxAnalyzer::is_valid_expression()
 {
-    // Start parsing a term (this could be a literal, identifier, or grouped expression)
     if (!is_valid_term())
     {
         return false;
     }
 
-    // Check for operators to handle binary expressions
     while (peek().is_operator())
     {
         consume();  // Consume the operator
-
-        if (!is_valid_term())  // Parse the right-hand side of the expression
+        if (!is_valid_term())
         {
-            SourceLineHighlighter::token_error(
-                container,
-                pos,
-                "Invalid right-hand side of binary expression",
-                SourceLineHighlighter::Severity::ERROR
-            );
-
-            failed = true;
-
+            REPORT_ERROR("Invalid right-hand side of binary expression");
             return false;
         }
+    }
+    return true;
+}
+
+bool SyntaxAnalyzer::is_valid_type()
+{
+    Token next = peek();
+
+    if (next.type != TokenType::IDENTIFIER)
+    {
+        return false;
+    }
+
+    consume();
+
+    if (peek().type == TokenType::OP_LT)
+    {
+        consume();
+
+        bool expecting_type = true;
+        bool expecting_comma = false;
+
+        while (peek().type != TokenType::OP_GT)
+        {
+            if (peek().type == TokenType::EOF_)
+            {
+                return false;
+            }
+
+            if (expecting_type)
+            {
+                if (!is_valid_type())
+                {
+                    return false;
+                }
+
+                expecting_type = false;
+                expecting_comma = true;
+
+                continue;
+            }
+
+            if (expecting_comma)
+            {
+                if (peek().type != TokenType::COMMA)
+                {
+                    return false;
+                }
+
+                expecting_type = true;
+                expecting_comma = false;
+
+                consume();
+            }
+        }
+        
+        if (peek().type != TokenType::OP_GT)
+        {
+            return false;
+        }
+
+        consume();
     }
 
     return true;
@@ -62,7 +145,6 @@ bool SyntaxAnalyzer::is_valid_expression()
 bool SyntaxAnalyzer::is_valid_term()
 {
     Token next = peek();
-
     if (next.is_literal() || next.type == TokenType::IDENTIFIER)
     {
         consume();
@@ -73,13 +155,7 @@ bool SyntaxAnalyzer::is_valid_term()
         consume();  // Consume '('
         if (!is_valid_expression())  // Recursively parse the expression inside parentheses
         {
-            SourceLineHighlighter::token_error(
-                container,
-                pos,
-                "Invalid expression inside parentheses",
-                SourceLineHighlighter::Severity::ERROR
-            );
-            failed = true;
+            REPORT_ERROR("Invalid expression inside parentheses");
             return false;
         }
         if (peek().type == TokenType::PAREN_CLOSE)
@@ -87,125 +163,63 @@ bool SyntaxAnalyzer::is_valid_term()
             consume();  // Consume ')'
             return true;
         }
-        else
-        {
-            SourceLineHighlighter::token_error(
-                container,
-                pos,
-                "Expected closing parenthesis",
-                SourceLineHighlighter::Severity::ERROR
-            );
-            failed = true;
-            return false;
-        }
+        REPORT_ERROR("Expected closing parenthesis");
     }
-    return false;  // If none of the conditions matched, return false
-}
-
-void SyntaxAnalyzer::expect(std::vector<TokenType> expected_types)
-{
-    size_t off = 0;
-    for (const auto& tp : expected_types)
-    {
-        if (peek(off).type == tp)
-        {
-            off++;
-        }
-        else
-        {
-            SourceLineHighlighter::token_error(
-                container,
-                pos + off,
-                "Unexpected token type; Expected: " + std::string(magic_enum::enum_name(tp)),
-                SourceLineHighlighter::Severity::ERROR
-            );
-            failed = true;
-            break;
-        }
-    }
-}
-
-void SyntaxAnalyzer::check_invalid_token()
-{
-    auto current = peek();
-
-    if (current.type == TokenType::UNKNOWN)
-    {
-        SourceLineHighlighter::token_error(
-            container,
-            pos,
-            "Invalid token '" + current.value + "'",
-            SourceLineHighlighter::Severity::ERROR
-        );
-        failed = true;
-    }
+    return false;
 }
 
 void SyntaxAnalyzer::check_fun_call()
 {
-    // Assuming current token is IDENTIFIER and the next is PAREN_OPEN
     consume();  // Consume IDENTIFIER
     consume();  // Consume PAREN_OPEN
 
-    while (peek().type != TokenType::PAREN_CLOSE && !failed)
+    bool expecting_arg = true;
+    bool expecting_comma = false;
+
+    while (peek().type != TokenType::PAREN_CLOSE)
     {
-        check_argument();
-        if (peek().type == TokenType::COMMA)
+        if (expecting_arg)
         {
-            consume();  // Consume COMMA and check next argument
+            check_argument();
+
+            expecting_arg = false;
+            expecting_comma = true;
+
+            continue;
         }
-        else
+
+        if (expecting_comma)
         {
-            break;
+            EXPECT_TOKEN(TokenType::COMMA);
+
+            expecting_arg = true;
+            expecting_comma = false;
         }
     }
 
-    if (peek().type != TokenType::PAREN_CLOSE)
+    if (peek().type == TokenType::COMMA)
     {
-        SourceLineHighlighter::token_error(
-            container,
-            pos,
-            "Expected closing parenthesis for function call",
-            SourceLineHighlighter::Severity::ERROR
-        );
-        failed = true;
+        REPORT_ERROR("Function call arguments closed with ','");
     }
-    else
-    {
-        consume();  // Consume PAREN_CLOSE
-    }
+
+    EXPECT_TOKEN(TokenType::PAREN_CLOSE);  // Ensure we have a closing parenthesis
 }
 
 void SyntaxAnalyzer::check_argument()
 {
-    Token next = peek();
-
-    if (next.type == TokenType::IDENTIFIER || next.is_literal())
+    if (peek().is_literal() || peek().type == TokenType::IDENTIFIER)
     {
         consume();
     }
-    else
+    else if (!is_valid_expression())
     {
-        // Attempt to parse a full expression as the argument
-        if (!is_valid_expression())
-        {
-            SourceLineHighlighter::token_error(
-                container,
-                pos,
-                "Invalid argument in function call; expected identifier, literal, or expression",
-                SourceLineHighlighter::Severity::ERROR
-            );
-
-            failed = true;
-        }
+        REPORT_ERROR("Invalid argument in function call; expected identifier, literal, or expression");
     }
 }
 
 void SyntaxAnalyzer::check_ident_token()
 {
-    auto current = peek();
-
-    if (current.type == TokenType::IDENTIFIER)
+    if (peek().type == TokenType::IDENTIFIER)
     {
         if (peek(1).type == TokenType::PAREN_OPEN)
         {
@@ -215,103 +229,261 @@ void SyntaxAnalyzer::check_ident_token()
         {
             consume();  // Consume IDENTIFIER
             consume();  // Consume DOT
-
-            if (peek().type == TokenType::IDENTIFIER)
-            {
-                consume();  // Consume identifier after DOT
-            }
-            else
-            {
-                SourceLineHighlighter::token_error(
-                    container,
-                    pos,
-                    "Expected identifier after dot for indexing",
-                    SourceLineHighlighter::Severity::ERROR
-                );
-
-                failed = true;
-            }
+            EXPECT_TOKEN(TokenType::IDENTIFIER);  // Expect another IDENTIFIER after DOT
         }
         else
         {
-            SourceLineHighlighter::token_error(
-                container,
-                pos,
-                std::format("Incomplete statement '{}' (IDENTIFIER), expected function call, index or assignment", current.value),
-                SourceLineHighlighter::Severity::ERROR
-            );
-
-            failed = true;
+            REPORT_ERROR(std::format("Incomplete statement '{}', expected function call, index or assignment", peek().value));
         }
     }
 }
 
 void SyntaxAnalyzer::check_spec_char()
 {
-    auto current = peek();
-
+    Token current = peek();
     switch (current.type)
     {
     case TokenType::PAREN_OPEN:
     case TokenType::BRACE_OPEN:
         // Handle scope openings and grouped statements
         break;
-    case TokenType::PAREN_CLOSE:
-    case TokenType::BRACE_CLOSE:
-    case TokenType::BRACKET_OPEN:
-    case TokenType::BRACKET_CLOSE:
-    case TokenType::AMPERSAND:
-    case TokenType::AT:
-    case TokenType::BACKTICK:
-    case TokenType::COLON:
-    case TokenType::COMMA:
-    case TokenType::DOLLAR:
-    case TokenType::DOT:
-    case TokenType::DOUBLE_QUOTE:
-    case TokenType::PIPE:
-    case TokenType::SEMICOLON:
-    case TokenType::TILDE:
-    case TokenType::OP_ADD:
-    case TokenType::OP_DEC:
-    case TokenType::OP_DIV:
-    case TokenType::OP_EQ:
-    case TokenType::OP_EXP:
-    case TokenType::OP_GEQ:
-    case TokenType::OP_GT:
-    case TokenType::OP_INC:
-    case TokenType::OP_LEQ:
-    case TokenType::OP_LT:
-    case TokenType::OP_MOD:
-    case TokenType::OP_MUL:
-    case TokenType::OP_NEQ:
-    case TokenType::OP_SUB:
-        // These tokens should not be encountered on non-illformed programs
-        SourceLineHighlighter::token_error(
-            container,
-            pos,
-            std::format("Unexpected token '{}' expected statement or term, found special character", current.value),
-            SourceLineHighlighter::Severity::ERROR
-        );
-
-        failed = true;
+    default:
+        if (is_special_character(current.type))
+        {
+            REPORT_ERROR(std::format("Unexpected token '{}' expected statement or term", current.value));
+        }
         break;
     }
 }
 
-void SyntaxAnalyzer::check_literal()
+void SyntaxAnalyzer::check_invalid_token()
 {
-    auto current = peek();
-
-    if (current.is_literal())
+    if (peek().type == TokenType::UNKNOWN)
     {
-        SourceLineHighlighter::token_error(
-            container,
-            pos,
-            std::format("Unexpected token '{}' expected statement, found literal expression", current.value),
-            SourceLineHighlighter::Severity::ERROR
-        );
-
+        REPORT_ERROR(std::format("Invalid token '{}'", peek().value));
         failed = true;
+        return;
+    }
+}
+
+bool SyntaxAnalyzer::is_special_character(TokenType type)
+{
+    return type == TokenType::PAREN_CLOSE || type == TokenType::BRACE_CLOSE || type == TokenType::BRACKET_OPEN ||
+        type == TokenType::BRACKET_CLOSE || type == TokenType::AMPERSAND || type == TokenType::AT ||
+        type == TokenType::BACKTICK || type == TokenType::COLON || type == TokenType::COMMA ||
+        type == TokenType::DOLLAR || type == TokenType::DOT || type == TokenType::DOUBLE_QUOTE ||
+        type == TokenType::PIPE || type == TokenType::SEMICOLON || type == TokenType::TILDE ||
+        type == TokenType::OP_ADD || type == TokenType::OP_DEC || type == TokenType::OP_DIV ||
+        type == TokenType::OP_EQ || type == TokenType::OP_EXP || type == TokenType::OP_GEQ ||
+        type == TokenType::OP_GT || type == TokenType::OP_INC || type == TokenType::OP_LEQ ||
+        type == TokenType::OP_LT || type == TokenType::OP_MOD || type == TokenType::OP_MUL ||
+        type == TokenType::OP_NEQ || type == TokenType::OP_SUB;
+}
+
+void SyntaxAnalyzer::check_decl()
+{
+    if (peek().type == TokenType::KW_LOCAL || peek().type == TokenType::KW_GLOBAL || peek().type == TokenType::KW_PROPERTY)
+    {
+        bool is_global = peek().type == TokenType::KW_GLOBAL;
+        bool is_prop = peek().type == TokenType::KW_PROPERTY;
+
+        consume();
+
+        if (peek().type == TokenType::KW_CONST)
+        {
+            if (is_global)
+            {
+                SourceLineHighlighter::token_error(
+                    container,
+                    pos,
+                    "Redundant usage of 'const'; global declarations are implicitly constant",
+                    SourceLineHighlighter::Severity::WARNING
+                );
+            }
+            consume();
+        }
+
+        EXPECT_TOKEN(TokenType::IDENTIFIER);  // Expect an identifier
+
+        if (peek().type == TokenType::COLON)
+        {
+            consume();
+
+            if (!is_valid_type())
+            {
+                REPORT_ERROR("Expected valid type for declaration");
+            }
+        }
+        else
+        {
+            if (is_prop)
+            {
+                REPORT_ERROR("Property declarations require explicit type declaration");
+                return;
+            }
+
+            SourceLineHighlighter::token_error(
+                container,
+                pos - 1,
+                std::format("Type not explicitly specified for variable '{}'; automatically deduced type '{}'",
+                    container.tokens.at(pos - 1).value, get_value_type(peek(1))),
+                SourceLineHighlighter::Severity::INFO
+            );
+        }
+
+        EXPECT_TOKEN(TokenType::OP_ASGN);     // Expect '='
+
+        if (!is_valid_expression())
+        {
+            REPORT_ERROR("Expected valid expression (rvalue) for declaration");
+            return;
+        }
+    }
+}
+
+void SyntaxAnalyzer::check_ret()
+{
+    if (peek().type == TokenType::KW_RETURN)
+    {
+        consume();
+        if (peek().type == TokenType::BRACE_CLOSE)
+        {
+            return;
+        }
+        if (!is_valid_expression())
+        {
+            REPORT_ERROR("Expected valid expression for return statement");
+        }
+    }
+}
+
+void SyntaxAnalyzer::check_scope()
+{
+    EXPECT_TOKEN(TokenType::BRACE_OPEN);
+
+    while (peek().type != TokenType::BRACE_CLOSE)
+    {
+        auto prev_pos = pos;
+
+        if (peek().type == TokenType::EOF_)
+        {
+            break;
+        }
+
+        match();
+
+        if (prev_pos == pos)
+        {
+            consume(); // Ensure progress
+        }
+    }
+    
+    EXPECT_TOKEN(TokenType::BRACE_CLOSE);
+}
+
+void SyntaxAnalyzer::check_func()
+{
+    if (peek().type == TokenType::KW_FUNC)
+    {
+        consume();
+
+        if (peek().type == TokenType::KW_CONST)
+        {
+            consume();
+        }
+
+        EXPECT_TOKEN(TokenType::IDENTIFIER);
+        EXPECT_TOKEN(TokenType::PAREN_OPEN);
+
+        bool expecting_arg = true;
+        bool expecting_comma = false;
+
+        if (peek().type != TokenType::PAREN_CLOSE)
+        {
+            while (peek().type != TokenType::PAREN_CLOSE)
+            {
+                // TODO: add EOF check here
+
+                if (expecting_arg)
+                {
+                    EXPECT_TOKEN(TokenType::IDENTIFIER);
+
+                    if (peek().type == TokenType::COLON)
+                    {
+                        consume();
+
+                        if (!is_valid_type())
+                        {
+                            REPORT_ERROR("Expected valid type for explicit type declaration for function parameter");
+                            break;
+                        }
+                    }
+
+                    expecting_arg = false;
+                    expecting_comma = true;
+
+                    continue;
+                }
+
+                if (expecting_comma)
+                {
+                    EXPECT_TOKEN(TokenType::COMMA);
+
+                    expecting_arg = true;
+                    expecting_comma = false;
+                }
+            }
+
+            if (container.tokens.at(pos - 1).type == TokenType::COMMA)
+            {
+                REPORT_ERROR("Function arguments closed with ','");
+                return;
+            }
+        }
+
+        EXPECT_TOKEN(TokenType::PAREN_CLOSE);
+
+        check_scope();
+    }
+}
+
+void SyntaxAnalyzer::check_structure()
+{
+    if (peek().type == TokenType::KW_STRUCT || peek().type == TokenType::KW_NAMESPACE)
+    {
+        consume();
+
+        EXPECT_TOKEN(TokenType::IDENTIFIER);
+        EXPECT_TOKEN(TokenType::BRACE_OPEN);
+
+        while (peek().type != TokenType::BRACE_CLOSE)
+        {
+            auto prev_pos = pos;
+
+            if (peek().type == TokenType::EOF_)
+            {
+                break;
+            }
+
+            if (peek().type == TokenType::KW_FUNC || peek().type == TokenType::KW_PROPERTY)
+            {
+                check_func();
+                check_decl();
+
+                if (prev_pos == pos)
+                {
+                    // If this runs, it means that something went wrong above
+                    // So, there's no point of throwing another error
+                    consume(); // Ensure progress
+                }
+
+                continue;
+            }
+
+            REPORT_ERROR("Expected function or property declaration inside declaration-only structure");
+        }
+
+        EXPECT_TOKEN(TokenType::BRACE_CLOSE);
     }
 }
 
@@ -319,16 +491,18 @@ void SyntaxAnalyzer::match()
 {
     check_invalid_token();
     check_spec_char();
-    check_literal();
     check_ident_token();
+    check_decl();
+    check_ret();
+    check_func();
+    check_structure();
 }
 
 bool SyntaxAnalyzer::analyze()
 {
     while (pos < container.tokens.size())
     {
-        size_t prev_pos = pos;  // Track position to detect non-consuming `match` calls
-
+        auto prev_pos = pos;  // Track position to detect non-consuming `match` calls
         match();
 
         // Ensure progress is made
@@ -339,14 +513,4 @@ bool SyntaxAnalyzer::analyze()
     }
 
     return failed;
-}
-
-bool SyntaxAnalysis::analyze(viaSourceContainer& container)
-{
-    auto analyzer = new SyntaxAnalyzer(container);
-    auto fail = analyzer->analyze();
-
-    delete analyzer;
-
-    return fail;
 }

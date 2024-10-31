@@ -1,6 +1,9 @@
 #include "common.h"
 #include "lexer.h"
 
+#define TOKEN(type, val, line, off) \
+    *m_alloc.emplace<Token>(type, val, line, off) \
+
 using namespace via::Tokenization;
 
 Token Tokenizer::read_number() noexcept
@@ -32,7 +35,7 @@ Token Tokenizer::read_number() noexcept
         }
     }
 
-    return Token(type, value, line, start_offset);  // Use start_offset here
+    return TOKEN(type, value, line, start_offset);  // Use start_offset here
 }
 
 Token Tokenizer::read_ident() noexcept
@@ -84,7 +87,7 @@ Token Tokenizer::read_ident() noexcept
         type = it->second;
     }
 
-    return Token(type, identifier, line, start_offset);  // Use start_offset here
+    return TOKEN(type, identifier, line, start_offset);  // Use start_offset here
 }
 
 Token Tokenizer::read_string() noexcept
@@ -124,7 +127,7 @@ Token Tokenizer::read_string() noexcept
     pos++; // Skip closing quote
     offset++;
 
-    return Token(TokenType::LIT_STRING, value, line, start_offset);  // Use start_offset here
+    return TOKEN(TokenType::LIT_STRING, value, line, start_offset);  // Use start_offset here
 }
 
 Token Tokenizer::get_token() noexcept
@@ -140,7 +143,7 @@ Token Tokenizer::get_token() noexcept
         {
             offset++;
         }
-        pos++;
+        pos++;  // Ensure this increments regardless of newline
     }
 
     if (pos >= source.size())
@@ -170,42 +173,46 @@ Token Tokenizer::get_token() noexcept
 
     switch (ch)
     {
-    case '+': pos++; offset++; return Token(TokenType::OP_ADD, "+", line, start_offset);
-    case '-': pos++; offset++; return Token(TokenType::OP_SUB, "-", line, start_offset);
-    case '*': pos++; offset++; return Token(TokenType::OP_MUL, "*", line, start_offset);
-    case '/': pos++; offset++; return Token(TokenType::OP_DIV, "/", line, start_offset);
-    case '%': pos++; offset++; return Token(TokenType::OP_MOD, "%", line, start_offset);
-    case '^': pos++; offset++; return Token(TokenType::OP_EXP, "^", line, start_offset);
+    case '+': pos++; offset++; return TOKEN(TokenType::OP_ADD, "+", line, start_offset);
+    case '-': pos++; offset++; return TOKEN(TokenType::OP_SUB, "-", line, start_offset);
+    case '*': pos++; offset++; return TOKEN(TokenType::OP_MUL, "*", line, start_offset);
+    case '/': pos++; offset++; return TOKEN(TokenType::OP_DIV, "/", line, start_offset);
+    case '%': pos++; offset++; return TOKEN(TokenType::OP_MOD, "%", line, start_offset);
+    case '^': pos++; offset++; return TOKEN(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
         if (pos + 1 < source.size() && source.at(pos + 1) == '=')
         {
             pos += 2;
             offset += 2;
-            return Token(TokenType::OP_EQ, "==", line, start_offset);
+            return TOKEN(TokenType::OP_EQ, "==", line, start_offset);
         }
 
-        return Token(TokenType::OP_ASGN, "=", line, start_offset);
+        pos++;
+        offset++;
+
+        return TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
         if (pos + 1 < source.size() && source.at(pos + 1) == '=')
         {
             pos += 2;
             offset += 2;
-            return Token(TokenType::OP_NEQ, "!=", line, start_offset);
+            return TOKEN(TokenType::OP_NEQ, "!=", line, start_offset);
         }
         break;
-    case '<': pos++; offset++; return Token(TokenType::OP_LT, "<", line, start_offset);
-    case '>': pos++; offset++; return Token(TokenType::OP_GT, ">", line, start_offset);
-    case '&': pos++; offset++; return Token(TokenType::AMPERSAND, "&", line, start_offset);
-    case '|': pos++; offset++; return Token(TokenType::PIPE, "|", line, start_offset);
-    case ';': pos++; offset++; return Token(TokenType::SEMICOLON, ";", line, start_offset);
-    case ',': pos++; offset++; return Token(TokenType::COMMA, ",", line, start_offset);
-    case '(': pos++; offset++; return Token(TokenType::PAREN_OPEN, "(", line, start_offset);
-    case ')': pos++; offset++; return Token(TokenType::PAREN_CLOSE, ")", line, start_offset);
-    case '{': pos++; offset++; return Token(TokenType::BRACE_OPEN, "{", line, start_offset);
-    case '}': pos++; offset++; return Token(TokenType::BRACE_CLOSE, "}", line, start_offset);
-    case '[': pos++; offset++; return Token(TokenType::BRACKET_OPEN, "[", line, start_offset);
-    case ']': pos++; offset++; return Token(TokenType::BRACKET_CLOSE, "]", line, start_offset);
-    case '.': pos++; offset++; return Token(TokenType::DOT, ".", line, start_offset);
+    case '<': pos++; offset++; return TOKEN(TokenType::OP_LT, "<", line, start_offset);
+    case '>': pos++; offset++; return TOKEN(TokenType::OP_GT, ">", line, start_offset);
+    case '&': pos++; offset++; return TOKEN(TokenType::AMPERSAND, "&", line, start_offset);
+    case '|': pos++; offset++; return TOKEN(TokenType::PIPE, "|", line, start_offset);
+    case ';': pos++; offset++; return TOKEN(TokenType::SEMICOLON, ";", line, start_offset);
+    case ',': pos++; offset++; return TOKEN(TokenType::COMMA, ",", line, start_offset);
+    case '(': pos++; offset++; return TOKEN(TokenType::PAREN_OPEN, "(", line, start_offset);
+    case ')': pos++; offset++; return TOKEN(TokenType::PAREN_CLOSE, ")", line, start_offset);
+    case '{': pos++; offset++; return TOKEN(TokenType::BRACE_OPEN, "{", line, start_offset);
+    case '}': pos++; offset++; return TOKEN(TokenType::BRACE_CLOSE, "}", line, start_offset);
+    case '[': pos++; offset++; return TOKEN(TokenType::BRACKET_OPEN, "[", line, start_offset);
+    case ']': pos++; offset++; return TOKEN(TokenType::BRACKET_CLOSE, "]", line, start_offset);
+    case '.': pos++; offset++; return TOKEN(TokenType::DOT, ".", line, start_offset);
+    case ':': pos++; offset++; return TOKEN(TokenType::COLON, ":", line, start_offset);
     default: pos++; offset++; return { TokenType::UNKNOWN, std::string(1, ch), line, start_offset };
     }
 
@@ -229,11 +236,5 @@ viaSourceContainer Tokenizer::tokenize() noexcept
         }
     }
 
-    return { tokens, source };
-}
-
-viaSourceContainer via::Tokenization::tokenize_code(std::string& source)
-{
-    Tokenizer tokenizer(source);
-    return tokenizer.tokenize();
+    return { tokens, source, "" };
 }

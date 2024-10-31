@@ -4,6 +4,11 @@
 #include "common.h"
 #include "token.h"
 #include "container.h"
+#include "arena.hpp"
+
+#ifndef __VIA_LEXER_ALLOC_SIZE
+    #define __VIA_LEXER_ALLOC_SIZE 4 * 1024
+#endif
 
 namespace via
 {
@@ -17,6 +22,7 @@ class Tokenizer
     size_t pos;
     size_t line;
     size_t offset;
+    ArenaAllocator m_alloc;
 
 public:
 
@@ -24,7 +30,8 @@ public:
         : source(source)
         , pos(0)
         , line(1)
-        , offset(0) {}
+        , offset(0)
+        , m_alloc(__VIA_LEXER_ALLOC_SIZE) {}
 
     Token read_number() noexcept;
     Token read_ident() noexcept;
@@ -33,8 +40,6 @@ public:
     Token get_token() noexcept;
     viaSourceContainer tokenize() noexcept;
 };
-
-viaSourceContainer tokenize_code(std::string& source);
 
 } // namespace Tokenization
     

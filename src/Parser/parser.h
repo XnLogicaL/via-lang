@@ -2,9 +2,15 @@
 #define VIA_PARSER_H
 
 #include "common.h"
-#include "token.h"
 #include "ast.h"
 #include "arena.hpp"
+
+#include "../Lexer/token.h"
+
+#ifndef __VIA_PARSER_ALLOC_SIZE
+    // 8MiB
+    #define __VIA_PARSER_ALLOC_SIZE 8 * 1024 * 1024
+#endif
 
 namespace via
 {
@@ -21,8 +27,12 @@ class Parser
     std::vector<Token> toks;
     size_t pos;
 
-    Token consume();
-    Token peek(size_t ahead = 0);
+    template <typename T> AST::TypeNode* cast_type_ptr(T* v);
+    template <typename T> AST::ExprNode* cast_expr_ptr(T* v);
+    template <typename T> AST::StmtNode* cast_stmt_ptr(T* v);
+
+    inline Token consume();
+    inline Token peek(size_t ahead = 0);
 
     bool check_value(std::string expected = "", size_t ahead = 0);
     bool check_type(TokenType expected = TokenType::UNKNOWN, size_t ahead = 0);
@@ -33,7 +43,9 @@ class Parser
     AST::TypeNode* parse_type();
 
     AST::ExprNode* parse_expr();
-    AST::BinExprNode* parse_bin_expr();
+    AST::ExprNode* parse_bin_expr(int precedence = 0);
+    AST::ExprNode* parse_ident_expr(const Token& current);
+    AST::ExprNode* parse_primary_expr();
 
     AST::TypedParamStmtNode* parse_param();
     AST::LocalDeclStmtNode* parse_local_decl_stmt();
@@ -58,13 +70,12 @@ class Parser
 public:
 
     Parser(std::vector<Token> toks)
-        : toks(toks)
-        , m_alloc(ArenaAllocator(8192)) {}
+        : m_alloc(ArenaAllocator(__VIA_PARSER_ALLOC_SIZE))
+        , toks(toks)
+        , pos(0) {}
 
     AST::AST* parse_prog();
 };
-
-AST::AST* parse(std::vector<Token> toks);
 
 } // namespace Parsing
     

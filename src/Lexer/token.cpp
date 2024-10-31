@@ -45,3 +45,30 @@ bool Token::is_operator() const noexcept
         type == TokenType::OP_SUB ||
         type == TokenType::OP_ASGN;
 }
+
+int Token::bin_prec() const noexcept
+{
+    switch (type)
+    {
+    case TokenType::OP_EXP:
+        return 4;
+    case TokenType::OP_MUL:
+    case TokenType::OP_DIV:
+    case TokenType::OP_MOD:
+        return 3;
+    case TokenType::OP_ADD:
+    case TokenType::OP_SUB:
+        return 2;
+    case TokenType::OP_EQ:
+    case TokenType::OP_NEQ:
+    case TokenType::OP_LT:
+    case TokenType::OP_GT:
+    case TokenType::OP_LEQ:
+    case TokenType::OP_GEQ:
+        return 1;
+    case TokenType::OP_ASGN:
+        return 0;
+    default:
+        return -1;
+    }
+}
