@@ -10,7 +10,7 @@ Token Tokenizer::read_number() noexcept
 {
     TokenType type = TokenType::LIT_INT;
     std::string value;
-    int start_offset = offset;  // Record starting offset of the number
+    size_t start_offset = offset;  // Record starting offset of the number
 
     while (pos < source.size() && isdigit(source.at(pos)))
     {
@@ -41,7 +41,7 @@ Token Tokenizer::read_number() noexcept
 Token Tokenizer::read_ident() noexcept
 {
     std::string identifier;
-    int start_offset = offset;  // Record starting offset of the identifier
+    size_t start_offset = offset;  // Record starting offset of the identifier
 
     while (pos < source.size() && (isalnum(source.at(pos)) || source.at(pos) == '_'))
     {
@@ -87,13 +87,17 @@ Token Tokenizer::read_ident() noexcept
         type = it->second;
     }
 
+    if (identifier == "true" || identifier == "false") {
+        type = TokenType::LIT_BOOL;
+    }
+
     return TOKEN(type, identifier, line, start_offset);  // Use start_offset here
 }
 
 Token Tokenizer::read_string() noexcept
 {
     std::string value;
-    int start_offset = offset;  // Record starting offset of the string
+    size_t start_offset = offset;  // Record starting offset of the string
     pos++; // Skip opening quote
     offset++;
 
@@ -213,6 +217,7 @@ Token Tokenizer::get_token() noexcept
     case ']': pos++; offset++; return TOKEN(TokenType::BRACKET_CLOSE, "]", line, start_offset);
     case '.': pos++; offset++; return TOKEN(TokenType::DOT, ".", line, start_offset);
     case ':': pos++; offset++; return TOKEN(TokenType::COLON, ":", line, start_offset);
+    case '@': pos++; offset++; return TOKEN(TokenType::AT, "@", line, start_offset);
     default: pos++; offset++; return { TokenType::UNKNOWN, std::string(1, ch), line, start_offset };
     }
 

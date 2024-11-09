@@ -2,20 +2,17 @@
 #define VIA_AST_H
 
 #include "common.h"
-#include "../Lexer/token.h"
+#include "token.h"
+#include <optional>
 #include <variant>
 #include <vector>
-#include <optional>
 
 namespace via
 {
-
 namespace Parsing
 {
-
 namespace AST
 {
-
 using namespace Tokenization;
 
 // Forward declarations
@@ -33,13 +30,15 @@ struct UnionTypeNode;
 struct VariantTypeNode;
 struct FunctorTypeNode;
 struct TableTypeNode;
+struct OptionTypeNode;
 
 typedef std::variant<
     LiteralTypeNode,
     UnionTypeNode,
     VariantTypeNode,
     FunctorTypeNode,
-    TableTypeNode
+    TableTypeNode,
+    OptionTypeNode
 > TypeNode;
 
 struct LiteralTypeNode
@@ -56,7 +55,7 @@ struct UnionTypeNode
 
 struct VariantTypeNode
 {
-    std::vector<TypeNode*> types;  
+    std::vector<TypeNode*> types;
 };
 
 struct FunctorTypeNode
@@ -66,6 +65,11 @@ struct FunctorTypeNode
 };
 
 struct TableTypeNode
+{
+    TypeNode* type;
+};
+
+struct OptionTypeNode
 {
     TypeNode* type;
 };
@@ -84,10 +88,7 @@ struct IndexCallExprNode;
 struct TypeCastExprNode;
 struct BracketIndexExprNode;
 struct BracketIndexCallExprNode;
-struct ExprIndexExprNode;
-struct ExprIndexCallExprNode;
-struct BracketExprIndexExprNode;
-struct BracketExprIndexCallExprNode;
+struct IdentExprNode;
 
 typedef std::variant<
     LitExprNode,
@@ -101,15 +102,17 @@ typedef std::variant<
     TypeCastExprNode,
     BracketIndexExprNode,
     BracketIndexCallExprNode,
-    ExprIndexExprNode,
-    ExprIndexCallExprNode,
-    BracketExprIndexExprNode,
-    BracketExprIndexCallExprNode
+    IdentExprNode
 > ExprNode;
 
 struct LitExprNode
 {
     Token val;
+};
+
+struct IdentExprNode
+{
+    Token val;  
 };
 
 struct UnExprNode
@@ -137,20 +140,20 @@ struct LambdaExprNode
 
 struct CallExprNode
 {
-    Token ident;
+    ExprNode* ident;
     std::vector<ExprNode*> args;
     std::vector<TypeNode*> type_args;
 };
 
 struct IndexExprNode
 {
-    Token ident;
+    ExprNode* ident;
     Token index;
 };
 
 struct IndexCallExprNode
 {
-    Token ident;
+    ExprNode* ident;
     Token index;
     std::vector<ExprNode*> args;
     std::vector<TypeNode*> type_args;
@@ -164,41 +167,13 @@ struct TypeCastExprNode
 
 struct BracketIndexExprNode
 {
-    Token ident;
+    ExprNode* ident;
     ExprNode* index;
 };
 
 struct BracketIndexCallExprNode
 {
-    Token ident;
-    ExprNode* index;
-    std::vector<ExprNode*> args;
-    std::vector<TypeNode*> type_args;
-};
-
-struct ExprIndexExprNode
-{
-    ExprNode* expr;
-    Token index;  
-};
-
-struct ExprIndexCallExprNode
-{
-    ExprNode* expr;
-    Token index;
-    std::vector<ExprNode*> args;
-    std::vector<TypeNode*> type_args;
-};
-
-struct BracketExprIndexExprNode
-{
-    ExprNode* expr;
-    ExprNode* index;
-};
-
-struct BracketExprIndexCallExprNode
-{
-    ExprNode* expr;
+    ExprNode* ident;
     ExprNode* index;
     std::vector<ExprNode*> args;
     std::vector<TypeNode*> type_args;
@@ -234,7 +209,7 @@ struct ExprIndexAssignStmtNode;
 struct BracketExprIndexCallStmtNode;
 struct BracketExprIndexAssignStmtNode;
 
-typedef std::variant <
+typedef std::variant<
     LocalDeclStmtNode,
     GlobDeclStmtNode,
     PropertyDeclStmtNode,
@@ -257,10 +232,8 @@ typedef std::variant <
     ReturnStmtNode,
     BracketIndexAssignStmtNode,
     BracketIndexCallStmtNode,
-    ExprIndexCallStmtNode,
-    ExprIndexAssignStmtNode,
-    BracketExprIndexCallStmtNode,
-    BracketExprIndexAssignStmtNode
+    IndexCallStmtNode,
+    IndexAssignStmtNode,
 > StmtNode;
 
 struct TypedParamStmtNode
@@ -298,7 +271,7 @@ struct ReturnStmtNode
 
 struct IndexCallStmtNode
 {
-    Token ident;
+    ExprNode* ident;
     Token index;
     std::vector<ExprNode*> args;
     std::vector<TypeNode*> type_args;
@@ -312,54 +285,24 @@ struct AssignStmtNode
 
 struct IndexAssignStmtNode
 {
-    Token ident;
+    ExprNode* ident;
     Token index;
     ExprNode* val;
 };
 
 struct BracketIndexAssignStmtNode
 {
-    Token ident;
+    ExprNode* ident;
     ExprNode* index;
     ExprNode* val;
 };
 
 struct BracketIndexCallStmtNode
 {
-    Token ident;
+    ExprNode* ident;
     ExprNode* index;
     std::vector<ExprNode*> args;
     std::vector<TypeNode*> type_args;
-};
-
-struct ExprIndexCallStmtNode
-{
-    ExprNode* expr;
-    Token index;
-    std::vector<ExprNode*> args;
-    std::vector<TypeNode*> type_args;
-};
-
-struct ExprIndexAssignStmtNode
-{
-    ExprNode* expr;
-    Token index;
-    ExprNode* val;
-};
-
-struct BracketExprIndexCallStmtNode
-{
-    ExprNode* expr;
-    ExprNode* index;
-    std::vector<ExprNode*> args;
-    std::vector<TypeNode*> type_args;
-};
-
-struct BracketExprIndexAssignStmtNode
-{
-    ExprNode* expr;
-    ExprNode* index;
-    ExprNode* val;
 };
 
 struct PropertyDeclStmtNode
@@ -367,6 +310,7 @@ struct PropertyDeclStmtNode
     Token ident;
     TypeNode* type;
     std::optional<ExprNode*> val;
+    bool is_const;
 };
 
 struct WhileStmtNode
@@ -418,27 +362,14 @@ struct DefaultStmtNode
 struct FuncDeclStmtNode
 {
     Token ident;
-    std::vector<TypedParamStmtNode> params;
+    std::vector<TypedParamStmtNode*> params;
     std::vector<Token> type_params;
     ScopeStmtNode* body;
-    bool is_lambda;
+    bool is_const;
 };
 
-struct MethodDeclStmtNode : public FuncDeclStmtNode
+struct MethodDeclStmtNode : FuncDeclStmtNode
 {
-    MethodDeclStmtNode()
-    {
-        auto ty = LiteralTypeNode{
-            .type = Token(TokenType::IDENTIFIER, "self", 0, 0),
-            .args = {}
-        };
-
-        // Add "self" as the first parameter
-        params.insert(params.begin(), TypedParamStmtNode{
-            .ident = Token(TokenType::IDENTIFIER, "self", 0, 0),
-            .type = new TypeNode(ty),
-        });
-    }
 };
 
 struct NamespaceDeclStmtNode
@@ -446,7 +377,7 @@ struct NamespaceDeclStmtNode
     Token ident;
     std::vector<PropertyDeclStmtNode*> properties;
     std::vector<FuncDeclStmtNode*> funcs;
-    std::vector<TypeNode*> template_types;
+    std::vector<Token> template_types;
 };
 
 struct StructDeclStmtNode
@@ -454,7 +385,7 @@ struct StructDeclStmtNode
     Token ident;
     std::vector<PropertyDeclStmtNode*> properties;
     std::vector<FuncDeclStmtNode*> funcs;
-    std::vector<TypeNode*> template_types;
+    std::vector<Token> template_types;
 };
 
 struct ScopeStmtNode
@@ -468,7 +399,7 @@ struct AST
 };
 
 } // namespace AST
-    
+
 } // namespace Parsing
 
 } // namespace via

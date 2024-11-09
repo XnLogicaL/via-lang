@@ -19,5 +19,7 @@ struct Vec2 {
     }
 }
 
+type Vec2 = typeof(Vec2)
+
 // Return the Vector2D struct for direct use in other files
 return Vec2

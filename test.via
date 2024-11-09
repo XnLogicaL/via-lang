@@ -1,14 +1,6 @@
 local const abc: Number = 10
 global const def: SubscriptableType<T, K<T>> = 20
 
-struct Math {
-    property pi: Number = 3.1415
-
-    func add(a: Number, b: Number) {
-        return a + b
-    }
-
-    func circ(radius: Number) {
-        return 2 * circ * pi
-    }
+func main() {
+    print("Hello, world!")
 }

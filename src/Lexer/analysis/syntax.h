@@ -4,8 +4,8 @@
 #include "common.h"
 #include "highlighter.h"
 
-#include "../token.h"
-#include "../container.h"
+#include "token.h"
+#include "container.h"
 
 #include "magic_enum/magic_enum.hpp"
 

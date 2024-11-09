@@ -1,165 +1,172 @@
 #include "print.h"
 #include "ast.h"
-#include "../Lexer/token.h"
+#include "token.h"
 #include "common.h"
+
 #include "magic_enum/magic_enum.hpp"
 
 using namespace via::Parsing;
 
-void AST::print_token(const Token& token)
+std::string AST::stringify_type_node(const TypeNode& type)
 {
-    std::cout << "Token(Type: " << magic_enum::enum_name(token.type) << ", Value: " << token.value << ")";
-}
-
-void AST::print_type_node(const TypeNode* type)
-{
-    std::cout << "TypeNode(Name: " << "some shit idfk" << ")";
-}
-
-void AST::print_expr_node(const ExprNode* expr)
-{
-    std::cout << "SOME FUCKING EXPRESSION";
-}
-
-void AST::print_typed_param_stmt_node(const TypedParamStmtNode& node)
-{
-    std::cout << "TypedParamStmtNode: ";
-
-    print_token(node.ident);
-
-    std::cout << ", ";
-
-    print_type_node(node.type);
-
-    std::cout << std::endl;
-}
-
-void AST::print_local_decl_stmt_node(const LocalDeclStmtNode& node)
-{
-    std::cout << "LocalDeclStmtNode: ";
-
-    print_token(node.ident);
-
-    std::cout << ", ";
-
-    print_type_node(node.type);
-
-    std::cout << ", Value: ";
-
-    if (node.val)
+    if (auto lit_node = std::get_if<LiteralTypeNode>(&type))
     {
-        print_expr_node(node.val);
+        return std::format("LiteralTypeNode(Type: {}, Args: {})",
+            stringify_type_node(*lit_node),
+            format_vector<TypeNode*>(lit_node->args, [](const TypeNode* t) {
+                return stringify_type_node(*t);
+            })
+        );
     }
-    else
+    else if (auto union_node = std::get_if<UnionTypeNode>(&type))
     {
-        std::cout << "null";
+        return std::format("UnionTypeNode(L: {}, R: {})",
+            stringify_type_node(*union_node->lhs),
+            stringify_type_node(*union_node->rhs)
+        );
     }
-
-    std::cout << ", Is Const: " << (node.is_const ? "true" : "false") << ")" << std::endl;
-}
-
-void AST::print_glob_decl_stmt_node(const GlobDeclStmtNode& node)
-{
-    std::cout << "GlobDeclStmtNode: ";
-
-    print_token(node.ident);
-
-    std::cout << ", ";
-
-    print_type_node(node.type);
+    else if (auto variant_node = std::get_if<VariantTypeNode>(&type))
+    {
+        return std::format("VariantTypeNode(Variants: {})",
+            format_vector<TypeNode*>(variant_node->types, [](const TypeNode* t) {
+                return stringify_type_node(*t);
+            })
+        );
+    }
+    else if (auto functor_node = std::get_if<FunctorTypeNode>(&type))
+    {
+        return std::format("FunctorTypeNode(Input: {}, Output: {})",
+            format_vector<TypeNode*>(functor_node->input, [](const TypeNode* t) {
+                return stringify_type_node(*t);
+            }),
+            format_vector<TypeNode*>(functor_node->output, [](const TypeNode* t) {
+                return stringify_type_node(*t);
+            })
+        );
+    }
+    else if (auto table_node = std::get_if<TableTypeNode>(&type))
+    {
+        return std::format("TableTypeNode(Type: {})",
+            stringify_type_node(*table_node->type)
+        );
+    }
     
-    std::cout << ", Value: ";
-
-    if (node.val)
-    {
-        print_expr_node(node.val);
-    }
-    else
-    {
-        std::cout << "null";
-    }
-
-    std::cout << ")" << std::endl;
+    return "UnknownTypeNode()";
 }
 
-void AST::print_call_stmt_node(const CallStmtNode& node)
+std::string AST::stringify_expr_node(const ExprNode& expr)
 {
-    std::cout << "CallStmtNode: ";
-
-    print_token(node.ident);
-
-    std::cout << ", Args: [";
-
-    for (const auto& arg : node.args)
+    if (auto lit_expr = std::get_if<LitExprNode>(&expr))
     {
-        print_expr_node(arg);
-        std::cout << ", ";
+        return std::format("LitExprNode(Val: {})",
+            lit_expr->val.to_string()
+        );
     }
-
-    std::cout << "], Type Args: [";
-
-    for (const auto& type_arg : node.type_args)
+    else if (auto un_expr = std::get_if<UnExprNode>(&expr))
     {
-        print_type_node(type_arg);
-        std::cout << ", ";
+        return std::format("UnExprNode(Expr: {})",
+            stringify_expr_node(*un_expr->expr)
+        );
     }
-
-    std::cout << "])" << std::endl;
+    else if (auto group_expr = std::get_if<GroupExprNode>(&expr))
+    {
+        return std::format("GroupExprNode(Expr: {})",
+            stringify_expr_node(*group_expr->expr)
+        );
+    }
+    else if (auto bin_expr = std::get_if<BinExprNode>(&expr))
+    {
+        return std::format("BinExprNode(Op: {}, L: {}, R: {})",
+            bin_expr->op.to_string(),
+            stringify_expr_node(*bin_expr->lhs),
+            stringify_expr_node(*bin_expr->rhs)
+        );
+    }
+    
+    return "UnknownExpr()";
 }
 
-void AST::print_return_stmt_node(const ReturnStmtNode& node)
+std::string AST::stringify_local_decl_stmt_node(const LocalDeclStmtNode node)
 {
-    std::cout << "ReturnStmtNode: Values: [";
-
-    for (const auto& val : node.vals)
-    {
-        print_expr_node(val);
-        std::cout << ", ";
-    }
-
-    std::cout << "]" << std::endl;
+    return std::format("LocalDeclStmt(Ident: {}, Type: {}, Const: {}, Val: {})",
+        node.ident.to_string(),
+        stringify_type_node(*node.type),
+        std::to_string(node.is_const),
+        stringify_expr_node(*node.val)
+    );
 }
 
-void AST::print_scope_stmt_node(const ScopeStmtNode& scope)
+std::string AST::stringify_glob_decl_stmt_node(const GlobDeclStmtNode node)
 {
-    std::cout << "ScopeStmtNode: Statements: [" << std::endl;
-
-    for (const auto& stmt : scope.stmts)
-    {
-        print_stmt_node(stmt);
-    }
-
-    std::cout << "]" << std::endl;
+    return std::format("GlobalDeclStmtNode(Ident: {}, Type: {}, Val: {})",
+        node.ident.to_string(),
+        stringify_type_node(*node.type),
+        stringify_expr_node(*node.val)
+    );
 }
 
-void AST::print_stmt_node(StmtNode* node)
+std::string AST::stringify_call_stmt_node(const CallStmtNode node)
 {
-    if (auto local_decl = std::get_if<LocalDeclStmtNode>(node))
-    {
-        print_local_decl_stmt_node(*local_decl);
-    }
-    else if (auto global_decl = std::get_if<GlobDeclStmtNode>(node))
-    {
-        print_glob_decl_stmt_node(*global_decl);
-    }
-    else if (auto call_stmt = std::get_if<CallStmtNode>(node))
-    {
-        print_call_stmt_node(*call_stmt);
-    }
-    else if (auto ret_stmt = std::get_if<ReturnStmtNode>(node))
-    {
-        print_return_stmt_node(*ret_stmt);
-    }
-    else if (auto scope_stmt = std::get_if<ScopeStmtNode>(node))
-    {
-        print_scope_stmt_node(*scope_stmt);
-    }
+    return std::format("CallStmtNode(Ident: {}, TypeArgs: {}, Args: {})",
+        node.ident.to_string(),
+        format_vector<TypeNode*>(node.type_args, [](const TypeNode* t) {
+            return stringify_type_node(*t);
+        }),
+        format_vector<ExprNode*>(node.args, [](const ExprNode* e) {
+            return stringify_expr_node(*e);
+        })
+    );
 }
 
-void AST::print_ast(AST* ast)
+std::string AST::stringify_return_stmt_node(const ReturnStmtNode node)
 {
-    for (const auto &stmt : ast->stmts)
+    return std::format("ReturnStmtNode(Vals: {})",
+        format_vector<ExprNode*>(node.vals, [](const ExprNode* e) {
+            return stringify_expr_node(*e);
+        })
+    );
+}
+
+std::string AST::stringify_scope_stmt_node(const ScopeStmtNode scope)
+{
+    return std::format("ScopeStmtNode(Stmts: {})",
+        format_vector<StmtNode*>(scope.stmts, [](const StmtNode* s) {
+            return stringify_stmt_node(*s);
+        })
+    );
+}
+
+std::string AST::stringify_stmt_node(const StmtNode& node)
+{
+    if (auto local_decl = std::get_if<LocalDeclStmtNode>(&node))
     {
-        print_stmt_node(stmt);
+        return stringify_local_decl_stmt_node(*local_decl);
     }
+    else if (auto global_decl = std::get_if<GlobDeclStmtNode>(&node))
+    {
+        return stringify_glob_decl_stmt_node(*global_decl);
+    }
+    else if (auto call_stmt = std::get_if<CallStmtNode>(&node))
+    {
+        return stringify_call_stmt_node(*call_stmt);
+    }
+    else if (auto ret_stmt = std::get_if<ReturnStmtNode>(&node))
+    {
+        return stringify_return_stmt_node(*ret_stmt);
+    }
+    else if (auto scope_stmt = std::get_if<ScopeStmtNode>(&node))
+    {
+        return stringify_scope_stmt_node(*scope_stmt);
+    }
+
+    return "UnknownStmt()";
+}
+
+std::string AST::stringify_ast(const AST ast)
+{
+    return std::format("AST(Stmts:{})",
+        format_vector<StmtNode*>(ast.stmts, [](const StmtNode* s) {
+            return " " + stringify_stmt_node(*s);
+        })
+    );
 }

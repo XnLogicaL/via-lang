@@ -1,304 +1,281 @@
 #include "common.h"
 #include "parser.h"
+#include "ast.h"
 
-#include "arena.hpp"
+#define CAST_VARIANT_POINTER(type, p) \
+    m_alloc.emplace<type>(*p)
 
-using namespace via::Tokenization;
-using namespace via::Parsing;
+using namespace via;
+using namespace Tokenization;
+using namespace Parsing;
 
-template <typename T>
-AST::ExprNode* Parser::cast_expr_ptr(T* v)
+/* Utilities */
+Token Parser::consume()
 {
-    return m_alloc.emplace<AST::ExprNode>(*v);
+    return container.tokens.at(current_position++);
 }
 
-template <typename T>
-AST::StmtNode* Parser::cast_stmt_ptr(T* v)
+Token Parser::peek(int offset) const
 {
-    return m_alloc.emplace<AST::StmtNode>(*v);
+    return container.tokens.at(current_position + offset);
 }
 
-template <typename T>
-AST::TypeNode* Parser::cast_type_ptr(T* v)
+bool Parser::is_value(const std::string& value, int offset) const
 {
-    return m_alloc.emplace<AST::TypeNode>(*v);
+    return peek(offset).value == value;
 }
 
-inline Token Parser::consume()
+bool Parser::is_type(Tokenization::TokenType type, int offset) const
 {
-    return toks.at(pos++);
+    return peek(offset).type == type;
 }
 
-inline Token Parser::peek(size_t ahead)
+/* Helper functions */
+std::vector<AST::ExprNode*> Parser::parse_call_arguments()
 {
-    if ((pos + ahead) > toks.size())
-    {
-        throw std::out_of_range(std::format("peek({}): Position out of range (pos={})", ahead, pos));
-    }
-
-    return toks.at(pos + ahead);
-}
-
-bool Parser::check_value(std::string expected, size_t ahead)
-{
-    return peek(ahead).value == expected;
-}
-
-bool Parser::check_type(TokenType expected, size_t ahead)
-{
-    return peek(ahead).type == expected;
-}
-
-std::vector<AST::ExprNode*> Parser::get_call_args()
-{
-    consume(); // Consume (
+    consume();
 
     std::vector<AST::ExprNode*> args;
+    bool expecting_arg = true;
 
-    while (!check_type(TokenType::PAREN_CLOSE))
+    while (!is_type(TokenType::PAREN_CLOSE))
     {
-        if (check_type(TokenType::COMMA))
-        {
-            continue;
-        }
-        else
+        if (expecting_arg)
         {
             args.push_back(parse_expr());
         }
+        else
+        {
+            consume();
+        }
+
+        expecting_arg = !expecting_arg;
     }
 
-    consume(); // Consume )
-    
+    consume();
+
     return args;
 }
 
-std::vector<AST::TypeNode*> Parser::get_call_type_args()
+std::vector<AST::TypeNode*> Parser::parse_call_type_arguments()
 {
-    consume(); // Consume <
+    consume();
 
     std::vector<AST::TypeNode*> types;
+    bool expecting_type = true;
 
-    while (!check_type(TokenType::OP_GT))
+    while (!is_type(TokenType::OP_GT))
     {
-        if (check_type(TokenType::COMMA))
-        {
-            consume();
-            continue;
-        }
-        else
+        if (expecting_type)
         {
             types.push_back(parse_type());
         }
-    }
-
-    consume(); // Consume >
-    
-    return types;
-}
-
-AST::TypeNode* Parser::parse_type()
-{
-    auto current = consume();
-
-    if (current.type == TokenType::BRACE_OPEN) // TableTypeNode
-    {
-        auto table_type_node = m_alloc.emplace<AST::TableTypeNode>();
-        table_type_node->type = parse_type();
-        return cast_type_ptr(table_type_node);
-    }
-    else if (current.type == TokenType::PAREN_OPEN) // FunctorTypeNode
-    {
-        auto functor_type_node = m_alloc.emplace<AST::FunctorTypeNode>();
-
-        while (!check_type(TokenType::PAREN_CLOSE))
-        {
-            auto current_ = consume();
-
-            if (current_.type == TokenType::COMMA)
-            {
-                continue;
-            }
-
-            functor_type_node->input.push_back(parse_type());
-        }
-
-        consume(); // Consume )
-        consume(); // Consume -
-        consume(); // Consume >
-
-        auto next = consume();
-
-        if (next.type == TokenType::PAREN_OPEN)
-        {
-            while (!check_type(TokenType::PAREN_CLOSE))
-            {
-                auto current_ = consume();
-
-                if (current_.type == TokenType::COMMA)
-                {
-                    continue;
-                }
-
-                functor_type_node->output.push_back(parse_type());
-            }
-
-            consume(); // Consume )
-        }
         else
         {
-            functor_type_node->output.push_back(parse_type());
+            consume();
         }
 
-        return cast_type_ptr(functor_type_node);
+        expecting_type = !expecting_type;
     }
-    else if (current.type == TokenType::IDENTIFIER) // Other types or generic types
+
+    consume();
+
+    return types;    
+}
+
+template <typename IndexExprType, typename IndexCallExprType>
+AST::ExprNode* Parser::parse_index_expr(AST::ExprNode* base_expr)
+{
+    auto index = parse_expr();
+    consume(); // Consume closing bracket or parenthesis
+
+    if (is_type(TokenType::OP_LT) || is_type(TokenType::PAREN_OPEN))
     {
-        auto next = consume();
-        auto next_type = m_alloc.emplace<AST::LiteralTypeNode>();
-        next_type->type = next;
-        next_type->args = {};
+        auto index_call_expr = m_alloc.emplace<IndexCallExprType>();
+        index_call_expr->ident = CAST_VARIANT_POINTER(AST::ExprNode, base_expr);
+        index_call_expr->index = index;
 
-        // Check for union or variant type before generic type
-        if (next.type == TokenType::AMPERSAND) // Union type
+        if (is_type(TokenType::OP_LT))
         {
-            auto union_type_node = m_alloc.emplace<AST::UnionTypeNode>();
-            union_type_node->lhs = cast_type_ptr(next_type);
-            union_type_node->rhs = parse_type();
-            return cast_type_ptr(union_type_node);
-        }
-        else if (next.type == TokenType::PIPE) // Variant type
-        {
-            auto variant_type_node = m_alloc.emplace<AST::VariantTypeNode>();
-            variant_type_node->types.push_back(cast_type_ptr(next_type));
-            variant_type_node->types.push_back(parse_type());
-
-            while (true)
-            {
-                auto next = peek();
-
-                if (next.type == TokenType::PIPE)
-                {
-                    consume(); // Consume |
-                    continue;
-                }
-
-                if (
-                    next.type == TokenType::IDENTIFIER || 
-                    next.type == TokenType::BRACE_OPEN || 
-                    next.type == TokenType::PAREN_OPEN || 
-                    next.type == TokenType::OP_LT)
-                {
-                    variant_type_node->types.push_back(parse_type()); // Parse the next type
-                }
-                else
-                {
-                    break; // Break if it's neither a pipe nor a valid type start
-                }
-            }
-
-            return cast_type_ptr(variant_type_node);
+            index_call_expr->type_args = parse_call_type_arguments();
         }
 
-        // Check for generic type declaration
-        if (check_type(TokenType::OP_LT)) // Check for <
-        {
-            consume(); // Consume <
-            auto generic_type_node = m_alloc.emplace<AST::LiteralTypeNode>();
-            generic_type_node->type = next;
+        index_call_expr->args = parse_call_arguments();
+        return CAST_VARIANT_POINTER(AST::ExprNode, index_call_expr);
+    }
+    else
+    {
+        auto index_expr = m_alloc.emplace<IndexExprType>();
+        index_expr->ident = CAST_VARIANT_POINTER(AST::ExprNode, base_expr);
+        index_expr->index = index;
 
-            while (check_type(TokenType::OP_GT))
-            {
-                if (check_type(TokenType::COMMA))
-                {
-                    consume(); // Consume ,
-                    continue;
-                }
+        return CAST_VARIANT_POINTER(AST::ExprNode, index_expr);
+    }
+}
 
-                generic_type_node->args.push_back(parse_type());
-            }
+AST::ExprNode* Parser::parse_literal_or_group_expr(Token current)
+{
+    if (current.is_literal())
+    {
+        auto lit_expr = m_alloc.emplace<AST::LitExprNode>();
+        lit_expr->val = current;
 
-            consume(); // Consume >
+        return CAST_VARIANT_POINTER(AST::ExprNode, lit_expr);
+    }
+    else if (current.type == TokenType::PAREN_OPEN)
+    {
+        auto expr = parse_expr();
+        consume(); // Consume closing parenthesis
 
-            return cast_type_ptr(generic_type_node);
-        }
+        auto group_expr = m_alloc.emplace<AST::GroupExprNode>();
+        group_expr->expr = expr;
 
-        // If none of the special cases matched, just return the base type
-        return cast_type_ptr(next_type);
+        return CAST_VARIANT_POINTER(AST::ExprNode, group_expr);
     }
 
     return nullptr;
 }
 
-AST::ExprNode* Parser::parse_ident_expr(const Token& current)
+/* Main functions */
+AST::ExprNode* Parser::parse_prim_expr()
 {
-    AST::ExprNode* expr;
+    auto current = consume();
 
-    auto next = peek();
-
-    if (next.type == TokenType::DOT)
+    // Literal or grouped expression
+    if (auto expr = parse_literal_or_group_expr(current))
     {
-        consume(); // Consume "."
+        return expr;
+    }
 
-        auto ident = consume();
-        auto next = peek();
+    // Unary expression
+    if (current.type == TokenType::OP_SUB)
+    {
+        auto un_expr = m_alloc.emplace<AST::UnExprNode>();
+        un_expr->expr = parse_expr();
 
-        if (next.type == TokenType::PAREN_OPEN)
+        return CAST_VARIANT_POINTER(AST::ExprNode, un_expr);
+    }
+
+    // Identifier and dot/bracket indexing
+    if (current.type == TokenType::IDENTIFIER || current.type == TokenType::PAREN_OPEN)
+    {
+        auto base_expr = CAST_VARIANT_POINTER(AST::ExprNode, m_alloc.emplace<AST::IdentExprNode>(current));
+
+        if (is_type(TokenType::DOT))
         {
-            auto index_call_expr_node = m_alloc.emplace<AST::IndexCallExprNode>();
-            index_call_expr_node->ident = current;
-            index_call_expr_node->index = ident;
-            index_call_expr_node->args = get_call_args();
-            index_call_expr_node->type_args = {};
+            consume(); // Consume the dot
+            return parse_index_expr<AST::IndexExprNode, AST::IndexCallExprNode>(base_expr);
+        }
+        else if (is_type(TokenType::BRACKET_OPEN))
+        {
+            consume(); // Consume the bracket
+            return parse_index_expr<AST::BracketIndexExprNode, AST::BracketIndexCallExprNode>(base_expr);
+        }
+    }
 
-            expr = cast_expr_ptr(index_call_expr_node);
+    return nullptr;
+}
+
+/* Main functions for type parsing */
+AST::TypeNode* Parser::parse_type()
+{
+    Token current = consume();
+
+    if (current.type == TokenType::BRACE_OPEN)
+    {
+        auto table_type = m_alloc.emplace<AST::TableTypeNode>();
+        table_type->type = parse_type();
+
+        consume(); // Consume closing brace
+
+        return CAST_VARIANT_POINTER(AST::TypeNode, table_type);
+    }
+
+    if (current.type == TokenType::PAREN_OPEN)
+    {
+        auto functor_type = m_alloc.emplace<AST::FunctorTypeNode>();
+
+        // Parse input types
+        while (!is_type(TokenType::PAREN_CLOSE))
+        {
+            if (consume().type != TokenType::COMMA)
+            {
+                functor_type->input.push_back(parse_type());
+            }
+        }
+
+        consume(); // Consume closing parenthesis for inputs
+
+        consume(); // Consume "->" sequence
+        consume(); // Consume "->" sequence
+
+        // Parse output types
+        if (is_type(TokenType::PAREN_OPEN))
+        {
+            while (!is_type(TokenType::PAREN_CLOSE))
+            {
+                if (consume().type != TokenType::COMMA)
+                {
+                    functor_type->output.push_back(parse_type());
+                }
+            }
+
+            consume(); // Consume closing parenthesis for outputs
         }
         else
         {
-            auto index_expr_node = m_alloc.emplace<AST::IndexExprNode>();
-            index_expr_node->ident = current;
-            index_expr_node->index = ident;
-
-            expr = cast_expr_ptr(index_expr_node);
+            functor_type->output.push_back(parse_type());
         }
+
+        return CAST_VARIANT_POINTER(AST::TypeNode, functor_type);
     }
-    else if (next.type == TokenType::BRACKET_OPEN)
+
+    // Other types (Literal, Union, Variant, Generic)
+    auto next_type = m_alloc.emplace<AST::LiteralTypeNode>();
+    next_type->type = current;
+
+    if (is_type(TokenType::AMPERSAND))
     {
-        consume(); // Consume "["
+        consume();
 
-        auto index = parse_expr();
+        auto union_type = m_alloc.emplace<AST::UnionTypeNode>();
+        union_type->lhs = CAST_VARIANT_POINTER(AST::TypeNode, next_type);
+        union_type->rhs = parse_type();
 
-        consume(); // Consume "]"
-
-        auto next = peek();
-
-        if (next.type == TokenType::PAREN_OPEN)
-        {
-            auto index_call_expr_node = m_alloc.emplace<AST::BracketIndexCallExprNode>();
-            index_call_expr_node->ident = current;
-            index_call_expr_node->index = index;
-            index_call_expr_node->args = get_call_args();
-            index_call_expr_node->type_args = {};
-
-            expr = cast_expr_ptr(index_call_expr_node);
-        }
-        else
-        {
-            auto index_expr_node = m_alloc.emplace<AST::BracketIndexExprNode>();
-            index_expr_node->ident = current;
-            index_expr_node->index = index;
-
-            expr = cast_expr_ptr(index_expr_node);
-        }
+        return CAST_VARIANT_POINTER(AST::TypeNode, union_type);
     }
-    else
+    else if (is_type(TokenType::PIPE))
     {
-        auto lit_expr_node = m_alloc.emplace<AST::LitExprNode>();
-        lit_expr_node->val = current;
+        consume();
 
-        expr = cast_expr_ptr(lit_expr_node);
+        auto variant_type = m_alloc.emplace<AST::VariantTypeNode>();
+        variant_type->types.push_back(CAST_VARIANT_POINTER(AST::TypeNode, next_type));
+
+        while (is_type(TokenType::PIPE))
+        {
+            consume();
+
+            variant_type->types.push_back(parse_type());
+        }
+
+        return CAST_VARIANT_POINTER(AST::TypeNode, variant_type);
+    }
+    else if (is_type(TokenType::OP_LT))
+    {
+        consume(); // Consume "<"
+
+        while (!is_type(TokenType::OP_GT))
+        {
+            if (consume().type != TokenType::COMMA)
+            {
+                next_type->args.push_back(parse_type());
+            }
+        }
+        
+        consume(); // Consume ">"
     }
 
-    return expr;
+    return CAST_VARIANT_POINTER(AST::TypeNode, next_type);
 }
 
 AST::ExprNode* Parser::parse_expr()
@@ -308,7 +285,7 @@ AST::ExprNode* Parser::parse_expr()
 
 AST::ExprNode* Parser::parse_bin_expr(int precedence)
 {
-    AST::ExprNode* lhs = parse_primary_expr();
+    AST::ExprNode* lhs = parse_prim_expr();
 
     while (true)
     {
@@ -329,535 +306,426 @@ AST::ExprNode* Parser::parse_bin_expr(int precedence)
         bin_expr_node->lhs = lhs;
         bin_expr_node->rhs = rhs;
 
-        lhs = cast_expr_ptr(bin_expr_node);
+        lhs = CAST_VARIANT_POINTER(AST::ExprNode, bin_expr_node);
     }
 
     return lhs;
 }
 
-AST::ExprNode* Parser::parse_primary_expr()
+AST::TypedParamStmtNode* Parser::parse_parameter()
 {
-    auto current = consume();
+    auto parameter_stmt = m_alloc.emplace<AST::TypedParamStmtNode>();
+    parameter_stmt->ident = consume();
 
-    if (current.is_literal())
+    if (is_type(TokenType::COLON))
     {
-        auto lit_expr = m_alloc.emplace<AST::LitExprNode>();
-        lit_expr->val = current;
-
-        return cast_expr_ptr(lit_expr);
-    }
-
-    switch (current.type)
-    {
-    case TokenType::OP_SUB: {
-        auto un_expr = m_alloc.emplace<AST::UnExprNode>();
-        un_expr->expr = parse_expr();
-
-        return cast_expr_ptr(un_expr);
-    }
-
-    case TokenType::PAREN_OPEN: {
-        auto group_expr_node = m_alloc.emplace<AST::GroupExprNode>();
-        group_expr_node->expr = parse_expr();
-
         consume();
 
-        return cast_expr_ptr(group_expr_node);
+        parameter_stmt->type = parse_type();
     }
 
-    case TokenType::IDENTIFIER:
-        return parse_ident_expr(current);
-
-    default:
-        return nullptr;
-    }
+    return parameter_stmt;
 }
 
-AST::TypedParamStmtNode* Parser::parse_param()
-{
-    auto param = m_alloc.emplace<AST::TypedParamStmtNode>();
-    param->ident = consume(); // Consume the parameter name
-
-    if (check_type(TokenType::COLON, 0))
-    {
-        consume(); // Consume :
-
-        param->type = parse_type(); // Consume the type
-    }
-
-    return param;
-}
-
-AST::LocalDeclStmtNode* Parser::parse_local_decl_stmt()
+AST::LocalDeclStmtNode* Parser::parse_local_declaration()
 {
     consume();
 
     auto decl_stmt = m_alloc.emplace<AST::LocalDeclStmtNode>();
-    decl_stmt->ident = consume(); // Parse identifier
-
-    if (check_type(TokenType::COLON))
+    
+    if (is_type(TokenType::KW_CONST))
     {
-        consume(); // Consume :
-        decl_stmt->type = parse_type();
+        consume();
+        decl_stmt->is_const = true;
     }
 
-    if (check_type(TokenType::OP_ASGN))
-    {
-        consume(); // Consume =
-        decl_stmt->val = parse_expr(); // Parse expression
-    }
-
-    return decl_stmt;
-}
-
-AST::GlobDeclStmtNode* Parser::parse_glob_decl_stmt()
-{
-    consume(); // Consume global
-
-    auto decl_stmt = m_alloc.emplace<AST::GlobDeclStmtNode>();
     decl_stmt->ident = consume();
 
-    if (check_type(TokenType::COLON))
+    if (is_type(TokenType::COLON))
     {
+        consume();
         decl_stmt->type = parse_type();
     }
 
-    consume(); // Consume =
-
-    decl_stmt->val = parse_expr();
+    if (is_type(TokenType::OP_ASGN))
+    {
+        consume();
+        decl_stmt->val = parse_expr();
+    }
 
     return decl_stmt;
 }
 
-AST::CallStmtNode* Parser::parse_call_stmt()
+AST::GlobDeclStmtNode* Parser::parse_global_declaration()
+{
+    auto local_stmt = parse_local_declaration();
+    auto global_stmt = m_alloc.emplace<AST::GlobDeclStmtNode>();
+    global_stmt->ident = local_stmt->ident;
+    global_stmt->type = local_stmt->type;
+    global_stmt->val = local_stmt->val;
+
+    delete local_stmt;
+    return global_stmt;
+}
+
+AST::CallStmtNode* Parser::parse_call_statement()
 {
     auto call_stmt = m_alloc.emplace<AST::CallStmtNode>();
     call_stmt->ident = consume();
     
-    if (check_type(TokenType::OP_LT))
+    if (is_type(TokenType::OP_LT))
     {
-        call_stmt->type_args = get_call_type_args();
+        call_stmt->type_args = parse_call_type_arguments();
     }
 
-    call_stmt->args = get_call_args();
-
-    return call_stmt;
+    call_stmt->args = parse_call_arguments();
+    return call_stmt;   
 }
 
-AST::ReturnStmtNode* Parser::parse_ret_stmt()
+AST::ReturnStmtNode* Parser::parse_return_statement()
 {
-    auto return_stmt = m_alloc.emplace<AST::ReturnStmtNode>();
+    consume();
 
-    consume(); // Consume return
-
-    // TODO: Make multi-expr return statements
-    return_stmt->vals.push_back(parse_expr());
-
-    return return_stmt;
+    auto ret_stmt = m_alloc.emplace<AST::ReturnStmtNode>();
+    // TODO: Add multiple return value support
+    ret_stmt->vals.push_back(parse_expr());
+    return ret_stmt;
 }
 
-AST::IndexCallStmtNode* Parser::parse_index_call_stmt()
+AST::IndexCallStmtNode* Parser::parse_index_call_statement()
 {
-    auto ident = consume();
-    auto next = consume();
+    auto index_call_stmt = m_alloc.emplace<AST::IndexCallStmtNode>();
+    index_call_stmt->ident = parse_expr();
+    
+    consume();
 
-    if (next.type == TokenType::BRACKET_OPEN)
+    index_call_stmt->index = consume();
+    
+    if (is_type(TokenType::OP_LT))
     {
-        auto bracket_index_call_stmt_node = m_alloc.emplace<AST::BracketIndexCallStmtNode>();
-        bracket_index_call_stmt_node->ident = ident;
-
-        consume(); // Consume [
-
-        bracket_index_call_stmt_node->index = parse_expr();
-
-        consume(); // Consume ]
-
-        if (peek().type == TokenType::OP_LT)
-        {
-            bracket_index_call_stmt_node->type_args = get_call_type_args();
-        }
-
-        bracket_index_call_stmt_node->args = get_call_args();
-
-        return nullptr;
-    }
-    else if (next.type == TokenType::DOT)
-    {
-        auto index_call_stmt_node = m_alloc.emplace<AST::IndexCallStmtNode>();
-        index_call_stmt_node->ident = ident;
-        index_call_stmt_node->index = consume();
-        
-        if (peek().type == TokenType::OP_LT)
-        {
-            index_call_stmt_node->type_args = get_call_type_args();
-        }
-
-        index_call_stmt_node->args = get_call_args();
-
-        return index_call_stmt_node;
+        index_call_stmt->type_args = parse_call_type_arguments();
     }
 
-    // Fallback
-    return nullptr;
+    index_call_stmt->args = parse_call_arguments();
+    return index_call_stmt;
 }
 
-AST::AssignStmtNode* Parser::parse_assign_stmt()
+AST::AssignStmtNode* Parser::parse_assignment_statement()
 {
-    auto assign_stmt = m_alloc.emplace<AST::AssignStmtNode>();
-    assign_stmt->ident = consume();
+    auto asgn_stmt = m_alloc.emplace<AST::AssignStmtNode>();
+    asgn_stmt->ident = consume();
 
-    consume(); // Consume =
+    consume();
 
-    assign_stmt->val = parse_expr();
-
-    return assign_stmt;
+    asgn_stmt->val = parse_expr();
+    return asgn_stmt;
 }
 
-AST::IndexAssignStmtNode* Parser::parse_index_assign_stmt()
+AST::IndexAssignStmtNode* Parser::parse_index_assignment_statement()
 {
-    auto index_assign_stmt = m_alloc.emplace<AST::IndexAssignStmtNode>();
-    index_assign_stmt->ident = consume();
+    auto index_asgn_stmt = m_alloc.emplace<AST::IndexAssignStmtNode>();
+    index_asgn_stmt->ident = parse_expr();
 
-    consume(); // Consume .
+    consume();
 
-    index_assign_stmt->index = consume();
+    index_asgn_stmt->index = consume();
+    
+    consume();
 
-    consume(); // Consume =
-
-    index_assign_stmt->val = parse_expr();
-
-    return index_assign_stmt;
+    index_asgn_stmt->val = parse_expr();
+    return index_asgn_stmt;
 }
 
-AST::PropertyDeclStmtNode* Parser::parse_property_decl_stmt()
+AST::PropertyDeclStmtNode* Parser::parse_property_declaration()
 {
-    consume(); // Consume property
+    auto local_stmt = parse_local_declaration();
+    auto prop_stmt = m_alloc.emplace<AST::PropertyDeclStmtNode>();
+    prop_stmt->ident = local_stmt->ident;
+    prop_stmt->type = local_stmt->type;
+    prop_stmt->val = local_stmt->val;
 
-    auto prop_decl_stmt = m_alloc.emplace<AST::PropertyDeclStmtNode>();
-    prop_decl_stmt->ident = consume();
-
-    consume(); // Consume :
-
-    prop_decl_stmt->type = parse_type();
-
-    if (check_type(TokenType::OP_ASGN))
-    {
-        prop_decl_stmt->val = parse_expr();
-    }
-
-    return prop_decl_stmt;
+    delete local_stmt;
+    return prop_stmt;
 }
 
-AST::WhileStmtNode* Parser::parse_while_stmt()
+AST::WhileStmtNode* Parser::parse_while_statement()
 {
-    consume(); // Consume while
+    consume();
 
     auto while_stmt = m_alloc.emplace<AST::WhileStmtNode>();
     while_stmt->cond = parse_expr();
-    while_stmt->scope = parse_scope_stmt();
-
+    while_stmt->scope = parse_scope_statement();
     return while_stmt;
 }
 
-AST::ForStmtNode* Parser::parse_for_stmt()
+AST::ForStmtNode* Parser::parse_for_statement()
 {
+    consume();
+
     auto for_stmt = m_alloc.emplace<AST::ForStmtNode>();
-
-    // TODO: fuck... make this work
-
+    // TODO: Make this work ffs
     return for_stmt;
 }
 
-AST::IfStmtNode* Parser::parse_if_stmt()
+AST::IfStmtNode* Parser::parse_if_statement()
 {
-    consume(); // Consume if
+    consume();
 
     auto if_stmt = m_alloc.emplace<AST::IfStmtNode>();
     if_stmt->cond = parse_expr();
-    if_stmt->body = parse_scope_stmt();
-
-    while (check_type(TokenType::KW_ELIF))
+    if_stmt->body = parse_scope_statement();
+    
+    while (is_type(TokenType::KW_ELIF))
     {
-        consume(); // Consume elseif
+        consume();
 
         auto elif_stmt = m_alloc.emplace<AST::ElifStmtNode>();
         elif_stmt->cond = parse_expr();
-        elif_stmt->body = parse_scope_stmt();
+        elif_stmt->body = parse_scope_statement();
 
         if_stmt->elif_bodies.push_back(elif_stmt);
     }
-    
-    if (check_type(TokenType::KW_ELSE))
+
+    if (is_type(TokenType::KW_ELSE))
     {
-        if_stmt->else_body = parse_scope_stmt();
+        consume();
+        
+        if_stmt->else_body = parse_scope_statement();
     }
 
     return if_stmt;
 }
 
-AST::SwitchStmtNode* Parser::parse_switch_stmt()
+AST::SwitchStmtNode* Parser::parse_switch_statement()
 {
-    consume(); // Consume switch
+    consume();
 
     auto switch_stmt = m_alloc.emplace<AST::SwitchStmtNode>();
     switch_stmt->cond = parse_expr();
 
-    consume(); // Consume {
-    
-    while (check_type(TokenType::KW_CASE))
+    consume();
+
+    while (is_type(TokenType::KW_CASE))
     {
-        consume(); // Consume case
+        consume();
 
         auto case_stmt = m_alloc.emplace<AST::CaseStmtNode>();
         case_stmt->value = parse_expr();
-        case_stmt->body = parse_scope_stmt();
+        case_stmt->body = parse_scope_statement();
 
         switch_stmt->cases.push_back(case_stmt);
     }
 
-    if (check_type(TokenType::KW_DEFAULT))
+    if (is_type(TokenType::KW_DEFAULT))
     {
-        consume(); // Consume default
+        consume();
 
         auto default_stmt = m_alloc.emplace<AST::DefaultStmtNode>();
-        default_stmt->body = parse_scope_stmt(); 
+        default_stmt->body = parse_scope_statement();
 
         switch_stmt->default_case = default_stmt;
     }
 
-    consume(); // Consume }
-
+    consume();
+    
     return switch_stmt;
 }
 
-AST::FuncDeclStmtNode* Parser::parse_func_decl_stmt()
+AST::FuncDeclStmtNode* Parser::parse_function_declaration()
 {
-    consume(); // Consume func
+    consume();
 
-    auto is_const = check_type(TokenType::KW_CONST);
-
-    if (is_const)
+    auto func_stmt = m_alloc.emplace<AST::FuncDeclStmtNode>();
+    
+    if (is_type(TokenType::KW_CONST))
     {
-        consume(); // Consume const
+        consume();
+        func_stmt->is_const = true;
     }
 
-    auto func_decl_stmt = m_alloc.emplace<AST::FuncDeclStmtNode>();
-    func_decl_stmt->ident = consume();
+    func_stmt->ident = consume();
 
-    if (check_type(TokenType::OP_LT))
+    if (is_type(TokenType::OP_LT))
     {
-        while (!check_type(TokenType::OP_GT))
+        consume();
+
+        while (!is_type(TokenType::OP_GT))
         {
-            if (check_type(TokenType::COMMA))
+            if (is_type(TokenType::COMMA))
             {
                 consume();
                 continue;
             }
 
-            func_decl_stmt->type_params.push_back(consume());
+            func_stmt->type_params.push_back(consume());
         }
+        
+        consume();
     }
 
-    consume(); // Consume (
+    consume();
 
-    while (!check_type(TokenType::PAREN_CLOSE))
+    while (!is_type(TokenType::PAREN_CLOSE))
     {
-        if (check_type(TokenType::COMMA))
+        if (is_type(TokenType::COMMA))
         {
             consume();
             continue;
         }
 
-        auto typed_param_stmt = m_alloc.emplace<AST::TypedParamStmtNode>();
-        typed_param_stmt->ident = consume();
-
-        if (check_type(TokenType::COLON))
-        {
-            consume(); // Consume :
-
-            typed_param_stmt->type = parse_type();
-        }
-    }
-
-    consume(); // Consume )
-
-    func_decl_stmt->body = parse_scope_stmt();
-
-    return func_decl_stmt;
-}
-
-AST::MethodDeclStmtNode* Parser::parse_method_decl_stmt()
-{
-    auto func_decl_stmt = parse_func_decl_stmt();
-    auto method_decl_stmt = m_alloc.emplace<AST::MethodDeclStmtNode>();
-    method_decl_stmt->ident = func_decl_stmt->ident;
-    method_decl_stmt->body = func_decl_stmt->body;
-    method_decl_stmt->type_params = func_decl_stmt->type_params;
-
-    for (const auto &param : func_decl_stmt->params)
-    {
-        method_decl_stmt->params.push_back(param);
-    }
-
-    delete func_decl_stmt;
-
-    return method_decl_stmt;
-}
-
-AST::NamespaceDeclStmtNode* Parser::parse_namesp_decl_stmt()
-{
-    consume(); // Consume namespace
-
-    auto namespace_decl_stmt = m_alloc.emplace<AST::NamespaceDeclStmtNode>();
-    namespace_decl_stmt->ident = consume();
-
-    if (check_type(TokenType::OP_LT))
-    {
-        consume(); // Consume <
-
-        while (!check_type(TokenType::OP_GT))
-        {
-            namespace_decl_stmt->template_types.push_back(parse_type());
-        }
-
-        consume(); // Consume >
-    }
-
-    consume(); // Consume {
-
-    while (!check_type(TokenType::BRACKET_CLOSE))
-    {
-        if (check_type(TokenType::KW_FUNC))
-        {
-            namespace_decl_stmt->funcs.push_back(parse_method_decl_stmt());
-        }
-        else if (check_type(TokenType::KW_PROPERTY))
-        {
-            namespace_decl_stmt->properties.push_back(parse_property_decl_stmt());
-        }
-    }
-
-    consume(); // Consume }
-
-    return namespace_decl_stmt;
-}
-
-AST::StructDeclStmtNode* Parser::parse_struct_decl_stmt()
-{
-    auto namespace_decl_stmt = parse_namesp_decl_stmt();
-    auto struct_decl_stmt = m_alloc.emplace<AST::StructDeclStmtNode>();
-    struct_decl_stmt->funcs = namespace_decl_stmt->funcs;
-    struct_decl_stmt->ident = namespace_decl_stmt->ident;
-    struct_decl_stmt->properties = namespace_decl_stmt->properties;
-    struct_decl_stmt->template_types = namespace_decl_stmt->template_types;
-
-    delete namespace_decl_stmt;
-
-    return struct_decl_stmt;
-}
-
-AST::ScopeStmtNode* Parser::parse_scope_stmt()
-{
-    consume(); // Consume {
-
-    auto scope_stmt_node = m_alloc.emplace<AST::ScopeStmtNode>();
-
-    while (!check_type(TokenType::BRACE_CLOSE))
-    {
-        scope_stmt_node->stmts.push_back(parse_stmt());        
+        func_stmt->params.push_back(parse_parameter());
     }
     
-    consume(); // Consume }
+    consume();
 
-    return scope_stmt_node;
+    func_stmt->body = parse_scope_statement();
+
+    return func_stmt;
 }
 
-AST::StmtNode* Parser::parse_stmt()
+AST::MethodDeclStmtNode* Parser::parse_method_declaration()
+{
+    auto func_stmt = parse_function_declaration();
+    auto method_stmt = m_alloc.emplace<AST::MethodDeclStmtNode>();
+    method_stmt->body = func_stmt->body;
+    method_stmt->ident = func_stmt->ident;
+    method_stmt->is_const = func_stmt->is_const;
+    method_stmt->params = func_stmt->params;
+    method_stmt->type_params = func_stmt->type_params;
+
+    auto first_param = method_stmt->params.at(0);
+
+    if (first_param->ident.value != "self")
+    {
+        auto self_param = m_alloc.emplace<AST::TypedParamStmtNode>();
+        self_param->ident = Token {
+            .type = TokenType::IDENTIFIER,
+            .value = "self",
+            .line = first_param->ident.line,
+            .offset = first_param->ident.offset,
+            .has_thrown_error = false
+        };
+
+        method_stmt->params.insert(
+            method_stmt->params.begin(), self_param);
+    }
+
+    delete func_stmt;
+    return method_stmt;
+}
+
+AST::StructDeclStmtNode* Parser::parse_struct_declaration()
+{
+    consume();
+
+    auto struct_stmt = m_alloc.emplace<AST::StructDeclStmtNode>();
+    struct_stmt->ident = consume();
+
+    if (is_type(TokenType::OP_LT))
+    {
+        consume();
+
+        while (!is_type(TokenType::OP_GT))
+        {
+            if (is_type(TokenType::COMMA))
+            {
+                consume();
+                continue;
+            }
+
+            struct_stmt->template_types.push_back(consume());
+        }
+
+        consume();
+    }
+
+    consume();
+
+    while (!is_type(TokenType::BRACE_CLOSE))
+    {
+        if (is_type(TokenType::KW_PROPERTY))
+        {
+            auto prop = parse_property_declaration();
+            struct_stmt->properties.push_back(prop);
+        }
+        else if (is_type(TokenType::KW_FUNC))
+        {
+            auto method = parse_method_declaration();
+            struct_stmt->funcs.push_back(method);
+        }
+    }
+
+    consume();
+
+    return struct_stmt;
+}
+
+AST::NamespaceDeclStmtNode* Parser::parse_namespace_declaration()
+{
+    auto struct_stmt = parse_struct_declaration();
+    auto namesp_stmt = m_alloc.emplace<AST::NamespaceDeclStmtNode>();
+    namesp_stmt->funcs = struct_stmt->funcs;
+    namesp_stmt->ident = struct_stmt->ident;
+    namesp_stmt->properties = struct_stmt->properties;
+    namesp_stmt->template_types = struct_stmt->template_types;
+
+    for (const auto &prop : namesp_stmt->properties) { prop->is_const = true; }
+    for (const auto& func : namesp_stmt->funcs) { func->is_const = true; }
+
+    delete struct_stmt;
+    return namesp_stmt;
+}
+
+AST::ScopeStmtNode* Parser::parse_scope_statement()
+{
+    consume();
+
+    auto scope_stmt = m_alloc.emplace<AST::ScopeStmtNode>();
+
+    while (!is_type(TokenType::BRACE_CLOSE))
+    {
+        scope_stmt->stmts.push_back(parse_statement());
+    }
+
+    return scope_stmt;
+}
+
+AST::StmtNode* Parser::parse_statement()
 {
     switch (peek().type)
     {
-    case TokenType::KW_LOCAL:
-        return cast_stmt_ptr(parse_local_decl_stmt());
-    case TokenType::KW_GLOBAL:
-        return cast_stmt_ptr(parse_glob_decl_stmt());
-    case TokenType::IDENTIFIER: {
-        if (check_type(TokenType::PAREN_OPEN, 1))
-        {
-            return cast_stmt_ptr(parse_call_stmt());
-        }
-        else if (check_type(TokenType::OP_ASGN, 1))
-        {
-            return cast_stmt_ptr(parse_assign_stmt());
-        }
-        else if (check_type(TokenType::DOT, 1))
-        {
-            if (check_type(TokenType::PAREN_OPEN, 3))
-            {
-                return cast_stmt_ptr(parse_index_call_stmt());
-            }
-            else if (check_type(TokenType::OP_ASGN))
-            {
-                return cast_stmt_ptr(parse_index_assign_stmt());
-            }
-        }
-        else if (check_type(TokenType::BRACKET_OPEN, 1))
-        {
-            size_t next_bracket = 1;
-
-            while (!check_type(TokenType::BRACKET_CLOSE, next_bracket))
-            {
-                next_bracket++;
-            }
-            
-            if (check_type(TokenType::OP_ASGN, next_bracket))
-            {
-                return cast_stmt_ptr(parse_index_assign_stmt());
-            }
-            else if (check_type(TokenType::PAREN_OPEN))
-            {
-                return cast_stmt_ptr(parse_index_call_stmt());
-            }
-        }
-
-        return nullptr;
-    }
-    case TokenType::KW_RETURN:
-        return cast_stmt_ptr(parse_ret_stmt());
-    case TokenType::KW_PROPERTY:
-        return cast_stmt_ptr(parse_property_decl_stmt());
-    case TokenType::KW_WHILE:
-        return cast_stmt_ptr(parse_while_stmt());
-    case TokenType::KW_FOR:
-        return cast_stmt_ptr(parse_for_stmt());
-    case TokenType::KW_IF:
-        return cast_stmt_ptr(parse_if_stmt());
-    case TokenType::KW_SWITCH:
-        return cast_stmt_ptr(parse_switch_stmt());
-    case TokenType::KW_FUNC:
-        return cast_stmt_ptr(parse_func_decl_stmt());
-    case TokenType::KW_NAMESPACE:
-        return cast_stmt_ptr(parse_namesp_decl_stmt());
-    case TokenType::KW_STRUCT:
-        return cast_stmt_ptr(parse_struct_decl_stmt());
+    case TokenType::KW_LOCAL:       return CAST_VARIANT_POINTER(AST::StmtNode, parse_local_declaration());
+    case TokenType::KW_GLOBAL:      return CAST_VARIANT_POINTER(AST::StmtNode, parse_global_declaration());
+    case TokenType::KW_RETURN:      return CAST_VARIANT_POINTER(AST::StmtNode, parse_return_statement());
+    case TokenType::KW_PROPERTY:    return CAST_VARIANT_POINTER(AST::StmtNode, parse_property_declaration());
+    case TokenType::KW_WHILE:       return CAST_VARIANT_POINTER(AST::StmtNode, parse_while_statement());
+    case TokenType::KW_FOR:         return CAST_VARIANT_POINTER(AST::StmtNode, parse_for_statement());
+    case TokenType::KW_IF:          return CAST_VARIANT_POINTER(AST::StmtNode, parse_if_statement());
+    case TokenType::KW_SWITCH:      return CAST_VARIANT_POINTER(AST::StmtNode, parse_switch_statement());
+    case TokenType::KW_FUNC:        return CAST_VARIANT_POINTER(AST::StmtNode, parse_function_declaration());
+    case TokenType::KW_NAMESPACE:   return CAST_VARIANT_POINTER(AST::StmtNode, parse_namespace_declaration());
+    case TokenType::KW_STRUCT:      return CAST_VARIANT_POINTER(AST::StmtNode, parse_struct_declaration());
     case TokenType::KW_DO:
         consume();
-        return cast_stmt_ptr(parse_scope_stmt());
+        return CAST_VARIANT_POINTER(AST::StmtNode, parse_scope_statement());
+    case TokenType::IDENTIFIER: {
+        if (is_type(TokenType::DOT, 1))
+        {
+            if (is_type(TokenType::OP_LT, 3) || is_type(TokenType::PAREN_OPEN, 3))
+            {
+                return CAST_VARIANT_POINTER(AST::StmtNode, parse_index_call_statement());
+            }
+            else if (is_type(TokenType::OP_ASGN, 3))
+            {
+                return CAST_VARIANT_POINTER(AST::StmtNode, parse_index_assignment_statement());
+            }
+        }
+    }
+
     default:
         break;
     }
 
     // Fallback
     return nullptr;
-}
-
-AST::AST* Parser::parse_prog()
-{
-    auto ast = m_alloc.emplace<AST::AST>();
-
-    while (!check_type(TokenType::EOF_))
-    {
-        ast->stmts.push_back(parse_stmt());
-    }
-
-    return ast;
 }

@@ -7,7 +7,7 @@
 #include "arena.hpp"
 
 #ifndef __VIA_LEXER_ALLOC_SIZE
-    #define __VIA_LEXER_ALLOC_SIZE 4 * 1024
+    #define __VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024
 #endif
 
 namespace via

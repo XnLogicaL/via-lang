@@ -1,0 +1,6 @@
+LI R0, 34;
+LI R1, 35;
+ADD R2, R0, R1;
+MOV R3, R2;
+STDOUT R3;
+HALT;

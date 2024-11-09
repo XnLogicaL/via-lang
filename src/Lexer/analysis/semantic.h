@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-#include "../token.h"
-#include "../container.h"
+#include "token.h"
+#include "container.h"
 
 namespace via
 {
