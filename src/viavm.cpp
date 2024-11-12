@@ -15,19 +15,19 @@ std::string format_operands(const std::vector<Operand>& operands)
     {
         switch (o.type) {
         case Operand::OType::Bool:
-            result += o.bool_val ? "true" : "false";
+            result += o.boole ? "true" : "false";
             break;
         case Operand::OType::Number:
-            result += std::format("{}", o.num_val);
+            result += std::format("{}", o.num);
             break;
         case Operand::OType::Register:
-            result += std::format("{}{}", magic_enum::enum_name(o.reg_val.type), o.reg_val.offset);
+            result += std::format("{}{}", magic_enum::enum_name(o.reg.type), o.reg.offset);
             break;
         case Operand::OType::String:
-            result += std::format("\"{}\"", o.str_val);
+            result += std::format("\"{}\"", o.str);
             break;
         case Operand::OType::Identifier:
-            result += std::format("@{}", o.ident_val);
+            result += std::format("@{}", o.ident);
             break;
         default:
             result += "unknown";

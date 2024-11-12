@@ -24,6 +24,7 @@
 #include <string_view>
 #include <filesystem>
 #include <fstream>
+#include <thread>
 
 #ifndef VIA_FORMATVEC
 #define VIA_FORMATVEC

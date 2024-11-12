@@ -42,11 +42,11 @@ struct Operand
 
      OType type;
      union {
-          double num_val;
-          bool bool_val;
-          const char* str_val;
-          const char* ident_val;
-          Register reg_val;
+          double num;
+          bool boole;
+          const char* str;
+          const char* ident;
+          Register reg;
      };
 };
 

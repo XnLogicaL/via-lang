@@ -92,6 +92,9 @@
         "string_view": "cpp",
         "numbers": "cpp",
         "cinttypes": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "semaphore": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp"
     }
 }

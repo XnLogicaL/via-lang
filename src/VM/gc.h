@@ -17,7 +17,9 @@ struct GCState
 class GarbageCollector
 {
     GCState state;
+
     std::vector<const void*> free_list;
+    std::vector<const void*> del_list;
 
 public:
 
@@ -30,15 +32,25 @@ public:
 
         state.collections++;
 
-        for (const auto& p : free_list)
+        for (const auto &p : free_list)
         {
             std::free(const_cast<void*>(p));
+        }
+
+        for (const auto &p : del_list)
+        {
+            delete p;
         }
     }
 
     inline void add(const void* p)
     {
         free_list.push_back(p);
+    }
+
+    inline void add_heap(const void* p)
+    {
+        del_list.push_back(p);
     }
 
 };

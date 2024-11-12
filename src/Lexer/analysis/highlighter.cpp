@@ -10,7 +10,7 @@ std::vector<std::string> SourceLineHighlighter::split_lines(const std::string& s
     std::istringstream stream(source);
     std::string line;
 
-    while (std::getline(stream, line))
+    while (std::lgetine(stream, line))
     {
         lines.push_back(line);
     }

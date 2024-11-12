@@ -1,27 +1,27 @@
 #include "types.h"
 #include "common.h"
 
-namespace via {
-namespace VM {
+namespace via::VM
+{
 
-std::size_t via_TableKeyHash::operator()(const via_TableKey& key) const
+size_t via_Table::via_TableKeyHash::operator()(const via_TableKey& key) const
 {
     if (key.type == via_TableKey::KType::Number) {
-        return std::hash<via_Number>()(key.num_val);
+        return std::hash<via_Number>()(key.num);
     } 
     else {
-        return std::hash<std::string_view>()(key.str_val);
+        return std::hash<std::string_view>()(key.str);
     }
 }
 
-bool via_TableKeyEqual::operator()(const via_TableKey& lhs, const via_TableKey& rhs) const
+bool via_Table::via_TableKeyEqual::operator()(const via_TableKey& lhs, const via_TableKey& rhs) const
 {
     if (lhs.type != rhs.type) return false;
     if (lhs.type == via_TableKey::KType::Number) {
-        return lhs.num_val == rhs.num_val;
+        return lhs.num == rhs.num;
     }
     else {
-        return strcmp(lhs.str_val, rhs.str_val) == 0;
+        return strcmp(lhs.str, rhs.str) == 0;
     }
 }
 
@@ -55,31 +55,31 @@ via_Value& via_Value::operator=(const via_Value& other)
         switch (type)
         {
         case VType::Number:
-            num_val = other.num_val;
+            num = other.num;
             break;
         case VType::Bool:
-            bool_val = other.bool_val;
+            boole = other.boole;
             break;
         case VType::String:
-            str_val = strdup(other.str_val);  // Deep copy of the string
+            str = strdup(other.str);  // Deep copy of the string
             break;
         case VType::Ptr:
-            ptr_val = other.ptr_val;
+            ptr = other.ptr;
             break;
         case VType::Func:
-            fun_val = new via_Func(*other.fun_val); // Deep copy the function pointer
+            fun = new via_Func(*other.fun); // Deep copy the function pointer
             break;
         case VType::CFunc:
-            cfun_val = other.cfun_val;
+            cfun = other.cfun;
             break;
         case VType::Table:
-            tbl_val = new via_Table(*other.tbl_val); // Deep copy the table
+            tbl = new via_Table(*other.tbl); // Deep copy the table
             break;
         case VType::Nil:
-            nil_val = nullptr;
+            nil = nullptr;
             break;
         case VType::TableKey:
-            tblkey_val = new via_TableKey(*other.tblkey_val); // Deep copy the table key
+            tblkey = new via_TableKey(*other.tblkey); // Deep copy the table key
             break;
         default:
             break;
@@ -91,7 +91,7 @@ via_Value& via_Value::operator=(const via_Value& other)
 via_Value::via_Value(const via_Table& t)
 {
     type = VType::Table;
-    tbl_val = new via_Table(t);
+    tbl = new via_Table(t);
 }
 
 via_Value::via_Value(const via_Value& other) : type(other.type)
@@ -104,27 +104,27 @@ void via_Value::cleanup()
     switch (type)
     {
     case VType::String:
-        if (str_val) {
-            free(str_val);
-            str_val = nullptr;
+        if (str) {
+            free(str);
+            str = nullptr;
         }
         break;
     case VType::Table:
-        if (tbl_val) {
-            delete tbl_val;
-            tbl_val = nullptr;
+        if (tbl) {
+            delete tbl;
+            tbl = nullptr;
         }
         break;
     case VType::Func:
-        if (fun_val) {
-            delete fun_val;
-            fun_val = nullptr;
+        if (fun) {
+            delete fun;
+            fun = nullptr;
         }
         break;
     case VType::TableKey:
-        if (tblkey_val) {
-            delete tblkey_val;
-            tblkey_val = nullptr;
+        if (tblkey) {
+            delete tblkey;
+            tblkey = nullptr;
         }
         break;
     default:
@@ -132,6 +132,4 @@ void via_Value::cleanup()
     }
 }
 
-} // namespace VM
-
-} // namespace via
+} // namespace via::VM

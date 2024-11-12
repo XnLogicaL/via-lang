@@ -7,7 +7,7 @@
 using namespace via::VM;
 using RType = Register::RType;
 
-uint8_t RegisterAllocator::get_size(const RType& type)
+uint8_t RegisterAllocator::get_size(const RType &type)
 {
     switch (type)
     {
@@ -21,53 +21,53 @@ uint8_t RegisterAllocator::get_size(const RType& type)
     }
 }
 
-void* RegisterAllocator::alloc(const Register::RType& type, const uint8_t& count)
+void *RegisterAllocator::alloc(const Register::RType &type, const uint8_t &count)
 {
     return std::malloc(get_size(type) * count);
 }
 
 void RegisterAllocator::prealloc()
 {
-    this->gpr = reinterpret_cast<via_Value*>(alloc(RType::R, 128));
-    this->ar = reinterpret_cast<via_Value*>(alloc(RType::AR, 16));
-    this->rr = reinterpret_cast<via_Value*>(alloc(RType::RR, 16));
-    this->ir = reinterpret_cast<via_TableKey*>(alloc(RType::IR, 1));
-    this->auxr = reinterpret_cast<std::byte*>(alloc(RType::AUX, 32));
-    this->selfr = reinterpret_cast<via_Table*>(alloc(RType::SELFR, 1));
+    this->gpr = reinterpret_cast<via_Value *>(alloc(RType::R, 128));
+    this->ar = reinterpret_cast<via_Value *>(alloc(RType::AR, 16));
+    this->rr = reinterpret_cast<via_Value *>(alloc(RType::RR, 16));
+    this->ir = reinterpret_cast<via_TableKey *>(alloc(RType::IR, 1));
+    this->auxr = reinterpret_cast<std::byte *>(alloc(RType::AUX, 32));
+    this->selfr = reinterpret_cast<via_Table *>(alloc(RType::SELFR, 1));
 }
 
-void RegisterAllocator::flush(const RType& r)
+void RegisterAllocator::flush(const RType &r)
 {
     switch (r)
     {
     case RType::R:
         std::free(this->gpr);
-        this->gpr = reinterpret_cast<via_Value*>(alloc(RType::R, 128));
+        this->gpr = reinterpret_cast<via_Value *>(alloc(RType::R, 128));
         break;
 
     case RType::AR:
         std::free(this->ar);
-        this->ar = reinterpret_cast<via_Value*>(alloc(RType::AR, 16));
+        this->ar = reinterpret_cast<via_Value *>(alloc(RType::AR, 16));
         break;
 
     case RType::RR:
         std::free(this->rr);
-        this->rr = reinterpret_cast<via_Value*>(alloc(RType::RR, 16));
+        this->rr = reinterpret_cast<via_Value *>(alloc(RType::RR, 16));
         break;
 
     case RType::IR:
         std::free(this->ir);
-        this->ir = reinterpret_cast<via_TableKey*>(alloc(RType::IR, 1));
+        this->ir = reinterpret_cast<via_TableKey *>(alloc(RType::IR, 1));
         break;
 
     case RType::AUX:
         std::free(this->auxr);
-        this->auxr = reinterpret_cast<std::byte*>(alloc(RType::AUX, 32));
+        this->auxr = reinterpret_cast<std::byte *>(alloc(RType::AUX, 32));
         break;
 
     case RType::SELFR:
         std::free(this->selfr);
-        this->selfr = reinterpret_cast<via_Table*>(alloc(RType::SELFR, 1));
+        this->selfr = reinterpret_cast<via_Table *>(alloc(RType::SELFR, 1));
         break;
 
     default:
@@ -75,7 +75,7 @@ void RegisterAllocator::flush(const RType& r)
     }
 }
 
-void RegisterAllocator::print(const Register::RType& rt)
+void RegisterAllocator::print(const Register::RType &rt)
 {
     switch (rt)
     {

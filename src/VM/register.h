@@ -13,15 +13,15 @@ namespace VM
 
 class RegisterAllocator
 {
-    via_Value* gpr;
-    via_Value* ar;
-    via_Value* rr;
-    via_TableKey* ir;
-    via_Table* selfr;
-    std::byte* auxr;
+    via_Value *gpr;
+    via_Value *ar;
+    via_Value *rr;
+    via_TableKey *ir;
+    via_Table *selfr;
+    std::byte *auxr;
 
-    uint8_t get_size(const Register::RType& type);
-    void* alloc(const Register::RType& type, const uint8_t& count);
+    uint8_t get_size(const Register::RType &type);
+    void* alloc(const Register::RType &type, const uint8_t &count);
     void prealloc();
 
 public:
@@ -40,7 +40,7 @@ public:
     }
 
     template <typename T>
-    inline T* get(const Register& r)
+    inline T *get(const Register &r)
     {
         const auto off = r.offset;
 
@@ -65,8 +65,8 @@ public:
         return nullptr;
     }
 
-    void flush(const Register::RType& r);
-    void print(const Register::RType& rt);
+    void flush(const Register::RType &r);
+    void print(const Register::RType &rt);
 };
 
 } // namespace VM

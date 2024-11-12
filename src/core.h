@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include <cassert>
+#include "magic_enum.hpp"
 
 #define VIA_ASSERT(cond, err) \
     do { \
@@ -13,5 +14,8 @@
             std::abort(); \
         } \
     } while (0)
+
+#define ENUM_NAME(expr) magic_enum::enum_name(expr)
+#define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
 
 #endif // VIA_CORE_H

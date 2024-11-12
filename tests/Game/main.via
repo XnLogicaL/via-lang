@@ -1,4 +1,3 @@
-local MathUtils = require("math_utils.viam")
 local Vec2 = require("vector_utils.viam")
 
 type Player {
@@ -28,15 +27,42 @@ struct Player {
             }
         }
     }
+
+    func new(name: String, pos: Vec2) {
+        self.name = name
+        self.position = pos
+    }
 }
 
-func main() {
-    local Players: {Player} = {}
+struct Game {
+    property players: {Player}
+    property state: Number
 
-    local player = Player { name = "Alice", position = Vector2D { x = 0, y = 0 } }
+    func addPlayer(memory.pointer<Player> player): void {
+        table.insert(self.players, memory.dereference(player))
+    }
+
+    func removePlayer(name: String) {
+        local player, i = table.find(self.players, func(i, v) {
+            return v.name == name
+        })
+
+        if player ~= nil {
+            table.remove(self.players, i)
+        }
+        else {
+            error(string.format("Could not find player %s in game instance %s", name, tostring(self)))
+        }
+    }
+}
+
+local func main() {
+    local const game = Game.new()
+
+    local player = Player.new("Alice", Vector2.new(0, 0))
     player.move(5, 10)
 
-    std.table.insert(Players, player)
+    game.addPlayer(memory.reference(player))
 
     local steps = 0
     
@@ -53,9 +79,13 @@ func main() {
     }
 
     local radius = 3.0
-    local area = MathUtils.circle_area(radius)
+    local area = Math.pi * radius ^ 2
     
     print("Area of circle with radius", radius, "is", area)
+
+    return
 }
+
+print("Running program")
 
 main()

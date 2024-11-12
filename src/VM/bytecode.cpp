@@ -50,32 +50,32 @@ Operand BytecodeParser::read_operand()
     case TokenType::LIT_FLOAT:
         return Operand {
             .type = Operand::OType::Number,
-            .num_val = std::stod(lit.value)
+            .num = std::stod(lit.value)
         };
     
     case TokenType::LIT_BOOL:
         return Operand {
             .type = Operand::OType::Bool,
-            .bool_val = lit.value == "true"
+            .boole = lit.value == "true"
         };
     
     case TokenType::LIT_STRING:
     case TokenType::LIT_CHAR:
         return Operand {
             .type = Operand::OType::String,
-            .str_val = strdup(lit.value.c_str())
+            .str = strdup(lit.value.c_str())
         };
 
     case TokenType::IDENTIFIER:
         return Operand{
             .type = Operand::OType::Register,
-            .reg_val = read_register(lit)
+            .reg = read_register(lit)
         };
 
     case TokenType::AT:
         return Operand {
             .type = Operand::OType::Identifier,
-            .ident_val = strdup(consume().value.c_str())
+            .ident = strdup(consume().value.c_str())
         };
 
     default:
