@@ -1,14 +1,14 @@
-#ifndef VIA_REGISTER_H
-#define VIA_REGISTER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#include "common.h"
+#pragma once
+
 #include "bytecode.h"
+#include "common.h"
 #include "types.h"
 
-namespace via
-{
+#include "magic_enum.hpp"
 
-namespace VM
+namespace via::VM
 {
 
 class RegisterAllocator
@@ -17,60 +17,48 @@ class RegisterAllocator
     via_Value *ar;
     via_Value *rr;
     via_TableKey *ir;
-    via_Table *selfr;
-    std::byte *auxr;
+    via_Table *sr;
+    via_Number *er;
 
-    uint8_t get_size(const Register::RType &type);
-    void* alloc(const Register::RType &type, const uint8_t &count);
+    uint8_t get_size(RegisterType type);
+    void *alloc(RegisterType type, uint8_t count);
     void prealloc();
 
 public:
-
-    RegisterAllocator() {
+    RegisterAllocator()
+    {
         this->prealloc();
     }
 
-    ~RegisterAllocator() {
+    ~RegisterAllocator()
+    {
         std::free(gpr);
         std::free(ar);
         std::free(rr);
         std::free(ir);
-        std::free(auxr);
-        std::free(selfr);
+        std::free(er);
+        std::free(sr);
     }
 
     template <typename T>
     inline T *get(const Register &r)
     {
-        const auto off = r.offset;
+        const auto off        = r.offset;
+        static T *registers[] = {
+            reinterpret_cast<T *>(gpr), reinterpret_cast<T *>(ar), reinterpret_cast<T *>(rr),
+            reinterpret_cast<T *>(ir),  reinterpret_cast<T *>(er), reinterpret_cast<T *>(sr),
+        };
 
-        switch (r.type)
+        // Ensure r.type maps to a valid index in registers[]
+        if (r.type >= RegisterType::R && r.type <= RegisterType::SR)
         {
-        case Register::RType::R:
-            return reinterpret_cast<T*>(gpr + off);
-        case Register::RType::AR:
-            return reinterpret_cast<T*>(ar + off);
-        case Register::RType::RR:
-            return reinterpret_cast<T*>(rr + off);
-        case Register::RType::IR:
-            return reinterpret_cast<T*>(ir + off);
-        case Register::RType::AUX:
-            return reinterpret_cast<T*>(auxr + off);
-        case Register::RType::SELFR:
-            return reinterpret_cast<T*>(selfr + off);
-        default:
-            break;
+            return registers[static_cast<int>(r.type) - static_cast<int>(RegisterType::R)] + off;
         }
-
         return nullptr;
     }
 
-    void flush(const Register::RType &r);
-    void print(const Register::RType &rt);
+    void flush(RegisterType r);
+    void print(RegisterType rt);
 };
 
-} // namespace VM
-
-} // namespace via
-
-#endif // VIA_REGISTER_H
+} // namespace via::VM

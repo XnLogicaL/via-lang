@@ -1,9 +1,12 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
 #include "print.h"
 #include "ast.h"
 #include "token.h"
 #include "common.h"
 
-#include "magic_enum/magic_enum.hpp"
+#include "magic_enum.hpp"
+#include "Utils/format_vec.h"
 
 using namespace via::Parsing;
 

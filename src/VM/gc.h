@@ -1,25 +1,22 @@
-#ifndef VIA_GC_H
-#define VIA_GC_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 
-namespace via
-{
-    
-namespace VM
+namespace via::VM
 {
 
 struct GCState
 {
     size_t collections;
+    size_t size;
 };
     
 class GarbageCollector
 {
     GCState state;
-
     std::vector<const void*> free_list;
-    std::vector<const void*> del_list;
 
 public:
 
@@ -30,33 +27,21 @@ public:
             return;
         }
 
+        state.size = 0;
         state.collections++;
 
         for (const auto &p : free_list)
         {
             std::free(const_cast<void*>(p));
         }
-
-        for (const auto &p : del_list)
-        {
-            delete p;
-        }
     }
 
-    inline void add(const void* p)
+    template <typename T>
+    inline void add(const T* p)
     {
         free_list.push_back(p);
+        state.size += sizeof(p);
     }
-
-    inline void add_heap(const void* p)
-    {
-        del_list.push_back(p);
-    }
-
 };
 
-} // namespace VM
-
-} // namespace via
-
-#endif // VIA_GC_H
+} // namespace via::VM

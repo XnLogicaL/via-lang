@@ -1,13 +1,11 @@
-#ifndef VIA_CONTAINER_H
-#define VIA_CONTAINER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "token.h"
 
-namespace via
-{
-
-namespace Tokenization
+namespace via::Tokenization
 {
 
 struct viaSourceContainer
@@ -17,8 +15,4 @@ struct viaSourceContainer
     std::string file_name;
 };
 
-} // namespace name
-    
-} // namespace via
-
-#endif // VIA_CONTAINER_H
+} // namespace via::Tokenization

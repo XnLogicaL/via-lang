@@ -1,0 +1,797 @@
+--------------------------------------------------------------------------------
+Profile data file 'callgrind.out.31655' (creator: callgrind-3.18.1)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 55392364
+Trigger: Program termination
+Profiled target:  ./test ./bytecode.txt (PID 31655, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+281,440,256 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                    file:function
+--------------------------------------------------------------------------------
+
+281,440,256 (100.0%)  *  ???:0x0000000000020290 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+279,086,833 (99.16%)  >   ???:(below main) (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+  2,254,430 ( 0.80%)  >   ./elf/./elf/rtld.c:_dl_start (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+     98,974 ( 0.04%)  >   ./elf/./elf/dl-init.c:_dl_init (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+
+279,086,833 (99.16%)  < ???:0x0000000000020290 (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+279,086,833 (99.16%)  *  ???:(below main) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,086,821 (99.16%)  >   ./csu/../csu/libc-start.c:__libc_start_main@@GLIBC_2.34 (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+
+279,086,821 (99.16%)  < ???:(below main) (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,086,821 (99.16%)  *  ./csu/../csu/libc-start.c:__libc_start_main@@GLIBC_2.34 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+279,085,688 (99.16%)  >   ./csu/../sysdeps/nptl/libc_start_call_main.h:(below main) (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+        968 ( 0.00%)  >   ???:0x0000000004be96d0 (1x) [???]
+         75 ( 0.00%)  >   ./stdlib/./stdlib/cxa_atexit.c:__cxa_atexit (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+         12 ( 0.00%)  >   ???:0x0000000000007c20 (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+          7 ( 0.00%)  >   ???:0x000000000010d000 (1x) [???]
+
+279,085,688 (99.16%)  < ./csu/../csu/libc-start.c:__libc_start_main@@GLIBC_2.34 (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+279,085,688 (99.16%)  *  ./csu/../sysdeps/nptl/libc_start_call_main.h:(below main) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+279,070,903 (99.16%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/viavm.cpp:main (1x)
+     14,723 ( 0.01%)  >   ./stdlib/./stdlib/exit.c:exit (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+         34 ( 0.00%)  >   ./setjmp/../sysdeps/x86_64/bsd-_setjmp.S:_setjmp (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+
+279,070,903 (99.16%)  < ./csu/../sysdeps/nptl/libc_start_call_main.h:(below main) (1x) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+279,070,903 (99.16%)  *  /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/viavm.cpp:main
+
+279,069,000 (99.16%)  *  ./src/viavm.cpp:main [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,007,599 (99.14%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.cpp:via::VM::VirtualMachine::init() (1x)
+     29,331 ( 0.01%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.h:via::VM::BytecodeParser::BytecodeParser(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (1x)
+     19,979 ( 0.01%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/Utils/reader.cpp:FileReader::read_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (1x)
+      9,838 ( 0.00%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.cpp:via::VM::BytecodeParser::parse() (1x)
+      1,655 ( 0.00%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::~VirtualMachine() (1x)
+        554 ( 0.00%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.h:via::VM::BytecodeParser::~BytecodeParser() (1x)
+
+279,007,599 (99.14%)  < ./src/viavm.cpp:main (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,007,599 (99.14%)  *  /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.cpp:via::VM::VirtualMachine::init()
+
+279,000,822 (99.13%)  *  ./src/VM/vm.cpp:via::VM::VirtualMachine::init() [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,000,803 (99.13%)  >   ./src/VM/vm.cpp:via::VM::VirtualMachine::execute() (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+
+279,000,803 (99.13%)  < ./src/VM/vm.cpp:via::VM::VirtualMachine::init() (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+279,000,803 (99.13%)  *  ./src/VM/vm.cpp:via::VM::VirtualMachine::execute() [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+ 49,000,000 (17.41%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::vtonumber(via::VM::via_Value const&) [clone .isra.0] (1,000,000x)
+        281 ( 0.00%)  >   /usr/include/c++/13/bits/basic_string.h:std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) [clone .constprop.0] (1x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+         68 ( 0.00%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::interpret_operand(via::VM::Operand const&) (2x)
+
+177,000,134 (62.89%)  *  ./src/VM/vm.h:via::VM::VirtualMachine::execute()
+ 75,000,093 (26.65%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h:via::VM::via_Value* via::VM::RegisterAllocator::get<via::VM::via_Value>(via::VM::Register const&) (3,000,002x)
+ 46,000,000 (16.34%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&) (2,000,000x)
+ 26,999,973 ( 9.59%)  >   ./src/VM/vm.h:via::VM::VirtualMachine::jmpto(via::VM::Instruction*) (999,999x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+         48 ( 0.00%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::operator=(via::VM::via_Value const&) (2x)
+
+ 75,000,093 (26.65%)  *  ./src/VM/register.h:via::VM::via_Value* via::VM::RegisterAllocator::get<via::VM::via_Value>(via::VM::Register const&) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+         19 ( 0.00%)  >   ???:0x000000000010dca0 (1x) [???]
+          8 ( 0.00%)  >   ???:0x000000000010d930 (1x) [???]
+
+ 75,000,093 (26.65%)  < ./src/VM/vm.h:via::VM::VirtualMachine::execute() (3,000,002x)
+ 75,000,093 (26.65%)  *  /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h:via::VM::via_Value* via::VM::RegisterAllocator::get<via::VM::via_Value>(via::VM::Register const&)
+
+ 69,000,000 (24.52%)  *  ./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+
+ 46,000,000 (16.34%)  < ./src/VM/vm.h:via::VM::VirtualMachine::execute() (2,000,000x)
+ 23,000,000 ( 8.17%)  < ./src/VM/vm.h:via::VM::VirtualMachine::vtonumber(via::VM::via_Value const&) [clone .isra.0] (1,000,000x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+ 69,000,000 (24.52%)  *  /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&)
+
+ 49,000,000 (17.41%)  *  ./src/VM/vm.h:via::VM::VirtualMachine::vtonumber(via::VM::via_Value const&) [clone .isra.0] [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+ 23,000,000 ( 8.17%)  >   /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&) (1,000,000x)
+
+ 49,000,000 (17.41%)  < ./src/VM/vm.cpp:via::VM::VirtualMachine::execute() (1,000,000x) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+ 49,000,000 (17.41%)  *  /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::vtonumber(via::VM::via_Value const&) [clone .isra.0]
+
+ 26,999,973 ( 9.59%)  < ./src/VM/vm.h:via::VM::VirtualMachine::execute() (999,999x)
+ 26,999,973 ( 9.59%)  *  ./src/VM/vm.h:via::VM::VirtualMachine::jmpto(via::VM::Instruction*) [/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/test]
+
+  4,000,004 ( 1.42%)  *  ./src/VM/types.h:via::VM::VirtualMachine::execute()
+
+  2,254,430 ( 0.80%)  < ???:0x0000000000020290 (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  2,254,430 ( 0.80%)  *  ./elf/./elf/rtld.c:_dl_start [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  2,252,337 ( 0.80%)  >   ./elf/../elf/dl-sysdep.c:_dl_sysdep_start (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         29 ( 0.00%)  >   ./elf/./elf/dl-setup_hash.c:_dl_setup_hash (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+         10 ( 0.00%)  >   ./elf/./elf/dl-minimal.c:__rtld_malloc_init_stubs (1x) [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/viavm.cpp
+--------------------------------------------------------------------------------
+Ir          
+
+-- line 42 ----------------------------------------
+ .               }
+ .           
+ .               result += (operands.size() == 0) ? "]" : "\b\b]";
+ .           
+ .               return result;
+ .           }
+ .           
+ .           int main(int argc, char const* argv[])
+11 ( 0.00%)  {
+ 2 ( 0.00%)      if (argc < 2)
+ .               {
+ .                   std::cerr << "Expected bytecode source\n";
+ .                   return 1;
+ .               }
+ .           
+ 6 ( 0.00%)      auto bytecode = FileReader::read_file(argv[1]);
+19,979 ( 0.01%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/Utils/reader.cpp:FileReader::read_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (1x)
+ .           
+ 4 ( 0.00%)      BytecodeParser parser(bytecode);
+29,331 ( 0.01%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.h:via::VM::BytecodeParser::BytecodeParser(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (1x)
+ 3 ( 0.00%)      auto instrs = parser.parse();
+9,838 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.cpp:via::VM::BytecodeParser::parse() (1x)
+ .           
+ .               /*for (const auto &instr : instrs)
+ .               {
+ .                   std::vector<Operand> operands(instr.operandv, instr.operandv + instr.operandc);
+ .           
+ .                   std::cout << std::format("Instruction(OpCode: {}, Operands: {})\n",
+ .                       magic_enum::enum_name(instr.op),
+ .                       format_operands(operands));
+ .               }*/
+ .           
+ .               VirtualMachine vm(instrs);
+ 2 ( 0.00%)      vm.init();
+279,007,599 (99.14%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.cpp:via::VM::VirtualMachine::init() (1x)
+ .           
+ 1 ( 0.00%)      return 0;
+15 ( 0.00%)  }
+1,655 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::~VirtualMachine() (1x)
+554 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/bytecode.h:via::VM::BytecodeParser::~BytecodeParser() (1x)
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/viavm.cpp
+--------------------------------------------------------------------------------
+  No information has been collected for /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/viavm.cpp
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h
+--------------------------------------------------------------------------------
+  No information has been collected for /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/VM/types.cpp
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 50 ----------------------------------------
+         .                   if (get(key).type != ValueType::Nil)
+         .                       data.erase(key);
+         .                   return;
+         .               }
+         .               data[key] = val;
+         .           }
+         .           
+         .           via_Value& via_Value::operator=(const via_Value& other)
+        10 ( 0.00%)  {
+ 6,000,004 ( 2.13%)      if (this != &other)
+         .               {
+         .                   //cleanup(); // Clean up existing resources
+         6 ( 0.00%)          type = other.type;
+18,000,012 ( 6.40%)          switch (type)
+         .                   {
+         .                   case VType::Number:
+ 6,000,004 ( 2.13%)              num = other.num;
+ 3,000,002 ( 1.07%)              break;
+         .                   case VType::Bool:
+         .                       boole = other.boole;
+         .                       break;
+         .                   case VType::String:
+         .                       str = strdup(other.str); // Deep copy of the string
+         .                       break;
+         .                   case VType::Ptr:
+         .                       ptr = other.ptr;
+-- line 75 ----------------------------------------
+-- line 89 ----------------------------------------
+         .                   case VType::TableKey:
+         .                       tblkey = new via_TableKey(*other.tblkey); // Deep copy the table key
+         .                       break;
+         .                   default:
+         .                       break;
+         .                   }
+         .               }
+         .               return *this;
+        10 ( 0.00%)  }
+         .           
+         .           via_Value::via_Value(const via_Table& t)
+         .           {
+         .               type = VType::Table;
+         .               tbl  = new via_Table(t);
+         .           }
+         .           
+18,000,000 ( 6.40%)  via_Value::via_Value(const via_Value& other)
+ 6,000,000 ( 2.13%)      : type(other.type)
+         .           {
+         .               *this = other; // Assign to utilize operator=
+12,000,000 ( 4.26%)  }
+         .           
+         .           void via_Value::cleanup()
+         .           {
+         .               switch (type)
+         .               {
+         .               case VType::String:
+         .                   if (str)
+         .                   {
+-- line 117 ----------------------------------------
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h
+--------------------------------------------------------------------------------
+  No information has been collected for /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/VM/vm.cpp
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 67 ----------------------------------------
+         .           #define VM_JMP(offset)                                                                                                 \
+         .               do                                                                                                                 \
+         .               {                                                                                                                  \
+         .                   jmp(offset);                                                                                                   \
+         .                   VM_DISPATCH();                                                                                                 \
+         .               } while (0);
+         .           
+         .           int VirtualMachine::execute()
+        13 ( 0.00%)  {
+         .               VM_DISPATCH();
+         .           
+         .           dispatch:
+         .           {
+         .               /*
+         .           
+         .               if (get_fflag(FFlag::ABRT))
+         .               {
+-- line 83 ----------------------------------------
+-- line 92 ----------------------------------------
+         .           
+         .               VM_ASSERT(is_valid_jump_address(ip),
+         .                         std::format("Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
+         .                                     reinterpret_cast<uintptr_t>(ip), reinterpret_cast<uintptr_t>(ihp),
+         .                                     reinterpret_cast<uintptr_t>(ibp)));
+         .           
+         .               */
+         .           
+18,000,027 ( 6.40%)      switch (ip->op)
+         .               {
+         .               case OpCode::END:
+         .               case OpCode::NOP:
+         .                   VM_NEXT();
+         .           
+         .               case OpCode::MOV:
+         .               {
+         .                   Operand dst_r = VM_OPND(0);
+-- line 108 ----------------------------------------
+-- line 141 ----------------------------------------
+         .                   /* TODO: Make this safe */
+         .                   *reinterpret_cast<via_Value *>(static_cast<uintptr_t>(dst_p.num)) = rget(src_r.reg);
+         .           
+         .                   VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::LI:
+         .               {
+         4 ( 0.00%)          Operand dst_r = VM_OPND(0);
+        10 ( 0.00%)          via_Value val = interpret_operand(VM_OPND(1));
+        68 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::interpret_operand(via::VM::Operand const&) (2x)
+         .           
+         .                   rset(dst_r.reg, val);
+         .           
+         4 ( 0.00%)          VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::PUSH:
+         .               {
+         .                   Instruction *ipc = ip;
+         .                   m_stack.push(StackFrame(ipc, m_gc));
+         .                   VM_NEXT();
+         .               }
+-- line 162 ----------------------------------------
+-- line 212 ----------------------------------------
+         .                   via_Value *dst_p = rget_address(dst.reg);                                                                      \
+         .                   via_Value num_n = rget(num.reg);                                                                               \
+         .                   VM_ASSERT_TYPE(num_n.type, ValueType::Number);                                                                 \
+         .                   dst_p->num op num_n.num;                                                                                       \
+         .                   VM_NEXT();                                                                                                     \
+         .               }
+         .           
+         .               case OpCode::ADD:
+12,000,000 ( 4.26%)          VM_BINOP(+=)
+         .               case OpCode::SUB:
+         .                   VM_BINOP(-=)
+         .               case OpCode::MUL:
+         .                   VM_BINOP(*=)
+         .               case OpCode::DIV:
+         .                   VM_BINOP(/=)
+         .           
+         .               case OpCode::NEG:
+-- line 228 ----------------------------------------
+-- line 315 ----------------------------------------
+         .                   VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::GCCOL:
+         .                   m_gc.collect();
+         .                   VM_NEXT();
+         .           
+         .               case OpCode::HALT:
+         5 ( 0.00%)          set_exit_data(0, "VM halted by user");
+       281 ( 0.00%)  => /usr/include/c++/13/bits/basic_string.h:std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) [clone .constprop.0] (1x)
+         1 ( 0.00%)          break;
+         .           
+         .               case OpCode::EXIT:
+         .               {
+         .                   via_Number code = rget<via_Number>({ RegisterType::ER, 0 });
+         .                   set_exit_data(static_cast<int>(code), "VM exited by user");
+         .                   VM_EXIT();
+         .               }
+         .           
+-- line 332 ----------------------------------------
+-- line 336 ----------------------------------------
+         .           
+         .                   VM_JMP(static_cast<int>(offset.num));
+         .                   VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::JNZ:
+         .               case OpCode::JZ:
+         .               {
+ 2,000,000 ( 0.71%)          Operand cond_r = VM_OPND(0);
+ 1,000,000 ( 0.36%)          Operand offset = VM_OPND(1);
+         .           
+ 4,000,000 ( 1.42%)          via_Value cond    = vtonumber(rget(cond_r.reg));
+49,000,000 (17.41%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.h:via::VM::VirtualMachine::vtonumber(via::VM::via_Value const&) [clone .isra.0] (1,000,000x)
+ 1,999,998 ( 0.71%)          int actual_offset = static_cast<int>(offset.num);
+         .           
+ 8,000,000 ( 2.84%)          if (ip->op == OpCode::JNZ ? (cond.num != 0) : (cond.num == 0))
+         .                       VM_JMP(actual_offset);
+         .           
+         1 ( 0.00%)          VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::CALL:
+         .               {
+         .                   Operand id = VM_OPND(0);
+         .                   via_Value calling = lget(id.ident);
+         .           
+         .                   call(calling);
+-- line 361 ----------------------------------------
+-- line 485 ----------------------------------------
+         .               {
+         .                   Operand tbl_r = VM_OPND(0);
+         .                   via_Value tbl = rget(tbl_r.reg);
+         .           
+         .                   VM_ASSERT(tbl.type == ValueType::Table, "Attempt to freeze non-table value");
+         .           
+         .                   tfreeze(tbl.tbl);
+         .           
+         2 ( 0.00%)          VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::ISFROZEN:
+         .               {
+         .                   Operand dst_r = VM_OPND(0);
+         .                   Operand tbl_r = VM_OPND(1);
+         .                   via_Value tbl = rget(tbl_r.reg);
+         .           
+-- line 501 ----------------------------------------
+-- line 637 ----------------------------------------
+         .           
+         .               case OpCode::ISNIL:
+         .               {
+         .                   Operand dst_r = VM_OPND(0);
+         .                   Operand obj_r = VM_OPND(1);
+         .           
+         .                   rset(dst_r.reg, via_Value(rget(obj_r.reg).type == ValueType::Nil));
+         .           
+ 2,000,000 ( 0.71%)          VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::STRCON:
+         .               {
+         .                   Operand dst_r = VM_OPND(0);
+         .                   Operand lhs_r = VM_OPND(1);
+         .                   Operand rhs_r = VM_OPND(2);
+         .           
+-- line 653 ----------------------------------------
+-- line 737 ----------------------------------------
+         .                   VM_ASSERT(size.type == ValueType::Number, "Expected number for allocation size");
+         .           
+         .                   void *mem = std::malloc(static_cast<size_t>(size.num));
+         .           
+         .                   VM_ASSERT(mem != nullptr, "Failed to allocate memory");
+         .           
+         .                   rset(addr_r.reg, via_Value(mem));
+         .           
+         1 ( 0.00%)          VM_NEXT();
+         .               }
+         .           
+         .               case OpCode::FREE:
+         .               {
+         .                   Operand addr_r = VM_OPND(0);
+         .                   via_Value addr = rget(addr_r.reg);
+         .           
+         .                   VM_ASSERT_TYPE(addr.type, ValueType::Number);
+-- line 753 ----------------------------------------
+-- line 778 ----------------------------------------
+         .           
+         .               default:
+         .                   set_exit_data(1, std::format("Unrecognized OpCode (op_id={})", static_cast<uint8_t>(ip->op)));
+         .                   VM_EXIT();
+         .               }
+         .           }
+         .           
+         .           exit:
+         1 ( 0.00%)      return m_state.exit_code;
+        11 ( 0.00%)  }
+         .           
+         .           void VirtualMachine::init()
+         7 ( 0.00%)  {
+         2 ( 0.00%)      VIA_ASSERT(!is_running(), "Attempt to initialize VM while running");
+         .           
+         .               try
+         .               {
+         2 ( 0.00%)          m_state.is_running = true;
+         1 ( 0.00%)          execute();
+279,000,803 (99.13%)  => ./src/VM/vm.cpp:via::VM::VirtualMachine::execute() (1x)
+         .               }
+         .               catch (const std::exception &e)
+         .               {
+         .                   std::cout << std::format("\nVM execution exception\n  {}\n", e.what());
+         .                   return;
+         .               }
+         .           
+         .               std::cout << std::format("\nVM exiting with code={} and exit_message='{}'\n", m_state.exit_code,
+         .                                        m_state.exit_message);
+         .           
+         .               return;
+         7 ( 0.00%)  }
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp
+--------------------------------------------------------------------------------
+  No information has been collected for /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.cpp
+--------------------------------------------------------------------------------
+  No information has been collected for /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/vm.cpp
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/VM/vm.h
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 19 ----------------------------------------
+         .           
+         .           namespace via::VM
+         .           {
+         .           
+         .           class VirtualMachine
+         .           {
+         .           public:
+         .               VirtualMachine(const std::vector<Instruction> &pipeline /* This has to be a constant ref */)
+         1 ( 0.00%)      {
+         4 ( 0.00%)          ihp = new Instruction[pipeline.size()]; // Allocate ihp    (Instruction head pointer)
+       217 ( 0.00%)  => ???:0x000000000010d6b0 (1x)
+         3 ( 0.00%)          ip  = ihp;                              // Initialize ip   (Instruction pointer)
+         2 ( 0.00%)          ibp = ihp + pipeline.size();            // Initialize ibp  (Instruction base pointer)
+         .                   // ? There might be a more optimized way to do this
+         .                   std::copy(pipeline.begin(), pipeline.end(), ip); // Copy instructions into the instruction pipeline
+         .               }
+         .           
+         9 ( 0.00%)      ~VirtualMachine()
+         .               {
+         .                   gccol();       // Final GC invocation, technically unnecessary because GC destructor already does this
+         1 ( 0.00%)          ip  = nullptr; // Invalidate ip
+         1 ( 0.00%)          ibp = nullptr; // Invalidate ibp
+         4 ( 0.00%)          delete[] ihp;  // Invalidate ihp
+        99 ( 0.00%)  => ???:0x000000000010daf0 (1x)
+         7 ( 0.00%)      }
+         .           
+         .               // Initializes VM code execution
+         .               // Terminates the program if called twice
+         .               void init();
+         .           
+         .               // Returns wether if the VM is running
+         .               constexpr bool is_running() const noexcept
+         .               {
+-- line 49 ----------------------------------------
+-- line 51 ----------------------------------------
+         .               }
+         .           
+         .               //* Internal
+         .           
+         .               // Manually sets the VM exit data
+         .               // ! Internal usage only, made public for libraries
+         .               inline void set_exit_data(int exit_code, const std::string &exit_message) noexcept
+         .               {
+         1 ( 0.00%)          m_state.exit_code    = exit_code;
+         1 ( 0.00%)          m_state.exit_message = exit_message;
+         .                   return;
+         .               }
+         .           
+         .               // Sets a fast flag to the given value
+         .               // Terminates if the flag doesn't exist
+         .               inline void set_fflag(FFlag flag, int val) noexcept
+         .               {
+         .                   m_state.fflags.set(static_cast<int>(flag), val);
+-- line 68 ----------------------------------------
+-- line 154 ----------------------------------------
+         .                   m_ralloc.flush(RegisterType::RR);
+         .                   return;
+         .               }
+         .           
+         .               // Sets register <r> to the given value <v>
+         .               template <typename T = via_Value>
+         .               inline void rset(const Register &r, const T &v) noexcept
+         .               {
+        12 ( 0.00%)          *m_ralloc.get<T>(r) = v;
+        93 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h:via::VM::via_Value* via::VM::RegisterAllocator::get<via::VM::via_Value>(via::VM::Register const&) (2x)
+        48 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::operator=(via::VM::via_Value const&) (2x)
+         .                   return;
+         .               }
+         .           
+         .               // Returns the value of register <r>
+         .               template <typename T = via_Value>
+         .               inline constexpr T rget(const Register &r) noexcept
+         .               {
+ 6,000,000 ( 2.13%)          return *rget_address<T>(r);
+46,000,000 (16.34%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&) (2,000,000x)
+         .               }
+         .           
+         .               // Returns the memory address of register <r>
+         .               template <typename T = via_Value>
+         .               inline constexpr T *rget_address(const Register &r) noexcept
+         .               {
+13,000,000 ( 4.62%)          T *addr = m_ralloc.get<T>(r);
+75,000,000 (26.65%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.h:via::VM::via_Value* via::VM::RegisterAllocator::get<via::VM::via_Value>(via::VM::Register const&) (3,000,000x)
+         .                   return addr;
+         .               }
+         .           
+         .               // Compares two registers types and offsets
+         .               inline constexpr bool ris(const Register &r0, const Register &r1) noexcept
+         .               {
+         .                   return r0.type == r1.type && r0.offset == r1.offset;
+         .               }
+-- line 185 ----------------------------------------
+-- line 334 ----------------------------------------
+         .                       break;
+         .                   }
+         .           
+         .                   return via_Value(true);
+         .               }
+         .           
+         .               // Returns the number representation of value <v>
+         .               // ! Returns Nil if impossible, unlike `vtostring` or `vtobool`
+10,000,000 ( 3.55%)      inline via_Value vtonumber(const via_Value &v)
+         .               {
+ 3,000,000 ( 1.07%)          if (v.type == ValueType::Number)
+         .                   {
+ 2,000,000 ( 0.71%)              return v;
+23,000,000 ( 8.17%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/types.cpp:via::VM::via_Value::via_Value(via::VM::via_Value const&) (1,000,000x)
+         .                   }
+         .           
+         .                   switch (v.type)
+         .                   {
+         .                   case ValueType::String:
+         .                       return via_Value(std::stod(v.str));
+         .                   case ValueType::Bool:
+         .                       return via_Value(v.boole ? 1.0f : 0.0f);
+         .                   default:
+         .                       break;
+         .                   }
+         .           
+         .                   return via_Value();
+11,000,000 ( 3.91%)      }
+         .           
+         .               // Calls a via_Func type, terminates if uncallable
+         .               // Uses the FASTCALL convention
+         .               // Arguments and return values are loaded onto registers of those respective types
+         .               // For example, argument register #1 would be;
+         .               // { RegisterType::AR, 0 }
+         .               // This allows for extremely fast function calls and an alternative to stack based calling conventions
+         .               inline void callf(const via_Func &f)
+-- line 368 ----------------------------------------
+-- line 567 ----------------------------------------
+         .               RegisterAllocator m_ralloc; // VM Register allocator
+         .           
+         .           private:
+         .               //* Entry point
+         .               // Located in vm.cpp
+         .               int execute();
+         .           
+         .               //* Control flow
+10,999,989 ( 3.91%)      inline void jmpto(Instruction *i)
+         .               {
+         .                   if (!is_valid_jump_address(i))
+         .                   {
+         .                       set_exit_data(1, "Illegal jump: jump  address out of bounds");
+         .                       set_fflag(FFlag::ABRT, true);
+         .                       return;
+         .                   }
+         .           
+   999,999 ( 0.36%)          ip = i;
+   999,999 ( 0.36%)          return;
+ 9,999,990 ( 3.55%)      }
+         .           
+         .               inline void jmp(int offset)
+         .               {
+ 2,999,997 ( 1.07%)          Instruction *target_ip = ip + offset;
+ 2,999,997 ( 1.07%)          jmpto(target_ip);
+26,999,973 ( 9.59%)  => ./src/VM/vm.h:via::VM::VirtualMachine::jmpto(via::VM::Instruction*) (999,999x)
+         .                   return;
+         .               }
+         .           
+         .               /*
+         .               ! This function should not be called outside corresponding stack frames
+         .               ! This WILL cause a stack underflow if used incorrectly
+         .               ! May even cause undefined behavior if somehow the return_address pointer
+         .               ! is within the bounds of the ip pipeline but is dangling/invalid
+-- line 599 ----------------------------------------
+-- line 623 ----------------------------------------
+         .                   jmpto(const_cast<Instruction *>(ra) + 1);
+         .           
+         .                   return;
+         .               }
+         .           
+         .               //* Utility
+         .               inline bool is_valid_jump_address(Instruction *addr) const noexcept
+         .               {
+ 8,000,008 ( 2.84%)          return (addr >= ihp) && (addr <= ibp);
+         .               }
+         .           
+        24 ( 0.00%)      inline via_Value interpret_operand(const Operand &o)
+         .               {
+        14 ( 0.00%)          switch (o.type)
+         .                   {
+         .                   case OperandType::Number:
+         .                       return via_Value(o.num);
+         .                   case OperandType::Bool:
+         .                       return via_Value(o.boole);
+         .                   case OperandType::String:
+         .                       return via_Value(o.str);
+         .                   default:
+         .                       set_exit_data(1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(o.type)));
+         .                       set_fflag(FFlag::ABRT, true);
+         .                       break;
+         .                   }
+         .           
+         .                   return via_Value();
+        24 ( 0.00%)      }
+         .           
+         .               inline void save_state()
+         .               {
+         .               }
+         .           };
+         .           
+         .           } // namespace via::VM
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/VM/types.h
+--------------------------------------------------------------------------------
+Ir                 
+
+-- line 68 ----------------------------------------
+        .               }
+        .               via_Value(const via_String &c)
+        .                   : type(VType::String)
+        .                   , str(strdup(c))
+        .               {
+        .               }
+        .           
+        .               explicit via_Value(const via_Number &d)
+        2 ( 0.00%)          : type(VType::Number)
+        4 ( 0.00%)          , num(d)
+        .               {
+        .               }
+        .               explicit via_Value(const via_Bool &b)
+        .                   : type(VType::Bool)
+        .                   , boole(b)
+        .               {
+        .               }
+        .               explicit via_Value(const via_Ptr &p)
+-- line 85 ----------------------------------------
+-- line 104 ----------------------------------------
+        .               {
+        .               }
+        .           
+        .               via_Value(const via_Value &other);
+        .               via_Value &operator=(const via_Value &other);
+        .           
+        .               ~via_Value()
+        .               {
+4,000,004 ( 1.42%)          if (type == VType::String)
+        .                   {
+        .                       std::free(str);
+        .                   }
+        .               };
+        .           
+        .               bool is_const;
+        .               VType type;
+        .           
+-- line 120 ----------------------------------------
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: ./src/VM/register.h
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 22 ----------------------------------------
+         .           
+         .               uint8_t get_size(RegisterType type);
+         .               void *alloc(RegisterType type, uint8_t count);
+         .               void prealloc();
+         .           
+         .           public:
+         .               RegisterAllocator()
+         .               {
+         2 ( 0.00%)          this->prealloc();
+     1,164 ( 0.00%)  => /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/./src/VM/register.cpp:via::VM::RegisterAllocator::prealloc() (1x)
+         .               }
+         .           
+         .               ~RegisterAllocator()
+         .               {
+         2 ( 0.00%)          std::free(gpr);
+       118 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         2 ( 0.00%)          std::free(ar);
+        91 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         2 ( 0.00%)          std::free(rr);
+        91 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         2 ( 0.00%)          std::free(ir);
+        91 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         2 ( 0.00%)          std::free(er);
+        91 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         2 ( 0.00%)          std::free(sr);
+        91 ( 0.00%)  => ???:0x000000000010dad0 (1x)
+         .               }
+         .           
+         .               template <typename T>
+21,000,014 ( 7.46%)      inline T *get(const Register &r)
+         .               {
+ 3,000,002 ( 1.07%)          const auto off        = r.offset;
+ 9,000,018 ( 3.20%)          static T *registers[] = {
+        19 ( 0.00%)  => ???:0x000000000010dca0 (1x)
+         8 ( 0.00%)  => ???:0x000000000010d930 (1x)
+         4 ( 0.00%)              reinterpret_cast<T *>(gpr), reinterpret_cast<T *>(ar), reinterpret_cast<T *>(rr),
+         .                       reinterpret_cast<T *>(ir),  reinterpret_cast<T *>(er), reinterpret_cast<T *>(sr),
+         .                   };
+         .           
+         .                   // Ensure r.type maps to a valid index in registers[]
+ 9,000,006 ( 3.20%)          if (r.type >= RegisterType::R && r.type <= RegisterType::SR)
+         .                   {
+12,000,008 ( 4.26%)              return registers[static_cast<int>(r.type) - static_cast<int>(RegisterType::R)] + off;
+         .                   }
+ 3,000,002 ( 1.07%)          return nullptr;
+18,000,012 ( 6.40%)      }
+         .           
+         .               void flush(RegisterType r);
+         .               void print(RegisterType rt);
+         .           };
+         .           
+         .           } // namespace via::VM
+--------------------------------------------------------------------------------
+The following files chosen for auto-annotation could not be found:
+--------------------------------------------------------------------------------
+  ./csu/../csu/libc-start.c
+  ./csu/../sysdeps/nptl/libc_start_call_main.h
+  ./elf/./elf/rtld.c
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+279,000,366 (99.13%)  events annotated
+

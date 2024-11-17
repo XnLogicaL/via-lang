@@ -1,10 +1,14 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <stdexcept>
 #include <format>
 
-namespace reader
+namespace FileReader
 {
 
 class BadFileException : std::exception
@@ -22,20 +26,6 @@ public:
     }
 };
 
-std::string read_file(std::string path)
-{
-    std::ifstream file(path);
+std::string read_file(std::string path);
 
-    if (!file)
-    {
-        throw BadFileException(path);
-    }
-
-    std::string source((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-    file.close();
-
-    return source;
-}
-
-} // namespace reader
+} // namespace FileReader

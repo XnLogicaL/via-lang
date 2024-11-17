@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++23 -I./src -I./include -Wextra -Wall -g
+CXXFLAGS = -std=c++23 -O3 -I./src -I./include -Wextra -Wall -g
 
 # Source files and includes
 SOURCES = $(shell find ./src -name '*.cpp')
@@ -23,6 +23,6 @@ clean:
 	@rm -f $(TARGET) test
 
 # Test build
-test:
+vm:
 	@echo "Building test executable..."
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o test ./src/vmtest.cpp ./src/Lexer/lexer.cpp ./src/Lexer/token.cpp $(shell find ./src/VM -name '*.cpp')
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o test ./src/viavm.cpp ./src/Lexer/lexer.cpp ./src/Lexer/token.cpp $(shell find ./src/VM -name '*.cpp') $(shell find ./src/Utils -name '*.cpp')

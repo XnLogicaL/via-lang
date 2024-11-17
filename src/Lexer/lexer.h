@@ -1,5 +1,6 @@
-#ifndef VIA_LEXER_H
-#define VIA_LEXER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "token.h"
@@ -10,15 +11,13 @@
     #define __VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024
 #endif
 
-namespace via
-{
-
-namespace Tokenization
+namespace via::Tokenization
 {
 
 class Tokenizer
 {
-    std::string& source;
+private:
+    std::string &source;
     size_t pos;
     size_t line;
     size_t offset;
@@ -26,7 +25,7 @@ class Tokenizer
 
 public:
 
-    Tokenizer(std::string& source)
+    Tokenizer(std::string &source)
         : source(source)
         , pos(0)
         , line(1)
@@ -41,8 +40,4 @@ public:
     viaSourceContainer tokenize() noexcept;
 };
 
-} // namespace Tokenization
-    
-} // namespace via
-
-#endif // VIA_LEXER_H
+} // namespace via::Tokenization

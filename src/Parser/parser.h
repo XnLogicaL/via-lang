@@ -1,5 +1,6 @@
-#ifndef VIA_PARSER_H
-#define VIA_PARSER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "ast.h"
@@ -7,15 +8,12 @@
 #include "token.h"
 #include "container.h"
 
-#ifndef VIA_PARSER_ALLOC_SIZE
+#ifndef __VIA_PARSER_ALLOC_SIZE
     // Default allocation size set to 8MiB
-    #define VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024)
+    #define __VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024)
 #endif
 
-namespace via
-{
-
-namespace Parsing
+namespace via::Parsing
 {
 
 class Parser
@@ -72,15 +70,11 @@ class Parser
 public:
 
     Parser(viaSourceContainer vsc)
-        : m_alloc(ArenaAllocator(VIA_PARSER_ALLOC_SIZE))
+        : m_alloc(ArenaAllocator(__VIA_PARSER_ALLOC_SIZE))
         , container(vsc)
         , current_position(0) {}
 
     AST::AST* parse_program();
 };
 
-} // namespace Parsing
-
-} // namespace via
-
-#endif // VIA_PARSER_H
+} // namespace via::Parsing

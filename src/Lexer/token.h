@@ -1,12 +1,10 @@
-#ifndef VIA_TOKEN_H
-#define VIA_TOKEN_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 
-namespace via
-{
-
-namespace Tokenization
+namespace via::Tokenization
 {
 
 enum class TokenType {
@@ -27,72 +25,78 @@ enum class TokenType {
     KW_CONST,
     KW_NEW,
     KW_BREAK,
-    KW_CONTINUE,      // continue
-    KW_SWITCH,        // switch
-    KW_CASE,          // case
-    KW_DEFAULT,       // default
-    KW_DELETE,        // delete
-    KW_AND,           // and
-    KW_NOT,           // not
-    KW_OR,            // or
+    KW_CONTINUE, // continue
+    KW_SWITCH,   // switch
+    KW_CASE,     // case
+    KW_DEFAULT,  // default
+    KW_DELETE,   // delete
+    KW_AND,      // and
+    KW_NOT,      // not
+    KW_OR,       // or
     KW_STRUCT,
     KW_NAMESPACE,
     KW_PROPERTY,
+    KW_IMPORT,
+    KW_EXPORT,
+    KW_MACRO,
+    KW_DEFINE,
 
     // Operators
-    OP_EXP,           // ^
-    OP_ADD,           // +
-    OP_SUB,           // -
-    OP_MUL,           // *
-    OP_DIV,           // /
-    OP_MOD,           // %
-    OP_EQ,            // ==
-    OP_NEQ,           // !=
-    OP_LT,            // <
-    OP_GT,            // >
-    OP_LEQ,           // <=
-    OP_GEQ,           // >=
-    OP_INC,           // ++
-    OP_DEC,           // --
+    OP_EXP, // ^
+    OP_ADD, // +
+    OP_SUB, // -
+    OP_MUL, // *
+    OP_DIV, // /
+    OP_MOD, // %
+    OP_EQ,  // ==
+    OP_NEQ, // !=
+    OP_LT,  // <
+    OP_GT,  // >
+    OP_LEQ, // <=
+    OP_GEQ, // >=
+    OP_INC, // ++
+    OP_DEC, // --
     OP_ASGN,
 
     // Literals
-    LIT_INT,          // Integer literals
-    LIT_FLOAT,        // Floating-point literals
-    LIT_STRING,       // String literals
-    LIT_CHAR,         // Character literals
-    LIT_BOOL,         // Boolean literals
+    LIT_INT,    // Integer literals
+    LIT_FLOAT,  // Floating-point literals
+    LIT_STRING, // String literals
+    LIT_CHAR,   // Character literals
+    LIT_BOOL,   // Boolean literals
 
     // Identifiers
-    IDENTIFIER,       // Variable and function names
+    IDENTIFIER, // Variable and function names
 
     // Punctuation
-    PAREN_OPEN,       // (
-    PAREN_CLOSE,      // )
-    BRACE_OPEN,       // {
-    BRACE_CLOSE,      // }
-    BRACKET_OPEN,     // [
-    BRACKET_CLOSE,    // ]
-    COMMA,            // ,
-    SEMICOLON,        // ;
-    COLON,            // :
-    DOT,              // .
+    PAREN_OPEN,    // (
+    PAREN_CLOSE,   // )
+    BRACE_OPEN,    // {
+    BRACE_CLOSE,   // }
+    BRACKET_OPEN,  // [
+    BRACKET_CLOSE, // ]
+    COMMA,         // ,
+    SEMICOLON,     // ;
+    COLON,         // :
+    DOT,           // .
 
     // Miscellaneous
-    AT,               // @
-    TILDE,            // ~
-    QUOTE,            // '
-    PIPE,             // |
-    DOLLAR,           // $
-    BACKTICK,         // `
-    AMPERSAND,        // &
-    DOUBLE_QUOTE,     // "
+    AT,           // @
+    TILDE,        // ~
+    QUOTE,        // '
+    PIPE,         // |
+    DOLLAR,       // $
+    BACKTICK,     // `
+    AMPERSAND,    // &
+    DOUBLE_QUOTE, // "
+    EXCLAMATION,  // !
 
-    EOF_,        // End of file
-    UNKNOWN           // Unknown token
+    EOF_,   // End of file
+    UNKNOWN // Unknown token
 };
 
-struct Token {
+struct Token
+{
     TokenType type;
     std::string value;
     size_t line;
@@ -100,14 +104,9 @@ struct Token {
     bool has_thrown_error = false;
 
     std::string to_string() const noexcept;
-    
     bool is_literal() const noexcept;
     bool is_operator() const noexcept;
     int bin_prec() const noexcept;
 };
 
-} // namespace name
-    
-} // namespace via
-
-#endif // VIA_TOKEN_H
+} // namespace via::Tokenization

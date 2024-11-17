@@ -1,5 +1,6 @@
-#ifndef VIA_AST_H
-#define VIA_AST_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "token.h"
@@ -7,12 +8,9 @@
 #include <variant>
 #include <vector>
 
-namespace via
+namespace via::Parsing::AST
 {
-namespace Parsing
-{
-namespace AST
-{
+
 using namespace Tokenization;
 
 // Forward declarations
@@ -398,10 +396,4 @@ struct AST
     std::vector<StmtNode*> stmts;
 };
 
-} // namespace AST
-
-} // namespace Parsing
-
-} // namespace via
-
-#endif // VIA_AST_H
+} // namespace via::Parsing::AST

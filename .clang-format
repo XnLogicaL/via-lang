@@ -1,0 +1,41 @@
+# .clang-format configuration file
+---
+BasedOnStyle: WebKit
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AllowShortFunctionsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
+BraceWrapping:
+  AfterFunction: true
+  AfterStruct: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterNamespace: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeWhile: true
+  IndentBraces: false
+ColumnLimit: 120
+MaxLineLength: 120  # Prevent wrapping for normal lines, including comments
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: true
+AlignOperands: true
+AlignTrailingComments: true
+SpaceBeforeParens: ControlStatements
+SpacesBeforeTrailingComments: 1
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: true
+DerivePointerAlignment: false
+PointerAlignment: Right
+IncludeBlocks: Preserve
+SortIncludes: true
+IndentCaseLabels: false
+BreakBeforeBinaryOperators: All  # Make binary operators (like <<) always break to a new line
+BreakBeforeBraces: Allman
+IndentNamespaces: false  # Prevent indentation inside namespaces
+IndentSwitchCaseLabels: false  # Prevent indentation of switch case labels
+PenaltyBreakComment: 1000000  # Disable wrapping of comments based on column limit
+CommentPragmas: '^.*$'  # Ensure that comments are not wrapped based on column limit

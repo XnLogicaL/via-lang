@@ -1,5 +1,6 @@
-#ifndef VIA_STACK_H
-#define VIA_STACK_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "types.h"
@@ -16,10 +17,7 @@
     #define __VIA_STACK_FRAME_SIZE 1024
 #endif
 
-namespace via
-{
-
-namespace VM
+namespace via::VM
 {
 
 class StackFrame {
@@ -109,8 +107,4 @@ public:
     }
 };
 
-} // namespace VM
-
-} // namespace via
-
-#endif // VIA_STACK_H
+} // namespace via::VM

@@ -1,9 +1,8 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
 #pragma once
 
-namespace via
-{
-
-namespace util
+namespace via::util
 {
     
 template <typename T>
@@ -35,6 +34,4 @@ public:
     }
 };
 
-} // namespace util
-
-} // namespace via
+} // namespace via::util

@@ -1,17 +1,12 @@
-#ifndef AST_PRINTER_H
-#define AST_PRINTER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "ast.h"
 #include "token.h"
 
-namespace via
-{
-
-namespace Parsing
-{
-
-namespace AST
+namespace via::Parsing::AST
 {
 
 std::string stringify_type_node(const TypeNode& type);
@@ -25,10 +20,4 @@ std::string stringify_return_stmt_node(const ReturnStmtNode node);
 std::string stringify_scope_stmt_node(const ScopeStmtNode scope);
 std::string stringify_ast(const AST ast);
     
-} // namespace AST
-
-} // namespace Parsing
-
-} // namespace via
-
-#endif // AST_PRINTER_H
+} // namespace via::Parsing::AST

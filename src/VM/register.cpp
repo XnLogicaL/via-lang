@@ -1,73 +1,84 @@
-#include "common.h"
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
 #include "register.h"
+#include "common.h"
 #include "magic_enum.hpp"
+
 #include <cstdlib>
 #include <cstring>
+#include <format>
+#include <iostream>
 
 using namespace via::VM;
-using RType = Register::RType;
 
-uint8_t RegisterAllocator::get_size(const RType &type)
+uint8_t RegisterAllocator::get_size(RegisterType type)
 {
     switch (type)
     {
-    case RType::R:      return sizeof(via_Value);
-    case RType::AR:     return sizeof(via_Value);
-    case RType::RR:     return sizeof(via_Value);
-    case RType::IR:     return sizeof(via_TableKey);
-    case RType::AUX:    return 1;
-    case RType::SELFR:  return sizeof(via_Table);
-    default:            return 0;
+    case RegisterType::R:
+        return sizeof(via_Value);
+    case RegisterType::AR:
+        return sizeof(via_Value);
+    case RegisterType::RR:
+        return sizeof(via_Value);
+    case RegisterType::IR:
+        return sizeof(via_TableKey);
+    case RegisterType::ER:
+        return sizeof(via_Number);
+    case RegisterType::SR:
+        return sizeof(via_Table);
+    default:
+        return 0;
     }
 }
 
-void *RegisterAllocator::alloc(const Register::RType &type, const uint8_t &count)
+void *RegisterAllocator::alloc(RegisterType type, uint8_t count)
 {
     return std::malloc(get_size(type) * count);
 }
 
 void RegisterAllocator::prealloc()
 {
-    this->gpr = reinterpret_cast<via_Value *>(alloc(RType::R, 128));
-    this->ar = reinterpret_cast<via_Value *>(alloc(RType::AR, 16));
-    this->rr = reinterpret_cast<via_Value *>(alloc(RType::RR, 16));
-    this->ir = reinterpret_cast<via_TableKey *>(alloc(RType::IR, 1));
-    this->auxr = reinterpret_cast<std::byte *>(alloc(RType::AUX, 32));
-    this->selfr = reinterpret_cast<via_Table *>(alloc(RType::SELFR, 1));
+    this->gpr = reinterpret_cast<via_Value *>(alloc(RegisterType::R, 128));
+    this->ar  = reinterpret_cast<via_Value *>(alloc(RegisterType::AR, 16));
+    this->rr  = reinterpret_cast<via_Value *>(alloc(RegisterType::RR, 16));
+    this->ir  = reinterpret_cast<via_TableKey *>(alloc(RegisterType::IR, 1));
+    this->er  = reinterpret_cast<via_Number *>(alloc(RegisterType::ER, 32));
+    this->sr  = reinterpret_cast<via_Table *>(alloc(RegisterType::SR, 1));
 }
 
-void RegisterAllocator::flush(const RType &r)
+void RegisterAllocator::flush(RegisterType r)
 {
     switch (r)
     {
-    case RType::R:
+    case RegisterType::R:
         std::free(this->gpr);
-        this->gpr = reinterpret_cast<via_Value *>(alloc(RType::R, 128));
+        this->gpr = reinterpret_cast<via_Value *>(alloc(RegisterType::R, 128));
         break;
 
-    case RType::AR:
+    case RegisterType::AR:
         std::free(this->ar);
-        this->ar = reinterpret_cast<via_Value *>(alloc(RType::AR, 16));
+        this->ar = reinterpret_cast<via_Value *>(alloc(RegisterType::AR, 16));
         break;
 
-    case RType::RR:
+    case RegisterType::RR:
         std::free(this->rr);
-        this->rr = reinterpret_cast<via_Value *>(alloc(RType::RR, 16));
+        this->rr = reinterpret_cast<via_Value *>(alloc(RegisterType::RR, 16));
         break;
 
-    case RType::IR:
+    case RegisterType::IR:
         std::free(this->ir);
-        this->ir = reinterpret_cast<via_TableKey *>(alloc(RType::IR, 1));
+        this->ir = reinterpret_cast<via_TableKey *>(alloc(RegisterType::IR, 1));
         break;
 
-    case RType::AUX:
-        std::free(this->auxr);
-        this->auxr = reinterpret_cast<std::byte *>(alloc(RType::AUX, 32));
+    case RegisterType::ER:
+        std::free(this->er);
+        this->er = reinterpret_cast<via_Number *>(alloc(RegisterType::ER, 1));
         break;
 
-    case RType::SELFR:
-        std::free(this->selfr);
-        this->selfr = reinterpret_cast<via_Table *>(alloc(RType::SELFR, 1));
+    case RegisterType::SR:
+        std::free(this->sr);
+        this->sr = reinterpret_cast<via_Table *>(alloc(RegisterType::SR, 1));
         break;
 
     default:
@@ -75,24 +86,28 @@ void RegisterAllocator::flush(const RType &r)
     }
 }
 
-void RegisterAllocator::print(const Register::RType &rt)
+void RegisterAllocator::print(RegisterType rt)
 {
+    std::cout << "---------- Register Map ----------\n";
+
     switch (rt)
     {
-    case RType::R: {
+    case RegisterType::R:
+    {
         auto rv = std::vector(gpr, gpr + 128);
-        int i = 0;
+        int i   = 0;
 
         for (const auto &r : rv)
         {
-            std::cout << std::format("|{}| T={}\n", i++,
-                magic_enum::enum_name(r.type));
+            std::cout << std::format("|{}| T={}\n", i++, magic_enum::enum_name(r.type));
         }
 
         break;
     }
-    
+
     default:
         break;
     }
+
+    std::cout << "----------------------------------\n";
 }

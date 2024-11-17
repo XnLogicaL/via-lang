@@ -1,204 +1,114 @@
-#ifndef VIA_VM_H
-#define VIA_VM_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
+#pragma once
+
+#include "bytecode.h"
 #include "common.h"
 #include "core.h"
+#include "gc.h"
+#include "global.h"
 #include "opcode.h"
-#include "bytecode.h"
 #include "register.h"
 #include "stack.h"
-#include "gc.h"
 #include "state.h"
-#include "global.h"
 #include "types.h"
 
-#include "util/modifiable_once.h"
-#include "util/callable_once.h"
-#include "util/debounce.h"
+#include "Utils/callable_once.h"
+#include "Utils/debounce.h"
+#include "Utils/modifiable_once.h"
 
 namespace via::VM
 {
 
 class VirtualMachine
 {
-private:
-
-    VMState m_state;        // State object for the VM
-    Instruction* ip;        // Instruction pointer
-    Instruction* ip_s;      // Instruction list head
-    Instruction* ip_e;      // Instruction list base
-
-    Global m_global;            // VM Global environment
-    Stack<StackFrame> m_stack;  // VM Stack
-    RegisterAllocator m_ralloc; // VM Register allocator
-    GarbageCollector m_gc;      // VM Garbage collector
-
-    std::unordered_map<std::string_view, Instruction*> m_labels;
-
-    int execute();
-
-    //* Control flow
-    inline void jmpto(Instruction* i)
-    {
-        if (!is_valid_jump_address(i))
-        {
-            set_exit_data(1, "Invalid jump address");
-            set_fflag("FFLAG_ABRT", true);
-            return;
-        }
-
-        ip = i;
-        return;
-    }
-
-    inline void jmp(int offset)
-    {
-        Instruction* target_ip = ip + static_cast<int>(offset);
-
-        if (!is_valid_jump_address(target_ip))
-        {
-            set_exit_data(1, "Illegal jump");
-            set_fflag("FFLAG_ABRT", true);
-            return;
-        }
-
-        ip = target_ip;
-        return;
-    }
-
-    /*
-    ! This function should not be called outside corresponding stack frames
-    ! This WILL cause a stack underflow if used incorrectly
-    ! May even cause undefined behavior if somehow the return_address pointer
-    ! is within the bounds of the ip pipeline but is dangling/invalid
-
-    // DO NOT ASK ME HOW THAT COULD HAPPEN
-    */
-    inline void ret()
-    {
-        if (m_stack.is_empty())
-        {
-            set_exit_data(1, "Callstack underflow");
-            set_fflag("FFLAG_ABRT", true);
-            return;
-        }
-
-        // Return address
-        auto ra = m_stack.top().return_address;
-        m_stack.pop();
-
-        flushargs();
-        jmpto(const_cast<Instruction*>(ra) + 1);
-
-        return;
-    }
-
-    //* Utility
-    inline bool is_valid_jump_address(Instruction* addr) const
-    {
-        return (addr <= ip_e) && (addr >= ip_s);
-    }
-
-    inline via_Value interpret_operand(const Operand& o)
-    {
-        switch (o.type)
-        {
-        case Operand::OType::Number:
-            return via_Value(o.num);
-        case Operand::OType::Bool:
-            return via_Value(o.boole);
-        case Operand::OType::String:
-            return via_Value(o.str);
-        default:
-            set_exit_data(1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(o.type)));
-            set_fflag("FFLAG_ABRT", true);
-            break;
-        }
-
-        return via_Value();
-    }
-
 public:
-
-    VirtualMachine(const std::vector<Instruction>& pipeline)
+    VirtualMachine(const std::vector<Instruction> &pipeline /* This has to be a constant ref */)
     {
-        ip_s = new Instruction[pipeline.size()];
-        ip = ip_s;
-        ip_e = ip_s + pipeline.size();
-        //// std::copy(pipeline.begin(), pipeline.end(), ip);
+        ihp = new Instruction[pipeline.size()]; // Allocate ihp    (Instruction head pointer)
+        ip  = ihp;                              // Initialize ip   (Instruction pointer)
+        ibp = ihp + pipeline.size();            // Initialize ibp  (Instruction base pointer)
+        // ? There might be a more optimized way to do this
+        std::copy(pipeline.begin(), pipeline.end(), ip); // Copy instructions into the instruction pipeline
     }
 
     ~VirtualMachine()
     {
-        gccol(); // Final GC invocation, technically unnecessary because GC destructor already does this
-        ip = nullptr;
-        ip_e = nullptr;
-        delete[] ip_s;
+        gccol();       // Final GC invocation, technically unnecessary because GC destructor already does this
+        ip  = nullptr; // Invalidate ip
+        ibp = nullptr; // Invalidate ibp
+        delete[] ihp;  // Invalidate ihp
     }
 
+    // Initializes VM code execution
+    // Terminates the program if called twice
     void init();
-    bool is_running() { return m_state.is_running; }
+
+    // Returns wether if the VM is running
+    constexpr bool is_running() const noexcept
+    {
+        return m_state.is_running;
+    }
 
     //* Internal
-    inline void set_exit_data(const int& e, const std::string& m)
+
+    // Manually sets the VM exit data
+    // ! Internal usage only, made public for libraries
+    inline void set_exit_data(int exit_code, const std::string &exit_message) noexcept
     {
-        m_state.exit_code = e;
-        m_state.exit_message = m;
+        m_state.exit_code    = exit_code;
+        m_state.exit_message = exit_message;
         return;
     }
 
-    inline void set_fflag(const char* id, int val)
+    // Sets a fast flag to the given value
+    // Terminates if the flag doesn't exist
+    inline void set_fflag(FFlag flag, int val) noexcept
     {
-        auto fflag = m_state.fflags.find(std::string(id));
-
-        VIA_ASSERT(fflag != m_state.fflags.end(),
-            std::format("Unknown fflag '{}'", id).c_str());
-
-        fflag->second = val;
+        m_state.fflags.set(static_cast<int>(flag), val);
         return;
     }
 
-    inline int get_fflag(const char* id)
+    // Returns the given fast flags value
+    // Terminates if the flag doesn't exist
+    inline constexpr int get_fflag(FFlag flag) const noexcept
     {
-        auto fflag = m_state.fflags.find(std::string(id));
-
-        VIA_ASSERT(fflag != m_state.fflags.end(),
-            std::format("Unknown fflag '{}'", id).c_str());
-
-        return fflag->second;
+        return m_state.fflags.test(static_cast<int>(flag));
     }
 
-    inline void gcadd(void* p)
+    // Appends a pointer to the garbage collector free list
+    // The pointer should be malloc-ed, otherwise this has undefined behavior
+    // ! The value cannot be removed from the free list!
+    template <typename T>
+    inline void gcadd(T p) noexcept
     {
         m_gc.add(p);
         return;
     }
 
-    inline void gcaddheap(void *p)
-    {
-        m_gc.add_heap(p);
-        return;
-    }
-
-    inline void gccol()
+    // Invokes garbage collection
+    // Should be called in intervals
+    inline void gccol() noexcept
     {
         m_gc.collect();
         return;
     }
 
-    inline via_Value loadlib(const via_String& id, via_Value& lib)
+    // Loads a static library to the global environment
+    // If called during runtime, it will terminate the VM
+    inline void loadlib(const char *id, const via_Value &lib) noexcept
     {
         if (is_running())
         {
             set_exit_data(1, "Attempt to load library during runtime");
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
             return;
         }
 
-        if (gget(id).type != via_Value::VType::Nil)
+        if (gget(id).type != ValueType::Nil)
         {
             set_exit_data(1, std::format("Attempt to load library '{}' twice", id));
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
             return;
         }
 
@@ -206,214 +116,300 @@ public:
         return;
     }
 
-    inline void vm_assert(bool cond, std::string err)
+    // Asserts a condition, terminates the VM if not met
+    inline void vm_assert(bool cond, const std::string &err) noexcept
     {
         if (!cond)
         {
             set_exit_data(1, std::format("VM assertion failed: {}", err));
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
         }
     }
-    
-    inline void fatalerr(const std::string& err)
+
+    // Throws an unrecoverable error that terminates the VM
+    inline void
+    fatalerr(const std::string &err) noexcept // Yes, this is a noexcept function because the VM doesn't use exceptions
     {
         std::cerr << err << "\n";
         set_exit_data(1, std::format("User error: {}", err));
-        set_fflag("FFLAG_ABRT", true);
+        set_fflag(FFlag::ABRT, true);
         return;
     }
 
     //* Register operations
-    inline void flushargs()
+
+    // Sets all argument registers to Nil
+    // ! This can mess up the program control flow, use carefully
+    inline void flushargs() noexcept
     {
-        m_ralloc.flush(Register::RType::AR);
-        m_ralloc.flush(Register::RType::SELFR);
+        m_ralloc.flush(RegisterType::AR);
+        m_ralloc.flush(RegisterType::SR);
         return;
     }
 
-    inline void flushret()
+    // Sets all return registers to Nil
+    // ! This can mess up the program control flow, use carefully
+    inline void flushret() noexcept
     {
-        m_ralloc.flush(Register::RType::RR);
+        m_ralloc.flush(RegisterType::RR);
         return;
     }
 
-    inline void rset(const Register& r, via_Value v)
+    // Sets register <r> to the given value <v>
+    template <typename T = via_Value>
+    inline void rset(const Register &r, const T &v) noexcept
     {
-        *m_ralloc.get<via_Value>(r) = v;
+        *m_ralloc.get<T>(r) = v;
         return;
     }
 
-    inline via_Value& rget(const Register& r)
+    // Returns the value of register <r>
+    template <typename T = via_Value>
+    inline constexpr T rget(const Register &r) noexcept
     {
-        static auto val = *m_ralloc.get<via_Value>(r);
-        return val;
+        return *rget_address<T>(r);
     }
 
-    inline via_Value* rget_address(const Register& r)
+    // Returns the memory address of register <r>
+    template <typename T = via_Value>
+    inline constexpr T *rget_address(const Register &r) noexcept
     {
-        auto addr = m_ralloc.get<via_Value>(r);
+        T *addr = m_ralloc.get<T>(r);
         return addr;
     }
 
-    inline bool ris(const Register& r0, const Register& r1)
+    // Compares two registers types and offsets
+    inline constexpr bool ris(const Register &r0, const Register &r1) noexcept
     {
         return r0.type == r1.type && r0.offset == r1.offset;
     }
 
-    inline bool rcmp(const Register& r0, const Register& r1)
+    // Compares the value of two registers and returns wether if they are equivalent
+    inline constexpr bool rcmp(const Register &r0, const Register &r1) noexcept
     {
-        if (ris(r0, r1))
+        // Early return if registers are equivalent
+        if (&r0 == &r1)
         {
             return true;
         }
 
-        auto v0 = rget(r0);
-        auto v1 = rget(r1);
+        const via_Value &v0 = rget(r0);
+        const via_Value &v1 = rget(r1);
 
+        // Early type mismatch check
         if (v0.type != v1.type)
         {
             return false;
         }
 
-        using Ty = via_Value::VType;
-
+        // Common types first to improve branching efficiency
         switch (v0.type)
         {
-        case Ty::Bool:
-            return v0.boole == v1.boole;
-        case Ty::Nil:
-            return true;
-        case Ty::Number:
+        case ValueType::Number:
             return v0.num == v1.num;
-        case Ty::Ptr:
+        case ValueType::Bool:
+            return v0.boole == v1.boole;
+        case ValueType::String:
+            if (v0.str && v1.str)
+            {
+                if (strlen(v0.str) != strlen(v1.str))
+                {
+                    return false;
+                }
+                return !strcmp(v0.str, v1.str);
+            }
+            return v0.str == v1.str;
+        case ValueType::Nil:
+            return true; // Nil values are always equal
+        case ValueType::Ptr:
             return v0.ptr == v1.ptr;
-        case Ty::String:
-            return !strcmp(v0.str, v1.str);
-        case Ty::CFunc:
-        case Ty::Func:
-        case Ty::Table:
-        case Ty::TableKey:
-            return false;
         default:
-            break;
+            return false; // Unique objects (CFunc, Func, Table, TableKey) are never equal
         }
 
+        // If the type isn't matched, return false by default
         return false;
     }
 
     //* Stack/Global operations
-    inline void gset(const via_String& k, via_Value v)
-    {
-        int exit_code = m_global.set_global(k, v);
 
-        if (exit_code != 0)
+    // Creates a new global variable with identifier <k> and value <v>
+    // Terminates the VM if the identifier already exists in the global enviornment
+    inline void gset(const char *k, via_Value v) noexcept
+    {
+        // Since there's no way for the `set_global` function to signal an error
+        // I made it so that it returns a success code, which is a reverse boolean
+        int success = m_global.set_global(k, v);
+
+        if (success != 0)
         {
             set_exit_data(1, std::format("Global '{}' already exists", k));
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
         }
 
         return;
     }
 
-    inline via_Value gget(const via_String& k)
+    // Returns the value of identifier <k> if found in the global enviornment
+    inline via_Value gget(const char *k) noexcept
     {
         return m_global.get_global(k);
     }
 
-    inline void lset(const char* id, via_Value v)
+    // Loads and returns the value of <k> into register <r> if it's found in the global enviornment
+    inline void gload(const char *k, const Register &r) noexcept
+    {
+        via_Value v = gget(k);
+        rset(r, v);
+        return;
+    }
+
+    // Sets the value of <id> to value <v> in the current stack frame
+    inline void lset(const char *id, via_Value v)
     {
         m_stack.top().set_local(id, v);
         return;
     }
 
-    inline via_Value& lget(const char* id)
+    // Returns the value of <id> if found in the current stack frame
+    inline via_Value lget(const char *id)
     {
-        static auto val = m_stack.top().get_local(id);
+        via_Value val = m_stack.top().get_local(id);
         return val;
     }
 
-    inline via_Value& lload(const char* id, const Register& r)
+    // Loads and returns the value of <id> into register <r> if found in the current stack frame
+    inline via_Value lload(const char *id, const Register &r) noexcept
     {
-        static auto val = lget(id);
-        auto addr = rget_address(r);
-        *addr = val;
+        via_Value val = lget(id);
+        rset(r, val);
         return val;
     }
 
     //* Value operations
-    inline via_Value vtostring(const via_Value &v)
+
+    // Returns a value that contains a via_String that represents the stringified version of <v>
+    // ! The return value is guaranteed to be a via_String
+    inline via_Value &vtostring(via_Value &val)
     {
-        switch (v.type)
+        if (val.type == ValueType::String)
         {
-        case via_Value::VType::String:
-            return via_Value(v.str);
-        case via_Value::VType::Number: {
-            auto str = strdup(std::to_string(v.num).c_str());
-            gcadd(str);
-            return via_Value(str);
+            return val;
         }
-        case via_Value::VType::Bool:
-            return via_Value(v.boole ? "true" : "false");
-        case via_Value::VType::Table: {
-            via_String str = strdup(std::format("table 0x{}", v.tbl->uid).c_str());
-            gcadd(str);
-            return via_Value(str);
+
+        switch (val.type)
+        {
+        case ValueType::Number:
+        {
+            via_String str = strdup(std::to_string(val.num).c_str());
+            val.str        = str;
+            break;
+        }
+        case ValueType::Bool:
+        {
+            via_String str = const_cast<char *>(val.boole ? "true" : "false");
+            val.str        = str;
+            break;
+        }
+        case ValueType::Table:
+        {
+            via_String str = strdup(std::format("table {}", static_cast<const void *>(val.tbl)).c_str());
+            val.str        = str;
+            break;
+        }
+        case ValueType::Func:
+        {
+            via_String str = strdup(std::format("function {}", static_cast<const void *>(val.fun)).c_str());
+            val.str        = str;
+            break;
+        }
+        case ValueType::CFunc:
+        {
+            via_String str = strdup(std::format("cfunction {}", reinterpret_cast<void *>(val.cfun)).c_str());
+            val.str        = str;
+            break;
         }
         default:
+            // Have to use `strdup` to duplicate the string
+            // This is because "nil" is stack allocated and once it goes out of scope
+            // It will be a dangling pointer
+            // Basically fast dynamic string allocation :)
+            val.str = strdup("nil");
             break;
         }
 
-        return via_Value("nil");
+        val.type = ValueType::String;
+        return val;
     }
 
-    inline via_Value vtobool(const via_Value& v)
+    // Returns the truthiness of value <v>
+    // ! Guaranteed to be a via_Bool
+    inline via_Value &vtobool(via_Value &val)
     {
-        switch (v.type)
+        if (val.type == ValueType::Bool)
         {
-        case via_Value::VType::Nil:
-            return via_Value(false);
-        case via_Value::VType::Bool:
-            return via_Value(v.boole);
+            return val;
+        }
+
+        switch (val.type)
+        {
+        case ValueType::Nil:
+            val.boole = false;
+            break;
         default:
+            val.boole = true;
             break;
         }
 
-        return via_Value(true);
+        val.type = ValueType::Bool;
+        return val;
     }
 
-    inline via_Value vtonumber(const via_Value& v)
+    // Returns the number representation of value <v>
+    // ! Returns Nil if impossible, unlike `vtostring` or `vtobool`
+    inline via_Value &vtonumber(via_Value &val)
     {
-        switch (v.type)
+        if (val.type == ValueType::Number)
         {
-        case via_Value::VType::String:
-            return via_Value(std::stod(v.str));
-        case via_Value::VType::Bool:
-            return via_Value(v.boole ? 1.0f : 0.0f);
-        default:
-            break;
+            return val;
         }
 
-        return via_Value();
+        switch (val.type)
+        {
+        case ValueType::String:
+            val.num = std::stod(val.str);
+            break;
+        case ValueType::Bool:
+            val.num = val.boole ? 1.0f : 0.0f;
+            break;
+        default:
+            val.nil = nullptr;
+            return val;
+        }
+
+        val.type = ValueType::Number;
+        return val;
     }
 
-    // In via, the default calling convention is the FASTCALL convention
+    // Calls a via_Func type, terminates if uncallable
+    // Uses the FASTCALL convention
     // Arguments and return values are loaded onto registers of those respective types
     // For example, argument register #1 would be;
-    // { Register::RType::AR, 0 }
-    // This allows for extremely fast function calls and an alternative to stack based calling convetions
+    // { RegisterType::AR, 0 }
+    // This allows for extremely fast function calls and an alternative to stack based calling conventions
     inline void callf(const via_Func &f)
     {
         if (!is_valid_jump_address(f.address))
         {
             set_exit_data(1, "Invalid function jump address");
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
             return;
         }
 
         if (f.address->op == OpCode::FUNC)
         {
             set_exit_data(1, "Function jump address points to non-function opcode");
-            set_fflag("FFLAG_ABRT", true);
+            set_fflag(FFlag::ABRT, true);
             return;
         }
 
@@ -425,7 +421,7 @@ public:
         return;
     }
 
-    // via uses function pointers instead of std::function to represent C functions
+    // Calls a C function pointer
     // This allows for a more flexible datatype, and avoids another layer of pointers in the via_Value union
     // C functions in via must return void and are called with VirtualMachine *
     // Type: void(*)(VirtualMachine *)
@@ -439,34 +435,40 @@ public:
     }
 
     // Generalized call interface
+    // Used to call a nil-able via_Value
+    // Terminates if the value is not callable
+    // Callable types include;
+    // - via_Func
+    // - via_CFunc
+    // - via_Table (if __call method is present)
     inline void call(const via_Value &v)
     {
-        switch (v.type)
-        {
-        case via_Value::VType::Func:
+        if (v.type == ValueType::Func)
             callf(*v.fun);
-            return;
-
-        case via_Value::VType::CFunc:
+        else if (v.type == ValueType::CFunc)
             callc(*v.cfun);
-            return;
-        
-        default:
-            break;
+        else if (v.type == ValueType::Table)
+        {
+            via_Value call_mm = tget(v.tbl, "__call");
+            call(call_mm);
+        }
+        else
+        {
+            set_exit_data(1, std::format("Attempt to call a {} value", vtype(v).str));
+            set_fflag(FFlag::ABRT, true);
         }
 
-        set_exit_data(1, std::format("Attempt to call a {} value", vtype(v).str));
-        set_fflag("FFLAG_ABRT", true);
         return;
     }
 
-    inline size_t len(const via_Value& v)
+    // Returns the length of value <v>, -1 if impossible
+    inline size_t len(const via_Value &v)
     {
-        if (v.type == via_Value::VType::String)
+        if (v.type == ValueType::String)
         {
             return strlen(v.str);
         }
-        else if (v.type == via_Value::VType::Table)
+        else if (v.type == ValueType::Table)
         {
             return v.tbl->data.size();
         }
@@ -474,95 +476,98 @@ public:
         return -1;
     }
 
+    // Returns the primitive type of value <v>
     inline via_Value vtype(const via_Value &v)
     {
         auto enum_name = ENUM_NAME(v.type);
-        auto str = strdup(std::string(enum_name).c_str());
+        auto str       = strdup(std::string(enum_name).c_str());
         gcadd(str);
         return via_Value(str);
     }
 
+    // Returns the complex type of value <v>
+    // Practically the same as `vtype()`, but returns
+    // the `__type` value if the given table has one
     inline via_Value vtypeof(const via_Value &v)
     {
-        if (v.type == via_Value::VType::Table)
+        if (v.type == ValueType::Table)
         {
-            auto t = v.tbl;
-            auto ty = t->get(via_TableKey {
-                .type = via_TableKey::KType::String,
-                .str = "__type"
-            });
+            auto t  = v.tbl;
+            auto ty = t->get(via_TableKey { .type = via_TableKey::KType::String, .str = const_cast<char *>("__type") });
 
-            if (ty.type == via_Value::VType::Nil)
+            if (ty.type == ValueType::Nil)
             {
                 return vtype(v);
             }
 
             return via_Value(ty.str);
         }
-        
+
         return vtype(v);
     }
 
-    inline via_Value &vcopy(const via_Value &v) // Copies a value
+    // Copies a value
+    inline via_Value vcopy(const via_Value &v)
     {
         via_Value copy = via_Value(v);
         return copy;
     }
 
-    inline via_Value *vcopyheap(const via_Value &v) // Copies a value onto the heap
+    // Copies a value onto the heap
+    // ! Not garbage collected
+    inline via_Value *vcopyheap(const via_Value &v)
     {
         via_Value *copy = new via_Value(v);
         return copy;
     }
 
-    inline via_Value tget(via_Table *t, const via_String k) // Utility function for quick table indexing
+    // Utility function for quick table indexing
+    // Returns the value of key <k> if present in table <t>
+    inline via_Value tget(via_Table *t, const char *k)
     {
-        return t->get({ .type = via_TableKey::KType::String, .str = k });
+        return t->get({ .type = via_TableKey::KType::String, .str = const_cast<char *>(k) });
     }
 
-    inline void tset(via_Table *t, const via_String k, via_Value v) // Utility function for quick table index assignment
+    // Assigns the given value <v> to key <k> in table <t>
+    inline void tset(via_Table *t, const char *k, via_Value v) // Utility function for quick table index assignment
     {
-        t->set({ .type = via_TableKey::KType::String, .str = k }, v);
+        t->set({ .type = via_TableKey::KType::String, .str = const_cast<char *>(k) }, v);
         return;
     }
 
-    inline void tinsert(via_Table *t, const via_Value& v)
+    // Pushes value <v> to the back of table <t>
+    inline void tinsert(via_Table *t, const via_Value &v)
     {
-        t->set(via_TableKey{
-            .type = via_TableKey::KType::Number,
-            .num = static_cast<via_Number>(t->data.size())
-            }, v);
-
+        t->set(via_TableKey { .type = via_TableKey::KType::Number, .num = static_cast<via_Number>(t->data.size()) }, v);
         return;
     }
 
-    inline via_Value& tload(via_Table *t, const via_TableKey& k, const Register& r)
+    // Loads the value of key <k> in table <t> into register <r>, if present in table
+    inline via_Value tload(via_Table *t, const via_TableKey &k, const Register &r)
     {
-        static auto v = t->get(k);
+        via_Value v = t->get(k);
         rset(r, v);
         return v;
     }
 
-    inline void tcallm(via_Table *t, const via_TableKey& k)
+    // Calls the value of key <k> in table <t>, if callable
+    // Uses the `call` method internally
+    inline void tcallm(via_Table *t, const via_TableKey &k)
     {
         auto at = t->get(k);
-
-        rset(Register{
-            .type = Register::RType::SELFR,
-            .offset = 0
-            }, via_Value(*t));
-
+        rset(Register { .type = RegisterType::SR, .offset = 0 }, via_Value(*t));
         call(at);
-
         return;
     }
 
+    // Freezes table <t>
+    // Terminates the VM if table <t> is already frozen
     inline void tfreeze(via_Table *t)
     {
         if (tisfrozen(t))
         {
             set_exit_data(1, "Attempt to freeze table twice");
-            set_fflag("FFLAG_EXIT", true);
+            set_fflag(FFlag::ABRT, true);
             return;
         }
 
@@ -570,12 +575,116 @@ public:
         return;
     }
 
+    // Returns wether if table <t> is frozen
     inline bool tisfrozen(via_Table *t)
     {
         return t->is_frozen.get();
     }
+
+private:
+    // I don't particularly like doing this
+    // However, it makes the code a lot cleaner
+    using VMStack = Stack<StackFrame>;
+    using Labels  = std::unordered_map<std::string_view, Instruction *>;
+
+    VMState m_state;  // State object for the VM
+    Instruction *ip;  // Instruction pointer
+    Instruction *ihp; // Instruction list head
+    Instruction *ibp; // Instruction list base
+
+    Global m_global;            // VM Global environment
+    VMStack m_stack;            // VM Stack
+    Labels m_labels;            // VM Label address table (LAT)
+    GarbageCollector m_gc;      // VM Garbage collector
+    RegisterAllocator m_ralloc; // VM Register allocator
+
+private:
+    //* Entry point
+    // Located in vm.cpp
+    int execute();
+
+    //* Control flow
+    inline void jmpto(Instruction *i)
+    {
+        if (!is_valid_jump_address(i))
+        {
+            set_exit_data(1, "Illegal jump: jump  address out of bounds");
+            set_fflag(FFlag::ABRT, true);
+            return;
+        }
+
+        ip = i;
+        return;
+    }
+
+    inline void jmp(int offset)
+    {
+        Instruction *target_ip = ip + offset;
+        jmpto(target_ip);
+        return;
+    }
+
+    /*
+    ! This function should not be called outside corresponding stack frames
+    ! This WILL cause a stack underflow if used incorrectly
+    ! May even cause undefined behavior if somehow the return_address pointer
+    ! is within the bounds of the ip pipeline but is dangling/invalid
+    // DO NOT ASK ME HOW THAT COULD HAPPEN
+    */
+    inline void ret()
+    {
+        if (m_stack.is_empty())
+        {
+            set_exit_data(1, "Callstack underflow");
+            set_fflag(FFlag::ABRT, true);
+            return;
+        }
+
+        // Return address
+        auto ra = m_stack.top().return_address;
+        m_stack.pop();
+
+        if (!is_valid_jump_address(const_cast<Instruction *>(ra)))
+        {
+            set_exit_data(1, "invalid return address");
+            set_fflag(FFlag::ABRT, true);
+            return;
+        }
+
+        flushargs();
+        jmpto(const_cast<Instruction *>(ra) + 1);
+
+        return;
+    }
+
+    //* Utility
+    inline bool is_valid_jump_address(Instruction *addr) const noexcept
+    {
+        return (addr >= ihp) && (addr <= ibp);
+    }
+
+    inline via_Value interpret_operand(const Operand &o)
+    {
+        switch (o.type)
+        {
+        case OperandType::Number:
+            return via_Value(o.num);
+        case OperandType::Bool:
+            return via_Value(o.boole);
+        case OperandType::String:
+            return via_Value(o.str);
+        default:
+            set_exit_data(1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(o.type)));
+            set_fflag(FFlag::ABRT, true);
+            break;
+        }
+
+        return via_Value();
+    }
+
+    inline void save_state()
+    {
+    }
 };
 
 } // namespace via::VM
-
-#endif // VIA_VM_H

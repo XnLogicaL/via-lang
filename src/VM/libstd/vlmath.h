@@ -1,3 +1,7 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
+
 #include "vm.h"
 #include "types.h"
 #include "libutils.h"
@@ -9,7 +13,7 @@ namespace via::VM::viastl
 
 bool is_number(const via_Value &v)
 {
-    return v.type == via_Value::VType::Number;
+    return v.type == ValueType::Number;
 }
 
 void math_exp(VirtualMachine *vm)
@@ -339,7 +343,7 @@ void math_ceil(VirtualMachine* vm)
     return;
 }
 
-via_Value &vstl_math_load(VirtualMachine *vm)
+void vstl_math_load(VirtualMachine *vm)
 {
     via_Table std_math = LibConstructor::new_lib();
 
@@ -371,7 +375,9 @@ via_Value &vstl_math_load(VirtualMachine *vm)
     via_Value std_math_v;
     std_math_v.is_const = true;
 
-    return std_math_v;
+    vm->loadlib("math", std_math_v);
+
+    return;
 }
 
 } // namespace via::VM::viastl

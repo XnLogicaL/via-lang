@@ -1,5 +1,6 @@
-#ifndef VIA_SYNTAX_ANALYZER_H
-#define VIA_SYNTAX_ANALYZER_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
+#pragma once
 
 #include "common.h"
 #include "highlighter.h"
@@ -9,13 +10,7 @@
 
 #include "magic_enum/magic_enum.hpp"
 
-namespace via
-{
-
-namespace Tokenization
-{
-        
-namespace SyntaxAnalysis
+namespace via::Tokenization::SyntaxAnalysis
 {
 
 class SyntaxAnalyzer
@@ -53,10 +48,4 @@ public:
     bool analyze();
 };
 
-} // namespace SyntaxAnalysis
-
-} // namespace Tokenization
-
-} // namespace via
-
-#endif // VIA_SYNTAX_ANALYZER_H
+} // namespace via::Tokenization::SyntaxAnalysis

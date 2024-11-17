@@ -1,4 +1,4 @@
-local Vec2 = require("vector_utils.viam")
+import "vector_utils.viam" as Vec2 ## Similar to require, but with unique syntax
 
 type Player {
     name: String;
@@ -38,7 +38,7 @@ struct Game {
     property players: {Player}
     property state: Number
 
-    func addPlayer(memory.pointer<Player> player): void {
+    func addPlayer(player: memory.pointer<Player>): void {
         table.insert(self.players, memory.dereference(player))
     }
 
@@ -68,7 +68,7 @@ local func main() {
     
     while steps < 5 {
         steps++
-        print("Step", steps)
+        printf("Step %d", steps)
 
         switch steps {
             case 1 { print("Started moving...") }
@@ -79,9 +79,9 @@ local func main() {
     }
 
     local radius = 3.0
-    local area = Math.pi * radius ^ 2
+    local area = math.pi * radius ^ 2
     
-    print("Area of circle with radius", radius, "is", area)
+    printf("Area of circle with radius %d is %d", radius, area)
 
     return
 }

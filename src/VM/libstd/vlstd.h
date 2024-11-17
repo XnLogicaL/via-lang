@@ -1,13 +1,12 @@
-#ifndef VIA_LIBSTD_H
-#define VIA_LIBSTD_H
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#include "vm.h"
-#include "types.h"
+#pragma once
+
 #include "libutils.h"
+#include "types.h"
+#include "vm.h"
 
-#include "vlmath.h"
-
-namespace via::VM::vstl
+namespace via::VM::viastl
 {
 
 void std_print(VirtualMachine *vm)
@@ -17,17 +16,17 @@ void std_print(VirtualMachine *vm)
 
     while (true)
     {
-        Register r = { Register::RType::AR, i++ };
+        Register r   = { RegisterType::AR, i++ };
         via_Value rv = vm->rget(r);
 
-        if (rv.type == via_Value::VType::Nil)
+        if (rv.type == ValueType::Nil)
         {
             break;
         }
 
         oss << vm->vtostring(rv).str << " ";
     }
-    
+
     std::cout << oss.str() << "\n";
 
     return;
@@ -35,7 +34,7 @@ void std_print(VirtualMachine *vm)
 
 void std_error(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
 
     vm->fatalerr(vm->vtostring(rv).str);
@@ -45,13 +44,12 @@ void std_error(VirtualMachine *vm)
 
 void std_exit(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value ec = vm->rget(r);
 
-    bool assertion = ec.type != via_Value::VType::Number;
+    bool assertion = ec.type != ValueType::Number;
 
-    vm->vm_assert(assertion,
-        "Expected type Number for argument 0 of std_exit");
+    vm->vm_assert(assertion, "Expected type Number for argument 0 of std_exit");
 
     if (!assertion)
         return;
@@ -59,16 +57,16 @@ void std_exit(VirtualMachine *vm)
     int code = static_cast<int>(ec.num);
 
     vm->set_exit_data(code, "std_exit called by user");
-    vm->set_fflag("FFLAG_ABRT", true);
+    vm->set_fflag(FFlag::ABRT, true);
 
     return;
 }
 
 void std_type(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
-    Register rr = get_ret_register(0);
+    Register rr  = get_ret_register(0);
 
     vm->rset(rr, vm->vtype(rv));
 
@@ -77,9 +75,9 @@ void std_type(VirtualMachine *vm)
 
 void std_typeof(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
-    Register rr = get_ret_register(0);
+    Register rr  = get_ret_register(0);
 
     vm->rset(rr, vm->vtypeof(rv));
 
@@ -88,9 +86,9 @@ void std_typeof(VirtualMachine *vm)
 
 void std_tostring(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
-    Register rr = get_ret_register(0);
+    Register rr  = get_ret_register(0);
 
     vm->rset(rr, vm->vtostring(rv));
 
@@ -99,9 +97,9 @@ void std_tostring(VirtualMachine *vm)
 
 void std_tonumber(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
-    Register rr = get_ret_register(0);
+    Register rr  = get_ret_register(0);
 
     vm->rset(rr, vm->vtonumber(rv));
 
@@ -110,9 +108,9 @@ void std_tonumber(VirtualMachine *vm)
 
 void std_tobool(VirtualMachine *vm)
 {
-    Register r = get_arg_register(0);
+    Register r   = get_arg_register(0);
     via_Value rv = vm->rget(r);
-    Register rr = get_ret_register(0);
+    Register rr  = get_ret_register(0);
 
     vm->rset(rr, vm->vtobool(rv));
 
@@ -129,8 +127,8 @@ void std_assert(VirtualMachine *vm)
 
     if (!vm->vtobool(cv).boole)
     {
-        via_String mvstr = vm->vtostring(mv).str;
-        std::string mfstr = std::format("std_assert assertion failed: {}", mvstr);
+        via_String mvstr   = vm->vtostring(mv).str;
+        std::string mfstr  = std::format("std_assert assertion failed: {}", mvstr);
         via_String mfstrds = strdup(mfstr.c_str());
 
         vm->rset(cr, mfstrds);
@@ -143,7 +141,6 @@ void std_assert(VirtualMachine *vm)
 
 void vstl_load(VirtualMachine *vm)
 {
-    // via base library v0.2.2
     vm->gset("print", via_Value(std_print));
     vm->gset("error", via_Value(std_error));
     vm->gset("exit", via_Value(std_exit));
@@ -153,11 +150,6 @@ void vstl_load(VirtualMachine *vm)
     vm->gset("tonumber", via_Value(std_tonumber));
     vm->gset("tobool", via_Value(std_tobool));
     vm->gset("assert", via_Value(std_assert));
-
-    // other libs
-    vm->gset("math", viastl::vstl_math_load(vm));
 }
 
-} // namespace via::VM::vstl
-
-#endif // VIA_LIBSTD_H
+} // namespace via::VM::viastl
