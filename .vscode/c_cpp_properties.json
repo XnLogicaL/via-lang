@@ -4,9 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/*/**",
-                "${workspaceFolder}/*/*/**",
-                "${workspaceFolder}/*/*/*/**"
+                "${workspaceFolder}/*/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -17,7 +15,10 @@
             "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
             "cStandard": "c17",
             "intelliSenseMode": "linux-gcc-x86",
-            "cppStandard": "c++23"
+            "cppStandard": "c++23",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

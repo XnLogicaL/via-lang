@@ -1,0 +1,10 @@
+-std=c++23
+-O3
+-Wextra
+-Wall
+-g
+-I./src
+-I./include
+-I./src/Lexer
+-I./src/VM
+-I./src/Utils

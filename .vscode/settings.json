@@ -95,6 +95,21 @@
         "bitset": "cpp",
         "semaphore": "cpp",
         "csignal": "cpp",
-        "cstdarg": "cpp"
-    }
+        "cstdarg": "cpp",
+        "sim_type_traits": "cpp",
+        "complex": "cpp",
+        "sim_algorithm": "cpp",
+        "sim_initializer_list": "cpp",
+        "sim_iterator_base": "cpp",
+        "sim_map": "cpp",
+        "sim_set": "cpp",
+        "sim_stl_pair": "cpp",
+        "sim_unordered_map": "cpp",
+        "sim_unordered_set": "cpp",
+        "sim_vector": "cpp",
+        "future": "cpp",
+        "cfenv": "cpp",
+        "__bit_reference": "cpp",
+        "__node_handle": "cpp"
+    },
 }

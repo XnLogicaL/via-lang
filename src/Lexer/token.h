@@ -3,11 +3,15 @@
 #pragma once
 
 #include "common.h"
+#include "core.h"
+
+#include <format>
 
 namespace via::Tokenization
 {
 
-enum class TokenType {
+enum class TokenType
+{
     // Keywords
     KW_DO,
     KW_IN,
@@ -64,6 +68,7 @@ enum class TokenType {
     LIT_STRING, // String literals
     LIT_CHAR,   // Character literals
     LIT_BOOL,   // Boolean literals
+    LIT_NIL,    // Nil literal (just "nil" lol)
 
     // Identifiers
     IDENTIFIER, // Variable and function names
@@ -101,11 +106,19 @@ struct Token
     std::string value;
     size_t line;
     size_t offset;
+    // This is an internal value used by the syntax analyzer
+    // To determine wether or not there was an error thrown on this token
+    // This makes it so that the console doesn't get flooded by errors
     bool has_thrown_error = false;
 
+    // Returns a stringified version of the token
     std::string to_string() const noexcept;
+    // Returns if the token is a literal
     bool is_literal() const noexcept;
+    // Returns if the token is an operator
     bool is_operator() const noexcept;
+    // Returns the tokens binary precedence
+    // Returns -1 if invalid, eg. if not an operator
     int bin_prec() const noexcept;
 };
 

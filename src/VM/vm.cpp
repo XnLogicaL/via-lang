@@ -1,43 +1,45 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "vm.h"
 
 #include <cmath>
+#include <cstring>
 
 using namespace via::VM;
 
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
-#define VM_EXIT()                                                                                                      \
-    {                                                                                                                  \
-        goto exit;                                                                                                     \
+#define VM_EXIT() \
+    { \
+        goto exit; \
     }
 
 // Same as VM_EXIT, for readability
-#define VM_DISPATCH()                                                                                                  \
-    {                                                                                                                  \
-        goto dispatch;                                                                                                 \
+#define VM_DISPATCH() \
+    { \
+        goto dispatch; \
     }
 
 // Macro for loading the next instruction
 // Has bound checks
-#define VM_LOAD()                                                                                                      \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (!is_valid_jump_address(ip + 1))                                                                            \
-        {                                                                                                              \
-            set_exit_data(0, "");                                                                                      \
-            VM_EXIT();                                                                                                 \
-        }                                                                                                              \
-        ip++;                                                                                                          \
+#define VM_LOAD() \
+    do \
+    { \
+        if (!is_valid_jump_address(ip + 1)) \
+        { \
+            set_exit_data(0, ""); \
+            VM_EXIT(); \
+        } \
+        ip++; \
     } while (0)
 
 // Macro that "signals" the VM has completed an execution cycle
-#define VM_NEXT()                                                                                                      \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        VM_LOAD();                                                                                                     \
-        VM_DISPATCH();                                                                                                 \
+#define VM_NEXT() \
+    do \
+    { \
+        VM_LOAD(); \
+        VM_DISPATCH(); \
     } while (0);
 
 // Returns the operand at offset <off>
@@ -47,33 +49,32 @@ using namespace via::VM;
 // Standard VM assertion
 // Terminates VM if the assertion fails
 // Contains debug information, such as file, line and a custom message
-#define VM_ASSERT(cond, message)                                                                                       \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (!(cond))                                                                                                   \
-        {                                                                                                              \
-            set_exit_data(                                                                                             \
-                1, std::format("VM_ASSERT(): {}\n in file {}, line {}", (message), __FILE__, __LINE__).c_str());       \
-            VM_EXIT();                                                                                                 \
-        }                                                                                                              \
+#define VM_ASSERT(cond, message) \
+    do \
+    { \
+        if (!(cond)) \
+        { \
+            set_exit_data(1, std::format("VM_ASSERT(): {}\n in file {}, line {}", (message), __FILE__, __LINE__).c_str()); \
+            VM_EXIT(); \
+        } \
     } while (0)
 
 // Macro for jumping to a jump address
 // Immediately dispatches the VM
-#define VM_JMPTO(to)                                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        jmpto(to);                                                                                                     \
-        VM_DISPATCH();                                                                                                 \
+#define VM_JMPTO(to) \
+    do \
+    { \
+        jmpto(to); \
+        VM_DISPATCH(); \
     } while (0)
 
-// Macro for jumping to an offset relative to the current instruction pointer position
-// Immediately dispatches VM
-#define VM_JMP(offset)                                                                                                 \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        jmp(offset);                                                                                                   \
-        VM_DISPATCH();                                                                                                 \
+// Macro for jumping to an offset relative to the current instruction pointer
+// position Immediately dispatches VM
+#define VM_JMP(offset) \
+    do \
+    { \
+        jmp(offset); \
+        VM_DISPATCH(); \
     } while (0);
 
 int VirtualMachine::execute()
@@ -97,8 +98,8 @@ dispatch:
     }
 
     VM_ASSERT(is_valid_jump_address(ip),
-              std::format("Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
-                          reinterpret_cast<uintptr_t>(ip), reinterpret_cast<uintptr_t>(ihp),
+              std::format("Instruction pointer out of bounds (ip={}, ihp={},
+    ibp={})", reinterpret_cast<uintptr_t>(ip), reinterpret_cast<uintptr_t>(ihp),
                           reinterpret_cast<uintptr_t>(ibp)));
 
     */
@@ -135,7 +136,7 @@ dispatch:
         Operand dst_r = VM_OPND(0);
         Operand src_p = VM_OPND(1);
         /* TODO: Make this safe */
-        rset(dst_r.reg, *reinterpret_cast<via_Value *>(static_cast<uintptr_t>(src_p.num)));
+        rset(dst_r.reg, *reinterpret_cast<via_Value*>(static_cast<uintptr_t>(src_p.num)));
 
         VM_NEXT();
     }
@@ -145,7 +146,7 @@ dispatch:
         Operand dst_p = VM_OPND(0);
         Operand src_r = VM_OPND(1);
         /* TODO: Make this safe */
-        *reinterpret_cast<via_Value *>(static_cast<uintptr_t>(dst_p.num)) = rget(src_r.reg);
+        *reinterpret_cast<via_Value*>(static_cast<uintptr_t>(dst_p.num)) = rget(src_r.reg);
 
         VM_NEXT();
     }
@@ -162,7 +163,7 @@ dispatch:
 
     case OpCode::PUSH:
     {
-        Instruction *ipc = ip;
+        Instruction* ipc = ip;
         m_stack.push(StackFrame(ipc, m_gc));
         VM_NEXT();
     }
@@ -173,7 +174,7 @@ dispatch:
 
     case OpCode::SETLOCAL:
     {
-        Operand id  = VM_OPND(0);
+        Operand id = VM_OPND(0);
         Operand val = VM_OPND(1);
 
         lset(id.ident, interpret_operand(val));
@@ -183,7 +184,7 @@ dispatch:
 
     case OpCode::GETLOCAL:
     {
-        Operand id  = VM_OPND(0);
+        Operand id = VM_OPND(0);
         Operand dst = VM_OPND(1);
 
         lload(id.ident, dst.reg);
@@ -193,7 +194,7 @@ dispatch:
 
     case OpCode::SETGLOBAL:
     {
-        Operand id  = VM_OPND(0);
+        Operand id = VM_OPND(0);
         Operand val = VM_OPND(1);
 
         gset(id.ident, interpret_operand(val));
@@ -203,7 +204,7 @@ dispatch:
 
     case OpCode::GETGLOBAL:
     {
-        Operand id  = VM_OPND(0);
+        Operand id = VM_OPND(0);
         Operand dst = VM_OPND(1);
 
         gload(id.ident, dst.reg);
@@ -211,17 +212,17 @@ dispatch:
         VM_NEXT();
     }
 
-#define VM_BINOP(op)                                                                                                   \
-    {                                                                                                                  \
-        Operand dst     = VM_OPND(0);                                                                                  \
-        Operand lhs     = VM_OPND(1);                                                                                  \
-        Operand rhs     = VM_OPND(2);                                                                                  \
-        via_Value lhs_n = rget(lhs.reg);                                                                               \
-        via_Value rhs_n = rget(rhs.reg);                                                                               \
-        VM_ASSERT(lhs_n.type == ValueType::Number, "Expected Number for binary operand 0");                            \
-        VM_ASSERT(rhs_n.type == ValueType::Number, "Expected Number for binary operand 1");                            \
-        rset(dst.reg, lhs_n.num + rhs_n.num);                                                                          \
-        VM_NEXT();                                                                                                     \
+#define VM_BINOP(op) \
+    { \
+        Operand dst = VM_OPND(0); \
+        Operand lhs = VM_OPND(1); \
+        Operand rhs = VM_OPND(2); \
+        via_Value lhs_n = rget(lhs.reg); \
+        via_Value rhs_n = rget(rhs.reg); \
+        VM_ASSERT(lhs_n.type == ValueType::Number, "Expected Number for binary operand 0"); \
+        VM_ASSERT(rhs_n.type == ValueType::Number, "Expected Number for binary operand 1"); \
+        rset(dst.reg, lhs_n.num + rhs_n.num); \
+        VM_NEXT(); \
     }
 
     case OpCode::ADD:
@@ -235,10 +236,10 @@ dispatch:
 
     case OpCode::POW:
     {
-        Operand dst      = VM_OPND(0);
-        Operand num      = VM_OPND(1);
-        via_Value *dst_p = rget_address(dst.reg);
-        via_Value num_n  = rget(num.reg);
+        Operand dst = VM_OPND(0);
+        Operand num = VM_OPND(1);
+        via_Value* dst_p = rget_address(dst.reg);
+        via_Value num_n = rget(num.reg);
 
         VM_ASSERT(num_n.type == ValueType::Number, "Expected Number for binary operand 0");
 
@@ -249,8 +250,8 @@ dispatch:
 
     case OpCode::NEG:
     {
-        Operand dst     = VM_OPND(0);
-        Operand lhs     = VM_OPND(1);
+        Operand dst = VM_OPND(0);
+        Operand lhs = VM_OPND(1);
         via_Value lhs_n = rget(lhs.reg);
 
         VM_ASSERT(lhs_n.type == ValueType::Number, "Expected Number for binary operand 0");
@@ -260,15 +261,15 @@ dispatch:
         VM_NEXT();
     }
 
-#define VM_LOGICOP(op)                                                                                                 \
-    {                                                                                                                  \
-        Operand dst     = VM_OPND(0);                                                                                  \
-        Operand lhs     = VM_OPND(1);                                                                                  \
-        Operand rhs     = VM_OPND(2);                                                                                  \
-        via_Value lhs_n = rget(lhs.reg);                                                                               \
-        via_Value rhs_n = rget(rhs.reg);                                                                               \
-        rset(dst.reg, via_Value(vtobool(lhs_n).boole op vtobool(rhs_n).boole));                                        \
-        VM_NEXT();                                                                                                     \
+#define VM_LOGICOP(op) \
+    { \
+        Operand dst = VM_OPND(0); \
+        Operand lhs = VM_OPND(1); \
+        Operand rhs = VM_OPND(2); \
+        via_Value lhs_n = rget(lhs.reg); \
+        via_Value rhs_n = rget(rhs.reg); \
+        rset(dst.reg, via_Value(vtobool(lhs_n).boole op vtobool(rhs_n).boole)); \
+        VM_NEXT(); \
     }
 
     case OpCode::BAND:
@@ -280,8 +281,8 @@ dispatch:
 
     case OpCode::BNOT:
     {
-        Operand dst     = VM_OPND(0);
-        Operand lhs     = VM_OPND(1);
+        Operand dst = VM_OPND(0);
+        Operand lhs = VM_OPND(1);
         via_Value lhs_n = rget(lhs.reg);
 
         VM_ASSERT(lhs_n.type == ValueType::Bool, "Expected Bool for logical operand 0");
@@ -291,13 +292,13 @@ dispatch:
         VM_NEXT();
     }
 
-#define VM_CMPOP(fn)                                                                                                   \
-    {                                                                                                                  \
-        Operand dst = VM_OPND(0);                                                                                      \
-        Operand lhs = VM_OPND(1);                                                                                      \
-        Operand rhs = VM_OPND(2);                                                                                      \
-        rset(dst.reg, via_Value(fn(lhs.reg, rhs.reg)));                                                                \
-        VM_NEXT();                                                                                                     \
+#define VM_CMPOP(fn) \
+    { \
+        Operand dst = VM_OPND(0); \
+        Operand lhs = VM_OPND(1); \
+        Operand rhs = VM_OPND(2); \
+        rset(dst.reg, via_Value(fn(lhs.reg, rhs.reg))); \
+        VM_NEXT(); \
     }
 
     case OpCode::EQ:
@@ -327,12 +328,12 @@ dispatch:
 
     case OpCode::GCADD:
     {
-        Operand addr_r   = VM_OPND(0);
+        Operand addr_r = VM_OPND(0);
         via_Value addr_v = rget(addr_r.reg);
 
         VM_ASSERT(addr_v.type == ValueType::Ptr, "Expected Ptr for GCADD");
 
-        m_gc.add(reinterpret_cast<void *>(addr_v.ptr));
+        m_gc.add(reinterpret_cast<void*>(addr_v.ptr));
 
         VM_NEXT();
     }
@@ -347,7 +348,7 @@ dispatch:
 
     case OpCode::EXIT:
     {
-        via_Number code = rget<via_Number>({ RegisterType::ER, 0 });
+        via_Number code = rget<via_Number>({RegisterType::ER, 0});
         set_exit_data(static_cast<int>(code), "VM exited by user");
         VM_EXIT();
     }
@@ -366,8 +367,8 @@ dispatch:
         Operand cond_r = VM_OPND(0);
         Operand offset = VM_OPND(1);
 
-        via_Value condv   = rget(cond_r.reg);
-        via_Value &cond   = vtonumber(condv);
+        via_Value condv = rget(cond_r.reg);
+        via_Value& cond = vtonumber(condv);
         int actual_offset = static_cast<int>(offset.num);
 
         if (ip->op == OpCode::JNZ ? (cond.num != 0) : (cond.num == 0))
@@ -404,9 +405,9 @@ dispatch:
     {
         Operand id = VM_OPND(0);
 
-        m_labels[std::string_view(id.ident)] = reinterpret_cast<Instruction *>(ip - ihp);
+        m_labels[std::string_view(id.ident)] = reinterpret_cast<Instruction*>(ip - ihp);
 
-        while (reinterpret_cast<Instruction *>(ip - ihp) < ibp)
+        while (reinterpret_cast<Instruction*>(ip - ihp) < ibp)
         {
             if (ip->op == OpCode::END)
             {
@@ -425,12 +426,12 @@ dispatch:
 
         if (lget(id.ident).type == ValueType::Nil)
         {
-            Instruction *ip_copy = ip;
+            Instruction* ip_copy = ip;
             lset(id.ident, via_Value(ip_copy));
             VM_NEXT();
         }
 
-        while (reinterpret_cast<Instruction *>(ip - ihp) < ibp)
+        while (reinterpret_cast<Instruction*>(ip - ihp) < ibp)
         {
             if (ip->op == OpCode::END)
             {
@@ -461,7 +462,7 @@ dispatch:
     {
         Operand tbl_r = VM_OPND(0);
         via_Value tbl = rget(tbl_r.reg);
-        via_Value key = rget(Register { .type = RegisterType::IR, .offset = 0 });
+        via_Value key = rget(Register{.type = RegisterType::IR, .offset = 0});
 
         VM_ASSERT(tbl.type == ValueType::Table, "Attempt to index non-table type");
         VM_ASSERT(key.type == ValueType::TableKey, "Attempt to index table with non-key type");
@@ -476,7 +477,7 @@ dispatch:
         Operand tbl_r = VM_OPND(0);
         Operand dst_r = VM_OPND(1);
         via_Value tbl = rget(tbl_r.reg);
-        via_Value key = rget(Register { .type = RegisterType::IR, .offset = 0 });
+        via_Value key = rget(Register{.type = RegisterType::IR, .offset = 0});
 
         VM_ASSERT(tbl.type == ValueType::Table, "Attempt to load index of non-table type");
         VM_ASSERT(key.type == ValueType::TableKey, "Attempt to load table index of non-key type");
@@ -491,12 +492,12 @@ dispatch:
         Operand tbl_r = VM_OPND(0);
         Operand src_r = VM_OPND(1);
         via_Value tbl = rget(tbl_r.reg);
-        via_Value key = rget(Register { .type = RegisterType::IR, .offset = 0 });
+        via_Value key = rget(Register{.type = RegisterType::IR, .offset = 0});
 
         VM_ASSERT(tbl.type == ValueType::Table, "Attempt to set index of non-table type");
         VM_ASSERT(key.type == ValueType::TableKey, "Attempt to set table index of non-key type");
 
-        via_Table *t = tbl.tbl;
+        via_Table* t = tbl.tbl;
         t->set(*key.tblkey, rget(src_r.reg));
 
         VM_NEXT();
@@ -572,8 +573,8 @@ dispatch:
 
     case OpCode::FSREAD:
     {
-        Operand dst_r    = VM_OPND(0);
-        Operand path_r   = VM_OPND(1);
+        Operand dst_r = VM_OPND(0);
+        Operand path_r = VM_OPND(1);
         via_Value path_v = rget(path_r.reg);
 
         VM_ASSERT(path_v.type == ValueType::String, "Expected string for file path");
@@ -596,8 +597,8 @@ dispatch:
 
     case OpCode::FSWRITE:
     {
-        Operand src_r    = VM_OPND(0);
-        Operand path_r   = VM_OPND(1);
+        Operand src_r = VM_OPND(0);
+        Operand path_r = VM_OPND(1);
         via_Value path_v = rget(path_r.reg);
 
         VM_ASSERT(path_v.type == ValueType::String, "Expected string for file path");
@@ -617,7 +618,7 @@ dispatch:
 
     case OpCode::FSMKDIR:
     {
-        Operand path_r   = VM_OPND(0);
+        Operand path_r = VM_OPND(0);
         via_Value path_v = rget(path_r.reg);
 
         VM_ASSERT(path_v.type == ValueType::String, "Expected string for file path");
@@ -634,7 +635,7 @@ dispatch:
 
     case OpCode::FSRM:
     {
-        Operand path_r   = VM_OPND(0);
+        Operand path_r = VM_OPND(0);
         via_Value path_v = rget(path_r.reg);
 
         VM_ASSERT(path_v.type == ValueType::String, "Expected string for file path");
@@ -700,12 +701,12 @@ dispatch:
     {
         Operand dst_r = VM_OPND(0);
         Operand src_r = VM_OPND(1);
-        Operand i_r   = VM_OPND(2);
-        Operand j_r   = VM_OPND(3);
+        Operand i_r = VM_OPND(2);
+        Operand j_r = VM_OPND(3);
 
         via_Value src = rget(src_r.reg);
-        via_Value i   = rget(i_r.reg);
-        via_Value j   = rget(j_r.reg);
+        via_Value i = rget(i_r.reg);
+        via_Value j = rget(j_r.reg);
 
         VM_ASSERT(src.type == ValueType::String, "Attempt to take substring of non-string value");
 
@@ -714,7 +715,7 @@ dispatch:
 
         std::string src_str(src.str);
         std::string sub_str = src_str.substr(static_cast<size_t>(i.num), static_cast<size_t>(j.num));
-        via_String str      = strdup(sub_str.c_str());
+        via_String str = strdup(sub_str.c_str());
 
         gcadd(str);
         rset(dst_r.reg, via_Value(str));
@@ -732,9 +733,19 @@ dispatch:
         VM_ASSERT(src.type == ValueType::String, "Attempt to uppercase non-string value");
 
         std::string str(src.str);
-        auto src_str
-            = std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::toupper(c); });
-        via_String str_cpy = strdup(src_str.base());
+        auto src_str = std::transform(
+            str.begin(),
+            str.end(),
+            str.begin(),
+            [](unsigned char c)
+            {
+                return std::toupper(c);
+            }
+        );
+
+        // Idk wtf is going on here
+        // But hey, clangd thinks it's fine!
+        via_String str_cpy = strdup(src_str._Ptr);
 
         gcadd(str_cpy);
         rset(dst_r.reg, via_Value(str_cpy));
@@ -752,9 +763,16 @@ dispatch:
         VM_ASSERT(src.type == ValueType::String, "Attempt to lowercase non-string value");
 
         std::string str(src.str);
-        auto src_str
-            = std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
-        via_String str_cpy = strdup(src_str.base());
+        auto src_str = std::transform(
+            str.begin(),
+            str.end(),
+            str.begin(),
+            [](unsigned char c)
+            {
+                return std::tolower(c);
+            }
+        );
+        via_String str_cpy = strdup(src_str._Ptr);
 
         gcadd(str_cpy);
         rset(dst_r.reg, via_Value(str_cpy));
@@ -770,7 +788,7 @@ dispatch:
 
         VM_ASSERT(size.type == ValueType::Number, "Expected number for allocation size");
 
-        void *mem = std::malloc(static_cast<size_t>(size.num));
+        void* mem = std::malloc(static_cast<size_t>(size.num));
 
         VM_ASSERT(mem != nullptr, "Failed to allocate memory");
 
@@ -790,7 +808,7 @@ dispatch:
 
         VM_ASSERT(actual_addr != 0, "Attempt to free null pointer");
 
-        std::free(reinterpret_cast<void *>(actual_addr));
+        std::free(reinterpret_cast<void*>(actual_addr));
 
         VM_NEXT();
     }
@@ -799,13 +817,13 @@ dispatch:
     {
         Operand dst_addr_r = VM_OPND(0);
         Operand src_addr_r = VM_OPND(1);
-        via_Value dst      = rget(dst_addr_r.reg);
-        via_Value src      = rget(src_addr_r.reg);
+        via_Value dst = rget(dst_addr_r.reg);
+        via_Value src = rget(src_addr_r.reg);
 
         VM_ASSERT(dst.type == ValueType::Ptr, "Expected Ptr for MEMCPY operand 0");
         VM_ASSERT(src.type == ValueType::Ptr, "Expected Ptr for MEMCPY operand 1");
 
-        memcpy(reinterpret_cast<void *>(dst.ptr), reinterpret_cast<void *>(src.ptr), sizeof(via_Value));
+        memcpy(reinterpret_cast<void*>(dst.ptr), reinterpret_cast<void*>(src.ptr), sizeof(via_Value));
 
         VM_NEXT();
     }
@@ -829,15 +847,17 @@ void VirtualMachine::init()
         m_state.is_running = true;
         execute();
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
-        std::cout << std::format("\nVM exiting with code=1 and exit_message='Exception thrown during execution: {}'\n",
-                                 e.what());
+        std::cout << std::format(
+            "\nVM exiting with code=1 and exit_message='Exception thrown during "
+            "execution: {}'\n",
+            e.what()
+        );
         return;
     }
 
-    std::cout << std::format("\nVM exiting with code={} and exit_message='{}'\n", m_state.exit_code,
-                             m_state.exit_message);
+    std::cout << std::format("\nVM exiting with code={} and exit_message='{}'\n", m_state.exit_code, m_state.exit_message);
 
     return;
 }

@@ -231,7 +231,7 @@ typedef std::variant<
     BracketIndexAssignStmtNode,
     BracketIndexCallStmtNode,
     IndexCallStmtNode,
-    IndexAssignStmtNode,
+    IndexAssignStmtNode
 > StmtNode;
 
 struct TypedParamStmtNode

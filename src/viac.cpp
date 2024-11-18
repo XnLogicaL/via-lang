@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
     using namespace via;
     using namespace Tokenization;
     using namespace Parsing;
-    using namespace SyntaxAnalysis;
     using namespace Preprocessing;
 
     using namespace FileReader;

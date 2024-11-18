@@ -5,7 +5,6 @@
 #include "common.h"
 #include "magic_enum.hpp"
 #include <cassert>
-#include <print.h>
 
 #define VIA_ASSERT(cond, err)                                                                                          \
     do                                                                                                                 \

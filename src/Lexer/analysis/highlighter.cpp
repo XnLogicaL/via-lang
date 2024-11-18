@@ -2,17 +2,19 @@
 
 #include "highlighter.h"
 
-using namespace via::Tokenization;
+namespace via::Tokenization
+{
 
+// This is an internal "flag" that determines if the file name has been displayed before any errors
 static bool has_printed_file_name = false;
 
-std::vector<std::string> SourceLineHighlighter::split_lines(const std::string& source)
+std::vector<std::string> split_lines(const std::string& source)
 {
     std::vector<std::string> lines;
     std::istringstream stream(source);
     std::string line;
 
-    while (std::lgetine(stream, line))
+    while (std::getline(stream, line))
     {
         lines.push_back(line);
     }
@@ -20,7 +22,7 @@ std::vector<std::string> SourceLineHighlighter::split_lines(const std::string& s
     return lines;
 }
 
-std::string SourceLineHighlighter::get_severity_header(Severity sev)
+std::string get_severity_header(Severity sev)
 {
     switch (sev)
     {
@@ -36,20 +38,14 @@ std::string SourceLineHighlighter::get_severity_header(Severity sev)
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string SourceLineHighlighter::underline_line(
-    const std::string& source,
-    int line_number,
-    int offset,
-    int length,
-    const std::string& message,
-    Severity sev)
+std::string underline_line(const std::string& source, int line_number, int offset, int length, const std::string& message, Severity sev)
 {
     std::vector<std::string> lines = split_lines(source);
 
     // Check if line number is valid
     if (line_number < 1 || line_number > static_cast<int>(lines.size()))
     {
-        return "<ERROR INVALID LINE>";
+        return "<ERROR-INVALID-LINE>";
     }
 
     const std::string& line = lines[line_number - 1]; // Lines are 1-based, vector is 0-based
@@ -58,7 +54,7 @@ std::string SourceLineHighlighter::underline_line(
     // Check if offset is valid
     if (offset < 0 || offset >= static_cast<int>(line.size()))
     {
-        return "<ERROR INVALID OFFSET>";
+        return "<ERROR-INVALID-OFFSET>";
     }
 
     // Create the underline with tildes and insert the cursor (^)
@@ -81,12 +77,11 @@ std::string SourceLineHighlighter::underline_line(
     std::string line_number_str = std::to_string(line_number);
 
     // Adjust alignment by dynamically adding spaces to the line number section
-    return get_severity_header(sev) + message + "\n"
-        + line_number_str + " | " + std::string(line_number_width, ' ') + line + "\n"
-        + std::string(line_number_width, ' ') + " |  " + underline;
+    return get_severity_header(sev) + message + "\n" + line_number_str + " | " + std::string(line_number_width, ' ') + line + "\n" +
+           std::string(line_number_width, ' ') + " |  " + underline;
 }
 
-void SourceLineHighlighter::token_error(viaSourceContainer vsc, size_t idx, std::string message, Severity sev)
+void token_error(viaSourceContainer vsc, size_t idx, std::string message, Severity sev)
 {
     if (!has_printed_file_name)
     {
@@ -96,10 +91,7 @@ void SourceLineHighlighter::token_error(viaSourceContainer vsc, size_t idx, std:
 
     auto tok = vsc.tokens.at(idx);
 
-    std::cout << underline_line(
-        vsc.source,
-        tok.line,
-        tok.offset,
-        tok.value.length(),
-        message, sev) << std::endl;
+    std::cout << underline_line(vsc.source, tok.line, tok.offset, tok.value.length(), message, sev) << std::endl;
 }
+
+} // namespace via::Tokenization
