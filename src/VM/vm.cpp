@@ -1,6 +1,12 @@
 /* This file is a part of the via programming language at
  * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
+/*
+ * !! WARNING !!
+ * Unit testing is not allowed in this file!
+ * This is due to the performance critical nature of it's contents
+ */
+
 #include "vm.h"
 
 #include <cmath>
@@ -136,7 +142,7 @@ dispatch:
         Operand dst_r = VM_OPND(0);
         Operand src_p = VM_OPND(1);
         /* TODO: Make this safe */
-        rset(dst_r.reg, *reinterpret_cast<via_Value*>(static_cast<uintptr_t>(src_p.num)));
+        rset(dst_r.reg, *reinterpret_cast<via_Value *>(static_cast<uintptr_t>(src_p.num)));
 
         VM_NEXT();
     }
@@ -146,7 +152,7 @@ dispatch:
         Operand dst_p = VM_OPND(0);
         Operand src_r = VM_OPND(1);
         /* TODO: Make this safe */
-        *reinterpret_cast<via_Value*>(static_cast<uintptr_t>(dst_p.num)) = rget(src_r.reg);
+        *reinterpret_cast<via_Value *>(static_cast<uintptr_t>(dst_p.num)) = rget(src_r.reg);
 
         VM_NEXT();
     }
@@ -163,7 +169,7 @@ dispatch:
 
     case OpCode::PUSH:
     {
-        Instruction* ipc = ip;
+        Instruction *ipc = ip;
         m_stack.push(StackFrame(ipc, m_gc));
         VM_NEXT();
     }
@@ -238,7 +244,7 @@ dispatch:
     {
         Operand dst = VM_OPND(0);
         Operand num = VM_OPND(1);
-        via_Value* dst_p = rget_address(dst.reg);
+        via_Value *dst_p = rget_address(dst.reg);
         via_Value num_n = rget(num.reg);
 
         VM_ASSERT(num_n.type == ValueType::Number, "Expected Number for binary operand 0");
@@ -333,7 +339,7 @@ dispatch:
 
         VM_ASSERT(addr_v.type == ValueType::Ptr, "Expected Ptr for GCADD");
 
-        m_gc.add(reinterpret_cast<void*>(addr_v.ptr));
+        m_gc.add(reinterpret_cast<void *>(addr_v.ptr));
 
         VM_NEXT();
     }
@@ -368,7 +374,7 @@ dispatch:
         Operand offset = VM_OPND(1);
 
         via_Value condv = rget(cond_r.reg);
-        via_Value& cond = vtonumber(condv);
+        via_Value &cond = vtonumber(condv);
         int actual_offset = static_cast<int>(offset.num);
 
         if (ip->op == OpCode::JNZ ? (cond.num != 0) : (cond.num == 0))
@@ -405,9 +411,9 @@ dispatch:
     {
         Operand id = VM_OPND(0);
 
-        m_labels[std::string_view(id.ident)] = reinterpret_cast<Instruction*>(ip - ihp);
+        m_labels[std::string_view(id.ident)] = reinterpret_cast<Instruction *>(ip - ihp);
 
-        while (reinterpret_cast<Instruction*>(ip - ihp) < ibp)
+        while (reinterpret_cast<Instruction *>(ip - ihp) < ibp)
         {
             if (ip->op == OpCode::END)
             {
@@ -426,12 +432,12 @@ dispatch:
 
         if (lget(id.ident).type == ValueType::Nil)
         {
-            Instruction* ip_copy = ip;
+            Instruction *ip_copy = ip;
             lset(id.ident, via_Value(ip_copy));
             VM_NEXT();
         }
 
-        while (reinterpret_cast<Instruction*>(ip - ihp) < ibp)
+        while (reinterpret_cast<Instruction *>(ip - ihp) < ibp)
         {
             if (ip->op == OpCode::END)
             {
@@ -497,7 +503,7 @@ dispatch:
         VM_ASSERT(tbl.type == ValueType::Table, "Attempt to set index of non-table type");
         VM_ASSERT(key.type == ValueType::TableKey, "Attempt to set table index of non-key type");
 
-        via_Table* t = tbl.tbl;
+        via_Table *t = tbl.tbl;
         t->set(*key.tblkey, rget(src_r.reg));
 
         VM_NEXT();
@@ -788,7 +794,7 @@ dispatch:
 
         VM_ASSERT(size.type == ValueType::Number, "Expected number for allocation size");
 
-        void* mem = std::malloc(static_cast<size_t>(size.num));
+        void *mem = std::malloc(static_cast<size_t>(size.num));
 
         VM_ASSERT(mem != nullptr, "Failed to allocate memory");
 
@@ -808,7 +814,7 @@ dispatch:
 
         VM_ASSERT(actual_addr != 0, "Attempt to free null pointer");
 
-        std::free(reinterpret_cast<void*>(actual_addr));
+        std::free(reinterpret_cast<void *>(actual_addr));
 
         VM_NEXT();
     }
@@ -823,7 +829,7 @@ dispatch:
         VM_ASSERT(dst.type == ValueType::Ptr, "Expected Ptr for MEMCPY operand 0");
         VM_ASSERT(src.type == ValueType::Ptr, "Expected Ptr for MEMCPY operand 1");
 
-        memcpy(reinterpret_cast<void*>(dst.ptr), reinterpret_cast<void*>(src.ptr), sizeof(via_Value));
+        memcpy(reinterpret_cast<void *>(dst.ptr), reinterpret_cast<void *>(src.ptr), sizeof(via_Value));
 
         VM_NEXT();
     }
@@ -847,7 +853,7 @@ void VirtualMachine::init()
         m_state.is_running = true;
         execute();
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cout << std::format(
             "\nVM exiting with code=1 and exit_message='Exception thrown during "

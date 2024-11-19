@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "instruction.h"
 #include "common.h"
 
 #include "Utils/callable_once.h"
@@ -12,22 +13,21 @@ namespace via::VM
 
 static size_t obj_uid_head = 0;
 
-struct Instruction;
 class VirtualMachine;
 
 using via_Number = double;
-using via_Bool   = bool;
+using via_Bool = bool;
 using via_String = char *;
-using via_Nil    = std::nullptr_t;
-using via_Ptr    = uintptr_t;
-using via_CFunc  = void (*)(VirtualMachine *);
+using via_Nil = std::nullptr_t;
+using via_Ptr = uintptr_t;
+using via_CFunc = void (*)(VirtualMachine *);
 
 struct via_Value; // Forward declaration
 struct via_Table; // Forward declaration
 
 struct via_Func
 {
-    VM::Instruction *address;
+    Compilation::Instruction *address;
 };
 
 struct via_TableKey

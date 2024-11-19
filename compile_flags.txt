@@ -8,3 +8,4 @@
 -I./src/Lexer
 -I./src/VM
 -I./src/Utils
+-I./src/Compiler

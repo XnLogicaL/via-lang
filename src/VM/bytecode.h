@@ -7,54 +7,16 @@
 #include "opcode.h"
 #include "token.h"
 #include "types.h"
+#include "instruction.h"
+
+#include "Compiler/instruction.h"
 
 namespace via::VM
 {
 
-struct Register
-{
-    enum class RType : uint8_t
-    {
-        R,  // General Purpose Register
-        AR, // Argument Register
-        RR, // Return Register
-        IR, // Index Register
-        ER, // Exit Register
-        SR, // Self-argument Register
-    };
-
-    RType type;
-    uint8_t offset;
-};
-
-struct Operand
-{
-    enum class OType : uint8_t
-    {
-        Number,
-        Bool,
-        String,
-        Register,
-        Identifier
-    };
-
-    OType type;
-    union
-    {
-        double num;
-        bool boole;
-        const char *str;
-        const char *ident;
-        Register reg;
-    };
-};
-
-struct Instruction
-{
-    OpCode op;
-    uint8_t operandc;
-    Operand operandv[4];
-};
+using Register = Compilation::Register;
+using Operand = Compilation::Operand;
+using Instruction = Compilation::Instruction;
 
 class BytecodeParser
 {
@@ -86,6 +48,6 @@ public:
 };
 
 using RegisterType = Register::RType;
-using OperandType  = Operand::OType;
+using OperandType = Operand::OType;
 
 } // namespace via::VM

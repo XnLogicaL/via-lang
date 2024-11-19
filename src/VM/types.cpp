@@ -1,12 +1,11 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "types.h"
-#include "common.h"
 
 namespace via::VM
 {
 
-size_t via_Table::via_TableKeyHash::operator()(const via_TableKey& key) const
+size_t via_Table::via_TableKeyHash::operator()(const via_TableKey &key) const
 {
     if (key.type == via_TableKey::KType::Number)
     {
@@ -18,7 +17,7 @@ size_t via_Table::via_TableKeyHash::operator()(const via_TableKey& key) const
     }
 }
 
-bool via_Table::via_TableKeyEqual::operator()(const via_TableKey& lhs, const via_TableKey& rhs) const
+bool via_Table::via_TableKeyEqual::operator()(const via_TableKey &lhs, const via_TableKey &rhs) const
 {
     if (lhs.type != rhs.type)
         return false;
@@ -32,7 +31,7 @@ bool via_Table::via_TableKeyEqual::operator()(const via_TableKey& lhs, const via
     }
 }
 
-via_Value& via_Table::get(const via_TableKey& key)
+via_Value &via_Table::get(const via_TableKey &key)
 {
     auto it = data.find(key);
     if (it != data.end())
@@ -43,7 +42,7 @@ via_Value& via_Table::get(const via_TableKey& key)
     return nil;
 }
 
-void via_Table::set(const via_TableKey& key, const via_Value& val)
+void via_Table::set(const via_TableKey &key, const via_Value &val)
 {
     if (val.type == ValueType::Nil)
     {
@@ -54,11 +53,11 @@ void via_Table::set(const via_TableKey& key, const via_Value& val)
     data[key] = val;
 }
 
-via_Value& via_Value::operator=(const via_Value& other)
+via_Value &via_Value::operator=(const via_Value &other)
 {
     if (this != &other)
     {
-        //cleanup(); // Clean up existing resources
+        // cleanup(); // Clean up existing resources
         type = other.type;
         switch (type)
         {
@@ -96,13 +95,13 @@ via_Value& via_Value::operator=(const via_Value& other)
     return *this;
 }
 
-via_Value::via_Value(const via_Table& t)
+via_Value::via_Value(const via_Table &t)
 {
     type = VType::Table;
-    tbl  = new via_Table(t);
+    tbl = new via_Table(t);
 }
 
-via_Value::via_Value(const via_Value& other)
+via_Value::via_Value(const via_Value &other)
     : type(other.type)
 {
     *this = other; // Assign to utilize operator=

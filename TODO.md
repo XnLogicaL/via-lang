@@ -43,14 +43,14 @@ macro printf(__fmt, ...) {
     print(string.format(__fmt, ...))
 }
 
-define has_printf: true
+define has_printf: (true)
 
 if $defined(has_printf) {
     printf!("Hello, %s!", "World")
 }
 
 if $defined(has_printf) and $has_printf == true {
-    printf("printf is defined and set to true! %s", "this statement was emplaced by the compiler!")
+    printf!("printf is defined and set to true! %s", "this statement was emplaced by the compiler!")
 }
 ```
 

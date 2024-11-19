@@ -54,27 +54,22 @@ int main(int argc, char *argv[])
         VIA_ASSERT(false, std::format("Failed to read file '{}'\n  No such file or directory", e.file_path).c_str());
     }
 
-    Tokenizer *tokenizer   = new Tokenizer(code);
-    viaSourceContainer vsc = tokenizer->tokenize();
-    vsc.file_name          = std::string(argv[1]);
+    Tokenizer tokenizer = Tokenizer(code);
+    viaSourceContainer vsc = tokenizer.tokenize();
+    vsc.file_name = std::string(argv[1]);
 
-    Preprocessor *preprocessor = new Preprocessor(&vsc.tokens);
-    preprocessor->preprocess();
+    Preprocessor preprocessor = Preprocessor(&vsc.tokens);
+    preprocessor.preprocess();
 
-    SyntaxAnalyzer *syntax_analyzer = new SyntaxAnalyzer(vsc);
-    bool syntax_fail                = syntax_analyzer->analyze();
+    SyntaxAnalyzer syntax_analyzer = SyntaxAnalyzer(vsc);
+    bool syntax_fail = syntax_analyzer.analyze();
 
     VIA_ASSERT(!syntax_fail, "Syntax analysis failed");
 
-    Parser *parser = new Parser(vsc);
-    AST::AST *ast  = parser->parse_program();
+    Parser parser = Parser(vsc);
+    AST::AST *ast = parser.parse_program();
 
     std::cout << AST::stringify_ast(*ast) << "\n";
-
-    delete tokenizer;
-    delete preprocessor;
-    delete syntax_analyzer;
-    delete parser;
 
     return 0;
 }

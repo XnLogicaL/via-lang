@@ -26,7 +26,7 @@ public:
     VirtualMachine(const std::vector<Instruction> &pipeline /* This has to be a constant ref */)
     {
         ihp = new Instruction[pipeline.size()]; // Allocate ihp    (Instruction head pointer)
-        ip  = ihp;                              // Initialize ip   (Instruction pointer)
+        ip = ihp;                               // Initialize ip   (Instruction pointer)
         ibp = ihp + pipeline.size();            // Initialize ibp  (Instruction base pointer)
         // ? There might be a more optimized way to do this
         std::copy(pipeline.begin(), pipeline.end(), ip); // Copy instructions into the instruction pipeline
@@ -35,7 +35,7 @@ public:
     ~VirtualMachine()
     {
         gccol();       // Final GC invocation, technically unnecessary because GC destructor already does this
-        ip  = nullptr; // Invalidate ip
+        ip = nullptr;  // Invalidate ip
         ibp = nullptr; // Invalidate ibp
         delete[] ihp;  // Invalidate ihp
     }
@@ -56,7 +56,7 @@ public:
     // ! Internal usage only, made public for libraries
     inline void set_exit_data(int exit_code, const std::string &exit_message) noexcept
     {
-        m_state.exit_code    = exit_code;
+        m_state.exit_code = exit_code;
         m_state.exit_message = exit_message;
         return;
     }
@@ -79,7 +79,7 @@ public:
     // Appends a pointer to the garbage collector free list
     // The pointer should be malloc-ed, otherwise this has undefined behavior
     // ! The value cannot be removed from the free list!
-    template <typename T>
+    template<typename T>
     inline void gcadd(T p) noexcept
     {
         m_gc.add(p);
@@ -127,8 +127,7 @@ public:
     }
 
     // Throws an unrecoverable error that terminates the VM
-    inline void
-    fatalerr(const std::string &err) noexcept // Yes, this is a noexcept function because the VM doesn't use exceptions
+    inline void fatalerr(const std::string &err) noexcept // Yes, this is a noexcept function because the VM doesn't use exceptions
     {
         std::cerr << err << "\n";
         set_exit_data(1, std::format("User error: {}", err));
@@ -156,7 +155,7 @@ public:
     }
 
     // Sets register <r> to the given value <v>
-    template <typename T = via_Value>
+    template<typename T = via_Value>
     inline void rset(const Register &r, const T &v) noexcept
     {
         *m_ralloc.get<T>(r) = v;
@@ -164,14 +163,14 @@ public:
     }
 
     // Returns the value of register <r>
-    template <typename T = via_Value>
+    template<typename T = via_Value>
     inline constexpr T rget(const Register &r) noexcept
     {
         return *rget_address<T>(r);
     }
 
     // Returns the memory address of register <r>
-    template <typename T = via_Value>
+    template<typename T = via_Value>
     inline constexpr T *rget_address(const Register &r) noexcept
     {
         T *addr = m_ralloc.get<T>(r);
@@ -302,31 +301,31 @@ public:
         case ValueType::Number:
         {
             via_String str = strdup(std::to_string(val.num).c_str());
-            val.str        = str;
+            val.str = str;
             break;
         }
         case ValueType::Bool:
         {
             via_String str = const_cast<char *>(val.boole ? "true" : "false");
-            val.str        = str;
+            val.str = str;
             break;
         }
         case ValueType::Table:
         {
             via_String str = strdup(std::format("table {}", static_cast<const void *>(val.tbl)).c_str());
-            val.str        = str;
+            val.str = str;
             break;
         }
         case ValueType::Func:
         {
             via_String str = strdup(std::format("function {}", static_cast<const void *>(val.fun)).c_str());
-            val.str        = str;
+            val.str = str;
             break;
         }
         case ValueType::CFunc:
         {
             via_String str = strdup(std::format("cfunction {}", reinterpret_cast<void *>(val.cfun)).c_str());
-            val.str        = str;
+            val.str = str;
             break;
         }
         default:
@@ -480,7 +479,7 @@ public:
     inline via_Value vtype(const via_Value &v)
     {
         auto enum_name = ENUM_NAME(v.type);
-        auto str       = strdup(std::string(enum_name).c_str());
+        auto str = strdup(std::string(enum_name).c_str());
         gcadd(str);
         return via_Value(str);
     }
@@ -492,8 +491,8 @@ public:
     {
         if (v.type == ValueType::Table)
         {
-            auto t  = v.tbl;
-            auto ty = t->get(via_TableKey { .type = via_TableKey::KType::String, .str = const_cast<char *>("__type") });
+            auto t = v.tbl;
+            auto ty = t->get(via_TableKey{.type = via_TableKey::KType::String, .str = const_cast<char *>("__type")});
 
             if (ty.type == ValueType::Nil)
             {
@@ -525,20 +524,20 @@ public:
     // Returns the value of key <k> if present in table <t>
     inline via_Value tget(via_Table *t, const char *k)
     {
-        return t->get({ .type = via_TableKey::KType::String, .str = const_cast<char *>(k) });
+        return t->get({.type = via_TableKey::KType::String, .str = const_cast<char *>(k)});
     }
 
     // Assigns the given value <v> to key <k> in table <t>
     inline void tset(via_Table *t, const char *k, via_Value v) // Utility function for quick table index assignment
     {
-        t->set({ .type = via_TableKey::KType::String, .str = const_cast<char *>(k) }, v);
+        t->set({.type = via_TableKey::KType::String, .str = const_cast<char *>(k)}, v);
         return;
     }
 
     // Pushes value <v> to the back of table <t>
     inline void tinsert(via_Table *t, const via_Value &v)
     {
-        t->set(via_TableKey { .type = via_TableKey::KType::Number, .num = static_cast<via_Number>(t->data.size()) }, v);
+        t->set(via_TableKey{.type = via_TableKey::KType::Number, .num = static_cast<via_Number>(t->data.size())}, v);
         return;
     }
 
@@ -555,7 +554,7 @@ public:
     inline void tcallm(via_Table *t, const via_TableKey &k)
     {
         auto at = t->get(k);
-        rset(Register { .type = RegisterType::SR, .offset = 0 }, via_Value(*t));
+        rset(Register{.type = RegisterType::SR, .offset = 0}, via_Value(*t));
         call(at);
         return;
     }
@@ -585,7 +584,7 @@ private:
     // I don't particularly like doing this
     // However, it makes the code a lot cleaner
     using VMStack = Stack<StackFrame>;
-    using Labels  = std::unordered_map<std::string_view, Instruction *>;
+    using Labels = std::unordered_map<std::string_view, Instruction *>;
 
     VMState m_state;  // State object for the VM
     Instruction *ip;  // Instruction pointer
@@ -682,9 +681,7 @@ private:
         return via_Value();
     }
 
-    inline void save_state()
-    {
-    }
+    inline void save_state() {}
 };
 
 } // namespace via::VM

@@ -2,28 +2,22 @@
 
 #include "gen.h"
 
-using namespace via::Compilation;
-
-void Generator::push(const std::string &line)
+namespace via::Compilation
 {
-    src += line;
-}
 
-void Generator::pushline(const std::string &line)
-{
-    src += line + "\n";
-}
-
-std::string Generator::finalize()
-{
-    return src;
-}
+// clang-format off
+void Generator::push(std::string line) { src += line; }
+void Generator::pushline(std::string line) { push(line + "\n"); }
+void Generator::pushinstr(Instruction instr) { instrs.push_back(instr); }
+void Generator::free_register(size_t offset) { registers[offset] = false; }
+std::string Generator::finalize() { return src; }
+// clang-format on
 
 size_t Generator::get_available_register()
 {
     size_t i = 0;
 
-    for (const auto &status : registers)
+    for (const bool &status : registers)
     {
         if (status == false)
         {
@@ -39,8 +33,4 @@ size_t Generator::get_available_register()
     return 0;
 }
 
-void Generator::free_register(size_t offset)
-{
-    registers[offset] = false;
-    return;
-}
+} // namespace via::Compilation

@@ -1,6 +1,9 @@
+## For parser testing
 local const abc: Number = 10
-global const def: SubscriptableType<T, K<T>> = 20
+global const def: Generic<T, K<T>> = 20
 
 func main() {
     print("Hello, world!")
 }
+
+main()
