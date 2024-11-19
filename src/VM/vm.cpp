@@ -12,8 +12,6 @@
 #include <cmath>
 #include <cstring>
 
-using namespace via::VM;
-
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
 #define VM_EXIT() \
@@ -83,6 +81,9 @@ using namespace via::VM;
         VM_DISPATCH(); \
     } while (0);
 
+namespace via::VM
+{
+
 int VirtualMachine::execute()
 {
     // Not necessary, but provides clarity
@@ -109,6 +110,10 @@ dispatch:
                           reinterpret_cast<uintptr_t>(ibp)));
 
     */
+
+    // No LOAD protocol is present here
+    // This is because the LOAD protocol is actually invoked when VM_NEXT is called
+    // This is to prevent inaccurate profiling
 
     switch (ip->op)
     {
@@ -867,3 +872,5 @@ void VirtualMachine::init()
 
     return;
 }
+
+} // namespace via::VM

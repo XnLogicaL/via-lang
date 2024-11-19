@@ -1,6 +1,6 @@
 [submodule "llvm"]
 	path = llvm
 	url = https://github.com/llvm/llvm-project.git
-[submodule "catch2"]
-	path = catch2
-	url = https://github.com/catchorg/Catch2
+[submodule "doctest"]
+	path = doctest
+	url = https://github.com/doctest/doctest.git
