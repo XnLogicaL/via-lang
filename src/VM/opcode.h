@@ -9,22 +9,24 @@ enum class OpCode
 {
     NOP, // No operation
 
-    // Register Operations
-    MOV, // Move value from one register to another <dst :: Register> <src :: Register>
+    // viaRegister Operations
+    MOV, // Move value from one register to another <dst :: viaRegister> <src :: viaRegister>
     CPY,
-    LOAD,  // Load value from memory into a register <dst :: Register> <addr :: Integer>
-    STORE, // Store value from a register to memory <addr :: Integer> <src :: Register>
-    LI,    // Load immediate value into register <dst :: Register> <val :: Any>
+    LOAD,  // Load value from memory into a register <dst :: viaRegister> <addr :: Integer>
+    STORE, // Store value from a register to memory <addr :: Integer> <src :: viaRegister>
+    LI,    // Load immediate value into register <dst :: viaRegister> <val :: Any>
     DUP,   // Duplicate a register value
     SWAP,  // Swap values between two registers
+    NIL,   // Sets a register to nil
 
-    // Register Manipulation
-    PUSH,      // Push a new stack frame onto the stack
-    POP,       // Pop a stack frame from the stack
-    SETLOCAL,  // Set a new local to the top stack frame
-    GETLOCAL,  // Load a local from the top stack frame
-    SETGLOBAL, // Set a global to the global environment, will fail if the identifier is already defined
-    GETGLOBAL, // Load a global from the global environment
+    // viaRegister Manipulation
+    PUSH,       // Push a new stack frame onto the stack
+    POP,        // Pop a stack frame from the stack
+    SETLOCAL,   // Set a new local to the top stack frame
+    LOADLOCAL,  // Load a local from the top stack frame
+    SETGLOBAL,  // Set a global to the global environment, will fail if the identifier is already defined
+    LOADGLOBAL, // Load a global from the global environment
+    LOADVAR,    // First searches for the variable in the global scope, then unwinds the callstack to find it, and finally searches the global scope
 
     // Arithmetic Operations
     ADD, // Add two registers and store result in the first register
@@ -77,9 +79,9 @@ enum class OpCode
     JLNLT, // Jump to label if not less than
     JLGT,  // Jump to label if greater than
     JLNGT, // Jump to label if not greater than
-    JLLE, // Jump to label if less than or equal to
+    JLLE,  // Jump to label if less than or equal to
     JLNLE, // Jump to label if not less than or equal to
-    JLGE, // Jump to label if greater than or equal to
+    JLGE,  // Jump to label if greater than or equal to
     JLNGE, // Jump to label if n not greate than or equal to
     CALL,  // Call function at a specified address
     CALLC, // Call function with C-style calling convention
@@ -115,12 +117,6 @@ enum class OpCode
     TONUMBER, // Converts a value into a number, nil if impossible
     TOBOOL,   // Converts a value into a bool (truthiness)
 
-    // File System Operations
-    FSWRITE, // Write data to a file
-    FSREAD,  // Read data from a file
-    FSMKDIR,
-    FSRM,
-
     // Type Operations
     TYPEOF, // Get the complex type of a value (e.g., class, table)
     TYPE,   // Get the primitive type of a value (e.g., INT, STRING)
@@ -128,20 +124,6 @@ enum class OpCode
 
     // String Operations
     STRCON, // Concatenate two strings
-    STRSUB, // Get a substring from a string
-    STRUP,
-    STRLOW,
-
-    // Memory Operations
-    ALLOC,  // Allocate memory for a variable
-    FREE,   // Free allocated memory
-    MEMCPY, // Copy memory from one location to another
-
-    // Thread Operations
-    THRDCREATE, // Create a new thread
-    THRDJOIN,   // Wait for a thread to finish
-    THRDEXIT,   // Exit a thread
-    THRDID,     // Get the ID of the current thread
 };
 
 } // namespace via::VM

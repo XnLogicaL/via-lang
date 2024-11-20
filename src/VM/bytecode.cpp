@@ -21,7 +21,7 @@ OpCode BytecodeParser::read_opcode()
     return magic_enum::enum_cast<OpCode>(consume().value).value_or(OpCode::NOP);
 }
 
-Register BytecodeParser::read_register(const Tokenization::Token register_)
+viaRegister BytecodeParser::read_register(const Tokenization::Token register_)
 {
     std::string register_str = register_.value;
     std::string register_type;
@@ -38,7 +38,7 @@ Register BytecodeParser::read_register(const Tokenization::Token register_)
     return {.type = magic_enum::enum_cast<RegisterType>(register_type).value_or(RegisterType::R), .offset = uoffset};
 }
 
-Operand BytecodeParser::read_operand()
+viaOperand BytecodeParser::read_operand()
 {
     auto lit = consume();
 
@@ -46,23 +46,23 @@ Operand BytecodeParser::read_operand()
     {
     case Tokenization::TokenType::LIT_INT:
     case Tokenization::TokenType::LIT_FLOAT:
-        return Operand{.type = OperandType::Number, .num = std::stod(lit.value)};
+        return viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.value)};
 
     case Tokenization::TokenType::OP_SUB:
-        return Operand{.type = OperandType::Number, .num = -std::stod(consume().value)};
+        return viaOperand{.type = viaOperandType::viaNumber, .num = -std::stod(consume().value)};
 
     case Tokenization::TokenType::LIT_BOOL:
-        return Operand{.type = OperandType::Bool, .boole = lit.value == "true"};
+        return viaOperand{.type = viaOperandType::Bool, .boole = lit.value == "true"};
 
     case Tokenization::TokenType::LIT_STRING:
     case Tokenization::TokenType::LIT_CHAR:
-        return Operand{.type = OperandType::String, .str = strdup(lit.value.c_str())};
+        return viaOperand{.type = viaOperandType::String, .str = strdup(lit.value.c_str())};
 
     case Tokenization::TokenType::IDENTIFIER:
-        return Operand{.type = OperandType::Register, .reg = read_register(lit)};
+        return viaOperand{.type = viaOperandType::viaRegister, .reg = read_register(lit)};
 
     case Tokenization::TokenType::AT:
-        return Operand{.type = OperandType::Identifier, .ident = strdup(consume().value.c_str())};
+        return viaOperand{.type = viaOperandType::Identifier, .ident = strdup(consume().value.c_str())};
 
     default:
         break;
@@ -71,15 +71,15 @@ Operand BytecodeParser::read_operand()
     return {};
 }
 
-Instruction BytecodeParser::read_instruction()
+viaInstruction BytecodeParser::read_instruction()
 {
-    Instruction ins{};
+    viaInstruction ins{};
     ins.op = read_opcode();
     ins.operandc = 0;
 
     for (int i = 0; i < 4; ++i)
     {
-        ins.operandv[i] = Operand{};
+        ins.operandv[i] = viaOperand{};
     }
 
     bool expecting_comma = false;
@@ -102,9 +102,9 @@ Instruction BytecodeParser::read_instruction()
     return ins;
 }
 
-std::vector<Instruction> BytecodeParser::parse()
+std::vector<viaInstruction> BytecodeParser::parse()
 {
-    std::vector<Instruction> instructions;
+    std::vector<viaInstruction> instructions;
 
     while (pos < toks.size() - 1)
     {

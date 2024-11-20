@@ -22,19 +22,17 @@ public:
     // Optimization stack
     std::stack<std::string> opt_stack;
 
-    void push(std::string line);
-    void pushline(std::string line);
-    void pushinstr(Instruction instr);
+    void pushinstr(viaInstruction instr);
 
-    std::string finalize();
+    std::string compile();
+    std::vector<viaInstruction> get();
 
     size_t get_available_register();
     void free_register(size_t offset);
 
 private:
-    std::string src;
     std::vector<bool> registers;
-    std::vector<Instruction> instrs;
+    std::vector<viaInstruction> instrs;
 };
 
 } // namespace via::Compilation

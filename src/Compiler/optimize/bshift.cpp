@@ -5,7 +5,7 @@
 namespace via::Compilation
 {
 
-void optimize_bshift(Compilation::Instruction &instruction) noexcept
+void optimize_bshift(Compilation::viaInstruction &instruction) noexcept
 {
     // Threshold for maximum floating point innaccuracy
     static const double epsilon = 1e-9;
@@ -28,7 +28,7 @@ void optimize_bshift(Compilation::Instruction &instruction) noexcept
         return;
 
     double operand_log2 = std::log2(instruction.operandv[2].num);
-    bool optimizable_operand_type = (instruction.operandv[2].type == Compilation::OperandType::Number);
+    bool optimizable_operand_type = (instruction.operandv[2].type == Compilation::viaOperandType::viaNumber);
     bool optimizable_operand_value = (std::abs(operand_log2 - std::floor(operand_log2)) < epsilon);
 
     if (optimizable_operand_type && optimizable_operand_value)

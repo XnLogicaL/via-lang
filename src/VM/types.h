@@ -1,167 +1,142 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #pragma once
 
-#include "instruction.h"
-#include "common.h"
-
-#include "Utils/callable_once.h"
 #include "Utils/modifiable_once.h"
+#include "common.h"
+#include "instruction.h"
 
 namespace via::VM
 {
 
-static size_t obj_uid_head = 0;
+struct viaState;
 
-class VirtualMachine;
+using __via_instruction = Compilation::viaInstruction;
 
-using via_Number = double;
-using via_Bool = bool;
-using via_String = char *;
-using via_Nil = std::nullptr_t;
-using via_Ptr = uintptr_t;
-using via_CFunc = void (*)(VirtualMachine *);
+using viaNumber = double;
+using Bool = bool;
+using String = char *;
+using Nil = std::nullptr_t;
+using Ptr = uintptr_t;
+using CFunc = void (*)(viaState *);
 
-struct via_Value; // Forward declaration
-struct via_Table; // Forward declaration
+struct viaValue; // Forward declaration
+struct viaTable; // Forward declaration
 
-struct via_Func
+struct Func
 {
-    Compilation::Instruction *address;
+    const __via_instruction *addr;
 };
 
-struct via_TableKey
+// Tagged union that holds a table key
+struct viaTableKey
 {
-    enum class KType : uint8_t
+    enum class __type : uint8_t
     {
-        Number,
+        viaNumber,
         String
     };
 
-    KType type;
+    __type type;
     union
     {
-        via_Number num;
-        via_String str;
+        viaNumber num;
+        String str;
     };
+
+    viaTableKey(double n)
+        : type(__type::viaNumber)
+        , num(n)
+    {
+    }
+    viaTableKey(const char *c)
+        : type(__type::String)
+        , str(const_cast<char *>(c))
+    {
+    }
 };
 
-struct via_Value
+// Tagged union that holds a primitive via value
+struct viaValue
 {
-    enum class VType : uint8_t
+    enum class __type : uint8_t
     {
-        Number,
+        viaNumber,
         Bool,
         String,
         Nil,
         Ptr,
         Func,
         CFunc,
-        Table,
-        TableKey,
+        viaTable,
     };
 
-    via_Value()
-        : type(VType::Nil)
-        , nil(nullptr)
-    {
-    }
-    via_Value(const via_String &c)
-        : type(VType::String)
-        , str(strdup(c))
-    {
-    }
+    // clang-format off
+    viaValue() : type(__type::Nil), nil(nullptr) {}
+    viaValue(const String &c) : type(__type::String), str(strdup(c)) {}
+    explicit viaValue(const viaNumber &d) : type(__type::viaNumber), num(d) {}
+    explicit viaValue(const Bool &b) : type(__type::Bool), boole(b) {}
+    explicit viaValue(const Ptr &p) : type(__type::Ptr), ptr(p) {}
+    explicit viaValue(const Func &f) : type(__type::Func), fun(new Func(f)) {}
+    explicit viaValue(CFunc cf) : type(__type::CFunc), cfun(CFunc(cf)) {}
 
-    explicit via_Value(const via_Number &d)
-        : type(VType::Number)
-        , num(d)
-    {
-    }
-    explicit via_Value(const via_Bool &b)
-        : type(VType::Bool)
-        , boole(b)
-    {
-    }
-    explicit via_Value(const via_Ptr &p)
-        : type(VType::Ptr)
-        , ptr(p)
-    {
-    }
-    explicit via_Value(const via_Table &t);
-    explicit via_Value(const via_Func &f)
-        : type(VType::Func)
-        , fun(new via_Func(f))
-    {
-    }
-    explicit via_Value(via_CFunc cf)
-        : type(VType::CFunc)
-        , cfun(via_CFunc(cf))
-    {
-    }
-    explicit via_Value(const via_TableKey &tk)
-        : type(VType::TableKey)
-        , tblkey(new via_TableKey(tk))
-    {
-    }
+    viaValue(const viaValue &other);
+    viaValue &operator=(const viaValue &other);
+    explicit viaValue(const viaTable &t);
+    // clang-format on
 
-    via_Value(const via_Value &other);
-    via_Value &operator=(const via_Value &other);
-
-    ~via_Value()
+    ~viaValue()
     {
-        if (type == VType::String)
+        if (type == __type::String)
         {
             std::free(str);
         }
     };
 
-    bool is_const;
-    VType type;
+    bool _const;
+    __type type;
 
     union
     {
-        via_Number num;
-        via_Bool boole;
-        via_String str;
-        via_Nil nil;
-        via_Ptr ptr;
-        via_Func *fun;
-        via_CFunc cfun;
-        via_Table *tbl;
-        via_TableKey *tblkey;
+        viaNumber num;
+        Bool boole;
+        String str;
+        Nil nil;
+        Ptr ptr;
+        Func *fun;
+        CFunc cfun;
+        viaTable *tbl;
     };
 
 private:
     void cleanup();
 };
 
-struct via_Table
+struct viaTable
 {
-    struct via_TableKeyHash
+    struct __hash
     {
-        std::size_t operator()(const via_TableKey &key) const;
+        std::size_t operator()(const viaTableKey &) const;
     };
 
-    struct via_TableKeyEqual
+    struct __eq
     {
-        bool operator()(const via_TableKey &lhs, const via_TableKey &rhs) const;
+        bool operator()(const viaTableKey &, const viaTableKey &) const;
     };
 
-    size_t uid;
-    util::modifiable_once<bool> is_frozen;
-    std::unordered_map<via_TableKey, via_Value, via_TableKeyHash, via_TableKeyEqual> data;
+    viaTable *meta;
+    util::modifiable_once<bool> frozen;
+    std::unordered_map<viaTableKey, viaValue, __hash, __eq> data;
 
-    via_Value &get(const via_TableKey &key);
-    void set(const via_TableKey &key, const via_Value &val);
-
-    via_Table()
-        : uid(obj_uid_head++)
-        , is_frozen(false)
+    viaTable()
+        : meta(nullptr)
+        , frozen(false)
         , data({})
     {
     }
 };
 
-using ValueType = via_Value::VType;
+using viaValueType = viaValue::__type;
 
 } // namespace via::VM

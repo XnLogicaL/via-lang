@@ -14,11 +14,10 @@ namespace via::VM::viastl
 
 void fs_read(VirtualMachine *vm)
 {
-    Register pr = get_arg_register(0);
-    via_Value p = vm->rget(pr);
+    viaRegister pr = get_arg_register(0);
+    viaValue p = vm->rget(pr);
 
-    vm->vm_assert(p.type == ValueType::String,
-        "Expected String for argument 0 of fs_read");
+    vm->vm_assert(p.type == viaValueType::String, "Expected String for argument 0 of fs_read");
 
     std::ifstream f(p.str);
     std::string buf;
@@ -30,10 +29,10 @@ void fs_read(VirtualMachine *vm)
     }
 
     f.close();
-    
-    via_Value v = via_Value(strdup(buf.c_str()));
-    Register rr = get_ret_register(0);
-    
+
+    viaValue v = viaValue(strdup(buf.c_str()));
+    viaRegister rr = get_ret_register(0);
+
     vm->rset(rr, v);
 
     return;

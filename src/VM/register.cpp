@@ -16,17 +16,17 @@ uint8_t RegisterAllocator::get_size(RegisterType type)
     switch (type)
     {
     case RegisterType::R:
-        return sizeof(via_Value);
+        return sizeof(viaValue);
     case RegisterType::AR:
-        return sizeof(via_Value);
+        return sizeof(viaValue);
     case RegisterType::RR:
-        return sizeof(via_Value);
+        return sizeof(viaValue);
     case RegisterType::IR:
-        return sizeof(via_TableKey);
+        return sizeof(viaTableKey);
     case RegisterType::ER:
-        return sizeof(via_Number);
+        return sizeof(viaNumber);
     case RegisterType::SR:
-        return sizeof(via_Table);
+        return sizeof(viaTable);
     default:
         return 0;
     }
@@ -39,12 +39,12 @@ void *RegisterAllocator::alloc(RegisterType type, uint8_t count)
 
 void RegisterAllocator::prealloc()
 {
-    this->gpr = reinterpret_cast<via_Value *>(alloc(RegisterType::R, 128));
-    this->ar  = reinterpret_cast<via_Value *>(alloc(RegisterType::AR, 16));
-    this->rr  = reinterpret_cast<via_Value *>(alloc(RegisterType::RR, 16));
-    this->ir  = reinterpret_cast<via_TableKey *>(alloc(RegisterType::IR, 1));
-    this->er  = reinterpret_cast<via_Number *>(alloc(RegisterType::ER, 32));
-    this->sr  = reinterpret_cast<via_Table *>(alloc(RegisterType::SR, 1));
+    this->gpr = reinterpret_cast<viaValue *>(alloc(RegisterType::R, 128));
+    this->ar = reinterpret_cast<viaValue *>(alloc(RegisterType::AR, 16));
+    this->rr = reinterpret_cast<viaValue *>(alloc(RegisterType::RR, 16));
+    this->ir = reinterpret_cast<viaTableKey *>(alloc(RegisterType::IR, 1));
+    this->er = reinterpret_cast<viaNumber *>(alloc(RegisterType::ER, 32));
+    this->sr = reinterpret_cast<viaTable *>(alloc(RegisterType::SR, 1));
 }
 
 void RegisterAllocator::flush(RegisterType r)
@@ -53,32 +53,32 @@ void RegisterAllocator::flush(RegisterType r)
     {
     case RegisterType::R:
         std::free(this->gpr);
-        this->gpr = reinterpret_cast<via_Value *>(alloc(RegisterType::R, 128));
+        this->gpr = reinterpret_cast<viaValue *>(alloc(RegisterType::R, 128));
         break;
 
     case RegisterType::AR:
         std::free(this->ar);
-        this->ar = reinterpret_cast<via_Value *>(alloc(RegisterType::AR, 16));
+        this->ar = reinterpret_cast<viaValue *>(alloc(RegisterType::AR, 16));
         break;
 
     case RegisterType::RR:
         std::free(this->rr);
-        this->rr = reinterpret_cast<via_Value *>(alloc(RegisterType::RR, 16));
+        this->rr = reinterpret_cast<viaValue *>(alloc(RegisterType::RR, 16));
         break;
 
     case RegisterType::IR:
         std::free(this->ir);
-        this->ir = reinterpret_cast<via_TableKey *>(alloc(RegisterType::IR, 1));
+        this->ir = reinterpret_cast<viaTableKey *>(alloc(RegisterType::IR, 1));
         break;
 
     case RegisterType::ER:
         std::free(this->er);
-        this->er = reinterpret_cast<via_Number *>(alloc(RegisterType::ER, 1));
+        this->er = reinterpret_cast<viaNumber *>(alloc(RegisterType::ER, 1));
         break;
 
     case RegisterType::SR:
         std::free(this->sr);
-        this->sr = reinterpret_cast<via_Table *>(alloc(RegisterType::SR, 1));
+        this->sr = reinterpret_cast<viaTable *>(alloc(RegisterType::SR, 1));
         break;
 
     default:
@@ -88,14 +88,14 @@ void RegisterAllocator::flush(RegisterType r)
 
 void RegisterAllocator::print(RegisterType rt)
 {
-    std::cout << "---------- Register Map ----------\n";
+    std::cout << "---------- viaRegister Map ----------\n";
 
     switch (rt)
     {
     case RegisterType::R:
     {
         auto rv = std::vector(gpr, gpr + 128);
-        int i   = 0;
+        int i = 0;
 
         for (const auto &r : rv)
         {

@@ -9,30 +9,30 @@
 namespace via::Compilation
 {
 
-struct Register
+struct viaRegister
 {
     enum class RType : uint8_t
     {
-        R,  // General Purpose Register
-        AR, // Argument Register
-        RR, // Return Register
-        IR, // Index Register
-        ER, // Exit Register
-        SR, // Self-argument Register
+        R,  // General Purpose viaRegister
+        AR, // Argument viaRegister
+        RR, // Return viaRegister
+        IR, // Index viaRegister
+        ER, // Exit viaRegister
+        SR, // Self-argument viaRegister
     };
 
     RType type;
     uint8_t offset;
 };
 
-struct Operand
+struct viaOperand
 {
     enum class OType : uint8_t
     {
-        Number,
+        viaNumber,
         Bool,
         String,
-        Register,
+        viaRegister,
         Identifier
     };
 
@@ -43,20 +43,20 @@ struct Operand
         bool boole;
         const char *str;
         const char *ident;
-        Register reg;
+        viaRegister reg;
     };
 
     const std::string compile() const noexcept;
 };
 
-struct Instruction
+struct viaInstruction
 {
     VM::OpCode op;
     uint8_t operandc;
-    Operand operandv[4];
+    viaOperand operandv[4];
 
-    Instruction(const std::string &op_str, const std::vector<Operand> &operands);
-    Instruction()
+    viaInstruction(const std::string &op_str, const std::vector<viaOperand> &operands);
+    viaInstruction()
         : op(VM::OpCode::NOP)
         , operandc(0)
         , operandv()
@@ -66,7 +66,7 @@ struct Instruction
     const std::string compile() const noexcept;
 };
 
-using RegisterType = Register::RType;
-using OperandType = Operand::OType;
+using RegisterType = viaRegister::RType;
+using viaOperandType = viaOperand::OType;
 
 } // namespace via::Compilation

@@ -2,154 +2,153 @@
 
 #pragma once
 
+#include "api.h"
+#include "bytecode.h"
 #include "libutils.h"
 #include "types.h"
-#include "vm.h"
+#include "state.h"
+#include "instruction.h"
 
-namespace via::VM::viastl
+namespace via::lib
 {
 
-void std_print(VirtualMachine *vm)
+using namespace VM;
+
+inline void std_print(viaState *V)
 {
-    size_t i = 0;
+    uint8_t i = 0;
     std::ostringstream oss;
 
-    while (true)
+    // Loop over the first 16 registers
+    while (i < 16)
     {
-        Register r   = { RegisterType::AR, i++ };
-        via_Value rv = vm->rget(r);
+        viaRegister R = __via_get_arg_register(i++);
+        viaValue RV = *via_getregister(V, R);
 
-        if (rv.type == ValueType::Nil)
-        {
-            break;
-        }
+        if (RV.type == viaValueType::Nil)
+            break; // Stop if Nil is encountered
 
-        oss << vm->vtostring(rv).str << " ";
+        oss << via_tostring(V, RV).str << " ";
     }
 
-    std::cout << oss.str() << "\n";
+    std::cout << oss.str() << "\n"; // Output the accumulated string
 
     return;
 }
 
-void std_error(VirtualMachine *vm)
+inline void std_error(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
 
-    vm->fatalerr(vm->vtostring(rv).str);
+    via_fatalerr(V, via_tostring(V, RV).str);
 
     return;
 }
 
-void std_exit(VirtualMachine *vm)
+inline void std_exit(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value ec = vm->rget(r);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue EC = *via_getregister(V, R);
 
-    bool assertion = ec.type != ValueType::Number;
+    LIB_ASSERT(EC.type == viaValueType::viaNumber, "Expected type viaNumber for argument 0 of std_exit");
 
-    vm->vm_assert(assertion, "Expected type Number for argument 0 of std_exit");
+    int code = static_cast<int>(EC.num);
 
-    if (!assertion)
-        return;
-
-    int code = static_cast<int>(ec.num);
-
-    vm->set_exit_data(code, "std_exit called by user");
-    vm->set_fflag(FFlag::ABRT, true);
+    via_setexitdata(V, code, "std_exit called by user");
+    V->abrt = true; // Abort the VM execution
 
     return;
 }
 
-void std_type(VirtualMachine *vm)
+inline void std_type(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
-    Register rr  = get_ret_register(0);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
+    viaRegister RR = __via_get_ret_register(0);
 
-    vm->rset(rr, vm->vtype(rv));
+    via_setregister(V, RR, via_type(V, RV));
 
     return;
 }
 
-void std_typeof(VirtualMachine *vm)
+inline void std_typeof(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
-    Register rr  = get_ret_register(0);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
+    viaRegister RR = __via_get_ret_register(0);
 
-    vm->rset(rr, vm->vtypeof(rv));
+    via_setregister(V, RR, via_typeof(V, RV));
 
     return;
 }
 
-void std_tostring(VirtualMachine *vm)
+inline void std_tostring(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
-    Register rr  = get_ret_register(0);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
+    viaRegister RR = __via_get_ret_register(0);
 
-    vm->rset(rr, vm->vtostring(rv));
+    via_setregister(V, RR, via_tostring(V, RV));
 
     return;
 }
 
-void std_tonumber(VirtualMachine *vm)
+inline void std_tonumber(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
-    Register rr  = get_ret_register(0);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
+    viaRegister RR = __via_get_ret_register(0);
 
-    vm->rset(rr, vm->vtonumber(rv));
+    via_setregister(V, RR, via_tonumber(V, RV));
 
     return;
 }
 
-void std_tobool(VirtualMachine *vm)
+inline void std_tobool(viaState *V)
 {
-    Register r   = get_arg_register(0);
-    via_Value rv = vm->rget(r);
-    Register rr  = get_ret_register(0);
+    viaRegister R = __via_get_arg_register(0);
+    viaValue RV = *via_getregister(V, R);
+    viaRegister RR = __via_get_ret_register(0);
 
-    vm->rset(rr, vm->vtobool(rv));
+    via_setregister(V, RR, via_tobool(V, RV));
 
     return;
 }
 
-void std_assert(VirtualMachine *vm)
+inline void std_assert(viaState *V)
 {
-    Register cr = get_arg_register(0);
-    Register mr = get_arg_register(1);
+    viaRegister cr = __via_get_arg_register(0);
+    viaRegister mr = __via_get_arg_register(1);
 
-    via_Value cv = vm->rget(cr);
-    via_Value mv = vm->rget(mr);
+    viaValue cv = *via_getregister(V, cr);
+    viaValue mv = *via_getregister(V, mr);
 
-    if (!vm->vtobool(cv).boole)
+    if (!via_tobool(V, cv).boole)
     {
-        via_String mvstr   = vm->vtostring(mv).str;
-        std::string mfstr  = std::format("std_assert assertion failed: {}", mvstr);
-        via_String mfstrds = strdup(mfstr.c_str());
+        String mvstr = via_tostring(V, mv).str;
+        std::string mfstr = std::format("std_assert assertion failed: {}", mvstr);
+        String mfstrds = strdup(mfstr.c_str());
 
-        vm->rset(cr, mfstrds);
+        via_setregister(V, cr, mfstrds); // Set the error message in the first register
 
-        std_error(vm);
+        std_error(V); // Invoke the error handler
     }
 
     return;
 }
 
-void vstl_load(VirtualMachine *vm)
+inline void vstl_load(viaState *V)
 {
-    vm->gset("print", via_Value(std_print));
-    vm->gset("error", via_Value(std_error));
-    vm->gset("exit", via_Value(std_exit));
-    vm->gset("type", via_Value(std_type));
-    vm->gset("typeof", via_Value(std_typeof));
-    vm->gset("tostring", via_Value(std_tostring));
-    vm->gset("tonumber", via_Value(std_tonumber));
-    vm->gset("tobool", via_Value(std_tobool));
-    vm->gset("assert", via_Value(std_assert));
+    via_setglobal(V, "print", viaValue(std_print));
+    via_setglobal(V, "error", viaValue(std_error));
+    via_setglobal(V, "exit", viaValue(std_exit));
+    via_setglobal(V, "type", viaValue(std_type));
+    via_setglobal(V, "typeof", viaValue(std_typeof));
+    via_setglobal(V, "tostring", viaValue(std_tostring));
+    via_setglobal(V, "tonumber", viaValue(std_tonumber));
+    via_setglobal(V, "tobool", viaValue(std_tobool));
+    via_setglobal(V, "assert", viaValue(std_assert));
 }
 
-} // namespace via::VM::viastl
+} // namespace via::lib

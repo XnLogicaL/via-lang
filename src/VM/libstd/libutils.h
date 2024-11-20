@@ -2,60 +2,63 @@
 
 #pragma once
 
-#include "vm.h"
 #include "types.h"
+#include "api.h"
+#include <cstdint>
 
-via::VM::via_TableKey make_key(const char* k)
+#define LIB_ASSERT(cond, msg) \
+    via_assert(V, (cond), (msg)); \
+    if (!(cond)) \
+        return;
+
+inline via::VM::viaTableKey __via_make_key(const char *k)
 {
-    return via::VM::via_TableKey {
-        .type = via::VM::via_TableKey::KType::String,
-        .str = const_cast<char*>(k)
-    };
+    return via::VM::viaTableKey(k);
 }
 
-inline via::VM::Register get_arg_register(size_t roffset)
+inline via::VM::viaRegister __via_get_arg_register(size_t roffset)
 {
-    return { via::VM::RegisterType::AR, roffset };
+    return {via::VM::RegisterType::AR, static_cast<uint8_t>(roffset)};
 }
 
-inline via::VM::Register get_ret_register(size_t roffset)
+inline via::VM::viaRegister __via_get_ret_register(size_t roffset)
 {
-    return { via::VM::RegisterType::RR, roffset };
+    return {via::VM::RegisterType::RR, static_cast<uint8_t>(roffset)};
 }
 
-inline via::VM::Register get_self_register()
+inline via::VM::viaRegister __via_get_self_register()
 {
-    return { via::VM::RegisterType::SR, 0 };
+    return {via::VM::RegisterType::SR, 0};
 }
 
-inline bool is_nil(const via::VM::via_Value &v)
+inline bool __via_is_nil(const via::VM::viaValue &v)
 {
-    return v.type == via::VM::ValueType::Nil;
+    return v.type == via::VM::viaValueType::Nil;
 }
 
 namespace via::VM::LibConstructor
 {
 
-via_Table new_lib()
+inline viaTable *new_lib(viaState *V)
 {
-    via_Table t;
-    t.set(make_key("__type"), via_Value("Library"));
-    return t;
+    viaTable *T = new viaTable;
+    via_settableindex(V, T, __via_make_key("__type"), viaValue("Library"));
+    return T;
 }
 
-void add_method(via_Table &l, const char *k, void(*f)(VirtualMachine *))
+inline void add_method(viaState *V, viaTable *T, const char *k, void (*f)(viaState *))
 {
-    l.set(make_key(k), via_Value(f));
+    via_settableindex(V, T, __via_make_key(k), viaValue(f));
 }
 
-void add_member(via_Table &l, const char *k, via_Value v)
+inline void add_member(viaState *V, viaTable *T, const char *k, viaValue v)
 {
-    l.set(make_key(k), v);
+    via_settableindex(V, T, __via_make_key(k), v);
 }
 
-void seal(via_Table &l)
+inline void seal(viaState *V, viaTable *T)
 {
-    l.is_frozen.set(true);
+    via_freeze(V, T);
 }
 
 } // namespace via::VM::LibConstructor

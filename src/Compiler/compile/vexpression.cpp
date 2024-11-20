@@ -10,16 +10,16 @@ namespace via::Compilation
 using TokenType = Tokenization::TokenType;
 using OpCode = VM::OpCode;
 
-// Helper to create an Operand for a register
-inline Operand make_register_operand(RegisterType reg_type, size_t reg_num)
+// Helper to create an viaOperand for a register
+inline viaOperand make_register_operand(RegisterType reg_type, size_t reg_num)
 {
-    return Operand{.type = OperandType::Register, .reg = Register(reg_type, reg_num)};
+    return viaOperand{.type = viaOperandType::viaRegister, .reg = viaRegister(reg_type, reg_num)};
 }
 
 // Helper to create an instruction
-inline Instruction make_instruction(OpCode opcode, std::initializer_list<Operand> operands)
+inline viaInstruction make_instruction(OpCode opcode, std::initializer_list<viaOperand> operands)
 {
-    Instruction instr;
+    viaInstruction instr;
     instr.op = opcode;
     instr.operandc = operands.size();
     std::copy(operands.begin(), operands.end(), instr.operandv);
@@ -80,10 +80,10 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
 {
     size_t reg = gen->get_available_register();
 
-    Operand dst_o = make_register_operand(RegisterType::R, reg);
-    Operand value_o;
+    viaOperand dst_o = make_register_operand(RegisterType::R, reg);
+    viaOperand value_o;
 
-    Instruction instr;
+    viaInstruction instr;
     instr.op = OpCode::LI;
 
     // Determine the type of literal and populate the instruction
@@ -91,26 +91,26 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
     {
     case TokenType::LIT_INT:
     {
-        value_o = Operand{.type = OperandType::Number, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_FLOAT:
     {
-        value_o = Operand{.type = OperandType::Number, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_STRING:
     {
-        value_o = Operand{.type = OperandType::String, .str = strdup(lit.val.value.c_str())};
+        value_o = viaOperand{.type = viaOperandType::String, .str = strdup(lit.val.value.c_str())};
         break;
     }
     case TokenType::LIT_BOOL:
     {
-        value_o = Operand{.type = OperandType::Bool, .boole = lit.val.value == "true"};
+        value_o = viaOperand{.type = viaOperandType::Bool, .boole = lit.val.value == "true"};
         break;
     }
     default:
-        value_o = Operand{.type = OperandType::Number, .num = 0.0f};
+        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = 0.0f};
         break;
     }
 
@@ -131,7 +131,7 @@ size_t compile_un_expr(Generator *gen, AST::UnExprNode un)
     size_t expr_reg = compile_expression(gen, un);
     size_t un_reg = gen->get_available_register();
 
-    Instruction instr =
+    viaInstruction instr =
         make_instruction(OpCode::NEG, {make_register_operand(RegisterType::R, expr_reg), make_register_operand(RegisterType::R, un_reg)});
 
     gen->free_register(expr_reg);
@@ -149,7 +149,7 @@ size_t compile_binary_expr(Generator *gen, AST::BinExprNode bin)
     OpCode op_code = map_token_to_opcode(bin.op.type);
 
     // clang-format off
-    Instruction instr = make_instruction(
+    viaInstruction instr = make_instruction(
         op_code,
         {
             make_register_operand(RegisterType::R, bin_reg),
@@ -179,9 +179,9 @@ size_t compile_index_expr(Generator *gen, AST::IndexExprNode idx)
 
     // clang-format off
     gen->pushinstr(make_instruction(
-        OpCode::GETLOCAL, 
+        OpCode::LOADLOCAL, 
         {
-            Operand{.type = OperandType::Identifier, .ident = strdup(ident.value.c_str())},
+            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(ident.value.c_str())},
             make_register_operand(RegisterType::R, tbl_reg)
         }
     ));
@@ -190,7 +190,7 @@ size_t compile_index_expr(Generator *gen, AST::IndexExprNode idx)
         OpCode::LI,
         {
             make_register_operand(RegisterType::IR, 0),
-            Operand{.type = OperandType::String, .str = strdup(idx.index.value.c_str())}
+            viaOperand{.type = viaOperandType::String, .str = strdup(idx.index.value.c_str())}
         }
     ));
 
@@ -215,9 +215,9 @@ size_t compile_call_expr(Generator *gen, Parsing::AST::CallExprNode expr)
     size_t func_reg = gen->get_available_register();
 
     gen->pushinstr(make_instruction(
-        OpCode::GETLOCAL,
+        OpCode::LOADLOCAL,
         {
-            Operand{.type = OperandType::Identifier, .ident = strdup(std::get<AST::IdentExprNode>(*expr.ident).val.value.c_str())},
+            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(std::get<AST::IdentExprNode>(*expr.ident).val.value.c_str())},
             make_register_operand(RegisterType::R, func_reg)
         }
     ));
@@ -249,9 +249,9 @@ size_t compile_ident_expr(Generator *gen, Parsing::AST::IdentExprNode expr)
 
     // clang-format off
     gen->pushinstr(make_instruction(
-        OpCode::GETLOCAL,
+        OpCode::LOADLOCAL,
         {
-            Operand{.type = OperandType::Identifier, .ident = strdup(expr.val.value.c_str())},
+            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(expr.val.value.c_str())},
             make_register_operand(RegisterType::R, expr_reg)
         }
     ));

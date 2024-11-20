@@ -1,59 +1,30 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "types.h"
 
 namespace via::VM
 {
 
-size_t via_Table::via_TableKeyHash::operator()(const via_TableKey &key) const
+size_t viaTable::__hash::operator()(const viaTableKey &key) const
 {
-    if (key.type == via_TableKey::KType::Number)
-    {
-        return std::hash<via_Number>()(key.num);
-    }
+    if (key.type == viaTableKey::__type::viaNumber)
+        return std::hash<viaNumber>()(key.num);
     else
-    {
         return std::hash<std::string_view>()(key.str);
-    }
 }
 
-bool via_Table::via_TableKeyEqual::operator()(const via_TableKey &lhs, const via_TableKey &rhs) const
+bool viaTable::__eq::operator()(const viaTableKey &lhs, const viaTableKey &rhs) const
 {
     if (lhs.type != rhs.type)
         return false;
-    if (lhs.type == via_TableKey::KType::Number)
-    {
+    if (lhs.type == viaTableKey::__type::viaNumber)
         return lhs.num == rhs.num;
-    }
-    else
-    {
-        return strcmp(lhs.str, rhs.str) == 0;
-    }
+
+    return strcmp(lhs.str, rhs.str) == 0;
 }
 
-via_Value &via_Table::get(const via_TableKey &key)
-{
-    auto it = data.find(key);
-    if (it != data.end())
-    {
-        return it->second;
-    }
-    static via_Value nil;
-    return nil;
-}
-
-void via_Table::set(const via_TableKey &key, const via_Value &val)
-{
-    if (val.type == ValueType::Nil)
-    {
-        if (get(key).type != ValueType::Nil)
-            data.erase(key);
-        return;
-    }
-    data[key] = val;
-}
-
-via_Value &via_Value::operator=(const via_Value &other)
+viaValue &viaValue::operator=(const viaValue &other)
 {
     if (this != &other)
     {
@@ -61,32 +32,29 @@ via_Value &via_Value::operator=(const via_Value &other)
         type = other.type;
         switch (type)
         {
-        case VType::Number:
+        case __type::viaNumber:
             num = other.num;
             break;
-        case VType::Bool:
+        case __type::Bool:
             boole = other.boole;
             break;
-        case VType::String:
+        case __type::String:
             str = strdup(other.str); // Deep copy of the string
             break;
-        case VType::Ptr:
+        case __type::Ptr:
             ptr = other.ptr;
             break;
-        case VType::Func:
-            fun = new via_Func(*other.fun); // Deep copy the function pointer
+        case __type::Func:
+            fun = new Func(*other.fun); // Deep copy the function pointer
             break;
-        case VType::CFunc:
+        case __type::CFunc:
             cfun = other.cfun;
             break;
-        case VType::Table:
-            tbl = new via_Table(*other.tbl); // Deep copy the table
+        case __type::viaTable:
+            tbl = new viaTable(*other.tbl); // Deep copy the table
             break;
-        case VType::Nil:
+        case __type::Nil:
             nil = nullptr;
-            break;
-        case VType::TableKey:
-            tblkey = new via_TableKey(*other.tblkey); // Deep copy the table key
             break;
         default:
             break;
@@ -95,48 +63,41 @@ via_Value &via_Value::operator=(const via_Value &other)
     return *this;
 }
 
-via_Value::via_Value(const via_Table &t)
+viaValue::viaValue(const viaTable &t)
 {
-    type = VType::Table;
-    tbl = new via_Table(t);
+    type = __type::viaTable;
+    tbl = new viaTable(t);
 }
 
-via_Value::via_Value(const via_Value &other)
+viaValue::viaValue(const viaValue &other)
     : type(other.type)
 {
     *this = other; // Assign to utilize operator=
 }
 
-void via_Value::cleanup()
+void viaValue::cleanup()
 {
     switch (type)
     {
-    case VType::String:
+    case __type::String:
         if (str)
         {
             std::free(str);
             str = nullptr;
         }
         break;
-    case VType::Table:
+    case __type::viaTable:
         if (tbl)
         {
             delete tbl;
             tbl = nullptr;
         }
         break;
-    case VType::Func:
+    case __type::Func:
         if (fun)
         {
             delete fun;
             fun = nullptr;
-        }
-        break;
-    case VType::TableKey:
-        if (tblkey)
-        {
-            delete tblkey;
-            tblkey = nullptr;
         }
         break;
     default:

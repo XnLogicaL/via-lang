@@ -11,12 +11,10 @@ namespace via::VM
 class Global
 {
 private:
-
-    std::unordered_map<std::string_view, via_Value> consts;
+    std::unordered_map<std::string_view, viaValue> consts;
 
 public:
-
-    inline bool set_global(const char *k, via_Value &v)
+    inline bool set_global(const char *k, viaValue &v)
     {
         auto it = consts.find(std::string_view(k));
 
@@ -28,12 +26,12 @@ public:
         return 0;
     }
 
-    inline via_Value get_global(const char *k)
+    inline viaValue get_global(const char *k)
     {
         auto it = consts.find(std::string_view(k));
 
         if (it != consts.end())
-            return via_Value();
+            return viaValue();
 
         return consts[std::string_view(k)];
     }

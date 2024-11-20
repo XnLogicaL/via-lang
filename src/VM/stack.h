@@ -10,44 +10,45 @@
 #include "magic_enum.hpp"
 
 #ifndef __VIA_STACK_SIZE
-    #define __VIA_STACK_SIZE 128
+#define __VIA_STACK_SIZE 128
 #endif
 
 #ifndef __VIA_STACK_FRAME_SIZE
-    #define __VIA_STACK_FRAME_SIZE 1024
+#define __VIA_STACK_FRAME_SIZE 1024
 #endif
 
 namespace via::VM
 {
 
-class StackFrame {
-    std::unordered_map<std::string_view, via_Value> locals;
+class StackFrame
+{
+    std::unordered_map<std::string_view, viaValue> locals;
     GarbageCollector &m_gc;
 
 public:
+    const viaInstruction *retaddr;
 
-    const Instruction* return_address;
-
-    StackFrame(Instruction* ret, GarbageCollector& m_gc)
+    StackFrame(viaInstruction *ret, GarbageCollector &m_gc)
         : m_gc(m_gc)
-        , return_address(ret)
+        , retaddr(ret)
     {
         locals.reserve(__VIA_STACK_FRAME_SIZE);
     }
 
-    ~StackFrame() {
-        for (const auto& it : locals)
+    ~StackFrame()
+    {
+        for (const auto &it : locals)
         {
-            m_gc.add(reinterpret_cast<const void*>(&it.second));
+            m_gc.add(reinterpret_cast<const void *>(&it.second));
         }
     }
 
-    inline void set_local(const char* key, const via_Value& value)
+    inline void set_local(const char *key, const viaValue &value)
     {
         locals[std::string_view(key)] = value;
     }
 
-    inline via_Value get_local(const char* key)
+    inline viaValue get_local(const char *key)
     {
         auto it = locals.find(std::string_view(key));
 
@@ -57,19 +58,19 @@ public:
             return val;
         }
 
-        return via_Value();
+        return viaValue();
     }
 };
 
-template <typename T>
-class Stack {
+template<typename T>
+class Stack
+{
 private:
     std::unique_ptr<T> stack[__VIA_STACK_SIZE];
     size_t stack_ptr = 0;
 
 public:
-
-    inline void push(const T& t)
+    inline void push(const T &t)
     {
         if (stack_ptr == __VIA_STACK_SIZE)
             throw std::overflow_error("Stack overflow");
@@ -85,7 +86,7 @@ public:
         stack[--stack_ptr].reset();
     }
 
-    inline T& top()
+    inline T &top()
     {
         if (is_empty())
             throw std::underflow_error("Stack underflow");

@@ -6,12 +6,24 @@ namespace via::Compilation
 {
 
 // clang-format off
-void Generator::push(std::string line) { src += line; }
-void Generator::pushline(std::string line) { push(line + "\n"); }
-void Generator::pushinstr(Instruction instr) { instrs.push_back(instr); }
+void Generator::pushinstr(viaInstruction instr) { instrs.push_back(instr); }
 void Generator::free_register(size_t offset) { registers[offset] = false; }
-std::string Generator::finalize() { return src; }
 // clang-format on
+
+std::string Generator::compile()
+{
+    std::string src;
+
+    for (viaInstruction &instr : instrs)
+        src += instr.compile() + "\n";
+
+    return src;
+}
+
+std::vector<viaInstruction> Generator::get()
+{
+    return instrs;
+}
 
 size_t Generator::get_available_register()
 {

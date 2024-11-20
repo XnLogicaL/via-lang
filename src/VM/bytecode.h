@@ -14,9 +14,9 @@
 namespace via::VM
 {
 
-using Register = Compilation::Register;
-using Operand = Compilation::Operand;
-using Instruction = Compilation::Instruction;
+using viaRegister = Compilation::viaRegister;
+using viaOperand = Compilation::viaOperand;
+using viaInstruction = Compilation::viaInstruction;
 
 class BytecodeParser
 {
@@ -28,9 +28,9 @@ class BytecodeParser
     Tokenization::Token peek(int ahead = 0);
 
     OpCode read_opcode();
-    Register read_register(const Tokenization::Token register_);
-    Operand read_operand();
-    Instruction read_instruction();
+    viaRegister read_register(const Tokenization::Token register_);
+    viaOperand read_operand();
+    viaInstruction read_instruction();
 
 public:
     BytecodeParser(const std::string &src)
@@ -44,10 +44,10 @@ public:
         delete lexer;
     }
 
-    std::vector<Instruction> parse();
+    std::vector<viaInstruction> parse();
 };
 
-using RegisterType = Register::RType;
-using OperandType = Operand::OType;
+using RegisterType = viaRegister::RType;
+using viaOperandType = viaOperand::OType;
 
 } // namespace via::VM

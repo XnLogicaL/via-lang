@@ -34,13 +34,13 @@ namespace via::Tokenization
 
 // Returns the primitive value type of a literal
 // Internal use only
-const std::string get_value_type(const Token& tok) noexcept
+const std::string get_value_type(const Token &tok) noexcept
 {
     switch (tok.type)
     {
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
-        return "Number";
+        return "viaNumber";
     case TokenType::LIT_BOOL:
         return "Bool";
     case TokenType::LIT_CHAR:
