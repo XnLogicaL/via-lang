@@ -5,11 +5,12 @@
 
 # via
 
-A general purpose, semi-dynamically typed scripting language.
+A general purpose, performant, semi-dynamically typed scripting language.
+Heavily inspired by Lua's "Luau" dialect.
 
 # Warning
 
-This project is currently very far from completion and has been rewritten countless times.
+This project is currently far from completion and has been rewritten countless times.
 Expect unintended behavior, bugs, etc.
 Do not use in production if you think taking said risks is not worth it.
 

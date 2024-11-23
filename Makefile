@@ -1,9 +1,9 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++23 -O3 -I./src -I./include -Wextra -Wall -g
+CXXFLAGS = -std=c++23 -O3 -I./src -I./include -I./llvm/llvm/include -Wextra -Wall -g
 
 # Source files and includes
-SOURCES = $(shell find ./src -name '*.cpp')
+SOURCES = $(shell find ./src -name '*.cpp') $(shell find ./llvm/llvm/** -name '*.cpp')
 INCLUDES = $(shell find ./src -type d -exec printf '-I%s ' {} \;) $(shell find ./include -type d -exec printf '-I%s ' {} \;)
 TARGET = main
 

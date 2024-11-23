@@ -9,7 +9,7 @@
 
 #include <filesystem>
 
-namespace via::VM::viastl
+namespace ::viastl
 {
 
 void fs_read(VirtualMachine *vm)
@@ -38,4 +38,4 @@ void fs_read(VirtualMachine *vm)
     return;
 }
 
-} // namespace via::VM::viastl
+} // namespace ::viastl

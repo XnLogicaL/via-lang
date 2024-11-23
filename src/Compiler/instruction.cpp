@@ -8,46 +8,59 @@
 namespace via::Compilation
 {
 
-viaInstruction::viaInstruction(const std::string &op_str, const std::vector<viaOperand> &operands)
+viaInstruction viaC_newinstruction()
 {
-    op = ENUM_CAST(VM::OpCode, op_str).value_or(VM::OpCode::NOP);
-    operandc = operands.size();
-    size_t i = 0;
+    viaInstruction instr;
+    instr.op = OpCode::NOP;
+    instr.operandc = 0;
 
+    return instr;
+}
+
+viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<viaOperand> &operands)
+{
+    viaInstruction instr;
+
+    instr.op = ENUM_CAST(OpCode, op_str).value_or(OpCode::NOP);
+    instr.operandc = operands.size();
+
+    size_t i = 0;
     for (const viaOperand &operand : operands)
     {
         viaOperand _operand = operand;
-        operandv[i++] = _operand;
+        instr.operandv[i++] = _operand;
     }
+
+    return instr;
 }
 
-const std::string viaInstruction::compile() const noexcept
+const std::string viaC_compileinstruction(viaInstruction &instr) noexcept
 {
     std::string operands_str;
 
-    for (size_t i = 0; i < operandc; i++)
+    for (size_t i = 0; i < instr.operandc; i++)
     {
-        viaOperand operand = operandv[i];
-        operands_str += operand.compile() + " ";
+        viaOperand operand = instr.operandv[i];
+        operands_str += viaC_compileoperand(operand) + " ";
     }
 
-    return std::format("{} {};\n", ENUM_NAME(op), operands_str);
+    return std::format("{} {};\n", ENUM_NAME(instr.op), operands_str);
 }
 
-const std::string viaOperand::compile() const noexcept
+const std::string viaC_compileoperand(viaOperand &oper) noexcept
 {
-    switch (type)
+    switch (oper.type)
     {
-    case OType::Bool:
-        return boole ? "true" : "false";
-    case OType::Identifier:
-        return std::format("@{}", ident);
-    case OType::viaNumber:
-        return std::to_string(num);
-    case OType::String:
-        return str;
-    case OType::Register:
-        return std::format("{}{}", ENUM_NAME(reg.type), reg.offset);
+    case viaOperandType::Bool:
+        return oper.boole ? "true" : "false";
+    case viaOperandType::Identifier:
+        return std::format("@{}", oper.ident);
+    case viaOperandType::Number:
+        return std::to_string(oper.num);
+    case viaOperandType::String:
+        return oper.str;
+    case viaOperandType::Register:
+        return std::format("{}{}", ENUM_NAME(oper.reg.type), oper.reg.offset);
     default:
         return "";
     }

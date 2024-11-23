@@ -2,11 +2,12 @@
 
 #pragma once
 
-namespace via::VM
+namespace via
 {
 
 enum class OpCode
 {
+    ERR, // Error opcode
     NOP, // No operation
 
     // viaRegister Operations
@@ -34,8 +35,14 @@ enum class OpCode
     MUL, // Multiply two registers and store result in the first register
     DIV, // Divide first register by the second and store result
     MOD, // Modulus of first register by the second and store result
-    NEG, // Negate the value in a register
     POW,
+    IADD,
+    ISUB,
+    IMUL,
+    IDIV,
+    IMOD,
+    IPOW,
+    NEG, // Negate the value in a register
     INC,
     DEC,
 
@@ -66,6 +73,8 @@ enum class OpCode
     JNEQ,  // Jump if the given registers don't the same value
     JLT,   // Jump if the first register is less than the second register
     JGT,   // Jump if the first register is greater than the second register
+    JNLT,  // Jump if not less than
+    JNGT,  // Jump if not greater than
     JLE,   // Jump if the first register is less than or equal to the second register
     JNLE,  // Jump if not less than or equal to
     JGE,   // Jump if the first register is greater than or equal to the second register
@@ -84,7 +93,6 @@ enum class OpCode
     JLGE,  // Jump to label if greater than or equal to
     JLNGE, // Jump to label if n not greate than or equal to
     CALL,  // Call function at a specified address
-    CALLC, // Call function with C-style calling convention
     RET,   // Return from a function
     HALT,  // Halt execution
     EXIT,  // Exit with a custom exit code
@@ -126,4 +134,4 @@ enum class OpCode
     STRCON, // Concatenate two strings
 };
 
-} // namespace via::VM
+} // namespace via

@@ -11,10 +11,12 @@
 #include "api.h"
 #include "bytecode.h"
 #include "core.h"
+#include "shared.h"
 #include "state.h"
 #include "types.h"
 #include <chrono>
-#include <cstddef>
+#include <cmath>
+#include <cstdint>
 
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
@@ -72,7 +74,7 @@
 #define VM_JMPTO(to) \
     do \
     { \
-        via_jmpto(to); \
+        via_jmpto(V, to); \
         VM_DISPATCH(); \
     } while (0)
 
@@ -128,10 +130,10 @@ dispatch:
         // Otherwise, this is completely impossible
         VIA_UNLIKELY(via_validjmpaddr(V, V->ip)),
         std::format(
-            "viaInstruction pointer out of bounds (ip={}, ihp={},ibp={})",
-            reinterpret_cast<uintptr_t>(V->ip),
-            reinterpret_cast<uintptr_t>(V->ihp),
-            reinterpret_cast<uintptr_t>(V->ibp)
+            "viaInstruction pointer out of bounds (ip={}, ihp={}, ibp={})",
+            reinterpret_cast<const void *>(V->ip),
+            reinterpret_cast<const void *>(V->ihp),
+            reinterpret_cast<const void *>(V->ibp)
         )
     );
 
@@ -148,6 +150,12 @@ dispatch:
     // This is because the LOAD protocol is invoked when VM_NEXT is called
     switch (V->ip->op)
     {
+    case OpCode::ERR:
+    {
+        via_setexitdata(V, 1, "ERR OpCode");
+        VM_EXIT();
+    }
+
     case OpCode::END:
     case OpCode::NOP:
         VM_NEXT();
@@ -158,23 +166,28 @@ dispatch:
         viaOperand rsrc = VM_OPND(1);
 
         // Fast-path: both operands are registers
-        if (VIA_LIKELY(rdst.type == viaOperandType::viaRegister))
+        if (VIA_LIKELY(rdst.type == viaOperandType::Register))
         {
-            via_setregister(V, rdst.reg, via_getregister(V, rsrc.reg));
-            via_setregister(V, rdst.reg, viaValue());
+            via_setregister(V, rdst.reg, *via_getregister(V, rsrc.reg));
+            // Set the <src> register to nil, for the sake of it!
+            via_setregister(V, rdst.reg, viaT_stackvalue(V));
         }
         else
+            // Basically just LI lmao
             via_setregister(V, rdst.reg, via_toviavalue(V, rsrc));
 
         VM_NEXT();
     }
 
+    // Basically MOV but the registers aren't cleaned
     case OpCode::CPY:
     {
         viaOperand rdst = VM_OPND(0);
         viaOperand rsrc = VM_OPND(1);
 
-        via_setregister(V, rdst.reg, via_getregister(V, rsrc.reg));
+        // This has to be copied, otherwise it will remain a reference
+        viaValue cpy = *via_getregister(V, rsrc.reg);
+        via_setregister(V, rdst.reg, cpy);
 
         VM_NEXT();
     }
@@ -183,8 +196,12 @@ dispatch:
     {
         viaOperand rdst = VM_OPND(0);
         viaOperand psrc = VM_OPND(1);
-        /* TODO: Make this safe */
-        via_setregister(V, rdst.reg, *reinterpret_cast<viaValue *>(static_cast<uintptr_t>(psrc.num)));
+
+        uintptr_t uaddr = static_cast<uintptr_t>(psrc.num);
+        viaValue *addr = reinterpret_cast<viaValue *>(uaddr);
+
+        // TODO: Make this safe
+        via_setregister(V, rdst.reg, *addr);
 
         VM_NEXT();
     }
@@ -193,8 +210,14 @@ dispatch:
     {
         viaOperand pdst = VM_OPND(0);
         viaOperand rsrc = VM_OPND(1);
-        /* TODO: Make this safe */
-        *reinterpret_cast<viaValue *>(static_cast<uintptr_t>(pdst.num)) = *via_getregister(V, rsrc.reg);
+
+        uintptr_t uaddr = static_cast<uintptr_t>(pdst.num);
+        viaValue *addr = reinterpret_cast<viaValue *>(uaddr);
+
+        // TODO: Make this safe
+        // We can't do a direct pointer assignment because the new pointer would point to the registers address
+        // Which constantly changes, therefore this requires copying
+        *addr = *via_getregister(V, rsrc.reg);
 
         VM_NEXT();
     }
@@ -213,7 +236,8 @@ dispatch:
     case OpCode::NIL:
     {
         viaOperand rdst = VM_OPND(0);
-        via_setregister(V, rdst.reg, viaValue());
+        // Set register to nil
+        via_setregister(V, rdst.reg, viaT_stackvalue(V));
 
         VM_NEXT();
     }
@@ -221,7 +245,8 @@ dispatch:
     case OpCode::PUSH:
     {
         viaInstruction *ipc = V->ip;
-        V->stack->push(StackFrame(ipc, *V->gc));
+        // Push new stack frame
+        V->stack->push(StackFrame(ipc, V->gc));
         VM_NEXT();
     }
 
@@ -236,7 +261,11 @@ dispatch:
         viaOperand id = VM_OPND(0);
         viaOperand val = VM_OPND(1);
 
-        via_setlocal(V, id.ident, via_toviavalue(V, val));
+        // Slow-path: loaded value is a register
+        if (VIA_UNLIKELY(val.type == viaOperandType::Register))
+            via_setlocal(V, id.ident, *via_getregister(V, val.reg));
+        else
+            via_setlocal(V, id.ident, via_toviavalue(V, val));
 
         VM_NEXT();
     }
@@ -256,7 +285,11 @@ dispatch:
         viaOperand id = VM_OPND(0);
         viaOperand val = VM_OPND(1);
 
-        via_setglobal(V, id.ident, via_toviavalue(V, val));
+        // Slow-path: loaded value is a register
+        if (VIA_UNLIKELY(val.type == viaOperandType::Register))
+            via_setglobal(V, id.ident, *via_getregister(V, val.reg));
+        else
+            via_setglobal(V, id.ident, via_toviavalue(V, val));
 
         VM_NEXT();
     }
@@ -276,18 +309,18 @@ dispatch:
         viaOperand id = VM_OPND(0);
         viaOperand dst = VM_OPND(1);
 
-        viaValue local = via_getlocal(V, id.ident);
+        viaValue *local = via_getlocal(V, id.ident);
 
-        if (local.type != viaValueType::Nil)
+        if (local->type != viaValueType::Nil)
         {
-            via_setregister(V, dst.reg, local);
+            via_setregister(V, dst.reg, *local);
             VM_NEXT();
         }
 
         // TODO: Implement stack unwinding to search for the variable
 
-        viaValue global = via_getglobal(V, id.ident);
-        via_setregister(V, dst.reg, global);
+        viaValue *global = via_getglobal(V, id.ident);
+        via_setregister(V, dst.reg, *global);
 
         VM_NEXT();
     }
@@ -298,44 +331,50 @@ dispatch:
         viaOperand lhs = VM_OPND(1); \
         viaOperand rhs = VM_OPND(2); \
         viaValue lhsn, rhsn; \
-        bool is_lhs_number = false; \
-        bool is_rhs_number = false; \
-        if (VIA_LIKELY(lhs.type == viaOperandType::viaNumber)) \
-        { \
+        if (VIA_LIKELY(lhs.type == viaOperandType::Number)) \
             lhsn.num = lhs.num; \
-            is_lhs_number = true; \
-        } \
         else \
             lhsn = *via_getregister(V, lhs.reg); \
-        if (VIA_LIKELY(rhs.type == viaOperandType::viaNumber)) \
-        { \
+        if (VIA_LIKELY(rhs.type == viaOperandType::Number)) \
             rhsn.num = rhs.num; \
-            is_rhs_number = true; \
-        } \
         else \
             rhsn = *via_getregister(V, rhs.reg); \
-        if (is_lhs_number && is_rhs_number) \
-            via_setregister(V, dst.reg, lhsn.num op rhsn.num); \
-        else \
-        { \
-            VM_ASSERT(lhsn.type == viaValueType::viaNumber, "Expected viaNumber for binary operand 0"); \
-            VM_ASSERT(rhsn.type == viaValueType::viaNumber, "Expected viaNumber for binary operand 1"); \
-            via_setregister(V, dst.reg, lhsn.num op rhsn.num); \
-        } \
+        via_setregister(V, dst.reg, viaT_stackvalue(V, lhsn.num op rhsn.num)); \
         VM_NEXT(); \
     }
 
+#define VM_IBINOP(op) \
+    { \
+        viaOperand dst = VM_OPND(0); \
+        viaOperand lhs = VM_OPND(1); \
+        viaValue lhsn; \
+        viaValue *dstn = via_getregister(V, dst.reg); \
+        if (VIA_LIKELY(lhs.type == viaOperandType::Number)) \
+            lhsn.num = lhs.num; \
+        else \
+            lhsn = *via_getregister(V, lhs.reg); \
+        dstn->num op lhsn.num; \
+        VM_NEXT(); \
+    }
 
     case OpCode::ADD:
-        VM_BINOP(+=)
+        VM_BINOP(+)
     case OpCode::SUB:
-        VM_BINOP(-=)
+        VM_BINOP(-)
     case OpCode::MUL:
-        VM_BINOP(*=)
+        VM_BINOP(*)
     case OpCode::DIV:
-        VM_BINOP(/=)
+        VM_BINOP(/)
+    case OpCode::IADD:
+        VM_IBINOP(+=);
+    case OpCode::ISUB:
+        VM_IBINOP(-=);
+    case OpCode::IMUL:
+        VM_IBINOP(*=);
+    case OpCode::IDIV:
+        VM_IBINOP(/=);
 
-    case OpCode::POW:
+    case OpCode::IPOW:
     {
         viaOperand dst = VM_OPND(0);
         viaOperand num = VM_OPND(1);
@@ -344,13 +383,11 @@ dispatch:
         viaValue numn;
 
         // Fast-path: num is a constant number
-        if (VIA_LIKELY(num.type == viaOperandType::viaNumber))
+        if (VIA_LIKELY(num.type == viaOperandType::Number))
             numn.num = num.num;
         else
             // Exponent is in register, fetch it
             numn = *via_getregister(V, num.reg);
-
-        VM_ASSERT(numn.type == viaValueType::viaNumber, "Expected viaNumber for binary operand 0");
 
         // Perform the power operation
         pdst->num = std::pow(pdst->num, numn.num);
@@ -365,9 +402,9 @@ dispatch:
 
         viaValue lhsn = *via_getregister(V, lhs.reg);
 
-        VM_ASSERT(lhsn.type == viaValueType::viaNumber, "Expected viaNumber for binary operand 0");
+        VM_ASSERT(lhsn.type == viaValueType::Number, "Expected Number for binary operand 0");
 
-        via_setregister(V, dst.reg, viaValue(-lhsn.num));
+        via_setregister(V, dst.reg, viaT_stackvalue(V, -lhsn.num));
 
         VM_NEXT();
     }
@@ -389,7 +426,7 @@ dispatch:
         else \
             rhsn = *via_getregister(V, rhs.reg); \
         /* Perform the logical operation directly if both operands are booleans */ \
-        via_setregister(V, dst.reg, viaValue(via_tobool(V, lhsn).boole op via_tobool(V, rhsn).boole)); \
+        via_setregister(V, dst.reg, viaT_stackvalue(V, via_tobool(V, lhsn).boole op via_tobool(V, rhsn).boole)); \
         VM_NEXT(); \
     }
 
@@ -408,7 +445,7 @@ dispatch:
 
         VM_ASSERT(lhsn.type == viaValueType::Bool, "Expected Bool for logical operand 0");
 
-        via_setregister(V, dst.reg, viaValue(!lhsn.boole));
+        via_setregister(V, dst.reg, viaT_stackvalue(V, !lhsn.boole));
 
         VM_NEXT();
     }
@@ -421,14 +458,14 @@ dispatch:
         viaValue lhsn, rhsn; \
         bool lhs_reg = false; \
         bool rhs_reg = false; \
-        if (VIA_UNLIKELY(lhs.type == viaOperandType::viaRegister)) \
+        if (VIA_UNLIKELY(lhs.type == viaOperandType::Register)) \
         { \
             lhsn = *via_getregister(V, lhs.reg); \
             lhs_reg = true; \
         } \
         else \
             lhsn = via_toviavalue(V, lhs); \
-        if (VIA_UNLIKELY(rhs.type == viaOperandType::viaRegister)) \
+        if (VIA_UNLIKELY(rhs.type == viaOperandType::Register)) \
         { \
             rhsn = *via_getregister(V, rhs.reg); \
             rhs_reg = true; \
@@ -436,13 +473,13 @@ dispatch:
         else \
             rhsn = via_toviavalue(V, rhs); \
         if (lhs_reg && rhs_reg) \
-            via_setregister(V, dst.reg, viaValue(fn(V, lhs.reg, rhs.reg))); \
+            via_setregister(V, dst.reg, viaT_stackvalue(V, fn(V, lhs.reg, rhs.reg))); \
         else if (lhs_reg) \
-            via_setregister(V, dst.reg, viaValue(fn2(V, *via_getregister(V, lhs.reg), rhsn))); \
+            via_setregister(V, dst.reg, viaT_stackvalue(V, fn2(V, *via_getregister(V, lhs.reg), rhsn))); \
         else if (rhs_reg) \
-            via_setregister(V, dst.reg, viaValue(fn2(V, *via_getregister(V, rhs.reg), lhsn))); \
+            via_setregister(V, dst.reg, viaT_stackvalue(V, fn2(V, *via_getregister(V, rhs.reg), lhsn))); \
         else \
-            via_setregister(V, dst.reg, viaValue(fn2(V, lhsn, rhsn))); \
+            via_setregister(V, dst.reg, viaT_stackvalue(V, fn2(V, lhsn, rhsn))); \
         VM_NEXT(); \
     }
 
@@ -466,7 +503,7 @@ dispatch:
         viaOperand rsrc = VM_OPND(0);
 
         viaValue *src = via_getregister(V, rsrc.reg);
-        std::cout << via_tostring(V, *src).str;
+        std::cout << via_tostring(V, *src).str->ptr;
 
         VM_NEXT();
     }
@@ -496,8 +533,12 @@ dispatch:
 
     case OpCode::EXIT:
     {
-        viaNumber *code = via_getregister<viaNumber>(V, {RegisterType::ER, 0});
-        via_setexitdata(V, static_cast<int>(*code), "VM exited by user");
+        viaOperand rcode = VM_OPND(0);
+
+        viaValue *code = via_getregister(V, rcode.reg);
+        viaNumber ecode = via_tonumber(V, *code).num;
+        via_setexitdata(V, static_cast<viaExitCode>(ecode), "VM exited by user");
+
         VM_EXIT();
     }
 
@@ -505,7 +546,7 @@ dispatch:
     {
         viaOperand offset = VM_OPND(0);
 
-        VM_JMP(static_cast<int>(offset.num));
+        VM_JMP(static_cast<viaJmpOffset>(offset.num));
         VM_NEXT();
     }
 
@@ -515,31 +556,237 @@ dispatch:
         viaOperand condr = VM_OPND(0);
         viaOperand offset = VM_OPND(1);
 
-        viaValue condv = *via_getregister(V, condr.reg);
-        viaValue &cond = via_tonumber(V, condv);
+        viaValue cond = *via_getregister(V, condr.reg);
+        // We don't need to save the return value because this function modifies `val`
+        via_tonumber(V, cond);
 
-        int actual_offset = static_cast<int>(offset.num);
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
         if (V->ip->op == OpCode::JNZ ? (cond.num != 0) : (cond.num == 0))
             VM_JMP(actual_offset);
 
         VM_NEXT();
     }
 
+    case OpCode::JEQ:
+    case OpCode::JNEQ:
+    {
+        viaOperand condlr = VM_OPND(0);
+        viaOperand condrr = VM_OPND(1);
+        viaOperand offset = VM_OPND(2);
+
+        bool cond = via_cmpregister(V, condlr.reg, condrr.reg);
+
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
+        if (V->ip->op == OpCode::JEQ ? cond : !cond)
+            VM_JMP(actual_offset);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLT:
+    case OpCode::JNLT:
+    {
+        viaOperand condlr = VM_OPND(0);
+        viaOperand condrr = VM_OPND(1);
+        viaOperand offset = VM_OPND(2);
+
+        bool cond = via_getregister(V, condlr.reg)->num < via_getregister(V, condrr.reg)->num;
+
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
+        if (V->ip->op == OpCode::JEQ ? cond : !cond)
+            VM_JMP(actual_offset);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JGT:
+    case OpCode::JNGT:
+    {
+        viaOperand condlr = VM_OPND(0);
+        viaOperand condrr = VM_OPND(1);
+        viaOperand offset = VM_OPND(2);
+
+        bool cond = via_getregister(V, condlr.reg)->num > via_getregister(V, condrr.reg)->num;
+
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
+        if (V->ip->op == OpCode::JEQ ? cond : !cond)
+            VM_JMP(actual_offset);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLE:
+    case OpCode::JNLE:
+    {
+        viaOperand condlr = VM_OPND(0);
+        viaOperand condrr = VM_OPND(1);
+        viaOperand offset = VM_OPND(2);
+
+        bool cond = via_getregister(V, condlr.reg)->num <= via_getregister(V, condrr.reg)->num;
+
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
+        if (V->ip->op == OpCode::JEQ ? cond : !cond)
+            VM_JMP(actual_offset);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JGE:
+    case OpCode::JNGE:
+    {
+        viaOperand condlr = VM_OPND(0);
+        viaOperand condrr = VM_OPND(1);
+        viaOperand offset = VM_OPND(2);
+
+        bool cond = via_getregister(V, condlr.reg)->num >= via_getregister(V, condrr.reg)->num;
+
+        viaJmpOffset actual_offset = static_cast<viaJmpOffset>(offset.num);
+        if (V->ip->op == OpCode::JEQ ? cond : !cond)
+            VM_JMP(actual_offset);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JL:
+    {
+        viaOperand label = VM_OPND(0);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+        VM_JMPTO(it->second);
+        VM_NEXT();
+    }
+
+    case OpCode::JLZ:
+    case OpCode::JLNZ:
+    {
+        viaOperand valr = VM_OPND(0);
+        viaOperand label = VM_OPND(1);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        viaValue *val = via_getregister(V, valr.reg);
+        bool cond = val->num == 0;
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLZ ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLEQ:
+    case OpCode::JLNEQ:
+    {
+        viaOperand lhsr = VM_OPND(0);
+        viaOperand rhsr = VM_OPND(1);
+        viaOperand label = VM_OPND(2);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        bool cond = via_cmpregister(V, lhsr.reg, rhsr.reg);
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLEQ ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLLT:
+    case OpCode::JLNLT:
+    {
+        viaOperand lhsr = VM_OPND(0);
+        viaOperand rhsr = VM_OPND(1);
+        viaOperand label = VM_OPND(2);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        bool cond = via_getregister(V, lhsr.reg)->num < via_getregister(V, rhsr.reg)->num;
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLLT ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLGT:
+    case OpCode::JLNGT:
+    {
+        viaOperand lhsr = VM_OPND(0);
+        viaOperand rhsr = VM_OPND(1);
+        viaOperand label = VM_OPND(2);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        bool cond = via_getregister(V, lhsr.reg)->num > via_getregister(V, rhsr.reg)->num;
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLLT ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLLE:
+    case OpCode::JLNLE:
+    {
+        viaOperand lhsr = VM_OPND(0);
+        viaOperand rhsr = VM_OPND(1);
+        viaOperand label = VM_OPND(2);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        bool cond = via_getregister(V, lhsr.reg)->num <= via_getregister(V, rhsr.reg)->num;
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLLT ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
+    case OpCode::JLGE:
+    case OpCode::JLNGE:
+    {
+        viaOperand lhsr = VM_OPND(0);
+        viaOperand rhsr = VM_OPND(1);
+        viaOperand label = VM_OPND(2);
+
+        auto it = V->labels->find(std::string_view(label.ident));
+
+        VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.ident));
+
+        bool cond = via_getregister(V, lhsr.reg)->num >= via_getregister(V, rhsr.reg)->num;
+
+        // Jump if the condition is met
+        if (V->ip->op == OpCode::JLLT ? cond : !cond)
+            VM_JMPTO(it->second);
+
+        VM_NEXT();
+    }
+
     case OpCode::CALL:
     {
-        viaOperand id = VM_OPND(0);
+        viaOperand rfn = VM_OPND(0);
+        viaOperand argc = VM_OPND(1);
 
-        // Slow-path: the called function is located outside the current stack frame
-        if (VIA_UNLIKELY(V->stack->is_empty()))
-        {
-            viaValue g_calling = via_getglobal(V, id.ident);
-            via_call(V, g_calling);
-        }
-        else
-        {
-            viaValue l_calling = via_getlocal(V, id.ident);
-            via_call(V, l_calling);
-        }
+        // Set argc
+        V->argc = static_cast<viaCallArgC>(argc.num);
+        // Call function
+        via_call(V, *via_getregister(V, rfn.reg), false);
 
         VM_NEXT();
     }
@@ -554,32 +801,32 @@ dispatch:
         }
 
         // Return address
-        auto ra = V->stack->top().retaddr;
+        const viaInstruction *retaddr = V->stack->top().retaddr;
         V->stack->pop();
 
-        if (!via_validjmpaddr(V, const_cast<viaInstruction *>(ra)))
+        if (!via_validjmpaddr(V, retaddr))
         {
-            via_setexitdata(V, 1, "invalid return address");
+            via_setexitdata(V, 1, "Invalid return address");
             V->abrt = true;
-            return;
+            VM_EXIT();
         }
 
         // Flush argument registers
-        V->ralloc.flush(RegisterType::AR);
-        V->ralloc.flush(RegisterType::SR);
+        V->ralloc->flush(RegisterType::AR);
 
         // Jump back to the stack return address
-        via_jmpto(V, const_cast<viaInstruction *>(ra) + 1);
+        via_jmpto(V, retaddr);
         VM_NEXT();
     }
 
     case OpCode::LABEL:
     {
         viaOperand id = VM_OPND(0);
+        viaInstruction *addr = reinterpret_cast<viaInstruction *>(V->ip - V->ihp);
 
-        (*V->labels)[std::string_view(id.ident)] = reinterpret_cast<viaInstruction *>(V->ip - V->ihp);
+        (*V->labels)[std::string_view(id.ident)] = addr;
 
-        while (reinterpret_cast<viaInstruction *>(V->ip - V->ihp) < V->ibp)
+        while (addr < V->ibp)
         {
             if (V->ip->op == OpCode::END)
             {
@@ -595,15 +842,16 @@ dispatch:
 
     case OpCode::FUNC:
     {
-        viaOperand id = VM_OPND(0);
+        viaOperand rfn = VM_OPND(0);
+        viaFunc *fn = new viaFunc;
+        fn->addr = V->ip;
+        // TODO: Accept a valid user-set ID
+        fn->id = "<anonymous-function>";
 
-        if (via_getlocal(V, id.ident).type == viaValueType::Nil)
-        {
-            via_setlocal(V, id.ident, viaValue(V->ip));
-            VM_NEXT();
-        }
+        via_setregister(V, rfn.reg, viaT_stackvalue(V, fn));
 
-        while (reinterpret_cast<viaInstruction *>(V->ip - V->ihp) < V->ibp)
+        viaInstruction *ioffset = reinterpret_cast<viaInstruction *>(V->ip - V->ihp);
+        while (ioffset < V->ibp)
         {
             if (V->ip->op == OpCode::END)
             {
@@ -626,12 +874,12 @@ dispatch:
         viaValue val;
 
         // Slow-path: inserted value is a register
-        if (VIA_UNLIKELY(valr.type == viaOperandType::viaRegister))
+        if (VIA_UNLIKELY(valr.type == viaOperandType::Register))
             val = *via_getregister(V, valr.reg);
         else
             val = via_toviavalue(V, valr);
 
-        VM_ASSERT(tbl.type == viaValueType::viaTable, "Attempt to insert into non-table value");
+        VM_ASSERT(tbl.type == viaValueType::Table, "Attempt to insert into non-table value");
         via_inserttable(V, tbl.tbl, val);
 
         VM_NEXT();
@@ -639,13 +887,16 @@ dispatch:
 
     case OpCode::CALLM:
     {
-        viaOperand tblr = VM_OPND(0);
-        viaValue tbl = *via_getregister(V, tblr.reg);
-        // No, this is not unsafe
-        // The IR register must hold a viaTableKey; therefore this is type safe
-        viaTableKey key = *VM_GETIDXREG();
+        viaOperand rtbl = VM_OPND(0);
+        viaOperand ridx = VM_OPND(1);
 
-        VM_ASSERT(tbl.type == viaValueType::viaTable, "Attempt to index non-table type");
+        viaValue tbl = *via_getregister(V, rtbl.reg);
+        viaValue idx = *via_getregister(V, ridx.reg);
+
+        viaTableKey key = idx.type == viaValueType::String ? idx.str->hash : static_cast<viaHash>(idx.num);
+
+        std::string _errfmt = std::format("Attempt to index {} with '{}'", via_type(V, tbl).str->ptr, key);
+        VM_ASSERT(tbl.type == viaValueType::Table, _errfmt);
         via_callmethod(V, tbl.tbl, key);
 
         VM_NEXT();
@@ -655,11 +906,15 @@ dispatch:
     {
         viaOperand rdst = VM_OPND(0);
         viaOperand rtbl = VM_OPND(1);
+        viaOperand ridx = VM_OPND(2);
 
         viaValue tbl = *via_getregister(V, rtbl.reg);
-        viaTableKey key = *VM_GETIDXREG();
+        viaValue idx = *via_getregister(V, ridx.reg);
 
-        VM_ASSERT(tbl.type == viaValueType::viaTable, "Attempt to load index of non-table type");
+        viaTableKey key = idx.type == viaValueType::String ? idx.str->hash : static_cast<viaHash>(idx.num);
+
+        std::string _errfmt = std::format("Attempt to load index of {}", via_type(V, tbl).str->ptr);
+        VM_ASSERT(tbl.type == viaValueType::Table, _errfmt);
 
         via_loadtableindex(V, tbl.tbl, key, rdst.reg);
 
@@ -668,17 +923,21 @@ dispatch:
 
     case OpCode::SETIDX:
     {
-        viaOperand tblr = VM_OPND(0);
-        viaOperand rsrc = VM_OPND(1);
+        viaOperand rsrc = VM_OPND(0);
+        viaOperand rtbl = VM_OPND(1);
+        viaOperand ridx = VM_OPND(2);
 
-        viaValue tbl = *via_getregister(V, tblr.reg);
-        viaTableKey key = *VM_GETIDXREG();
         viaValue val;
+        viaValue tbl = *via_getregister(V, rtbl.reg);
+        viaValue idx = *via_getregister(V, ridx.reg);
 
-        VM_ASSERT(tbl.type == viaValueType::viaTable, "Attempt to set index of non-table type");
+        viaTableKey key = idx.type == viaValueType::String ? idx.str->hash : static_cast<viaHash>(idx.num);
+
+        std::string _errfmt = std::format("Attempt to assign index to {}", ENUM_NAME(tbl.type));
+        VM_ASSERT(tbl.type == viaValueType::Table, _errfmt);
 
         // Slow-path: the value is stored in a register
-        if (VIA_UNLIKELY(rsrc.type == viaOperandType::viaRegister))
+        if (VIA_UNLIKELY(rsrc.type == viaOperandType::Register))
             val = *via_getregister(V, rsrc.reg);
         else
             val = via_toviavalue(V, rsrc);
@@ -697,7 +956,7 @@ dispatch:
         viaValue val;
 
         // Fast-path: object is stored in a register
-        if (VIA_LIKELY(objr.type == viaOperandType::viaRegister))
+        if (VIA_LIKELY(objr.type == viaOperandType::Register))
             val = *via_getregister(V, objr.reg);
         else
             val = via_toviavalue(V, objr);
@@ -712,7 +971,7 @@ dispatch:
         viaOperand tblr = VM_OPND(0);
 
         viaValue T = *via_getregister(V, tblr.reg);
-        VM_ASSERT(T.type == viaValueType::viaTable, "Attempt to freeze non-table value");
+        VM_ASSERT(T.type == viaValueType::Table, "Attempt to freeze {}");
         via_freeze(V, T.tbl);
 
         VM_NEXT();
@@ -724,8 +983,8 @@ dispatch:
         viaOperand tblr = VM_OPND(1);
 
         viaValue tbl = *via_getregister(V, tblr.reg);
-        VM_ASSERT(tbl.type == viaValueType::viaTable, "Attempt to query isfrozen on non-table value");
-        via_setregister(V, rdst.reg, viaValue(via_isfrozen(V, tbl.tbl)));
+        VM_ASSERT(tbl.type == viaValueType::Table, "Attempt to query isfrozen on non-table value");
+        via_setregister(V, rdst.reg, viaT_stackvalue(V, via_isfrozen(V, tbl.tbl)));
 
         VM_NEXT();
     }
@@ -748,7 +1007,6 @@ dispatch:
         viaOperand valr = VM_OPND(1);
 
         viaValue val = *via_getregister(V, valr.reg);
-
         via_setregister(V, rdst.reg, via_tonumber(V, val));
 
         VM_NEXT();
@@ -770,7 +1028,10 @@ dispatch:
         viaOperand rdst = VM_OPND(0);
         viaOperand objr = VM_OPND(1);
 
-        via_setregister(V, rdst.reg, via_type(V, *via_getregister(V, objr.reg)));
+        viaValue *val = via_getregister(V, objr.reg);
+        viaValue type = via_type(V, *val);
+
+        via_setregister(V, rdst.reg, type);
 
         VM_NEXT();
     }
@@ -780,7 +1041,10 @@ dispatch:
         viaOperand rdst = VM_OPND(0);
         viaOperand objr = VM_OPND(1);
 
-        via_setregister(V, rdst.reg, via_typeof(V, *via_getregister(V, objr.reg)));
+        viaValue *val = via_getregister(V, objr.reg);
+        viaValue type = via_typeof(V, *val);
+
+        via_setregister(V, rdst.reg, type);
 
         VM_NEXT();
     }
@@ -790,7 +1054,8 @@ dispatch:
         viaOperand rdst = VM_OPND(0);
         viaOperand objr = VM_OPND(1);
 
-        via_setregister(V, rdst.reg, viaValue(via_getregister(V, objr.reg)->type == viaValueType::Nil));
+        bool is_nil = via_getregister(V, objr.reg)->type == viaValueType::Nil;
+        via_setregister(V, rdst.reg, viaT_stackvalue(V, is_nil));
 
         VM_NEXT();
     }
@@ -807,7 +1072,10 @@ dispatch:
         VM_ASSERT(lhs.type == viaValueType::String, "Attempt to concatenate non-string value");
         VM_ASSERT(rhs.type == viaValueType::String, "Attempt to concatenate string with non-string value");
 
-        via_setregister(V, rdst.reg, viaValue(strcat(lhs.str, rhs.str)));
+        std::string str = std::string(lhs.str->ptr) + rhs.str->ptr;
+        viaString *vstr = viaT_newstring(V, str.c_str());
+
+        via_setregister(V, rdst.reg, viaT_stackvalue(V, vstr));
 
         VM_NEXT();
     }
@@ -819,7 +1087,7 @@ dispatch:
 }
 
 exit:
-    return;
+    std::cout << std::format("VM exiting with exit_code={}, exit_message={}\n", V->exitc, V->exitm);
 }
 
 void via_killthread(viaState *V)
@@ -830,8 +1098,6 @@ void via_killthread(viaState *V)
 
     // Mark as dead thread
     V->ts = viaThreadState::DEAD;
-    // Destroy state object (thread)
-    delete V;
     // Decrement the thread_id to make room for more threads (I know you can technically make 4 billion threads ok?)
     __thread_id--;
 }

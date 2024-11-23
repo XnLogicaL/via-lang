@@ -51,7 +51,7 @@ Token Tokenizer::read_number()
     return TOKEN(type, value, line, start_offset);
 }
 
-Token Tokenizer::read_ident() 
+Token Tokenizer::read_ident()
 {
     // List of allowed special characters that can be included in an identifier
     static const std::vector<char> allowed_identifier_spec_chars = {
@@ -60,7 +60,7 @@ Token Tokenizer::read_ident()
 
     // Default type, this is because this might be an identifier, keyword or boolean literal
     // We can't know in advance which.
-    TokenType type      = TokenType::IDENTIFIER;
+    TokenType type = TokenType::IDENTIFIER;
     size_t start_offset = offset; // Record starting offset of the identifier
     std::string identifier;
 
@@ -68,11 +68,11 @@ Token Tokenizer::read_ident()
     auto is_allowed = [this](char ch) -> bool
     {
         auto allow_list = allowed_identifier_spec_chars;
-        bool is_alnum   = isalnum(ch);
+        bool is_alnum = isalnum(ch);
         // I love std::find and the ridiculous iterator template
         // Like, who the fuck thought it was a good idea to make people write .begin() and .end() every single fuckin time?
         bool is_allowed = std::find(allow_list.begin(), allow_list.end(), source.at(pos)) != allow_list.end();
-        return is_alnum && is_allowed;
+        return is_alnum || is_allowed;
     };
 
     // Read identifier while position is inside bounds and the current character is allowed within an identifier
@@ -108,27 +108,21 @@ Token Tokenizer::read_ident()
     // Checks if the identifier is a keyword or not
     auto it = keyword_map.find(identifier);
     if (it != keyword_map.end())
-    {
-        // If so, overwrites the identifier type with the respective keyword type
+        // If so, overwrite the identifier type with the respective keyword type
         type = it->second;
-    }
 
     // Checks if the identifier is a boolean literal
     if (identifier == "true" || identifier == "false")
-    {
         // Pretty self-explanatory.
         type = TokenType::LIT_BOOL;
-    }
 
     if (identifier == "nil")
-    {
         type = TokenType::LIT_NIL;
-    }
 
     return TOKEN(type, identifier, line, start_offset); // Use start_offset here
 }
 
-Token Tokenizer::read_string() 
+Token Tokenizer::read_string()
 {
     std::string value;
     size_t start_offset = offset; // Record starting offset of the string
@@ -176,7 +170,7 @@ Token Tokenizer::read_string()
     return TOKEN(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
 }
 
-Token Tokenizer::get_token() 
+Token Tokenizer::get_token()
 {
     // Skip whitespace
     while (pos < source.size() && isspace(source.at(pos)))
@@ -189,9 +183,7 @@ Token Tokenizer::get_token()
             offset = 0;
         }
         else
-        {
             offset++;
-        }
 
         pos++; // Ensure this increments regardless of newline
     }
@@ -199,31 +191,23 @@ Token Tokenizer::get_token()
     // Check if the position is at the end of the source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source.size())
-    {
-        return { TokenType::EOF_, "", line, offset };
-    }
+        return {TokenType::EOF_, "", line, offset};
 
     size_t start_offset = offset; // Record starting offset of each token
 
-    // Read number if the current character is numeric
+    // Handle numbers
     if (isdigit(source.at(pos)))
-    {
         return read_number();
-    }
-    // Read string literal
-    // ! Currently only double quotes supported
-    else if (source.at(pos) == '"')
-    {
+
+    // Handle string literals
+    if (source.at(pos) == '"')
         return read_string();
-    }
 
-    // Read identifier
+    // Handle identifiers and keywords
     if (isalpha(source.at(pos)))
-    {
         return read_ident();
-    }
 
-    // Handle special character
+    // Handle special characters (operators, delimiters, etc.)
     char ch = source.at(pos);
 
     pos++;
@@ -290,15 +274,13 @@ Token Tokenizer::get_token()
     case '@':
         return TOKEN(TokenType::AT, "@", line, start_offset);
     default:
-        return { TokenType::UNKNOWN, std::string(1, ch), line, start_offset };
+        return {TokenType::UNKNOWN, std::string(1, ch), line, start_offset};
     }
 
-    pos++;
-    offset++;
-    return { TokenType::UNKNOWN, "", line, start_offset };
+    return {TokenType::UNKNOWN, "", line, start_offset};
 }
 
-viaSourceContainer Tokenizer::tokenize() 
+viaSourceContainer Tokenizer::tokenize()
 {
     std::vector<Token> tokens;
 
@@ -308,12 +290,10 @@ viaSourceContainer Tokenizer::tokenize()
         tokens.push_back(token);
 
         if (token.type == TokenType::EOF_)
-        {
             break;
-        }
     }
 
-    return { tokens, source, "" };
+    return {tokens, source, ""};
 }
 
 } // namespace via::Tokenization

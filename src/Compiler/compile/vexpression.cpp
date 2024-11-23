@@ -8,12 +8,11 @@ namespace via::Compilation
 {
 
 using TokenType = Tokenization::TokenType;
-using OpCode = VM::OpCode;
 
 // Helper to create an viaOperand for a register
 inline viaOperand make_register_operand(RegisterType reg_type, size_t reg_num)
 {
-    return viaOperand{.type = viaOperandType::viaRegister, .reg = viaRegister(reg_type, reg_num)};
+    return viaOperand{.type = viaOperandType::Register, .reg = viaRegister(reg_type, reg_num)};
 }
 
 // Helper to create an instruction
@@ -91,12 +90,12 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
     {
     case TokenType::LIT_INT:
     {
-        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_FLOAT:
     {
-        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_STRING:
@@ -110,7 +109,7 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
         break;
     }
     default:
-        value_o = viaOperand{.type = viaOperandType::viaNumber, .num = 0.0f};
+        value_o = viaOperand{.type = viaOperandType::Number, .num = 0.0f};
         break;
     }
 

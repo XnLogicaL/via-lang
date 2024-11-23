@@ -5,38 +5,37 @@
 #include "common.h"
 #include "core.h"
 #include "VM/opcode.h"
+#include <cstdint>
 
 namespace via::Compilation
 {
 
 struct viaRegister
 {
-    enum class RType : uint8_t
+    using __offset = uint8_t;
+    enum class __type : uint8_t
     {
         R,  // General Purpose viaRegister
         AR, // Argument viaRegister
         RR, // Return viaRegister
-        IR, // Index viaRegister
-        ER, // Exit viaRegister
-        SR, // Self-argument viaRegister
     };
 
-    RType type;
-    uint8_t offset;
+    __type type;
+    __offset offset;
 };
 
 struct viaOperand
 {
-    enum class OType : uint8_t
+    enum class __type : uint8_t
     {
-        viaNumber,
+        Number,
         Bool,
         String,
-        viaRegister,
+        Register,
         Identifier
     };
 
-    OType type;
+    __type type;
     union
     {
         double num;
@@ -45,28 +44,23 @@ struct viaOperand
         const char *ident;
         viaRegister reg;
     };
-
-    const std::string compile() const noexcept;
 };
 
 struct viaInstruction
 {
-    VM::OpCode op;
+    OpCode op;
     uint8_t operandc;
     viaOperand operandv[4];
-
-    viaInstruction(const std::string &op_str, const std::vector<viaOperand> &operands);
-    viaInstruction()
-        : op(VM::OpCode::NOP)
-        , operandc(0)
-        , operandv()
-    {
-    }
-
-    const std::string compile() const noexcept;
 };
 
-using RegisterType = viaRegister::RType;
-using viaOperandType = viaOperand::OType;
+viaInstruction viaC_newinstruction();
+viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<viaOperand> &operands);
+
+const std::string viaC_compileinstruction(viaInstruction &) noexcept;
+const std::string viaC_compileoperand(viaOperand &) noexcept;
+
+using viaRegisterType = viaRegister::__type;
+using viaRegisterOffset = viaRegister::__offset;
+using viaOperandType = viaOperand::__type;
 
 } // namespace via::Compilation

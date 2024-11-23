@@ -3,7 +3,7 @@
 #include "bytecode.h"
 #include "common.h"
 
-namespace via::VM
+namespace via
 {
 
 Tokenization::Token BytecodeParser::consume()
@@ -46,10 +46,10 @@ viaOperand BytecodeParser::read_operand()
     {
     case Tokenization::TokenType::LIT_INT:
     case Tokenization::TokenType::LIT_FLOAT:
-        return viaOperand{.type = viaOperandType::viaNumber, .num = std::stod(lit.value)};
+        return viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.value)};
 
     case Tokenization::TokenType::OP_SUB:
-        return viaOperand{.type = viaOperandType::viaNumber, .num = -std::stod(consume().value)};
+        return viaOperand{.type = viaOperandType::Number, .num = -std::stod(consume().value)};
 
     case Tokenization::TokenType::LIT_BOOL:
         return viaOperand{.type = viaOperandType::Bool, .boole = lit.value == "true"};
@@ -59,7 +59,7 @@ viaOperand BytecodeParser::read_operand()
         return viaOperand{.type = viaOperandType::String, .str = strdup(lit.value.c_str())};
 
     case Tokenization::TokenType::IDENTIFIER:
-        return viaOperand{.type = viaOperandType::viaRegister, .reg = read_register(lit)};
+        return viaOperand{.type = viaOperandType::Register, .reg = read_register(lit)};
 
     case Tokenization::TokenType::AT:
         return viaOperand{.type = viaOperandType::Identifier, .ident = strdup(consume().value.c_str())};
@@ -71,16 +71,14 @@ viaOperand BytecodeParser::read_operand()
     return {};
 }
 
-viaInstruction BytecodeParser::read_instruction()
+Compilation::viaInstruction BytecodeParser::read_instruction()
 {
-    viaInstruction ins{};
+    Compilation::viaInstruction ins{};
     ins.op = read_opcode();
     ins.operandc = 0;
 
     for (int i = 0; i < 4; ++i)
-    {
         ins.operandv[i] = viaOperand{};
-    }
 
     bool expecting_comma = false;
 
@@ -102,16 +100,14 @@ viaInstruction BytecodeParser::read_instruction()
     return ins;
 }
 
-std::vector<viaInstruction> BytecodeParser::parse()
+std::vector<Compilation::viaInstruction> BytecodeParser::parse()
 {
-    std::vector<viaInstruction> instructions;
+    std::vector<Compilation::viaInstruction> instructions;
 
     while (pos < toks.size() - 1)
-    {
         instructions.push_back(read_instruction());
-    }
 
     return instructions;
 }
 
-} // namespace via::VM
+} // namespace via

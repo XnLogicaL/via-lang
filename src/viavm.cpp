@@ -6,49 +6,14 @@
 #include "common.h"
 #include "api.h"
 #include "execute.h"
-
-#include "libstd/vlstd.h"
+#include "libstd/vlrand.h"
 #include "state.h"
+#include "libstd/vlbase.h"
+#include "libstd/vlmath.h"
+#include "libstd/vlvec3.h"
 
 using namespace via;
-using namespace VM;
-
-std::string format_operands(const std::vector<viaOperand> &operands)
-{
-    std::string result = "[";
-
-    for (const auto &o : operands)
-    {
-        switch (o.type)
-        {
-        case viaOperandType::Bool:
-            result += o.boole ? "true" : "false";
-            break;
-        case viaOperandType::viaNumber:
-            result += std::format("{}", o.num);
-            break;
-        case viaOperandType::viaRegister:
-            result += std::format("{}{}", magic_enum::enum_name(o.reg.type), o.reg.offset);
-            break;
-        case viaOperandType::String:
-            result += std::format("\"{}\"", o.str);
-            break;
-        case viaOperandType::Identifier:
-            result += std::format("@{}", o.ident);
-            break;
-        default:
-            result += "unknown";
-            break;
-        }
-
-        if (!result.empty())
-            result += ", ";
-    }
-
-    result += (operands.size() == 0) ? "]" : "\b\b]";
-
-    return result;
-}
+using namespace Compilation;
 
 int main(int argc, char const *argv[])
 {
@@ -63,19 +28,11 @@ int main(int argc, char const *argv[])
     BytecodeParser parser(bytecode);
     auto instrs = parser.parse();
 
-    /*for (const auto &instr : instrs)
-    {
-        std::vector<viaOperand> operands(instr.operandv, instr.operandv +
-    instr.operandc);
-
-        std::cout << std::format("viaInstruction(OpCode: {}, Operands: {})\n",
-            magic_enum::enum_name(instr.op),
-            format_operands(operands));
-    }*/
-
-    // Spawn a new thread
     viaState *V = via::via_newstate(instrs);
-    lib::vstl_load(V);
+    lib::viaL_loadbaselib(V);
+    lib::viaL_loadmathlib(V);
+    lib::viaL_loadvec3lib(V);
+    lib::viaL_loadrandlib(V);
     via_execute(V);
 
     return 0;

@@ -6,17 +6,13 @@
 #include "lexer.h"
 #include "opcode.h"
 #include "token.h"
-#include "types.h"
 #include "instruction.h"
 
-#include "Compiler/instruction.h"
-
-namespace via::VM
+namespace via
 {
 
 using viaRegister = Compilation::viaRegister;
 using viaOperand = Compilation::viaOperand;
-using viaInstruction = Compilation::viaInstruction;
 
 class BytecodeParser
 {
@@ -30,24 +26,24 @@ class BytecodeParser
     OpCode read_opcode();
     viaRegister read_register(const Tokenization::Token register_);
     viaOperand read_operand();
-    viaInstruction read_instruction();
+    Compilation::viaInstruction read_instruction();
 
 public:
     BytecodeParser(const std::string &src)
         : lexer(new Tokenization::Tokenizer(const_cast<std::string &>(src)))
         , pos(0)
+        , toks(lexer->tokenize().tokens)
     {
-        toks = lexer->tokenize().tokens;
     }
     ~BytecodeParser()
     {
         delete lexer;
     }
 
-    std::vector<viaInstruction> parse();
+    std::vector<Compilation::viaInstruction> parse();
 };
 
-using RegisterType = viaRegister::RType;
-using viaOperandType = viaOperand::OType;
+using RegisterType = viaRegister::__type;
+using viaOperandType = viaOperand::__type;
 
-} // namespace via::VM
+} // namespace via

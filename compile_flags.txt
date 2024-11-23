@@ -9,3 +9,4 @@
 -I./src/VM
 -I./src/Utils
 -I./src/Compiler
+-I./llvm/llvm/include

@@ -2,381 +2,325 @@
 
 #pragma once
 
-#include "vm.h"
+#include "api.h"
+#include "shared.h"
+#include "state.h"
 #include "types.h"
 #include "libutils.h"
 
 #include <cmath>
 
-namespace via::VM::viastl
+namespace via::lib
 {
 
-bool is_number(const viaValue &v)
+inline void math_exp(viaState *V)
 {
-    return v.type == viaValueType::viaNumber;
+    viaRegister nR = viaL_getargument(V, 0);
+    viaValue n = *via_getregister(V, nR);
+
+    LIB_ASSERT(viaT_checknumber(V, n), "Expected Number for argument 0 of math_exp");
+
+    viaValue val = viaT_stackvalue(V, std::exp(n.num));
+    viaRegister RR = viaL_getreturn(V, 0);
+
+    via_setregister(V, RR, val);
 }
 
-void math_exp(VirtualMachine *vm)
+inline void math_log(viaState *V)
 {
-    viaRegister nr = get_arg_register(0);
-    viaValue n = vm->rget(nr);
+    viaRegister bR = viaL_getargument(V, 0);
+    viaRegister nR = viaL_getreturn(V, 1);
 
-    vm->vm_assert(is_number(n), "Expected viaNumber for argument 0 of math_exp");
+    viaValue base = *via_getregister(V, bR);
+    viaValue n = *via_getregister(V, nR);
 
-    // Unfortunately, this has to be done
-    if (!is_number(n))
-        return;
+    LIB_ASSERT(viaT_checknumber(V, base), "Expected Number for argument 0 of math_log");
+    LIB_ASSERT(viaT_checknumber(V, n), "Expected Number for argument 1 of math_log");
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::exp(n.num)));
+    viaValue val = viaT_stackvalue(V, std::log(n.num) / std::log(base.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_log(VirtualMachine *vm)
+inline void math_log10(viaState *V)
 {
-    viaRegister br = get_arg_register(0);
-    viaRegister nr = get_arg_register(1);
+    viaRegister nR = viaL_getargument(V, 0);
+    viaValue n = *via_getregister(V, nR);
 
-    viaValue base = vm->rget(br);
-    viaValue n = vm->rget(nr);
+    LIB_ASSERT(viaT_checknumber(V, n), "Expected Number for argument 0 of math_log10");
 
-    vm->vm_assert(is_number(base), "Expected viaNumber for argument 0 of math_log");
-    vm->vm_assert(is_number(n), "Expected viaNumber for argument 1 of math_log");
+    viaValue val = viaT_stackvalue(V, std::log10(n.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    if (!is_number(base) || !is_number(n))
-        return;
-
-    viaRegister rr = get_ret_register(0);
-
-    vm->rset(rr, viaValue(std::log(n.num) / std::log(base.num)));
-
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_log10(VirtualMachine *vm)
+inline void math_pow(viaState *V)
 {
-    viaRegister nr = get_arg_register(0);
-    viaValue n = vm->rget(nr);
+    viaRegister nR = viaL_getargument(V, 0);
+    viaRegister eR = viaL_getargument(V, 1);
 
-    vm->vm_assert(is_number(n), "Expected viaNumber for argument 0 of math_log10");
+    viaValue n = *via_getregister(V, nR);
+    viaValue e = *via_getregister(V, eR);
 
-    if (!is_number(n))
-        return;
+    LIB_ASSERT(viaT_checknumber(V, n), "Expected Number for argument 0 of math_pow");
+    LIB_ASSERT(viaT_checknumber(V, e), "Expected Number for argument 1 of math_pow");
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::log10(n.num)));
+    viaValue val = viaT_stackvalue(V, std::pow(n.num, e.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_pow(VirtualMachine *vm)
+inline void math_cos(viaState *V)
 {
-    viaRegister nr = get_arg_register(0);
-    viaRegister er = get_arg_register(1);
+    viaRegister tR = viaL_getargument(V, 0); // Get the argument register
+    viaValue t = *via_getregister(V, tR);    // Retrieve the value from the register
 
-    viaValue n = vm->rget(nr);
-    viaValue e = vm->rget(er);
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_cos");
 
-    vm->vm_assert(is_number(n), "Expected viaNumber for argument 0 of math_pow");
-    vm->vm_assert(is_number(e), "Expected viaNumber for argument 1 of math_pow");
+    viaValue val = viaT_stackvalue(V, std::cos(t.num)); // Compute the cosine
+    viaRegister RR = viaL_getreturn(V, 0);              // Get the return register
 
-    if (!is_number(n) || !is_number(e))
-        return;
-
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::pow(n.num, e.num)));
-
-    return;
+    via_setregister(V, RR, val); // Set the return value
 }
 
-void math_cos(VirtualMachine *vm)
+inline void math_tan(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tR = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tR);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_cos");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_tan");
 
-    if (!is_number(t))
-        return;
+    viaValue val = viaT_stackvalue(V, std::tan(t.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::cos(t.num)));
-
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_tan(VirtualMachine *vm)
+inline void math_asin(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tR = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tR);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_tan");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_asin");
 
-    if (!is_number(t))
-        return;
+    viaValue val = viaT_stackvalue(V, std::asin(t.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::tan(t.num)));
-
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_asin(VirtualMachine *vm)
+inline void math_acos(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tR = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tR);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_asin");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_acos");
 
-    if (!is_number(t))
-        return;
+    viaValue val = viaT_stackvalue(V, std::acos(t.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::asin(t.num)));
-
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_acos(VirtualMachine *vm)
+inline void math_atan(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tR = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tR);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_acos");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_atan");
 
-    if (!is_number(t))
-        return;
+    viaValue val = viaT_stackvalue(V, std::atan(t.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::acos(t.num)));
-
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_atan(VirtualMachine *vm)
+inline void math_atan2(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister xR = viaL_getargument(V, 0);
+    viaRegister yR = viaL_getargument(V, 1);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_atan");
+    viaValue x = *via_getregister(V, xR);
+    viaValue y = *via_getregister(V, yR);
 
-    if (!is_number(t))
-        return;
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_atan2");
+    LIB_ASSERT(viaT_checknumber(V, y), "Expected Number for argument 1 of math_atan2");
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::atan(t.num)));
+    viaValue val = viaT_stackvalue(V, std::atan2(x.num, y.num));
+    viaRegister RR = viaL_getreturn(V, 0);
 
-    return;
+    via_setregister(V, RR, val);
 }
 
-void math_atan2(VirtualMachine *vm)
+inline void math_sinh(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaRegister yr = get_arg_register(1);
+    viaRegister tr = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tr);
 
-    viaValue x = vm->rget(xr);
-    viaValue y = vm->rget(yr);
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_sinh");
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_atan2");
-    vm->vm_assert(is_number(y), "Expected number for argument 1 of math_atan2");
+    viaValue result = viaT_stackvalue(V, std::sinh(t.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    if (!is_number(x) || !is_number(y))
-        return;
-
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::atan2(x.num, y.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_sinh(VirtualMachine *vm)
+inline void math_cosh(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tr = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tr);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_sinh");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_cosh");
 
-    if (!is_number(t))
-        return;
+    viaValue result = viaT_stackvalue(V, std::cosh(t.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::sinh(t.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_cosh(VirtualMachine *vm)
+inline void math_tanh(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister tr = viaL_getargument(V, 0);
+    viaValue t = *via_getregister(V, tr);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_cosh");
+    LIB_ASSERT(viaT_checknumber(V, t), "Expected Number for argument 0 of math_tanh");
 
-    if (!is_number(t))
-        return;
+    viaValue result = viaT_stackvalue(V, std::tanh(t.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::cosh(t.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_tanh(VirtualMachine *vm)
+inline void math_abs(viaState *V)
 {
-    viaRegister tr = get_arg_register(0);
-    viaValue t = vm->rget(tr);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaValue x = *via_getregister(V, xr);
 
-    vm->vm_assert(is_number(t), "Expected number for argument 0 of math_tanh");
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_abs");
 
-    if (!is_number(t))
-        return;
+    viaValue result = viaT_stackvalue(V, std::fabs(x.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::tanh(t.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_abs(VirtualMachine *vm)
+inline void math_min(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaValue x = vm->rget(xr);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaRegister yr = viaL_getargument(V, 1);
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_abs");
+    viaValue x = *via_getregister(V, xr);
+    viaValue y = *via_getregister(V, yr);
 
-    if (!is_number(x))
-        return;
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_min");
+    LIB_ASSERT(viaT_checknumber(V, y), "Expected Number for argument 1 of math_min");
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::fabs(x.num)));
+    viaValue result = viaT_stackvalue(V, std::min(x.num, y.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_min(VirtualMachine *vm)
+inline void math_max(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaRegister yr = get_arg_register(1);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaRegister yr = viaL_getargument(V, 1);
 
-    viaValue x = vm->rget(xr);
-    viaValue y = vm->rget(yr);
+    viaValue x = *via_getregister(V, xr);
+    viaValue y = *via_getregister(V, yr);
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_min");
-    vm->vm_assert(is_number(y), "Expected number for argument 1 of math_min");
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_max");
+    LIB_ASSERT(viaT_checknumber(V, y), "Expected Number for argument 1 of math_max");
 
-    if (!is_number(x) || !is_number(y))
-        return;
+    viaValue result = viaT_stackvalue(V, std::max(x.num, y.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::min(x.num, y.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_max(VirtualMachine *vm)
+inline void math_round(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaRegister yr = get_arg_register(1);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaValue x = *via_getregister(V, xr);
 
-    viaValue x = vm->rget(xr);
-    viaValue y = vm->rget(yr);
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_round");
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_max");
-    vm->vm_assert(is_number(y), "Expected number for argument 1 of math_max");
+    viaValue result = viaT_stackvalue(V, std::round(x.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    if (!is_number(x) || !is_number(y))
-        return;
-
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::max(x.num, y.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_round(VirtualMachine *vm)
+inline void math_floor(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaValue x = vm->rget(xr);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaValue x = *via_getregister(V, xr);
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_round");
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_floor");
 
-    if (!is_number(x))
-        return;
+    viaValue result = viaT_stackvalue(V, std::floor(x.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::round(x.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_floor(VirtualMachine *vm)
+inline void math_ceil(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaValue x = vm->rget(xr);
+    viaRegister xr = viaL_getargument(V, 0);
+    viaValue x = *via_getregister(V, xr);
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_floor");
+    LIB_ASSERT(viaT_checknumber(V, x), "Expected Number for argument 0 of math_ceil");
 
-    if (!is_number(x))
-        return;
+    viaValue result = viaT_stackvalue(V, std::ceil(x.num));
+    viaRegister rr = viaL_getreturn(V, 0);
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::floor(x.num)));
-
-    return;
+    via_setregister(V, rr, result);
 }
 
-void math_ceil(VirtualMachine *vm)
+inline void viaL_loadmathlib(viaState *V)
 {
-    viaRegister xr = get_arg_register(0);
-    viaValue x = vm->rget(xr);
+    static const viaHashMap<viaRawString, viaValue> math_properties = {
 
-    vm->vm_assert(is_number(x), "Expected number for argument 0 of math_ceil");
+        // Constants
+        {"pi", WRAPVAL(3.1415926535)},
 
-    if (!is_number(x))
-        return;
+        // Functions
+        {"exp", WRAPVAL(math_exp)},
+        {"log", WRAPVAL(math_log)},
+        {"log10", WRAPVAL(math_log10)},
+        {"pow", WRAPVAL(math_pow)},
+        {"cos", WRAPVAL(math_cos)},
+        {"tan", WRAPVAL(math_tan)},
+        {"asin", WRAPVAL(math_asin)},
+        {"acos", WRAPVAL(math_acos)},
+        {"atan", WRAPVAL(math_atan)},
+        {"atan2", WRAPVAL(math_atan2)},
+        {"sinh", WRAPVAL(math_sinh)},
+        {"cosh", WRAPVAL(math_cosh)},
+        {"tanh", WRAPVAL(math_tanh)},
+        {"abs", WRAPVAL(math_abs)},
+        {"min", WRAPVAL(math_min)},
+        {"max", WRAPVAL(math_max)},
+        {"round", WRAPVAL(math_round)},
+        {"floor", WRAPVAL(math_floor)},
+        {"ceil", WRAPVAL(math_ceil)}
+    };
 
-    viaRegister rr = get_ret_register(0);
-    vm->rset(rr, viaValue(std::ceil(x.num)));
+    viaTable *lib = viaT_newtable(V, nullptr, {});
 
-    return;
+    for (auto it : math_properties)
+    {
+        viaTableKey key = viaT_hashstring(V, it.first);
+        via_settableindex(V, lib, key, it.second);
+    }
+
+    via_freeze(V, lib);
+
+    via_freeze(V, lib);
+    via_loadlib(V, "math", viaT_stackvalue(V, lib));
 }
 
-void vstl_math_load(VirtualMachine *vm)
-{
-    viaTable std_math = LibConstructor::new_lib();
-
-    LibConstructor::add_member(std_math, "pi", viaValue(3.1415926535));
-
-    // Ah yes
-    LibConstructor::add_method(std_math, "exp", math_exp);
-    LibConstructor::add_method(std_math, "log", math_log);
-    LibConstructor::add_method(std_math, "log10", math_log10);
-    LibConstructor::add_method(std_math, "pow", math_pow);
-    LibConstructor::add_method(std_math, "cos", math_cos);
-    LibConstructor::add_method(std_math, "tan", math_tan);
-    LibConstructor::add_method(std_math, "asin", math_asin);
-    LibConstructor::add_method(std_math, "acos", math_acos);
-    LibConstructor::add_method(std_math, "atan", math_atan);
-    LibConstructor::add_method(std_math, "atan2", math_atan2);
-    LibConstructor::add_method(std_math, "sinh", math_sinh);
-    LibConstructor::add_method(std_math, "cosh", math_cosh);
-    LibConstructor::add_method(std_math, "tanh", math_tanh);
-    LibConstructor::add_method(std_math, "abs", math_abs);
-    LibConstructor::add_method(std_math, "min", math_min);
-    LibConstructor::add_method(std_math, "max", math_max);
-    LibConstructor::add_method(std_math, "round", math_round);
-    LibConstructor::add_method(std_math, "floor", math_floor);
-    LibConstructor::add_method(std_math, "ceil", math_ceil);
-
-    LibConstructor::seal(std_math);
-
-    viaValue std_math_v;
-    std_math_v.is_const = true;
-
-    vm->loadlib("math", std_math_v);
-
-    return;
-}
-
-} // namespace via::VM::viastl
+} // namespace via::lib

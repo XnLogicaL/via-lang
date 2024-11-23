@@ -4,44 +4,31 @@
 
 #include "common.h"
 
-namespace via::VM
+namespace via
 {
 
-struct GCState
+struct viaState;
+struct viaValue;
+struct viaGCState
 {
+    bool terminating;
     size_t collections;
     size_t size;
-};
-    
-class GarbageCollector
-{
-    GCState state;
-    std::vector<const void*> free_list;
-
-public:
-
-    inline void collect()
-    {
-        if (free_list.size() == 0)
-        {
-            return;
-        }
-
-        state.size = 0;
-        state.collections++;
-
-        for (const auto &p : free_list)
-        {
-            std::free(const_cast<void*>(p));
-        }
-    }
-
-    template <typename T>
-    inline void add(const T* p)
-    {
-        free_list.push_back(p);
-        state.size += sizeof(p);
-    }
+    std::vector<void *> freelist;
+    std::vector<std::weak_ptr<viaValue>> reflist;
 };
 
-} // namespace via::VM
+// Creates a new GCState object
+viaGCState *viaGC_newstate();
+// Adds a malloc-ed pointer to the gc free list
+template<typename Ptr>
+void viaGC_add(viaGCState *, Ptr *);
+// Invokes garbage collection
+void viaGC_collect(viaGCState *);
+// Adds a value reference to the gc
+// These references are only cleaned up when the program is terminated
+void viaGC_addref(viaGCState *, std::shared_ptr<viaValue>);
+// Cleansup a GCState object
+void viaGC_cleanup(viaGCState *S);
+
+} // namespace via

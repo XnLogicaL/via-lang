@@ -3,38 +3,20 @@
 #pragma once
 
 #include "common.h"
+#include "shared.h"
 #include "types.h"
 
-namespace via::VM
+namespace via
 {
 
 class Global
 {
-private:
-    std::unordered_map<std::string_view, viaValue> consts;
-
 public:
-    inline bool set_global(const char *k, viaValue &v)
-    {
-        auto it = consts.find(std::string_view(k));
+    viaExitCode set_global(viaState *, viaGlobalIdentifier, viaValue);
+    viaValue *get_global(viaState *, viaGlobalIdentifier);
 
-        if (it != consts.end())
-            return 1;
-
-        consts[std::string_view(k)] = v;
-
-        return 0;
-    }
-
-    inline viaValue get_global(const char *k)
-    {
-        auto it = consts.find(std::string_view(k));
-
-        if (it != consts.end())
-            return viaValue();
-
-        return consts[std::string_view(k)];
-    }
+private:
+    viaHashMap<viaGlobalIdentifier, viaValue> consts;
 };
 
-} // namespace via::VM
+} // namespace via

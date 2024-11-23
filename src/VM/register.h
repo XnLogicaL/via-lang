@@ -2,66 +2,52 @@
 
 #pragma once
 
-#include "bytecode.h"
 #include "common.h"
+#include "shared.h"
 #include "types.h"
+#include <cstdint>
 
-#include "magic_enum.hpp"
-
-namespace via::VM
+namespace via
 {
+
+using viaRegisterSize = uint16_t;
+using viaRegisterCount = uint8_t;
 
 class RegisterAllocator
 {
-    viaValue *gpr;
-    viaValue *ar;
-    viaValue *rr;
-    viaTableKey *ir;
-    viaTable *sr;
-    viaNumber *er;
-
-    uint8_t get_size(RegisterType type);
-    void *alloc(RegisterType type, uint8_t count);
-    void prealloc();
-
 public:
-    RegisterAllocator()
-    {
-        this->prealloc();
-    }
+    RegisterAllocator();
+    ~RegisterAllocator();
 
-    ~RegisterAllocator()
-    {
-        std::free(gpr);
-        std::free(ar);
-        std::free(rr);
-        std::free(ir);
-        std::free(er);
-        std::free(sr);
-    }
-
+    // This is inlined due to performance critical and frequent usage
     template<typename T>
-    inline T *get(const viaRegister &r)
+    inline T *get(const viaRegister &R)
     {
-        const auto off = r.offset;
+        const viaRegisterOffset off = R.offset;
         static T *registers[] = {
             reinterpret_cast<T *>(gpr),
             reinterpret_cast<T *>(ar),
             reinterpret_cast<T *>(rr),
-            reinterpret_cast<T *>(ir),
-            reinterpret_cast<T *>(er),
-            reinterpret_cast<T *>(sr),
         };
 
-        // Ensure r.type maps to a valid index in registers[]
-        if (r.type >= RegisterType::R && r.type <= RegisterType::SR)
-            return registers[static_cast<int>(r.type) - static_cast<int>(RegisterType::R)] + off;
+        // Ensure R.type maps to a valid index in registers[]
+        if (R.type >= viaRegisterType::R && R.type <= viaRegisterType::RR)
+            return registers[static_cast<uint8_t>(R.type) - static_cast<uint8_t>(viaRegisterType::R)] + off;
 
         return nullptr;
     }
 
-    void flush(RegisterType r);
-    void print(RegisterType rt);
+    void flush(viaRegisterType);
+    void print(viaRegisterType);
+
+private:
+    viaValue *gpr;
+    viaValue *ar;
+    viaValue *rr;
+
+    viaRegisterSize get_size(viaRegisterType);
+    void *alloc(viaRegisterType, viaRegisterCount);
+    void prealloc();
 };
 
-} // namespace via::VM
+} // namespace via
