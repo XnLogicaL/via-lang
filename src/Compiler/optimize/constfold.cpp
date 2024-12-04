@@ -4,7 +4,8 @@
 #include "Parser/ast.h"
 #include "arena.hpp"
 #include "token.h"
-#include <string>
+
+#include <cmath>
 
 using namespace via::Parsing;
 using namespace via::Tokenization;
@@ -74,7 +75,7 @@ double _eval_expr(const Parsing::AST::ExprNode &expr)
     else if (auto bin = std::get_if<AST::BinExprNode>(&expr))
         return _eval_binexpr(*bin);
 
-    return NULL;
+    return 0.0f;
 }
 
 void optimize_constfold(Parsing::AST::ExprNode &expr)

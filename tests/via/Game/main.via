@@ -1,4 +1,4 @@
-import "vector_utils.viam" as Vec2 ## Similar to require, but with unique syntax
+import "vector_utils.viam" as Vec2 ## Syntax sugar for `global const [name] = require([file])`
 
 type Player {
     name: String;

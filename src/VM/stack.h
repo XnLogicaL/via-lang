@@ -3,52 +3,67 @@
 #pragma once
 
 #include "common.h"
-#include "types.h"
-#include "shared.h"
-#include "gc.h"
 
 // Stack depth limit
 #ifndef VIA_STACK_SIZE
 #define VIA_STACK_SIZE 128
 #endif
 
-// Stackframe variable limit
-#ifndef VIA_STACK_FRAME_SIZE
-#define VIA_STACK_FRAME_SIZE 1024
+#ifndef VIA_SFRAME_SIZE
+#define VIA_SFRAME_SIZE 2048
 #endif
 
 namespace via
 {
 
-class StackFrame
+template<typename T>
+struct viaStackState
 {
-public:
-    const viaInstruction *retaddr;
+    T *sp;
+    T *sbp;
+    size_t size;
 
-    StackFrame(viaInstruction *, viaGCState *);
-    ~StackFrame();
+    // For iteration support
+    inline auto end()
+    {
+        return sbp;
+    };
 
-    void set_local(viaState *, viaLocalIdentifier, viaValue);
-    viaValue *get_local(viaState *, viaLocalIdentifier);
-
-private:
-    viaHashMap<viaLocalIdentifier, viaValue> locals;
-    viaGCState *gcs;
+    inline auto begin()
+    {
+        return sp;
+    };
 };
 
 template<typename T>
-class Stack
+inline void viaS_push(viaStackState<T> *S, T val)
 {
-public:
-    T &top();
-    void push(const T &);
-    void pop();
-    bool is_empty() const;
-    void flush();
+    S->sp++;
+    *S->sp = val;
+}
 
-private:
-    std::unique_ptr<T> stack[VIA_STACK_SIZE];
-    size_t stack_ptr = 0;
-};
+template<typename T>
+inline void viaS_pop(viaStackState<T> *S)
+{
+    S->sp--;
+}
+
+template<typename T>
+inline T viaS_top(viaStackState<T> *S)
+{
+    return *S->sp;
+}
+
+template<typename T>
+inline void viaS_flush(viaStackState<T> *S)
+{
+    S->sp = S->sbp;
+}
+
+template<typename T>
+viaStackState<T> *viaS_newstate();
+
+template<typename T>
+void viaS_deletestate(viaStackState<T> *);
 
 } // namespace via

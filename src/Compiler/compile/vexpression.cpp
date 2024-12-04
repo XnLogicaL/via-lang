@@ -10,9 +10,9 @@ namespace via::Compilation
 using TokenType = Tokenization::TokenType;
 
 // Helper to create an viaOperand for a register
-inline viaOperand make_register_operand(RegisterType reg_type, size_t reg_num)
+inline viaOperand make_register_operand(viaRegisterType_t reg_type, size_t reg_num)
 {
-    return viaOperand{.type = viaOperandType::Register, .reg = viaRegister(reg_type, reg_num)};
+    return viaOperand{.type = viaOperandType_t::Register, .reg = viaRegister(reg_type, reg_num)};
 }
 
 // Helper to create an instruction
@@ -65,9 +65,9 @@ inline void load_arguments(Generator *gen, std::vector<AST::ExprNode *> args)
         gen->pushinstr(make_instruction(
             OpCode::MOV,
             {// Corresponding argument register
-                make_register_operand(RegisterType::AR, i++),
+                make_register_operand(viaRegisterType_t::AR, i++),
                 // Since there are no `get_available_register` calls in between, we can safely use `expr_reg` again
-                make_register_operand(RegisterType::R, expr_reg)
+                make_register_operand(viaRegisterType_t::R, expr_reg)
             }
         ));
         // clang-format on
@@ -79,7 +79,7 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
 {
     size_t reg = gen->get_available_register();
 
-    viaOperand dst_o = make_register_operand(RegisterType::R, reg);
+    viaOperand dst_o = make_register_operand(viaRegisterType_t::R, reg);
     viaOperand value_o;
 
     viaInstruction instr;
@@ -90,26 +90,26 @@ size_t compile_lit_expr(Generator *gen, AST::LitExprNode lit)
     {
     case TokenType::LIT_INT:
     {
-        value_o = viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType_t::Number, val_number = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_FLOAT:
     {
-        value_o = viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.val.value)};
+        value_o = viaOperand{.type = viaOperandType_t::Number, val_number = std::stod(lit.val.value)};
         break;
     }
     case TokenType::LIT_STRING:
     {
-        value_o = viaOperand{.type = viaOperandType::String, .str = strdup(lit.val.value.c_str())};
+        value_o = viaOperand{.type = viaOperandType_t::String, .str = strdup(lit.val.value.c_str())};
         break;
     }
     case TokenType::LIT_BOOL:
     {
-        value_o = viaOperand{.type = viaOperandType::Bool, .boole = lit.val.value == "true"};
+        value_o = viaOperand{.type = viaOperandType_t::Bool, .val_boolean = lit.val.value == "true"};
         break;
     }
     default:
-        value_o = viaOperand{.type = viaOperandType::Number, .num = 0.0f};
+        value_o = viaOperand{.type = viaOperandType_t::Number, val_number = 0.0f};
         break;
     }
 
@@ -131,7 +131,7 @@ size_t compile_un_expr(Generator *gen, AST::UnExprNode un)
     size_t un_reg = gen->get_available_register();
 
     viaInstruction instr =
-        make_instruction(OpCode::NEG, {make_register_operand(RegisterType::R, expr_reg), make_register_operand(RegisterType::R, un_reg)});
+        make_instruction(OpCode::NEG, {make_register_operand(viaRegisterType_t::R, expr_reg), make_register_operand(viaRegisterType_t::R, un_reg)});
 
     gen->free_register(expr_reg);
     gen->pushinstr(instr);
@@ -151,9 +151,9 @@ size_t compile_binary_expr(Generator *gen, AST::BinExprNode bin)
     viaInstruction instr = make_instruction(
         op_code,
         {
-            make_register_operand(RegisterType::R, bin_reg),
-            make_register_operand(RegisterType::R, lhs_reg),
-            make_register_operand(RegisterType::R, rhs_reg)
+            make_register_operand(viaRegisterType_t::R, bin_reg),
+            make_register_operand(viaRegisterType_t::R, lhs_reg),
+            make_register_operand(viaRegisterType_t::R, rhs_reg)
         }
     );
     // clang-format on
@@ -173,6 +173,7 @@ size_t compile_index_expr(Generator *gen, AST::IndexExprNode idx)
 {
     size_t tbl_reg = gen->get_available_register();
     size_t idx_reg = gen->get_available_register();
+    size_t idx_aux = gen->get_available_register();
 
     auto ident = std::get<AST::IdentExprNode>(*idx.ident).val;
 
@@ -180,29 +181,31 @@ size_t compile_index_expr(Generator *gen, AST::IndexExprNode idx)
     gen->pushinstr(make_instruction(
         OpCode::LOADLOCAL, 
         {
-            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(ident.value.c_str())},
-            make_register_operand(RegisterType::R, tbl_reg)
+            viaOperand{.type = viaOperandType_t::Identifier, .ident = strdup(ident.value.c_str())},
+            make_register_operand(viaRegisterType_t::R, tbl_reg)
         }
     ));
 
     gen->pushinstr(make_instruction(
         OpCode::LI,
         {
-            make_register_operand(RegisterType::IR, 0),
-            viaOperand{.type = viaOperandType::String, .str = strdup(idx.index.value.c_str())}
+            make_register_operand(viaRegisterType_t::R, idx_aux),
+            viaOperand{.type = viaOperandType_t::String, .str = strdup(idx.index.value.c_str())}
         }
     ));
 
     gen->pushinstr(make_instruction(
         OpCode::LOADIDX,
         {
-            make_register_operand(RegisterType::R, idx_reg),
-            make_register_operand(RegisterType::R, tbl_reg)
+            make_register_operand(viaRegisterType_t::R, idx_reg),
+            make_register_operand(viaRegisterType_t::R, tbl_reg)
         }
     ));
     // clang-format on
 
     gen->free_register(tbl_reg);
+    gen->free_register(idx_aux);
+
     return idx_reg;
 }
 
@@ -216,15 +219,15 @@ size_t compile_call_expr(Generator *gen, Parsing::AST::CallExprNode expr)
     gen->pushinstr(make_instruction(
         OpCode::LOADLOCAL,
         {
-            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(std::get<AST::IdentExprNode>(*expr.ident).val.value.c_str())},
-            make_register_operand(RegisterType::R, func_reg)
+            viaOperand{.type = viaOperandType_t::Identifier, .ident = strdup(std::get<AST::IdentExprNode>(*expr.ident).val.value.c_str())},
+            make_register_operand(viaRegisterType_t::R, func_reg)
         }
     ));
 
     gen->pushinstr(make_instruction(
         OpCode::CALL,
         {
-            make_register_operand(RegisterType::R, func_reg)
+            make_register_operand(viaRegisterType_t::R, func_reg)
         }
     ));
 
@@ -233,8 +236,8 @@ size_t compile_call_expr(Generator *gen, Parsing::AST::CallExprNode expr)
     gen->pushinstr(make_instruction(
         OpCode::MOV,
         {
-            make_register_operand(RegisterType::R, ret_reg),
-            make_register_operand(RegisterType::RR, 0)
+            make_register_operand(viaRegisterType_t::R, ret_reg),
+            make_register_operand(viaRegisterType_t::RR, 0)
         }
     ));
     // clang-format on
@@ -250,8 +253,8 @@ size_t compile_ident_expr(Generator *gen, Parsing::AST::IdentExprNode expr)
     gen->pushinstr(make_instruction(
         OpCode::LOADLOCAL,
         {
-            viaOperand{.type = viaOperandType::Identifier, .ident = strdup(expr.val.value.c_str())},
-            make_register_operand(RegisterType::R, expr_reg)
+            viaOperand{.type = viaOperandType_t::Identifier, .ident = strdup(expr.val.value.c_str())},
+            make_register_operand(viaRegisterType_t::R, expr_reg)
         }
     ));
     // clang-format on
@@ -294,7 +297,7 @@ size_t compile_expression(Generator *gen, AST::ExprNode expr)
         gen->pushinstr(make_instruction(
             OpCode::CALL,
             {
-                make_register_operand(RegisterType::R, index_reg)
+                make_register_operand(viaRegisterType_t::R, index_reg)
             }
         ));
         // clang-format on

@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "lexer.h"
+#include "token.h"
 
 // Macro for quickly construction tokens
 // Uses arena allocator for emplacing the newly created token
@@ -273,6 +274,8 @@ Token Tokenizer::get_token()
         return TOKEN(TokenType::COLON, ":", line, start_offset);
     case '@':
         return TOKEN(TokenType::AT, "@", line, start_offset);
+    case '?':
+        return TOKEN(TokenType::QUESTION, "?", line, start_offset);
     default:
         return {TokenType::UNKNOWN, std::string(1, ch), line, start_offset};
     }

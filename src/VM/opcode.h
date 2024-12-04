@@ -13,12 +13,10 @@ enum class OpCode
     // viaRegister Operations
     MOV, // Move value from one register to another <dst :: viaRegister> <src :: viaRegister>
     CPY,
-    LOAD,  // Load value from memory into a register <dst :: viaRegister> <addr :: Integer>
-    STORE, // Store value from a register to memory <addr :: Integer> <src :: viaRegister>
-    LI,    // Load immediate value into register <dst :: viaRegister> <val :: Any>
-    DUP,   // Duplicate a register value
-    SWAP,  // Swap values between two registers
-    NIL,   // Sets a register to nil
+    LI,   // Load immediate value into register <dst :: viaRegister> <val :: Any>
+    DUP,  // Duplicate a register value
+    SWAP, // Swap values between two registers
+    NIL,  // Sets a register to nil
 
     // viaRegister Manipulation
     PUSH,       // Push a new stack frame onto the stack
@@ -93,6 +91,7 @@ enum class OpCode
     JLGE,  // Jump to label if greater than or equal to
     JLNGE, // Jump to label if n not greate than or equal to
     CALL,  // Call function at a specified address
+    CALLM, // Call a method (on an object or class)
     RET,   // Return from a function
     HALT,  // Halt execution
     EXIT,  // Exit with a custom exit code
@@ -109,12 +108,6 @@ enum class OpCode
     LABEL, // Define a label for a jump target
     FUNC,  // Define a function
     END,   // End the current function or block
-
-    // Insert and Freeze Operations
-    INSERT,   // Insert a value into a collection or structure
-    FREEZE,   // Freeze a value to prevent further modification
-    ISFROZEN, // Check if a value is frozen
-    CALLM,    // Call a method (on an object or class)
 
     // Index Operations
     LOADIDX, // Load a value from a specified index

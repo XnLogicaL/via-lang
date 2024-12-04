@@ -1,3 +1,3 @@
 # viapm
 
-The built-in package manager for via, written in Rust.
+The built-in package manager for the via programming language

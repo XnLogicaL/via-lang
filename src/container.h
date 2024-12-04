@@ -5,14 +5,14 @@
 #include "common.h"
 #include "token.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 struct viaSourceContainer
 {
-    std::vector<Token> tokens;
+    std::vector<Tokenization::Token> tokens;
     std::string source;
     std::string file_name;
 };
 
-} // namespace via::Tokenization
+} // namespace via

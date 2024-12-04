@@ -95,6 +95,7 @@ enum class TokenType
     AMPERSAND,    // &
     DOUBLE_QUOTE, // "
     EXCLAMATION,  // !
+    QUESTION,     // ?
 
     EOF_,   // End of file
     UNKNOWN // Unknown token

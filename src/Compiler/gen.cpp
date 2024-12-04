@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "gen.h"
+#include "instruction.h"
 
 namespace via::Compilation
 {
@@ -15,7 +16,7 @@ std::string Generator::compile()
     std::string src;
 
     for (viaInstruction &instr : instrs)
-        src += instr.compile() + "\n";
+        src += viaC_compileinstruction(instr) + "\n";
 
     return src;
 }

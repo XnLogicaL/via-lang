@@ -3,28 +3,57 @@
 #pragma once
 
 #include "common.h"
-#include "core.h"
-#include "gc.h"
 #include "shared.h"
 
+// Identifier of the defacto "main" function
+// Kinda useless but it can stay
+#ifndef VIA_MAIN_ID
+#define VIA_MAIN_ID ("__via_main__")
+#endif
+
+/*
+ * Context switching in via consists of 2 steps;
+ * - Saving the state
+ * - Restoring the state (either by setting V->savestate to true or by calling via_restorestate(V))
+ * This allows for a very fast context switching systen--at least one with minimal overhead-
+ * Context switching in via has some special traits; for example,
+ * the state (e.g stack state) of pointers inside the viaState-
+ * object are never saved, instead they are passed onto the copy as-is, since they're pointers,
+ * creating an efficient way to "shallow-save" the state-
+ * of the VM
+ */
 namespace via
 {
 
-class Global;
+// Stores the amount of threads, basically
+static viaThreadId_t __thread_id__ = 0;
+
+// Forward declarations
+struct viaFunction;
+struct viaValue;
+
 template<typename T>
-class Stack;
-class StackFrame;
-class GarbageCollector;
-class RegisterAllocator;
+struct viaStackState;
+struct viaStackFrame;
+struct viaGCState;
+struct viaRAllocatorState;
 struct viaString;
 
-static uint32_t __thread_id = 0;
+// Type aliases for convenience, not much else
+using viaLabels = viaHashMap_t<viaLabelKey_t, viaInstruction *>;
+using viaSTable = viaHashMap_t<viaHash_t, viaString *>;
 
-using VMStack = Stack<StackFrame>;
-using Labels = viaHashMap<viaLabelKey, viaInstruction *>;
-using STable = viaHashMap<viaHash, viaString *>;
+// Calling convention that is actively being used by the VM
+enum class viaCallType : uint8_t
+{
+    NOCALL,
+    CALL,
+    FASTCALL1,
+    FASTCALL2,
+    FASTCALL3
+};
 
-enum class viaThreadState
+enum class viaThreadState : uint8_t
 {
     RUNNING,
     PAUSED,
@@ -33,40 +62,52 @@ enum class viaThreadState
 
 struct viaGlobalState
 {
-    Global *global; // Pointer to VM Global environment
-    STable *stable; // Global string lookup table, derrived from Lua's string interning
+    viaSTable *stable; // Global string lookup table, derrived from Lua's string interning
 };
 
 // More likely to be cached (hopefully...)
 struct alignas(64) viaState
 {
-    uint32_t id; // Thread id
-
+    // Metadata
+    viaThreadId_t id;  // Thread id
     viaGlobalState *G; // Global state
 
     viaInstruction *ip;  // Instruction pointer
     viaInstruction *ihp; // Instruction list head
     viaInstruction *ibp; // Instruction list base
 
-    VMStack *stack;            // Pointer to VM Stack
-    Labels *labels;            // Pointer to VM Label address table (LAT)
-    RegisterAllocator *ralloc; // VM viaRegister allocator
-    viaGCState *gc;            // Pointer to VM Garbage collector state
+    viaStackState<viaFunction *> *stack; // Pointer to VM Stack
+    viaStackState<viaValue> *arguments;  // Pointer to argument stack
+    viaStackState<viaValue> *returns;    // Pointer to return stack
+    viaRAllocatorState *ralloc;          // Pointer to VM Register allocator state
+    viaLabels *labels;                   // Pointer to VM Label address table (LAT)
+    viaGCState *gc;                      // Pointer to VM Garbage collector state
 
-    int exitc;         // VM exit code
-    const char *exitm; // VM exit message
+    int exitc;            // VM exit code
+    viaRawString_t exitm; // VM exit message
 
     bool abrt;         // Aborts on the next VM cycle
     bool skip;         // Skips the next instruction on the next VM cycle
-    bool yield;        // Tells the VM to yield or not on the next VM cycle (debounces, meaning resets every VM cycle)
+    bool yield;        // Tells the VM to yield or not on the next VM cycle (debounces, meaning gets flipped every VM clock, if set to true)
     bool restorestate; // Tells the VM to restore the state on the next VM cycle (to sstate)
-    bool hasself;      // Tells if there is a self argument loaded into AR0 (resets every call)
 
-    float yieldfor; // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
-    int argc;       // Argument count for the currently being-called function
-
-    viaThreadState ts; // Thread state
-    viaState *sstate;  // Saved state
+    float yieldfor;        // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
+    int argc;              // Argument count, for both CALL and FASTCALLX
+    viaCallType calltype;  // Stores the current calling convention
+    viaThreadState tstate; // Thread state
+    viaState *sstate;      // Saved state
 };
+
+// Creates a new global state object
+viaGlobalState *viaA_newgstate();
+// Creats a new state object
+viaState *viaA_newstate(const std::vector<viaInstruction> &);
+// Cleans up a global state object
+void viaA_cleanupgstate(viaGlobalState *);
+// Cleans up a state object
+void viaA_cleanupstate(viaState *);
+// Returns the thread count, no matter their state
+// Equivalent to `__thread_id__`
+viaThreadId_t viaA_threadcount(viaState *);
 
 } // namespace via

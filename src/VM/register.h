@@ -3,51 +3,32 @@
 #pragma once
 
 #include "common.h"
+#include "core.h"
 #include "shared.h"
 #include "types.h"
-#include <cstdint>
+
+#define VIA_REGISTERCOUNT uintptr_t(2048)
 
 namespace via
 {
 
-using viaRegisterSize = uint16_t;
-using viaRegisterCount = uint8_t;
-
-class RegisterAllocator
+struct viaState;
+struct viaRAllocatorState
 {
-public:
-    RegisterAllocator();
-    ~RegisterAllocator();
-
-    // This is inlined due to performance critical and frequent usage
-    template<typename T>
-    inline T *get(const viaRegister &R)
-    {
-        const viaRegisterOffset off = R.offset;
-        static T *registers[] = {
-            reinterpret_cast<T *>(gpr),
-            reinterpret_cast<T *>(ar),
-            reinterpret_cast<T *>(rr),
-        };
-
-        // Ensure R.type maps to a valid index in registers[]
-        if (R.type >= viaRegisterType::R && R.type <= viaRegisterType::RR)
-            return registers[static_cast<uint8_t>(R.type) - static_cast<uint8_t>(viaRegisterType::R)] + off;
-
-        return nullptr;
-    }
-
-    void flush(viaRegisterType);
-    void print(viaRegisterType);
-
-private:
-    viaValue *gpr;
-    viaValue *ar;
-    viaValue *rr;
-
-    viaRegisterSize get_size(viaRegisterType);
-    void *alloc(viaRegisterType, viaRegisterCount);
-    void prealloc();
+    viaValue *head;
 };
+
+inline viaValue *viaR_getregister(viaRAllocatorState *R, viaRegister reg)
+{
+    return R->head + reg;
+}
+
+inline void viaR_setregister(viaRAllocatorState *R, viaRegister reg, viaValue val)
+{
+    viaValue *addr = R->head + reg;
+    *addr = val;
+}
+
+viaRAllocatorState *viaR_newstate(viaState *);
 
 } // namespace via

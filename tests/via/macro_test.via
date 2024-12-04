@@ -1,4 +1,4 @@
-define printf_supported: (true)
+define printf_supported (true)
 
 macro printf(__fmt, ...) {
     print(string.format(__fmt, ...))

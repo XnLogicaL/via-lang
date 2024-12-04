@@ -1,7 +1,6 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "bytecode.h"
-#include "common.h"
 
 namespace via
 {
@@ -24,18 +23,9 @@ OpCode BytecodeParser::read_opcode()
 viaRegister BytecodeParser::read_register(const Tokenization::Token register_)
 {
     std::string register_str = register_.value;
-    std::string register_type;
-    size_t pos_ = 0;
+    int offset = std::strtoul(register_str.substr(1).c_str(), nullptr, 10);
 
-    while (pos_ < register_str.length() && !isdigit(register_str.at(pos_)))
-    {
-        register_type += register_str.at(pos_++);
-    }
-
-    int offset = std::strtoul(register_str.substr(pos_).c_str(), nullptr, 10);
-    uint8_t uoffset = static_cast<uint8_t>(offset);
-
-    return {.type = magic_enum::enum_cast<RegisterType>(register_type).value_or(RegisterType::R), .offset = uoffset};
+    return offset;
 }
 
 viaOperand BytecodeParser::read_operand()
@@ -46,23 +36,23 @@ viaOperand BytecodeParser::read_operand()
     {
     case Tokenization::TokenType::LIT_INT:
     case Tokenization::TokenType::LIT_FLOAT:
-        return viaOperand{.type = viaOperandType::Number, .num = std::stod(lit.value)};
+        return viaOperand{.type = viaOperandType_t::Number, .val_number = std::stod(lit.value)};
 
     case Tokenization::TokenType::OP_SUB:
-        return viaOperand{.type = viaOperandType::Number, .num = -std::stod(consume().value)};
+        return viaOperand{.type = viaOperandType_t::Number, .val_number = -std::stod(consume().value)};
 
     case Tokenization::TokenType::LIT_BOOL:
-        return viaOperand{.type = viaOperandType::Bool, .boole = lit.value == "true"};
+        return viaOperand{.type = viaOperandType_t::Bool, .val_boolean = lit.value == "true"};
 
     case Tokenization::TokenType::LIT_STRING:
     case Tokenization::TokenType::LIT_CHAR:
-        return viaOperand{.type = viaOperandType::String, .str = strdup(lit.value.c_str())};
+        return viaOperand{.type = viaOperandType_t::String, .val_string = strdup(lit.value.c_str())};
 
     case Tokenization::TokenType::IDENTIFIER:
-        return viaOperand{.type = viaOperandType::Register, .reg = read_register(lit)};
+        return viaOperand{.type = viaOperandType_t::Register, .val_register = read_register(lit)};
 
     case Tokenization::TokenType::AT:
-        return viaOperand{.type = viaOperandType::Identifier, .ident = strdup(consume().value.c_str())};
+        return viaOperand{.type = viaOperandType_t::Identifier, .val_identifier = strdup(consume().value.c_str())};
 
     default:
         break;
@@ -71,9 +61,9 @@ viaOperand BytecodeParser::read_operand()
     return {};
 }
 
-Compilation::viaInstruction BytecodeParser::read_instruction()
+viaInstruction BytecodeParser::read_instruction()
 {
-    Compilation::viaInstruction ins{};
+    viaInstruction ins;
     ins.op = read_opcode();
     ins.operandc = 0;
 
@@ -100,9 +90,9 @@ Compilation::viaInstruction BytecodeParser::read_instruction()
     return ins;
 }
 
-std::vector<Compilation::viaInstruction> BytecodeParser::parse()
+std::vector<viaInstruction> BytecodeParser::parse()
 {
-    std::vector<Compilation::viaInstruction> instructions;
+    std::vector<viaInstruction> instructions;
 
     while (pos < toks.size() - 1)
         instructions.push_back(read_instruction());

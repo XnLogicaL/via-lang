@@ -8,78 +8,94 @@
 #include "state.h"
 #include "shared.h"
 
+#define VIA_MAX_CONSTS (256)
+
 namespace via
 {
 
+// Stores the (always) previous dynamically allocated value, for linking dynamic values
+static viaValue *__value_prev__ = nullptr;
+
 using viaNumber = double;
 using viaBool = bool;
-using viaPtr = uintptr_t;
-using viaCFunc = void (*)(viaState *);
-// Type alias for viaHash
-using viaTableKey = viaHash;
+// Basic pointer type, currently only used internally
+using viaPointer = uintptr_t;
+// C function pointer, used for C++ interoperability
+using viaCFunction = void (*)(viaState *);
+// Type alias for viaHash_t
+using viaTableKey = viaHash_t;
 
-struct viaValue; // Forward declaration
-struct viaTable; // Forward declaration
+// Forward declarations
+struct viaValue;
+struct viaTable;
+struct viaString;
+struct viaFunction;
+struct viaVarArg;
 
-struct viaString
+enum class viaValueType : uint8_t
 {
-    const char *ptr;
-    uint32_t len;
-    uint32_t hash;
-};
-
-struct viaFunc
-{
-    const char *id;
-    const viaInstruction *addr;
+    Monostate,
+    Nil,
+    Number,
+    Bool,
+    String,
+    Ptr,
+    Func,
+    CFunc,
+    Table,
 };
 
 // Tagged union that holds a primitive via value
 struct viaValue
 {
-    enum class __type : uint8_t
-    {
-        Number,
-        Bool,
-        String,
-        Nil,
-        Ptr,
-        Func,
-        CFunc,
-        Table,
-    };
-
-    bool _const;
-    __type type;
-
+    viaValue *prev = nullptr;
+    viaValue *next = nullptr;
+    viaValueType type = viaValueType::Monostate;
     union
     {
-        viaNumber num;
-        viaBool boole;
-        viaPtr ptr;
-        viaCFunc cfun;
-        viaString *str;
-        viaFunc *fun;
-        viaTable *tbl;
+        viaNumber val_number;
+        viaBool val_boolean;
+        viaPointer val_pointer;
+        viaCFunction val_cfunction;
+        // These are pointers because their size is larger than 4 bytes,
+        // which is what registers are supposed to hold
+        viaString *val_string;
+        viaFunction *val_function;
+        viaTable *val_table;
     };
+};
 
-private:
-    void cleanup();
+struct viaString
+{
+    viaRawString_t ptr = nullptr;
+    uint32_t len = 0;
+    viaHash_t hash = 0;
+};
+
+struct viaFunction
+{
+    // Line information, determined during compile time,
+    // Inherited from the instruction that declares this function
+    size_t line = 0;
+    // Function identifier
+    viaRawString_t id = "<anonymous-function>";
+    viaFunction *caller = nullptr;
+    std::vector<viaValue> locals = {};
+    std::vector<viaInstruction> bytecode = {};
+    std::array<viaValue, 256> consts = {};
 };
 
 struct viaTable
 {
-    viaTable *meta;
-    util::modifiable_once<bool> frozen;
-    viaHashMap<viaTableKey, viaValue> data;
+    viaTable *meta = nullptr;
+    util::modifiable_once<bool> frozen = false;
+    viaHashMap_t<viaTableKey, viaValue> data = {};
 };
 
-using viaValueType = viaValue::__type;
-
 // ! Random hashing algo, may need to be replaced later
-inline uint32_t viaT_hashstring(viaState *, const char *s)
+inline viaHash_t viaT_hashstring(viaState *, viaRawString_t s)
 {
-    uint32_t hash = 0;
+    viaHash_t hash = 0;
 
     while (*s)
         hash = (hash * 31) + *s++;
@@ -87,13 +103,13 @@ inline uint32_t viaT_hashstring(viaState *, const char *s)
     return hash;
 }
 
-inline viaString *viaT_newstring(viaState *V = nullptr, const char *s = "")
+inline viaString *viaT_newstring(viaState *V = nullptr, viaRawString_t s = "")
 {
     // Retrieve the string table
-    STable *stable = V->G->stable;
+    viaSTable *stable = V->G->stable;
 
     // Compute the hash first
-    uint32_t hash = viaT_hashstring(V, s);
+    viaHash_t hash = viaT_hashstring(V, s);
 
     // Check if the string already exists in the stable
     auto it = stable->find(hash);
@@ -122,7 +138,7 @@ inline viaString *viaT_newstring(viaState *V = nullptr, const char *s = "")
     return nstr;
 }
 
-inline viaTable *viaT_newtable(viaState *, viaTable *meta = nullptr, viaHashMap<viaTableKey, viaValue> ilist = {})
+inline viaTable *viaT_newtable(viaState *, viaTable *meta = nullptr, viaHashMap_t<viaTableKey, viaValue> ilist = {})
 {
     // Allocate the table
     viaTable *tbl = new viaTable;
@@ -136,99 +152,94 @@ inline viaTable *viaT_newtable(viaState *, viaTable *meta = nullptr, viaHashMap<
     return tbl;
 }
 
-inline viaFunc *viaT_newfunc(viaState *, viaInstruction *addr = nullptr, const char *id = "<anonymous-function>")
+inline viaFunction *viaT_newfunc(viaState *)
 {
-    viaFunc *fn = new viaFunc;
-    fn->id = id;
-    fn->addr = addr;
-
-    return fn;
+    // TODO
+    return nullptr;
 }
 
 inline viaValue *viaT_newvalue(viaState *, viaValueType ty)
 {
     viaValue *val = new viaValue;
     val->type = ty;
+    // Link with the previous value
+    val->prev = __value_prev__;
+
+    // Link the previous value with this value
+    if (__value_prev__ != nullptr)
+        __value_prev__->next = val;
+
+    // Overwrite the previous value
+    __value_prev__ = val;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *)
+inline viaValue *viaT_newvalue(viaState *V)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Nil;
+    viaValue *val = viaT_newvalue(V, viaValueType::Nil);
+    return val;
+}
+
+inline viaValue *viaT_newvalue(viaState *V, viaNumber x)
+{
+    viaValue *val = viaT_newvalue(V, viaValueType::Number);
+    val->val_number = x;
+    return val;
+}
+
+inline viaValue *viaT_newvalue(viaState *V, viaBool b)
+{
+    viaValue *val = viaT_newvalue(V, viaValueType::Bool);
+    val->val_boolean = b;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *, viaNumber x)
+inline viaValue *viaT_newvalue(viaState *V, viaPointer p)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Number;
-    val->num = x;
+    viaValue *val = viaT_newvalue(V, viaValueType::Ptr);
+    val->val_pointer = p;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *, viaBool b)
+inline viaValue *viaT_newvalue(viaState *V, viaCFunction cf)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Bool;
-    val->boole = b;
+    viaValue *val = viaT_newvalue(V, viaValueType::CFunc);
+    val->val_boolean = cf;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *, viaPtr p)
+inline viaValue *viaT_newvalue(viaState *V, viaRawString_t s)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Ptr;
-    val->ptr = p;
+    viaValue *val = viaT_newvalue(V, viaValueType::String);
+    val->val_string = viaT_newstring(V, s);
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *, viaCFunc cf)
+inline viaValue *viaT_newvalue(viaState *V, viaString *s)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::CFunc;
-    val->boole = cf;
+    viaValue *val = viaT_newvalue(V, viaValueType::String);
+    val->val_string = s;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *V, const char *s)
+inline viaValue *viaT_newvalue(viaState *V, viaTable *t)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::String;
-    val->str = viaT_newstring(V, s);
+    viaValue *val = viaT_newvalue(V, viaValueType::Table);
+    val->val_table = t;
 
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *, viaString *s)
+inline viaValue *viaT_newvalue(viaState *V, viaFunction *f)
 {
-    viaValue *val = new viaValue;
-    val->type = viaValueType::String;
-    val->str = s;
-
-    return val;
-}
-
-inline viaValue *viaT_newvalue(viaState *, viaTable *t)
-{
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Table;
-    val->tbl = t;
-
-    return val;
-}
-
-inline viaValue *viaT_newvalue(viaState *, viaFunc *f)
-{
-    viaValue *val = new viaValue;
-    val->type = viaValueType::Func;
-    val->fun = f;
+    viaValue *val = viaT_newvalue(V, viaValueType::Func);
+    val->val_function = f;
 
     return val;
 }
@@ -238,92 +249,83 @@ inline viaValue viaT_stackvalue(viaState *, viaValueType ty)
     viaValue val;
     val.type = ty;
 
-    return val;
-}
-
-inline viaValue viaT_stackvalue(viaState *)
-{
-    viaValue val;
-    val.type = viaValueType::Nil;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaNumber x)
+inline viaValue viaT_stackvalue(viaState *V)
 {
-    viaValue val;
-    val.type = viaValueType::Number;
-    val.num = x;
+    viaValue val = viaT_stackvalue(V, viaValueType::Nil);
+    return val;
+}
+
+inline viaValue viaT_stackvalue(viaState *V, viaNumber x)
+{
+    viaValue val = viaT_stackvalue(V, viaValueType::Number);
+    val.val_number = x;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaBool b)
+inline viaValue viaT_stackvalue(viaState *V, viaBool b)
 {
-    viaValue val;
-    val.type = viaValueType::Bool;
-    val.boole = b;
+    viaValue val = viaT_stackvalue(V, viaValueType::Bool);
+    val.val_boolean = b;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaPtr p)
+inline viaValue viaT_stackvalue(viaState *V, viaPointer p)
 {
-    viaValue val;
-    val.type = viaValueType::Ptr;
-    val.ptr = p;
+    viaValue val = viaT_stackvalue(V, viaValueType::Ptr);
+    val.val_pointer = p;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaCFunc cf)
+inline viaValue viaT_stackvalue(viaState *V, viaCFunction cf)
 {
-    viaValue val;
-    val.type = viaValueType::CFunc;
-    val.boole = cf;
+    viaValue val = viaT_stackvalue(V, viaValueType::CFunc);
+    val.val_boolean = cf;
 
     return val;
 }
 
 inline viaValue viaT_stackvalue(viaState *V, const char *s)
 {
-    viaValue val;
-    val.type = viaValueType::String;
-    val.str = viaT_newstring(V, s);
+    viaValue val = viaT_stackvalue(V, viaValueType::String);
+    val.val_string = viaT_newstring(V, s);
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaString *s)
+inline viaValue viaT_stackvalue(viaState *V, viaString *s)
 {
-    viaValue val;
-    val.type = viaValueType::String;
-    val.str = s;
+    viaValue val = viaT_stackvalue(V, viaValueType::String);
+    val.val_string = s;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaTable *t)
+inline viaValue viaT_stackvalue(viaState *V, viaTable *t)
 {
-    viaValue val;
-    val.type = viaValueType::Table;
-    val.tbl = t;
+    viaValue val = viaT_stackvalue(V, viaValueType::Table);
+    val.val_table = t;
 
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *, viaFunc *f)
+inline viaValue viaT_stackvalue(viaState *V, viaFunction *f)
 {
-    viaValue val;
-    val.type = viaValueType::Func;
-    val.fun = f;
+    viaValue val = viaT_stackvalue(V, viaValueType::Func);
+    val.val_function = f;
 
     return val;
 }
 
 inline void viaT_cleanupstring(viaState *V, viaString *str)
 {
-    STable *stable = V->G->stable;
+    viaSTable *stable = V->G->stable;
     uint32_t hash = str->hash;
 
     auto it = stable->find(hash);
@@ -345,7 +347,7 @@ inline void viaT_cleanuptable(viaState *, viaTable *tbl)
     delete tbl;
 }
 
-inline void viaT_cleanupfunc(viaState *, viaFunc *fn)
+inline void viaT_cleanupfunc(viaState *, viaFunction *fn)
 {
     // I know a function just for this is unnecessary
     // The idea is, the user may not know how to cleanup an object that is instantiated by a wrapper (viaT_newfunc)
@@ -361,19 +363,24 @@ inline void viaT_cleanupval(viaState *V, viaValue *val)
     switch (val->type)
     {
     case viaValueType::String:
-        viaT_cleanupstring(V, val->str);
+        viaT_cleanupstring(V, val->val_string);
         break;
     case viaValueType::Table:
-        viaT_cleanuptable(V, val->tbl);
+        viaT_cleanuptable(V, val->val_table);
         break;
     case viaValueType::Func:
-        viaT_cleanupfunc(V, val->fun);
+        viaT_cleanupfunc(V, val->val_function);
         break;
     default:
         break;
     }
 
     delete val;
+}
+
+inline bool viaT_checkmonostate(viaState *, viaValue val)
+{
+    return val.type == viaValueType::Monostate;
 }
 
 inline bool viaT_checknumber(viaState *, viaValue val)

@@ -6,11 +6,11 @@
 #include "common.h"
 #include "api.h"
 #include "execute.h"
-#include "libstd/vlrand.h"
+#include "vlrand.h"
 #include "state.h"
-#include "libstd/vlbase.h"
-#include "libstd/vlmath.h"
-#include "libstd/vlvec3.h"
+#include "vlbase.h"
+#include "vlmath.h"
+#include "vlvec3.h"
 
 using namespace via;
 using namespace Compilation;

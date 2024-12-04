@@ -7,49 +7,41 @@
 #include "VM/opcode.h"
 #include <cstdint>
 
-namespace via::Compilation
+namespace via
 {
 
-struct viaRegister
-{
-    using __offset = uint8_t;
-    enum class __type : uint8_t
-    {
-        R,  // General Purpose viaRegister
-        AR, // Argument viaRegister
-        RR, // Return viaRegister
-    };
+using viaRegister = uint32_t;
 
-    __type type;
-    __offset offset;
+// viaOperand declarations
+enum class viaOperandType_t : uint8_t
+{
+    Number,
+    Bool,
+    String,
+    Register,
+    Identifier
 };
 
 struct viaOperand
 {
-    enum class __type : uint8_t
-    {
-        Number,
-        Bool,
-        String,
-        Register,
-        Identifier
-    };
-
-    __type type;
+    viaOperandType_t type;
     union
     {
-        double num;
-        bool boole;
-        const char *str;
-        const char *ident;
-        viaRegister reg;
+        double val_number;
+        bool val_boolean;
+        const char *val_string;
+        const char *val_identifier;
+        viaRegister val_register;
     };
 };
+
+// viaInstruction declarations
+using viaInstructionC_t = uint8_t;
 
 struct viaInstruction
 {
     OpCode op;
-    uint8_t operandc;
+    viaInstructionC_t operandc;
     viaOperand operandv[4];
 };
 
@@ -59,8 +51,4 @@ viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<
 const std::string viaC_compileinstruction(viaInstruction &) noexcept;
 const std::string viaC_compileoperand(viaOperand &) noexcept;
 
-using viaRegisterType = viaRegister::__type;
-using viaRegisterOffset = viaRegister::__offset;
-using viaOperandType = viaOperand::__type;
-
-} // namespace via::Compilation
+} // namespace via

@@ -13,12 +13,12 @@ This document defines the grammar of via, a powerful, semi-dynamically typed, mu
   ## This is a single-line comment
   ```
 
-- **Multi-line comment**: Enclosed in `#/`
+- **Multi-line comment**: Enclosed in `#/` and `/#`
   ```plaintext
   #/
   This is a 
   multi-line comment
-  #/
+  /#
   ```
 
 ### Identifiers

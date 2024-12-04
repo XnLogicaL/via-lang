@@ -7,6 +7,7 @@
 #include <optional>
 #include <variant>
 #include <vector>
+#include <memory>
 
 namespace via::Parsing::AST
 {
@@ -15,27 +16,27 @@ using namespace Tokenization;
 
 // Forward declarations
 struct ScopeStmtNode;
-struct TypedParamStmtNode;
+struct TypedParamNode;
 struct ElifStmtNode;
 struct CaseStmtNode;
 struct DefaultStmtNode;
 
-// Type nodes
-// ---------------
+// TypeNode Variants and Definitions
+// -----------------------------------
 
-struct LiteralTypeNode;
+struct GenericTypeNode;
 struct UnionTypeNode;
 struct VariantTypeNode;
-struct FunctorTypeNode;
+struct FunctionTypeNode;
 struct TableTypeNode;
-struct OptionTypeNode;
+struct OptionalTypeNode;
 
-typedef std::variant<LiteralTypeNode, UnionTypeNode, VariantTypeNode, FunctorTypeNode, TableTypeNode, OptionTypeNode> TypeNode;
+using TypeNode = std::variant<GenericTypeNode, UnionTypeNode, VariantTypeNode, FunctionTypeNode, TableTypeNode, OptionalTypeNode>;
 
-struct LiteralTypeNode
+struct GenericTypeNode
 {
-    Token type;
-    std::vector<TypeNode *> args;
+    Token name;
+    std::vector<TypeNode> generics;
 };
 
 struct UnionTypeNode
@@ -46,67 +47,58 @@ struct UnionTypeNode
 
 struct VariantTypeNode
 {
-    std::vector<TypeNode *> types;
+    std::vector<TypeNode> types;
 };
 
-struct FunctorTypeNode
+struct FunctionTypeNode
 {
-    std::vector<TypeNode *> input;
-    std::vector<TypeNode *> output;
+    std::vector<TypeNode> input;
+    std::vector<TypeNode> output;
 };
 
 struct TableTypeNode
 {
-    TypeNode *type;
+    TypeNode *ktype;
+    TypeNode *vtype;
 };
 
-struct OptionTypeNode
+struct OptionalTypeNode
 {
     TypeNode *type;
 };
 
-// Expression nodes
-// ---------------
+// ExpressionNode Variants and Definitions
+// ----------------------------------------
 
-struct LitExprNode;
-struct UnExprNode;
+struct LiteralExprNode;
+struct UnaryExprNode;
 struct GroupExprNode;
-struct BinExprNode;
+struct BinaryExprNode;
 struct LambdaExprNode;
 struct CallExprNode;
 struct IndexExprNode;
-struct IndexCallExprNode;
-struct TypeCastExprNode;         // TODO
-struct BracketIndexExprNode;     // TODO
-struct BracketIndexCallExprNode; // TODO
-struct IdentExprNode;
+struct TypeCastExprNode;
+struct BracketIndexExprNode;
+struct VarExprNode;
 
-typedef std::variant<
-    LitExprNode,
-    UnExprNode,
+using ExprNode = std::variant<
+    LiteralExprNode,
+    UnaryExprNode,
     GroupExprNode,
-    BinExprNode,
+    BinaryExprNode,
     LambdaExprNode,
     CallExprNode,
     IndexExprNode,
-    IndexCallExprNode,
     TypeCastExprNode,
     BracketIndexExprNode,
-    BracketIndexCallExprNode,
-    IdentExprNode>
-    ExprNode;
+    VarExprNode>;
 
-struct LitExprNode
+struct LiteralExprNode
 {
-    Token val;
+    Token value;
 };
 
-struct IdentExprNode
-{
-    Token val;
-};
-
-struct UnExprNode
+struct UnaryExprNode
 {
     ExprNode *expr;
 };
@@ -116,7 +108,7 @@ struct GroupExprNode
     ExprNode *expr;
 };
 
-struct BinExprNode
+struct BinaryExprNode
 {
     Token op;
     ExprNode *lhs;
@@ -125,223 +117,141 @@ struct BinExprNode
 
 struct LambdaExprNode
 {
-    std::vector<TypedParamStmtNode *> params;
+    std::vector<TypedParamNode> params;
     ScopeStmtNode *body;
 };
 
 struct CallExprNode
 {
-    ExprNode *ident;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
+    ExprNode *callee;
+    std::vector<ExprNode> args;
+    std::vector<TypeNode> type_args;
 };
 
 struct IndexExprNode
 {
-    ExprNode *ident;
-    Token index;
-};
-
-struct IndexCallExprNode
-{
-    ExprNode *ident;
-    Token index;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
+    ExprNode *object;
+    ExprNode *index;
 };
 
 struct TypeCastExprNode
 {
-    TypeNode *type;
+    TypeNode type;
     ExprNode *expr;
 };
 
 struct BracketIndexExprNode
 {
-    ExprNode *ident;
+    ExprNode *object;
     ExprNode *index;
 };
 
-struct BracketIndexCallExprNode
+struct VarExprNode
 {
-    ExprNode *ident;
-    ExprNode *index;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
+    Token ident;
 };
 
-// Statement nodes
-// ---------------
+// StatementNode Variants and Definitions
+// ----------------------------------------
 
 struct LocalDeclStmtNode;
-struct GlobDeclStmtNode;
-struct PropertyDeclStmtNode;
+struct GlobalDeclStmtNode;
 struct CallStmtNode;
-struct IndexCallStmtNode;
-struct IndexAssignStmtNode;
 struct AssignStmtNode;
 struct WhileStmtNode;
 struct ForStmtNode;
 struct ScopeStmtNode;
-struct FuncDeclStmtNode;
-struct MethodDeclStmtNode;
+struct FunctionDeclStmtNode;
 struct IfStmtNode;
-struct ElifStmtNode;
 struct SwitchStmtNode;
-struct CaseStmtNode;
-struct DefaultStmtNode;
-struct NamespaceDeclStmtNode;
-struct StructDeclStmtNode;
 struct ReturnStmtNode;
-struct BracketIndexAssignStmtNode;
-struct BracketIndexCallStmtNode;
-struct ExprIndexCallStmtNode;
-struct ExprIndexAssignStmtNode;
-struct BracketExprIndexCallStmtNode;
-struct BracketExprIndexAssignStmtNode;
 
-typedef std::variant<
+using StmtNode = std::variant<
     LocalDeclStmtNode,
-    GlobDeclStmtNode,
-    PropertyDeclStmtNode,
+    GlobalDeclStmtNode,
     CallStmtNode,
-    IndexCallStmtNode,
-    IndexAssignStmtNode,
     AssignStmtNode,
     WhileStmtNode,
     ForStmtNode,
     ScopeStmtNode,
-    FuncDeclStmtNode,
-    MethodDeclStmtNode,
+    FunctionDeclStmtNode,
     IfStmtNode,
-    ElifStmtNode,
     SwitchStmtNode,
-    CaseStmtNode,
-    DefaultStmtNode,
-    NamespaceDeclStmtNode,
-    StructDeclStmtNode,
-    ReturnStmtNode,
-    BracketIndexAssignStmtNode,
-    BracketIndexCallStmtNode,
-    IndexCallStmtNode,
-    IndexAssignStmtNode>
-    StmtNode;
+    ReturnStmtNode>;
 
-struct TypedParamStmtNode
+struct TypedParamNode
 {
     Token ident;
-    TypeNode *type;
+    TypeNode type;
 };
 
 struct LocalDeclStmtNode
 {
     Token ident;
-    TypeNode *type;
-    ExprNode *val;
+    TypeNode type;
+    std::optional<ExprNode> value;
     bool is_const;
 };
 
-struct GlobDeclStmtNode
+struct GlobalDeclStmtNode
 {
     Token ident;
-    TypeNode *type;
-    ExprNode *val;
+    TypeNode type;
+    std::optional<ExprNode> value;
 };
 
 struct CallStmtNode
 {
-    Token ident;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
-};
-
-struct ReturnStmtNode
-{
-    std::vector<ExprNode *> vals;
-};
-
-struct IndexCallStmtNode
-{
-    ExprNode *ident;
-    Token index;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
+    ExprNode *callee;
+    std::vector<ExprNode> args;
+    std::vector<TypeNode> type_args;
 };
 
 struct AssignStmtNode
 {
-    Token ident;
-    ExprNode *val;
-};
-
-struct IndexAssignStmtNode
-{
-    ExprNode *ident;
-    Token index;
-    ExprNode *val;
-};
-
-struct BracketIndexAssignStmtNode
-{
-    ExprNode *ident;
-    ExprNode *index;
-    ExprNode *val;
-};
-
-struct BracketIndexCallStmtNode
-{
-    ExprNode *ident;
-    ExprNode *index;
-    std::vector<ExprNode *> args;
-    std::vector<TypeNode *> type_args;
-};
-
-struct PropertyDeclStmtNode
-{
-    Token ident;
-    TypeNode *type;
-    std::optional<ExprNode *> val;
-    bool is_const;
+    ExprNode *target;
+    ExprNode *value;
 };
 
 struct WhileStmtNode
 {
-    ExprNode *cond;
-    ScopeStmtNode *scope;
+    ExprNode *condition;
+    ScopeStmtNode *body;
 };
 
 struct ForStmtNode
 {
-    Token init;
-    ExprNode *cond;
-    ExprNode *step;
+    StmtNode *init;
+    ExprNode *condition;
+    StmtNode *step;
     ScopeStmtNode *body;
+};
+
+struct ScopeStmtNode
+{
+    std::vector<StmtNode> statements;
+};
+
+struct FunctionDeclStmtNode
+{
+    Token ident;
+    std::vector<TypedParamNode> params;
+    std::vector<Token> type_params;
+    ScopeStmtNode *body;
+    bool is_const;
 };
 
 struct IfStmtNode
 {
-    ExprNode *cond;
-    ScopeStmtNode *body;
+    ExprNode *condition;
+    ScopeStmtNode *then_body;
     std::optional<ScopeStmtNode *> else_body;
-    std::vector<ElifStmtNode *> elif_bodies;
+    std::vector<ElifStmtNode> elif_branches;
 };
 
 struct ElifStmtNode
 {
-    ExprNode *cond;
-    ScopeStmtNode *body;
-};
-
-struct SwitchStmtNode
-{
-    ExprNode *cond;
-    std::vector<CaseStmtNode *> cases;
-    std::optional<DefaultStmtNode *> default_case;
-};
-
-struct CaseStmtNode
-{
-    ExprNode *value;
+    ExprNode *condition;
     ScopeStmtNode *body;
 };
 
@@ -350,43 +260,29 @@ struct DefaultStmtNode
     ScopeStmtNode *body;
 };
 
-struct FuncDeclStmtNode
+struct SwitchStmtNode
 {
-    Token ident;
-    std::vector<TypedParamStmtNode *> params;
-    std::vector<Token> type_params;
+    ExprNode *condition;
+    std::vector<CaseStmtNode> cases;
+    std::optional<DefaultStmtNode> default_case;
+};
+
+struct CaseStmtNode
+{
+    ExprNode *value;
     ScopeStmtNode *body;
-    bool is_const;
 };
 
-struct MethodDeclStmtNode : FuncDeclStmtNode
+struct ReturnStmtNode
 {
+    std::vector<ExprNode> values;
 };
 
-struct NamespaceDeclStmtNode
-{
-    Token ident;
-    std::vector<PropertyDeclStmtNode *> properties;
-    std::vector<FuncDeclStmtNode *> funcs;
-    std::vector<Token> template_types;
-};
-
-struct StructDeclStmtNode
-{
-    Token ident;
-    std::vector<PropertyDeclStmtNode *> properties;
-    std::vector<FuncDeclStmtNode *> funcs;
-    std::vector<Token> template_types;
-};
-
-struct ScopeStmtNode
-{
-    std::vector<StmtNode *> stmts;
-};
-
+// Root AST Node
+// ---------------
 struct AST
 {
-    std::vector<StmtNode *> stmts;
+    std::vector<StmtNode> statements;
 };
 
 } // namespace via::Parsing::AST

@@ -1,7 +1,5 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#pragma once
-
 #include "instruction.h"
 #include "core.h"
 
@@ -51,16 +49,16 @@ const std::string viaC_compileoperand(viaOperand &oper) noexcept
 {
     switch (oper.type)
     {
-    case viaOperandType::Bool:
-        return oper.boole ? "true" : "false";
-    case viaOperandType::Identifier:
-        return std::format("@{}", oper.ident);
-    case viaOperandType::Number:
-        return std::to_string(oper.num);
-    case viaOperandType::String:
-        return oper.str;
-    case viaOperandType::Register:
-        return std::format("{}{}", ENUM_NAME(oper.reg.type), oper.reg.offset);
+    case viaOperandType_t::Bool:
+        return oper.val_boolean ? "true" : "false";
+    case viaOperandType_t::Identifier:
+        return std::format("@{}", oper.val_identifier);
+    case viaOperandType_t::Number:
+        return std::to_string(oper.val_number);
+    case viaOperandType_t::String:
+        return oper.val_string;
+    case viaOperandType_t::Register:
+        return std::format("R{}", oper.val_register);
     default:
         return "";
     }

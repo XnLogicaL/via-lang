@@ -7,7 +7,6 @@
 namespace via
 {
 
-struct viaState;
 struct viaValue;
 struct viaGCState
 {

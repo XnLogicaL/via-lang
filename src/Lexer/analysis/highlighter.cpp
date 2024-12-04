@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "highlighter.h"
+#include <cmath>
 
 namespace via::Tokenization
 {
@@ -8,7 +9,7 @@ namespace via::Tokenization
 // This is an internal "flag" that determines if the file name has been displayed before any errors
 static bool has_printed_file_name = false;
 
-std::vector<std::string> split_lines(const std::string& source)
+std::vector<std::string> split_lines(const std::string &source)
 {
     std::vector<std::string> lines;
     std::istringstream stream(source);
@@ -38,39 +39,31 @@ std::string get_severity_header(Severity sev)
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string underline_line(const std::string& source, int line_number, int offset, int length, const std::string& message, Severity sev)
+std::string underline_line(const std::string &source, int line_number, int offset, int length, const std::string &message, Severity sev)
 {
     std::vector<std::string> lines = split_lines(source);
 
     // Check if line number is valid
     if (line_number < 1 || line_number > static_cast<int>(lines.size()))
-    {
         return "<ERROR-INVALID-LINE>";
-    }
 
-    const std::string& line = lines[line_number - 1]; // Lines are 1-based, vector is 0-based
+    const std::string &line = lines[line_number - 1]; // Lines are 1-based, vector is 0-based
     std::string underline;
 
     // Check if offset is valid
     if (offset < 0 || offset >= static_cast<int>(line.size()))
-    {
         return "<ERROR-INVALID-OFFSET>";
-    }
 
     // Create the underline with tildes and insert the cursor (^)
     underline = std::string(offset, ' ') + std::string(length, '~');
 
     // Ensure we don't go past the line's length
     if (offset + length > static_cast<int>(line.size()))
-    {
         underline = underline.substr(0, line.size() - offset);
-    }
 
     // Place the cursor (^) at the exact offset
     if (offset < static_cast<int>(underline.size()))
-    {
         underline[offset] = '^';
-    }
 
     // Calculate the width of the line number field
     int line_number_width = static_cast<int>(std::ceil(std::log10(line_number)));

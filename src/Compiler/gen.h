@@ -22,13 +22,13 @@ public:
     // Optimization stack
     std::stack<std::string> opt_stack;
 
-    void pushinstr(viaInstruction instr);
+    void pushinstr(viaInstruction);
 
     std::string compile();
     std::vector<viaInstruction> get();
 
     size_t get_available_register();
-    void free_register(size_t offset);
+    void free_register(size_t);
 
 private:
     std::vector<bool> registers;

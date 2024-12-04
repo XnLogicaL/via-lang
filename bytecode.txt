@@ -1,7 +1,0 @@
-LOADGLOBAL @type, R0;
-LOADGLOBAL @print, R1;
-LI AR0, 1;
-CALL R0, 1;
-MOV AR0, RR0;
-CALL R1, 1;
-HALT;
