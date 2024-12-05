@@ -91,6 +91,8 @@ void viaA_cleanupstate(viaState *V)
     delete V->ralloc;
 
     viaGC_cleanup(V->gc);
+
+    delete V;
 }
 
 viaThreadId_t viaA_threadcount(viaState *)

@@ -48,9 +48,7 @@ enum class viaCallType : uint8_t
 {
     NOCALL,
     CALL,
-    FASTCALL1,
-    FASTCALL2,
-    FASTCALL3
+    FASTCALL,
 };
 
 enum class viaThreadState : uint8_t

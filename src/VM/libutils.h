@@ -21,5 +21,6 @@ namespace via::lib
 {
 
 viaValue *viaL_quickindex(viaState *, viaTable *, viaRawString_t);
+void viaL_pusharguments(viaState *, std::vector<viaValue>);
 
 } // namespace via::lib

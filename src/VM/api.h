@@ -460,6 +460,36 @@ inline viaValue via_popreturn(viaState *V)
     return ret;
 }
 
+// Utility function for quickly geting a metamethod from an opcode
+inline viaValue *via_getmetamethod(viaState *V, viaValue val, OpCode op)
+{
+    if (!viaT_checktable(V, val))
+        return viaT_newvalue(V);
+
+    switch (op)
+    {
+    case OpCode::ADD:
+    case OpCode::IADD:
+        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__add"), true);
+    case OpCode::SUB:
+    case OpCode::ISUB:
+        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__sub"), true);
+    case OpCode::MUL:
+    case OpCode::IMUL:
+        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__mul"), true);
+    case OpCode::DIV:
+    case OpCode::IDIV:
+        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__div"), true);
+    case OpCode::MOD:
+    case OpCode::IMOD:
+        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__mod"), true);
+    default:
+        break;
+    }
+
+    return viaT_newvalue(V);
+}
+
 // Calls a Func type, terminates if uncallable
 inline void via_callf(viaState *V, viaFunction *f, bool save_state)
 {
@@ -483,22 +513,25 @@ inline void via_callf(viaState *V, viaFunction *f, bool save_state)
 }
 
 // Calls a C function pointer
-inline void via_callc(viaState *V, const viaCFunction &cf)
+inline void via_callc(viaState *V, viaCFunction *cf)
 {
-    // 13 additional characters:
+    // 15 additional characters:
     // - 9 for "cfunction"
     // - 1 for space
     // - 2 for "0x"
+    // - 2 for < and >
     // - 1 for null terminator
-    char buffer[2 * sizeof(void *) + 13];
+    char buffer[2 * sizeof(void *) + 15];
     // Yes, this is safe because cf is a const reference
     const void *addr = &cf;
 
-    std::snprintf(buffer, sizeof(buffer), "cfunction 0x%p", addr);
+    std::snprintf(buffer, sizeof(buffer), "<cfunction@0x%p>", addr);
 
     viaFunction *freplica = new viaFunction{
         0,
+        cf->error_handler,
         buffer,
+        *V->stack->begin(),
         {},
         {},
         {},
@@ -507,7 +540,8 @@ inline void via_callc(viaState *V, const viaCFunction &cf)
     viaS_push(V->stack, freplica);
     viaS_flush(V->returns);
 
-    cf(V);
+    // Call function pointer
+    cf->ptr(V);
 
     viaS_pop(V->stack);
     viaS_flush(V->arguments);
@@ -554,7 +588,7 @@ inline void via_call(viaState *V, viaValue val)
 
 inline void via_fastcall1(viaState *V, viaValue val, viaRegister arg0)
 {
-    V->calltype = viaCallType::FASTCALL1;
+    V->calltype = viaCallType::FASTCALL;
     V->argc = 1;
 }
 

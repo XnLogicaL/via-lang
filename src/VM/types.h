@@ -1,5 +1,4 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #pragma once
 
@@ -20,8 +19,6 @@ using viaNumber = double;
 using viaBool = bool;
 // Basic pointer type, currently only used internally
 using viaPointer = uintptr_t;
-// C function pointer, used for C++ interoperability
-using viaCFunction = void (*)(viaState *);
 // Type alias for viaHash_t
 using viaTableKey = viaHash_t;
 
@@ -30,7 +27,7 @@ struct viaValue;
 struct viaTable;
 struct viaString;
 struct viaFunction;
-struct viaVarArg;
+struct viaCFunction;
 
 enum class viaValueType : uint8_t
 {
@@ -56,11 +53,11 @@ struct viaValue
         viaNumber val_number;
         viaBool val_boolean;
         viaPointer val_pointer;
-        viaCFunction val_cfunction;
         // These are pointers because their size is larger than 4 bytes,
         // which is what registers are supposed to hold
         viaString *val_string;
         viaFunction *val_function;
+        viaCFunction *val_cfunction;
         viaTable *val_table;
     };
 };
@@ -77,28 +74,45 @@ struct viaFunction
     // Line information, determined during compile time,
     // Inherited from the instruction that declares this function
     size_t line = 0;
+    // Tells the VM wether if this caller can handle an error
+    bool error_handler = false;
+    // Tells the VM if the last argument is a variadic argument
+    bool is_vararg = false;
     // Function identifier
     viaRawString_t id = "<anonymous-function>";
     viaFunction *caller = nullptr;
     std::vector<viaValue> locals = {};
     std::vector<viaInstruction> bytecode = {};
-    std::array<viaValue, 256> consts = {};
+    std::vector<viaValue> consts = {};
+};
+
+struct viaCFunction
+{
+    // Function pointer
+    void (*ptr)(viaState *) = nullptr;
+    // Tells the VM if the function can handle errors or not
+    // This gets passed down to the replica function that represents this C functions stack frame
+    // Pretty much only used for pcall
+    bool error_handler = false;
 };
 
 struct viaTable
 {
+    // Pointer to metatable
     viaTable *meta = nullptr;
+    // Tells the VM if the table is modifiable
     util::modifiable_once<bool> frozen = false;
     viaHashMap_t<viaTableKey, viaValue> data = {};
 };
 
 // ! Random hashing algo, may need to be replaced later
-inline viaHash_t viaT_hashstring(viaState *, viaRawString_t s)
+inline viaHash_t viaT_hashstring(viaState *, viaRawString_t str)
 {
     viaHash_t hash = 0;
 
-    while (*s)
-        hash = (hash * 31) + *s++;
+    // Automatically breaks when it hits the nullbyte, quite clever
+    while (*str)
+        hash = (hash * 31) + *str++;
 
     return hash;
 }
@@ -204,10 +218,10 @@ inline viaValue *viaT_newvalue(viaState *V, viaPointer p)
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *V, viaCFunction cf)
+inline viaValue *viaT_newvalue(viaState *V, viaCFunction *cf)
 {
     viaValue *val = viaT_newvalue(V, viaValueType::CFunc);
-    val->val_boolean = cf;
+    val->val_cfunction = cf;
 
     return val;
 }
@@ -283,10 +297,10 @@ inline viaValue viaT_stackvalue(viaState *V, viaPointer p)
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *V, viaCFunction cf)
+inline viaValue viaT_stackvalue(viaState *V, viaCFunction *cf)
 {
     viaValue val = viaT_stackvalue(V, viaValueType::CFunc);
-    val.val_boolean = cf;
+    val.val_cfunction = cf;
 
     return val;
 }
