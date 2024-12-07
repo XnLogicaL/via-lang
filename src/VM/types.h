@@ -82,8 +82,8 @@ struct viaFunction
     viaRawString_t id = "<anonymous-function>";
     viaFunction *caller = nullptr;
     std::vector<viaValue> locals = {};
-    std::vector<viaInstruction> bytecode = {};
     std::vector<viaValue> consts = {};
+    std::vector<viaInstruction> bytecode = {};
 };
 
 struct viaCFunction
@@ -226,6 +226,14 @@ inline viaValue *viaT_newvalue(viaState *V, viaCFunction *cf)
     return val;
 }
 
+inline viaValue *viaT_newvalue(viaState *V, void (*cf)(viaState *))
+{
+    viaValue *val = viaT_newvalue(V, viaValueType::CFunc);
+    val->val_cfunction = new viaCFunction{cf, false};
+
+    return val;
+}
+
 inline viaValue *viaT_newvalue(viaState *V, viaRawString_t s)
 {
     viaValue *val = viaT_newvalue(V, viaValueType::String);
@@ -301,6 +309,14 @@ inline viaValue viaT_stackvalue(viaState *V, viaCFunction *cf)
 {
     viaValue val = viaT_stackvalue(V, viaValueType::CFunc);
     val.val_cfunction = cf;
+
+    return val;
+}
+
+inline viaValue viaT_stackvalue(viaState *V, void (*cf)(viaState *))
+{
+    viaValue val = viaT_stackvalue(V, viaValueType::CFunc);
+    val.val_cfunction = new viaCFunction{cf, false};
 
     return val;
 }
