@@ -453,4 +453,9 @@ inline bool viaT_checkfunction(viaState *, viaValue val)
     return val.type == viaValueType::Func;
 }
 
+inline bool viaT_checkempty(viaState *V, viaValue val)
+{
+    return viaT_checknil(V, val) || viaT_checkmonostate(V, val);
+}
+
 } // namespace via
