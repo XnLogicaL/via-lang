@@ -811,7 +811,6 @@ dispatch:
         fn->line = 0;
         // TODO: Accept a valid user-set ID
         fn->id = "<anonymous-function>";
-        fn->consts = {};
         fn->locals = {};
 
         via_setregister(V, rfn.val_register, viaT_stackvalue(V, fn));
