@@ -2,28 +2,29 @@
 
 ## What is via?
 
-**via** is a powerful, semi-dynamically typed, multi-paradigm programming language enhanced with Just-In-Time (JIT) compilation. It aims to strike a balance between convenience and performance, combining the ease of use found in languages like Python and Lua with the speed of systems programming languages. via is heavily inspired by the Lua (specifically Luau) programming language for it's flexibility and robust features. However, via is more featureful and has been carefully crafted to ensure good development experience, unlike some features of Lua/Luau that I personally don't like. These features include;
+**via** is a powerful, semi-dynamically typed, multi-paradigm programming language enhanced with Just-In-Time (JIT) compilation. It aims to strike a balance between convenience and performance, combining the ease of use found in languages like Python and Lua with the speed of systems programming languages. via is heavily inspired by the Lua (specifically the Luau "dialect") programming language for it's flexibility and robust features. However, via is more featureful and has been carefully crafted to ensure good development experience, unlike some features of Lua/Luau that I personally (and many other developers I've met) don't like. These features include;
 
 - Abundance of runtime errors
-    - via solves this issue by emitting most errors during compile time, so you won't have to wait for your program to fail.
-    via still does have runtime errors, just not as many as Lua/Luau
+    - via solves this issue by emitting most errors during compile time, so you won't have to wait for your program to fail during runtime.
+    However via still does have runtime errors, all-be-it significantly less than Lua/Luau
 - Unusual syntax
-    - Even though the Lua/Luau syntax is great for simplicity, it lacks in functionality. via borrows keywords from Lua and combines
+    - Even though the Lua/Luau syntax is great for simplicity and readability, it lacks in functionality. via borrows keywords from Lua and combines
     them with features from more robust languages such as Rust.
 - Limited standard library
-    - Lua/Luau is quite infamous for it's minimal standard library (which technically isn't even a library), wihch in my opinion deals
-    a huge blow to the functionality of the language. via addresses this issue by providing you with the via STL (via standard template library), which includes both abstract high level concepts and low level features that give you extra control over everything.
+    - Lua/Luau is quite infamous for it's minimal standard library (which technically isn't even a library), which in my opinion deals
+    a huge blow to the functionality of the language. via addresses this issue by providing a 1-to-1 collection of libraries that correspond to every feature of the language.
 
 ## Design and Syntax
 
-via employs a curly brace-based syntax, reminiscent of languages such as JavaScript and the C family. However, it shares many design philosophies with Lua/Luau, particularly in variable declarations and a straightforward import/export system. In `via`, `tables` serve as the primary data structure, underpinning objects, namespaces, arrays, and dictionaries, which minimizes compatibility issues within the language.
+via employs a familiar curly brace-based syntax, reminiscent of languages such as JavaScript and the C family. However, it shares many design philosophies with Lua/Luau, particularly in variable declarations and a straight-forward import/export system. In `via`, `tables` serve as the primary data structure, underpinning objects, namespaces, arrays, and dictionaries, which minimizes compatibility issues within the language.
 
 ### Key Features
-
-- **Structured Types:** via introduces powerful features such as structs and static namespaces.
+- **Structured Types:** via introduces powerful features such as structs and "static" (which is an iternal feature) namespaces, which are more abstract tables with 0-cost abstraction.
 - **Control Structures:** The language supports constructs like switch statements for cleaner control flow.
 - **Standard Library:** A robust standard library provides a wealth of functionality for developers.
 - **Low-Level Memory Management:** Advanced memory management capabilities enable extra control over resource management.
+- **Focus on compilation:** Unlike many interpreted languages, via focuses on compile-time experience, which introduces features such as; the majority of errors being emitted during compile-time, the via preprocessor (similar to the C preprocessor, although more minimal) providing a safe way to interact with the compiler. 
+- **Interoperability with other languages:** via has a built-in keyword for embedding Lua code into your program, and an abstract yet 0-cost powerful C++ API for interacting with/embedding via into other programs.
 
 ### Variable Declarations
 
