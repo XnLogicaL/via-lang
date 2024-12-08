@@ -1,5 +1,4 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 /*
  * !! WARNING !!
@@ -18,6 +17,10 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+
+#ifndef VIA_HOTPATH_THRESHOLD
+#define VIA_HOTPATH_THRESHOLD 64
+#endif
 
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
@@ -108,7 +111,7 @@ inline void _optimize_empty_instruction_sequence(viaState *V)
         if (skip_count > 1)
         {
             V->ip->op = OpCode::JMP;
-            V->ip->operandv[0] = viaOperand{.type = viaOperandType_t::Number, .val_number = static_cast<double>(skip_count)};
+            V->ip->operandv[0] = {.type = viaOperandType_t::Number, .val_number = static_cast<double>(skip_count)};
         }
     }
 }
@@ -127,6 +130,13 @@ void via_execute(viaState *V)
 
 dispatch:
 {
+    // Increment path counter of this specific instruction
+    V->ip->pc++;
+
+    // Flag the instruction as a "hot" instruction if it has been executed more than a certain amount
+    if (VIA_UNLIKELY(!V->ip->hot && V->ip->pc >= VIA_HOTPATH_THRESHOLD))
+        V->ip->hot = true;
+
     // Check if the state needs to be restored
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
     {
@@ -787,8 +797,9 @@ dispatch:
     {
         viaOperand id = VM_OPND(0);
         viaInstruction *addr = reinterpret_cast<viaInstruction *>(V->ip - V->ihp);
+        viaLabelKey_t key = id.val_identifier;
 
-        (*V->labels)[std::string_view(id.val_identifier)] = addr;
+        (*V->labels)[key] = addr;
 
         while (addr < V->ibp)
         {

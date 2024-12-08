@@ -12,8 +12,8 @@ namespace via::lib
 
 // Returns the "name" aka identifier of the given function
 void function_name(viaState *);
-void function_params(viaState *);
-void function_returns(viaState *);
+void function_parameters(viaState *);
+void function_returntype(viaState *);
 void function_line(viaState *);
 
 } // namespace via::lib

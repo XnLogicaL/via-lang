@@ -7,6 +7,10 @@
 #include "VM/opcode.h"
 #include <cstdint>
 
+#ifndef VIA_OPERAND_COUNT
+#define VIA_OPERAND_COUNT 4
+#endif
+
 namespace via
 {
 
@@ -40,13 +44,15 @@ using viaInstructionC_t = uint8_t;
 
 struct viaInstruction
 {
+    bool hot;
+    uint16_t pc;
     OpCode op;
     viaInstructionC_t operandc;
-    viaOperand operandv[4];
+    viaOperand operandv[VIA_OPERAND_COUNT];
 };
 
 viaInstruction viaC_newinstruction();
-viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<viaOperand> &operands);
+viaInstruction viaC_newinstruction(const std::string &, const std::vector<viaOperand> &);
 
 const std::string viaC_compileinstruction(viaInstruction &) noexcept;
 const std::string viaC_compileoperand(viaOperand &) noexcept;
