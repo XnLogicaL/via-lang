@@ -254,6 +254,4 @@ void table_values(viaState *V)
     via_pushreturn(V, values_table);
 }
 
-
-
 } // namespace via::lib

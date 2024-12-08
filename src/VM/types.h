@@ -82,7 +82,6 @@ struct viaFunction
     viaRawString_t id = "<anonymous-function>";
     viaFunction *caller = nullptr;
     std::vector<viaValue> locals = {};
-    std::vector<viaValue> consts = {};
     std::vector<viaInstruction> bytecode = {};
 };
 

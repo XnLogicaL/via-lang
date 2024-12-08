@@ -224,33 +224,6 @@ inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue va
     }
 }
 
-inline void via_setconst(viaState *V, viaVariableIdentifier_t id, viaValue val)
-{
-    viaFunction *top = viaS_top(V->stack);
-    viaValue existing = top->consts.at(id);
-
-    if (!viaT_checkmonostate(V, existing))
-        return;
-
-    top->consts[id] = val;
-}
-
-inline viaValue via_getconst(viaState *V, viaVariableIdentifier_t id)
-{
-    viaFunction *top = viaS_top(V->stack);
-    return top->consts.at(id);
-}
-
-inline viaValue via_loadconst(viaState *V, viaVariableIdentifier_t id, viaRegister R)
-{
-    viaFunction *top = viaS_top(V->stack);
-    viaValue val = top->consts.at(id);
-
-    via_setregister(V, R, val);
-
-    return val;
-}
-
 // Similar to `via_getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller
 inline viaValue *via_getglobal(viaState *V, viaVariableIdentifier_t id)
 {
@@ -530,9 +503,9 @@ inline void via_callc(viaState *V, viaCFunction *cf)
     viaFunction *freplica = new viaFunction{
         0,
         cf->error_handler,
+        false,
         buffer,
         *V->stack->begin(),
-        {},
         {},
         {},
     };
