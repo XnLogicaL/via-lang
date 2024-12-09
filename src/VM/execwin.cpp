@@ -1,9 +1,8 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-// Check for Linux
-#ifdef __linux__
-#    include "execlinux.h"
-#    include <sys/mman.h>
+#if defined(_WIN32) || defined(_WIN64)
+#    include "execwin.h"
+#    include "Windows.h"
 // Ordered from most common to least common
 #    ifdef __x86_64__
 #        include "x86_64codegen.h"
@@ -24,22 +23,20 @@ namespace via::jit
 // Initializes a chunk with pre-assembled machine code
 void viaJIT_assemblechunk(viaState *, viaChunk *chunk, unsigned char *mc_code, size_t mc_size)
 {
-    // Indicates empty chunk, skip to not waste resources
     if (mc_size == 0)
         return;
 
-    // Create an executable buffer
-    void *exec_buf = mmap(nullptr, mc_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    void *exec_buf = VirtualAlloc(NULL, mc_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
     // Check if the buffer failed to allocate
-    VIA_ASSERT(exec_buf != MAP_FAILED, "viaJIT: mmap failed");
+    VIA_ASSERT(exec_buf != NULL, "viaJIT: VirtualAlloc failed");
     memcpy(exec_buf, mc_code, mc_size);
 
     chunk->mcode = reinterpret_cast<viaMCodeExec_t>(exec_buf);
 }
 
 // Executes the chunk
-void viaJIT_executechunk(viaState *V, viaChunk *chunk)
+int viaJIT_executechunk(viaState *V, viaChunk *chunk)
 {
     // Check if the chunk has been compiled before
     if (chunk->mcode == nullptr)

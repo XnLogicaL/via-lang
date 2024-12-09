@@ -27,3 +27,7 @@ AlignAfterOpenBracket: BlockIndent
 BinPackArguments: false
 BinPackParameters: false
 PenaltyReturnTypeOnItsOwnLine: 10000
+
+# Add these lines to ensure proper indentation for macros
+IndentPPDirectives: AfterHash  # Indent preprocessor directives like #define
+MacroBlockBegin: ''  # Prevent special indentation for macro blocks
