@@ -64,4 +64,29 @@ std::string viaC_compileoperand(viaOperand &oper)
     }
 }
 
+bool viaC_checkregister(const viaOperand &oper)
+{
+    return oper.type == viaOperandType_t::Register;
+}
+
+bool viaC_checknumber(const viaOperand &oper)
+{
+    return oper.type == viaOperandType_t::Number;
+}
+
+bool viaC_checkbool(const viaOperand &oper)
+{
+    return oper.type == viaOperandType_t::Bool;
+}
+
+bool viaC_checkstring(const viaOperand &oper)
+{
+    return oper.type == viaOperandType_t::String;
+}
+
+bool viaC_checkidentifier(const viaOperand &oper)
+{
+    return oper.type == viaOperandType_t::Identifier;
+}
+
 } // namespace via::Compilation

@@ -60,6 +60,12 @@ viaInstruction viaC_newinstruction(const std::string &, const std::vector<viaOpe
 std::string viaC_compileinstruction(viaInstruction &);
 std::string viaC_compileoperand(viaOperand &);
 
+bool viaC_checkregister(const viaOperand &);
+bool viaC_checknumber(const viaOperand &);
+bool viaC_checkbool(const viaOperand &);
+bool viaC_checkstring(const viaOperand &);
+bool viaC_checkidentifier(const viaOperand &);
+
 } // namespace Compilation
 
 } // namespace via

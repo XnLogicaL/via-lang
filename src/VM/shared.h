@@ -6,6 +6,9 @@
 #include "instruction.h"
 #include <string_view>
 
+#define VIA_DEBUG
+#define VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE
+
 namespace via
 {
 

@@ -463,4 +463,14 @@ inline bool viaT_checkempty(viaState *V, viaValue val)
     return viaT_checknil(V, val) || viaT_checkmonostate(V, val);
 }
 
+inline bool viaT_checkcallable(viaState *V, viaValue val)
+{
+    return viaT_checkfunction(V, val) || viaT_checkcfunction(V, val);
+}
+
+inline bool viaT_checksubscriptable(viaState *V, viaValue val)
+{
+    return viaT_checktable(V, val) || viaT_checkstring(V, val);
+}
+
 } // namespace via
