@@ -17,13 +17,13 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
         const Token &tok = toks->at(i);
 
         // Check for macro invocation: `macro_name!(` pattern
-        if (tok.value == macro.name && i + 2 < toks->size() && toks->at(i + 1).type == TokenType::EXCLAMATION
-            && toks->at(i + 2).type == TokenType::PAREN_OPEN)
+        if (tok.value == macro.name && i + 2 < toks->size() && toks->at(i + 1).type == TokenType::EXCLAMATION &&
+            toks->at(i + 2).type == TokenType::PAREN_OPEN)
         {
             // Parse macro arguments
             std::vector<std::vector<Token>> macro_args;
             size_t arg_start = i + 3;
-            size_t depth     = 1;
+            size_t depth = 1;
 
             // Parse arguments until the closing parenthesis
             std::vector<Token> current_arg;
@@ -31,9 +31,7 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
             for (size_t j = arg_start; j < toks->size(); ++j)
             {
                 if (toks->at(j).type == TokenType::PAREN_OPEN)
-                {
                     depth++;
-                }
                 else if (toks->at(j).type == TokenType::PAREN_CLOSE)
                 {
                     depth--;
@@ -41,12 +39,9 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
                     if (depth == 0)
                     {
                         if (!current_arg.empty())
-                        {
                             macro_args.push_back(std::move(current_arg));
-                        }
 
                         arg_start = j + 1;
-
                         break;
                     }
                 }
@@ -56,16 +51,12 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
                     current_arg.clear();
                 }
                 else
-                {
                     current_arg.push_back(toks->at(j));
-                }
             }
 
             // Check for argument count mismatch
             if (macro_args.size() != macro.params.size())
-            {
                 throw PreprocessorException(std::format("Macro argument count mismatch for macro '{}'", macro.name));
-            }
 
             // Replace the macro call with its expanded body
             std::vector<Token> expanded_body = macro.body;
@@ -73,19 +64,13 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
 
             // Map parameter names to their arguments
             for (size_t k = 0; k < macro.params.size(); ++k)
-            {
                 arg_map[macro.params[k]] = macro_args[k];
-            }
 
             // Replace parameters in the macro body with their arguments
             for (Token &body_tok : expanded_body)
-            {
                 if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value))
-                {
                     // Expand parameter with corresponding argument tokens
                     body_tok = arg_map[body_tok.value][0];
-                }
-            }
 
             // Remove the macro invocation and insert the expanded body
             toks->erase(toks->begin() + i, toks->begin() + arg_start);
@@ -95,9 +80,7 @@ void Preprocessing::expand_macro(std::vector<Token> *toks, const Macro &macro)
             i += expanded_body.size();
         }
         else
-        {
             i++;
-        }
     }
 }
 

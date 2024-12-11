@@ -81,7 +81,7 @@ struct viaFunction
     // Function identifier
     viaRawString_t id = "<anonymous-function>";
     viaFunction *caller = nullptr;
-    std::vector<viaValue> locals = {};
+    std::unordered_map<viaVariableIdentifier_t, viaValue> locals = {};
     std::vector<viaInstruction> bytecode = {};
 };
 
@@ -233,7 +233,9 @@ inline viaValue *viaT_newvalue(viaState *V, void (*cf)(viaState *))
     return val;
 }
 
-inline viaValue *viaT_newvalue(viaState *V, viaRawString_t s)
+template<typename T>
+    requires std::same_as<T, viaRawString_t>
+inline viaValue *viaT_newvalue(viaState *V, T s)
 {
     viaValue *val = viaT_newvalue(V, viaValueType::String);
     val->val_string = viaT_newstring(V, s);
@@ -312,7 +314,9 @@ inline viaValue viaT_stackvalue(viaState *V, viaCFunction *cf)
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *V, void (*cf)(viaState *))
+template<typename T>
+    requires std::same_as<T, void (*)(viaState *)>
+inline viaValue viaT_stackvalue(viaState *V, T cf)
 {
     viaValue val = viaT_stackvalue(V, viaValueType::CFunc);
     val.val_cfunction = new viaCFunction{cf, false};
@@ -320,7 +324,9 @@ inline viaValue viaT_stackvalue(viaState *V, void (*cf)(viaState *))
     return val;
 }
 
-inline viaValue viaT_stackvalue(viaState *V, const char *s)
+template<typename T>
+    requires std::same_as<T, viaRawString_t>
+inline viaValue viaT_stackvalue(viaState *V, T s)
 {
     viaValue val = viaT_stackvalue(V, viaValueType::String);
     val.val_string = viaT_newstring(V, s);

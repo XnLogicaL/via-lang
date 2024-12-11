@@ -5,6 +5,7 @@
 #include "bytecode.h"
 #include "common.h"
 #include "api.h"
+#include "debug.h"
 #include "execute.h"
 #include "vlrand.h"
 #include "state.h"
@@ -13,7 +14,6 @@
 #include "vlvec3.h"
 
 using namespace via;
-using namespace Compilation;
 
 int main(int argc, char const *argv[])
 {
@@ -23,16 +23,15 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    auto bytecode = FileReader::read_file(argv[1]);
+    std::string bytecode = FileReader::read_file(argv[1]);
 
     BytecodeParser parser(bytecode);
-    auto instrs = parser.parse();
+    std::vector<viaInstruction> instrs = parser.parse();
 
-    viaState *V = via::via_newstate(instrs);
+    viaState *V = viaA_newstate(instrs);
+
     lib::viaL_loadbaselib(V);
-    lib::viaL_loadmathlib(V);
-    lib::viaL_loadvec3lib(V);
-    lib::viaL_loadrandlib(V);
+
     via_execute(V);
 
     return 0;

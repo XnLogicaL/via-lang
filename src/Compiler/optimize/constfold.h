@@ -7,8 +7,8 @@
 namespace via::Compilation
 {
 
-double _eval_binexpr(const Parsing::AST::BinExprNode &);
-double _eval_litexpr(const Parsing::AST::LitExprNode &);
+double _eval_binexpr(const Parsing::AST::BinaryExprNode &);
+double _eval_litexpr(const Parsing::AST::LiteralExprNode &);
 double _eval_expr(const Parsing::AST::ExprNode &);
 bool _is_constexpr(const Parsing::AST::ExprNode &);
 

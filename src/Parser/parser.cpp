@@ -61,7 +61,7 @@ ExprNode *Parser::parse_bin_expr(int precedence)
             .rhs = rhs,
         };
 
-        // Properly construct a BinExprNode, respecting the AST structure
+        // Properly construct a BinaryExprNode, respecting the AST structure
         lhs = m_alloc.emplace<ExprNode>(bin);
     }
 

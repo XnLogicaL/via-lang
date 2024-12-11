@@ -10,7 +10,7 @@ namespace via::lib
 
 void base_print(viaState *V)
 {
-    uint8_t i = 0;
+    uint16_t i = 0;
     std::ostringstream oss;
 
     // Loop over argument count
@@ -18,6 +18,7 @@ void base_print(viaState *V)
     {
         viaValue argx = via_popargument(V);
         oss << via_tostring(V, argx).val_string->ptr << " ";
+        i++;
     }
 
     // Output the accumulated string
@@ -35,9 +36,10 @@ void base_println(viaState *V)
     {
         viaValue argx = via_popargument(V);
         oss << via_tostring(V, argx).val_string->ptr << " ";
+        i++;
     }
 
-    // Output the accumulated string, with the promised line break
+    // Output the accumulated string
     std::cout << oss.str() << "\n";
 }
 
@@ -53,7 +55,7 @@ void base_exit(viaState *V)
 
     LIB_ASSERT(arg0.type == viaValueType::Number, "Expected type viaNumber for argument 0 of base_exit");
 
-    viaExitCode_t code = arg0val_number;
+    viaExitCode_t code = arg0.val_number;
     via_setexitdata(V, code, "base_exit called by user");
     V->abrt = true; // Abort the VM execution
 }
@@ -150,7 +152,7 @@ void viaL_loadbaselib(viaState *V)
 
     for (auto it : base_properties)
     {
-        viaVariableIdentifier_t id(it.first);
+        viaVariableIdentifier_t id = viaT_hashstring(V, it.first);
         via_setglobal(V, id, it.second);
     }
 }

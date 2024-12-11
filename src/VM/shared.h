@@ -24,7 +24,7 @@ using viaHash_t = uint32_t;
 using viaLabelKey_t = std::string_view;
 
 // Default variable identifiers
-using viaVariableIdentifier_t = size_t;
+using viaVariableIdentifier_t = viaHash_t;
 
 // VM related
 using viaCallArgC_t = uint16_t;

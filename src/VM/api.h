@@ -26,7 +26,6 @@ inline void via_setexitdata(viaState *V, viaExitCode_t exitc, const std::string 
     // I don't know why but `strdup` is deprecated but `_strdup` isn't
     // This is the completely opposite of the deprecation convention, but sure...
     V->exitm = strdup(exitm.c_str());
-    return;
 }
 
 inline bool via_validjmpaddr(viaState *V, const viaInstruction *addr) noexcept
@@ -44,7 +43,6 @@ inline void via_jmpto(viaState *V, const viaInstruction *addr)
     }
 
     V->ip = const_cast<viaInstruction *>(addr);
-    return;
 }
 
 // Jumps a given offset
@@ -52,25 +50,21 @@ inline void via_jmp(viaState *V, viaJmpOffset_t offset)
 {
     viaInstruction *addr = V->ip + offset;
     via_jmpto(V, addr);
-    return;
 }
 
 // Appends a pointer to the garbage collector free list
 // The pointer should be malloc-ed, otherwise this has undefined behavior
 // ! The value cannot be removed from the free list!
-template<typename T>
-inline void via_gcadd(viaState *V, T ptr) noexcept
+inline void via_gcadd(viaState *V, viaValue *ptr) noexcept
 {
-    viaGC_add(V->gc, ptr);
-    return;
+    viaGC_add(V, ptr);
 }
 
 // Invokes garbage collection
 // Should be called in intervals
 inline void via_gccol(viaState *V) noexcept
 {
-    viaGC_collect(V->gc);
-    return;
+    viaGC_collect(V);
 }
 
 // Asserts a condition, terminates the VM if not met
@@ -95,9 +89,9 @@ inline void via_fatalerr(viaState *V, const std::string &err)
 
 // Sets register <R> to the given value <v>
 template<typename T = viaValue>
+    requires(!std::is_pointer_v<T>)
 inline void via_setregister(viaState *V, viaRegister R, T val) noexcept
 {
-    VIA_ASSERT(!std::is_pointer_v<T>, "via_setregister(): Expected non-pointer value to assign to register");
     viaR_setregister(V->ralloc, R, val);
 }
 
@@ -214,7 +208,6 @@ inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue va
     for (viaFunction *frame : *V->stack)
     {
         viaValue var = frame->locals[id];
-
         // Check if the variable has been declared or not
         // It can never be monostate again if declared once
         if (viaT_checkmonostate(V, var))
@@ -225,13 +218,17 @@ inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue va
 }
 
 // Similar to `via_getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller
-inline viaValue *via_getglobal(viaState *V, viaVariableIdentifier_t id)
+template<typename T>
+    requires std::same_as<T, viaVariableIdentifier_t>
+inline viaValue *via_getglobal(viaState *V, T id)
 {
-    // Yes, this is kinda hacky but it should do
-    // Same as *V->stack->sbp
-    viaFunction *global = *V->stack->end();
-    viaValue *val = &global->locals[id];
-    return val;
+    viaFunction *global = *V->stack->sbp;
+    auto it = global->locals.find(id);
+
+    if (it == global->locals.end())
+        return viaT_newvalue(V);
+
+    return &it->second;
 }
 
 // Similar to `via_loadvariable` but explicitly looks for the variable in the global scope
@@ -245,7 +242,7 @@ inline viaValue *via_loadglobal(viaState *V, viaVariableIdentifier_t id, viaRegi
 // Similar to `via_setvariable` but explicitly sets the variable in the global scope
 inline void via_setglobal(viaState *V, viaVariableIdentifier_t id, viaValue val)
 {
-    viaFunction *global = *V->stack->end();
+    viaFunction *global = *V->stack->sbp;
     global->locals[id] = val;
 }
 
@@ -255,6 +252,9 @@ inline void via_setglobal(viaState *V, viaVariableIdentifier_t id, viaValue val)
 // ! The return value is guaranteed to be a String
 inline viaValue &via_tostring(viaState *V, viaValue &val)
 {
+    // If the value has a String type but an invalid string value,
+    // That it undefined behavior and should be explicitly handled by the end user.
+    // It should NEVER occur under compiled bytecode
     if (viaT_checkstring(V, val))
         return val;
 
@@ -468,11 +468,12 @@ inline void via_callf(viaState *V, viaFunction *f, bool save_state)
 {
     if (save_state)
     {
+        viaInstruction *begin = f->bytecode.data();
+
         // Save VM state to be restored when the function stops executing
         V->sstate = new viaState(*V);
-        // Fucking hack, why are these iterators
-        V->ihp = f->bytecode.begin()._Ptr;
-        V->ibp = f->bytecode.end()._Ptr;
+        V->ihp = begin;
+        V->ibp = begin + f->bytecode.size() - 1;
         V->ip = V->ihp;
     }
 
@@ -526,7 +527,6 @@ inline viaValue via_type(viaState *V, viaValue v)
     auto enum_name = ENUM_NAME(v.type);
     std::string stdstr = std::string(enum_name);
     const char *str = strdup(stdstr.c_str());
-    via_gcadd(V, str);
     return viaT_stackvalue(V, viaT_newstring(V, str));
 }
 
@@ -538,7 +538,7 @@ inline viaValue via_type(viaState *V, viaValue v)
 inline void via_call(viaState *V, viaValue val)
 {
     V->calltype = viaCallType::CALL;
-    V->argc = V->arguments->size;
+    // V->argc = static_cast<viaCallArgC_t>(V->arguments->size);
 
     if (viaT_checkfunction(V, val))
         via_callf(V, val.val_function, true);
@@ -553,13 +553,15 @@ inline void via_call(viaState *V, viaValue val)
         via_pushargument(V, *mmcall);
         via_call(V, *mmcall);
     }
-
-    viaValue callt = via_type(V, val);
-    via_setexitdata(V, 1, std::format("Attempt to call a {} value", callt.val_string->ptr));
-    V->abrt = true;
+    else
+    {
+        viaValue callt = via_type(V, val);
+        via_setexitdata(V, 1, std::format("Attempt to call a {} value", callt.val_string->ptr));
+        V->abrt = true;
+    }
 }
 
-inline void via_fastcall1(viaState *V, viaValue val, viaRegister arg0)
+inline void via_fastcall1(viaState *V, viaValue, viaRegister)
 {
     V->calltype = viaCallType::FASTCALL;
     V->argc = 1;

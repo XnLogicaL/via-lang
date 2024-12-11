@@ -6,15 +6,8 @@
 #include "core.h"
 #include "instruction.h"
 
-static size_t _iota = std::numeric_limits<size_t>::max();
-
 namespace via::Compilation
 {
-
-size_t iota()
-{
-    return _iota--;
-}
 
 class Generator
 {

@@ -10,7 +10,7 @@ enum class OpCode
     ERR, // Error opcode
     NOP, // No operation
 
-    // viaRegister Operations
+    // Register Operations
     MOV, // Move value from one register to another <dst :: viaRegister> <src :: viaRegister>
     CPY,
     LI,   // Load immediate value into register <dst :: viaRegister> <val :: Any>
@@ -18,7 +18,7 @@ enum class OpCode
     SWAP, // Swap values between two registers
     NIL,  // Sets a register to nil
 
-    // viaRegister Manipulation
+    // Register Manipulation
     PUSH,       // Push a new stack frame onto the stack
     POP,        // Pop a stack frame from the stack
     SETLOCAL,   // Set a new local to the top stack frame
@@ -54,6 +54,12 @@ enum class OpCode
     BSAR,
     BROL,
     BROR,
+
+    // Stack operations
+    PUSHARG,
+    POPARG,
+    PUSHRET,
+    POPRET,
 
     // Comparison Operations
     EQ,  // Check if two registers are equal
@@ -125,6 +131,11 @@ enum class OpCode
 
     // String Operations
     STRCON, // Concatenate two strings
+
+    // Debug OpCodes
+    DEBUGREGISTERS,
+    DEBUGARGUMENTS,
+    DEBUGRETURNS,
 };
 
 } // namespace via

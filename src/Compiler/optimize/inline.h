@@ -7,6 +7,6 @@ namespace via::Compilation
 {
 
 void optimize_inline_const(Parsing::AST::AST *, std::string, Parsing::AST::ExprNode);
-void optimize_inline_func(Parsing::AST::AST *, std::string, Parsing::AST::FuncDeclStmtNode);
+void optimize_inline_func(Parsing::AST::AST *, std::string, Parsing::AST::FunctionDeclStmtNode);
 
 } // namespace via::Compilation

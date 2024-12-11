@@ -12,6 +12,6 @@ namespace via::Compilation
 
 // Optimizes division/multiplication operations by changing them to bitshifts if applicable
 // ! This is a post-compilation optimization
-void optimize_bshift(Compilation::viaInstruction &) noexcept;
+void optimize_bshift(viaInstruction &) noexcept;
 
 } // namespace via::Compilation

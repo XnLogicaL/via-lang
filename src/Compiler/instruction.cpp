@@ -32,7 +32,7 @@ viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<
     return instr;
 }
 
-const std::string viaC_compileinstruction(viaInstruction &instr) noexcept
+std::string viaC_compileinstruction(viaInstruction &instr)
 {
     std::string operands_str;
 
@@ -45,7 +45,7 @@ const std::string viaC_compileinstruction(viaInstruction &instr) noexcept
     return std::format("{} {};\n", ENUM_NAME(instr.op), operands_str);
 }
 
-const std::string viaC_compileoperand(viaOperand &oper) noexcept
+std::string viaC_compileoperand(viaOperand &oper)
 {
     switch (oper.type)
     {

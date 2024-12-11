@@ -13,12 +13,12 @@
 namespace via::Compilation
 {
 
-size_t compile_lit_expr(Generator *, Parsing::AST::LitExprNode);
-size_t compile_un_expr(Generator *, Parsing::AST::UnExprNode);
-size_t compile_binary_expr(Generator *, Parsing::AST::BinExprNode);
+size_t compile_lit_expr(Generator *, Parsing::AST::LiteralExprNode);
+size_t compile_un_expr(Generator *, Parsing::AST::UnaryExprNode);
+size_t compile_binary_expr(Generator *, Parsing::AST::BinaryExprNode);
 size_t compile_index_expr(Generator *, Parsing::AST::IndexExprNode);
 size_t compile_call_expr(Generator *, Parsing::AST::CallExprNode);
-size_t compile_ident_expr(Generator *, Parsing::AST::IdentExprNode);
+size_t compile_ident_expr(Generator *, Parsing::AST::VarExprNode);
 size_t compile_expression(Generator *, Parsing::AST::ExprNode);
 
 } // namespace via::Compilation

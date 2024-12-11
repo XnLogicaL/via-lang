@@ -1,7 +1,5 @@
-LOADGLOBAL @type, R0;
-LOADGLOBAL @print, R1;
-LI AR0, 1;
+LOADGLOBAL @println, R0;
+LI R1, "Hello, world!";
+PUSHARG R1;
 CALL R0, 1;
-MOV AR0, RR0;
-CALL R1, 1;
-HALT;
+EXIT 0;

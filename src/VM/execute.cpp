@@ -14,12 +14,13 @@
 #include "shared.h"
 #include "state.h"
 #include "types.h"
+#include "debug.h"
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 
 #ifndef VIA_HOTPATH_THRESHOLD
-#define VIA_HOTPATH_THRESHOLD 64
+#    define VIA_HOTPATH_THRESHOLD 64
 #endif
 
 // Simple macro for exiting the VM
@@ -120,8 +121,8 @@ inline void _optimize_empty_instruction_sequence(viaState *V)
 // Becaue it should only be called once
 void via_execute(viaState *V)
 {
-    VIA_ASSERT(V->tstate != viaThreadState::RUNNING, "via_execute() called on thread with status RUNNING");
-    VIA_ASSERT(V->tstate != viaThreadState::DEAD, "via_execute() called on dead thread");
+    VIA_ASSERT(V->tstate != viaThreadState::RUNNING, "via_execute() called on running thread (tstate=RUNNING)");
+    VIA_ASSERT(V->tstate != viaThreadState::DEAD, "via_execute() called on dead thread (tstate=DEAD)");
 
     V->tstate = viaThreadState::RUNNING;
 
@@ -246,6 +247,83 @@ dispatch:
         VM_NEXT();
     }
 
+    case OpCode::PUSH:
+    {
+        viaFunction *frame = new viaFunction{
+            0,
+            false,
+            false,
+            "LC",
+            viaS_top(V->stack),
+            {},
+            {},
+        };
+
+        viaS_push(V->stack, frame);
+        VM_NEXT();
+    }
+
+    case OpCode::POP:
+    {
+        if (V->stack->size == 1)
+        {
+            via_setexitdata(V, 1, "Attempt to POP global (root) stack frame");
+            VM_EXIT();
+        }
+
+        viaS_pop(V->stack);
+        VM_NEXT();
+    }
+
+    case OpCode::PUSHARG:
+    {
+        viaOperand arg = VM_OPND(0);
+        viaValue arg_val;
+
+        if (VIA_LIKELY(arg.type == viaOperandType_t::Register))
+            arg_val = *via_getregister(V, arg.val_register);
+        else
+            arg_val = via_toviavalue(V, arg);
+
+        viaS_push(V->arguments, arg_val);
+
+        VM_NEXT();
+    }
+
+    case OpCode::POPARG:
+    {
+        viaOperand dst = VM_OPND(0);
+        viaValue val = viaS_top(V->arguments);
+
+        viaS_pop(V->arguments);
+        via_setregister(V, dst.val_register, val);
+        VM_NEXT();
+    }
+
+    case OpCode::PUSHRET:
+    {
+        viaOperand ret = VM_OPND(0);
+        viaValue ret_val;
+
+        if (VIA_LIKELY(ret.type == viaOperandType_t::Register))
+            ret_val = *via_getregister(V, ret.val_register);
+        else
+            ret_val = via_toviavalue(V, ret);
+
+        viaS_push(V->returns, ret_val);
+        VM_NEXT();
+    }
+
+    case OpCode::POPRET:
+    {
+        viaOperand dst = VM_OPND(0);
+        viaValue val = viaS_top(V->arguments);
+
+        viaS_pop(V->returns);
+        via_setregister(V, dst.val_register, val);
+        VM_NEXT();
+    }
+
     case OpCode::SETLOCAL:
     {
         viaOperand id = VM_OPND(0);
@@ -311,10 +389,8 @@ dispatch:
             VM_NEXT();
         }
 
-        // TODO: Implement stack unwinding to search for the variable
-
-        viaValue *global = via_getglobal(V, viaT_hashstring(V, id.val_identifier));
-        via_setregister(V, dst.val_register, *global);
+        viaValue global = via_getvariable(V, viaT_hashstring(V, id.val_identifier));
+        via_setregister(V, dst.val_register, global);
 
         VM_NEXT();
     }
@@ -508,7 +584,7 @@ dispatch:
         viaValue addrv = *via_getregister(V, raddr.val_register);
 
         VM_ASSERT(viaT_checkptr(V, addrv), "Expected Ptr for GCADD");
-        via_gcadd(V, reinterpret_cast<void *>(addrv.val_pointer));
+        via_gcadd(V, reinterpret_cast<viaValue *>(addrv.val_pointer));
 
         VM_NEXT();
     }
@@ -779,9 +855,9 @@ dispatch:
 
         // Set argc
         V->argc = static_cast<viaCallArgC_t>(argc.val_number);
+
         // Call function
         via_call(V, *via_getregister(V, rfn.val_register));
-
         VM_NEXT();
     }
 
@@ -1028,6 +1104,36 @@ dispatch:
 
         via_setregister(V, rdst.val_register, viaT_stackvalue(V, vstr));
 
+        VM_NEXT();
+    }
+
+    case OpCode::DEBUGREGISTERS:
+    {
+        viaOperand count = VM_OPND(0);
+
+        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of registers to debug");
+
+        viaD_printregistermap(V, static_cast<size_t>(count.val_number));
+        VM_NEXT();
+    }
+
+    case OpCode::DEBUGARGUMENTS:
+    {
+        viaOperand count = VM_OPND(0);
+
+        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of arguments to debug");
+
+        viaD_printargumentstack(V, static_cast<size_t>(count.val_number));
+        VM_NEXT();
+    }
+
+    case OpCode::DEBUGRETURNS:
+    {
+        viaOperand count = VM_OPND(0);
+
+        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of returns to debug");
+
+        viaD_printreturnstack(V, static_cast<size_t>(count.val_number));
         VM_NEXT();
     }
 

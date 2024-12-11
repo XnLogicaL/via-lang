@@ -2,40 +2,16 @@
 
 #pragma once
 
-#include "vm.h"
+#include "api.h"
 #include "types.h"
 #include "libutils.h"
 #include "common.h"
 
 #include <filesystem>
 
-namespace ::viastl
+namespace via::lib
 {
 
-void fs_read(VirtualMachine *vm)
-{
-    viaRegister pr = get_arg_register(0);
-    viaValue p = vm->rget(pr);
+void fs_read(viaState *V);
 
-    vm->vm_assert(p.type == viaValueType::String, "Expected String for argument 0 of fs_read");
-
-    std::ifstream f(p.val_string);
-    std::string buf;
-    std::string aux;
-
-    while (std::getline(f, aux))
-    {
-        buf += aux;
-    }
-
-    f.close();
-
-    viaValue v = viaValue(strdup(buf.c_str()));
-    viaRegister rr = get_ret_register(0);
-
-    vm->rset(rr, v);
-
-    return;
-}
-
-} // namespace ::viastl
+} // namespace via::lib

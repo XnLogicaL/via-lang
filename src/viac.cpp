@@ -14,16 +14,7 @@
 #include "Parser/parser.h"
 #include "Parser/print.h"
 
-#define __VIA_VER "0.2.1"
-
-/*
-Define custom allocation sizes using these macros:
-
-#define __VIA_LEXER_ALLOC_SIZE
-#define __VIA_PARSER_ALLOC_SIZE
-
-Define before the main() function!
-*/
+#define VIA_VERSION ""
 
 int main(int argc, char *argv[])
 {
@@ -33,12 +24,6 @@ int main(int argc, char *argv[])
     using namespace Preprocessing;
 
     using namespace FileReader;
-
-// DO NOT remove
-// This program relies on GCC 14.x features and is not compatible with MSVC
-#ifdef _MSC_VER
-    VIA_ASSERT(false, "MSVC is not supported, compile using GCC/Clang instead!");
-#endif
 
     VIA_ASSERT(argc < 2, "Incorrect usage.\n  Correct usage: via <file> <flags>");
 

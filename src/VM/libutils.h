@@ -13,8 +13,7 @@
     if (!(cond)) \
         return;
 
-#define WRAPVAL(val) viaT_stackvalue(V, val)
-
+#define WRAPVAL(val) viaT_stackvalue(V, new viaCFunction{.ptr = val, .error_handler = false})
 #define ARG_MISMATCH(i, e, g) std::format("Expected {}, got {} for argument #{}\n", (e), (g), (i))
 
 namespace via::lib

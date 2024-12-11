@@ -210,7 +210,7 @@ void viaL_loadmathlib(viaState *V)
     static const viaHashMap_t<viaRawString_t, viaValue> math_properties = {
 
         // Constants
-        {"pi", WRAPVAL(3.1415926535)},
+        {"pi", viaT_stackvalue(V, 3.1415926535)},
 
         // Functions
         {"exp", WRAPVAL(math_exp)},

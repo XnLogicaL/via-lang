@@ -16,10 +16,11 @@
 #include "Parser/parser.h"
 #include "Compiler/compiler.h"
 
-#include "VM/vm.h"
-#include "VM/libstd/vlstd.h"
-#include "VM/libstd/vlmath.h"
-#include "VM/libstd/vlvec.h"
+#include "VM/api.h"
+#include "VM/execute.h"
+#include "VM/vlbase.h"
+#include "VM/vlmath.h"
+#include "VM/vlvec3.h"
 
 #define __VIA_VER "0.2.1"
 
@@ -39,7 +40,6 @@ int main(int argc, char *argv[])
     using namespace Parsing;
     using namespace Preprocessing;
     using namespace Compilation;
-    using namespace VM;
     using namespace FileReader;
 
 // DO NOT remove
@@ -80,10 +80,8 @@ int main(int argc, char *argv[])
     Compiler compiler(ast);
     auto instrs = compiler.compile();
 
-    VirtualMachine vm(instrs);
-    viastl::vstl_load(&vm);
-    viastl::vstl_math_load(&vm);
-    vm.init();
+    viaState *V = viaA_newstate(instrs);
+    via_execute(V);
 
     return 0;
 }

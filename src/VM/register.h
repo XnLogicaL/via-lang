@@ -20,7 +20,8 @@ struct viaRAllocatorState
 
 inline viaValue *viaR_getregister(viaRAllocatorState *R, viaRegister reg)
 {
-    return R->head + reg;
+    viaValue *ptr = R->head + reg;
+    return ptr;
 }
 
 inline void viaR_setregister(viaRAllocatorState *R, viaRegister reg, viaValue val)
@@ -30,5 +31,6 @@ inline void viaR_setregister(viaRAllocatorState *R, viaRegister reg, viaValue va
 }
 
 viaRAllocatorState *viaR_newstate(viaState *);
+void viaR_initialize(viaRAllocatorState *);
 
 } // namespace via

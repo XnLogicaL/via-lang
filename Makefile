@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g -ftemplate-depth=2048
+CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g
 
 # Include directories
 INCLUDE_DIRS = ./src ./include
@@ -16,7 +16,7 @@ VIAC_MAIN = ./src/viac.cpp
 VIAVM_MAIN = ./src/viavm.cpp
 
 # Declare phony targets
-.PHONY: all clean
+.PHONY: all clean asm
 
 # Default target to build all executables
 all: $(TARGETS)
@@ -34,7 +34,12 @@ viavm: $(VIAVM_MAIN) $(COMMON_SOURCES)
 	@echo "Building viavm (virtual machine)..."
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^
 
+# Generate assembly files for each source file
+asm:
+	@echo "Generating assembly files..."
+	$(CXX) $(CXXFLAGS) -S $(COMMON_SOURCES) $(INCLUDES)
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning up..."
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) $(shell find ./src -name '*.s')

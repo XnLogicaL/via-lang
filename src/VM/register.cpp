@@ -5,16 +5,27 @@
 namespace via
 {
 
-viaRAllocatorState *viaR_newstate(viaState *V)
+void viaR_initialize(viaRAllocatorState *R)
+{
+    for (viaRegister i = 0; i < VIA_REGISTERCOUNT; i++)
+    {
+        viaValue monostate_val;
+        monostate_val.type = viaValueType::Monostate;
+        monostate_val.next = nullptr;
+        monostate_val.prev = nullptr;
+
+        viaR_setregister(R, i, monostate_val);
+    }
+}
+
+viaRAllocatorState *viaR_newstate(viaState *)
 {
     auto *state = new viaRAllocatorState;
 
     void *alloc = std::malloc(sizeof(viaValue) * VIA_REGISTERCOUNT);
     state->head = reinterpret_cast<viaValue *>(alloc);
 
-    // Initialize registers with Nil
-    for (viaRegister i = 0; i < VIA_REGISTERCOUNT; i++)
-        viaR_setregister(state, i, viaT_stackvalue(V));
+    viaR_initialize(state);
 
     return state;
 }

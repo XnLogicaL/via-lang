@@ -67,7 +67,7 @@ viaState *viaA_newstate(const std::vector<viaInstruction> &pipeline)
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    viaFunction *mainf = new viaFunction{0, VIA_MAIN_ID, {}, {}, {}};
+    viaFunction *mainf = new viaFunction{0, false, false, VIA_MAIN_ID, {}, {}, {}};
     viaS_push(V->stack, mainf);
 
     return V;

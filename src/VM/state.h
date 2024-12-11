@@ -8,24 +8,32 @@
 // Identifier of the defacto "main" function
 // Kinda useless but it can stay
 #ifndef VIA_MAIN_ID
-#define VIA_MAIN_ID ("__via_main__")
+#    define VIA_MAIN_ID ("__via_main__")
 #endif
 
 /*
  * Context switching in via consists of 2 steps;
  * - Saving the state
- * - Restoring the state (either by setting V->savestate to true or by calling via_restorestate(V))
- * This allows for a very fast context switching systen--at least one with minimal overhead-
+ * - Restoring the state (either by setting V->savestate to true
+ * (requires waiting for the next VM cycle, exists for multithreading support) or by calling via_restorestate(V))
+ * This allows for a very fast context switching systen--at least one with minimal overhead
  * Context switching in via has some special traits; for example,
- * the state (e.g stack state) of pointers inside the viaState-
+ * the state (e.g stack state) of pointers inside the viaState
  * object are never saved, instead they are passed onto the copy as-is, since they're pointers,
- * creating an efficient way to "shallow-save" the state-
+ * creating an efficient way to "shallow-save" the state
  * of the VM
  */
 namespace via
 {
 
-// Stores the amount of threads, basically
+/*
+ * Stores the amount of threads
+ * Has this attribute because
+ * the compiler doesn't like the fact that it's used in other translation units but not this particular one
+ */
+#if defined(__GNUC__) || defined(__clang__)
+[[maybe_unused]]
+#endif
 static viaThreadId_t __thread_id__ = 0;
 
 // Forward declarations
@@ -90,7 +98,7 @@ struct alignas(64) viaState
     bool restorestate; // Tells the VM to restore the state on the next VM cycle (to sstate)
 
     float yieldfor;        // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
-    int argc;              // Argument count, for both CALL and FASTCALLX
+    viaCallArgC_t argc;    // Argument count, for both CALL and FASTCALLX
     viaCallType calltype;  // Stores the current calling convention
     viaThreadState tstate; // Thread state
     viaState *sstate;      // Saved state

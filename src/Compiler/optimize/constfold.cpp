@@ -16,14 +16,14 @@ namespace via::Compilation
 // Returns if the given expression is a constant expression that can be evaluated by the compiler
 bool _is_constexpr(const Parsing::AST::ExprNode &expr)
 {
-    if (auto lit = std::get_if<AST::LitExprNode>(&expr))
+    if (auto lit = std::get_if<AST::LiteralExprNode>(&expr))
         // Check literal type to make sure that it's a number
-        return lit->val.type == TokenType::LIT_INT || lit->val.type == TokenType::LIT_FLOAT;
-    else if (auto un_expr = std::get_if<AST::UnExprNode>(&expr))
+        return lit->value.type == TokenType::LIT_INT || lit->value.type == TokenType::LIT_FLOAT;
+    else if (auto un_expr = std::get_if<AST::UnaryExprNode>(&expr))
         return _is_constexpr(*un_expr->expr);
     else if (auto group_expr = std::get_if<AST::GroupExprNode>(&expr))
         return _is_constexpr(*group_expr->expr);
-    else if (auto bin_expr = std::get_if<AST::BinExprNode>(&expr))
+    else if (auto bin_expr = std::get_if<AST::BinaryExprNode>(&expr))
         return _is_constexpr(*bin_expr->lhs) && _is_constexpr(*bin_expr->rhs);
 
     return false;
@@ -32,16 +32,16 @@ bool _is_constexpr(const Parsing::AST::ExprNode &expr)
 // Evaluates a literal expression
 // Can only be a number literal
 // ! Does not perform sanity checks
-double _eval_litexpr(const Parsing::AST::LitExprNode &lit_expr)
+double _eval_litexpr(const Parsing::AST::LiteralExprNode &lit_expr)
 {
-    return std::stod(lit_expr.val.value);
+    return std::stod(lit_expr.value.value);
 }
 
 // Evaluates a binary expression using `_eval_litexpr` on lvalue and rvalue
-double _eval_binexpr(const Parsing::AST::BinExprNode &bin_expr)
+double _eval_binexpr(const Parsing::AST::BinaryExprNode &bin_expr)
 {
-    double lhs = _eval_litexpr(std::get<AST::LitExprNode>(*bin_expr.lhs));
-    double rhs = _eval_litexpr(std::get<AST::LitExprNode>(*bin_expr.rhs));
+    double lhs = _eval_litexpr(std::get<AST::LiteralExprNode>(*bin_expr.lhs));
+    double rhs = _eval_litexpr(std::get<AST::LiteralExprNode>(*bin_expr.rhs));
 
     switch (bin_expr.op.type)
     {
@@ -66,13 +66,13 @@ double _eval_binexpr(const Parsing::AST::BinExprNode &bin_expr)
 
 double _eval_expr(const Parsing::AST::ExprNode &expr)
 {
-    if (auto lit = std::get_if<AST::LitExprNode>(&expr))
+    if (auto lit = std::get_if<AST::LiteralExprNode>(&expr))
         return _eval_litexpr(*lit);
-    else if (auto un = std::get_if<AST::UnExprNode>(&expr))
+    else if (auto un = std::get_if<AST::UnaryExprNode>(&expr))
         return _eval_expr(*un->expr);
     else if (auto grp = std::get_if<AST::GroupExprNode>(&expr))
         return _eval_expr(*grp->expr);
-    else if (auto bin = std::get_if<AST::BinExprNode>(&expr))
+    else if (auto bin = std::get_if<AST::BinaryExprNode>(&expr))
         return _eval_binexpr(*bin);
 
     return 0.0f;
@@ -85,7 +85,7 @@ void optimize_constfold(Parsing::AST::ExprNode &expr)
 
     double expr_result = _eval_expr(expr);
     Token expr_token{TokenType::LIT_FLOAT, std::to_string(expr_result), 0, 0};
-    AST::LitExprNode new_expr(expr_token);
+    AST::LiteralExprNode new_expr(expr_token);
     expr = new_expr;
 }
 

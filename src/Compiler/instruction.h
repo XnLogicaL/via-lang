@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #ifndef VIA_OPERAND_COUNT
-#define VIA_OPERAND_COUNT 4
+#    define VIA_OPERAND_COUNT 4
 #endif
 
 namespace via
@@ -51,10 +51,15 @@ struct viaInstruction
     viaOperand operandv[VIA_OPERAND_COUNT];
 };
 
+namespace Compilation
+{
+
 viaInstruction viaC_newinstruction();
 viaInstruction viaC_newinstruction(const std::string &, const std::vector<viaOperand> &);
 
-const std::string viaC_compileinstruction(viaInstruction &) noexcept;
-const std::string viaC_compileoperand(viaOperand &) noexcept;
+std::string viaC_compileinstruction(viaInstruction &);
+std::string viaC_compileoperand(viaOperand &);
+
+} // namespace Compilation
 
 } // namespace via

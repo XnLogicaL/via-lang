@@ -6,10 +6,15 @@
 namespace via::Compilation
 {
 
-// clang-format off
-void Generator::pushinstr(viaInstruction instr) { instrs.push_back(instr); }
-void Generator::free_register(size_t offset) { registers[offset] = false; }
-// clang-format on
+void Generator::pushinstr(viaInstruction instr)
+{
+    instrs.push_back(instr);
+}
+
+void Generator::free_register(size_t offset)
+{
+    registers[offset] = false;
+}
 
 std::string Generator::compile()
 {
