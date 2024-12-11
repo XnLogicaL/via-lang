@@ -19,8 +19,18 @@
 #include <cmath>
 #include <cstdint>
 
+// Define the hot path threshold for the instruction dispatch loop
+// How many times an instruction will be executed before being flagged as "hot"
 #ifndef VIA_HOTPATH_THRESHOLD
 #    define VIA_HOTPATH_THRESHOLD 64
+#endif
+
+// Check for debug mode and warn the user about it's possible effects on behavior
+#ifdef VIA_DEBUG
+#    warning Compiling via in debug mode; optimizations will be disabled!
+#    ifdef VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE
+#        warning Enabling optimizations in debug mode may cause instability issues!
+#    endif
 #endif
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
