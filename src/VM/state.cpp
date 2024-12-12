@@ -82,16 +82,16 @@ void viaA_cleanupgstate(viaGlobalState *G)
 void viaA_cleanupstate(viaState *V)
 {
     viaA_cleanupgstate(V->G);
+    viaGC_cleanup(V->gc);
+    viaS_cleanupstate(V->stack);
+    viaS_cleanupstate(V->arguments);
+    viaS_cleanupstate(V->returns);
+    viaR_cleanupstate(V->ralloc);
 
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately
-    delete V->ihp;
-    delete V->stack;
+    delete[] V->ihp;
     delete V->labels;
-    delete V->ralloc;
-
-    viaGC_cleanup(V->gc);
-
     delete V;
 }
 

@@ -501,7 +501,7 @@ inline void via_callc(viaState *V, viaCFunction *cf)
 
     std::snprintf(buffer, sizeof(buffer), "<cfunction@0x%p>", addr);
 
-    viaFunction *freplica = new viaFunction{
+    viaFunction freplica = viaFunction{
         0,
         cf->error_handler,
         false,
@@ -511,7 +511,9 @@ inline void via_callc(viaState *V, viaCFunction *cf)
         {},
     };
 
-    viaS_push(V->stack, freplica);
+    // We can safely reference the functions address because it will be cleaned up after
+    // the C function stops executing, therefore it won't dangle
+    viaS_push(V->stack, &freplica);
     viaS_flush(V->returns);
 
     // Call function pointer

@@ -263,16 +263,16 @@ dispatch:
 #endif
         viaValue val = via_toviavalue(V, imm);
         via_setregister(V, rdst.val_register, val);
-
         VM_NEXT();
     }
 
     case OpCode::NIL:
     {
         viaOperand rdst = VM_OPND(0);
-        // Set register to nil
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for NIL destination");
+#endif
         via_setregister(V, rdst.val_register, viaT_stackvalue(V));
-
         VM_NEXT();
     }
 
@@ -316,7 +316,6 @@ dispatch:
             arg_val = via_toviavalue(V, arg);
 
         viaS_push(V->arguments, arg_val);
-
         VM_NEXT();
     }
 
@@ -324,7 +323,9 @@ dispatch:
     {
         viaOperand dst = VM_OPND(0);
         viaValue val = viaS_top(V->arguments);
-
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(dst), "Expected register for POPARG destination");
+#endif
         viaS_pop(V->arguments);
         via_setregister(V, dst.val_register, val);
         VM_NEXT();
@@ -348,7 +349,9 @@ dispatch:
     {
         viaOperand dst = VM_OPND(0);
         viaValue val = viaS_top(V->returns);
-
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(dst), "Expected register for POPRET destination");
+#endif
         viaS_pop(V->returns);
         via_setregister(V, dst.val_register, val);
         VM_NEXT();
@@ -358,9 +361,10 @@ dispatch:
     {
         viaOperand id = VM_OPND(0);
         viaOperand val = VM_OPND(1);
-
-        viaVariableIdentifier_t id_t = id.val_number;
-
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkidentifier(id), "Expected identifier for SETLOCAL id");
+#endif
+        viaVariableIdentifier_t id_t = viaT_hashstring(V, id.val_identifier);
         // Slow-path: loaded value is a register
         if (VIA_UNLIKELY(viaC_checkregister(val)))
             via_setvariable(V, id_t, *via_getregister(V, val.val_register));

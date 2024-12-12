@@ -164,7 +164,7 @@ viaStackState<T> *viaS_newstate()
 
 // Delete a stack state
 template<typename T>
-void viaS_deletestate(viaStackState<T> *S)
+void viaS_cleanupstate(viaStackState<T> *S)
 {
     std::free(S->sbp); // Free the stack memory
     delete S;          // Free the stack state

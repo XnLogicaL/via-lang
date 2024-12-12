@@ -1,10 +1,13 @@
 # Compiler and flags
-CXX = g++
+CXX = ccache g++
 CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g
 
 # Include directories
 INCLUDE_DIRS = ./src ./include
 INCLUDES = $(foreach dir, $(INCLUDE_DIRS), $(shell find $(dir) -type d -exec printf '-I%s ' {} \;))
+
+# Build directory
+BUILD_DIR = ./build
 
 # Common source files (shared by all executables)
 COMMON_SOURCES = $(shell find ./src -name '*.cpp' ! -name 'via.cpp' ! -name 'viac.cpp' ! -name 'viavm.cpp')
@@ -22,24 +25,24 @@ VIAVM_MAIN = ./src/viavm.cpp
 all: $(TARGETS)
 
 # Build rules for each executable
-via: $(VIA_MAIN) $(COMMON_SOURCES)
+via: $(BUILD_DIR)/via.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
 	@echo "Building via (main executable)..."
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
 
-viac: $(VIAC_MAIN) $(COMMON_SOURCES)
+viac: $(BUILD_DIR)/viac.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
 	@echo "Building viac (compiler)..."
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
 
-viavm: $(VIAVM_MAIN) $(COMMON_SOURCES)
+viavm: $(BUILD_DIR)/viavm.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
 	@echo "Building viavm (virtual machine)..."
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
 
-# Generate assembly files for each source file
-asm:
-	@echo "Generating assembly files..."
-	$(CXX) $(CXXFLAGS) -S $(COMMON_SOURCES) $(INCLUDES)
+# Generate object files in the build directory from source files
+$(BUILD_DIR)/%.o: ./src/%.cpp
+	@mkdir -p $(dir $@)  # Create the necessary directories for object files
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning up..."
-	rm -f $(TARGETS) $(shell find ./src -name '*.s')
+	@rm -rf $(BUILD_DIR) $(TARGETS)

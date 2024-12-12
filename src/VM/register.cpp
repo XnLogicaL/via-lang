@@ -5,6 +5,12 @@
 namespace via
 {
 
+void viaR_cleanupstate(viaRAllocatorState *R)
+{
+    std::free(R->head);
+    delete R;
+}
+
 void viaR_initialize(viaRAllocatorState *R)
 {
     for (viaRegister i = 0; i < VIA_REGISTERCOUNT; i++)

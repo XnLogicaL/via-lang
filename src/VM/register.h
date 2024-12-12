@@ -31,6 +31,7 @@ inline void viaR_setregister(viaRAllocatorState *R, viaRegister reg, viaValue va
 }
 
 viaRAllocatorState *viaR_newstate(viaState *);
+void viaR_cleanupstate(viaRAllocatorState *);
 void viaR_initialize(viaRAllocatorState *);
 
 } // namespace via

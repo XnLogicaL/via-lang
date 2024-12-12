@@ -32,7 +32,9 @@ int main(int argc, char const *argv[])
 
     lib::viaL_loadbaselib(V);
 
+    // Start VM execution
     via_execute(V);
+    viaA_cleanupstate(V);
 
     return 0;
 }
