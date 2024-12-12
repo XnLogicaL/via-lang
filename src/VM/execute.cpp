@@ -1357,12 +1357,14 @@ dispatch:
     case OpCode::LABEL:
     {
         viaOperand id = VM_OPND(0);
-        viaInstruction *addr = reinterpret_cast<viaInstruction *>(V->ip - V->ihp);
         viaLabelKey_t key = id.val_identifier;
+        viaInstruction *instr = V->ip;
 
-        (*V->labels)[key] = addr;
+        auto it = V->labels->find(key);
+        if (it != V->labels->end())
+            (*V->labels)[key] = instr;
 
-        while (addr < V->ibp)
+        while (V->ip < V->ibp)
         {
             if (V->ip->op == OpCode::END)
             {
