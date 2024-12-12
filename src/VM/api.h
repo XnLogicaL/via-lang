@@ -14,6 +14,7 @@
 #include "stack.h"
 #include "state.h"
 #include "types.h"
+#include <cmath>
 
 namespace via
 {
@@ -31,25 +32,6 @@ inline void via_setexitdata(viaState *V, viaExitCode_t exitc, const std::string 
 inline bool via_validjmpaddr(viaState *V, const viaInstruction *addr) noexcept
 {
     return (addr >= V->ihp) && (addr <= V->ibp);
-}
-
-inline void via_jmpto(viaState *V, const viaInstruction *addr)
-{
-    if (!via_validjmpaddr(V, addr))
-    {
-        via_setexitdata(V, 1, "Illegal jump: jump address out of bounds");
-        V->abrt = true;
-        return;
-    }
-
-    V->ip = const_cast<viaInstruction *>(addr);
-}
-
-// Jumps a given offset
-inline void via_jmp(viaState *V, viaJmpOffset_t offset)
-{
-    viaInstruction *addr = V->ip + offset;
-    via_jmpto(V, addr);
 }
 
 // Appends a pointer to the garbage collector free list
@@ -732,6 +714,81 @@ inline void via_restorestate(viaState *V)
 {
     *V = *V->sstate;
     V->sstate = nullptr;
+}
+
+inline viaValue via_arith(viaState *V, viaValue lhs, viaValue rhs, OpCode op)
+{
+#ifdef VIA_DEBUG
+    VIA_ASSERT(viaT_checknumber(V, rhs), "via_arith(): Expected Number for rhs");
+    VIA_ASSERT(rhs.val_number != 0.0f, "via_arith(): Expected non-zero Number for rhs");
+#endif
+    if (viaT_checknumber(V, lhs))
+    {
+        switch (op)
+        {
+        case OpCode::ADD:
+            return viaT_stackvalue(V, lhs.val_number + rhs.val_number);
+        case OpCode::SUB:
+            return viaT_stackvalue(V, lhs.val_number - rhs.val_number);
+        case OpCode::MUL:
+            return viaT_stackvalue(V, lhs.val_number * rhs.val_number);
+        case OpCode::DIV:
+            return viaT_stackvalue(V, lhs.val_number / rhs.val_number);
+        case OpCode::POW:
+            return viaT_stackvalue(V, std::pow(lhs.val_number, rhs.val_number));
+        case OpCode::MOD:
+            return viaT_stackvalue(V, std::fmod(lhs.val_number, rhs.val_number));
+        default:
+            break;
+        }
+
+        return viaT_stackvalue(V);
+    }
+    else if (viaT_checktable(V, lhs))
+    {
+        viaValue *mm = via_getmetamethod(V, lhs, op);
+
+        via_pushargument(V, lhs);
+        via_pushargument(V, rhs);
+        via_call(V, *mm);
+
+        return via_popreturn(V);
+    }
+
+    via_setexitdata(V, 1, "Invalid arithmetic operator");
+    V->abrt = true;
+    return viaT_stackvalue(V);
+}
+
+inline void via_iarith(viaState *, viaValue *lhs, viaValue rhs, OpCode op)
+{
+#ifdef VIA_DEBUG
+    VIA_ASSERT(viaT_checknumber(V, rhs), "via_arith(): Expected Number for rhs");
+    VIA_ASSERT(rhs.val_number != 0.0f, "via_arith(): Expected non-zero Number for rhs");
+#endif
+    switch (op)
+    {
+    case OpCode::IADD:
+        lhs->val_number += rhs.val_number;
+        break;
+    case OpCode::ISUB:
+        lhs->val_number -= rhs.val_number;
+        break;
+    case OpCode::IMUL:
+        lhs->val_number *= rhs.val_number;
+        break;
+    case OpCode::IDIV:
+        lhs->val_number /= rhs.val_number;
+        break;
+    case OpCode::IPOW:
+        lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
+        break;
+    case OpCode::IMOD:
+        lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
+        break;
+    default:
+        break;
+    }
 }
 
 } // namespace via

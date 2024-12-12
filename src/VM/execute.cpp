@@ -440,34 +440,21 @@ dispatch:
         viaOperand rlhs = VM_OPND(1);
         viaOperand rrhs = VM_OPND(2);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for ADD destination");
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for ADD lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for ADD rhs");
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
+        viaValue lhs, rhs;
 
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for ADD rvalue");
-#endif
-            via_setregister(V, rdst.val_register, viaT_stackvalue(V, lhs->val_number + rhs->val_number));
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::ADD);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for ADD lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            via_setregister(V, rdst.val_register, via_popreturn(V));
-        }
-#ifdef VIA_DEBUG
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for ADD");
-#endif
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::ADD));
         VM_NEXT();
     }
     case OpCode::SUB:
@@ -476,34 +463,21 @@ dispatch:
         viaOperand rlhs = VM_OPND(1);
         viaOperand rrhs = VM_OPND(2);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for SUB destination");
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for SUB lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for SUB rhs");
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
+        viaValue lhs, rhs;
 
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for SUB rvalue");
-#endif
-            via_setregister(V, rdst.val_register, viaT_stackvalue(V, lhs->val_number - rhs->val_number));
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::SUB);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for SUB lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            via_setregister(V, rdst.val_register, via_popreturn(V));
-        }
-#ifdef VIA_DEBUG
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for SUB");
-#endif
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::SUB));
         VM_NEXT();
     }
     case OpCode::MUL:
@@ -512,34 +486,21 @@ dispatch:
         viaOperand rlhs = VM_OPND(1);
         viaOperand rrhs = VM_OPND(2);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for MUL destination");
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for MUL lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for MUL rhs");
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
+        viaValue lhs, rhs;
 
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for MUL rvalue");
-#endif
-            via_setregister(V, rdst.val_register, viaT_stackvalue(V, lhs->val_number * rhs->val_number));
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::MUL);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for MUL lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            via_setregister(V, rdst.val_register, via_popreturn(V));
-        }
-#ifdef VIA_DEBUG
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for MUL");
-#endif
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::MUL));
         VM_NEXT();
     }
     case OpCode::DIV:
@@ -548,34 +509,67 @@ dispatch:
         viaOperand rlhs = VM_OPND(1);
         viaOperand rrhs = VM_OPND(2);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for DIV destination");
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for DIV lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for DIV rhs");
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
+        viaValue lhs, rhs;
 
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for DIV rvalue");
-#endif
-            via_setregister(V, rdst.val_register, viaT_stackvalue(V, lhs->val_number / rhs->val_number));
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::DIV);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for DIV lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            via_setregister(V, rdst.val_register, via_popreturn(V));
-        }
-#ifdef VIA_DEBUG
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for DIV");
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::DIV));
+        VM_NEXT();
+    }
+    case OpCode::POW:
+    {
+        viaOperand rdst = VM_OPND(0);
+        viaOperand rlhs = VM_OPND(1);
+        viaOperand rrhs = VM_OPND(2);
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
+        viaValue lhs, rhs;
+
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
+        else
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::POW));
+        VM_NEXT();
+    }
+    case OpCode::MOD:
+    {
+        viaOperand rdst = VM_OPND(0);
+        viaOperand rlhs = VM_OPND(1);
+        viaOperand rrhs = VM_OPND(2);
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+#endif
+        viaValue lhs, rhs;
+
+        if (VIA_LIKELY(viaC_checkregister(rlhs)))
+            lhs = *via_getregister(V, rlhs.val_register);
+        else
+            lhs = via_toviavalue(V, rlhs);
+
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
+
+        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::MOD));
         VM_NEXT();
     }
 
@@ -584,33 +578,15 @@ dispatch:
         viaOperand rlhs = VM_OPND(0);
         viaOperand rrhs = VM_OPND(1);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for IADD lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for IADD rhs");
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
-
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for IADD rvalue");
-#endif
-            lhs->val_number += rhs->val_number;
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::ADD);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for IADD lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            *lhs = via_popreturn(V);
-        }
-#ifdef VIA_DEBUG
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for IADD");
-#endif
+            rhs = via_toviavalue(V, rrhs);
+
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IADD);
         VM_NEXT();
     }
     case OpCode::ISUB:
@@ -618,33 +594,15 @@ dispatch:
         viaOperand rlhs = VM_OPND(0);
         viaOperand rrhs = VM_OPND(1);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for ISUB lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for ISUB rhs");
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
-
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for ISUB rvalue");
-#endif
-            lhs->val_number -= rhs->val_number;
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::SUB);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for ISUB lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            *lhs = via_popreturn(V);
-        }
-#ifdef VIA_DEBUG
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for ISUB");
-#endif
+            rhs = via_toviavalue(V, rrhs);
+
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::ISUB);
         VM_NEXT();
     }
     case OpCode::IMUL:
@@ -652,33 +610,15 @@ dispatch:
         viaOperand rlhs = VM_OPND(0);
         viaOperand rrhs = VM_OPND(1);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for IMUL lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for IMUL rhs");
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
-
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for IMUL rvalue");
-#endif
-            lhs->val_number *= rhs->val_number;
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::MUL);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for IMUL lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            *lhs = via_popreturn(V);
-        }
-#ifdef VIA_DEBUG
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for IADD");
-#endif
+            rhs = via_toviavalue(V, rrhs);
+
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IMUL);
         VM_NEXT();
     }
     case OpCode::IDIV:
@@ -686,54 +626,47 @@ dispatch:
         viaOperand rlhs = VM_OPND(0);
         viaOperand rrhs = VM_OPND(1);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for IDIV lhs");
-        VM_ASSERT(viaC_checkregister(rrhs), "Expected register for IDIV rhs");
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue *lhs = via_getregister(V, rlhs.val_register);
-        viaValue *rhs = via_getregister(V, rrhs.val_register);
-
-        if (VIA_LIKELY(viaT_checknumber(V, *lhs)))
-        {
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checknumber(V, *rhs), "Expected Number for IDIV rvalue");
-#endif
-            lhs->val_number /= rhs->val_number;
-        }
-        else if (VIA_UNLIKELY(viaT_checktable(V, *lhs)))
-        {
-            viaValue *mm = via_getmetamethod(V, *lhs, OpCode::DIV);
-#ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected Callable metamethod for IDIV lvalue");
-#endif
-            via_pushargument(V, *rhs);
-            via_call(V, *mm);
-            *lhs = via_popreturn(V);
-        }
-#ifdef VIA_DEBUG
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
         else
-            VM_ASSERT(false, "Expected valid lvalue for IDIV");
-#endif
+            rhs = via_toviavalue(V, rrhs);
+
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IDIV);
         VM_NEXT();
     }
-
     case OpCode::IPOW:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand num = VM_OPND(1);
-
-        viaValue *pdst = via_getregister(V, dst.val_register);
-        viaValue numn;
-
-        // Fast-path: num is a constant number
-        if (VIA_LIKELY(num.type == viaOperandType_t::Number))
-            numn.val_number = num.val_number;
+        viaOperand rlhs = VM_OPND(0);
+        viaOperand rrhs = VM_OPND(1);
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+#endif
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
         else
-            // Exponent is in register, fetch it
-            numn = *via_getregister(V, num.val_register);
+            rhs = via_toviavalue(V, rrhs);
 
-        // Perform the power operation
-        pdst->val_number = std::pow(pdst->val_number, numn.val_number);
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IPOW);
+        VM_NEXT();
+    }
+    case OpCode::IMOD:
+    {
+        viaOperand rlhs = VM_OPND(0);
+        viaOperand rrhs = VM_OPND(1);
+#ifdef VIA_DEBUG
+        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+#endif
+        viaValue rhs;
+        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
+            rhs = *via_getregister(V, rrhs.val_register);
+        else
+            rhs = via_toviavalue(V, rrhs);
 
+        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IMOD);
         VM_NEXT();
     }
 

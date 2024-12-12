@@ -1,7 +1,5 @@
-LOADGLOBAL @print, R0;
-LABEL @print;
-PUSHARG "Hello, world!";
+LOADGLOBAL @println, R0;
+ADD R1, 34, 35;
+PUSHARG R1;
 CALL R0, 1;
 EXIT 0;
-END;
-JL @print;
