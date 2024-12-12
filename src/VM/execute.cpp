@@ -82,9 +82,15 @@
 
 // Macro for jumping to a jump address
 // Immediately dispatches the VM
-#define VM_JMPTO(to) \
+#define VM_JMPTO(addr) \
     { \
-        via_jmpto(V, to); \
+        if (!via_validjmpaddr(V, addr)) \
+        { \
+            via_setexitdata(V, 1, "Illegal jump: jump address out of bounds"); \
+            V->abrt = true; \
+            return; \
+        } \
+        V->ip = addr; \
         VM_DISPATCH(); \
     }
 
@@ -92,8 +98,7 @@
 // position Immediately dispatches VM
 #define VM_JMP(offset) \
     { \
-        via_jmpto(V, V->ip + offset); \
-        VM_DISPATCH(); \
+        VM_JMPTO(V->ip + offset); \
     }
 
 namespace via
@@ -1204,12 +1209,11 @@ dispatch:
     case OpCode::JL:
     {
         viaOperand label = VM_OPND(0);
-
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        VM_JMPTO(it->second);
+        VM_JMPTO(it->second + 1);
         VM_NEXT();
     }
 
@@ -1228,7 +1232,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLZ ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1248,7 +1252,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLEQ ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1268,7 +1272,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1288,7 +1292,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1308,7 +1312,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1328,7 +1332,7 @@ dispatch:
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second);
+            VM_JMPTO(it->second + 1);
 
         VM_NEXT();
     }
@@ -1361,7 +1365,7 @@ dispatch:
         viaInstruction *instr = V->ip;
 
         auto it = V->labels->find(key);
-        if (it != V->labels->end())
+        if (it == V->labels->end())
             (*V->labels)[key] = instr;
 
         while (V->ip < V->ibp)
