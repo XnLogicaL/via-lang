@@ -1,3 +1,0 @@
-#.clangd
-CompileFlags:
-  Add: [-VIA_DEBUG]

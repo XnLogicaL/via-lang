@@ -433,6 +433,12 @@ void SyntaxAnalyzer::check_decl()
         // Consume keyword
         consume();
 
+        if (peek().type == TokenType::KW_FUNC)
+        {
+            check_func();
+            return;
+        }
+
         // Check for the `const` keyword
         // If present mark declaration as constant
         if (peek().type == TokenType::KW_CONST)

@@ -1,0 +1,12 @@
+local a: Number = 34
+local b: Number = 35
+
+local func main() {
+    println("Hello")
+
+    local c = a + b
+    println(c)
+}
+
+println("Calling function")
+main()

@@ -6,17 +6,16 @@
  * This is due to the performance critical nature of it's contents
  */
 
+#define VIA_DEBUG
+
 #include "execute.h"
 #include "api.h"
-#include "bytecode.h"
 #include "core.h"
-#include "instruction.h"
 #include "shared.h"
 #include "state.h"
 #include "types.h"
 #include "debug.h"
 #include <chrono>
-#include <cmath>
 #include <cstdint>
 
 // Define the hot path threshold for the instruction dispatch loop
@@ -237,7 +236,7 @@ dispatch:
             via_setregister(V, rdst.val_register, viaT_stackvalue(V));
         }
         else
-            // Basically just LI lmao
+            // Basically just LOAD lmao
             via_setregister(V, rdst.val_register, via_toviavalue(V, rsrc));
 
         VM_NEXT();
@@ -259,12 +258,12 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LI:
+    case OpCode::LOAD:
     {
         viaOperand rdst = VM_OPND(0);
         viaOperand imm = VM_OPND(1);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for LI destination");
+        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for LOAD destination");
 #endif
         viaValue val = via_toviavalue(V, imm);
         via_setregister(V, rdst.val_register, val);
@@ -364,8 +363,8 @@ dispatch:
 
     case OpCode::SETLOCAL:
     {
-        viaOperand id = VM_OPND(0);
-        viaOperand val = VM_OPND(1);
+        viaOperand val = VM_OPND(0);
+        viaOperand id = VM_OPND(1);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkidentifier(id), "Expected identifier for SETLOCAL id");
 #endif
@@ -381,8 +380,8 @@ dispatch:
 
     case OpCode::LOADLOCAL:
     {
-        viaOperand id = VM_OPND(0);
-        viaOperand dst = VM_OPND(1);
+        viaOperand dst = VM_OPND(0);
+        viaOperand id = VM_OPND(1);
 
         viaVariableIdentifier_t id_t = id.val_number;
 
@@ -406,8 +405,8 @@ dispatch:
 
     case OpCode::LOADGLOBAL:
     {
-        viaOperand id = VM_OPND(0);
-        viaOperand dst = VM_OPND(1);
+        viaOperand dst = VM_OPND(0);
+        viaOperand id = VM_OPND(1);
 
         via_loadglobal(V, viaT_hashstring(V, id.val_identifier), dst.val_register);
 
@@ -416,21 +415,23 @@ dispatch:
 
     case OpCode::LOADVAR:
     {
-        viaOperand id = VM_OPND(0);
-        viaOperand dst = VM_OPND(1);
+        viaOperand dst = VM_OPND(0);
+        viaOperand id = VM_OPND(1);
 
-        viaVariableIdentifier_t id_t = id.val_number;
-        viaValue local = via_getvariable(V, id_t);
+        viaVariableIdentifier_t id_t = viaT_hashstring(V, id.val_identifier);
+        viaValue val = viaT_stackvalue(V, viaValueType::Nil);
 
-        if (!viaT_checknil(V, local))
+        for (viaFunction *frame : *V->stack)
         {
-            via_setregister(V, dst.val_register, local);
-            VM_NEXT();
+            auto it = frame->locals.find(id_t);
+            if (it != frame->locals.end())
+            {
+                val = it->second;
+                break;
+            }
         }
 
-        viaValue global = via_getvariable(V, viaT_hashstring(V, id.val_identifier));
-        via_setregister(V, dst.val_register, global);
-
+        via_setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 

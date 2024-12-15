@@ -36,13 +36,27 @@ std::string viaC_compileinstruction(viaInstruction &instr)
 {
     std::string operands_str;
 
+    // Append operands with proper formatting
     for (size_t i = 0; i < instr.operandc; i++)
     {
         viaOperand operand = instr.operandv[i];
-        operands_str += viaC_compileoperand(operand) + " ";
+        operands_str += viaC_compileoperand(operand) + ", ";
     }
 
-    return std::format("{} {};\n", ENUM_NAME(instr.op), operands_str);
+    // Remove the trailing ", " if any operands were added
+    if (!operands_str.empty())
+    {
+        operands_str.pop_back(); // Remove last space
+        operands_str.pop_back(); // Remove last comma
+    }
+
+    // Format the instruction with schema: [HEX OPCODE] [OPCODE NAME] [OPERANDS]
+    return std::format(
+        "0x{:02X} {:<8} {}",
+        static_cast<unsigned>(instr.op), // Hex opcode, padded to 4 chars
+        ENUM_NAME(instr.op),             // Opcode name, padded to 4 chars
+        operands_str                     // Operand list
+    );
 }
 
 std::string viaC_compileoperand(viaOperand &oper)
@@ -50,17 +64,19 @@ std::string viaC_compileoperand(viaOperand &oper)
     switch (oper.type)
     {
     case viaOperandType_t::Bool:
-        return oper.val_boolean ? "true" : "false";
+        return std::string(oper.val_boolean ? "true" : "false");
     case viaOperandType_t::Identifier:
         return std::format("@{}", oper.val_identifier);
     case viaOperandType_t::Number:
         return std::to_string(oper.val_number);
     case viaOperandType_t::String:
-        return oper.val_string;
+        return std::format("\"{}\"", oper.val_string);
     case viaOperandType_t::Register:
         return std::format("R{}", oper.val_register);
+    case viaOperandType_t::Nil:
+        return std::string("nil");
     default:
-        return "";
+        return std::string(ENUM_NAME(oper.type));
     }
 }
 
@@ -87,6 +103,33 @@ bool viaC_checkstring(const viaOperand &oper)
 bool viaC_checkidentifier(const viaOperand &oper)
 {
     return oper.type == viaOperandType_t::Identifier;
+}
+
+viaOperand viaC_newoperand()
+{
+    return {.type = viaOperandType_t::Nil};
+}
+
+viaOperand viaC_newoperand(double x)
+{
+    return {.type = viaOperandType_t::Number, .val_number = x};
+}
+
+viaOperand viaC_newoperand(bool b)
+{
+    return {.type = viaOperandType_t::Bool, .val_boolean = b};
+}
+
+viaOperand viaC_newoperand(const char *s, bool id)
+{
+    if (id)
+        return {.type = viaOperandType_t::Identifier, .val_identifier = s};
+    return {.type = viaOperandType_t::String, .val_string = s};
+}
+
+viaOperand viaC_newoperand(viaRegister reg)
+{
+    return {.type = viaOperandType_t::Register, .val_register = reg};
 }
 
 } // namespace via::Compilation

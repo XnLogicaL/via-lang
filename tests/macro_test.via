@@ -1,0 +1,5 @@
+macro printf(__fmt, ...) {
+    print(string.format(__fmt, ...))
+}
+
+printf!("Hello, %s!", "World")

@@ -184,19 +184,26 @@ inline viaValue via_loadvariable(viaState *V, viaVariableIdentifier_t id, viaReg
     return val;
 }
 
-// Sets the variable declared with <id>
+inline void via_setlocal(viaState *V, viaVariableIdentifier_t id, viaValue val)
+{
+    viaFunction *frame = viaS_top(V->stack);
+    frame->locals[id] = val;
+}
+
 inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue val)
 {
     for (viaFunction *frame : *V->stack)
     {
-        viaValue var = frame->locals[id];
-        // Check if the variable has been declared or not
-        // It can never be monostate again if declared once
-        if (viaT_checkmonostate(V, var))
+        auto it = frame->locals.find(id);
+        if (it == frame->locals.end())
             continue;
 
         frame->locals[id] = val;
+        return; // Stop after setting the variable in the nearest frame
     }
+
+    // If variable doesn't exist, we declare a new local
+    via_setlocal(V, id, val);
 }
 
 // Similar to `via_getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller
@@ -760,7 +767,7 @@ inline viaValue via_arith(viaState *V, viaValue lhs, viaValue rhs, OpCode op)
     return viaT_stackvalue(V);
 }
 
-inline void via_iarith(viaState *, viaValue *lhs, viaValue rhs, OpCode op)
+inline void via_iarith(viaState *V, viaValue *lhs, viaValue rhs, OpCode op)
 {
 #ifdef VIA_DEBUG
     VIA_ASSERT(viaT_checknumber(V, rhs), "via_arith(): Expected Number for rhs");

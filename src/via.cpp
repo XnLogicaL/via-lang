@@ -22,17 +22,6 @@
 #include "VM/vlmath.h"
 #include "VM/vlvec3.h"
 
-#define __VIA_VER "0.2.1"
-
-/*
-Define custom allocation sizes using these macros:
-
-#define __VIA_LEXER_ALLOC_SIZE
-#define __VIA_PARSER_ALLOC_SIZE
-
-Define before the main() function!
-*/
-
 int main(int argc, char *argv[])
 {
     using namespace via;
@@ -42,13 +31,7 @@ int main(int argc, char *argv[])
     using namespace Compilation;
     using namespace FileReader;
 
-// DO NOT remove
-// This program relies on GCC 14.x features and is not compatible with MSVC
-#ifdef _MSC_VER
-    VIA_ASSERT(false, "MSVC is not supported, compile using GCC/Clang instead!");
-#endif
-
-    VIA_ASSERT(argc < 2, "Incorrect usage.\n  Correct usage: via <file> <flags>");
+    VIA_ASSERT(argc >= 2, "Incorrect usage.\n  Correct usage: via <file> <flags>");
 
     flags::flags *flag = new flags::flags(argc, argv);
     std::string code;
@@ -80,8 +63,14 @@ int main(int argc, char *argv[])
     Compiler compiler(ast);
     auto instrs = compiler.compile();
 
+    if (flag->passed("-bc"))
+        for (viaInstruction instr : instrs)
+            std::cout << viaC_compileinstruction(instr) << "\n";
+
     viaState *V = viaA_newstate(instrs);
+    lib::viaL_loadbaselib(V);
     via_execute(V);
+    viaA_cleanupstate(V);
 
     return 0;
 }

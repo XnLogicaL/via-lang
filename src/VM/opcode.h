@@ -13,7 +13,7 @@ enum class OpCode
     // Register Operations
     MOV, // Move value from one register to another <dst :: viaRegister> <src :: viaRegister>
     CPY,
-    LI,   // Load immediate value into register <dst :: viaRegister> <val :: Any>
+    LOAD, // Load immediate value into register <dst :: viaRegister> <val :: Any>
     DUP,  // Duplicate a register value
     SWAP, // Swap values between two registers
     NIL,  // Sets a register to nil

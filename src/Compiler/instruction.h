@@ -19,11 +19,12 @@ using viaRegister = uint32_t;
 // viaOperand declarations
 enum class viaOperandType_t : uint8_t
 {
+    Nil,
     Number,
     Bool,
     String,
     Register,
-    Identifier
+    Identifier,
 };
 
 struct viaOperand
@@ -65,6 +66,12 @@ bool viaC_checknumber(const viaOperand &);
 bool viaC_checkbool(const viaOperand &);
 bool viaC_checkstring(const viaOperand &);
 bool viaC_checkidentifier(const viaOperand &);
+
+viaOperand viaC_newoperand();
+viaOperand viaC_newoperand(double);
+viaOperand viaC_newoperand(bool);
+viaOperand viaC_newoperand(const char *, bool);
+viaOperand viaC_newoperand(viaRegister);
 
 } // namespace Compilation
 

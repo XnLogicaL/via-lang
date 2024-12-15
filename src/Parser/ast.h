@@ -90,7 +90,6 @@ using ExprNode = std::variant<
     CallExprNode,
     IndexExprNode,
     TypeCastExprNode,
-    BracketIndexExprNode,
     VarExprNode>;
 
 struct LiteralExprNode
@@ -140,12 +139,6 @@ struct TypeCastExprNode
     ExprNode *expr;
 };
 
-struct BracketIndexExprNode
-{
-    ExprNode *object;
-    ExprNode *index;
-};
-
 struct VarExprNode
 {
     Token ident;
@@ -165,6 +158,10 @@ struct FunctionDeclStmtNode;
 struct IfStmtNode;
 struct SwitchStmtNode;
 struct ReturnStmtNode;
+struct StructDeclStmtNode;
+struct NamespaceDeclStmtNode;
+struct ContinueStmtNode;
+struct BreakStmtNode;
 
 using StmtNode = std::variant<
     LocalDeclStmtNode,
@@ -177,7 +174,11 @@ using StmtNode = std::variant<
     FunctionDeclStmtNode,
     IfStmtNode,
     SwitchStmtNode,
-    ReturnStmtNode>;
+    ReturnStmtNode,
+    StructDeclStmtNode,
+    NamespaceDeclStmtNode,
+    ContinueStmtNode,
+    BreakStmtNode>;
 
 struct TypedParamNode
 {
@@ -204,7 +205,7 @@ struct CallStmtNode
 {
     ExprNode *callee;
     std::vector<ExprNode> args;
-    std::vector<TypeNode> type_args;
+    std::vector<TypeNode> generics;
 };
 
 struct AssignStmtNode
@@ -221,9 +222,9 @@ struct WhileStmtNode
 
 struct ForStmtNode
 {
-    StmtNode *init;
-    ExprNode *condition;
-    StmtNode *step;
+    Token keys;
+    Token values;
+    ExprNode *iterator;
     ScopeStmtNode *body;
 };
 
@@ -236,16 +237,16 @@ struct FunctionDeclStmtNode
 {
     Token ident;
     std::vector<TypedParamNode> params;
-    std::vector<Token> type_params;
+    std::vector<Token> generics;
     ScopeStmtNode *body;
-    bool is_const;
+    bool is_global;
 };
 
 struct IfStmtNode
 {
     ExprNode *condition;
     ScopeStmtNode *then_body;
-    std::optional<ScopeStmtNode *> else_body;
+    std::optional<ScopeStmtNode> else_body;
     std::vector<ElifStmtNode> elif_branches;
 };
 
@@ -255,16 +256,11 @@ struct ElifStmtNode
     ScopeStmtNode *body;
 };
 
-struct DefaultStmtNode
-{
-    ScopeStmtNode *body;
-};
-
 struct SwitchStmtNode
 {
     ExprNode *condition;
     std::vector<CaseStmtNode> cases;
-    std::optional<DefaultStmtNode> default_case;
+    std::optional<ScopeStmtNode> default_case;
 };
 
 struct CaseStmtNode
@@ -276,6 +272,26 @@ struct CaseStmtNode
 struct ReturnStmtNode
 {
     std::vector<ExprNode> values;
+};
+
+struct StructDeclStmtNode
+{
+    Token ident;
+    std::vector<StmtNode> declarations;
+};
+
+struct NamespaceDeclStmtNode
+{
+    Token ident;
+    std::vector<StmtNode> declarations;
+};
+
+struct BreakStmtNode
+{
+};
+
+struct ContinueStmtNode
+{
 };
 
 // Root AST Node

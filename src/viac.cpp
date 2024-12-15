@@ -14,6 +14,18 @@
 #include "Parser/parser.h"
 #include "Parser/print.h"
 
+#include "Compiler/gen.h"
+#include "Compiler/compiler.h"
+
+#include "VM/api.h"
+#include "VM/debug.h"
+#include "VM/execute.h"
+#include "VM/vlrand.h"
+#include "VM/state.h"
+#include "VM/vlbase.h"
+#include "VM/vlmath.h"
+#include "VM/vlvec3.h"
+
 #define VIA_VERSION ""
 
 int main(int argc, char *argv[])
@@ -22,10 +34,11 @@ int main(int argc, char *argv[])
     using namespace Tokenization;
     using namespace Parsing;
     using namespace Preprocessing;
+    using namespace Compilation;
 
     using namespace FileReader;
 
-    VIA_ASSERT(argc < 2, "Incorrect usage.\n  Correct usage: via <file> <flags>");
+    VIA_ASSERT(argc >= 2, "Incorrect usage.\n  Correct usage: via <file> <flags>");
 
     flags::flags *flag = new flags::flags(argc, argv);
     std::string code;
@@ -54,7 +67,11 @@ int main(int argc, char *argv[])
     Parser parser = Parser(vsc);
     AST::AST *ast = parser.parse_program();
 
-    std::cout << AST::stringify_ast(*ast) << "\n";
+    Compiler compiler(ast);
+    std::vector<viaInstruction> instrs = compiler.compile();
+
+    for (viaInstruction instr : instrs)
+        std::cout << viaC_compileinstruction(instr) << "\n";
 
     return 0;
 }

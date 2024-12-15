@@ -10,7 +10,7 @@
 
 #ifndef __VIA_PARSER_ALLOC_SIZE
 // Default allocation size set to 8MiB
-#define __VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024)
+#    define __VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024)
 #endif
 
 namespace via::Parsing
@@ -61,18 +61,18 @@ private:
     AST::ExprNode *parse_prim_expr();
 
     // Statement parsing functions
-    AST::TypedParamNode parse_parameter();
-    AST::LocalDeclStmtNode parse_local_declaration();
-    AST::GlobalDeclStmtNode parse_global_declaration();
-    AST::CallStmtNode parse_call_statement();
-    AST::ReturnStmtNode parse_return_statement();
-    AST::AssignStmtNode parse_assignment_statement();
-    AST::WhileStmtNode parse_while_statement();
-    AST::ForStmtNode parse_for_statement();
-    AST::IfStmtNode parse_if_statement();
-    AST::SwitchStmtNode parse_switch_statement();
-    AST::FunctionDeclStmtNode parse_function_declaration();
-    AST::ScopeStmtNode parse_scope_statement();
+    AST::TypedParamNode *parse_parameter();
+    AST::LocalDeclStmtNode *parse_local_declaration();
+    AST::GlobalDeclStmtNode *parse_global_declaration();
+    AST::CallStmtNode *parse_call_statement(AST::ExprNode *expr);
+    AST::AssignStmtNode *parse_assignment_statement(AST::ExprNode *expr);
+    AST::ReturnStmtNode *parse_return_statement();
+    AST::WhileStmtNode *parse_while_statement();
+    AST::ForStmtNode *parse_for_statement();
+    AST::IfStmtNode *parse_if_statement();
+    AST::SwitchStmtNode *parse_switch_statement();
+    AST::FunctionDeclStmtNode *parse_function_declaration();
+    AST::ScopeStmtNode *parse_scope_statement();
     AST::StmtNode *parse_statement();
 };
 
