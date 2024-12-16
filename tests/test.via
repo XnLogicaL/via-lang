@@ -4,7 +4,7 @@ local b: Number = 35
 local func main() {
     println("Hello")
 
-    local c = a + b
+    local c: Number = a + b
     println(c)
 }
 

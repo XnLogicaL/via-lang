@@ -15,11 +15,11 @@ viaInstruction viaC_newinstruction()
     return instr;
 }
 
-viaInstruction viaC_newinstruction(const std::string &op_str, const std::vector<viaOperand> &operands)
+viaInstruction viaC_newinstruction(OpCode op, const std::vector<viaOperand> &operands)
 {
     viaInstruction instr;
 
-    instr.op = ENUM_CAST(OpCode, op_str).value_or(OpCode::NOP);
+    instr.op = op;
     instr.operandc = operands.size();
 
     size_t i = 0;

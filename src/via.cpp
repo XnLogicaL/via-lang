@@ -61,7 +61,11 @@ int main(int argc, char *argv[])
     AST::AST *ast = parser.parse_program();
 
     Compiler compiler(ast);
-    auto instrs = compiler.compile();
+    compiler.add_default_passes();
+    compiler.compile();
+    compiler.optimize();
+
+    auto instrs = compiler.get();
 
     if (flag->passed("-bc"))
         for (viaInstruction instr : instrs)

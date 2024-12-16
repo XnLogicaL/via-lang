@@ -26,10 +26,10 @@ def run_with_callgrind():
 def analyze_callgrind_output():
     via_log_message(f"Analyzing Callgrind output: {callgrind_output}")
     if os.path.exists(callgrind_output):
-        stdout, stderr = run_command(f'kcachegrind {callgrind_output}')
+        stdout, stderr = run_command(f'callgrind_annotate --tree=both --inclusive=yes --auto=yes --show-percs=yes {callgrind_output} > tree')
         if stderr:
             via_log_message(f"Error during execution:\n{stderr}")
-        run_command(f'rm -rf {callgrind_output}')
+        run_command(f"rm -rf {callgrind_output}")
     else:
         via_log_message("No Callgrind output found.")
 

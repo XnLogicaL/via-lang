@@ -56,7 +56,7 @@ namespace Compilation
 {
 
 viaInstruction viaC_newinstruction();
-viaInstruction viaC_newinstruction(const std::string &, const std::vector<viaOperand> &);
+viaInstruction viaC_newinstruction(OpCode, const std::vector<viaOperand> &);
 
 std::string viaC_compileinstruction(viaInstruction &);
 std::string viaC_compileoperand(viaOperand &);

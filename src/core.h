@@ -11,14 +11,16 @@
 // Asserts <cond>
 // If false, aborts after throwing an error that includes debug information such as file name and line that the macro was initially expanded
 #define VIA_ASSERT(cond, err) \
-    do \
     { \
         if (!(cond)) \
         { \
             std::cerr << "VIA_ASSERT(): " << (err) << "\n  in file " << __FILE__ << ", line " << __LINE__ << '\n'; \
             std::abort(); \
         } \
-    } while (0)
+    }
+
+#define UNREACHABLE() \
+    VIA_ASSERT(false, "Unreachable");
 
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)

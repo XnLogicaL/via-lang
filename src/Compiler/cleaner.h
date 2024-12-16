@@ -1,12 +1,23 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
+#pragma once
+
 #include "common.h"
-#include "Parser/ast.h"
 
 namespace via::Compilation
 {
 
-void optimize_inline_const(Parsing::AST::AST *, std::string, Parsing::AST::ExprNode);
-void optimize_inline_func(Parsing::AST::AST *, std::string, Parsing::AST::FunctionDeclStmtNode);
+class Cleaner
+{
+public:
+    Cleaner() = default;
+    ~Cleaner() = default;
+
+    void add_malloc(const void *);
+    void clean();
+
+private:
+    std::vector<const void *> free_list;
+};
 
 } // namespace via::Compilation
