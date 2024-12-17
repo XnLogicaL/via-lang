@@ -72,25 +72,13 @@ struct OptionalTypeNode
 
 struct LiteralExprNode;
 struct UnaryExprNode;
-struct GroupExprNode;
 struct BinaryExprNode;
 struct LambdaExprNode;
 struct CallExprNode;
 struct IndexExprNode;
-struct TypeCastExprNode;
-struct BracketIndexExprNode;
 struct VarExprNode;
 
-using ExprNode = std::variant<
-    LiteralExprNode,
-    UnaryExprNode,
-    GroupExprNode,
-    BinaryExprNode,
-    LambdaExprNode,
-    CallExprNode,
-    IndexExprNode,
-    TypeCastExprNode,
-    VarExprNode>;
+using ExprNode = std::variant<LiteralExprNode, UnaryExprNode, BinaryExprNode, LambdaExprNode, CallExprNode, IndexExprNode, VarExprNode>;
 
 struct LiteralExprNode
 {
@@ -98,11 +86,6 @@ struct LiteralExprNode
 };
 
 struct UnaryExprNode
-{
-    ExprNode *expr;
-};
-
-struct GroupExprNode
 {
     ExprNode *expr;
 };
@@ -131,12 +114,6 @@ struct IndexExprNode
 {
     ExprNode *object;
     ExprNode *index;
-};
-
-struct TypeCastExprNode
-{
-    TypeNode type;
-    ExprNode *expr;
 };
 
 struct VarExprNode

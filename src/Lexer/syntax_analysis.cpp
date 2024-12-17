@@ -1,13 +1,12 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#include "syntax.h"
-#include "highlighter.h" // Have to do this because ld is fucking stupid
+#include "syntax_analysis.h"
 
 // Macro for reporting a syntax error
 // Yes, this is yet another abstraction over io
 #define REPORT_ERROR(message) \
     { \
-        token_error(container, pos, message, Severity::ERROR); \
+        emitter.out(container, pos, message, Emitter::Severity::ERROR); \
         failed = true; \
     } \
     while (0)
@@ -19,9 +18,7 @@
     do \
     { \
         if (peek().type == expected_type) \
-        { \
             consume(); \
-        } \
         else \
         { \
             REPORT_ERROR(std::format("Unexpected token '{}', Expected type {}", peek().value, magic_enum::enum_name(expected_type))); \
@@ -43,7 +40,6 @@ const std::string get_value_type(const Token &tok) noexcept
         return "viaNumber";
     case TokenType::LIT_BOOL:
         return "Bool";
-    case TokenType::LIT_CHAR:
     case TokenType::LIT_STRING:
         return "String";
     case TokenType::LIT_NIL:
@@ -449,7 +445,7 @@ void SyntaxAnalyzer::check_decl()
             if (is_global)
             {
                 // Emit a warning
-                token_error(container, pos, "Redundant usage of 'const'; global declarations are implicitly constant", Severity::WARNING);
+                emitter.out(container, pos, "Redundant usage of 'const'; global declarations are implicitly constant", Emitter::Severity::WARNING);
             }
 
             // Consume const
@@ -488,7 +484,7 @@ void SyntaxAnalyzer::check_decl()
 
             // Otherwise, report an "info"
             // This is because explicit type declarations are not required in non-property declarations
-            token_error(
+            emitter.out(
                 container,
                 pos - 1,
                 std::format(
@@ -496,7 +492,7 @@ void SyntaxAnalyzer::check_decl()
                     container.tokens.at(pos - 1).value,
                     get_value_type(peek(1))
                 ),
-                Severity::INFO
+                Emitter::Severity::INFO
             );
         }
 

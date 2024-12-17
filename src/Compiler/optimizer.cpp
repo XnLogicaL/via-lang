@@ -5,15 +5,35 @@
 namespace via::Compilation
 {
 
-// Adds an optimization pass to the manager
-void PassManager::add_pass(std::unique_ptr<OptimizationPass> pass)
+// Adds an AST optimization pass to the manager
+void PassManager::add_astree_pass(std::unique_ptr<OptimizationPass> pass)
 {
-    if (pass->type == PassType::ASTree)
-        astree_passes.push_back(std::move(pass));
-    else if (pass->type == PassType::Bytecode)
-        bytecode_passes.push_back(std::move(pass));
-    else
-        UNREACHABLE();
+    astree_passes.push_back(std::move(pass));
+}
+
+
+// Adds a bytecode optimization pass to the manager
+void PassManager::add_bytecode_pass(std::unique_ptr<OptimizationPass> pass)
+{
+    bytecode_passes.push_back(std::move(pass));
+}
+
+void PassManager::apply_astree(Generator &gen, Bytecode &bytecode)
+{
+    for (auto &pass : astree_passes)
+    {
+        if (pass->is_applicable(bytecode))
+            pass->apply(gen, bytecode);
+    }
+}
+
+void PassManager::apply_bytecode(Generator &gen, Bytecode &bytecode)
+{
+    for (auto &pass : bytecode_passes)
+    {
+        if (pass->is_applicable(bytecode))
+            pass->apply(gen, bytecode);
+    }
 }
 
 void PassManager::apply_all(Generator &gen, Bytecode &bytecode)

@@ -6,7 +6,6 @@
 #include "optimizer.h"
 #include "cleaner.h"
 #include "instruction.h"
-#include "bshift.h"
 #include "Parser/ast.h"
 
 namespace via::Compilation
@@ -33,8 +32,7 @@ public:
         // Everything else should be automatically cleaned up
     }
 
-    void compile();
-    void optimize();
+    void generate();
     void add_default_passes();
     void add_pass(std::unique_ptr<OptimizationPass>);
     Instructions_t get();

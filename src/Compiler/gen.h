@@ -47,6 +47,7 @@ public:
     // Utility
     size_t iota();
     bool is_constexpr(Parsing::AST::ExprNode, int);
+    void evaluate_constexpr(Parsing::AST::ExprNode *);
 
 public:
     ArenaAllocator alloc;
@@ -66,6 +67,7 @@ private:
     viaRegister generate_literal_expression(Parsing::AST::LiteralExprNode);
     viaRegister generate_unary_expression(Parsing::AST::UnaryExprNode);
     viaRegister generate_binary_expression(Parsing::AST::BinaryExprNode);
+    viaRegister generate_lambda_expression(Parsing::AST::LambdaExprNode);
     viaRegister generate_index_expression(Parsing::AST::IndexExprNode);
     viaRegister generate_call_expression(Parsing::AST::CallExprNode);
     viaRegister generate_variable_expression(Parsing::AST::VarExprNode);

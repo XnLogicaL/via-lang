@@ -6,7 +6,6 @@
 
 #include "common.h"
 #include "token.h"
-
 #include "def.h"
 #include "import.h"
 #include "macro.h"

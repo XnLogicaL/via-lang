@@ -1,6 +1,8 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "compiler.h"
+#include "bshift.h"
+#include "constfold.h"
 
 namespace via::Compilation
 {
@@ -8,24 +10,23 @@ namespace via::Compilation
 using namespace via::Parsing;
 
 // Compiles the AST into instructions
-void Compiler::compile()
-{
-    bytecode = generator.generate();
-}
-
-// Optimize the bytecode by invoking the PassManager back-end
-void Compiler::optimize()
+void Compiler::generate()
 {
     static bool __called__ = false;
-    VIA_ASSERT(!__called__, "Compiler::optimize() called twice");
+    VIA_ASSERT(!__called__, "Compiler::generate() called twice");
     __called__ = true;
-    pass_manager.apply_all(generator, *bytecode);
+
+    // Optimize AST before generating bytecode
+    pass_manager.apply_astree(generator, *bytecode);
+    bytecode = generator.generate();
+    pass_manager.apply_bytecode(generator, *bytecode);
 }
 
 void Compiler::add_default_passes()
 {
     // Bitshift optimization
     add_pass(std::make_unique<BitShiftOptimizationPass>());
+    add_pass(std::make_unique<ConstFoldOptimizationPass>());
 }
 
 void Compiler::add_pass(std::unique_ptr<OptimizationPass> pass)

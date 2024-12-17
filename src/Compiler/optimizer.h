@@ -10,17 +10,9 @@
 namespace via::Compilation
 {
 
-enum class PassType
-{
-    ASTree,
-    Bytecode,
-};
-
 class OptimizationPass
 {
 public:
-    PassType type;
-
     OptimizationPass() = default;
     virtual ~OptimizationPass() = default;
 
@@ -37,7 +29,10 @@ public:
     PassManager() = default;
     ~PassManager() = default;
 
-    void add_pass(std::unique_ptr<OptimizationPass>);
+    void add_astree_pass(std::unique_ptr<OptimizationPass>);
+    void add_bytecode_pass(std::unique_ptr<OptimizationPass>);
+    void apply_astree(Generator &, Bytecode &);
+    void apply_bytecode(Generator &, Bytecode &);
     void apply_all(Generator &, Bytecode &);
 
 private:

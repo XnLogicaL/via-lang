@@ -9,8 +9,8 @@
 
 // This value will be passed onto the arena allocator of the tokenizer
 // Esentially the maximum amounts of
-#ifndef __VIA_LEXER_ALLOC_SIZE
-#   define __VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
+#ifndef VIA_LEXER_ALLOC_SIZE
+#    define VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
 #endif
 
 namespace via::Tokenization
@@ -27,7 +27,7 @@ public:
         , pos(0)
         , line(1)
         , offset(0)
-        , m_alloc(__VIA_LEXER_ALLOC_SIZE)
+        , alloc(VIA_LEXER_ALLOC_SIZE)
     {
     }
 
@@ -51,7 +51,7 @@ private:
     size_t pos;
     size_t line;
     size_t offset;
-    ArenaAllocator m_alloc;
+    ArenaAllocator alloc;
 };
 
 } // namespace via::Tokenization

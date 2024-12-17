@@ -3,20 +3,23 @@
 #pragma once
 
 #include "common.h"
+#include "gen.h"
+#include "bytecode.h"
 #include "optimizer.h"
 #include "Parser/ast.h"
 
 namespace via::Compilation
 {
 
-class ConstFoldOptimizationPass : public OptimizationPass
+class DeadCodeEliminationOptimizationPass : public OptimizationPass
 {
 public:
     void apply(Generator &, Bytecode &) override;
-    bool is_applicable(const Bytecode &) const override;
 
 private:
-    void fold_constexpr(Generator &, Parsing::AST::ExprNode *);
+    bool always_true(Generator &, Parsing::AST::IfStmtNode);
+    bool always_false(Generator &, Parsing::AST::IfStmtNode);
+    void remove_unreachable_code_in_scope(Generator &, Parsing::AST::ScopeStmtNode *);
 };
 
 } // namespace via::Compilation

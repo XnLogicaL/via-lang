@@ -62,8 +62,7 @@ int main(int argc, char *argv[])
 
     Compiler compiler(ast);
     compiler.add_default_passes();
-    compiler.compile();
-    compiler.optimize();
+    compiler.generate();
 
     auto instrs = compiler.get();
 

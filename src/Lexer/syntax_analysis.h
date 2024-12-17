@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "container.h"
+#include "highlighter.h"
 #include "token.h"
 
 namespace via::Tokenization
@@ -12,10 +13,24 @@ namespace via::Tokenization
 
 class SyntaxAnalyzer
 {
-    viaSourceContainer& container;
+public:
+    // Constructs a SyntaxAnalyzer instance with the provided source container
+    explicit SyntaxAnalyzer(viaSourceContainer &container)
+        : container(container)
+    {
+    }
+
+    // Analyzes the tokens in the source container for syntactical correctness.
+    // Returns true if the analysis is successful, otherwise false.
+    bool analyze();
+
+private:
+    Emitter emitter;
+    viaSourceContainer &container;
     size_t pos = 0;
     bool failed = false;
 
+private:
     // Returns if the internal `pos` variable is in bounds
     constexpr bool in_bounds() noexcept;
 
@@ -79,17 +94,6 @@ class SyntaxAnalyzer
     // Checks for invalid or unexpected tokens in the source code
     // Ensures proper error handling for syntax violations
     void check_invalid_token();
-
-public:
-    // Constructs a SyntaxAnalyzer instance with the provided source container
-    explicit SyntaxAnalyzer(viaSourceContainer& container)
-        : container(container)
-    {
-    }
-
-    // Analyzes the tokens in the source container for syntactical correctness.
-    // Returns true if the analysis is successful, otherwise false.
-    bool analyze();
 };
 
 } // namespace via::Tokenization

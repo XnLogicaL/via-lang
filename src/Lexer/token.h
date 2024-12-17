@@ -5,8 +5,6 @@
 #include "common.h"
 #include "core.h"
 
-#include <format>
-
 namespace via::Tokenization
 {
 
@@ -66,7 +64,6 @@ enum class TokenType
     LIT_INT,    // Integer literals
     LIT_FLOAT,  // Floating-point literals
     LIT_STRING, // String literals
-    LIT_CHAR,   // Character literals
     LIT_BOOL,   // Boolean literals
     LIT_NIL,    // Nil literal (just "nil" lol)
 

@@ -5,7 +5,7 @@
 
 // Macro for quickly construction tokens
 // Uses arena allocator for emplacing the newly created token
-#define TOKEN(type, val, line, off) *m_alloc.emplace<Token>(type, val, line, off)
+#define TOKEN(type, val, line, off) *alloc.emplace<Token>(type, val, line, off)
 
 // We use this rather than `using namespace via::Tokenization`
 namespace via::Tokenization
@@ -158,9 +158,8 @@ Token Tokenizer::read_string()
             }
         }
         else
-        {
             value.push_back(source.at(pos));
-        }
+
         pos++;
         offset++;
     }
@@ -277,10 +276,10 @@ Token Tokenizer::get_token()
     case '?':
         return TOKEN(TokenType::QUESTION, "?", line, start_offset);
     default:
-        return {TokenType::UNKNOWN, std::string(1, ch), line, start_offset};
+        return TOKEN(TokenType::UNKNOWN, std::string(1, ch), line, start_offset);
     }
 
-    return {TokenType::UNKNOWN, "", line, start_offset};
+    return TOKEN(TokenType::UNKNOWN, "", line, start_offset);
 }
 
 viaSourceContainer Tokenizer::tokenize()

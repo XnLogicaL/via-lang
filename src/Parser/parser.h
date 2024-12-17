@@ -8,9 +8,8 @@
 #include "token.h"
 #include "container.h"
 
-#ifndef __VIA_PARSER_ALLOC_SIZE
-// Default allocation size set to 8MiB
-#    define __VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024)
+#ifndef VIA_PARSER_ALLOC_SIZE
+#    define VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024) // 8MB
 #endif
 
 namespace via::Parsing
@@ -18,9 +17,12 @@ namespace via::Parsing
 
 class Parser
 {
+    using Token = Tokenization::Token;
+    using TokenType = Tokenization::TokenType;
+
 public:
-    Parser(const viaSourceContainer &vsc)
-        : m_alloc(ArenaAllocator(__VIA_PARSER_ALLOC_SIZE))
+    Parser(viaSourceContainer &vsc)
+        : alloc(VIA_PARSER_ALLOC_SIZE)
         , container(vsc)
         , current_position(0)
     {
@@ -30,28 +32,27 @@ public:
 
 private:
     // Memory allocator
-    ArenaAllocator m_alloc;
-
+    ArenaAllocator alloc;
     // Token management
-    const viaSourceContainer &container;
+    viaSourceContainer &container;
     size_t current_position;
 
 private:
     // Core token manipulation functions
-    Tokenization::Token consume();
-    Tokenization::Token peek(int offset = 0) const;
+    Token consume();
+    Token peek(int offset = 0) const;
 
     // Token checking utilities
     bool is_value(const std::string &value = "", int offset = 0) const;
-    bool is_type(Tokenization::TokenType type = Tokenization::TokenType::UNKNOWN, int offset = 0) const;
+    bool is_type(TokenType type = TokenType::UNKNOWN, int offset = 0) const;
 
     // Parsing helper functions
     std::vector<AST::ExprNode> parse_call_arguments();
     std::vector<AST::TypeNode> parse_call_type_arguments();
 
     template<typename IndexExprType, typename IndexCallExprType>
-    AST::ExprNode *parse_index_expr(AST::ExprNode *base_expr);
-    AST::ExprNode *parse_literal_or_group_expr(Tokenization::Token current);
+    AST::ExprNode *parse_index_expr(AST::ExprNode *);
+    AST::ExprNode *parse_literal_or_group_expr(Token);
 
     // Type and expression parsing functions
     AST::TypeNode *parse_type_generic();
@@ -64,8 +65,8 @@ private:
     AST::TypedParamNode *parse_parameter();
     AST::LocalDeclStmtNode *parse_local_declaration();
     AST::GlobalDeclStmtNode *parse_global_declaration();
-    AST::CallStmtNode *parse_call_statement(AST::ExprNode *expr);
-    AST::AssignStmtNode *parse_assignment_statement(AST::ExprNode *expr);
+    AST::CallStmtNode *parse_call_statement(AST::ExprNode *);
+    AST::AssignStmtNode *parse_assignment_statement(AST::ExprNode *);
     AST::ReturnStmtNode *parse_return_statement();
     AST::WhileStmtNode *parse_while_statement();
     AST::ForStmtNode *parse_for_statement();

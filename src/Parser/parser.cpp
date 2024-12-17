@@ -68,7 +68,7 @@ ExprNode *Parser::parse_bin_expr(int precedence)
         };
 
         // Construct a BinaryExprNode
-        lhs = m_alloc.emplace<ExprNode>(ExprNode(bin));
+        lhs = alloc.emplace<ExprNode>(ExprNode(bin));
     }
 
     return lhs;
@@ -92,13 +92,13 @@ ExprNode *Parser::parse_prim_expr()
             std::vector<ExprNode> args = parse_call_arguments();
 
             CallExprNode call;
-            call.callee = m_alloc.emplace<ExprNode>(varid);
+            call.callee = alloc.emplace<ExprNode>(varid);
             call.args = args;
 
-            return m_alloc.emplace<ExprNode>(call);
+            return alloc.emplace<ExprNode>(call);
         }
 
-        return m_alloc.emplace<ExprNode>(varid);
+        return alloc.emplace<ExprNode>(varid);
     }
 
     case TokenType::LIT_INT:
@@ -107,7 +107,7 @@ ExprNode *Parser::parse_prim_expr()
     {
         LiteralExprNode lit;
         lit.value = token;
-        return m_alloc.emplace<ExprNode>(lit);
+        return alloc.emplace<ExprNode>(lit);
     }
 
     case TokenType::PAREN_OPEN:
@@ -185,7 +185,7 @@ TypeNode *Parser::parse_type_generic()
         consume(); // Consume '>'
     }
 
-    return m_alloc.emplace<TypeNode>(type);
+    return alloc.emplace<TypeNode>(type);
 }
 
 TypeNode *Parser::parse_type()
@@ -205,7 +205,7 @@ TypeNode *Parser::parse_type()
             utype.lhs = gen;
             utype.rhs = rtype;
 
-            return m_alloc.emplace<TypeNode>(utype);
+            return alloc.emplace<TypeNode>(utype);
         }
         case TokenType::PIPE:
         {
@@ -220,7 +220,7 @@ TypeNode *Parser::parse_type()
             VariantTypeNode var;
             var.types = types;
 
-            return m_alloc.emplace<TypeNode>(var);
+            return alloc.emplace<TypeNode>(var);
         }
         case TokenType::QUESTION:
         {
@@ -229,7 +229,7 @@ TypeNode *Parser::parse_type()
             OptionalTypeNode opt;
             opt.type = gen;
 
-            return m_alloc.emplace<TypeNode>(opt);
+            return alloc.emplace<TypeNode>(opt);
         }
         default:
             break;
@@ -241,7 +241,7 @@ TypeNode *Parser::parse_type()
     {
         consume();
 
-        TypeNode *ktype = m_alloc.emplace<TypeNode>(GenericTypeNode{
+        TypeNode *ktype = alloc.emplace<TypeNode>(GenericTypeNode{
             {
                 TokenType::IDENTIFIER,
                 "Number",
@@ -264,7 +264,7 @@ TypeNode *Parser::parse_type()
         table.ktype = ktype;
         table.vtype = parse_type();
 
-        return m_alloc.emplace<TypeNode>(table);
+        return alloc.emplace<TypeNode>(table);
     }
     else if (is_type(TokenType::PAREN_OPEN))
     {
@@ -276,7 +276,7 @@ TypeNode *Parser::parse_type()
 TypedParamNode *Parser::parse_parameter()
 {
     // Consume identifier
-    TypedParamNode *param = m_alloc.emplace<TypedParamNode>();
+    TypedParamNode *param = alloc.emplace<TypedParamNode>();
     param->ident = consume();
 
     if (is_type(TokenType::COLON))
@@ -293,7 +293,7 @@ LocalDeclStmtNode *Parser::parse_local_declaration()
     // Consume 'local'
     consume();
 
-    LocalDeclStmtNode *decl = m_alloc.emplace<LocalDeclStmtNode>();
+    LocalDeclStmtNode *decl = alloc.emplace<LocalDeclStmtNode>();
     decl->is_const = false;
 
     if (is_type(TokenType::KW_CONST))
@@ -324,7 +324,7 @@ GlobalDeclStmtNode *Parser::parse_global_declaration()
     // Consume 'local'
     consume();
 
-    GlobalDeclStmtNode *decl = m_alloc.emplace<GlobalDeclStmtNode>();
+    GlobalDeclStmtNode *decl = alloc.emplace<GlobalDeclStmtNode>();
 
     if (is_type(TokenType::KW_CONST))
         consume();
@@ -350,7 +350,7 @@ CallStmtNode *Parser::parse_call_statement(ExprNode *expr)
 {
     std::cout << "Parsing call at " << peek().to_string() << "\n";
 
-    CallStmtNode *call = m_alloc.emplace<CallStmtNode>();
+    CallStmtNode *call = alloc.emplace<CallStmtNode>();
     call->callee = expr;
 
     if (is_type(TokenType::OP_LT))
@@ -369,7 +369,7 @@ AssignStmtNode *Parser::parse_assignment_statement(ExprNode *expr)
 {
     consume();
 
-    AssignStmtNode *asgn = m_alloc.emplace<AssignStmtNode>();
+    AssignStmtNode *asgn = alloc.emplace<AssignStmtNode>();
     asgn->target = expr;
     asgn->value = parse_expr();
 
@@ -380,7 +380,7 @@ ReturnStmtNode *Parser::parse_return_statement()
 {
     consume();
 
-    ReturnStmtNode *ret = m_alloc.emplace<ReturnStmtNode>();
+    ReturnStmtNode *ret = alloc.emplace<ReturnStmtNode>();
     ret->values.push_back(*parse_expr());
 
     while (is_type(TokenType::COMMA))
@@ -396,7 +396,7 @@ WhileStmtNode *Parser::parse_while_statement()
 {
     consume();
 
-    WhileStmtNode *loop = m_alloc.emplace<WhileStmtNode>();
+    WhileStmtNode *loop = alloc.emplace<WhileStmtNode>();
     loop->condition = parse_expr();
     loop->body = parse_scope_statement();
 
@@ -407,7 +407,7 @@ ForStmtNode *Parser::parse_for_statement()
 {
     consume();
 
-    ForStmtNode *loop = m_alloc.emplace<ForStmtNode>();
+    ForStmtNode *loop = alloc.emplace<ForStmtNode>();
     loop->keys = consume();
     // Consume ','
     consume();
@@ -426,7 +426,7 @@ IfStmtNode *Parser::parse_if_statement()
 {
     consume();
 
-    IfStmtNode *ifs = m_alloc.emplace<IfStmtNode>();
+    IfStmtNode *ifs = alloc.emplace<IfStmtNode>();
     ifs->condition = parse_expr();
     ifs->then_body = parse_scope_statement();
 
@@ -434,7 +434,7 @@ IfStmtNode *Parser::parse_if_statement()
     {
         consume();
 
-        ElifStmtNode *elif = m_alloc.emplace<ElifStmtNode>();
+        ElifStmtNode *elif = alloc.emplace<ElifStmtNode>();
         elif->condition = parse_expr();
         elif->body = parse_scope_statement();
 
@@ -454,14 +454,14 @@ SwitchStmtNode *Parser::parse_switch_statement()
 {
     consume();
 
-    SwitchStmtNode *switchs = m_alloc.emplace<SwitchStmtNode>();
+    SwitchStmtNode *switchs = alloc.emplace<SwitchStmtNode>();
     switchs->condition = parse_expr();
 
     while (is_type(TokenType::KW_CASE))
     {
         consume();
 
-        CaseStmtNode *cases = m_alloc.emplace<CaseStmtNode>();
+        CaseStmtNode *cases = alloc.emplace<CaseStmtNode>();
         cases->value = parse_expr();
         cases->body = parse_scope_statement();
 
@@ -483,7 +483,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration()
     consume();
     consume();
 
-    FunctionDeclStmtNode *decl = m_alloc.emplace<FunctionDeclStmtNode>();
+    FunctionDeclStmtNode *decl = alloc.emplace<FunctionDeclStmtNode>();
     decl->is_global = is_global;
     decl->ident = consume();
 
@@ -522,7 +522,7 @@ ScopeStmtNode *Parser::parse_scope_statement()
 {
     consume();
 
-    ScopeStmtNode *scope = m_alloc.emplace<ScopeStmtNode>();
+    ScopeStmtNode *scope = alloc.emplace<ScopeStmtNode>();
 
     while (!is_type(TokenType::BRACE_CLOSE))
         scope->statements.push_back(*parse_statement());
@@ -534,7 +534,7 @@ ScopeStmtNode *Parser::parse_scope_statement()
 
 StmtNode *Parser::parse_statement()
 {
-#define emplace(expr) m_alloc.emplace<StmtNode>(expr)
+#define emplace(expr) alloc.emplace<StmtNode>(expr)
     switch (peek().type)
     {
     case TokenType::KW_LOCAL:
@@ -560,9 +560,9 @@ StmtNode *Parser::parse_statement()
     case TokenType::KW_NAMESPACE:
         return nullptr;
     case TokenType::KW_BREAK:
-        return emplace(*m_alloc.emplace<BreakStmtNode>());
+        return emplace(*alloc.emplace<BreakStmtNode>());
     case TokenType::KW_CONTINUE:
-        return emplace(*m_alloc.emplace<ContinueStmtNode>());
+        return emplace(*alloc.emplace<ContinueStmtNode>());
     case TokenType::KW_DO:
         consume();
         return emplace(*parse_scope_statement());
@@ -572,7 +572,7 @@ StmtNode *Parser::parse_statement()
 
         if (CallExprNode *call = std::get_if<CallExprNode>(expr))
         {
-            CallStmtNode *stmt = m_alloc.emplace<CallStmtNode>();
+            CallStmtNode *stmt = alloc.emplace<CallStmtNode>();
             stmt->callee = call->callee;
             stmt->args = call->args;
             stmt->generics = call->type_args;
@@ -591,7 +591,7 @@ StmtNode *Parser::parse_statement()
 
 AST::AST *Parser::parse_program()
 {
-    AST::AST *ast = m_alloc.emplace<AST::AST>();
+    AST::AST *ast = alloc.emplace<AST::AST>();
 
     for (Token tok : container.tokens)
     {
