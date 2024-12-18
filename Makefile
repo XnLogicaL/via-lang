@@ -1,5 +1,5 @@
 # Compiler and flags
-CXX = g++
+CXX = ccache g++
 CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g
 
 # Include directories
@@ -11,7 +11,7 @@ BUILD_DIR = ./build
 
 # Common source files (shared by all executables)
 COMMON_SOURCES = $(shell find ./src -name '*.cpp')
-COMMON_OBJECTS = $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/src/%.o)
+COMMON_OBJECTS = $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
 
 # CLI source files
 CLI_SOURCES = $(shell find ./CLI -name '*.cpp')
@@ -32,7 +32,7 @@ $(TARGET): $(COMMON_OBJECTS) $(CLI_OBJECTS)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_OBJECTS) $(CLI_OBJECTS) -o $(TARGET)
 
 # Generate object files for common sources (src)
-$(BUILD_DIR)/src/%.o: ./src/%.cpp
+$(BUILD_DIR)/%.o: ./src/%.cpp
 	@mkdir -p $(dir $@)  # Ensure build subdirectories exist
 	@echo "Compiling $< to $@..."
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
