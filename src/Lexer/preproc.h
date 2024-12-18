@@ -5,26 +5,50 @@
 #include <vector>
 
 #include "common.h"
+#include "container.h"
+#include "highlighter.h"
 #include "token.h"
 #include "def.h"
 #include "import.h"
 #include "macro.h"
 
-namespace via::Tokenization::Preprocessing
+#define PREPROCESSOR_ERROR(message) \
+    { \
+        emitter.out(container, pos, (message), Emitter::Severity::ERROR); \
+        failed = true; \
+    }
+
+namespace via::Tokenization
 {
 
 class Preprocessor
 {
 public:
-    Preprocessor(std::vector<Token> *toks)
-        : toks(toks)
+    ~Preprocessor() = default;
+    Preprocessor(viaSourceContainer &container)
+        : pos(0)
+        , failed(false)
+        , emitter(Emitter())
+        , container(container)
     {
     }
 
-    void preprocess();
+    bool preprocess();
 
 private:
-    std::vector<Token> *toks;
+    size_t pos;
+    bool failed;
+    Emitter emitter;
+    viaSourceContainer &container;
+
+private:
+    Token consume(size_t ahead = 1);
+    Token peek(int ahead = 0);
+
+    Macro parse_macro();
+    Definition parse_definition();
+    void expand_macro(const Macro &);
+    void expand_definition(const Definition &);
 };
 
-} // namespace via::Tokenization::Preprocessing
+} // namespace via::Tokenization

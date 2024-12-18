@@ -2,21 +2,40 @@
 
 #include "preproc.h"
 
-using namespace via::Tokenization;
-using namespace Preprocessing;
-
-void Preprocessor::preprocess()
+namespace via::Tokenization
 {
-    size_t pos = 0;
 
-    for (const auto &tok : *toks)
+Token Preprocessor::consume(size_t ahead)
+{
+    size_t old_pos = pos;
+    pos += ahead;
+    return container.tokens.at(old_pos);
+}
+
+Token Preprocessor::peek(int ahead)
+{
+    return container.tokens.at(pos + ahead);
+}
+
+bool Preprocessor::preprocess()
+{
+    for (const Token &tok : container.tokens)
     {
         if (tok.type == TokenType::KW_MACRO)
         {
-            Macro mac = parse_macro(toks, pos);
-            expand_macro(toks, mac);
+            Macro mac = parse_macro();
+            expand_macro(mac);
         }
-
-        pos++;
+        else if (tok.type == TokenType::KW_DEFINE)
+        {
+            Definition def = parse_definition();
+            expand_definition(def);
+        }
+        else
+            pos++;
     }
+
+    return failed;
 }
+
+} // namespace via::Tokenization

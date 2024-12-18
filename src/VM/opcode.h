@@ -118,6 +118,7 @@ enum class OpCode
     // Index Operations
     LOADIDX, // Load a value from a specified index
     SETIDX,  // Set a value at a specified index
+    NEXT,    // Returns the next element in a table
     LEN,     // Get the length of a collection or string
 
     TOSTRING, // Converts a value into a string, "nil" if impossible

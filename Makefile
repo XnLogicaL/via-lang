@@ -1,48 +1,49 @@
 # Compiler and flags
-CXX = ccache g++
+CXX = g++
 CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g
 
 # Include directories
-INCLUDE_DIRS = ./src ./include
+INCLUDE_DIRS = ./src ./include ./CLI
 INCLUDES = $(foreach dir, $(INCLUDE_DIRS), $(shell find $(dir) -type d -exec printf '-I%s ' {} \;))
 
 # Build directory
 BUILD_DIR = ./build
 
 # Common source files (shared by all executables)
-COMMON_SOURCES = $(shell find ./src -name '*.cpp' ! -name 'via.cpp' ! -name 'viac.cpp' ! -name 'viavm.cpp')
+COMMON_SOURCES = $(shell find ./src -name '*.cpp')
+COMMON_OBJECTS = $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/src/%.o)
 
-# Executables and their main source files
-TARGETS = via viac viavm
-VIA_MAIN = ./src/via.cpp
-VIAC_MAIN = ./src/viac.cpp
-VIAVM_MAIN = ./src/viavm.cpp
+# CLI source files
+CLI_SOURCES = $(shell find ./CLI -name '*.cpp')
+CLI_OBJECTS = $(CLI_SOURCES:./CLI/%.cpp=$(BUILD_DIR)/CLI/%.o)
+
+# Targets
+TARGET = via
 
 # Declare phony targets
-.PHONY: all clean asm
+.PHONY: all clean
 
-# Default target to build all executables
-all: $(TARGETS)
+# Default target to build the 'via' executable
+all: $(TARGET)
 
-# Build rules for each executable
-via: $(BUILD_DIR)/via.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
-	@echo "Building via (main executable)..."
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
+# Link the final executable
+$(TARGET): $(COMMON_OBJECTS) $(CLI_OBJECTS)
+	@echo "Linking $(TARGET)..."
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_OBJECTS) $(CLI_OBJECTS) -o $(TARGET)
 
-viac: $(BUILD_DIR)/viac.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
-	@echo "Building viac (compiler)..."
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
+# Generate object files for common sources (src)
+$(BUILD_DIR)/src/%.o: ./src/%.cpp
+	@mkdir -p $(dir $@)  # Ensure build subdirectories exist
+	@echo "Compiling $< to $@..."
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-viavm: $(BUILD_DIR)/viavm.o $(COMMON_SOURCES:./src/%.cpp=$(BUILD_DIR)/%.o)
-	@echo "Building viavm (virtual machine)..."
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$@ $^
-
-# Generate object files in the build directory from source files
-$(BUILD_DIR)/%.o: ./src/%.cpp
-	@mkdir -p $(dir $@)  # Create the necessary directories for object files
+# Generate object files for CLI sources
+$(BUILD_DIR)/CLI/%.o: ./CLI/%.cpp
+	@mkdir -p $(dir $@)  # Ensure build subdirectories exist
+	@echo "Compiling $< to $@..."
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning up..."
-	@rm -rf $(BUILD_DIR) $(TARGETS)
+	@rm -rf $(BUILD_DIR) $(TARGET)

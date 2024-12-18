@@ -7,8 +7,8 @@ namespace via::Compilation
 
 void Cleaner::clean()
 {
-    for (void *ptr : free_list)
-        std::free(ptr);
+    for (const void *ptr : free_list)
+        std::free(const_cast<void *>(ptr));
 
     free_list.clear();
 }

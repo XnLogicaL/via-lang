@@ -2,16 +2,10 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <format>
-
 #include "common.h"
 #include "token.h"
-#include "except.h"
 
-namespace via::Tokenization::Preprocessing
+namespace via::Tokenization
 {
 
 struct Macro
@@ -21,7 +15,4 @@ struct Macro
     std::vector<Token> body;         // Macro body as a list of tokens
 };
 
-Macro parse_macro(std::vector<Token> *toks, size_t &pos);
-void expand_macro(std::vector<Token> *toks, const Macro &macro);
-
-} // namespace via::Tokenization::Preprocessing
+} // namespace via::Tokenization

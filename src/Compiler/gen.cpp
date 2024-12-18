@@ -2,6 +2,7 @@
 
 #include "gen.h"
 #include "instruction.h"
+#include <cmath>
 
 #ifndef VIA_CONSTEXPR_MAX_DEPTH
 #    define VIA_CONSTEXPR_MAX_DEPTH 5

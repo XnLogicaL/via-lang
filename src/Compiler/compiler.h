@@ -27,8 +27,6 @@ public:
     {
         // Invoke cleaner
         cleaner.clean();
-        // Cleanup dynamically allocated bytecode object
-        delete bytecode.get();
         // Everything else should be automatically cleaned up
     }
 

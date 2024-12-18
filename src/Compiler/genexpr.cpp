@@ -212,6 +212,8 @@ viaRegister Generator::generate_expression(ExprNode expr)
         return generate_index_expression(*idx_expr);
     else if (CallExprNode *call_expr = std::get_if<CallExprNode>(&expr))
         return generate_call_expression(*call_expr);
+    else if (VarExprNode *var_expr = std::get_if<VarExprNode>(&expr))
+        return generate_variable_expression(*var_expr);
 
     UNREACHABLE();
     return SIZE_MAX;

@@ -31,7 +31,7 @@ void Compiler::add_default_passes()
 
 void Compiler::add_pass(std::unique_ptr<OptimizationPass> pass)
 {
-    pass_manager.add_pass(std::move(pass));
+    // pass_manager.add_pass(std::move(pass));
 }
 
 Compiler::Instructions_t Compiler::get()

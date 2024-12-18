@@ -45,7 +45,6 @@ viaOperand BytecodeParser::read_operand()
         return viaOperand{.type = viaOperandType_t::Bool, .val_boolean = lit.value == "true"};
 
     case Tokenization::TokenType::LIT_STRING:
-    case Tokenization::TokenType::LIT_CHAR:
         return viaOperand{.type = viaOperandType_t::String, .val_string = strdup(lit.value.c_str())};
 
     case Tokenization::TokenType::IDENTIFIER:

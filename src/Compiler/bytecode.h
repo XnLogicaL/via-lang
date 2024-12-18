@@ -13,7 +13,6 @@ class Bytecode
 {
 public:
     Bytecode() = default;
-    ~Bytecode() = default;
 
     using Instructions_t = std::vector<viaInstruction>;
     Instructions_t instructions;

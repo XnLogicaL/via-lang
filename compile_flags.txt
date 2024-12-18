@@ -9,4 +9,7 @@
 -I./src/VM
 -I./src/Utils
 -I./src/Compiler
--I./llvm/include
+-I./CLI
+-I./CLI/Utils
+-I./CLI/Config
+-I./CLI/Commands

@@ -152,7 +152,7 @@ void viaL_loadbaselib(viaState *V)
 
     for (auto it : base_properties)
     {
-        viaVariableIdentifier_t id = viaT_hashstring(V, it.first);
+        viaGlobalIdentifier_t id = it.first;
         via_setglobal(V, id, it.second);
     }
 }

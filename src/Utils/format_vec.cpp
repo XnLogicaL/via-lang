@@ -9,9 +9,7 @@ std::string format_vector(const std::vector<T>& vec, std::function<std::string(c
     for (const auto& item : vec)
     {
         if (!first)
-        {
             result += ", ";
-        }
 
         result += std::format("{}", func(item));
         first = false;

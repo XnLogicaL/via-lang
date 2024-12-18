@@ -17,7 +17,7 @@ public:
     ~RegisterPool() = default;
     RegisterPool(size_t pool_size)
     {
-        for (viaRegister i = 0; i < pool_size; i++)
+        for (viaRegister i = pool_size; i > 0; i--)
             available_registers.push(i);
     }
 
