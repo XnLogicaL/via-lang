@@ -9,31 +9,27 @@
 namespace via
 {
 
-// Type alias for C strings
-// Useful if it needs to be changed later
-using viaRawString_t = const char *;
-
 // Default hashmap used in via, can be changed with an appropriate alternative
 template<typename K, typename T>
-using viaHashMap_t = std::unordered_map<K, T>;
+using HashMap = std::unordered_map<K, T>;
 
 // Default hash type
-using viaHash_t = uint32_t;
+using Hash = uint32_t;
 
 // Default label key
-using viaLabelKey_t = std::string_view;
+using LabelId = std::string_view;
 
 // Default variable identifiers
-using viaVariableIdentifier_t = viaHash_t;
+using VarId = Hash;
 
 // VM related
-using viaCallArgC_t = uint16_t;
-using viaExitCode_t = int8_t;
+using CallArgc = uint16_t;
+using ExitCode = int8_t;
 #ifdef VIA_LONGJMP
-using viaJmpOffset_t = long int;
+using JmpOffset = long int;
 #else
-using viaJmpOffset_t = int;
+using JmpOffset = int;
 #endif
-using viaThreadId_t = uint32_t;
+using ThreadId = uint32_t;
 
 } // namespace via

@@ -41,7 +41,7 @@ void vec3_unary_op(viaState *V, Op op)
 {
     viaValue self = via_popargument(V);
 
-    viaRawString_t keys[] = {"x", "y", "z"};
+    const char *keys[] = {"x", "y", "z"};
     viaValue results[3];
 
     for (int i = 0; i < 3; ++i)
@@ -148,7 +148,7 @@ void vec3_normalize(viaState *V)
 void vec3_new(viaState *V)
 {
     viaTable *vec3_ins = viaT_newtable(V, vec3_meta);
-    viaRawString_t keys[] = {"x", "y", "z"};
+    const char *keys[] = {"x", "y", "z"};
 
     for (int i = 0; i < 3; ++i)
     {
@@ -175,7 +175,7 @@ void vec3_zero(viaState *V)
 // Library loader
 void viaL_loadvec3lib(viaState *V)
 {
-    static const viaHashMap_t<viaRawString_t, viaValue> vec3_meta_properties = {
+    static const HashMap<const char *, viaValue> vec3_meta_properties = {
         {"magnitude", viaT_stackvalue(V, vec3_magnitude)},
         {"normalize", viaT_stackvalue(V, vec3_normalize)},
         {"__add", viaT_stackvalue(V, vec3_mmadd)},
@@ -185,7 +185,7 @@ void viaL_loadvec3lib(viaState *V)
         {"__unm", viaT_stackvalue(V, vec3_mmunm)}
     };
 
-    static const viaHashMap_t<viaRawString_t, viaValue> vec3_gtable_properties = {
+    static const HashMap<const char *, viaValue> vec3_gtable_properties = {
         {"new", viaT_stackvalue(V, vec3_new)},
         {"one", viaT_stackvalue(V, vec3_one)},
         {"zero", viaT_stackvalue(V, vec3_zero)},

@@ -14,10 +14,11 @@
 namespace via
 {
 
-using viaRegister = uint32_t;
+struct Chunk;
+using Register = uint32_t;
 
-// viaOperand declarations
-enum class viaOperandType_t : uint8_t
+// Operand declarations
+enum class OperandType : uint8_t
 {
     Nil,
     Number,
@@ -27,51 +28,48 @@ enum class viaOperandType_t : uint8_t
     Identifier,
 };
 
-struct viaOperand
+struct Operand
 {
-    viaOperandType_t type;
+    OperandType type;
     union
     {
         double val_number;
         bool val_boolean;
         const char *val_string;
         const char *val_identifier;
-        viaRegister val_register;
+        Register val_register;
     };
 };
 
-// viaInstruction declarations
-using viaInstructionC_t = uint8_t;
-
-struct viaInstruction
+struct Instruction
 {
-    bool hot;
-    uint16_t pc;
     OpCode op;
-    viaInstructionC_t operandc;
-    viaOperand operandv[VIA_OPERAND_COUNT];
+    Operand operand1;
+    Operand operand2;
+    Operand operand3;
+    Chunk *chunk;
 };
 
 namespace Compilation
 {
 
-viaInstruction viaC_newinstruction();
-viaInstruction viaC_newinstruction(OpCode, const std::vector<viaOperand> &);
+Instruction viaC_newinstruction();
+Instruction viaC_newinstruction(OpCode, const std::vector<Operand> &);
 
-std::string viaC_compileinstruction(viaInstruction &);
-std::string viaC_compileoperand(viaOperand &);
+std::string viaC_compileinstruction(Instruction &);
+std::string viaC_compileoperand(Operand &);
 
-bool viaC_checkregister(const viaOperand &);
-bool viaC_checknumber(const viaOperand &);
-bool viaC_checkbool(const viaOperand &);
-bool viaC_checkstring(const viaOperand &);
-bool viaC_checkidentifier(const viaOperand &);
+bool viaC_checkregister(const Operand &);
+bool viaC_checknumber(const Operand &);
+bool viaC_checkbool(const Operand &);
+bool viaC_checkstring(const Operand &);
+bool viaC_checkidentifier(const Operand &);
 
-viaOperand viaC_newoperand();
-viaOperand viaC_newoperand(double);
-viaOperand viaC_newoperand(bool);
-viaOperand viaC_newoperand(const char *, bool);
-viaOperand viaC_newoperand(viaRegister);
+Operand viaC_newoperand();
+Operand viaC_newoperand(double);
+Operand viaC_newoperand(bool);
+Operand viaC_newoperand(const char *, bool);
+Operand viaC_newoperand(Register);
 
 } // namespace Compilation
 

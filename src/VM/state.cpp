@@ -12,13 +12,13 @@ viaGlobalState *viaA_newgstate()
 {
     viaGlobalState *G = new viaGlobalState;
 
-    G->stable = new viaSTable();
+    G->stable = new STable();
 
     return G;
 }
 
 // Initializes and returns a new viaState object
-viaState *viaA_newstate(const std::vector<viaInstruction> &pipeline)
+viaState *viaA_newstate(const std::vector<Instruction> &pipeline)
 {
     viaState *V = new viaState;
 
@@ -26,7 +26,7 @@ viaState *viaA_newstate(const std::vector<viaInstruction> &pipeline)
     V->G = viaA_newgstate();
 
     // Allocate ihp (Instruction head pointer)
-    V->ihp = new viaInstruction[pipeline.size()];
+    V->ihp = new Instruction[pipeline.size()];
     // Initialize ibp (Instruction base pointer)
     V->ibp = V->ihp + pipeline.size();
     // Initialize ip (Instruction pointer)
@@ -70,6 +70,17 @@ viaState *viaA_newstate(const std::vector<viaInstruction> &pipeline)
     viaFunction *mainf = new viaFunction{0, false, false, VIA_MAIN_ID, {}, {}, {}};
     viaS_push(V->stack, mainf);
 
+    Instruction *ip = V->ip;
+    for (Instruction instr : pipeline)
+    {
+        if (instr.op == OpCode::LABEL)
+        {
+            Operand ident = instr.operand1;
+            (*V->labels)[LabelId(ident.val_identifier)] = ip;
+        }
+        ++ip;
+    }
+
     return V;
 }
 
@@ -95,7 +106,7 @@ void viaA_cleanupstate(viaState *V)
     delete V;
 }
 
-viaThreadId_t viaA_threadcount(viaState *)
+ThreadId viaA_threadcount(viaState *)
 {
     // Just return the latest thread id as it represents the number of threads
     return __thread_id__;

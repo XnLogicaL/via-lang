@@ -14,7 +14,7 @@ namespace via::Compilation
 class Compiler
 {
 public:
-    using Instructions_t = std::vector<viaInstruction>;
+    using Instructions_t = std::vector<Instruction>;
 
     Compiler(Parsing::AST::AST *tree)
         : register_pool(128)

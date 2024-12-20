@@ -7,13 +7,12 @@ namespace via
 
 enum class OpCode
 {
-    ERR, // Error opcode
     NOP, // No operation
 
     // Register Operations
-    MOV, // Move value from one register to another <dst :: viaRegister> <src :: viaRegister>
+    MOV, // Move value from one register to another <dst :: Register> <src :: Register>
     CPY,
-    LOAD, // Load immediate value into register <dst :: viaRegister> <val :: Any>
+    LOAD, // Load immediate value into register <dst :: Register> <val :: Any>
     DUP,  // Duplicate a register value
     SWAP, // Swap values between two registers
     NIL,  // Sets a register to nil

@@ -17,6 +17,7 @@ public:
     // Constructs a SyntaxAnalyzer instance with the provided source container
     explicit SyntaxAnalyzer(viaSourceContainer &container)
         : container(container)
+        , emitter(container)
     {
     }
 
@@ -25,8 +26,8 @@ public:
     bool analyze();
 
 private:
-    Emitter emitter;
     viaSourceContainer &container;
+    Emitter emitter;
     size_t pos = 0;
     bool failed = false;
 
@@ -50,6 +51,7 @@ private:
     // can form a valid term A term might include literals, identifiers, or other
     // self-contained syntactical units
     bool is_valid_term();
+    bool is_valid_argument_expression();
     // Determines whether the current token sequence matches a valid type
     // declaration or reference Includes primitive types, user-defined types, or
     // type aliases

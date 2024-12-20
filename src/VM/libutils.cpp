@@ -11,7 +11,7 @@ void viaL_pusharguments(viaState *V, std::vector<viaValue> args)
         via_pushargument(V, val);
 }
 
-viaValue *viaL_quickindex(viaState *V, viaTable *T, viaRawString_t K)
+viaValue *viaL_quickindex(viaState *V, viaTable *T, const char *K)
 {
     return via_gettableindex(V, T, viaT_hashstring(V, K), false);
 }

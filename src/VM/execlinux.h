@@ -11,8 +11,8 @@
 namespace via::jit
 {
 
-void viaJIT_assemblechunk(viaState *, viaChunk *, unsigned char *, size_t);
-int viaJIT_executechunk(viaState *, viaChunk *);
+void viaJIT_assemblechunk(viaState *, Chunk *, unsigned char *, size_t);
+int viaJIT_executechunk(viaState *, Chunk *);
 
 } // namespace via::jit
 

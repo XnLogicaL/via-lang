@@ -45,7 +45,7 @@ void rand_int(viaState *V)
 
 void viaL_loadrandlib(viaState *V)
 {
-    static const viaHashMap_t<viaRawString_t, viaValue> rand_properties = {
+    static const HashMap<const char *, viaValue> rand_properties = {
         {"range", viaT_stackvalue(V, rand_range)},
         {"int", viaT_stackvalue(V, rand_int)},
     };
@@ -54,7 +54,7 @@ void viaL_loadrandlib(viaState *V)
 
     for (auto it : rand_properties)
     {
-        viaTableKey key = viaT_hashstring(V, it.first);
+        TableKey key = viaT_hashstring(V, it.first);
         via_settableindex(V, lib, key, it.second);
     }
 

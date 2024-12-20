@@ -19,7 +19,7 @@
 namespace via::lib
 {
 
-viaValue *viaL_quickindex(viaState *, viaTable *, viaRawString_t);
+viaValue *viaL_quickindex(viaState *, viaTable *, const char *);
 void viaL_pusharguments(viaState *, std::vector<viaValue>);
 
 } // namespace via::lib

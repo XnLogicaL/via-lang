@@ -9,30 +9,30 @@ using namespace Parsing;
 using namespace AST;
 using namespace Tokenization;
 
-viaRegister Generator::generate_literal_expression(LiteralExprNode lit_expr)
+Register Generator::generate_literal_expression(LiteralExprNode lit_expr)
 {
-    viaOperand operand = viaC_newoperand();
-    viaRegister reg = register_pool.allocate_register();
+    Operand operand = viaC_newoperand();
+    Register reg = register_pool.allocate_register();
 
     switch (lit_expr.value.type)
     {
     case TokenType::LIT_BOOL:
-        operand.type = viaOperandType_t::Bool;
+        operand.type = OperandType::Bool;
         operand.val_boolean = lit_expr.value.value == "true";
         break;
     case TokenType::LIT_STRING:
-        operand.type = viaOperandType_t::String;
+        operand.type = OperandType::String;
         operand.val_string = via_dupstring(lit_expr.value.value);
         // Add dynamically allocated duplicate string to cleaner
         cleaner.add_malloc(operand.val_string);
         break;
     case TokenType::LIT_FLOAT:
     case TokenType::LIT_INT:
-        operand.type = viaOperandType_t::Number;
+        operand.type = OperandType::Number;
         operand.val_number = std::stod(lit_expr.value.value);
         break;
     case TokenType::LIT_NIL:
-        operand.type = viaOperandType_t::Nil;
+        operand.type = OperandType::Nil;
         break;
     default:
         break;
@@ -49,10 +49,10 @@ viaRegister Generator::generate_literal_expression(LiteralExprNode lit_expr)
     return reg;
 }
 
-viaRegister Generator::generate_unary_expression(UnaryExprNode unary_expr)
+Register Generator::generate_unary_expression(UnaryExprNode unary_expr)
 {
-    viaRegister reg = generate_expression(unary_expr);
-    viaRegister new_reg = register_pool.allocate_register();
+    Register reg = generate_expression(unary_expr);
+    Register new_reg = register_pool.allocate_register();
 
     register_pool.free_register(reg);
     push_instruction(
@@ -66,7 +66,7 @@ viaRegister Generator::generate_unary_expression(UnaryExprNode unary_expr)
     return new_reg;
 }
 
-viaRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
+Register Generator::generate_binary_expression(BinaryExprNode bin_expr)
 {
     static std::unordered_map<TokenType, OpCode> operator_map = {
         {TokenType::OP_ADD, OpCode::ADD},
@@ -84,9 +84,9 @@ viaRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
     };
 
     OpCode op = operator_map[bin_expr.op.type];
-    viaRegister dst = register_pool.allocate_register();
-    viaRegister lhs = generate_expression(*bin_expr.lhs);
-    viaRegister rhs = generate_expression(*bin_expr.rhs);
+    Register dst = register_pool.allocate_register();
+    Register lhs = generate_expression(*bin_expr.lhs);
+    Register rhs = generate_expression(*bin_expr.rhs);
 
     register_pool.free_register(lhs);
     register_pool.free_register(rhs);
@@ -103,14 +103,14 @@ viaRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
     return lhs;
 }
 
-viaRegister Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
+Register Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
 {
-    viaRegister dst = register_pool.allocate_register();
+    Register dst = register_pool.allocate_register();
     push_instruction(OpCode::FUNC, {viaC_newoperand(dst)});
 
     for (TypedParamNode param : lmd_expr.params)
     {
-        viaRegister param_reg = register_pool.allocate_register();
+        Register param_reg = register_pool.allocate_register();
         register_pool.free_register(param_reg);
 
         push_instruction(OpCode::POPARG, {viaC_newoperand(param_reg)});
@@ -131,11 +131,11 @@ viaRegister Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
     return dst;
 }
 
-viaRegister Generator::generate_index_expression(IndexExprNode idx_expr)
+Register Generator::generate_index_expression(IndexExprNode idx_expr)
 {
-    viaRegister dst = register_pool.allocate_register();
-    viaRegister obj = generate_expression(*idx_expr.object);
-    viaRegister idx = generate_expression(*idx_expr.index);
+    Register dst = register_pool.allocate_register();
+    Register obj = generate_expression(*idx_expr.object);
+    Register idx = generate_expression(*idx_expr.index);
 
     register_pool.free_register(obj);
     register_pool.free_register(idx);
@@ -152,17 +152,17 @@ viaRegister Generator::generate_index_expression(IndexExprNode idx_expr)
     return dst;
 }
 
-viaRegister Generator::generate_call_expression(CallExprNode call_expr)
+Register Generator::generate_call_expression(CallExprNode call_expr)
 {
     size_t argc = call_expr.args.size();
-    viaRegister dst = register_pool.allocate_register();
-    viaRegister callee = generate_expression(*call_expr.callee);
+    Register dst = register_pool.allocate_register();
+    Register callee = generate_expression(*call_expr.callee);
 
     // Load arguments
     for (ExprNode arg : call_expr.args)
     {
         // Generate argument expression and free the register
-        viaRegister arg_reg = register_pool.allocate_register();
+        Register arg_reg = register_pool.allocate_register();
         register_pool.free_register(arg_reg);
         // Push the argument onto the stack
         push_instruction(OpCode::PUSHARG, {viaC_newoperand(arg_reg)});
@@ -183,9 +183,9 @@ viaRegister Generator::generate_call_expression(CallExprNode call_expr)
     return dst;
 }
 
-viaRegister Generator::generate_variable_expression(VarExprNode var_expr)
+Register Generator::generate_variable_expression(VarExprNode var_expr)
 {
-    viaRegister dst = register_pool.allocate_register();
+    Register dst = register_pool.allocate_register();
 
     push_instruction(
         OpCode::LOADVAR,
@@ -198,8 +198,14 @@ viaRegister Generator::generate_variable_expression(VarExprNode var_expr)
     return dst;
 }
 
-viaRegister Generator::generate_expression(ExprNode expr)
+Register Generator::generate_expression(ExprNode expr)
 {
+    initialize_with_chunk = true;
+    current_chunk = new Chunk;
+    current_chunk->mcode = nullptr;
+    current_chunk->mlen = 0;
+    current_chunk->pc = 0;
+
     if (LiteralExprNode *lit_expr = std::get_if<LiteralExprNode>(&expr))
         return generate_literal_expression(*lit_expr);
     else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr))
@@ -216,7 +222,7 @@ viaRegister Generator::generate_expression(ExprNode expr)
         return generate_variable_expression(*var_expr);
 
     UNREACHABLE();
-    return SIZE_MAX;
+    return std::numeric_limits<Register>::max();
 }
 
 } // namespace via::Compilation

@@ -5,9 +5,9 @@
 namespace via::lib
 {
 
-viaTableKey _get_largest_key(viaTable *tbl)
+TableKey _get_largest_key(viaTable *tbl)
 {
-    viaTableKey largest = 0;
+    TableKey largest = 0;
 
     for (auto it : tbl->data)
         if (it.first > largest)
@@ -40,19 +40,19 @@ void table_insertat(viaState *V)
     LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
     LIB_ASSERT(viaT_checknumber(V, index), ARG_MISMATCH(1, "Number", ENUM_NAME(index.type)));
 
-    viaTableKey idx = static_cast<viaTableKey>(index.val_number);
+    TableKey idx = static_cast<TableKey>(index.val_number);
     LIB_ASSERT(idx > 0, "Index must be greater than 0");
 
     auto &data = tbl.val_table->data;
 
-    viaTableKey max_key = 0;
+    TableKey max_key = 0;
     for (const auto &[key, _] : data)
         if (key > max_key)
             max_key = key;
 
     LIB_ASSERT(idx <= max_key + 1, "Index out of range");
 
-    for (viaTableKey key = max_key; key >= idx; --key)
+    for (TableKey key = max_key; key >= idx; --key)
         if (data.find(key) != data.end())
             data[key + 1] = data[key];
 
@@ -67,7 +67,7 @@ void table_remove(viaState *V)
     LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
 
     auto &data = tbl.val_table->data;
-    viaTableKey last_key = _get_largest_key(tbl.val_table);
+    TableKey last_key = _get_largest_key(tbl.val_table);
     viaValue last_val = data[last_key];
 
     data.erase(last_key);
@@ -83,7 +83,7 @@ void table_removeat(viaState *V)
     LIB_ASSERT(viaT_checknumber(V, idx), ARG_MISMATCH(1, "Number", ENUM_NAME(idx.type)));
     LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
 
-    viaTableKey index = static_cast<viaTableKey>(idx.val_number);
+    TableKey index = static_cast<TableKey>(idx.val_number);
     auto &data = tbl.val_table->data;
     viaValue rem_val = data[index];
 
@@ -126,7 +126,7 @@ void table_concat(viaState *V)
         buf += std::string(it_string->ptr, it_string->len);
     }
 
-    viaRawString_t final_str = strdup(buf.c_str());
+    const char *final_str = strdup(buf.c_str());
     viaValue final = viaT_stackvalue(V, final_str);
 
     via_pushreturn(V, final);
@@ -163,7 +163,7 @@ void table_deepclone(viaState *V)
     auto &data = clone->data;
     for (const auto &it : original->data)
     {
-        viaTableKey key = it.first;
+        TableKey key = it.first;
         bool is_table = viaT_checktable(V, it.second);
 
         if (VIA_UNLIKELY(is_table))

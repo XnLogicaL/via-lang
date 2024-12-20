@@ -104,6 +104,8 @@ ExprNode *Parser::parse_prim_expr()
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
     case TokenType::LIT_STRING:
+    case TokenType::LIT_BOOL:
+    case TokenType::LIT_NIL:
     {
         LiteralExprNode lit;
         lit.value = token;
@@ -556,9 +558,9 @@ StmtNode *Parser::parse_statement()
     case TokenType::KW_SWITCH:
         return emplace(*parse_switch_statement());
     case TokenType::KW_STRUCT:
-        return nullptr;
     case TokenType::KW_NAMESPACE:
-        return nullptr;
+        // TODO: Self explanatory...
+        goto invalid_statement;
     case TokenType::KW_BREAK:
         return emplace(*alloc.emplace<BreakStmtNode>());
     case TokenType::KW_CONTINUE:
@@ -572,6 +574,11 @@ StmtNode *Parser::parse_statement()
 
         if (CallExprNode *call = std::get_if<CallExprNode>(expr))
         {
+            // Construct a new statement based on the call expression
+            // This is bad for several reasons;
+            // - It soft-leaks memory
+            // - It's unscalable
+            // TODO: SO FIND A SOLUTION FFS
             CallStmtNode *stmt = alloc.emplace<CallStmtNode>();
             stmt->callee = call->callee;
             stmt->args = call->args;
@@ -579,14 +586,29 @@ StmtNode *Parser::parse_statement()
 
             return emplace(*stmt);
         }
+        else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(expr))
+        {
+            // Only binary expression allowed is an "assignment operation"
+            // Which isn't a actually a real thing, it's just a quirk caused by how operators are classified
+            // I guess it's beneficial in this case, although it will be HELL to debug in other cases
+            // Because it technically cannot evaluate to any value
+            if (bin_expr->op.type != TokenType::OP_ASGN)
+                goto invalid_statement;
 
-        if (is_type(TokenType::OP_ASGN))
-            return emplace(*parse_assignment_statement(expr));
+            AssignStmtNode *asgn = alloc.emplace<AssignStmtNode>();
+            asgn->target = bin_expr->lhs;
+            asgn->value = bin_expr->rhs;
 
-        VIA_ASSERT(false, "");
-        return nullptr;
+            return emplace(*asgn);
+        }
+
+        goto invalid_statement;
     }
     }
+invalid_statement:
+    VIA_ASSERT(false, "Parser::parse_statement(): Invalid statement");
+    return nullptr;
+#undef emplace
 }
 
 AST::AST *Parser::parse_program()

@@ -288,9 +288,17 @@ void Generator::evaluate_constexpr(ExprNode *expr)
 }
 
 // Pushes a bytecode instruction
-void Generator::push_instruction(OpCode op, std::vector<viaOperand> operands)
+void Generator::push_instruction(OpCode op, std::vector<Operand> operands)
 {
-    bytecode->add_instruction(viaC_newinstruction(op, operands));
+    Instruction instruction = viaC_newinstruction(op, operands);
+
+    if (initialize_with_chunk)
+    {
+        initialize_with_chunk = false;
+        instruction.chunk = current_chunk;
+    }
+
+    bytecode->add_instruction(instruction);
 }
 
 } // namespace via::Compilation

@@ -53,9 +53,9 @@ void base_exit(viaState *V)
 {
     viaValue arg0 = via_popargument(V);
 
-    LIB_ASSERT(arg0.type == viaValueType::Number, "Expected type viaNumber for argument 0 of base_exit");
+    LIB_ASSERT(arg0.type == ValueType::Number, "Expected type viaNumber for argument 0 of base_exit");
 
-    viaExitCode_t code = arg0.val_number;
+    ExitCode code = arg0.val_number;
     via_setexitdata(V, code, "base_exit called by user");
     V->abrt = true; // Abort the VM execution
 }
@@ -137,7 +137,7 @@ void base_setmetatable(viaState *V)
 
 void viaL_loadbaselib(viaState *V)
 {
-    viaHashMap_t<viaRawString_t, viaValue> base_properties = {
+    HashMap<const char *, viaValue> base_properties = {
         {"print", WRAPVAL(base_print)},
         {"println", WRAPVAL(base_println)},
         {"error", WRAPVAL(base_error)},
@@ -152,7 +152,7 @@ void viaL_loadbaselib(viaState *V)
 
     for (auto it : base_properties)
     {
-        viaVariableIdentifier_t id = viaT_hashstring(V, it.first);
+        VarId id = viaT_hashstring(V, it.first);
         via_setglobal(V, id, it.second);
     }
 }

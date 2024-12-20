@@ -1,2 +1,4 @@
 luau/
 build/
+./via
+./test.asm

@@ -16,7 +16,7 @@ namespace via::lib
 
 static viaTable *vec3_meta = new viaTable;
 
-viaValue get_vec3_component(viaState *V, viaTable *vec, viaRawString_t key);
+viaValue get_vec3_component(viaState *V, viaTable *vec, const char *key);
 template<typename Op>
 void vec3_binary_op(viaState *V, Op op);
 // Utility: Perform a unary operation on a vector

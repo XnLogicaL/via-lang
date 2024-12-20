@@ -10,10 +10,10 @@ namespace via::Tokenization
 static bool has_printed_file_name = false;
 
 // Splits a source string into lines
-std::vector<std::string> Emitter::split_lines(const std::string &source)
+std::vector<std::string> Emitter::split_lines()
 {
     std::vector<std::string> lines;
-    std::istringstream stream(source);
+    std::istringstream stream(container.source);
     std::string line;
 
     // Loop through lines and split them
@@ -41,57 +41,53 @@ std::string Emitter::get_severity_header(Severity sev)
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string Emitter::underline_line(const std::string &source, int line_number, int offset, int length, const std::string &message, Severity sev)
+std::string Emitter::underline_line(int line_number, int offset, int length, const std::string &message, Severity sev)
 {
-    std::vector<std::string> lines = split_lines(source);
+    std::vector<std::string> lines = split_lines();
 
-    // Check if line number is valid
     if (line_number < 1 || line_number > static_cast<int>(lines.size()))
-        return "<ERROR-INVALID-LINE>";
+        return "<error-invalid-line>";
 
-    const std::string &line = lines[line_number - 1]; // Lines are 1-based, vector is 0-based
+    // Lines are 1-based, vector is 0-based
+    const std::string &line = lines[line_number - 1];
     std::string underline;
 
-    // Check if offset is valid
     if (offset < 0 || offset >= static_cast<int>(line.size()))
-        return "<ERROR-INVALID-OFFSET>";
+        return "<error-invalid-line>";
 
-    // Create the underline with tildes and insert the cursor (^)
     underline = std::string(offset, ' ') + std::string(length, '~');
 
-    // Ensure we don't go past the line's length
     if (offset + length > static_cast<int>(line.size()))
         underline = underline.substr(0, line.size() - offset);
 
-    // Place the cursor (^) at the exact offset
     if (offset < static_cast<int>(underline.size()))
         underline[offset] = '^';
 
-    // Calculate the width of the line number field
-    int line_number_width = static_cast<int>(std::ceil(std::log10(line_number)));
     std::string line_number_str = std::to_string(line_number);
+    // Leetcode mfers will absolutely HATE this
+    // "oH iTs NoT O(1) bro" (shut the fuck up, go make your own language buddy)
+    int line_number_width = line_number_str.length();
 
-    // Adjust alignment by dynamically adding spaces to the line number section
-    return get_severity_header(sev) + message + "\n" + line_number_str + " | " + std::string(line_number_width, ' ') + line + "\n" +
-           std::string(line_number_width, ' ') + " |  " + underline;
+    return get_severity_header(sev) + message + "\n" + line_number_str + " | " + line + "\n" + std::string(line_number_width, ' ') + " | " +
+           underline;
 }
 
 // Emits an output message
-void Emitter::out(viaSourceContainer vsc, size_t idx, std::string message, Severity sev)
+void Emitter::out(size_t idx, std::string message, Severity sev)
 {
     // Check if file information has been printed
-    if (!has_printed_file_name)
+    if (!has_printed_file_name && container.file_name != "<repl>")
     {
         has_printed_file_name = true;
-        std::cout << std::format("In file {}:\n", vsc.file_name);
+        std::cout << std::format("In file {}:\n", container.file_name);
     }
 
     // Find token
-    Token tok = vsc.tokens.at(idx);
+    Token tok = container.tokens.at(idx);
     size_t line = tok.line;
     size_t offset = tok.offset;
     size_t length = tok.value.length();
-    std::cout << underline_line(vsc.source, line, offset, length, message, sev) << "\n";
+    std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 
 } // namespace via::Tokenization

@@ -14,11 +14,11 @@ class Bytecode
 public:
     Bytecode() = default;
 
-    using Instructions_t = std::vector<viaInstruction>;
+    using Instructions_t = std::vector<Instruction>;
     Instructions_t instructions;
     Parsing::AST::AST *ast;
 
-    void add_instruction(const viaInstruction &);
+    void add_instruction(const Instruction &);
     void remove_instruction(size_t index);
     Instructions_t &get();
     const Instructions_t &get() const;

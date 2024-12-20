@@ -4,19 +4,28 @@
 
 #include "common.h"
 #include "magic_enum.hpp"
+#include "except.h"
 #include <cassert>
+#include <stdexcept>
 
 // clang-format off
 
 // Asserts <cond>
-// If false, aborts after throwing an error that includes debug information such as file name and line that the macro was initially expanded
-#define VIA_ASSERT(cond, err) \
+// If false, throws an exception that includes debug information such as file name and line that the macro was initially expanded
+#define VIA_ASSERT(cond, msg) \
     { \
         if (!(cond)) \
         { \
-            std::cerr << "VIA_ASSERT(): " << (err) << "\n  in file " << __FILE__ << ", line " << __LINE__ << '\n'; \
-            std::abort(); \
+            std::string err = std::format("VIA_ASSERT(): {}\n  in {}:{}", (msg), __FILE__, __LINE__); \
+            throw via::viaException(err); \
         } \
+    }
+
+// Like VIA_ASSERT but doesn't contain debug information
+#define VIA_ASSERT_SILENT(cond, msg) \
+    { \
+        if (!(cond)) \
+            throw via::viaException(msg); \
     }
 
 #define UNREACHABLE() \

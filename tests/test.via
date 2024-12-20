@@ -6,7 +6,18 @@ local func main() {
 
     local c: Number = a + b
     println(c)
+
+    if (c) {
+        println("C is truthy")
+    }
+
+    println("After if")
 }
 
-println("Calling function")
+println("Calling main")
 main()
+println("Calling main forever")
+
+while (true) {
+    main()
+}

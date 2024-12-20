@@ -6,7 +6,7 @@ namespace via::Compilation
 {
 
 // Add an instruction to the container
-void Bytecode::add_instruction(const viaInstruction &instruction)
+void Bytecode::add_instruction(const Instruction &instruction)
 {
     instructions.push_back(instruction);
 }

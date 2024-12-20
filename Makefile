@@ -20,16 +20,22 @@ CLI_OBJECTS = $(CLI_SOURCES:./CLI/%.cpp=$(BUILD_DIR)/CLI/%.o)
 # Targets
 TARGET = via
 
+DEBUG_FLAGS = -DVIA_DEBUG=1
+
 # Declare phony targets
 .PHONY: all clean
 
 # Default target to build the 'via' executable
-all: $(TARGET)
+all: $(PRELUDE) $(TARGET)
+
+$(PRELUDE):
+	@echo "Starting build..."
 
 # Link the final executable
 $(TARGET): $(COMMON_OBJECTS) $(CLI_OBJECTS)
-	@echo "Linking $(TARGET)..."
+	@echo "Linking object files..."
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_OBJECTS) $(CLI_OBJECTS) -o $(TARGET)
+	@echo "Build complete"
 
 # Generate object files for common sources (src)
 $(BUILD_DIR)/%.o: ./src/%.cpp
@@ -45,5 +51,9 @@ $(BUILD_DIR)/CLI/%.o: ./CLI/%.cpp
 
 # Clean build artifacts
 clean:
-	@echo "Cleaning up..."
+	@echo "Cleaning up old build..."
 	@rm -rf $(BUILD_DIR) $(TARGET)
+	@echo "Cleaning completed."
+
+debug: CXXFLAGS += $(DBEUG_FLAGS)
+debug: all

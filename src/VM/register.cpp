@@ -13,10 +13,10 @@ void viaR_cleanupstate(viaRAllocatorState *R)
 
 void viaR_initialize(viaRAllocatorState *R)
 {
-    for (viaRegister i = 0; i < VIA_REGISTERCOUNT; i++)
+    for (Register i = 0; i < VIA_REGISTERCOUNT; i++)
     {
         viaValue monostate_val;
-        monostate_val.type = viaValueType::Monostate;
+        monostate_val.type = ValueType::Monostate;
         monostate_val.next = nullptr;
         monostate_val.prev = nullptr;
 

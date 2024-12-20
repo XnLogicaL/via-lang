@@ -34,7 +34,7 @@ namespace via
 #if defined(__GNUC__) || defined(__clang__)
 [[maybe_unused]]
 #endif
-static viaThreadId_t __thread_id__ = 0;
+static ThreadId __thread_id__ = 0;
 
 // Forward declarations
 struct viaFunction;
@@ -48,8 +48,8 @@ struct viaRAllocatorState;
 struct viaString;
 
 // Type aliases for convenience, not much else
-using viaLabels = viaHashMap_t<viaLabelKey_t, viaInstruction *>;
-using viaSTable = viaHashMap_t<viaHash_t, viaString *>;
+using viaLabels = HashMap<LabelId, Instruction *>;
+using STable = HashMap<Hash, viaString *>;
 
 // Calling convention that is actively being used by the VM
 enum class viaCallType : uint8_t
@@ -68,19 +68,19 @@ enum class viaThreadState : uint8_t
 
 struct viaGlobalState
 {
-    viaSTable *stable; // Global string lookup table, derrived from Lua's string interning
+    STable *stable; // Global string lookup table, derrived from Lua's string interning
 };
 
 // More likely to be cached (hopefully...)
 struct alignas(64) viaState
 {
     // Metadata
-    viaThreadId_t id;  // Thread id
+    ThreadId id;       // Thread id
     viaGlobalState *G; // Global state
 
-    viaInstruction *ip;  // Instruction pointer
-    viaInstruction *ihp; // Instruction list head
-    viaInstruction *ibp; // Instruction list base
+    Instruction *ip;  // Instruction pointer
+    Instruction *ihp; // Instruction list head
+    Instruction *ibp; // Instruction list base
 
     viaStackState<viaFunction *> *stack; // Pointer to VM Stack
     viaStackState<viaValue> *arguments;  // Pointer to argument stack
@@ -89,8 +89,8 @@ struct alignas(64) viaState
     viaLabels *labels;                   // Pointer to VM Label address table (LAT)
     viaGCState *gc;                      // Pointer to VM Garbage collector state
 
-    int exitc;            // VM exit code
-    viaRawString_t exitm; // VM exit message
+    int exitc;         // VM exit code
+    const char *exitm; // VM exit message
 
     bool abrt;         // Aborts on the next VM cycle
     bool skip;         // Skips the next instruction on the next VM cycle
@@ -98,7 +98,7 @@ struct alignas(64) viaState
     bool restorestate; // Tells the VM to restore the state on the next VM cycle (to sstate)
 
     float yieldfor;        // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
-    viaCallArgC_t argc;    // Argument count, for both CALL and FASTCALLX
+    CallArgc argc;         // Argument count, for both CALL and FASTCALLX
     viaCallType calltype;  // Stores the current calling convention
     viaThreadState tstate; // Thread state
     viaState *sstate;      // Saved state
@@ -107,13 +107,13 @@ struct alignas(64) viaState
 // Creates a new global state object
 viaGlobalState *viaA_newgstate();
 // Creats a new state object
-viaState *viaA_newstate(const std::vector<viaInstruction> &);
+viaState *viaA_newstate(const std::vector<Instruction> &);
 // Cleans up a global state object
 void viaA_cleanupgstate(viaGlobalState *);
 // Cleans up a state object
 void viaA_cleanupstate(viaState *);
 // Returns the thread count, no matter their state
 // Equivalent to `__thread_id__`
-viaThreadId_t viaA_threadcount(viaState *);
+ThreadId viaA_threadcount(viaState *);
 
 } // namespace via

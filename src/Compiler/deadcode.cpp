@@ -8,7 +8,7 @@ namespace via::Compilation
 using namespace via::Parsing;
 using namespace AST;
 
-void DeadCodeEliminationOptimizationPass::apply(Generator &gen, Bytecode &bytecode) {}
+void DeadCodeEliminationOptimizationPass::apply(Generator &, Bytecode &) {}
 
 bool DeadCodeEliminationOptimizationPass::always_true(Generator &gen, IfStmtNode if_stmt)
 {

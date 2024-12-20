@@ -6,7 +6,7 @@
 // Yes, this is yet another abstraction over io
 #define REPORT_ERROR(message) \
     { \
-        emitter.out(container, pos, message, Emitter::Severity::ERROR); \
+        emitter.out(pos, message, Emitter::Severity::ERROR); \
         failed = true; \
     } \
     while (0)
@@ -15,16 +15,12 @@
 // Reports a generic syntax error and returns if the assertion fails
 // Consumes the current token if not
 #define EXPECT_TOKEN(expected_type) \
-    do \
     { \
         if (peek().type == expected_type) \
             consume(); \
         else \
-        { \
             REPORT_ERROR(std::format("Unexpected token '{}', Expected type {}", peek().value, magic_enum::enum_name(expected_type))); \
-            return; \
-        } \
-    } while (0)
+    }
 
 namespace via::Tokenization
 {
@@ -37,7 +33,7 @@ const std::string get_value_type(const Token &tok) noexcept
     {
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
-        return "viaNumber";
+        return "Number";
     case TokenType::LIT_BOOL:
         return "Bool";
     case TokenType::LIT_STRING:
@@ -61,10 +57,8 @@ Token SyntaxAnalyzer::peek(size_t ahead) noexcept // This should never throw, in
 {
     // Bound check
     if (pos + ahead >= container.tokens.size())
-    {
         // Return a special token if out of bounds
         return Token(TokenType::EOF_, "", 0, 0);
-    }
 
     return container.tokens.at(pos + ahead);
 }
@@ -77,10 +71,8 @@ Token SyntaxAnalyzer::consume(size_t ahead) noexcept
 
     // Bound check before return
     if (!in_bounds())
-    {
         // Return a special token if out of bounds
         return Token(TokenType::EOF_, "", 0, 0);
-    }
 
     return container.tokens.at(pos);
 }
@@ -91,10 +83,8 @@ bool SyntaxAnalyzer::is_valid_expression()
 {
     // Check if the lhs (left-hand side) of the expression is a valid term
     if (!is_valid_term())
-    {
         // Returns false (illformed expression)
         return false;
-    }
 
     // Loop until the current token is not an operator
     // This check is mainly for binary operations
@@ -126,10 +116,8 @@ bool SyntaxAnalyzer::is_valid_type()
     // Since types can only "start" with an identifier, this is the first thing we check
     // eg. Generic<T>
     if (next.type != TokenType::IDENTIFIER)
-    {
         // Return false (illformed type)
         return false;
-    }
 
     // Consume the type body (identifier)
     consume();
@@ -141,7 +129,6 @@ bool SyntaxAnalyzer::is_valid_type()
         consume();
 
         // Initialize expectations
-        // Technically there doesn't need to be 2 of these since they will never be equal
         bool expecting_type = true;
         bool expecting_comma = false;
 
@@ -150,22 +137,16 @@ bool SyntaxAnalyzer::is_valid_type()
         {
             // This is kinda redundant but we can keep it either way
             if (peek().type == TokenType::EOF_)
-            {
                 // Return false (illformed type)
                 return false;
-            }
 
-            // Check if it's expecting a type (generic, literal, ...)
-            // eg. Generic<Type>
-            //             ^~~~
+            // Check if it's expecting a type (generic, literal, ...), eg. Generic<Type> ^~~~
             if (expecting_type)
             {
                 // Recursively check if this type is valid
                 if (!is_valid_type())
-                {
                     // Return false (illformed type)
                     return false;
-                }
 
                 // Debounce the expectations
                 expecting_type = false;
@@ -180,10 +161,8 @@ bool SyntaxAnalyzer::is_valid_type()
             {
                 // If a comma is expected but not found, return false
                 if (peek().type != TokenType::COMMA)
-                {
                     // Return false (illformed type)
                     return false;
-                }
 
                 // Debounce expectations
                 expecting_type = true;
@@ -194,11 +173,7 @@ bool SyntaxAnalyzer::is_valid_type()
             }
         }
 
-        if (peek().type != TokenType::OP_GT)
-        {
-            return false;
-        }
-
+        EXPECT_TOKEN(TokenType::OP_GT);
         consume();
     }
 
@@ -215,8 +190,12 @@ bool SyntaxAnalyzer::is_valid_term()
     // Check if the term is a literal or identifier, if so return true
     if (next.is_literal() || next.type == TokenType::IDENTIFIER)
     {
-        // Consume the term and return true
-        consume();
+        if (next.type == TokenType::IDENTIFIER && peek(1).type == TokenType::PAREN_OPEN)
+        {
+            check_fun_call();
+            return failed;
+        }
+
         return true;
     }
     // Check if the term is a grouped expression
@@ -232,72 +211,72 @@ bool SyntaxAnalyzer::is_valid_term()
             REPORT_ERROR("Invalid expression inside parentheses");
             return false;
         }
-        if (peek().type == TokenType::PAREN_CLOSE)
-        {
-            // Consume ')' and return true
-            consume();
-            return true;
-        }
 
-        // Report missing closing parantheses
-        REPORT_ERROR("Expected closing parenthesis");
+        EXPECT_TOKEN(TokenType::PAREN_CLOSE);
+        return true;
     }
+
+    REPORT_ERROR(std::format("Unexpected token '{}'", next.value));
 
     // Return false (illformed term) (base case)
     return false;
 }
 
-// Returns if the a sequence of tokens starting from the current one can form a syntactically correct call statement/expression
+// A helper function to handle both function calls and regular expressions in arguments
+bool SyntaxAnalyzer::is_valid_argument_expression()
+{
+    // If the next token is an identifier followed by an open parenthesis, it's a function call
+    if (peek().type == TokenType::IDENTIFIER && peek(1).type == TokenType::PAREN_OPEN)
+    {
+        check_fun_call(); // Handle the function call recursively
+        return !failed;   // If the function call was valid, return true
+    }
+
+    // Otherwise, check if it's a valid expression (this handles non-function calls)
+    return is_valid_expression();
+}
+
 void SyntaxAnalyzer::check_fun_call()
 {
-    consume(); // Consume call identifier
-    consume(); // Consume '('
+    consume(); // Consume the function name identifier
+    consume(); // Consume the '('
 
-    // Setup expectations
-    bool expecting_arg = true;
-    bool expecting_comma = false;
+    bool expecting_arg = true;    // Initially, we are expecting an argument
+    bool expecting_comma = false; // After parsing one argument, we expect a comma or the closing parenthesis
 
-    // Loop through arguments until it finds ')' or goes out of bounds
     while (in_bounds() && peek().type != TokenType::PAREN_CLOSE)
     {
-        // Check if it's expecting an argument
         if (expecting_arg)
         {
-            // If so, validate argument
-            check_argument();
+            // Validate the argument as a valid expression
+            if (!is_valid_expression()) // Check for a valid expression
+            {
+                REPORT_ERROR("Invalid argument, expected expression");
+                return;
+            }
 
-            // Debounce expectations
+            // After parsing an argument, expect either a comma or the closing parenthesis
             expecting_arg = false;
             expecting_comma = true;
-
-            // Skip base-case
             continue;
         }
 
-        // Check if it's expecting a comma for arg seperation
         if (expecting_comma)
         {
-            // If so, assert the presence of a comma
-            EXPECT_TOKEN(TokenType::COMMA);
+            // If we are expecting a comma, check for it
+            if (peek().type != TokenType::COMMA)
+            {
+                REPORT_ERROR("Expected comma between arguments");
+                return;
+            }
 
-            // Debounce expectations
-            expecting_arg = true;
+            consume();            // Consume the comma
+            expecting_arg = true; // Now expect another argument
             expecting_comma = false;
         }
     }
 
-    // Check if the parantheses were closed after a comma
-    // This is invalid syntax, as defined in {root}/GRAMMAR.md
-    // eg. function(argument0, argument1,)
-    if (peek().type == TokenType::COMMA)
-    {
-        // Report error and return
-        REPORT_ERROR("Function call arguments closed with ','");
-        return;
-    }
-
-    // If all goes well, this is where it should end up
-    // Ensure we have a closing parenthesis
+    // Ensure the function call ends with a closing parenthesis
     EXPECT_TOKEN(TokenType::PAREN_CLOSE);
     return;
 }
@@ -306,14 +285,8 @@ void SyntaxAnalyzer::check_fun_call()
 // Basically just validate expression but wrapped for verbosity
 void SyntaxAnalyzer::check_argument()
 {
-    if (peek().is_literal() || peek().type == TokenType::IDENTIFIER)
-    {
-        consume();
-    }
-    else if (!is_valid_expression())
-    {
-        REPORT_ERROR("Invalid argument in function call; expected identifier, literal, or expression");
-    }
+    if (!is_valid_expression())
+        REPORT_ERROR("Invalid argument in function call; expected valid expression");
 }
 
 // Returns if the a sequence of tokens starting from the current one can form a syntactically correct identifier expression/statement
@@ -329,9 +302,8 @@ void SyntaxAnalyzer::check_ident_token()
     {
         // Check for function calls
         if (peek(1).type == TokenType::PAREN_OPEN)
-        {
             check_fun_call();
-        }
+
         // Check for index expressions/statements
         else if (peek(1).type == TokenType::DOT)
         {
@@ -445,7 +417,7 @@ void SyntaxAnalyzer::check_decl()
             if (is_global)
             {
                 // Emit a warning
-                emitter.out(container, pos, "Redundant usage of 'const'; global declarations are implicitly constant", Emitter::Severity::WARNING);
+                emitter.out(pos, "Redundant usage of 'const'; global declarations are implicitly constant", Emitter::Severity::WARNING);
             }
 
             // Consume const
@@ -485,7 +457,6 @@ void SyntaxAnalyzer::check_decl()
             // Otherwise, report an "info"
             // This is because explicit type declarations are not required in non-property declarations
             emitter.out(
-                container,
                 pos - 1,
                 std::format(
                     "Type not explicitly specified for variable '{}'; automatically deduced type '{}'",

@@ -18,13 +18,13 @@ struct viaRAllocatorState
     viaValue *head;
 };
 
-inline viaValue *viaR_getregister(viaRAllocatorState *R, viaRegister reg)
+inline viaValue *viaR_getregister(viaRAllocatorState *R, Register reg)
 {
     viaValue *ptr = R->head + reg;
     return ptr;
 }
 
-inline void viaR_setregister(viaRAllocatorState *R, viaRegister reg, viaValue val)
+inline void viaR_setregister(viaRAllocatorState *R, Register reg, viaValue val)
 {
     viaValue *addr = R->head + reg;
     *addr = val;

@@ -12,10 +12,6 @@ using namespace via::Parsing;
 // Compiles the AST into instructions
 void Compiler::generate()
 {
-    static bool __called__ = false;
-    VIA_ASSERT(!__called__, "Compiler::generate() called twice");
-    __called__ = true;
-
     // Optimize AST before generating bytecode
     pass_manager.apply_astree(generator, *bytecode);
     bytecode = generator.generate();
@@ -29,7 +25,7 @@ void Compiler::add_default_passes()
     add_pass(std::make_unique<ConstFoldOptimizationPass>());
 }
 
-void Compiler::add_pass(std::unique_ptr<OptimizationPass> pass)
+void Compiler::add_pass(std::unique_ptr<OptimizationPass>)
 {
     // pass_manager.add_pass(std::move(pass));
 }

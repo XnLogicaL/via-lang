@@ -8,20 +8,18 @@
 namespace viaCLI
 {
 
-class REPL
+class REPLEngine
 {
 public:
-    REPL()
+    REPLEngine()
         : V(nullptr){};
-    ~REPL() = default;
+    ~REPLEngine() = default;
 
-    void execute(std::string);
-
-private:
+    void execute(std::string, bool print);
     via::viaState *V;
 
 private:
-    std::vector<via::viaInstruction> compile(std::string);
+    std::vector<via::Instruction> compile(std::string);
 };
 
 } // namespace viaCLI

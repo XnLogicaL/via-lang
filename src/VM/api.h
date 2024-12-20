@@ -21,7 +21,7 @@ namespace via
 
 // Manually sets the VM exit data
 // ! Internal usage only, made public for libraries
-inline void via_setexitdata(viaState *V, viaExitCode_t exitc, const std::string &exitm) noexcept
+inline void via_setexitdata(viaState *V, ExitCode exitc, const std::string &exitm) noexcept
 {
     V->exitc = exitc;
     // I don't know why but `strdup` is deprecated but `_strdup` isn't
@@ -29,7 +29,7 @@ inline void via_setexitdata(viaState *V, viaExitCode_t exitc, const std::string 
     V->exitm = strdup(exitm.c_str());
 }
 
-inline bool via_validjmpaddr(viaState *V, const viaInstruction *addr) noexcept
+inline bool via_validjmpaddr(viaState *V, const Instruction *addr) noexcept
 {
     return (addr >= V->ihp) && (addr <= V->ibp);
 }
@@ -67,24 +67,24 @@ inline void via_fatalerr(viaState *V, const std::string &err)
     V->abrt = true;
 }
 
-//* viaRegister operations
+//* Register operations
 
 // Sets register <R> to the given value <v>
 template<typename T = viaValue>
     requires(!std::is_pointer_v<T>)
-inline void via_setregister(viaState *V, viaRegister R, T val) noexcept
+inline void via_setregister(viaState *V, Register R, T val) noexcept
 {
     viaR_setregister(V->ralloc, R, val);
 }
 
 // Returns the value of register <R>
-inline viaValue *via_getregister(viaState *V, viaRegister R) noexcept
+inline viaValue *via_getregister(viaState *V, Register R) noexcept
 {
     return viaR_getregister(V->ralloc, R);
 }
 
 // Compares the value of two registers and returns wether if they are equivalent
-inline constexpr bool via_cmpregister(viaState *V, viaRegister R0, viaRegister R1) noexcept
+inline constexpr bool via_cmpregister(viaState *V, Register R0, Register R1) noexcept
 {
     // Early return if registers are equivalent
     if (via_getregister(V, R0) == via_getregister(V, R1))
@@ -100,11 +100,11 @@ inline constexpr bool via_cmpregister(viaState *V, viaRegister R0, viaRegister R
     // Common types first to improve branching efficiency
     switch (v0.type)
     {
-    case viaValueType::Number:
+    case ValueType::Number:
         return v0.val_number == v1.val_number;
-    case viaValueType::Bool:
+    case ValueType::Bool:
         return v0.val_boolean == v1.val_boolean;
-    case viaValueType::String:
+    case ValueType::String:
         if (v0.val_string->ptr && v1.val_string->ptr)
         {
             if (strlen(v0.val_string->ptr) != strlen(v1.val_string->ptr))
@@ -112,12 +112,12 @@ inline constexpr bool via_cmpregister(viaState *V, viaRegister R0, viaRegister R
             return !strcmp(v0.val_string->ptr, v1.val_string->ptr);
         }
         return v0.val_string->ptr == v1.val_string->ptr;
-    case viaValueType::Nil:
+    case ValueType::Nil:
         return true; // Nil values are always equal
-    case viaValueType::Ptr:
+    case ValueType::Ptr:
         return v0.val_pointer == v1.val_pointer;
     default:
-        return false; // Unique objects (CFunc, Func, viaTable, viaTableKey) are never equal
+        return false; // Unique objects (CFunc, Func, viaTable, TableKey) are never equal
     }
 
     // If the type isn't matched, return false by default
@@ -132,20 +132,20 @@ inline bool via_compare(viaState *, viaValue V0, viaValue V1)
 
     switch (V0.type)
     {
-    case viaValueType::Bool:
+    case ValueType::Bool:
         return V0.val_boolean == V1.val_boolean;
-    case viaValueType::Number:
+    case ValueType::Number:
         return V0.val_number == V1.val_number;
-    case viaValueType::Nil:
+    case ValueType::Nil:
         // Nil values are always equal
         return true;
-    case viaValueType::String:
+    case ValueType::String:
         return !strcmp(V0.val_string->ptr, V1.val_string->ptr);
-    case viaValueType::Ptr:
+    case ValueType::Ptr:
         return V0.val_pointer == V1.val_pointer;
-    case viaValueType::Func:
+    case ValueType::Func:
         return V0.val_function == V1.val_function;
-    case viaValueType::CFunc:
+    case ValueType::CFunc:
         return V0.val_cfunction == V1.val_cfunction;
     default:
         // Unique objects (such as table) are never equal
@@ -159,7 +159,7 @@ inline bool via_compare(viaState *, viaValue V0, viaValue V1)
 
 // Soft-unwinds the stack to find variable with declared with <id>
 // Starts searching from the first-most call frame
-inline viaValue via_getvariable(viaState *V, viaVariableIdentifier_t id)
+inline viaValue via_getvariable(viaState *V, VarId id)
 {
     for (viaFunction *frame : *V->stack)
     {
@@ -176,7 +176,7 @@ inline viaValue via_getvariable(viaState *V, viaVariableIdentifier_t id)
 }
 
 // Loads the value of the variable declared with <id> into register <reg>
-inline viaValue via_loadvariable(viaState *V, viaVariableIdentifier_t id, viaRegister reg)
+inline viaValue via_loadvariable(viaState *V, VarId id, Register reg)
 {
     viaValue val = via_getvariable(V, id);
     via_setregister(V, reg, val);
@@ -184,13 +184,13 @@ inline viaValue via_loadvariable(viaState *V, viaVariableIdentifier_t id, viaReg
     return val;
 }
 
-inline void via_setlocal(viaState *V, viaVariableIdentifier_t id, viaValue val)
+inline void via_setlocal(viaState *V, VarId id, viaValue val)
 {
     viaFunction *frame = viaS_top(V->stack);
     frame->locals[id] = val;
 }
 
-inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue val)
+inline void via_setvariable(viaState *V, VarId id, viaValue val)
 {
     for (viaFunction *frame : *V->stack)
     {
@@ -208,7 +208,7 @@ inline void via_setvariable(viaState *V, viaVariableIdentifier_t id, viaValue va
 
 // Similar to `via_getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller
 template<typename T>
-    requires std::same_as<T, viaVariableIdentifier_t>
+    requires std::same_as<T, VarId>
 inline viaValue *via_getglobal(viaState *V, T id)
 {
     viaFunction *global = *V->stack->sbp;
@@ -221,7 +221,7 @@ inline viaValue *via_getglobal(viaState *V, T id)
 }
 
 // Similar to `via_loadvariable` but explicitly looks for the variable in the global scope
-inline viaValue *via_loadglobal(viaState *V, viaVariableIdentifier_t id, viaRegister reg)
+inline viaValue *via_loadglobal(viaState *V, VarId id, Register reg)
 {
     viaValue *val = via_getglobal(V, id);
     via_setregister(V, reg, *val);
@@ -229,7 +229,7 @@ inline viaValue *via_loadglobal(viaState *V, viaVariableIdentifier_t id, viaRegi
 }
 
 // Similar to `via_setvariable` but explicitly sets the variable in the global scope
-inline void via_setglobal(viaState *V, viaVariableIdentifier_t id, viaValue val)
+inline void via_setglobal(viaState *V, VarId id, viaValue val)
 {
     viaFunction *global = *V->stack->sbp;
     global->locals[id] = val;
@@ -249,19 +249,19 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
 
     switch (val.type)
     {
-    case viaValueType::Number:
+    case ValueType::Number:
     {
         viaString *str = viaT_newstring(V, std::to_string(val.val_number).c_str());
         val.val_string = str;
         break;
     }
-    case viaValueType::Bool:
+    case ValueType::Bool:
     {
         viaString *str = viaT_newstring(V, val.val_boolean ? "true" : "false");
         val.val_string = str;
         break;
     }
-    case viaValueType::Table:
+    case ValueType::Table:
     {
         std::string str = "{";
 
@@ -279,14 +279,14 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
         val.val_string = viaT_newstring(V, str.c_str());
         break;
     }
-    case viaValueType::Func:
+    case ValueType::Func:
     {
         const void *faddr = val.val_function;
         viaString *str = viaT_newstring(V, std::format("<function@{}>", faddr).c_str());
         val.val_string = str;
         break;
     }
-    case viaValueType::CFunc:
+    case ValueType::CFunc:
     {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = reinterpret_cast<const void *>(val.val_cfunction);
@@ -299,7 +299,7 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
         break;
     }
 
-    val.type = viaValueType::String;
+    val.type = ValueType::String;
     return val;
 }
 
@@ -312,7 +312,7 @@ inline viaValue &via_tobool(viaState *V, viaValue &val)
 
     switch (val.type)
     {
-    case viaValueType::Nil:
+    case ValueType::Nil:
         val.val_boolean = false;
         break;
     default:
@@ -320,7 +320,7 @@ inline viaValue &via_tobool(viaState *V, viaValue &val)
         break;
     }
 
-    val.type = viaValueType::Bool;
+    val.type = ValueType::Bool;
     return val;
 }
 
@@ -333,23 +333,23 @@ inline viaValue &via_tonumber(viaState *V, viaValue &val)
 
     switch (val.type)
     {
-    case viaValueType::String:
+    case ValueType::String:
         val.val_number = std::stod(val.val_string->ptr);
         break;
-    case viaValueType::Bool:
+    case ValueType::Bool:
         val.val_number = val.val_boolean ? 1.0f : 0.0f;
         break;
     default:
         return val;
     }
 
-    val.type = viaValueType::Number;
+    val.type = ValueType::Number;
     return val;
 }
 
 // Utility function for quick table indexing
 // Returns the value of key <k> if present in table <t>
-inline viaValue *via_gettableindex(viaState *V, viaTable *T, viaTableKey key, bool search_meta)
+inline viaValue *via_gettableindex(viaState *V, viaTable *T, TableKey key, bool search_meta)
 {
     auto it = T->data.find(key);
 
@@ -365,11 +365,11 @@ inline viaValue *via_gettableindex(viaState *V, viaTable *T, viaTableKey key, bo
 }
 
 // Assigns the given value <v> to key <k> in table <t>
-inline void via_settableindex(viaState *V, viaTable *T, viaTableKey key, viaValue val)
+inline void via_settableindex(viaState *V, viaTable *T, TableKey key, viaValue val)
 {
     if (viaT_checknil(V, val))
     {
-        if (via_gettableindex(V, T, key, false)->type != viaValueType::Nil)
+        if (via_gettableindex(V, T, key, false)->type != ValueType::Nil)
             T->data.erase(key);
 
         return;
@@ -457,7 +457,7 @@ inline void via_callf(viaState *V, viaFunction *f, bool save_state)
 {
     if (save_state)
     {
-        viaInstruction *begin = f->bytecode.data();
+        Instruction *begin = f->bytecode.data();
 
         // Save VM state to be restored when the function stops executing
         V->sstate = new viaState(*V);
@@ -529,7 +529,7 @@ inline viaValue via_type(viaState *V, viaValue v)
 inline void via_call(viaState *V, viaValue val)
 {
     V->calltype = viaCallType::CALL;
-    // V->argc = static_cast<viaCallArgC_t>(V->arguments->size);
+    // V->argc = static_cast<CallArgc>(V->arguments->size);
 
     if (viaT_checkfunction(V, val))
         via_callf(V, val.val_function, true);
@@ -537,7 +537,7 @@ inline void via_call(viaState *V, viaValue val)
         via_callc(V, val.val_cfunction);
     else if (viaT_checktable(V, val))
     {
-        viaTableKey mhash = viaT_hashstring(V, "__call");
+        TableKey mhash = viaT_hashstring(V, "__call");
         viaValue *mmcall = via_gettableindex(V, val.val_table, mhash, true);
 
         // Push self argument
@@ -552,7 +552,7 @@ inline void via_call(viaState *V, viaValue val)
     }
 }
 
-inline void via_fastcall1(viaState *V, viaValue, viaRegister)
+inline void via_fastcall1(viaState *V, viaValue, Register)
 {
     V->calltype = viaCallType::FASTCALL;
     V->argc = 1;
@@ -565,7 +565,7 @@ inline viaValue via_len(viaState *V, viaValue val)
         return viaT_stackvalue(V, static_cast<viaNumber>(strlen(val.val_string->ptr)));
     else if (viaT_checktable(V, val))
     {
-        viaTableKey mhash = viaT_hashstring(V, "__len");
+        TableKey mhash = viaT_hashstring(V, "__len");
         viaValue *mmlen = via_gettableindex(V, val.val_table, mhash, true);
 
         if (viaT_checknil(V, *mmlen))
@@ -582,7 +582,7 @@ inline viaValue via_len(viaState *V, viaValue val)
 }
 
 // Loads the value of key <k> in table <t> into register <R>, if present in table
-inline viaValue *via_loadtableindex(viaState *V, viaTable *T, viaTableKey key, viaRegister R)
+inline viaValue *via_loadtableindex(viaState *V, viaTable *T, TableKey key, Register R)
 {
     viaValue *val = via_gettableindex(V, T, key, true);
     via_setregister(V, R, *val);
@@ -612,7 +612,7 @@ inline viaValue via_typeof(viaState *V, viaValue val)
 
 // Calls the value of key <k> in table <t>, if callable
 // Uses the `call` method internally
-inline void via_callmethod(viaState *V, viaTable *T, viaTableKey key)
+inline void via_callmethod(viaState *V, viaTable *T, TableKey key)
 {
     viaValue *at = via_gettableindex(V, T, key, true);
     // ! This doesn't need to be a pointer because the underlying table type is already a pointer
@@ -666,16 +666,18 @@ inline viaValue via_getmetatable(viaState *V, viaTable *T)
 }
 
 //* Utility
-inline viaValue via_toviavalue(viaState *V, const viaOperand &operand)
+inline viaValue via_toviavalue(viaState *V, const Operand &operand)
 {
     switch (operand.type)
     {
-    case viaOperandType_t::Number:
+    case OperandType::Number:
         return viaT_stackvalue(V, operand.val_number);
-    case viaOperandType_t::Bool:
+    case OperandType::Bool:
         return viaT_stackvalue(V, operand.val_boolean);
-    case viaOperandType_t::String:
+    case OperandType::String:
         return viaT_stackvalue(V, viaT_newstring(V, operand.val_string));
+    case via::OperandType::Nil:
+        return viaT_stackvalue(V);
     default:
         via_setexitdata(V, 1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type)));
         V->abrt = true;
@@ -687,7 +689,7 @@ inline viaValue via_toviavalue(viaState *V, const viaOperand &operand)
 
 // Loads a static library to the global environment
 // If called during runtime, it will terminate the VM
-inline void via_loadlib(viaState *V, viaVariableIdentifier_t id, viaValue lib) noexcept
+inline void via_loadlib(viaState *V, VarId id, viaValue lib) noexcept
 {
     if (V->tstate == viaThreadState::RUNNING)
     {
@@ -696,7 +698,7 @@ inline void via_loadlib(viaState *V, viaVariableIdentifier_t id, viaValue lib) n
         return;
     }
 
-    if (via_getglobal(V, id)->type != viaValueType::Nil)
+    if (via_getglobal(V, id)->type != ValueType::Nil)
     {
         via_setexitdata(V, 1, std::format("Attempt to load library '{}' twice", id));
         V->abrt = true;
@@ -767,6 +769,13 @@ inline viaValue via_arith(viaState *V, viaValue lhs, viaValue rhs, OpCode op)
     return viaT_stackvalue(V);
 }
 
+#if defined(__GNUC__) || defined(__clang__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#elif defined(_MSC_VER)
+#    pragma warning(push)
+#    pragma warning(disable : 4100)
+#endif
 inline void via_iarith(viaState *V, viaValue *lhs, viaValue rhs, OpCode op)
 {
 #ifdef VIA_DEBUG
@@ -797,5 +806,10 @@ inline void via_iarith(viaState *V, viaValue *lhs, viaValue rhs, OpCode op)
         break;
     }
 }
+#if defined(__GNUC__) || defined(__clang__)
+#    pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#    pragma warning(pop)
+#endif
 
 } // namespace via

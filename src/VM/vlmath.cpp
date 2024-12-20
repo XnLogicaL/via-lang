@@ -207,7 +207,7 @@ void math_ceil(viaState *V)
 
 void viaL_loadmathlib(viaState *V)
 {
-    static const viaHashMap_t<viaRawString_t, viaValue> math_properties = {
+    static const HashMap<const char *, viaValue> math_properties = {
 
         // Constants
         {"pi", viaT_stackvalue(V, 3.1415926535)},
@@ -238,7 +238,7 @@ void viaL_loadmathlib(viaState *V)
 
     for (auto it : math_properties)
     {
-        viaTableKey key = viaT_hashstring(V, it.first);
+        TableKey key = viaT_hashstring(V, it.first);
         via_settableindex(V, lib, key, it.second);
     }
 

@@ -19,19 +19,27 @@ public:
         WARNING,
         ERROR
     };
+
+    ~Emitter() = default;
+    Emitter(viaSourceContainer &container)
+        : container(container)
+    {
+    }
+
     // Main "entry point" for underlined/highlighted errors
-    void out(viaSourceContainer, size_t, std::string, Severity);
+    void out(size_t, std::string, Severity);
 
 private:
+    viaSourceContainer &container;
     // I forgot what this does
-    std::vector<std::string> split_lines(const std::string &);
+    std::vector<std::string> split_lines();
     // Returns a header based on the given severity
     // These headers will vary in terms of color, text, etc.
     std::string get_severity_header(Severity);
     // Draws a horizontal line under the line line_number of source
     // The dimensions of the line is determined by the offset and length parameters of this function
     // Attaches a message to the top of the underlined line, with the given severity
-    std::string underline_line(const std::string &, int, int, int, const std::string &, Severity);
+    std::string underline_line(int, int, int, const std::string &, Severity);
 };
 
 } // namespace via::Tokenization

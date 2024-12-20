@@ -13,11 +13,13 @@ public:
     Cleaner() = default;
     ~Cleaner() = default;
 
+    void add_callback(std::function<void(void)>);
     void add_malloc(const void *);
     void clean();
 
 private:
     std::vector<const void *> free_list;
+    std::vector<std::function<void(void)>> callback_list;
 };
 
 } // namespace via::Compilation

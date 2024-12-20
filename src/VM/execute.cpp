@@ -6,10 +6,11 @@
  * This is due to the performance critical nature of it's contents
  */
 
-#define VIA_DEBUG
-
 #include "execute.h"
 #include "api.h"
+#include "chunk.h"
+#include "execlinux.h"
+#include "execwin.h"
 #include "core.h"
 #include "shared.h"
 #include "state.h"
@@ -26,9 +27,9 @@
 
 // Check for debug mode and warn the user about it's possible effects on behavior
 #ifdef VIA_DEBUG
-#    warning Compiling via in debug mode; optimizations will be disabled!
+#    pragma message(Compiling via in debug mode; some optimizations may be disabled)
 #    ifdef VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE
-#        warning Enabling optimizations in debug mode may cause instability issues!
+#        pragma message(Enabling optimizations in debug mode may cause instability issues)
 #    endif
 #endif
 // Simple macro for exiting the VM
@@ -62,10 +63,6 @@
         VM_LOAD(); \
         VM_DISPATCH(); \
     }
-
-// Returns the operand at offset <off>
-// ! Can cause undefined behavior
-#define VM_OPND(off) (V->ip->operandv[off])
 
 // Standard VM assertion
 // Terminates VM if the assertion fails
@@ -108,7 +105,7 @@ using namespace Compilation;
 
 // Check if the instruction holds an empty OpCode, e.g. NOP or END
 // Used for runtime optimizations
-inline bool _is_empty_instruction(viaInstruction *instr)
+inline bool _is_empty_instruction(Instruction *instr)
 {
     return instr->op == OpCode::NOP || instr->op == OpCode::END;
 }
@@ -120,7 +117,7 @@ inline void _optimize_empty_instruction_sequence(viaState *V)
     // Check for an empty instruction at the current IP
     if (VIA_UNLIKELY(_is_empty_instruction(V->ip)))
     {
-        viaJmpOffset_t skip_count = 1;
+        JmpOffset skip_count = 1;
 
         // Find the end of the sequence of empty instructions
         while (V->ip + skip_count < V->ibp && _is_empty_instruction(V->ip + skip_count))
@@ -130,7 +127,7 @@ inline void _optimize_empty_instruction_sequence(viaState *V)
         if (skip_count > 1)
         {
             V->ip->op = OpCode::JMP;
-            V->ip->operandv[0] = {.type = viaOperandType_t::Number, .val_number = static_cast<double>(skip_count)};
+            V->ip->operand1 = {.type = OperandType::Number, .val_number = static_cast<double>(skip_count)};
         }
     }
 }
@@ -149,12 +146,25 @@ void via_execute(viaState *V)
 
 dispatch:
 {
-    // Increment path counter of this specific instruction
-    V->ip->pc++;
+    // Check if the instruction pointer is the start of a chunk
+    if (VIA_UNLIKELY(V->ip->chunk != nullptr))
+    {
+        // Increment chunk program counter
+        V->ip->chunk->pc++;
+        // Check if the program counter exceeds a certain threshold
+        // to determine if it needs to be compiled into machine code
+        if (V->ip->chunk->pc >= VIA_HOTPATH_THRESHOLD)
+        {
+            // This function automatically compiles the chunk if it hasn't been compiled before
+            jit::viaJIT_executechunk(V, V->ip->chunk);
+        }
 
-    // Flag the instruction as a "hot" instruction if it has been executed more than a certain amount
-    if (VIA_UNLIKELY(!V->ip->hot && V->ip->pc >= VIA_HOTPATH_THRESHOLD))
-        V->ip->hot = true;
+        // After the chunk has been executed,
+        // we need to find the next chunk and jump to it
+        for (Instruction *i = V->ip; i <= V->ihp; i++)
+            if (i->chunk != nullptr)
+                break;
+    }
 
     // Check if the state needs to be restored
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
@@ -177,10 +187,10 @@ dispatch:
 #ifdef VIA_DEBUG
     VM_ASSERT(
         // This is unlikely because for the ip to go out of bounds, the user specifically has to jump to an invalid address
-        // Otherwise, this is completely impossible
+        // Otherwise, this is completely impossible to be produced by the compiler
         VIA_UNLIKELY(via_validjmpaddr(V, V->ip)),
         std::format(
-            "viaInstruction pointer out of bounds (ip={}, ihp={}, ibp={})",
+            "Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
             reinterpret_cast<const void *>(V->ip),
             reinterpret_cast<const void *>(V->ihp),
             reinterpret_cast<const void *>(V->ibp)
@@ -191,6 +201,7 @@ dispatch:
     // This is unlikely because the VM very rarely yields at all
     if (VIA_UNLIKELY(V->yield))
     {
+        // This code is dogshit...
         long long waitt = static_cast<long long>(V->yieldfor * 1000);
         std::chrono::milliseconds dur = std::chrono::milliseconds(waitt);
         std::this_thread::sleep_for(dur);
@@ -201,14 +212,6 @@ dispatch:
     // This is because the LOAD protocol is invoked when VM_NEXT is called
     switch (V->ip->op)
     {
-#ifdef VIA_DEBUG
-    case OpCode::ERR:
-    {
-        via_setexitdata(V, 1, "ERR OpCode");
-        VM_EXIT();
-    }
-#endif
-
     case OpCode::END:
     case OpCode::NOP:
     {
@@ -223,8 +226,8 @@ dispatch:
 
     case OpCode::MOV:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rsrc = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand rsrc = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rsrc), "Expected Register for MOV source");
 #endif
@@ -245,8 +248,8 @@ dispatch:
     // Basically MOV but the registers aren't cleaned
     case OpCode::CPY:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rsrc = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand rsrc = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected Register for CPY destination");
         VM_ASSERT(viaC_checkregister(rsrc), "Expected Register for CPY source");
@@ -260,8 +263,8 @@ dispatch:
 
     case OpCode::LOAD:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand imm = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand imm = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected Register for LOAD destination");
 #endif
@@ -272,7 +275,7 @@ dispatch:
 
     case OpCode::NIL:
     {
-        viaOperand rdst = VM_OPND(0);
+        Operand rdst = V->ip->operand1;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected Register for NIL destination");
 #endif
@@ -311,7 +314,7 @@ dispatch:
 
     case OpCode::PUSHARG:
     {
-        viaOperand arg = VM_OPND(0);
+        Operand arg = V->ip->operand1;
         viaValue arg_val;
 
         if (VIA_LIKELY(viaC_checkregister(arg)))
@@ -325,7 +328,7 @@ dispatch:
 
     case OpCode::POPARG:
     {
-        viaOperand dst = VM_OPND(0);
+        Operand dst = V->ip->operand1;
         viaValue val = viaS_top(V->arguments);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for POPARG destination");
@@ -337,7 +340,7 @@ dispatch:
 
     case OpCode::PUSHRET:
     {
-        viaOperand ret = VM_OPND(0);
+        Operand ret = V->ip->operand1;
         viaValue ret_val;
 
         if (VIA_LIKELY(viaC_checkregister(ret)))
@@ -351,7 +354,7 @@ dispatch:
 
     case OpCode::POPRET:
     {
-        viaOperand dst = VM_OPND(0);
+        Operand dst = V->ip->operand1;
         viaValue val = viaS_top(V->returns);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for POPRET destination");
@@ -363,12 +366,12 @@ dispatch:
 
     case OpCode::SETLOCAL:
     {
-        viaOperand val = VM_OPND(0);
-        viaOperand id = VM_OPND(1);
+        Operand val = V->ip->operand1;
+        Operand id = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkidentifier(id), "Expected identifier for SETLOCAL id");
 #endif
-        viaVariableIdentifier_t id_t = viaT_hashstring(V, id.val_identifier);
+        VarId id_t = viaT_hashstring(V, id.val_identifier);
         // Slow-path: loaded value is a register
         if (VIA_UNLIKELY(viaC_checkregister(val)))
             via_setvariable(V, id_t, *via_getregister(V, val.val_register));
@@ -380,10 +383,10 @@ dispatch:
 
     case OpCode::LOADLOCAL:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand id = VM_OPND(1);
+        Operand dst = V->ip->operand1;
+        Operand id = V->ip->operand2;
 
-        viaVariableIdentifier_t id_t = id.val_number;
+        VarId id_t = viaT_hashstring(V, id.val_identifier);
 
         via_loadvariable(V, id_t, dst.val_register);
         VM_NEXT();
@@ -391,8 +394,8 @@ dispatch:
 
     case OpCode::SETGLOBAL:
     {
-        viaOperand id = VM_OPND(0);
-        viaOperand val = VM_OPND(1);
+        Operand val = V->ip->operand1;
+        Operand id = V->ip->operand2;
 
         // Slow-path: loaded value is a register
         if (VIA_UNLIKELY(viaC_checkregister(val)))
@@ -405,8 +408,8 @@ dispatch:
 
     case OpCode::LOADGLOBAL:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand id = VM_OPND(1);
+        Operand dst = V->ip->operand1;
+        Operand id = V->ip->operand2;
 
         via_loadglobal(V, viaT_hashstring(V, id.val_identifier), dst.val_register);
 
@@ -415,11 +418,11 @@ dispatch:
 
     case OpCode::LOADVAR:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand id = VM_OPND(1);
+        Operand dst = V->ip->operand1;
+        Operand id = V->ip->operand2;
 
-        viaVariableIdentifier_t id_t = viaT_hashstring(V, id.val_identifier);
-        viaValue val = viaT_stackvalue(V, viaValueType::Nil);
+        VarId id_t = viaT_hashstring(V, id.val_identifier);
+        viaValue val = viaT_stackvalue(V, ValueType::Nil);
 
         for (viaFunction *frame : *V->stack)
         {
@@ -437,9 +440,9 @@ dispatch:
 
     case OpCode::ADD:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -460,9 +463,9 @@ dispatch:
     }
     case OpCode::SUB:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -483,9 +486,9 @@ dispatch:
     }
     case OpCode::MUL:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -506,9 +509,9 @@ dispatch:
     }
     case OpCode::DIV:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -529,9 +532,9 @@ dispatch:
     }
     case OpCode::POW:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -552,9 +555,9 @@ dispatch:
     }
     case OpCode::MOD:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rlhs = VM_OPND(1);
-        viaOperand rrhs = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rlhs = V->ip->operand2;
+        Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
 #endif
@@ -576,12 +579,13 @@ dispatch:
 
     case OpCode::IADD:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -592,12 +596,13 @@ dispatch:
     }
     case OpCode::ISUB:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -608,12 +613,13 @@ dispatch:
     }
     case OpCode::IMUL:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -624,12 +630,13 @@ dispatch:
     }
     case OpCode::IDIV:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -640,12 +647,13 @@ dispatch:
     }
     case OpCode::IPOW:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -656,12 +664,13 @@ dispatch:
     }
     case OpCode::IMOD:
     {
-        viaOperand rlhs = VM_OPND(0);
-        viaOperand rrhs = VM_OPND(1);
+        Operand rlhs = V->ip->operand1;
+        Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
         viaValue rhs;
+
         if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
             rhs = *via_getregister(V, rrhs.val_register);
         else
@@ -673,32 +682,31 @@ dispatch:
 
     case OpCode::NEG:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
 
         viaValue lhsn = *via_getregister(V, lhs.val_register);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaT_checknumber(V, lhsn), "Expected Number for binary operand 0");
 #endif
         via_setregister(V, dst.val_register, viaT_stackvalue(V, -lhsn.val_number));
-
         VM_NEXT();
     }
 
     case OpCode::BAND:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 
         viaValue lhsn, rhsn;
 
-        if (VIA_LIKELY(lhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
             lhsn = *via_getregister(V, lhs.val_register);
 
-        if (VIA_LIKELY(rhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
             rhsn = *via_getregister(V, rhs.val_register);
@@ -709,18 +717,18 @@ dispatch:
     }
     case OpCode::BOR:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 
         viaValue lhsn, rhsn;
 
-        if (VIA_LIKELY(lhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
             lhsn = *via_getregister(V, lhs.val_register);
 
-        if (VIA_LIKELY(rhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
             rhsn = *via_getregister(V, rhs.val_register);
@@ -731,18 +739,18 @@ dispatch:
     }
     case OpCode::BXOR:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 
         viaValue lhsn, rhsn;
 
-        if (VIA_LIKELY(lhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
             lhsn = *via_getregister(V, lhs.val_register);
 
-        if (VIA_LIKELY(rhs.type == viaOperandType_t::Bool))
+        if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
             rhsn = *via_getregister(V, rhs.val_register);
@@ -754,8 +762,8 @@ dispatch:
 
     case OpCode::BNOT:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
         viaValue lhsn = *via_getregister(V, lhs.val_register);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaT_checkbool(V, lhsn), "Expected Bool for logical operand 0");
@@ -767,16 +775,16 @@ dispatch:
 
     case OpCode::EQ:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 
         viaValue lhsn, rhsn;
 
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == viaOperandType_t::Register))
+        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
         {
             lhsn = *via_getregister(V, lhs.val_register);
             lhs_reg = true;
@@ -784,7 +792,7 @@ dispatch:
         else
             lhsn = via_toviavalue(V, lhs);
 
-        if (VIA_UNLIKELY(rhs.type == viaOperandType_t::Register))
+        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
         {
             rhsn = *via_getregister(V, rhs.val_register);
             rhs_reg = true;
@@ -805,16 +813,16 @@ dispatch:
     }
     case OpCode::NEQ:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 
         viaValue lhsn, rhsn;
 
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == viaOperandType_t::Register))
+        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
         {
             lhsn = *via_getregister(V, lhs.val_register);
             lhs_reg = true;
@@ -822,7 +830,7 @@ dispatch:
         else
             lhsn = via_toviavalue(V, lhs);
 
-        if (VIA_UNLIKELY(rhs.type == viaOperandType_t::Register))
+        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
         {
             rhsn = *via_getregister(V, rhs.val_register);
             rhs_reg = true;
@@ -843,9 +851,9 @@ dispatch:
     }
     case OpCode::LT:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for LT destination");
         VM_ASSERT(viaC_checkregister(lhs), "Expected register for LT lhs");
@@ -880,9 +888,9 @@ dispatch:
     }
     case OpCode::GT:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for GT destination");
         VM_ASSERT(viaC_checkregister(lhs), "Expected register for GT lhs");
@@ -917,9 +925,9 @@ dispatch:
     }
     case OpCode::LE:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for LE destination");
         VM_ASSERT(viaC_checkregister(lhs), "Expected register for LE lhs");
@@ -954,9 +962,9 @@ dispatch:
     }
     case OpCode::GE:
     {
-        viaOperand dst = VM_OPND(0);
-        viaOperand lhs = VM_OPND(1);
-        viaOperand rhs = VM_OPND(2);
+        Operand dst = V->ip->operand1;
+        Operand lhs = V->ip->operand2;
+        Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
         VM_ASSERT(viaC_checkregister(dst), "Expected register for GE destination");
         VM_ASSERT(viaC_checkregister(lhs), "Expected register for GE lhs");
@@ -992,7 +1000,7 @@ dispatch:
 
     case OpCode::STDOUT:
     {
-        viaOperand rsrc = VM_OPND(0);
+        Operand rsrc = V->ip->operand1;
 
         viaValue *src = via_getregister(V, rsrc.val_register);
         std::cout << via_tostring(V, *src).val_string->ptr;
@@ -1002,7 +1010,7 @@ dispatch:
 
     case OpCode::GCADD:
     {
-        viaOperand raddr = VM_OPND(0);
+        Operand raddr = V->ip->operand1;
         viaValue addrv = *via_getregister(V, raddr.val_register);
 #ifdef VIA_DEBUG
         VM_ASSERT(viaT_checkptr(V, addrv), "Expected Ptr for GCADD");
@@ -1026,34 +1034,34 @@ dispatch:
 
     case OpCode::EXIT:
     {
-        viaOperand rcode = VM_OPND(0);
+        Operand rcode = V->ip->operand1;
 
         viaValue *code = via_getregister(V, rcode.val_register);
         viaNumber ecode = via_tonumber(V, *code).val_number;
-        via_setexitdata(V, static_cast<viaExitCode_t>(ecode), "VM exited by user");
+        via_setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
 
         VM_EXIT();
     }
 
     case OpCode::JMP:
     {
-        viaOperand offset = VM_OPND(0);
+        Operand offset = V->ip->operand1;
 
-        VM_JMP(static_cast<viaJmpOffset_t>(offset.val_number));
+        VM_JMP(static_cast<JmpOffset>(offset.val_number));
         VM_NEXT();
     }
 
     case OpCode::JNZ:
     case OpCode::JZ:
     {
-        viaOperand condr = VM_OPND(0);
-        viaOperand offset = VM_OPND(1);
+        Operand condr = V->ip->operand1;
+        Operand offset = V->ip->operand2;
 
         viaValue cond = *via_getregister(V, condr.val_register);
         // We don't need to save the return value because this function modifies `val`
         via_tonumber(V, cond);
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JNZ ? (cond.val_number != 0) : (cond.val_number == 0))
             VM_JMP(actual_offset);
 
@@ -1063,13 +1071,13 @@ dispatch:
     case OpCode::JEQ:
     case OpCode::JNEQ:
     {
-        viaOperand condlr = VM_OPND(0);
-        viaOperand condrr = VM_OPND(1);
-        viaOperand offset = VM_OPND(2);
+        Operand condlr = V->ip->operand1;
+        Operand condrr = V->ip->operand2;
+        Operand offset = V->ip->operand3;
 
         bool cond = via_cmpregister(V, condlr.val_register, condrr.val_register);
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JEQ ? cond : !cond)
             VM_JMP(actual_offset);
 
@@ -1079,13 +1087,13 @@ dispatch:
     case OpCode::JLT:
     case OpCode::JNLT:
     {
-        viaOperand condlr = VM_OPND(0);
-        viaOperand condrr = VM_OPND(1);
-        viaOperand offset = VM_OPND(2);
+        Operand condlr = V->ip->operand1;
+        Operand condrr = V->ip->operand2;
+        Operand offset = V->ip->operand3;
 
         bool cond = via_getregister(V, condlr.val_register)->val_number < via_getregister(V, condrr.val_register)->val_number;
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JEQ ? cond : !cond)
             VM_JMP(actual_offset);
 
@@ -1095,13 +1103,13 @@ dispatch:
     case OpCode::JGT:
     case OpCode::JNGT:
     {
-        viaOperand condlr = VM_OPND(0);
-        viaOperand condrr = VM_OPND(1);
-        viaOperand offset = VM_OPND(2);
+        Operand condlr = V->ip->operand1;
+        Operand condrr = V->ip->operand2;
+        Operand offset = V->ip->operand3;
 
         bool cond = via_getregister(V, condlr.val_register)->val_number > via_getregister(V, condrr.val_register)->val_number;
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JEQ ? cond : !cond)
             VM_JMP(actual_offset);
 
@@ -1111,13 +1119,13 @@ dispatch:
     case OpCode::JLE:
     case OpCode::JNLE:
     {
-        viaOperand condlr = VM_OPND(0);
-        viaOperand condrr = VM_OPND(1);
-        viaOperand offset = VM_OPND(2);
+        Operand condlr = V->ip->operand1;
+        Operand condrr = V->ip->operand2;
+        Operand offset = V->ip->operand3;
 
         bool cond = via_getregister(V, condlr.val_register)->val_number <= via_getregister(V, condrr.val_register)->val_number;
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JEQ ? cond : !cond)
             VM_JMP(actual_offset);
 
@@ -1127,13 +1135,13 @@ dispatch:
     case OpCode::JGE:
     case OpCode::JNGE:
     {
-        viaOperand condlr = VM_OPND(0);
-        viaOperand condrr = VM_OPND(1);
-        viaOperand offset = VM_OPND(2);
+        Operand condlr = V->ip->operand1;
+        Operand condrr = V->ip->operand2;
+        Operand offset = V->ip->operand3;
 
         bool cond = via_getregister(V, condlr.val_register)->val_number >= via_getregister(V, condrr.val_register)->val_number;
 
-        viaJmpOffset_t actual_offset = static_cast<viaJmpOffset_t>(offset.val_number);
+        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
         if (V->ip->op == OpCode::JEQ ? cond : !cond)
             VM_JMP(actual_offset);
 
@@ -1142,7 +1150,7 @@ dispatch:
 
     case OpCode::JL:
     {
-        viaOperand label = VM_OPND(0);
+        Operand label = V->ip->operand1;
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
@@ -1154,8 +1162,8 @@ dispatch:
     case OpCode::JLZ:
     case OpCode::JLNZ:
     {
-        viaOperand valr = VM_OPND(0);
-        viaOperand label = VM_OPND(1);
+        Operand valr = V->ip->operand1;
+        Operand label = V->ip->operand2;
 
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
@@ -1174,11 +1182,11 @@ dispatch:
     case OpCode::JLEQ:
     case OpCode::JLNEQ:
     {
-        viaOperand lhsr = VM_OPND(0);
-        viaOperand rhsr = VM_OPND(1);
-        viaOperand label = VM_OPND(2);
+        Operand lhsr = V->ip->operand1;
+        Operand rhsr = V->ip->operand2;
+        Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(LabelId(label.val_identifier));
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
@@ -1194,9 +1202,9 @@ dispatch:
     case OpCode::JLLT:
     case OpCode::JLNLT:
     {
-        viaOperand lhsr = VM_OPND(0);
-        viaOperand rhsr = VM_OPND(1);
-        viaOperand label = VM_OPND(2);
+        Operand lhsr = V->ip->operand1;
+        Operand rhsr = V->ip->operand2;
+        Operand label = V->ip->operand3;
 
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
@@ -1214,9 +1222,9 @@ dispatch:
     case OpCode::JLGT:
     case OpCode::JLNGT:
     {
-        viaOperand lhsr = VM_OPND(0);
-        viaOperand rhsr = VM_OPND(1);
-        viaOperand label = VM_OPND(2);
+        Operand lhsr = V->ip->operand1;
+        Operand rhsr = V->ip->operand2;
+        Operand label = V->ip->operand3;
 
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
@@ -1234,9 +1242,9 @@ dispatch:
     case OpCode::JLLE:
     case OpCode::JLNLE:
     {
-        viaOperand lhsr = VM_OPND(0);
-        viaOperand rhsr = VM_OPND(1);
-        viaOperand label = VM_OPND(2);
+        Operand lhsr = V->ip->operand1;
+        Operand rhsr = V->ip->operand2;
+        Operand label = V->ip->operand3;
 
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
@@ -1254,9 +1262,9 @@ dispatch:
     case OpCode::JLGE:
     case OpCode::JLNGE:
     {
-        viaOperand lhsr = VM_OPND(0);
-        viaOperand rhsr = VM_OPND(1);
-        viaOperand label = VM_OPND(2);
+        Operand lhsr = V->ip->operand1;
+        Operand rhsr = V->ip->operand2;
+        Operand label = V->ip->operand3;
 
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
@@ -1273,11 +1281,11 @@ dispatch:
 
     case OpCode::CALL:
     {
-        viaOperand rfn = VM_OPND(0);
-        viaOperand argc = VM_OPND(1);
+        Operand rfn = V->ip->operand1;
+        Operand argc = V->ip->operand2;
 
         // Set argc
-        V->argc = static_cast<viaCallArgC_t>(argc.val_number);
+        V->argc = static_cast<CallArgc>(argc.val_number);
 
         // Call function
         via_call(V, *via_getregister(V, rfn.val_register));
@@ -1294,9 +1302,9 @@ dispatch:
 
     case OpCode::LABEL:
     {
-        viaOperand id = VM_OPND(0);
-        viaLabelKey_t key = id.val_identifier;
-        viaInstruction *instr = V->ip;
+        Operand id = V->ip->operand1;
+        LabelId key = id.val_identifier;
+        Instruction *instr = V->ip;
 
         auto it = V->labels->find(key);
         if (it == V->labels->end())
@@ -1318,7 +1326,7 @@ dispatch:
 
     case OpCode::FUNC:
     {
-        viaOperand rfn = VM_OPND(0);
+        Operand rfn = V->ip->operand1;
         viaFunction *fn = new viaFunction;
         fn->line = 0;
         // TODO: Accept a valid user-set ID
@@ -1340,7 +1348,7 @@ dispatch:
             }
 
             // Copy the instruction and insert into the function object
-            viaInstruction cpy = *V->ip;
+            Instruction cpy = *V->ip;
             fn->bytecode.push_back(cpy);
 
             // Mark OpCode as NOP so the VM skips this instruction
@@ -1354,14 +1362,14 @@ dispatch:
 
     case OpCode::CALLM:
     {
-        viaOperand rtbl = VM_OPND(0);
-        viaOperand ridx = VM_OPND(1);
+        Operand rtbl = V->ip->operand1;
+        Operand ridx = V->ip->operand2;
 
         viaValue tbl = *via_getregister(V, rtbl.val_register);
         viaValue idx = *via_getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        viaTableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<viaHash_t>(idx.val_number);
+        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
 #ifdef VIA_DEBUG
         // Assert that the value is a table
         std::string _errfmt = std::format("Attempt to index {} with '{}'", via_type(V, tbl).val_string->ptr, key);
@@ -1374,15 +1382,15 @@ dispatch:
 
     case OpCode::LOADIDX:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand rtbl = VM_OPND(1);
-        viaOperand ridx = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand rtbl = V->ip->operand2;
+        Operand ridx = V->ip->operand3;
 
         viaValue tbl = *via_getregister(V, rtbl.val_register);
         viaValue idx = *via_getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        viaTableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<viaTableKey>(idx.val_number);
+        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<TableKey>(idx.val_number);
 #ifdef VIA_DEBUG
         // Assert that the value is a table
         std::string _errfmt = std::format("Attempt to load index of {}", via_type(V, tbl).val_string->ptr);
@@ -1395,23 +1403,23 @@ dispatch:
 
     case OpCode::SETIDX:
     {
-        viaOperand rsrc = VM_OPND(0);
-        viaOperand rtbl = VM_OPND(1);
-        viaOperand ridx = VM_OPND(2);
+        Operand rsrc = V->ip->operand1;
+        Operand rtbl = V->ip->operand2;
+        Operand ridx = V->ip->operand3;
 
         viaValue val;
         viaValue tbl = *via_getregister(V, rtbl.val_register);
         viaValue idx = *via_getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        viaTableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<viaHash_t>(idx.val_number);
+        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
 #ifdef VIA_DEBUG
         // Assert that the value is a table
         std::string _errfmt = std::format("Attempt to assign index to {}", ENUM_NAME(tbl.type));
         VM_ASSERT(viaT_checktable(V, tbl), _errfmt);
 #endif
         // Slow-path: the value is stored in a register, load it
-        if (VIA_UNLIKELY(rsrc.type == viaOperandType_t::Register))
+        if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
             val = *via_getregister(V, rsrc.val_register);
         else
             val = via_toviavalue(V, rsrc);
@@ -1425,13 +1433,13 @@ dispatch:
 
     case OpCode::LEN:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand objr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand objr = V->ip->operand2;
 
         viaValue val;
 
         // Fast-path: object is stored in a register
-        if (VIA_LIKELY(objr.type == viaOperandType_t::Register))
+        if (VIA_LIKELY(objr.type == OperandType::Register))
             val = *via_getregister(V, objr.val_register);
         else
             val = via_toviavalue(V, objr);
@@ -1443,8 +1451,8 @@ dispatch:
 
     case OpCode::TOSTRING:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand valr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand valr = V->ip->operand2;
 
         viaValue val = *via_getregister(V, valr.val_register);
 
@@ -1455,8 +1463,8 @@ dispatch:
 
     case OpCode::TONUMBER:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand valr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand valr = V->ip->operand2;
 
         viaValue val = *via_getregister(V, valr.val_register);
         via_setregister(V, rdst.val_register, via_tonumber(V, val));
@@ -1466,8 +1474,8 @@ dispatch:
 
     case OpCode::TOBOOL:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand valr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand valr = V->ip->operand2;
 
         viaValue val = *via_getregister(V, valr.val_register);
         via_setregister(V, rdst.val_register, via_tobool(V, val));
@@ -1477,8 +1485,8 @@ dispatch:
 
     case OpCode::TYPE:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand objr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand objr = V->ip->operand2;
 
         viaValue *val = via_getregister(V, objr.val_register);
         viaValue type = via_type(V, *val);
@@ -1490,8 +1498,8 @@ dispatch:
 
     case OpCode::TYPEOF:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand objr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand objr = V->ip->operand2;
 
         viaValue *val = via_getregister(V, objr.val_register);
         viaValue type = via_typeof(V, *val);
@@ -1503,10 +1511,10 @@ dispatch:
 
     case OpCode::ISNIL:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand objr = VM_OPND(1);
+        Operand rdst = V->ip->operand1;
+        Operand objr = V->ip->operand2;
 
-        bool is_nil = via_getregister(V, objr.val_register)->type == viaValueType::Nil;
+        bool is_nil = via_getregister(V, objr.val_register)->type == ValueType::Nil;
         via_setregister(V, rdst.val_register, viaT_stackvalue(V, is_nil));
 
         VM_NEXT();
@@ -1514,9 +1522,9 @@ dispatch:
 
     case OpCode::STRCON:
     {
-        viaOperand rdst = VM_OPND(0);
-        viaOperand lhsr = VM_OPND(1);
-        viaOperand rhsr = VM_OPND(2);
+        Operand rdst = V->ip->operand1;
+        Operand lhsr = V->ip->operand2;
+        Operand rhsr = V->ip->operand3;
 
         viaValue lhs = *via_getregister(V, lhsr.val_register);
         viaValue rhs = *via_getregister(V, rhsr.val_register);
@@ -1534,9 +1542,9 @@ dispatch:
 
     case OpCode::DEBUGREGISTERS:
     {
-        viaOperand count = VM_OPND(0);
+        Operand count = V->ip->operand1;
 #ifdef VIA_DEBUG
-        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of registers to debug");
+        VM_ASSERT(count.type == OperandType::Number, "Expected number of registers to debug");
 #endif
         viaD_printregistermap(V, static_cast<size_t>(count.val_number));
         VM_NEXT();
@@ -1544,9 +1552,9 @@ dispatch:
 
     case OpCode::DEBUGARGUMENTS:
     {
-        viaOperand count = VM_OPND(0);
+        Operand count = V->ip->operand1;
 #ifdef VIA_DEBUG
-        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of arguments to debug");
+        VM_ASSERT(count.type == OperandType::Number, "Expected number of arguments to debug");
 #endif
         viaD_printargumentstack(V, static_cast<size_t>(count.val_number));
         VM_NEXT();
@@ -1554,9 +1562,9 @@ dispatch:
 
     case OpCode::DEBUGRETURNS:
     {
-        viaOperand count = VM_OPND(0);
+        Operand count = V->ip->operand1;
 #ifdef VIA_DEBUG
-        VM_ASSERT(count.type == viaOperandType_t::Number, "Expected number of returns to debug");
+        VM_ASSERT(count.type == OperandType::Number, "Expected number of returns to debug");
 #endif
         viaD_printreturnstack(V, static_cast<size_t>(count.val_number));
         VM_NEXT();
@@ -1568,8 +1576,7 @@ dispatch:
     }
 }
 
-exit:
-    std::cout << std::format("VM exiting with exit_code={}, exit_message={}\n", V->exitc, V->exitm);
+exit:;
 } // namespace via
 
 void via_killthread(viaState *V)

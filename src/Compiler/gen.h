@@ -4,6 +4,7 @@
 #include "common.h"
 #include "core.h"
 #include "instruction.h"
+#include "chunk.h"
 #include "bytecode.h"
 #include "register.h"
 #include "stack.h"
@@ -57,6 +58,8 @@ public:
 public:
     ArenaAllocator alloc; // Custom allocator
     TestStack &stack;     // Reference to the stack
+    Chunk *current_chunk;
+    bool initialize_with_chunk;
 
 private:
     size_t __iota__; // Counter for unique operations
@@ -68,17 +71,17 @@ private:
 
 private:
     // Instruction handling functions
-    void push_instruction(OpCode, std::vector<viaOperand>);
+    void push_instruction(OpCode, std::vector<Operand>);
 
     // Expression generators
-    viaRegister generate_literal_expression(Parsing::AST::LiteralExprNode);
-    viaRegister generate_unary_expression(Parsing::AST::UnaryExprNode);
-    viaRegister generate_binary_expression(Parsing::AST::BinaryExprNode);
-    viaRegister generate_lambda_expression(Parsing::AST::LambdaExprNode);
-    viaRegister generate_index_expression(Parsing::AST::IndexExprNode);
-    viaRegister generate_call_expression(Parsing::AST::CallExprNode);
-    viaRegister generate_variable_expression(Parsing::AST::VarExprNode);
-    viaRegister generate_expression(Parsing::AST::ExprNode);
+    Register generate_literal_expression(Parsing::AST::LiteralExprNode);
+    Register generate_unary_expression(Parsing::AST::UnaryExprNode);
+    Register generate_binary_expression(Parsing::AST::BinaryExprNode);
+    Register generate_lambda_expression(Parsing::AST::LambdaExprNode);
+    Register generate_index_expression(Parsing::AST::IndexExprNode);
+    Register generate_call_expression(Parsing::AST::CallExprNode);
+    Register generate_variable_expression(Parsing::AST::VarExprNode);
+    Register generate_expression(Parsing::AST::ExprNode);
 
     // Statement generators
     void generate_local_declaration_statement(Parsing::AST::LocalDeclStmtNode);

@@ -14,7 +14,7 @@
 
 #define PREPROCESSOR_ERROR(message) \
     { \
-        emitter.out(container, pos, (message), Emitter::Severity::ERROR); \
+        emitter.out(pos, (message), Emitter::Severity::ERROR); \
         failed = true; \
     }
 
@@ -28,8 +28,8 @@ public:
     Preprocessor(viaSourceContainer &container)
         : pos(0)
         , failed(false)
-        , emitter(Emitter())
         , container(container)
+        , emitter(container)
     {
     }
 
@@ -38,8 +38,8 @@ public:
 private:
     size_t pos;
     bool failed;
-    Emitter emitter;
     viaSourceContainer &container;
+    Emitter emitter;
 
 private:
     Token consume(size_t ahead = 1);

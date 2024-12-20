@@ -7,7 +7,7 @@ namespace via
 
 void viaD_printregistermap(viaState *V = nullptr, size_t count = VIA_REGISTERCOUNT)
 {
-    for (viaRegister reg = 0; reg <= count; reg++)
+    for (Register reg = 0; reg <= count; reg++)
     {
         viaValue *val = viaR_getregister(V->ralloc, reg);
         viaValue val_clone = *val;

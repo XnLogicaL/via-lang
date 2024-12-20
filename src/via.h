@@ -75,7 +75,7 @@ private:
         compiler.add_default_passes();
         compiler.generate();
 
-        std::vector<viaInstruction> bytecode = compiler.get();
+        std::vector<Instruction> bytecode = compiler.get();
 
         viaState *V = viaA_newstate(bytecode);
         load_libraries(V);
