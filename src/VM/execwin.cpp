@@ -29,7 +29,7 @@ void viaJIT_assemblechunk(viaState *, Chunk *chunk, unsigned char *mc_code, size
     VIA_ASSERT(exec_buf != NULL, "viaJIT: VirtualAlloc failed");
     memcpy(exec_buf, mc_code, mc_size);
 
-    chunk->mcode = reinterpret_cast<MCodeFunc>(exec_buf);
+    chunk->mcode = reinterpret_cast<ExecutableMachineCode>(exec_buf);
 }
 
 // Executes the chunk
@@ -47,7 +47,7 @@ int viaJIT_executechunk(viaState *V, Chunk *chunk)
     }
 
     // Retrieve and execute chunk machine code
-    MCodeFunc mcode_exec = chunk->mcode;
+    ExecutableMachineCode mcode_exec = chunk->mcode;
     int exit_code = mcode_exec(V);
 
     return exit_code;

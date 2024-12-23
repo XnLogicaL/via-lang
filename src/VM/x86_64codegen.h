@@ -8,11 +8,7 @@
 namespace via::jit
 {
 
-struct MachineCode
-{
-    unsigned char *machine_code;
-    size_t machine_code_len;
-};
+using MachineCode = std::vector<unsigned char>;
 
 MachineCode viaJIT_codegen(viaState *, Chunk *);
 

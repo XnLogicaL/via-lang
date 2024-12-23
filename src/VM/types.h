@@ -108,7 +108,6 @@ struct viaTable
 inline Hash viaT_hashstring(viaState *, const char *str)
 {
     Hash hash = 0;
-
     // Automatically breaks when it hits the nullbyte, quite clever
     while (*str)
         hash = (hash * 31) + *str++;

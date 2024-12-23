@@ -14,7 +14,7 @@ namespace
 {
 
 const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
-const char REPL_WELCOME[] = "via-lang Copyright (C) 2024 @ github.com/XnLogicaL/via-lang, XnLogicaL\n"
+const char REPL_WELCOME[] = "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
                             "Use ';help' to see a list of commands.\n";
 const char REPL_HELP[] = "repl commands:\n"
                          "  ;quit - Quits repl\n"
@@ -38,7 +38,7 @@ void handle_compile(const std::vector<std::string> &args)
     if (args.empty())
     {
         std::cerr << "Invalid command\nNo input file provided.\n";
-        exit(1);
+        std::exit(1);
     }
 
     std::string input = args.at(0);
@@ -46,6 +46,11 @@ void handle_compile(const std::vector<std::string> &args)
 
     Tokenization::Tokenizer lexer(input_code);
     viaSourceContainer container = lexer.tokenize();
+
+    Tokenization::Preprocessor preprocessor(container);
+    bool failed = preprocessor.preprocess();
+
+    VIA_ASSERT_SILENT(!failed, "Preprocessor failed");
 
     Parsing::Parser parser(container);
     Parsing::AST::AST *ast = parser.parse_program();
@@ -66,7 +71,7 @@ void handle_run(const std::vector<std::string> &args)
     if (args.empty())
     {
         std::cerr << "Invalid command\nNo input file provided.\n";
-        exit(1);
+        std::exit(1);
     }
 
     std::string file_path = args.at(0);
@@ -111,7 +116,9 @@ void handle_repl(const std::vector<std::string> &args)
                     std::cout << "<none>\n";
                 else
                     std::cout << "Exit code:    " << repl.V->exitc << "\n"
-                              << "Exit message: '" << repl.V->exitm << "'\n";
+                              << "Exit message: '" << repl.V->exitm << "'\n"
+                              << "At instruction: " << reinterpret_cast<const void *>(repl.V->ip)
+                              << std::format(" (position={} opcode={})\n", repl.V->ip - repl.V->ihp, ENUM_NAME(repl.V->ip->op));
             }
             else
                 std::cerr << "Unknown command: " << command << "\n";

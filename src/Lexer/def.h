@@ -12,6 +12,8 @@ struct Definition
 {
     std::string identifier;
     std::vector<Token> replacement;
+    size_t begin;
+    size_t end;
 };
 
 } // namespace via::Tokenization

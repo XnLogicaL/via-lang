@@ -9,6 +9,7 @@ namespace via::Tokenization
 Definition Preprocessor::parse_definition()
 {
     Definition def;
+    def.begin = pos;
     std::vector<Token> &toks = container.tokens;
 
     // Ensure there are enough tokens to parse
@@ -33,6 +34,7 @@ Definition Preprocessor::parse_definition()
 
     // Consume closing parenthesis
     ++pos;
+    def.end = pos;
 
     return def;
 }

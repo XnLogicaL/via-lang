@@ -13,6 +13,7 @@ namespace via::Parsing
 
 Token Parser::consume()
 {
+    VIA_ASSERT(!is_type(TokenType::EOF_), "Attempt to consume EOF");
     return container.tokens.at(current_position++);
 }
 
@@ -43,8 +44,11 @@ ExprNode *Parser::parse_bin_expr(int precedence)
 
     while (true)
     {
+        if (current_position >= container.tokens.size())
+            break;
+
         // Check if there are more tokens to process
-        if (peek().type == TokenType::EOF_)
+        if (is_type(TokenType::EOF_))
             break;
 
         if (!peek().is_operator())
@@ -78,27 +82,18 @@ ExprNode *Parser::parse_prim_expr()
 {
     Token token = consume();
 
+    // Start with the base expression
+    ExprNode *base_expr = nullptr;
+
     switch (token.type)
     {
     case TokenType::IDENTIFIER:
     {
-        VarExprNode varid;
-        varid.ident = token;
-
-        // Handle identifiers, which might be variables or function calls
-        if (is_type(TokenType::PAREN_OPEN)) // Function call
-        {
-            consume(); // Consume '('
-            std::vector<ExprNode> args = parse_call_arguments();
-
-            CallExprNode call;
-            call.callee = alloc.emplace<ExprNode>(varid);
-            call.args = args;
-
-            return alloc.emplace<ExprNode>(call);
-        }
-
-        return alloc.emplace<ExprNode>(varid);
+        // Initial identifier (variable or function)
+        VarExprNode *varid = alloc.emplace<VarExprNode>();
+        varid->ident = token;
+        base_expr = alloc.emplace<ExprNode>(*varid);
+        break;
     }
 
     case TokenType::LIT_INT:
@@ -109,20 +104,79 @@ ExprNode *Parser::parse_prim_expr()
     {
         LiteralExprNode lit;
         lit.value = token;
-        return alloc.emplace<ExprNode>(lit);
+        base_expr = alloc.emplace<ExprNode>(lit);
+        break;
     }
 
     case TokenType::PAREN_OPEN:
     {
-        ExprNode *expr = parse_expr();
+        base_expr = parse_expr();
         consume(); // Consume ')'
-        return expr;
+        break;
     }
 
     default:
         VIA_ASSERT(false, std::format("parse_prim_expr(): Unexpected token: {}", token.to_string()));
         return nullptr;
     }
+
+    // Parse the chain of operations
+    while (true)
+    {
+        if (current_position >= container.tokens.size())
+            break;
+
+        if (is_type(TokenType::DOT)) // Member access: obj.prop
+        {
+            consume(); // Consume '.'
+
+            Token member = consume();
+            // Change the member type from IDENTIFIER to LIT_STRING
+            // in order to not confuse the compiler
+            member.type = TokenType::LIT_STRING;
+
+            LiteralExprNode *member_var = alloc.emplace<LiteralExprNode>();
+            member_var->value = member;
+
+            IndexExprNode *index_expr = alloc.emplace<IndexExprNode>();
+            index_expr->object = base_expr;
+            index_expr->index = alloc.emplace<ExprNode>(*member_var);
+
+            base_expr = alloc.emplace<ExprNode>(*index_expr);
+        }
+        // Function call: obj.func(args)
+        else if (is_type(TokenType::PAREN_OPEN) || is_type(TokenType::OP_LT))
+        {
+            bool has_generics = is_type(TokenType::OP_LT);
+
+            consume(); // Consume '(' or '<'
+
+            CallExprNode *call_expr = alloc.emplace<CallExprNode>();
+            call_expr->callee = base_expr;
+
+            if (has_generics)
+                call_expr->type_args = parse_call_type_arguments();
+            call_expr->args = parse_call_arguments();
+            base_expr = alloc.emplace<ExprNode>(*call_expr);
+        }
+        // Array indexing: obj[index]
+        else if (is_type(TokenType::BRACKET_OPEN))
+        {
+            consume(); // Consume '['
+
+            IndexExprNode *index_expr = alloc.emplace<IndexExprNode>();
+            index_expr->object = base_expr;
+            index_expr->index = parse_expr();
+
+            consume(); // Consume ']'
+
+            base_expr = alloc.emplace<ExprNode>(*index_expr);
+        }
+        else
+            break;
+    }
+
+    return base_expr;
 }
 
 std::vector<ExprNode> Parser::parse_call_arguments()

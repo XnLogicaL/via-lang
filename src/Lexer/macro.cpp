@@ -18,36 +18,59 @@ void Preprocessor::expand_macro(const Macro &macro)
         const Token &tok = peek();
 
         // Match macro_name!( pattern
-        if (tok.value == macro.name && pos + 2 < toks.size() && peek(1).type == TokenType::EXCLAMATION && peek(2).type == TokenType::PAREN_OPEN)
+        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name && pos + 1 < toks.size() &&
+            peek(1).type == TokenType::PAREN_OPEN)
         {
-            size_t start_pos = pos; // Save the macro invocation start position
-            consume(3);             // Consume macro_name!(
+            size_t start_pos = pos;
+            consume(2); // Consume macro_name! and the opening parenthesis
 
             // Parse macro arguments
             std::vector<std::vector<Token>> macro_args;
             std::vector<Token> current_arg;
             size_t depth = 1;
 
-            while (pos < toks.size() && depth > 0)
+            // Loop to parse arguments within parentheses
+            while (pos < toks.size())
             {
-                if (peek().type == TokenType::PAREN_OPEN)
+                const Token &current = peek();
+
+                // Handle nested parentheses
+                if (current.type == TokenType::PAREN_OPEN)
                     depth++;
-                else if (peek().type == TokenType::PAREN_CLOSE)
+                else if (current.type == TokenType::PAREN_CLOSE)
                 {
                     depth--;
                     if (depth == 0)
-                        break;
+                        break; // End of arguments
                 }
-
-                if (toks.at(pos).type == TokenType::COMMA && depth == 1)
+                else if (current.type == TokenType::COMMA && depth == 1)
                 {
-                    macro_args.push_back(current_arg);
-                    current_arg.clear();
+                    // End of current argument
+                    if (!current_arg.empty())
+                    {
+                        macro_args.push_back(current_arg);
+                        current_arg.clear();
+                    }
+                    consume(); // Consume the comma
+                    continue;
                 }
-                else
-                    current_arg.push_back(peek());
 
-                consume();
+                // Add token to current argument
+                if (depth > 0)
+                    current_arg.push_back(current);
+
+                // Avoid consuming past EOF
+                if (pos < toks.size())
+                    consume();
+                else
+                    break; // Prevent consuming EOF
+            }
+
+            // Check for unmatched parentheses (error handling)
+            if (depth > 0)
+            {
+                PREPROCESSOR_ERROR("Unmatched parentheses in macro invocation");
+                return;
             }
 
             if (!current_arg.empty())
@@ -70,7 +93,6 @@ void Preprocessor::expand_macro(const Macro &macro)
             {
                 if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value))
                 {
-                    // Replace parameter with corresponding argument tokens
                     const std::vector<Token> &replacement = arg_map[body_tok.value];
                     expanded_body.insert(expanded_body.end(), replacement.begin(), replacement.end());
                 }
@@ -78,34 +100,36 @@ void Preprocessor::expand_macro(const Macro &macro)
                     expanded_body.push_back(body_tok);
             }
 
-            // Replace macro invocation with the expanded body
+            // Replace macro invocation with expanded body
             toks.erase(toks.begin() + start_pos, toks.begin() + pos + 1);
             toks.insert(toks.begin() + start_pos, expanded_body.begin(), expanded_body.end());
 
-            // Reset position to account for expanded tokens
-            pos = start_pos + expanded_body.size();
+            // Reset pos to start of the macro replacement
+            pos = start_pos;
+            return;
         }
         else
             consume();
     }
 }
 
+
 Macro Preprocessor::parse_macro()
 {
     std::vector<Token> &toks = container.tokens;
-
     // Consume 'macro' keyword
     pos++;
 
     if (pos >= toks.size() || peek().type != TokenType::IDENTIFIER)
-        PREPROCESSOR_ERROR("Expected macro identifier after 'macro' keyword.");
+        PREPROCESSOR_ERROR("Expected macro identifier after 'macro' keyword");
 
     Macro mac;
+    mac.begin = pos - 1;
     mac.name = consume().value;
 
     // Expect opening parenthesis
     if (pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
-        PREPROCESSOR_ERROR("Expected '(' after macro name.");
+        PREPROCESSOR_ERROR("Expected '(' after macro name");
 
     consume(); // Consume '('
 
@@ -119,14 +143,14 @@ Macro Preprocessor::parse_macro()
         }
 
         if (peek().type != TokenType::IDENTIFIER)
-            PREPROCESSOR_ERROR("Invalid macro parameter name.");
+            PREPROCESSOR_ERROR("Invalid macro parameter name");
 
         mac.params.push_back(consume().value);
     }
 
     // Expect closing parenthesis
     if (pos >= toks.size() || peek().type != TokenType::PAREN_CLOSE)
-        PREPROCESSOR_ERROR("Expected ')' after macro parameters.");
+        PREPROCESSOR_ERROR("Expected ')' after macro parameters");
 
     consume(); // Consume ')'
 
@@ -144,7 +168,10 @@ Macro Preprocessor::parse_macro()
     if (pos >= toks.size() || peek().type != TokenType::BRACE_CLOSE)
         PREPROCESSOR_ERROR("Expected '}' to close macro body.");
 
-    pos++; // Consume '}'
+    consume(); // Consume '}'
+
+    mac.end = pos;
+    macro_table[mac.name] = mac;
 
     return mac;
 }

@@ -352,12 +352,11 @@ inline viaValue &via_tonumber(viaState *V, viaValue &val)
 inline viaValue *via_gettableindex(viaState *V, viaTable *T, TableKey key, bool search_meta)
 {
     auto it = T->data.find(key);
-
     if (it != T->data.end())
         return &it->second;
     else if (search_meta && T->meta)
         // Disable metatable search to prevent chain searching
-        // Which can cause infinite loops, crashes among other bugs
+        // Which can cause infinite loops, crashes, and other bugs
         return via_gettableindex(V, T->meta, key, false);
 
     // This has to be a pointer because we don't know if the value is a non-pointer primitive type

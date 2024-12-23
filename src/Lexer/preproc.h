@@ -39,6 +39,8 @@ private:
     size_t pos;
     bool failed;
     viaSourceContainer &container;
+    std::unordered_map<std::string, Macro> macro_table;
+    std::unordered_map<std::string, Definition> def_table;
     Emitter emitter;
 
 private:
@@ -49,6 +51,7 @@ private:
     Definition parse_definition();
     void expand_macro(const Macro &);
     void expand_definition(const Definition &);
+    void erase_from_stream(size_t, size_t);
 };
 
 } // namespace via::Tokenization

@@ -3,6 +3,7 @@
 -Wextra
 -Wall
 -g
+-xc++
 -I./src
 -I./include
 -I./src/Lexer

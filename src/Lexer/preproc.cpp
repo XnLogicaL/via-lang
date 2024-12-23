@@ -32,10 +32,25 @@ bool Preprocessor::preprocess()
             expand_definition(def);
         }
         else
+        {
             pos++;
+            continue;
+        }
     }
 
+    for (auto it : macro_table)
+        erase_from_stream(it.second.begin, it.second.end);
+
+    for (auto it : def_table)
+        erase_from_stream(it.second.begin, it.second.end);
+
     return failed;
+}
+
+void Preprocessor::erase_from_stream(size_t begin, size_t end)
+{
+    auto tokens_begin = container.tokens.begin();
+    container.tokens.erase(tokens_begin + begin, tokens_begin + end);
 }
 
 } // namespace via::Tokenization

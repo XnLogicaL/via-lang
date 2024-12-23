@@ -1,5 +1,5 @@
-macro printf(__fmt, ...) {
-    print(string.format(__fmt, ...))
+macro do_stuff(){
+    println("Hello, world")
 }
 
-printf!("Hello, %s!", "World")
+do_stuff!()

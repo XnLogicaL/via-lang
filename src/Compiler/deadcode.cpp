@@ -41,6 +41,10 @@ void DeadCodeEliminationOptimizationPass::remove_unreachable_code_in_scope(Gener
             // if so; get rid of the if statement and just emplace it's body into the scope
             if (always_true(gen, *if_stmt))
             {
+                // Check if the if statement is empty
+                if (if_stmt->then_body->statements.size() == 0)
+                    continue;
+
                 // Make sure to optimize the if statement as well
                 remove_unreachable_code_in_scope(gen, if_stmt->then_body);
 

@@ -6,65 +6,16 @@
 namespace via::jit
 {
 
-unsigned char *allocate_machine_code(std::vector<unsigned char> code_vec)
+std::vector<unsigned char> viaJIT_codegen(viaState *, Chunk *)
 {
-    unsigned char *code = new unsigned char[code_vec.size()];
-    std::copy(code_vec.begin(), code_vec.end(), code);
-    return code;
-}
-
-MachineCode viaJIT_codegen(viaState *, Chunk *)
-{
+    // clang-format off
     std::vector<unsigned char> code = {
-#    ifdef __linux__
-        // mov rdi, 0
-        0x48,
-        0xC7,
-        0xC7,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        // mov rax, 60
-        0x48,
-        0xC7,
-        0xC0,
-        0x3C,
-        0x0,
-        0x0,
-        0x0,
-        // syscall
-        0x0F,
-        0x05,
-#    elif defined(_WIN32) || defined(_WIN64)
-        // mov eax, 0 (exit code)
-        0xB8,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        // push eax
-        0x50,
-        // mov eax, [0x12345678]
-        0xA1,
-        0x78,
-        0x56,
-        0x34,
-        0x12,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        // call eax (call ExitProcess)
-        0xFF,
-        0xD0,
-#    endif
-    };
+        0xbf, 0x00, 0x00, 0x00, 0x00,
+        0xb8, 0x3c, 0x00, 0x00, 0x00,
+        0x0f, 0x05,
+    }; // clang-format on
 
-    return {
-        allocate_machine_code(code),
-        1,
-    };
+    return code;
 }
 
 } // namespace via::jit

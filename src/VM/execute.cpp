@@ -76,27 +76,6 @@
         } \
     }
 
-// Macro for jumping to a jump address
-// Immediately dispatches the VM
-#define VM_JMPTO(addr) \
-    { \
-        if (!via_validjmpaddr(V, addr)) \
-        { \
-            via_setexitdata(V, 1, "Illegal jump: jump address out of bounds"); \
-            V->abrt = true; \
-            return; \
-        } \
-        V->ip = addr; \
-        VM_DISPATCH(); \
-    }
-
-// Macro for jumping to an offset relative to the current instruction pointer
-// position Immediately dispatches VM
-#define VM_JMP(offset) \
-    { \
-        VM_JMPTO(V->ip + offset); \
-    }
-
 namespace via
 {
 
@@ -156,7 +135,8 @@ dispatch:
         if (V->ip->chunk->pc >= VIA_HOTPATH_THRESHOLD)
         {
             // This function automatically compiles the chunk if it hasn't been compiled before
-            jit::viaJIT_executechunk(V, V->ip->chunk);
+            // Disabled for now due to machine code instability
+            // jit::viaJIT_executechunk(V, V->ip->chunk);
         }
 
         // After the chunk has been executed,
@@ -270,16 +250,6 @@ dispatch:
 #endif
         viaValue val = via_toviavalue(V, imm);
         via_setregister(V, rdst.val_register, val);
-        VM_NEXT();
-    }
-
-    case OpCode::NIL:
-    {
-        Operand rdst = V->ip->operand1;
-#ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for NIL destination");
-#endif
-        via_setregister(V, rdst.val_register, viaT_stackvalue(V));
         VM_NEXT();
     }
 
@@ -1008,24 +978,6 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GCADD:
-    {
-        Operand raddr = V->ip->operand1;
-        viaValue addrv = *via_getregister(V, raddr.val_register);
-#ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checkptr(V, addrv), "Expected Ptr for GCADD");
-#endif
-        via_gcadd(V, reinterpret_cast<viaValue *>(addrv.val_pointer));
-
-        VM_NEXT();
-    }
-
-    case OpCode::GCCOL:
-    {
-        via_gccol(V);
-        VM_NEXT();
-    }
-
     case OpCode::HALT:
     {
         via_setexitdata(V, 0, "VM halted by user");
@@ -1038,129 +990,129 @@ dispatch:
 
         viaValue *code = via_getregister(V, rcode.val_register);
         viaNumber ecode = via_tonumber(V, *code).val_number;
-        via_setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
 
+        via_setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
         VM_EXIT();
     }
 
     case OpCode::JMP:
     {
         Operand offset = V->ip->operand1;
-
-        VM_JMP(static_cast<JmpOffset>(offset.val_number));
+#ifdef VIA_DEBUG
+        VIA_ASSERT(viaC_checknumber(offset), "Expected number of JMP offset");
+#endif
+        V->ip += static_cast<JmpOffset>(offset.val_number);
         VM_NEXT();
     }
 
-    case OpCode::JNZ:
-    case OpCode::JZ:
+    case OpCode::JMPNZ:
+    case OpCode::JMPZ:
     {
         Operand condr = V->ip->operand1;
         Operand offset = V->ip->operand2;
 
         viaValue cond = *via_getregister(V, condr.val_register);
-        // We don't need to save the return value because this function modifies `val`
+        // We don't need to save the return value because this function modifies `cond`
         via_tonumber(V, cond);
-
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JNZ ? (cond.val_number != 0) : (cond.val_number == 0))
-            VM_JMP(actual_offset);
+        if (V->ip->op == OpCode::JMPNZ ? (cond.val_number != 0) : (cond.val_number == 0))
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JEQ:
-    case OpCode::JNEQ:
+    case OpCode::JMPEQ:
+    case OpCode::JMPNEQ:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
         bool cond = via_cmpregister(V, condlr.val_register, condrr.val_register);
-
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JEQ ? cond : !cond)
-            VM_JMP(actual_offset);
+        if (V->ip->op == OpCode::JMPEQ ? cond : !cond)
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JLT:
-    case OpCode::JNLT:
+    case OpCode::JMPLT:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = via_getregister(V, condlr.val_register)->val_number < via_getregister(V, condrr.val_register)->val_number;
+        viaValue *lhs = via_getregister(V, condlr.val_register);
+        viaValue *rhs = via_getregister(V, condrr.val_register);
 
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JEQ ? cond : !cond)
-            VM_JMP(actual_offset);
+        bool cond = lhs->val_number < rhs->val_number;
+        if (cond)
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JGT:
-    case OpCode::JNGT:
+    case OpCode::JMPGT:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = via_getregister(V, condlr.val_register)->val_number > via_getregister(V, condrr.val_register)->val_number;
+        viaValue *lhs = via_getregister(V, condlr.val_register);
+        viaValue *rhs = via_getregister(V, condrr.val_register);
 
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JEQ ? cond : !cond)
-            VM_JMP(actual_offset);
+        bool cond = lhs->val_number > rhs->val_number;
+        if (cond)
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JLE:
-    case OpCode::JNLE:
+    case OpCode::JMPLE:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = via_getregister(V, condlr.val_register)->val_number <= via_getregister(V, condrr.val_register)->val_number;
+        viaValue *lhs = via_getregister(V, condlr.val_register);
+        viaValue *rhs = via_getregister(V, condrr.val_register);
 
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JEQ ? cond : !cond)
-            VM_JMP(actual_offset);
+        bool cond = lhs->val_number <= rhs->val_number;
+        if (cond)
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JGE:
-    case OpCode::JNGE:
+    case OpCode::JMPGE:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = via_getregister(V, condlr.val_register)->val_number >= via_getregister(V, condrr.val_register)->val_number;
+        viaValue *lhs = via_getregister(V, condlr.val_register);
+        viaValue *rhs = via_getregister(V, condrr.val_register);
 
-        JmpOffset actual_offset = static_cast<JmpOffset>(offset.val_number);
-        if (V->ip->op == OpCode::JEQ ? cond : !cond)
-            VM_JMP(actual_offset);
+        bool cond = lhs->val_number >= rhs->val_number;
+        if (cond)
+            V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JL:
+    case OpCode::JMPLBL:
     {
         Operand label = V->ip->operand1;
         auto it = V->labels->find(std::string_view(label.val_identifier));
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        VM_JMPTO(it->second + 1);
+        // +1 Because if we jump to the exact position of the label, the VM will interpret it as
+        // a declaration, not a jump
+        V->ip = it->second + 1;
         VM_NEXT();
     }
 
-    case OpCode::JLZ:
-    case OpCode::JLNZ:
+    case OpCode::JMPLBLZ:
+    case OpCode::JMPLBLNZ:
     {
         Operand valr = V->ip->operand1;
         Operand label = V->ip->operand2;
@@ -1171,16 +1123,15 @@ dispatch:
 #endif
         viaValue *val = via_getregister(V, valr.val_register);
         bool cond = val->val_number == 0;
-
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLZ ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (V->ip->op == OpCode::JMPLBLZ ? cond : !cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JLEQ:
-    case OpCode::JLNEQ:
+    case OpCode::JMPLBLEQ:
+    case OpCode::JMPLBLNEQ:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1193,14 +1144,13 @@ dispatch:
         bool cond = via_cmpregister(V, lhsr.val_register, rhsr.val_register);
 
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLEQ ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (V->ip->op == OpCode::JMPLBLEQ ? cond : !cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JLLT:
-    case OpCode::JLNLT:
+    case OpCode::JMPLBLLT:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1213,14 +1163,13 @@ dispatch:
         bool cond = via_getregister(V, lhsr.val_register)->val_number < via_getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JLGT:
-    case OpCode::JLNGT:
+    case OpCode::JMPLBLGT:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1231,16 +1180,14 @@ dispatch:
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
         bool cond = via_getregister(V, lhsr.val_register)->val_number > via_getregister(V, rhsr.val_register)->val_number;
-
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JLLE:
-    case OpCode::JLNLE:
+    case OpCode::JMPLBLLE:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1253,14 +1200,13 @@ dispatch:
         bool cond = via_getregister(V, lhsr.val_register)->val_number <= via_getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JLGE:
-    case OpCode::JLNGE:
+    case OpCode::JMPLBLGE:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1273,8 +1219,8 @@ dispatch:
         bool cond = via_getregister(V, lhsr.val_register)->val_number >= via_getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JLLT ? cond : !cond)
-            VM_JMPTO(it->second + 1);
+        if (cond)
+            V->ip = it->second + 1;
 
         VM_NEXT();
     }
@@ -1360,26 +1306,6 @@ dispatch:
         VM_DISPATCH();
     }
 
-    case OpCode::CALLM:
-    {
-        Operand rtbl = V->ip->operand1;
-        Operand ridx = V->ip->operand2;
-
-        viaValue tbl = *via_getregister(V, rtbl.val_register);
-        viaValue idx = *via_getregister(V, ridx.val_register);
-
-        // Get table key based on the index type (string or number)
-        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
-#ifdef VIA_DEBUG
-        // Assert that the value is a table
-        std::string _errfmt = std::format("Attempt to index {} with '{}'", via_type(V, tbl).val_string->ptr, key);
-        VM_ASSERT(viaT_checktable(V, tbl), _errfmt);
-#endif
-        // Call the method from the table
-        via_callmethod(V, tbl.val_table, key);
-        VM_NEXT();
-    }
-
     case OpCode::LOADIDX:
     {
         Operand rdst = V->ip->operand1;
@@ -1390,7 +1316,7 @@ dispatch:
         viaValue idx = *via_getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<TableKey>(idx.val_number);
+        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
 #ifdef VIA_DEBUG
         // Assert that the value is a table
         std::string _errfmt = std::format("Attempt to load index of {}", via_type(V, tbl).val_string->ptr);
@@ -1449,40 +1375,6 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::TOSTRING:
-    {
-        Operand rdst = V->ip->operand1;
-        Operand valr = V->ip->operand2;
-
-        viaValue val = *via_getregister(V, valr.val_register);
-
-        via_setregister(V, rdst.val_register, val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::TONUMBER:
-    {
-        Operand rdst = V->ip->operand1;
-        Operand valr = V->ip->operand2;
-
-        viaValue val = *via_getregister(V, valr.val_register);
-        via_setregister(V, rdst.val_register, via_tonumber(V, val));
-
-        VM_NEXT();
-    }
-
-    case OpCode::TOBOOL:
-    {
-        Operand rdst = V->ip->operand1;
-        Operand valr = V->ip->operand2;
-
-        viaValue val = *via_getregister(V, valr.val_register);
-        via_setregister(V, rdst.val_register, via_tobool(V, val));
-
-        VM_NEXT();
-    }
-
     case OpCode::TYPE:
     {
         Operand rdst = V->ip->operand1;
@@ -1509,17 +1401,6 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::ISNIL:
-    {
-        Operand rdst = V->ip->operand1;
-        Operand objr = V->ip->operand2;
-
-        bool is_nil = via_getregister(V, objr.val_register)->type == ValueType::Nil;
-        via_setregister(V, rdst.val_register, viaT_stackvalue(V, is_nil));
-
-        VM_NEXT();
-    }
-
     case OpCode::STRCON:
     {
         Operand rdst = V->ip->operand1;
@@ -1537,36 +1418,6 @@ dispatch:
 
         via_setregister(V, rdst.val_register, viaT_stackvalue(V, vstr));
 
-        VM_NEXT();
-    }
-
-    case OpCode::DEBUGREGISTERS:
-    {
-        Operand count = V->ip->operand1;
-#ifdef VIA_DEBUG
-        VM_ASSERT(count.type == OperandType::Number, "Expected number of registers to debug");
-#endif
-        viaD_printregistermap(V, static_cast<size_t>(count.val_number));
-        VM_NEXT();
-    }
-
-    case OpCode::DEBUGARGUMENTS:
-    {
-        Operand count = V->ip->operand1;
-#ifdef VIA_DEBUG
-        VM_ASSERT(count.type == OperandType::Number, "Expected number of arguments to debug");
-#endif
-        viaD_printargumentstack(V, static_cast<size_t>(count.val_number));
-        VM_NEXT();
-    }
-
-    case OpCode::DEBUGRETURNS:
-    {
-        Operand count = V->ip->operand1;
-#ifdef VIA_DEBUG
-        VM_ASSERT(count.type == OperandType::Number, "Expected number of returns to debug");
-#endif
-        viaD_printreturnstack(V, static_cast<size_t>(count.val_number));
         VM_NEXT();
     }
 
