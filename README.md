@@ -12,8 +12,7 @@ See [Introduction](./docs/introduction.md) for more information.
 
 # Warning
 
-This project is currently far from completion and has been rewritten countless times.
-Expect unintended behavior, bugs, etc.
+This is a **PASSION PROJECT**, it is maintained by **ONE** person and may contain vulnerabilities, design flaws, etc.
 Do not use in production if you think taking said risks is not worth it.
 
 # Build
