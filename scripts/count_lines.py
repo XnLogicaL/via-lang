@@ -7,7 +7,7 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 directory = sys.argv[1]
-possible_submodules = ['luau',]
+possible_submodules = ['luau', 'AsmJit']
 accepted_extensions = ('.cpp', '.h')
 
 def get_lines_in_directory(file_path: str):
