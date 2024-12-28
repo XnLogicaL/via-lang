@@ -21,7 +21,7 @@ class Parser
     using TokenType = Tokenization::TokenType;
 
 public:
-    Parser(viaSourceContainer &vsc)
+    Parser(SrcContainer &vsc)
         : alloc(VIA_PARSER_ALLOC_SIZE)
         , container(vsc)
         , current_position(0)
@@ -34,7 +34,7 @@ private:
     // Memory allocator
     ArenaAllocator alloc;
     // Token management
-    viaSourceContainer &container;
+    SrcContainer &container;
     size_t current_position;
 
 private:

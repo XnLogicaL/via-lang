@@ -5,12 +5,10 @@
 namespace viaCLI
 {
 
-using namespace via;
-
-std::vector<Instruction> REPLEngine::compile(std::string source)
+std::vector<via::Instruction> REPLEngine::compile(std::string source)
 {
-    Tokenization::Tokenizer lexer(source);
-    viaSourceContainer container = lexer.tokenize();
+    via::Tokenization::Tokenizer lexer(source);
+    via::SrcContainer container = lexer.tokenize();
     container.file_name = "<repl>";
 
     /*Tokenization::SyntaxAnalyzer analyzer(container);
@@ -18,10 +16,10 @@ std::vector<Instruction> REPLEngine::compile(std::string source)
 
     VIA_ASSERT_SILENT(!fail, "Syntax analysis failed");*/
 
-    Parsing::Parser parser(container);
-    Parsing::AST::AST *ast = parser.parse_program();
+    via::Parsing::Parser parser(container);
+    via::Parsing::AST::AST *ast = parser.parse_program();
 
-    Compilation::Compiler compiler(ast);
+    via::Compilation::Compiler compiler(ast);
     compiler.add_default_passes();
     compiler.generate();
 
@@ -39,15 +37,15 @@ void REPLEngine::execute(std::string code, bool print)
     if (print)
     {
         std::cout << "Program bytecode:\n";
-        for (Instruction instr : bytecode)
-            std::cout << Compilation::viaC_compileinstruction(instr) << "\n";
+        for (via::Instruction instr : bytecode)
+            std::cout << via::Compilation::ccompileinstruction(instr) << "\n";
     }
 
     if (!V)
-        V = viaA_newstate(bytecode);
+        V = stnewstate(bytecode);
     else
     {
-        V->ihp = new Instruction[bytecode.size()];
+        V->ihp = new via::Instruction[bytecode.size()];
         V->ibp = V->ihp + bytecode.size();
         V->ip = V->ihp;
 
@@ -57,15 +55,15 @@ void REPLEngine::execute(std::string code, bool print)
     if (!libs_loaded)
     {
         libs_loaded = true;
-        lib::viaL_loadbaselib(V);
-        lib::viaL_loadmathlib(V);
+        via::lib::loadbaselib(V);
+        via::lib::loadmathlib(V);
     }
 
     if (print)
         std::cout << "Program output:\n";
 
-    via_execute(V);
-    via_pausethread(V);
+    via::execute(V);
+    via::pausethread(V);
 
     delete[] V->ihp;
 

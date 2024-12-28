@@ -28,7 +28,7 @@
 #include <variant>
 #include <vector>
 
-inline const char *via_dupstring(const std::string &str)
+inline const char *dupstring(const std::string &str)
 {
     size_t len = str.size() + 1;
     char *chars = new char[len];

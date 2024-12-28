@@ -15,7 +15,7 @@ class SyntaxAnalyzer
 {
 public:
     // Constructs a SyntaxAnalyzer instance with the provided source container
-    explicit SyntaxAnalyzer(viaSourceContainer &container)
+    explicit SyntaxAnalyzer(SrcContainer &container)
         : container(container)
         , emitter(container)
     {
@@ -26,7 +26,7 @@ public:
     bool analyze();
 
 private:
-    viaSourceContainer &container;
+    SrcContainer &container;
     Emitter emitter;
     size_t pos = 0;
     bool failed = false;

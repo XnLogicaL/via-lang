@@ -3,7 +3,7 @@ CXX = ccache g++
 CXXFLAGS = -std=c++23 -O3 -Wall -Wextra -g
 
 # Include directories
-INCLUDE_DIRS = ./src ./include ./CLI
+INCLUDE_DIRS = ./src ./include ./CLI -I./AsmJit/src
 INCLUDES = $(foreach dir, $(INCLUDE_DIRS), $(shell find $(dir) -type d -exec printf '-I%s ' {} \;))
 
 # Build directory

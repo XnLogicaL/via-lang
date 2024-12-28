@@ -15,7 +15,7 @@ namespace via
 {
 
 template<typename T>
-struct viaStackState
+struct TStack
 {
     T *sp;  // Current top of the stack
     T *sbp; // Bottom of the stack
@@ -112,38 +112,38 @@ struct viaStackState
 
 // Push a value onto the stack
 template<typename T>
-inline void viaS_push(viaStackState<T> *S, T val)
+inline void tspush(TStack<T> *S, T val)
 {
     *(++S->sp) = val;
 }
 
 // Pop a value from the stack
 template<typename T>
-inline void viaS_pop(viaStackState<T> *S)
+inline void tspop(TStack<T> *S)
 {
     S->sp--;
 }
 
 // Get the top value from the stack
 template<typename T>
-inline T viaS_top(viaStackState<T> *S)
+inline T tstop(TStack<T> *S)
 {
     return *S->sp;
 }
 
 // Reset the stack pointer to the base
 template<typename T>
-inline void viaS_flush(viaStackState<T> *S)
+inline void tsflush(TStack<T> *S)
 {
     S->sp = S->sbp - 1;
 }
 
 // Create a new stack state
 template<typename T>
-viaStackState<T> *viaS_newstate()
+TStack<T> *tsnewstate()
 {
     // Allocate memory for the stack state
-    auto *state = new viaStackState<T>;
+    auto *state = new TStack<T>;
     state->size = VIA_STACK_SIZE;
 
     // Allocate memory for the stack
@@ -164,7 +164,7 @@ viaStackState<T> *viaS_newstate()
 
 // Delete a stack state
 template<typename T>
-void viaS_cleanupstate(viaStackState<T> *S)
+void tscleanupstate(TStack<T> *S)
 {
     std::free(S->sbp); // Free the stack memory
     delete S;          // Free the stack state

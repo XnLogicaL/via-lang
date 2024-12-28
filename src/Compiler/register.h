@@ -17,17 +17,17 @@ public:
     ~RegisterPool() = default;
     RegisterPool(size_t pool_size)
     {
-        for (Register i = pool_size; i > 0; i--)
+        for (GPRegister i = pool_size; i > 0; i--)
             available_registers.push(i);
     }
 
-    Register allocate_register();
-    void free_register(Register);
-    void spill_register(Register);
-    void restore_register(Register);
+    GPRegister allocate_register();
+    void free_register(GPRegister);
+    void spill_register(GPRegister);
+    void restore_register(GPRegister);
 
 private:
-    std::stack<Register> available_registers;
+    std::stack<GPRegister> available_registers;
 };
 
 class RegisterManager
@@ -42,12 +42,12 @@ public:
     RegisterManager() = default;
     ~RegisterManager() = default;
 
-    void use_register(Register, viaTime_t);
-    void unuse_register(Register, viaTime_t);
-    bool can_free_register(Register, viaTime_t);
+    void use_register(GPRegister, viaTime_t);
+    void unuse_register(GPRegister, viaTime_t);
+    bool can_free_register(GPRegister, viaTime_t);
 
 private:
-    std::unordered_map<Register, RegisterLifeRange> register_life_ranges;
+    std::unordered_map<GPRegister, RegisterLifeRange> register_life_ranges;
 };
 
 class RegisterAllocator
@@ -61,7 +61,7 @@ public:
     {
     }
 
-    Register allocate_variable(viaTestVariable_t);
+    GPRegister allocate_variable(viaTestVariable_t);
     void free_variable(viaTestVariable_t);
     void increment_time();
 
@@ -69,7 +69,7 @@ private:
     RegisterPool &register_pool;
     RegisterManager &register_manager;
     viaTime_t current_time;
-    std::unordered_map<viaTestVariable_t, Register> variable_to_register;
+    std::unordered_map<viaTestVariable_t, GPRegister> variable_to_register;
 };
 
 } // namespace via::Compilation

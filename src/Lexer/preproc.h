@@ -25,7 +25,7 @@ class Preprocessor
 {
 public:
     ~Preprocessor() = default;
-    Preprocessor(viaSourceContainer &container)
+    Preprocessor(SrcContainer &container)
         : pos(0)
         , failed(false)
         , container(container)
@@ -38,7 +38,7 @@ public:
 private:
     size_t pos;
     bool failed;
-    viaSourceContainer &container;
+    SrcContainer &container;
     std::unordered_map<std::string, Macro> macro_table;
     std::unordered_map<std::string, Definition> def_table;
     Emitter emitter;

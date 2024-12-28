@@ -5,19 +5,19 @@
 namespace via::lib
 {
 
-void function_name(viaState *V)
+void function_name(RTState *V)
 {
-    viaValue func = via_popargument(V);
+    TValue func = popargument(V);
 
     // Check if the argument is a function
     // If so return nil
-    if (!viaT_checkfunction(V, func))
+    if (!checkfunction(V, func))
     {
-        via_pushreturn(V, viaT_stackvalue(V));
+        pushreturn(V, stackvalue(V));
         return;
     }
 
-    via_pushreturn(V, viaT_stackvalue(V, func.val_function->id));
+    pushreturn(V, stackvalue(V, func.val_function->id));
 }
 
 } // namespace via::lib

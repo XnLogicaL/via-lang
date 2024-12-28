@@ -74,14 +74,14 @@ private:
     void push_instruction(OpCode, std::vector<Operand>);
 
     // Expression generators
-    Register generate_literal_expression(Parsing::AST::LiteralExprNode);
-    Register generate_unary_expression(Parsing::AST::UnaryExprNode);
-    Register generate_binary_expression(Parsing::AST::BinaryExprNode);
-    Register generate_lambda_expression(Parsing::AST::LambdaExprNode);
-    Register generate_index_expression(Parsing::AST::IndexExprNode);
-    Register generate_call_expression(Parsing::AST::CallExprNode);
-    Register generate_variable_expression(Parsing::AST::VarExprNode);
-    Register generate_expression(Parsing::AST::ExprNode);
+    GPRegister generate_literal_expression(Parsing::AST::LiteralExprNode);
+    GPRegister generate_unary_expression(Parsing::AST::UnaryExprNode);
+    GPRegister generate_binary_expression(Parsing::AST::BinaryExprNode);
+    GPRegister generate_lambda_expression(Parsing::AST::LambdaExprNode);
+    GPRegister generate_index_expression(Parsing::AST::IndexExprNode);
+    GPRegister generate_call_expression(Parsing::AST::CallExprNode);
+    GPRegister generate_variable_expression(Parsing::AST::VarExprNode);
+    GPRegister generate_expression(Parsing::AST::ExprNode);
 
     // Statement generators
     void generate_local_declaration_statement(Parsing::AST::LocalDeclStmtNode);

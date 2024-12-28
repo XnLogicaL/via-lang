@@ -7,27 +7,27 @@
 namespace via
 {
 
-struct viaState;
-struct viaValue;
-struct viaGCState
+struct RTState;
+struct TValue;
+struct GCState
 {
     bool terminating;
     size_t collections;
     size_t size;
-    std::vector<viaValue *> dellist;
-    std::vector<std::weak_ptr<viaValue>> reflist;
+    std::vector<TValue *> dellist;
+    std::vector<std::weak_ptr<TValue>> reflist;
 };
 
 // Creates a new GCState object
-viaGCState *viaGC_newstate();
+GCState *gcnewstate();
 // Adds a dynamically allocated value to the free list
-void viaGC_add(viaState *, viaValue *);
+void gcadd(RTState *, TValue *);
 // Invokes garbage collection
-void viaGC_collect(viaState *);
+void gccollect(RTState *);
 // Adds a value reference to the gc
 // These references are only cleaned up when the program is terminated
-void viaGC_addref(viaState *, std::shared_ptr<viaValue>);
+void gcaddref(RTState *, std::shared_ptr<TValue>);
 // Cleansup a GCState object
-void viaGC_cleanup(viaGCState *S);
+void gccleanup(GCState *S);
 
 } // namespace via

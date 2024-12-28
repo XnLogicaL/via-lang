@@ -45,7 +45,7 @@ void handle_compile(const std::vector<std::string> &args)
     std::string input_code = utils::read_from_file(input);
 
     Tokenization::Tokenizer lexer(input_code);
-    viaSourceContainer container = lexer.tokenize();
+    SrcContainer container = lexer.tokenize();
 
     Tokenization::Preprocessor preprocessor(container);
     bool failed = preprocessor.preprocess();
@@ -61,7 +61,7 @@ void handle_compile(const std::vector<std::string> &args)
 
     std::string buffer;
     for (Instruction &instr : compiler.get())
-        buffer += Compilation::viaC_compileinstruction(instr) + "\n";
+        buffer += Compilation::ccompileinstruction(instr) + "\n";
 
     std::cout << buffer;
 }

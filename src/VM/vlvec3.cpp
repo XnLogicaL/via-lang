@@ -6,104 +6,104 @@ namespace via::lib
 {
 
 // Forward declaration of the default vec3 constructor
-void vec3_new(viaState *);
+void vec3_new(RTState *);
 
 // Utility: Get a vector component (x, y, z) from a table
-viaValue get_vec3_component(viaState *V, viaTable *vec, const char *key)
+TValue get_vec3_component(RTState *V, TTable *vec, const char *key)
 {
-    return *via_gettableindex(V, vec, viaT_hashstring(V, key), false);
+    return *gettableindex(V, vec, hashstring(V, key), false);
 }
 
 // Utility: Perform a binary operation on two vectors
 template<typename Op>
-void vec3_binary_op(viaState *V, Op op)
+void vec3_binary_op(RTState *V, Op op)
 {
-    viaValue self = via_popargument(V);
-    viaValue other = via_popargument(V);
+    TValue self = popargument(V);
+    TValue other = popargument(V);
 
     const char *keys[] = {"x", "y", "z"};
-    viaValue results[3];
+    TValue results[3];
 
     for (int i = 0; i < 3; ++i)
     {
-        viaNumber a = get_vec3_component(V, self.val_table, keys[i]).val_number;
-        viaNumber b = get_vec3_component(V, other.val_table, keys[i]).val_number;
-        results[i] = viaT_stackvalue(V, op(a, b));
+        TNumber a = get_vec3_component(V, self.val_table, keys[i]).val_number;
+        TNumber b = get_vec3_component(V, other.val_table, keys[i]).val_number;
+        results[i] = stackvalue(V, op(a, b));
     }
 
-    viaL_pusharguments(V, {results[0], results[1], results[2]});
+    pusharguments(V, {results[0], results[1], results[2]});
     vec3_new(V);
 }
 
 // Utility: Perform a unary operation on a vector
 template<typename Op>
-void vec3_unary_op(viaState *V, Op op)
+void vec3_unary_op(RTState *V, Op op)
 {
-    viaValue self = via_popargument(V);
+    TValue self = popargument(V);
 
     const char *keys[] = {"x", "y", "z"};
-    viaValue results[3];
+    TValue results[3];
 
     for (int i = 0; i < 3; ++i)
     {
-        viaNumber a = get_vec3_component(V, self.val_table, keys[i]).val_number;
-        results[i] = viaT_stackvalue(V, op(a));
+        TNumber a = get_vec3_component(V, self.val_table, keys[i]).val_number;
+        results[i] = stackvalue(V, op(a));
     }
 
-    viaL_pusharguments(V, {results[0], results[1], results[2]});
+    pusharguments(V, {results[0], results[1], results[2]});
     vec3_new(V);
 }
 
 // Vector operations
-void vec3_mmadd(viaState *V)
+void vec3_mmadd(RTState *V)
 {
     vec3_binary_op(
         V,
-        [](viaNumber a, viaNumber b)
+        [](TNumber a, TNumber b)
         {
             return a + b;
         }
     );
 }
 
-void vec3_mmsub(viaState *V)
+void vec3_mmsub(RTState *V)
 {
     vec3_binary_op(
         V,
-        [](viaNumber a, viaNumber b)
+        [](TNumber a, TNumber b)
         {
             return a - b;
         }
     );
 }
 
-void vec3_mmmul(viaState *V)
+void vec3_mmmul(RTState *V)
 {
     vec3_binary_op(
         V,
-        [](viaNumber a, viaNumber b)
+        [](TNumber a, TNumber b)
         {
             return a * b;
         }
     );
 }
 
-void vec3_mmdiv(viaState *V)
+void vec3_mmdiv(RTState *V)
 {
     vec3_binary_op(
         V,
-        [](viaNumber a, viaNumber b)
+        [](TNumber a, TNumber b)
         {
             return a / b;
         }
     );
 }
 
-void vec3_mmunm(viaState *V)
+void vec3_mmunm(RTState *V)
 {
     vec3_unary_op(
         V,
-        [](viaNumber a)
+        [](TNumber a)
         {
             return -a;
         }
@@ -111,96 +111,96 @@ void vec3_mmunm(viaState *V)
 }
 
 // Magnitude function
-void vec3_magnitude(viaState *V)
+void vec3_magnitude(RTState *V)
 {
-    viaTable *self = via_popargument(V).val_table;
+    TTable *self = popargument(V).val_table;
 
-    viaNumber x = get_vec3_component(V, self, "x").val_number;
-    viaNumber y = get_vec3_component(V, self, "y").val_number;
-    viaNumber z = get_vec3_component(V, self, "z").val_number;
+    TNumber x = get_vec3_component(V, self, "x").val_number;
+    TNumber y = get_vec3_component(V, self, "y").val_number;
+    TNumber z = get_vec3_component(V, self, "z").val_number;
 
-    viaValue mag = viaT_stackvalue(V, std::sqrt(x * x + y * y + z * z));
-    via_pushreturn(V, mag);
+    TValue mag = stackvalue(V, std::sqrt(x * x + y * y + z * z));
+    pushreturn(V, mag);
 }
 
 // Normalize function
-void vec3_normalize(viaState *V)
+void vec3_normalize(RTState *V)
 {
-    viaTable *self = via_popargument(V).val_table;
+    TTable *self = popargument(V).val_table;
 
     vec3_magnitude(V); // Compute magnitude
-    viaNumber mag = via_popreturn(V).val_number;
+    TNumber mag = popreturn(V).val_number;
 
     const char *keys[] = {"x", "y", "z"};
-    viaValue results[3];
+    TValue results[3];
 
     for (int i = 0; i < 3; ++i)
     {
-        viaNumber a = get_vec3_component(V, self, keys[i]).val_number;
-        results[i] = viaT_stackvalue(V, a / mag);
+        TNumber a = get_vec3_component(V, self, keys[i]).val_number;
+        results[i] = stackvalue(V, a / mag);
     }
 
-    viaL_pusharguments(V, {results[0], results[1], results[2]});
+    pusharguments(V, {results[0], results[1], results[2]});
     vec3_new(V);
 }
 
 // Create vector
-void vec3_new(viaState *V)
+void vec3_new(RTState *V)
 {
-    viaTable *vec3_ins = viaT_newtable(V, vec3_meta);
+    TTable *vec3_ins = newtable(V, vec3_meta);
     const char *keys[] = {"x", "y", "z"};
 
     for (int i = 0; i < 3; ++i)
     {
-        viaValue val = via_popargument(V);
-        via_settableindex(V, vec3_ins, viaT_hashstring(V, keys[i]), val);
+        TValue val = popargument(V);
+        settableindex(V, vec3_ins, hashstring(V, keys[i]), val);
     }
 
-    via_pushreturn(V, viaT_stackvalue(V, vec3_ins));
+    pushreturn(V, stackvalue(V, vec3_ins));
 }
 
 // Predefined vectors
-void vec3_one(viaState *V)
+void vec3_one(RTState *V)
 {
-    viaL_pusharguments(V, {viaT_stackvalue(V, 1.0f), viaT_stackvalue(V, 1.0f), viaT_stackvalue(V, 1.0f)});
+    pusharguments(V, {stackvalue(V, 1.0f), stackvalue(V, 1.0f), stackvalue(V, 1.0f)});
     vec3_new(V);
 }
 
-void vec3_zero(viaState *V)
+void vec3_zero(RTState *V)
 {
-    viaL_pusharguments(V, {viaT_stackvalue(V, 0.0f), viaT_stackvalue(V, 0.0f), viaT_stackvalue(V, 0.0f)});
+    pusharguments(V, {stackvalue(V, 0.0f), stackvalue(V, 0.0f), stackvalue(V, 0.0f)});
     vec3_new(V);
 }
 
 // Library loader
-void viaL_loadvec3lib(viaState *V)
+void loadvec3lib(RTState *V)
 {
-    static const HashMap<const char *, viaValue> vec3_meta_properties = {
-        {"magnitude", viaT_stackvalue(V, vec3_magnitude)},
-        {"normalize", viaT_stackvalue(V, vec3_normalize)},
-        {"__add", viaT_stackvalue(V, vec3_mmadd)},
-        {"__sub", viaT_stackvalue(V, vec3_mmsub)},
-        {"__mul", viaT_stackvalue(V, vec3_mmmul)},
-        {"__div", viaT_stackvalue(V, vec3_mmdiv)},
-        {"__unm", viaT_stackvalue(V, vec3_mmunm)}
+    static const HashMap<const char *, TValue> vec3_meta_properties = {
+        {"magnitude", stackvalue(V, vec3_magnitude)},
+        {"normalize", stackvalue(V, vec3_normalize)},
+        {"__add", stackvalue(V, vec3_mmadd)},
+        {"__sub", stackvalue(V, vec3_mmsub)},
+        {"__mul", stackvalue(V, vec3_mmmul)},
+        {"__div", stackvalue(V, vec3_mmdiv)},
+        {"__unm", stackvalue(V, vec3_mmunm)}
     };
 
-    static const HashMap<const char *, viaValue> vec3_gtable_properties = {
-        {"new", viaT_stackvalue(V, vec3_new)},
-        {"one", viaT_stackvalue(V, vec3_one)},
-        {"zero", viaT_stackvalue(V, vec3_zero)},
+    static const HashMap<const char *, TValue> vec3_gtable_properties = {
+        {"new", stackvalue(V, vec3_new)},
+        {"one", stackvalue(V, vec3_one)},
+        {"zero", stackvalue(V, vec3_zero)},
     };
 
-    viaTable *lib = viaT_newtable(V);
+    TTable *lib = newtable(V);
 
     for (auto it : vec3_meta_properties)
-        via_settableindex(V, vec3_meta, viaT_hashstring(V, it.first), it.second);
+        settableindex(V, vec3_meta, hashstring(V, it.first), it.second);
 
     for (auto it : vec3_gtable_properties)
-        via_settableindex(V, lib, viaT_hashstring(V, it.first), it.second);
+        settableindex(V, lib, hashstring(V, it.first), it.second);
 
-    via_freeze(V, lib);
-    via_loadlib(V, viaT_hashstring(V, "vector3"), viaT_stackvalue(V, lib));
+    freeze(V, lib);
+    loadlib(V, hashstring(V, "vector3"), stackvalue(V, lib));
 }
 
 } // namespace via::lib

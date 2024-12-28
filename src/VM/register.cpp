@@ -5,33 +5,33 @@
 namespace via
 {
 
-void viaR_cleanupstate(viaRAllocatorState *R)
+void rcleanupstate(RAState *R)
 {
     std::free(R->head);
     delete R;
 }
 
-void viaR_initialize(viaRAllocatorState *R)
+void rinitialize(RAState *R)
 {
-    for (Register i = 0; i < VIA_REGISTERCOUNT; i++)
+    for (GPRegister i = 0; i < VIA_REGISTERCOUNT; i++)
     {
-        viaValue monostate_val;
+        TValue monostate_val;
         monostate_val.type = ValueType::Monostate;
         monostate_val.next = nullptr;
         monostate_val.prev = nullptr;
 
-        viaR_setregister(R, i, monostate_val);
+        rsetregister(R, i, monostate_val);
     }
 }
 
-viaRAllocatorState *viaR_newstate(viaState *)
+RAState *rnewstate(RTState *)
 {
-    auto *state = new viaRAllocatorState;
+    auto *state = new RAState;
 
-    void *alloc = std::malloc(sizeof(viaValue) * VIA_REGISTERCOUNT);
-    state->head = reinterpret_cast<viaValue *>(alloc);
+    void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTERCOUNT);
+    state->head = reinterpret_cast<TValue *>(alloc);
 
-    viaR_initialize(state);
+    rinitialize(state);
 
     return state;
 }

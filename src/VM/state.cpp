@@ -8,22 +8,22 @@
 namespace via
 {
 
-viaGlobalState *viaA_newgstate()
+GState *stnewgstate()
 {
-    viaGlobalState *G = new viaGlobalState;
+    GState *G = new GState;
 
     G->stable = new STable();
 
     return G;
 }
 
-// Initializes and returns a new viaState object
-viaState *viaA_newstate(const std::vector<Instruction> &pipeline)
+// Initializes and returns a new RTState object
+RTState *stnewstate(const std::vector<Instruction> &pipeline)
 {
-    viaState *V = new viaState;
+    RTState *V = new RTState;
 
     V->id = __thread_id__++;
-    V->G = viaA_newgstate();
+    V->G = stnewgstate();
 
     // Allocate ihp (Instruction head pointer)
     V->ihp = new Instruction[pipeline.size()];
@@ -35,13 +35,13 @@ viaState *viaA_newstate(const std::vector<Instruction> &pipeline)
     // Copy instructions into the instruction pipeline
     std::copy(pipeline.begin(), pipeline.end(), V->ip);
 
-    V->stack = viaS_newstate<viaFunction *>();
-    V->arguments = viaS_newstate<viaValue>();
-    V->returns = viaS_newstate<viaValue>();
+    V->stack = tsnewstate<TFunction *>();
+    V->arguments = tsnewstate<TValue>();
+    V->returns = tsnewstate<TValue>();
     // I know, the odd one out...
-    V->labels = new viaLabels();
-    V->ralloc = viaR_newstate(V);
-    V->gc = viaGC_newstate();
+    V->labels = new LblMap();
+    V->ralloc = rnewstate(V);
+    V->gc = gcnewstate();
 
     // Exit code
     V->exitc = 0;
@@ -60,15 +60,15 @@ viaState *viaA_newstate(const std::vector<Instruction> &pipeline)
     V->yieldfor = 0.0f;
     V->argc = 0;
 
-    // This is set to idle by default because the via thread manipulators (via_execute, via_pausethread, via_killthread)
+    // This is set to idle by default because the via thread manipulators (execute, pausethread, killthread)
     // are the only ones allowed to mutate this
-    V->tstate = viaThreadState::PAUSED;
+    V->tstate = ThreadState::PAUSED;
     V->sstate = nullptr;
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    viaFunction *mainf = new viaFunction{0, false, false, VIA_MAIN_ID, {}, {}, {}};
-    viaS_push(V->stack, mainf);
+    TFunction *mainf = new TFunction{0, false, false, VIA_MAIN_ID, {}, {}, {}};
+    tspush(V->stack, mainf);
 
     Instruction *ip = V->ip;
     for (Instruction instr : pipeline)
@@ -84,20 +84,20 @@ viaState *viaA_newstate(const std::vector<Instruction> &pipeline)
     return V;
 }
 
-void viaA_cleanupgstate(viaGlobalState *G)
+void stcleanupgstate(GState *G)
 {
     delete G->stable;
     delete G;
 }
 
-void viaA_cleanupstate(viaState *V)
+void stcleanupstate(RTState *V)
 {
-    viaA_cleanupgstate(V->G);
-    viaGC_cleanup(V->gc);
-    viaS_cleanupstate(V->stack);
-    viaS_cleanupstate(V->arguments);
-    viaS_cleanupstate(V->returns);
-    viaR_cleanupstate(V->ralloc);
+    stcleanupgstate(V->G);
+    gccleanup(V->gc);
+    tscleanupstate(V->stack);
+    tscleanupstate(V->arguments);
+    tscleanupstate(V->returns);
+    rcleanupstate(V->ralloc);
 
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately
@@ -106,7 +106,7 @@ void viaA_cleanupstate(viaState *V)
     delete V;
 }
 
-ThreadId viaA_threadcount(viaState *)
+ThreadId stthreadcount(RTState *)
 {
     // Just return the latest thread id as it represents the number of threads
     return __thread_id__;

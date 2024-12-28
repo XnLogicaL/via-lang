@@ -9,17 +9,19 @@
 #include "instruction.h"
 
 #define LIB_ASSERT(cond, msg) \
-    via_assert(V, (cond), (msg)); \
     if (!(cond)) \
-        return;
+    { \
+        setexitdata(V, 1, msg); \
+        return; \
+    }
 
-#define WRAPVAL(val) viaT_stackvalue(V, new viaCFunction{.ptr = val, .error_handler = false})
+#define WRAPVAL(val) stackvalue(V, new TCFunction{.ptr = val, .error_handler = false})
 #define ARG_MISMATCH(i, e, g) std::format("Expected {}, got {} for argument #{}\n", (e), (g), (i))
 
 namespace via::lib
 {
 
-viaValue *viaL_quickindex(viaState *, viaTable *, const char *);
-void viaL_pusharguments(viaState *, std::vector<viaValue>);
+TValue *quickindex(RTState *, TTable *, const char *);
+void pusharguments(RTState *, std::vector<TValue>);
 
 } // namespace via::lib

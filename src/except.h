@@ -9,12 +9,12 @@
 namespace via
 {
 
-class viaException : public std::exception
+class VRTException : public std::exception
 {
 public:
     std::string message;
 
-    viaException(const std::string &message)
+    VRTException(const std::string &message)
         : message(message)
     {
     }

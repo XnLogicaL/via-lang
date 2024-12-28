@@ -19,79 +19,44 @@
 namespace via
 {
 
-// Manually sets the VM exit data
-// ! Internal usage only, made public for libraries
-inline void via_setexitdata(viaState *V, ExitCode exitc, const std::string &exitm) noexcept
+// Manually sets the VM exit data.
+inline void setexitdata(RTState *V, ExitCode exitc, const std::string &exitm) noexcept
 {
     V->exitc = exitc;
-    // I don't know why but `strdup` is deprecated but `_strdup` isn't
-    // This is the completely opposite of the deprecation convention, but sure...
-    V->exitm = strdup(exitm.c_str());
+    V->exitm = dupstring(exitm);
 }
 
-inline bool via_validjmpaddr(viaState *V, const Instruction *addr) noexcept
+// Returns whether if <addr> is within the bounds of the instruction pipeline.
+inline bool isvalidjmpaddr(RTState *V, const Instruction *addr) noexcept
 {
     return (addr >= V->ihp) && (addr <= V->ibp);
 }
 
-// Appends a pointer to the garbage collector free list
-// The pointer should be malloc-ed, otherwise this has undefined behavior
-// ! The value cannot be removed from the free list!
-inline void via_gcadd(viaState *V, viaValue *ptr) noexcept
-{
-    viaGC_add(V, ptr);
-}
-
-// Invokes garbage collection
-// Should be called in intervals
-inline void via_gccol(viaState *V) noexcept
-{
-    viaGC_collect(V);
-}
-
-// Asserts a condition, terminates the VM if not met
-inline void via_assert(viaState *V, bool cond, const std::string &err) noexcept
-{
-    if (!cond)
-    {
-        via_setexitdata(V, 1, std::format("VM assertion failed: {}", err));
-        V->abrt = true;
-    }
-}
-
-// Throws an unrecoverable error that terminates the VM
-inline void via_fatalerr(viaState *V, const std::string &err)
-{
-    std::cerr << err << "\n";
-    via_setexitdata(V, 1, std::format("User error: {}", err));
-    V->abrt = true;
-}
-
-//* Register operations
-
-// Sets register <R> to the given value <v>
-template<typename T = viaValue>
+// Sets register <R> to the given value <v>.
+// Wrapper for `rsetregister`.
+template<typename T = TValue>
     requires(!std::is_pointer_v<T>)
-inline void via_setregister(viaState *V, Register R, T val) noexcept
+inline void setregister(RTState *V, GPRegister R, T val) noexcept
 {
-    viaR_setregister(V->ralloc, R, val);
+    rsetregister(V->ralloc, R, val);
 }
 
-// Returns the value of register <R>
-inline viaValue *via_getregister(viaState *V, Register R) noexcept
+// Returns the value of register <R>.
+// Wrapper for `rgetregister`.
+inline TValue *getregister(RTState *V, GPRegister R) noexcept
 {
-    return viaR_getregister(V->ralloc, R);
+    return rgetregister(V->ralloc, R);
 }
 
-// Compares the value of two registers and returns wether if they are equivalent
-inline constexpr bool via_cmpregister(viaState *V, Register R0, Register R1) noexcept
+// Compares the values of two registers and returns whether if they are equivalent.
+inline bool cmpregister(RTState *V, GPRegister R0, GPRegister R1) noexcept
 {
     // Early return if registers are equivalent
-    if (via_getregister(V, R0) == via_getregister(V, R1))
+    if (getregister(V, R0) == getregister(V, R1))
         return true;
 
-    viaValue v0 = *via_getregister(V, R0);
-    viaValue v1 = *via_getregister(V, R1);
+    TValue v0 = *getregister(V, R0);
+    TValue v1 = *getregister(V, R1);
 
     // Early type mismatch check
     if (v0.type != v1.type)
@@ -107,9 +72,9 @@ inline constexpr bool via_cmpregister(viaState *V, Register R0, Register R1) noe
     case ValueType::String:
         if (v0.val_string->ptr && v1.val_string->ptr)
         {
-            if (strlen(v0.val_string->ptr) != strlen(v1.val_string->ptr))
+            if (v0.val_string->len != v1.val_string->len)
                 return false;
-            return !strcmp(v0.val_string->ptr, v1.val_string->ptr);
+            return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
         }
         return v0.val_string->ptr == v1.val_string->ptr;
     case ValueType::Nil:
@@ -117,14 +82,15 @@ inline constexpr bool via_cmpregister(viaState *V, Register R0, Register R1) noe
     case ValueType::Ptr:
         return v0.val_pointer == v1.val_pointer;
     default:
-        return false; // Unique objects (CFunc, Func, viaTable, TableKey) are never equal
+        return false; // Unique objects (CFunc, Func, Table, etc.) are never equal
     }
 
     // If the type isn't matched, return false by default
     return false;
 }
 
-inline bool via_compare(viaState *, viaValue V0, viaValue V1)
+// Compares 2 values and returns whether if they are equal.
+inline bool compare(RTState *, TValue V0, TValue V1)
 {
     // Early return; if types aren't the same they cannot be equivalent
     if (V0.type != V1.type)
@@ -140,7 +106,7 @@ inline bool via_compare(viaState *, viaValue V0, viaValue V1)
         // Nil values are always equal
         return true;
     case ValueType::String:
-        return !strcmp(V0.val_string->ptr, V1.val_string->ptr);
+        return !std::strcmp(V0.val_string->ptr, V1.val_string->ptr);
     case ValueType::Ptr:
         return V0.val_pointer == V1.val_pointer;
     case ValueType::Func:
@@ -155,44 +121,45 @@ inline bool via_compare(viaState *, viaValue V0, viaValue V1)
     return false;
 };
 
-//* Stack/Global operations
-
-// Soft-unwinds the stack to find variable with declared with <id>
-// Starts searching from the first-most call frame
-inline viaValue via_getvariable(viaState *V, VarId id)
+// Soft-unwinds the stack to find variable with declared with <id>.
+// Starts searching from the top-most caller stack-frame.
+inline TValue getvariable(RTState *V, VarId id)
 {
-    for (viaFunction *frame : *V->stack)
+    for (TFunction *frame : *V->stack)
     {
-        viaValue var = frame->locals[id];
+        TValue var = frame->locals[id];
 
-        // No branch-hints, for a very good reason
-        if (viaT_checknil(V, var))
+        // No branching-hints, for a very good reason
+        if (checknil(V, var))
             continue;
 
         return var;
     }
 
-    return viaT_stackvalue(V);
+    return stackvalue(V);
 }
 
-// Loads the value of the variable declared with <id> into register <reg>
-inline viaValue via_loadvariable(viaState *V, VarId id, Register reg)
+// Loads the value of the variable declared with <id> into register <reg>.
+inline TValue loadvariable(RTState *V, VarId id, GPRegister reg)
 {
-    viaValue val = via_getvariable(V, id);
-    via_setregister(V, reg, val);
-
+    TValue val = getvariable(V, id);
+    setregister(V, reg, val);
     return val;
 }
 
-inline void via_setlocal(viaState *V, VarId id, viaValue val)
+// Declares (or reassigns) a local variable with identifier <id> and value <val>.
+inline void setlocal(RTState *V, VarId id, TValue val)
 {
-    viaFunction *frame = viaS_top(V->stack);
+    TFunction *frame = tstop(V->stack);
     frame->locals[id] = val;
 }
 
-inline void via_setvariable(viaState *V, VarId id, viaValue val)
+// Declares (or reassigns) a variable with identifier <id> and value <val>.
+// Soft unwinds the stack to find the variable, if not found,
+// declares a new local variable with the same parameters.
+inline void setvariable(RTState *V, VarId id, TValue val)
 {
-    for (viaFunction *frame : *V->stack)
+    for (TFunction *frame : *V->stack)
     {
         auto it = frame->locals.find(id);
         if (it == frame->locals.end())
@@ -203,61 +170,62 @@ inline void via_setvariable(viaState *V, VarId id, viaValue val)
     }
 
     // If variable doesn't exist, we declare a new local
-    via_setlocal(V, id, val);
+    setlocal(V, id, val);
 }
 
-// Similar to `via_getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller
+// Similar to `getvariable` but explicitly looks for the variable in the global scope, a.k.a the root caller stack-frame.
 template<typename T>
     requires std::same_as<T, VarId>
-inline viaValue *via_getglobal(viaState *V, T id)
+inline TValue *getglobal(RTState *V, T id)
 {
-    viaFunction *global = *V->stack->sbp;
-    auto it = global->locals.find(id);
+    TFunction *global = *V->stack->sbp;
 
+    auto it = global->locals.find(id);
     if (it == global->locals.end())
-        return viaT_newvalue(V);
+        return newvalue(V);
 
     return &it->second;
 }
 
-// Similar to `via_loadvariable` but explicitly looks for the variable in the global scope
-inline viaValue *via_loadglobal(viaState *V, VarId id, Register reg)
+// Similar to `loadvariable` but explicitly looks for the variable in the global scope.
+inline TValue *loadglobal(RTState *V, VarId id, GPRegister reg)
 {
-    viaValue *val = via_getglobal(V, id);
-    via_setregister(V, reg, *val);
+    TValue *val = getglobal(V, id);
+    setregister(V, reg, *val);
     return val;
 }
 
-// Similar to `via_setvariable` but explicitly sets the variable in the global scope
-inline void via_setglobal(viaState *V, VarId id, viaValue val)
+// Similar to `setvariable` but explicitly sets the variable in the global scope.
+inline void setglobal(RTState *V, VarId id, TValue val)
 {
-    viaFunction *global = *V->stack->sbp;
+    // Retrieve stack-base-pointer
+    TFunction *global = *V->stack->sbp;
     global->locals[id] = val;
 }
 
-//* viaValue operations
+//* TValue operations
 
-// Returns a value that contains a String that represents the stringified version of <v>
-// ! The return value is guaranteed to be a String
-inline viaValue &via_tostring(viaState *V, viaValue &val)
+// Returns a value that contains a String that represents the stringified version of <v>.
+// The return value is guaranteed to be a String type.
+inline TValue &tostring(RTState *V, TValue &val)
 {
     // If the value has a String type but an invalid string value,
-    // That it undefined behavior and should be explicitly handled by the end user.
-    // It should NEVER occur under compiled bytecode
-    if (viaT_checkstring(V, val))
+    // that is classified as undefined behavior and should be explicitly handled by the end user.
+    // It is guaranteed to NEVER occur under compiled bytecode
+    if (checkstring(V, val))
         return val;
 
     switch (val.type)
     {
     case ValueType::Number:
     {
-        viaString *str = viaT_newstring(V, std::to_string(val.val_number).c_str());
+        TString *str = newstring(V, std::to_string(val.val_number).c_str());
         val.val_string = str;
         break;
     }
     case ValueType::Bool:
     {
-        viaString *str = viaT_newstring(V, val.val_boolean ? "true" : "false");
+        TString *str = newstring(V, val.val_boolean ? "true" : "false");
         val.val_string = str;
         break;
     }
@@ -267,7 +235,7 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
 
         for (auto elem : val.val_table->data)
         {
-            str += via_tostring(V, elem.second).val_string->ptr;
+            str += tostring(V, elem.second).val_string->ptr;
             str += ", ";
         }
 
@@ -276,13 +244,13 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
 
         str += "}";
 
-        val.val_string = viaT_newstring(V, str.c_str());
+        val.val_string = newstring(V, str.c_str());
         break;
     }
     case ValueType::Func:
     {
         const void *faddr = val.val_function;
-        viaString *str = viaT_newstring(V, std::format("<function@{}>", faddr).c_str());
+        TString *str = newstring(V, std::format("<function@{}>", faddr).c_str());
         val.val_string = str;
         break;
     }
@@ -290,12 +258,12 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
     {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = reinterpret_cast<const void *>(val.val_cfunction);
-        viaString *str = viaT_newstring(V, std::format("<cfunction@{}>", cfaddr).c_str());
+        TString *str = newstring(V, std::format("<cfunction@{}>", cfaddr).c_str());
         val.val_string = str;
         break;
     }
     default:
-        val.val_string = viaT_newstring(V, "nil");
+        val.val_string = newstring(V, "nil");
         break;
     }
 
@@ -303,11 +271,11 @@ inline viaValue &via_tostring(viaState *V, viaValue &val)
     return val;
 }
 
-// Returns the truthiness of value <v>
-// ! Guaranteed to be a Bool
-inline viaValue &via_tobool(viaState *V, viaValue &val)
+// Returns the truthiness of value <v>.
+// Guaranteed to be a Bool type.
+inline TValue &tobool(RTState *V, TValue &val)
 {
-    if (viaT_checkbool(V, val))
+    if (checkbool(V, val))
         return val;
 
     switch (val.type)
@@ -324,11 +292,11 @@ inline viaValue &via_tobool(viaState *V, viaValue &val)
     return val;
 }
 
-// Returns the number representation of value <v>
-// ! Returns Nil if impossible, unlike `vtostring` or `vtobool`
-inline viaValue &via_tonumber(viaState *V, viaValue &val)
+// Returns the number representation of value <v>.
+// Returns Nil if impossible, unlike `vtostring` or `vtobool`.
+inline TValue &tonumber(RTState *V, TValue &val)
 {
-    if (viaT_checknumber(V, val))
+    if (checknumber(V, val))
         return val;
 
     switch (val.type)
@@ -347,9 +315,9 @@ inline viaValue &via_tonumber(viaState *V, viaValue &val)
     return val;
 }
 
-// Utility function for quick table indexing
-// Returns the value of key <k> if present in table <t>
-inline viaValue *via_gettableindex(viaState *V, viaTable *T, TableKey key, bool search_meta)
+// Utility function for quick table indexing.
+// Returns the value of key <k> if present in table <t>.
+inline TValue *gettableindex(RTState *V, TTable *T, TableKey key, bool search_meta)
 {
     auto it = T->data.find(key);
     if (it != T->data.end())
@@ -357,18 +325,18 @@ inline viaValue *via_gettableindex(viaState *V, viaTable *T, TableKey key, bool 
     else if (search_meta && T->meta)
         // Disable metatable search to prevent chain searching
         // Which can cause infinite loops, crashes, and other bugs
-        return via_gettableindex(V, T->meta, key, false);
+        return gettableindex(V, T->meta, key, false);
 
     // This has to be a pointer because we don't know if the value is a non-pointer primitive type
-    return viaT_newvalue(V);
+    return newvalue(V);
 }
 
-// Assigns the given value <v> to key <k> in table <t>
-inline void via_settableindex(viaState *V, viaTable *T, TableKey key, viaValue val)
+// Assigns the given value <v> to key <k> in table <t>.
+inline void settableindex(RTState *V, TTable *T, TableKey key, TValue val)
 {
-    if (viaT_checknil(V, val))
+    if (checknil(V, val))
     {
-        if (via_gettableindex(V, T, key, false)->type != ValueType::Nil)
+        if (gettableindex(V, T, key, false)->type != ValueType::Nil)
             T->data.erase(key);
 
         return;
@@ -377,89 +345,87 @@ inline void via_settableindex(viaState *V, viaTable *T, TableKey key, viaValue v
     T->data[key] = val;
 }
 
-// Pushes an argument
-// Does not interact with FASTCALLs
-inline void via_pushargument(viaState *V, viaValue arg)
+// Pushes an argument.
+inline void pushargument(RTState *V, TValue arg)
 {
-    viaS_push(V->arguments, arg);
+    tspush(V->arguments, arg);
 }
 
-// Pops and returns a call argument
-// Does not interact with FASTCALLs
-inline viaValue via_popargument(viaState *V)
+// Pops and returns a call argument.
+inline TValue popargument(RTState *V)
 {
     // Check if the stack is empty
     // If so, return Nil
     if (V->arguments->size == 0)
-        return viaT_stackvalue(V);
+        return stackvalue(V);
 
     // Clone the top value and pop it
-    viaValue arg = viaS_top(V->arguments);
-    viaS_pop(V->arguments);
+    TValue arg = tstop(V->arguments);
+    tspop(V->arguments);
 
     return arg;
 }
 
-// Pushes a return value
-inline void via_pushreturn(viaState *V, viaValue ret)
+// Pushes a return value.
+inline void pushreturn(RTState *V, TValue ret)
 {
-    viaS_push(V->returns, ret);
+    tspush(V->returns, ret);
 }
 
-// Pops a return value
-inline viaValue via_popreturn(viaState *V)
+// Pops a return value.
+inline TValue popreturn(RTState *V)
 {
     // Check if the stack is empty
     // If so, return Nil
     if (V->returns->size == 0)
-        return viaT_stackvalue(V);
+        return stackvalue(V);
 
     // Clone the top value and pop it
-    viaValue ret = viaS_top(V->returns);
-    viaS_pop(V->returns);
+    TValue ret = tstop(V->returns);
+    tspop(V->returns);
 
     return ret;
 }
 
-// Utility function for quickly geting a metamethod from an opcode
-inline viaValue *via_getmetamethod(viaState *V, viaValue val, OpCode op)
+// Utility function for quickly geting a metamethod associated to <op>.
+inline TValue *getmetamethod(RTState *V, TValue val, OpCode op)
 {
-    if (!viaT_checktable(V, val))
-        return viaT_newvalue(V);
+    if (!checktable(V, val))
+        return newvalue(V);
 
     switch (op)
     {
     case OpCode::ADD:
     case OpCode::IADD:
-        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__add"), true);
+        return gettableindex(V, val.val_table, hashstring(V, "__add"), true);
     case OpCode::SUB:
     case OpCode::ISUB:
-        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__sub"), true);
+        return gettableindex(V, val.val_table, hashstring(V, "__sub"), true);
     case OpCode::MUL:
     case OpCode::IMUL:
-        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__mul"), true);
+        return gettableindex(V, val.val_table, hashstring(V, "__mul"), true);
     case OpCode::DIV:
     case OpCode::IDIV:
-        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__div"), true);
+        return gettableindex(V, val.val_table, hashstring(V, "__div"), true);
     case OpCode::MOD:
     case OpCode::IMOD:
-        return via_gettableindex(V, val.val_table, viaT_hashstring(V, "__mod"), true);
+        return gettableindex(V, val.val_table, hashstring(V, "__mod"), true);
     default:
         break;
     }
 
-    return viaT_newvalue(V);
+    return newvalue(V);
 }
 
-// Calls a Func type, terminates if uncallable
-inline void via_callf(viaState *V, viaFunction *f, bool save_state)
+// Calls a native function.
+inline void callf(RTState *V, TFunction *f, bool save_state)
 {
     if (save_state)
     {
         Instruction *begin = f->bytecode.data();
 
         // Save VM state to be restored when the function stops executing
-        V->sstate = new viaState(*V);
+        V->sstate = new RTState(*V);
         V->ihp = begin;
         V->ibp = begin + f->bytecode.size() - 1;
         V->ip = V->ihp;
@@ -470,12 +436,13 @@ inline void via_callf(viaState *V, viaFunction *f, bool save_state)
      * This is because the stack is a pointer and not an object
      * Which means that it cannot be mutated with context switching
      */
-    viaS_push(V->stack, f);
-    viaS_flush(V->returns);
+    tspush(V->stack, f);
+    tsflush(V->returns);
 }
 
-// Calls a C function pointer
-inline void via_callc(viaState *V, viaCFunction *cf)
+// Calls a C function pointer.
+// Mimics stack behavior as it would behave while calling a native function.
+inline void callc(RTState *V, TCFunction *cf)
 {
     // 15 additional characters:
     // - 9 for "cfunction"
@@ -489,7 +456,7 @@ inline void via_callc(viaState *V, viaCFunction *cf)
 
     std::snprintf(buffer, sizeof(buffer), "<cfunction@0x%p>", addr);
 
-    viaFunction freplica = viaFunction{
+    TFunction freplica{
         0,
         cf->error_handler,
         false,
@@ -501,152 +468,130 @@ inline void via_callc(viaState *V, viaCFunction *cf)
 
     // We can safely reference the functions address because it will be cleaned up after
     // the C function stops executing, therefore it won't dangle
-    viaS_push(V->stack, &freplica);
-    viaS_flush(V->returns);
+    tspush(V->stack, &freplica);
+    tsflush(V->returns);
 
     // Call function pointer
     cf->ptr(V);
 
-    viaS_pop(V->stack);
-    viaS_flush(V->arguments);
+    tspop(V->stack);
+    tsflush(V->arguments);
 }
 
-// Returns the primitive type of value <v>
-inline viaValue via_type(viaState *V, viaValue v)
+// Returns the primitive type of value <v>.
+inline TValue type(RTState *V, TValue v)
 {
     auto enum_name = ENUM_NAME(v.type);
     std::string stdstr = std::string(enum_name);
-    const char *str = strdup(stdstr.c_str());
-    return viaT_stackvalue(V, viaT_newstring(V, str));
+    const char *str = dupstring(stdstr);
+    return stackvalue(V, newstring(V, str));
 }
 
-/*
- * Unified call interface
- * Calls both viaFunction and viaCFunction values
- * Uses a stack-based calling convention
- */
-inline void via_call(viaState *V, viaValue val)
+// Unified call interface.
+// Works on all callable types (TFunction, TCFunction, TTable).
+inline void call(RTState *V, TValue val)
 {
-    V->calltype = viaCallType::CALL;
+    V->calltype = CallType::CALL;
     // V->argc = static_cast<CallArgc>(V->arguments->size);
 
-    if (viaT_checkfunction(V, val))
-        via_callf(V, val.val_function, true);
-    else if (viaT_checkcfunction(V, val))
-        via_callc(V, val.val_cfunction);
-    else if (viaT_checktable(V, val))
+    if (checkfunction(V, val))
+        callf(V, val.val_function, true);
+    else if (checkcfunction(V, val))
+        callc(V, val.val_cfunction);
+    else if (checktable(V, val))
     {
-        TableKey mhash = viaT_hashstring(V, "__call");
-        viaValue *mmcall = via_gettableindex(V, val.val_table, mhash, true);
+        TableKey mhash = hashstring(V, "__call");
+        TValue *mmcall = gettableindex(V, val.val_table, mhash, true);
 
         // Push self argument
-        via_pushargument(V, *mmcall);
-        via_call(V, *mmcall);
+        pushargument(V, *mmcall);
+        call(V, *mmcall);
     }
     else
     {
-        viaValue callt = via_type(V, val);
-        via_setexitdata(V, 1, std::format("Attempt to call a {} value", callt.val_string->ptr));
+        TValue callt = type(V, val);
+        setexitdata(V, 1, std::format("Attempt to call a {} value", callt.val_string->ptr));
         V->abrt = true;
     }
 }
 
-inline void via_fastcall1(viaState *V, viaValue, Register)
+// Calls <val> with the FASTCALL1 (argument count is 1, argument 1 located in <arg0>) calling convention.
+inline void fastcall1(RTState *V, TValue, GPRegister)
 {
-    V->calltype = viaCallType::FASTCALL;
+    V->calltype = CallType::FASTCALL;
     V->argc = 1;
 }
 
-// Returns the length of value <v>, nil if impossible
-inline viaValue via_len(viaState *V, viaValue val)
+// Returns the length of value <v>, nil if impossible.
+inline TValue len(RTState *V, TValue val)
 {
-    if (viaT_checkstring(V, val))
-        return viaT_stackvalue(V, static_cast<viaNumber>(strlen(val.val_string->ptr)));
-    else if (viaT_checktable(V, val))
+    if (checkstring(V, val))
+        return stackvalue(V, static_cast<TNumber>(strlen(val.val_string->ptr)));
+    else if (checktable(V, val))
     {
-        TableKey mhash = viaT_hashstring(V, "__len");
-        viaValue *mmlen = via_gettableindex(V, val.val_table, mhash, true);
+        TableKey mhash = hashstring(V, "__len");
+        TValue *mmlen = gettableindex(V, val.val_table, mhash, true);
 
-        if (viaT_checknil(V, *mmlen))
-            return viaT_stackvalue(V, static_cast<viaNumber>(val.val_table->data.size()));
+        if (checknil(V, *mmlen))
+            return stackvalue(V, static_cast<TNumber>(val.val_table->data.size()));
 
         // Push self argument
-        via_pushargument(V, val);
-        via_call(V, *mmlen);
+        pushargument(V, val);
+        call(V, *mmlen);
 
-        return via_popreturn(V);
+        return popreturn(V);
     }
 
-    return viaT_stackvalue(V);
+    return stackvalue(V);
 }
 
-// Loads the value of key <k> in table <t> into register <R>, if present in table
-inline viaValue *via_loadtableindex(viaState *V, viaTable *T, TableKey key, Register R)
+// Loads the value of key <k> in table <t> into register <R>, if present in table.
+inline TValue *loadtableindex(RTState *V, TTable *T, TableKey key, GPRegister R)
 {
-    viaValue *val = via_gettableindex(V, T, key, true);
-    via_setregister(V, R, *val);
+    TValue *val = gettableindex(V, T, key, true);
+    setregister(V, R, *val);
     return val;
 }
 
-// Returns the complex type of value <v>
-// Practically the same as `vtype()`, but returns
-// the `__type` value if the given table has one
-inline viaValue via_typeof(viaState *V, viaValue val)
+// Returns the complex type of value <v>.
+// Practically the same as `type()`, but returns
+// the `__type` key if the given table has it defined.
+inline TValue typeof(RTState * V, TValue val)
 {
-    if (viaT_checktable(V, val))
+    if (checktable(V, val))
     {
-        viaTable *tbl = val.val_table;
-        viaValue *ty = via_gettableindex(V, tbl, viaT_hashstring(V, "__type"), true);
+        TTable *tbl = val.val_table;
+        TValue *ty = gettableindex(V, tbl, hashstring(V, "__type"), true);
 
-        if (viaT_checknil(V, *ty))
-            return via_type(V, val);
+        if (checknil(V, *ty))
+            return type(V, val);
 
-        viaString *tystr = viaT_newstring(V, ty->val_string->ptr);
+        TString *tystr = newstring(V, ty->val_string->ptr);
 
-        return viaT_stackvalue(V, tystr);
+        return stackvalue(V, tystr);
     }
 
-    return via_type(V, val);
+    return type(V, val);
 }
 
-// Calls the value of key <k> in table <t>, if callable
-// Uses the `call` method internally
-inline void via_callmethod(viaState *V, viaTable *T, TableKey key)
-{
-    viaValue *at = via_gettableindex(V, T, key, true);
-    // ! This doesn't need to be a pointer because the underlying table type is already a pointer
-    viaValue self = viaT_stackvalue(V, T);
-
-    via_pushargument(V, self);
-    via_call(V, *at);
-}
-
-// Returns wether if table <t> is frozen
-inline bool via_isfrozen(viaState *, viaTable *T)
+// Returns wether if table <t> is frozen.
+inline bool isfrozen(RTState *, TTable *T)
 {
     return T->frozen.get();
 }
 
-// Freezes table <t>
-// Terminates the VM if table <t> is already frozen
-inline void via_freeze(viaState *V, viaTable *T)
+// Freezes (locks, const-ifies) table <t>.
+inline void freeze(RTState *, TTable *T)
 {
-    if (via_isfrozen(V, T))
-    {
-        via_setexitdata(V, 1, "Attempt to freeze already-frozen table");
-        V->abrt = true;
-        return;
-    }
-
     T->frozen.set(true);
 }
 
-// Sets the metatable of <t> to <meta>
-inline void via_setmetatable(viaState *V, viaTable *T, viaTable *meta)
+// Sets the metatable of <t> to <meta>.
+inline void setmetatable(RTState *V, TTable *T, TTable *meta)
 {
-    if (via_isfrozen(V, T))
+    if (isfrozen(V, T))
     {
-        via_setexitdata(V, 1, "Cannot set metatable of frozen table");
+        setexitdata(V, 1, "Cannot set metatable of frozen table");
         V->abrt = true;
         return;
     }
@@ -654,120 +599,125 @@ inline void via_setmetatable(viaState *V, viaTable *T, viaTable *meta)
     T->meta = meta;
 }
 
-// Returns the metatable of <t>, nil if it doesn't have one
-inline viaValue via_getmetatable(viaState *V, viaTable *T)
+// Returns the metatable of <t>, nil if impossible.
+inline TValue getmetatable(RTState *V, TTable *T)
 {
     if (T->meta)
         // We don't need to return a value pointer as the underlying table value is already a pointer
-        return viaT_stackvalue(V, T->meta);
+        return stackvalue(V, T->meta);
 
-    return viaT_stackvalue(V);
+    return stackvalue(V);
 }
 
-//* Utility
-inline viaValue via_toviavalue(viaState *V, const Operand &operand)
+// Converts an Operand objecti into a TValue object.
+inline TValue toviavalue(RTState *V, const Operand &operand)
 {
     switch (operand.type)
     {
     case OperandType::Number:
-        return viaT_stackvalue(V, operand.val_number);
+        return stackvalue(V, operand.val_number);
     case OperandType::Bool:
-        return viaT_stackvalue(V, operand.val_boolean);
+        return stackvalue(V, operand.val_boolean);
     case OperandType::String:
-        return viaT_stackvalue(V, viaT_newstring(V, operand.val_string));
+        return stackvalue(V, newstring(V, operand.val_string));
     case via::OperandType::Nil:
-        return viaT_stackvalue(V);
+        return stackvalue(V);
     default:
-        via_setexitdata(V, 1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type)));
+        setexitdata(V, 1, std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type)));
         V->abrt = true;
         break;
     }
 
-    return viaT_stackvalue(V);
+    return stackvalue(V);
 }
 
-// Loads a static library to the global environment
-// If called during runtime, it will terminate the VM
-inline void via_loadlib(viaState *V, VarId id, viaValue lib) noexcept
+// Loads a static library to the global environment.
+// Cannot be called during runtime.
+inline void loadlib(RTState *V, VarId id, TValue lib) noexcept
 {
-    if (V->tstate == viaThreadState::RUNNING)
+    if (V->tstate == ThreadState::RUNNING)
     {
-        via_setexitdata(V, 1, "Attempt to load library during runtime");
+        setexitdata(V, 1, "Attempt to load library during runtime");
         V->abrt = true;
         return;
     }
 
-    if (via_getglobal(V, id)->type != ValueType::Nil)
+    if (getglobal(V, id)->type != ValueType::Nil)
     {
-        via_setexitdata(V, 1, std::format("Attempt to load library '{}' twice", id));
+        setexitdata(V, 1, std::format("Attempt to load library '{}' twice", id));
         V->abrt = true;
         return;
     }
 
-    via_setglobal(V, id, lib);
+    setglobal(V, id, lib);
 }
 
-inline void via_yield(viaState *V, float ms)
+// Schedules a yield <ms>.
+// Only yields the VM thread.
+inline void yield(RTState *V, float ms)
 {
-    if (V->tstate == viaThreadState::RUNNING)
+    if (V->tstate == ThreadState::RUNNING)
         V->yield = ms;
 }
 
-inline void via_savestate(viaState *V)
+// Saves the state by copying it and storing it.
+inline void savestate(RTState *V)
 {
-    V->sstate = new viaState(*V);
+    V->sstate = new RTState(*V);
 }
 
-inline void via_restorestate(viaState *V)
+// Restores the saved state by overwriting the state pointer.
+// Resets the saved state pointer.
+inline void restorestate(RTState *V)
 {
     *V = *V->sstate;
     V->sstate = nullptr;
 }
 
-inline viaValue via_arith(viaState *V, viaValue lhs, viaValue rhs, OpCode op)
+// Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
+inline TValue arith(RTState *V, TValue lhs, TValue rhs, OpCode op)
 {
 #ifdef VIA_DEBUG
-    VIA_ASSERT(viaT_checknumber(V, rhs), "via_arith(): Expected Number for rhs");
-    VIA_ASSERT(rhs.val_number != 0.0f, "via_arith(): Expected non-zero Number for rhs");
+    VIA_ASSERT(checknumber(V, rhs), "arith(): Expected Number for rhs");
 #endif
-    if (viaT_checknumber(V, lhs))
+    if (checknumber(V, lhs))
     {
         switch (op)
         {
         case OpCode::ADD:
-            return viaT_stackvalue(V, lhs.val_number + rhs.val_number);
+            return stackvalue(V, lhs.val_number + rhs.val_number);
         case OpCode::SUB:
-            return viaT_stackvalue(V, lhs.val_number - rhs.val_number);
+            return stackvalue(V, lhs.val_number - rhs.val_number);
         case OpCode::MUL:
-            return viaT_stackvalue(V, lhs.val_number * rhs.val_number);
+            return stackvalue(V, lhs.val_number * rhs.val_number);
         case OpCode::DIV:
-            return viaT_stackvalue(V, lhs.val_number / rhs.val_number);
+            return stackvalue(V, lhs.val_number / rhs.val_number);
         case OpCode::POW:
-            return viaT_stackvalue(V, std::pow(lhs.val_number, rhs.val_number));
+            return stackvalue(V, std::pow(lhs.val_number, rhs.val_number));
         case OpCode::MOD:
-            return viaT_stackvalue(V, std::fmod(lhs.val_number, rhs.val_number));
+            return stackvalue(V, std::fmod(lhs.val_number, rhs.val_number));
         default:
             break;
         }
 
-        return viaT_stackvalue(V);
+        return stackvalue(V);
     }
-    else if (viaT_checktable(V, lhs))
+    else if (checktable(V, lhs))
     {
-        viaValue *mm = via_getmetamethod(V, lhs, op);
-
-        via_pushargument(V, lhs);
-        via_pushargument(V, rhs);
-        via_call(V, *mm);
-
-        return via_popreturn(V);
+        TValue *mm = getmetamethod(V, lhs, op);
+        pushargument(V, lhs);
+        pushargument(V, rhs);
+        call(V, *mm);
+        return popreturn(V);
     }
 
-    via_setexitdata(V, 1, "Invalid arithmetic operator");
+    setexitdata(V, 1, "Invalid arithmetic operator");
     V->abrt = true;
-    return viaT_stackvalue(V);
+    return stackvalue(V);
 }
 
+// Work around for the state object being unused
+// when `VIA_DEBUG` is not defined
 #if defined(__GNUC__) || defined(__clang__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -775,11 +725,12 @@ inline viaValue via_arith(viaState *V, viaValue lhs, viaValue rhs, OpCode op)
 #    pragma warning(push)
 #    pragma warning(disable : 4100)
 #endif
-inline void via_iarith(viaState *V, viaValue *lhs, viaValue rhs, OpCode op)
+// Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
+inline void iarith(RTState *V, TValue *lhs, TValue rhs, OpCode op)
 {
 #ifdef VIA_DEBUG
-    VIA_ASSERT(viaT_checknumber(V, rhs), "via_arith(): Expected Number for rhs");
-    VIA_ASSERT(rhs.val_number != 0.0f, "via_arith(): Expected non-zero Number for rhs");
+    VIA_ASSERT(checknumber(V, rhs), "arith(): Expected Number for rhs");
+    VIA_ASSERT(rhs.val_number != 0.0f, "arith(): Expected non-zero Number for rhs");
 #endif
     switch (op)
     {

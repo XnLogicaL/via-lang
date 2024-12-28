@@ -10,7 +10,9 @@
 -I./src/VM
 -I./src/Utils
 -I./src/Compiler
+-I./src/CodeGen
 -I./CLI
 -I./CLI/Utils
 -I./CLI/Config
 -I./CLI/Commands
+-I./AsmJit/src

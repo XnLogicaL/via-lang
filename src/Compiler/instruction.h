@@ -15,7 +15,7 @@ namespace via
 {
 
 struct Chunk;
-using Register = uint32_t;
+using GPRegister = uint32_t;
 
 // Operand declarations
 enum class OperandType : uint8_t
@@ -24,7 +24,7 @@ enum class OperandType : uint8_t
     Number,
     Bool,
     String,
-    Register,
+    GPRegister,
     Identifier,
 };
 
@@ -37,7 +37,7 @@ struct Operand
         bool val_boolean;
         const char *val_string;
         const char *val_identifier;
-        Register val_register;
+        GPRegister val_register;
     };
 };
 
@@ -53,23 +53,23 @@ struct Instruction
 namespace Compilation
 {
 
-Instruction viaC_newinstruction();
-Instruction viaC_newinstruction(OpCode, const std::vector<Operand> &);
+Instruction cnewinstruction();
+Instruction cnewinstruction(OpCode, const std::vector<Operand> &);
 
-std::string viaC_compileinstruction(Instruction &);
-std::string viaC_compileoperand(Operand &);
+std::string ccompileinstruction(Instruction &);
+std::string ccompileoperand(Operand &);
 
-bool viaC_checkregister(const Operand &);
-bool viaC_checknumber(const Operand &);
-bool viaC_checkbool(const Operand &);
-bool viaC_checkstring(const Operand &);
-bool viaC_checkidentifier(const Operand &);
+bool ccheckregister(const Operand &);
+bool cchecknumber(const Operand &);
+bool ccheckbool(const Operand &);
+bool ccheckstring(const Operand &);
+bool ccheckidentifier(const Operand &);
 
-Operand viaC_newoperand();
-Operand viaC_newoperand(double);
-Operand viaC_newoperand(bool);
-Operand viaC_newoperand(const char *, bool);
-Operand viaC_newoperand(Register);
+Operand cnewoperand();
+Operand cnewoperand(double);
+Operand cnewoperand(bool);
+Operand cnewoperand(const char *, bool);
+Operand cnewoperand(GPRegister);
 
 } // namespace Compilation
 

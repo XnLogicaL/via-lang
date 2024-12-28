@@ -5,212 +5,212 @@
 namespace via::lib
 {
 
-void math_exp(viaState *V)
+void math_exp(RTState *V)
 {
-    viaValue n = via_popargument(V);
+    TValue n = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
+    LIB_ASSERT(checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
 
-    viaValue val = viaT_stackvalue(V, std::exp(n.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::exp(n.val_number));
+    pushreturn(V, val);
 }
 
-void math_log(viaState *V)
+void math_log(RTState *V)
 {
-    viaValue base = via_popargument(V);
-    viaValue n = via_popargument(V);
+    TValue base = popargument(V);
+    TValue n = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, base), ARG_MISMATCH(0, "Number", ENUM_NAME(base.type)));
-    LIB_ASSERT(viaT_checknumber(V, n), ARG_MISMATCH(1, "Number", ENUM_NAME(n.type)));
+    LIB_ASSERT(checknumber(V, base), ARG_MISMATCH(0, "Number", ENUM_NAME(base.type)));
+    LIB_ASSERT(checknumber(V, n), ARG_MISMATCH(1, "Number", ENUM_NAME(n.type)));
 
-    viaValue val = viaT_stackvalue(V, std::log(n.val_number) / std::log(base.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::log(n.val_number) / std::log(base.val_number));
+    pushreturn(V, val);
 }
 
-void math_log10(viaState *V)
+void math_log10(RTState *V)
 {
-    viaValue n = via_popargument(V);
+    TValue n = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
+    LIB_ASSERT(checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
 
-    viaValue val = viaT_stackvalue(V, std::log10(n.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::log10(n.val_number));
+    pushreturn(V, val);
 }
 
-void math_pow(viaState *V)
+void math_pow(RTState *V)
 {
-    viaValue n = via_popargument(V);
-    viaValue e = via_popargument(V);
+    TValue n = popargument(V);
+    TValue e = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
-    LIB_ASSERT(viaT_checknumber(V, e), ARG_MISMATCH(1, "Number", ENUM_NAME(e.type)));
+    LIB_ASSERT(checknumber(V, n), ARG_MISMATCH(0, "Number", ENUM_NAME(n.type)));
+    LIB_ASSERT(checknumber(V, e), ARG_MISMATCH(1, "Number", ENUM_NAME(e.type)));
 
-    viaValue val = viaT_stackvalue(V, std::pow(n.val_number, e.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::pow(n.val_number, e.val_number));
+    pushreturn(V, val);
 }
 
-void math_cos(viaState *V)
+void math_cos(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::cos(t.val_number)); // Compute the cosine
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::cos(t.val_number)); // Compute the cosine
+    pushreturn(V, val);
 }
 
-void math_tan(viaState *V)
+void math_tan(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::tan(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::tan(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_asin(viaState *V)
+void math_asin(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::asin(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::asin(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_acos(viaState *V)
+void math_acos(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::acos(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::acos(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_atan(viaState *V)
+void math_atan(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::atan(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::atan(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_atan2(viaState *V)
+void math_atan2(RTState *V)
 {
-    viaValue t = via_popargument(V);
-    viaValue x = via_popargument(V);
+    TValue t = popargument(V);
+    TValue x = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
-    LIB_ASSERT(viaT_checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
 
-    viaValue val = viaT_stackvalue(V, std::atan2(t.val_number, x.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::atan2(t.val_number, x.val_number));
+    pushreturn(V, val);
 }
 
-void math_sinh(viaState *V)
+void math_sinh(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::sinh(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::sinh(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_cosh(viaState *V)
+void math_cosh(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::cosh(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::cosh(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_tanh(viaState *V)
+void math_tanh(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::atan(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::atan(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_abs(viaState *V)
+void math_abs(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::fabs(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::fabs(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_min(viaState *V)
+void math_min(RTState *V)
 {
-    viaValue t = via_popargument(V);
-    viaValue x = via_popargument(V);
+    TValue t = popargument(V);
+    TValue x = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
-    LIB_ASSERT(viaT_checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
 
-    viaValue val = viaT_stackvalue(V, std::min(t.val_number, x.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::min(t.val_number, x.val_number));
+    pushreturn(V, val);
 }
 
-void math_max(viaState *V)
+void math_max(RTState *V)
 {
-    viaValue t = via_popargument(V);
-    viaValue x = via_popargument(V);
+    TValue t = popargument(V);
+    TValue x = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
-    LIB_ASSERT(viaT_checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
 
-    viaValue val = viaT_stackvalue(V, std::max(t.val_number, x.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::max(t.val_number, x.val_number));
+    pushreturn(V, val);
 }
 
-void math_round(viaState *V)
+void math_round(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::round(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::round(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_floor(viaState *V)
+void math_floor(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::floor(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::floor(t.val_number));
+    pushreturn(V, val);
 }
 
-void math_ceil(viaState *V)
+void math_ceil(RTState *V)
 {
-    viaValue t = via_popargument(V);
+    TValue t = popargument(V);
 
-    LIB_ASSERT(viaT_checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
+    LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
-    viaValue val = viaT_stackvalue(V, std::ceil(t.val_number));
-    via_pushreturn(V, val);
+    TValue val = stackvalue(V, std::ceil(t.val_number));
+    pushreturn(V, val);
 }
 
-void viaL_loadmathlib(viaState *V)
+void loadmathlib(RTState *V)
 {
-    static const HashMap<const char *, viaValue> math_properties = {
+    static const HashMap<const char *, TValue> math_properties = {
 
         // Constants
-        {"pi", viaT_stackvalue(V, 3.1415926535)},
+        {"pi", stackvalue(V, 3.1415926535)},
 
         // Functions
         {"exp", WRAPVAL(math_exp)},
@@ -234,16 +234,16 @@ void viaL_loadmathlib(viaState *V)
         {"ceil", WRAPVAL(math_ceil)}
     };
 
-    viaTable *lib = viaT_newtable(V, nullptr, {});
+    TTable *lib = newtable(V, nullptr, {});
 
     for (auto it : math_properties)
     {
-        TableKey key = viaT_hashstring(V, it.first);
-        via_settableindex(V, lib, key, it.second);
+        TableKey key = hashstring(V, it.first);
+        settableindex(V, lib, key, it.second);
     }
 
-    via_freeze(V, lib);
-    via_loadlib(V, viaT_hashstring(V, "math"), viaT_stackvalue(V, lib));
+    freeze(V, lib);
+    loadlib(V, hashstring(V, "math"), stackvalue(V, lib));
 }
 
 } // namespace via::lib

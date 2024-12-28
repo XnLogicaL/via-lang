@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "vlrand.h"
+#include "mathutils.h"
 
 namespace via::lib
 {
@@ -16,50 +17,50 @@ uint64_t pcg32_rand()
 }
 
 // Function to generate a random double in the range [a, b]
-viaNumber pcg32_range(viaNumber a, viaNumber b)
+TNumber pcg32_range(TNumber a, TNumber b)
 {
     // Get a random number in the full uint64_t range
     uint64_t rand_val = pcg32_rand();
     // Map it to the range [0.0, 1.0]
-    viaNumber scaled = static_cast<viaNumber>(rand_val) / static_cast<viaNumber>(UINT64_MAX);
+    TNumber scaled = static_cast<TNumber>(rand_val) / static_cast<TNumber>(UINT64_MAX);
     // Now scale it to the desired range [a, b]
-    return a + scaled * (b - a);
+    return lerp(a, b, scaled);
 }
 
-void rand_range(viaState *V)
+void rand_range(RTState *V)
 {
-    viaValue low = via_popargument(V);
-    viaValue high = via_popargument(V);
+    TValue low = popargument(V);
+    TValue high = popargument(V);
 
-    viaValue num = viaT_stackvalue(V, pcg32_range(low.val_number, high.val_number));
+    TValue num = stackvalue(V, pcg32_range(low.val_number, high.val_number));
 
-    via_pushreturn(V, num);
+    pushreturn(V, num);
 }
 
-void rand_int(viaState *V)
+void rand_int(RTState *V)
 {
     rand_range(V);
-    viaValue x = via_popreturn(V);
+    TValue x = popreturn(V);
     x.val_number = std::floor(x.val_number);
 }
 
-void viaL_loadrandlib(viaState *V)
+void loadrandlib(RTState *V)
 {
-    static const HashMap<const char *, viaValue> rand_properties = {
-        {"range", viaT_stackvalue(V, rand_range)},
-        {"int", viaT_stackvalue(V, rand_int)},
+    static const HashMap<const char *, TValue> rand_properties = {
+        {"range", stackvalue(V, rand_range)},
+        {"int", stackvalue(V, rand_int)},
     };
 
-    viaTable *lib = viaT_newtable(V);
+    TTable *lib = newtable(V);
 
     for (auto it : rand_properties)
     {
-        TableKey key = viaT_hashstring(V, it.first);
-        via_settableindex(V, lib, key, it.second);
+        TableKey key = hashstring(V, it.first);
+        settableindex(V, lib, key, it.second);
     }
 
-    via_freeze(V, lib);
-    via_loadlib(V, viaT_hashstring(V, "random"), viaT_stackvalue(V, lib));
+    freeze(V, lib);
+    loadlib(V, hashstring(V, "random"), stackvalue(V, lib));
 }
 
 } // namespace via::lib

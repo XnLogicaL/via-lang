@@ -8,7 +8,7 @@ namespace via
 ExecutionResult Interpreter::run(std::string code)
 {
     Tokenization::Tokenizer tokenizer(code);
-    viaSourceContainer container = tokenizer.tokenize();
+    SrcContainer container = tokenizer.tokenize();
 
     Tokenization::Preprocessor preprocessor(container);
     bool failed = preprocessor.preprocess();
@@ -18,15 +18,15 @@ ExecutionResult Interpreter::run(std::string code)
     return compile_and_run(container);
 }
 
-void Interpreter::load_libraries(viaState *V)
+void Interpreter::load_libraries(RTState *V)
 {
-    lib::viaL_loadbaselib(V);
-    lib::viaL_loadmathlib(V);
-    lib::viaL_loadrandlib(V);
-    lib::viaL_loadvec3lib(V);
+    lib::loadbaselib(V);
+    lib::loadmathlib(V);
+    lib::loadrandlib(V);
+    lib::loadvec3lib(V);
 }
 
-ExecutionResult Interpreter::compile_and_run(viaSourceContainer &container)
+ExecutionResult Interpreter::compile_and_run(SrcContainer &container)
 {
     using namespace via::Parsing;
     using namespace via::Compilation;
@@ -41,13 +41,13 @@ ExecutionResult Interpreter::compile_and_run(viaSourceContainer &container)
 
     std::vector<Instruction> bytecode = compiler.get();
 
-    viaState *V = viaA_newstate(bytecode);
+    RTState *V = stnewstate(bytecode);
     load_libraries(V);
-    via_execute(V);
+    execute(V);
 
     ExecutionResult result = {V->exitc, V->exitm};
 
-    viaA_cleanupstate(V);
+    stcleanupstate(V);
 
     return result;
 }

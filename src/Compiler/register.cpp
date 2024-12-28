@@ -6,49 +6,49 @@ namespace via::Compilation
 {
 
 // Allocates an empty register for usage
-Register RegisterPool::allocate_register()
+GPRegister RegisterPool::allocate_register()
 {
     // Check if there is an available register
     if (available_registers.empty())
-        return std::numeric_limits<Register>::max();
+        return std::numeric_limits<GPRegister>::max();
 
     // Save the register
-    Register reg = available_registers.top();
+    GPRegister reg = available_registers.top();
     // Pop the register
     available_registers.pop();
     return reg;
 }
 
 // Adds the register to the available list
-void RegisterPool::free_register(Register reg)
+void RegisterPool::free_register(GPRegister reg)
 {
     available_registers.push(reg);
 }
 
-void RegisterPool::spill_register(Register) {}
-void RegisterPool::restore_register(Register) {}
+void RegisterPool::spill_register(GPRegister) {}
+void RegisterPool::restore_register(GPRegister) {}
 
 // Marks register <reg> as being "used", keeps track of time
-void RegisterManager::use_register(Register reg, viaTime_t time)
+void RegisterManager::use_register(GPRegister reg, viaTime_t time)
 {
     register_life_ranges[reg].start_time = time;
 }
 
 // Marks register <reg> as unused, stops the timer
-void RegisterManager::unuse_register(Register reg, viaTime_t time)
+void RegisterManager::unuse_register(GPRegister reg, viaTime_t time)
 {
     register_life_ranges[reg].end_time = time;
 }
 
 // Returns whether if the register <reg> can be freed relative to <current_time>
-bool RegisterManager::can_free_register(Register reg, viaTime_t current_time)
+bool RegisterManager::can_free_register(GPRegister reg, viaTime_t current_time)
 {
     return register_life_ranges[reg].end_time <= current_time;
 }
 
 // Allocates a variable and assigns it to a register
 // Used for advanced compilation analysis
-Register RegisterAllocator::allocate_variable(viaTestVariable_t var)
+GPRegister RegisterAllocator::allocate_variable(viaTestVariable_t var)
 {
     // Try to find a register for the variable
     size_t reg = register_pool.allocate_register();

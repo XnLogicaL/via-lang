@@ -5,15 +5,15 @@
 namespace via::lib
 {
 
-void viaL_pusharguments(viaState *V, std::vector<viaValue> args)
+void pusharguments(RTState *V, std::vector<TValue> args)
 {
-    for (viaValue val : args)
-        via_pushargument(V, val);
+    for (TValue val : args)
+        pushargument(V, val);
 }
 
-viaValue *viaL_quickindex(viaState *V, viaTable *T, const char *K)
+TValue *quickindex(RTState *V, TTable *T, const char *K)
 {
-    return via_gettableindex(V, T, viaT_hashstring(V, K), false);
+    return gettableindex(V, T, hashstring(V, K), false);
 }
 
 } // namespace via::lib

@@ -24,13 +24,13 @@ void BitShiftOptimizationPass::apply(Generator &, Bytecode &bytecode)
         // Replace with bit-shift instructions
         if (instr.op == OpCode::MUL)
         {
-            instr.op = OpCode::BSHL;                              // Bitwise shift left
-            instr.operand1 = viaC_newoperand(power_of_2.value()); // Use the shift count
+            instr.op = OpCode::BSHL;                          // Bitwise shift left
+            instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
         }
         else if (instr.op == OpCode::DIV)
         {
-            instr.op = OpCode::BSHR;                              // Bitwise shift right
-            instr.operand1 = viaC_newoperand(power_of_2.value()); // Use the shift count
+            instr.op = OpCode::BSHR;                          // Bitwise shift right
+            instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
         }
     }
 }

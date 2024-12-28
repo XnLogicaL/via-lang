@@ -8,17 +8,16 @@
 #include "api.h"
 #include "types.h"
 #include "libutils.h"
-
 #include <cmath>
 #include <chrono>
 
 namespace via::lib
 {
 
-// Function to generate a random double in the range [a, b]
-viaNumber pcg32_range(viaNumber a, viaNumber b);
-void rand_range(viaState *V);
-void rand_int(viaState *V);
-void viaL_loadrandlib(viaState *V);
+// Function to generate a random double in the range [a, b].
+TNumber pcg32_range(TNumber a, TNumber b);
+void rand_range(RTState *V);
+void rand_int(RTState *V);
+void loadrandlib(RTState *V);
 
 } // namespace via::lib

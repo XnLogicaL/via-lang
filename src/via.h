@@ -48,8 +48,8 @@ public:
     ExecutionResult run(std::string code);
 
 private:
-    void load_libraries(viaState *V);
-    ExecutionResult compile_and_run(viaSourceContainer &container);
+    void load_libraries(RTState *V);
+    ExecutionResult compile_and_run(SrcContainer &container);
 };
 
 } // namespace via

@@ -1,16 +1,8 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-/*
- * !! WARNING !!
- * Unit testing is not allowed in this file!
- * This is due to the performance critical nature of it's contents
- */
-
 #include "execute.h"
 #include "api.h"
 #include "chunk.h"
-#include "execlinux.h"
-#include "execwin.h"
 #include "core.h"
 #include "shared.h"
 #include "state.h"
@@ -49,9 +41,9 @@
 // Has bound checks
 #define VM_LOAD() \
     { \
-        if (!via_validjmpaddr(V, V->ip + 1)) \
+        if (!isvalidjmpaddr(V, V->ip + 1)) \
         { \
-            via_setexitdata(V, 0, ""); \
+            setexitdata(V, 0, ""); \
             VM_EXIT(); \
         } \
         V->ip++; \
@@ -71,7 +63,7 @@
     { \
         if (!(cond)) \
         { \
-            via_setexitdata(V, 1, std::format("VM_ASSERT(): {}\n in file {}, line {}", (message), __FILE__, __LINE__).c_str()); \
+            setexitdata(V, 1, std::format("VM_ASSERT(): {}\n in file {}, line {}", (message), __FILE__, __LINE__).c_str()); \
             VM_EXIT(); \
         } \
     }
@@ -91,7 +83,7 @@ inline bool _is_empty_instruction(Instruction *instr)
 
 // Internal function that optimizes a sequence of empty instructions (such as NOP or END)
 // By replacing the first instruction with a jmp instruction that jumps over the sequence
-inline void _optimize_empty_instruction_sequence(viaState *V)
+inline void _optimize_empty_instruction_sequence(RTState *V)
 {
     // Check for an empty instruction at the current IP
     if (VIA_UNLIKELY(_is_empty_instruction(V->ip)))
@@ -113,12 +105,11 @@ inline void _optimize_empty_instruction_sequence(viaState *V)
 
 // This does not need to be inline
 // Becaue it should only be called once
-void via_execute(viaState *V)
+void execute(RTState *V)
 {
-    VIA_ASSERT(V->tstate != viaThreadState::RUNNING, "via_execute() called on running thread (tstate=RUNNING)");
-    VIA_ASSERT(V->tstate != viaThreadState::DEAD, "via_execute() called on dead thread (tstate=DEAD)");
-
-    V->tstate = viaThreadState::RUNNING;
+    VIA_ASSERT(V->tstate != ThreadState::RUNNING, "execute() called on running thread (tstate=RUNNING)");
+    VIA_ASSERT(V->tstate != ThreadState::DEAD, "execute() called on dead thread (tstate=DEAD)");
+    V->tstate = ThreadState::RUNNING;
 
     // Not necessary, but provides clarity
     VM_DISPATCH();
@@ -136,7 +127,6 @@ dispatch:
         {
             // This function automatically compiles the chunk if it hasn't been compiled before
             // Disabled for now due to machine code instability
-            // jit::viaJIT_executechunk(V, V->ip->chunk);
         }
 
         // After the chunk has been executed,
@@ -150,7 +140,8 @@ dispatch:
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
     {
         V->restorestate = false;
-        via_restorestate(V);
+        *V = *V->sstate;
+        V->sstate = nullptr;
     }
 
     // This is unlikely because it only occurs once
@@ -168,7 +159,7 @@ dispatch:
     VM_ASSERT(
         // This is unlikely because for the ip to go out of bounds, the user specifically has to jump to an invalid address
         // Otherwise, this is completely impossible to be produced by the compiler
-        VIA_UNLIKELY(via_validjmpaddr(V, V->ip)),
+        VIA_UNLIKELY(isvalidjmpaddr(V, V->ip)),
         std::format(
             "Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
             reinterpret_cast<const void *>(V->ip),
@@ -181,9 +172,8 @@ dispatch:
     // This is unlikely because the VM very rarely yields at all
     if (VIA_UNLIKELY(V->yield))
     {
-        // This code is dogshit...
-        long long waitt = static_cast<long long>(V->yieldfor * 1000);
-        std::chrono::milliseconds dur = std::chrono::milliseconds(waitt);
+        long long milliseconds = V->yieldfor / 1000;
+        std::chrono::milliseconds dur(milliseconds);
         std::this_thread::sleep_for(dur);
         V->yield = false;
     }
@@ -209,18 +199,18 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rsrc), "Expected Register for MOV source");
+        VM_ASSERT(ccheckregister(rsrc), "Expected GPRegister for MOV source");
 #endif
         // Fast-path: both operands are registers
-        if (VIA_LIKELY(viaC_checkregister(rdst)))
+        if (VIA_LIKELY(ccheckregister(rdst)))
         {
-            via_setregister(V, rdst.val_register, *via_getregister(V, rsrc.val_register));
+            setregister(V, rdst.val_register, *getregister(V, rsrc.val_register));
             // Set the <src> register to nil
-            via_setregister(V, rdst.val_register, viaT_stackvalue(V));
+            setregister(V, rdst.val_register, stackvalue(V));
         }
         else
             // Basically just LOAD lmao
-            via_setregister(V, rdst.val_register, via_toviavalue(V, rsrc));
+            setregister(V, rdst.val_register, toviavalue(V, rsrc));
 
         VM_NEXT();
     }
@@ -231,12 +221,12 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for CPY destination");
-        VM_ASSERT(viaC_checkregister(rsrc), "Expected Register for CPY source");
+        VM_ASSERT(ccheckregister(rdst), "Expected GPRegister for CPY destination");
+        VM_ASSERT(ccheckregister(rsrc), "Expected GPRegister for CPY source");
 #endif
         // This has to be copied, otherwise it will remain a reference
-        viaValue cpy = *via_getregister(V, rsrc.val_register);
-        via_setregister(V, rdst.val_register, cpy);
+        TValue cpy = *getregister(V, rsrc.val_register);
+        setregister(V, rdst.val_register, cpy);
 
         VM_NEXT();
     }
@@ -246,91 +236,91 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand imm = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected Register for LOAD destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected GPRegister for LOAD destination");
 #endif
-        viaValue val = via_toviavalue(V, imm);
-        via_setregister(V, rdst.val_register, val);
+        TValue val = toviavalue(V, imm);
+        setregister(V, rdst.val_register, val);
         VM_NEXT();
     }
 
     case OpCode::PUSH:
     {
-        viaFunction *frame = new viaFunction{
+        TFunction *frame = new TFunction{
             0,
             false,
             false,
             "LC",
-            viaS_top(V->stack),
+            tstop(V->stack),
             {},
             {},
         };
 
-        viaS_push(V->stack, frame);
+        tspush(V->stack, frame);
         VM_NEXT();
     }
 
     case OpCode::POP:
     {
 #ifdef VIA_DEBUG
-        if (V->stack->size == 1)
+        if (V->stack->size >= 1)
         {
-            via_setexitdata(V, 1, "Attempt to POP global (root) stack frame");
+            setexitdata(V, 1, "Illegal pop: restricted stack frame");
             VM_EXIT();
         }
 #endif
-        viaS_pop(V->stack);
+        tspop(V->stack);
         VM_NEXT();
     }
 
     case OpCode::PUSHARG:
     {
         Operand arg = V->ip->operand1;
-        viaValue arg_val;
+        TValue arg_val;
 
-        if (VIA_LIKELY(viaC_checkregister(arg)))
-            arg_val = *via_getregister(V, arg.val_register);
+        if (VIA_LIKELY(ccheckregister(arg)))
+            arg_val = *getregister(V, arg.val_register);
         else
-            arg_val = via_toviavalue(V, arg);
+            arg_val = toviavalue(V, arg);
 
-        viaS_push(V->arguments, arg_val);
+        tspush(V->arguments, arg_val);
         VM_NEXT();
     }
 
     case OpCode::POPARG:
     {
         Operand dst = V->ip->operand1;
-        viaValue val = viaS_top(V->arguments);
+        TValue val = tstop(V->arguments);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for POPARG destination");
+        VM_ASSERT(ccheckregister(dst), "Expected register for POPARG destination");
 #endif
-        viaS_pop(V->arguments);
-        via_setregister(V, dst.val_register, val);
+        tspop(V->arguments);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
     case OpCode::PUSHRET:
     {
         Operand ret = V->ip->operand1;
-        viaValue ret_val;
+        TValue ret_val;
 
-        if (VIA_LIKELY(viaC_checkregister(ret)))
-            ret_val = *via_getregister(V, ret.val_register);
+        if (VIA_LIKELY(ccheckregister(ret)))
+            ret_val = *getregister(V, ret.val_register);
         else
-            ret_val = via_toviavalue(V, ret);
+            ret_val = toviavalue(V, ret);
 
-        viaS_push(V->returns, ret_val);
+        tspush(V->returns, ret_val);
         VM_NEXT();
     }
 
     case OpCode::POPRET:
     {
         Operand dst = V->ip->operand1;
-        viaValue val = viaS_top(V->returns);
+        TValue val = tstop(V->returns);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for POPRET destination");
+        VM_ASSERT(ccheckregister(dst), "Expected register for POPRET destination");
 #endif
-        viaS_pop(V->returns);
-        via_setregister(V, dst.val_register, val);
+        tspop(V->returns);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -339,14 +329,14 @@ dispatch:
         Operand val = V->ip->operand1;
         Operand id = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkidentifier(id), "Expected identifier for SETLOCAL id");
+        VM_ASSERT(ccheckidentifier(id), "Expected identifier for SETLOCAL id");
 #endif
-        VarId id_t = viaT_hashstring(V, id.val_identifier);
+        VarId id_t = hashstring(V, id.val_identifier);
         // Slow-path: loaded value is a register
-        if (VIA_UNLIKELY(viaC_checkregister(val)))
-            via_setvariable(V, id_t, *via_getregister(V, val.val_register));
+        if (VIA_UNLIKELY(ccheckregister(val)))
+            setvariable(V, id_t, *getregister(V, val.val_register));
         else
-            via_setvariable(V, id_t, via_toviavalue(V, val));
+            setvariable(V, id_t, toviavalue(V, val));
 
         VM_NEXT();
     }
@@ -356,9 +346,9 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand id = V->ip->operand2;
 
-        VarId id_t = viaT_hashstring(V, id.val_identifier);
+        VarId id_t = hashstring(V, id.val_identifier);
 
-        via_loadvariable(V, id_t, dst.val_register);
+        loadvariable(V, id_t, dst.val_register);
         VM_NEXT();
     }
 
@@ -368,10 +358,10 @@ dispatch:
         Operand id = V->ip->operand2;
 
         // Slow-path: loaded value is a register
-        if (VIA_UNLIKELY(viaC_checkregister(val)))
-            via_setglobal(V, viaT_hashstring(V, id.val_identifier), *via_getregister(V, val.val_register));
+        if (VIA_UNLIKELY(ccheckregister(val)))
+            setglobal(V, hashstring(V, id.val_identifier), *getregister(V, val.val_register));
         else
-            via_setglobal(V, viaT_hashstring(V, id.val_identifier), via_toviavalue(V, val));
+            setglobal(V, hashstring(V, id.val_identifier), toviavalue(V, val));
 
         VM_NEXT();
     }
@@ -381,8 +371,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand id = V->ip->operand2;
 
-        via_loadglobal(V, viaT_hashstring(V, id.val_identifier), dst.val_register);
-
+        loadglobal(V, hashstring(V, id.val_identifier), dst.val_register);
         VM_NEXT();
     }
 
@@ -391,10 +380,10 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand id = V->ip->operand2;
 
-        VarId id_t = viaT_hashstring(V, id.val_identifier);
-        viaValue val = viaT_stackvalue(V, ValueType::Nil);
+        VarId id_t = hashstring(V, id.val_identifier);
+        TValue val = stackvalue(V, ValueType::Nil);
 
-        for (viaFunction *frame : *V->stack)
+        for (TFunction *frame : *V->stack)
         {
             auto it = frame->locals.find(id_t);
             if (it != frame->locals.end())
@@ -404,7 +393,7 @@ dispatch:
             }
         }
 
-        via_setregister(V, dst.val_register, val);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -414,21 +403,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::ADD));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::ADD));
         VM_NEXT();
     }
     case OpCode::SUB:
@@ -437,21 +426,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::SUB));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::SUB));
         VM_NEXT();
     }
     case OpCode::MUL:
@@ -460,21 +449,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::MUL));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::MUL));
         VM_NEXT();
     }
     case OpCode::DIV:
@@ -483,21 +472,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::DIV));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::DIV));
         VM_NEXT();
     }
     case OpCode::POW:
@@ -506,21 +495,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::POW));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::POW));
         VM_NEXT();
     }
     case OpCode::MOD:
@@ -529,21 +518,21 @@ dispatch:
         Operand rlhs = V->ip->operand2;
         Operand rrhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rdst), "Expected register for arithmetic destination");
+        VM_ASSERT(ccheckregister(rdst), "Expected register for arithmetic destination");
 #endif
-        viaValue lhs, rhs;
+        TValue lhs, rhs;
 
-        if (VIA_LIKELY(viaC_checkregister(rlhs)))
-            lhs = *via_getregister(V, rlhs.val_register);
+        if (VIA_LIKELY(ccheckregister(rlhs)))
+            lhs = *getregister(V, rlhs.val_register);
         else
-            lhs = via_toviavalue(V, rlhs);
+            lhs = toviavalue(V, rlhs);
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_setregister(V, rdst.val_register, via_arith(V, lhs, rhs, OpCode::MOD));
+        setregister(V, rdst.val_register, arith(V, lhs, rhs, OpCode::MOD));
         VM_NEXT();
     }
 
@@ -552,16 +541,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IADD);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::IADD);
         VM_NEXT();
     }
     case OpCode::ISUB:
@@ -569,16 +558,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::ISUB);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::ISUB);
         VM_NEXT();
     }
     case OpCode::IMUL:
@@ -586,16 +575,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IMUL);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::IMUL);
         VM_NEXT();
     }
     case OpCode::IDIV:
@@ -603,16 +592,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IDIV);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::IDIV);
         VM_NEXT();
     }
     case OpCode::IPOW:
@@ -620,16 +609,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IPOW);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::IPOW);
         VM_NEXT();
     }
     case OpCode::IMOD:
@@ -637,16 +626,16 @@ dispatch:
         Operand rlhs = V->ip->operand1;
         Operand rrhs = V->ip->operand2;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(rlhs), "Expected register for inline arithmetic operation");
+        VM_ASSERT(ccheckregister(rlhs), "Expected register for inline arithmetic operation");
 #endif
-        viaValue rhs;
+        TValue rhs;
 
-        if (VIA_UNLIKELY(viaC_checkregister(rrhs)))
-            rhs = *via_getregister(V, rrhs.val_register);
+        if (VIA_UNLIKELY(ccheckregister(rrhs)))
+            rhs = *getregister(V, rrhs.val_register);
         else
-            rhs = via_toviavalue(V, rrhs);
+            rhs = toviavalue(V, rrhs);
 
-        via_iarith(V, via_getregister(V, rlhs.val_register), rhs, OpCode::IMOD);
+        iarith(V, getregister(V, rlhs.val_register), rhs, OpCode::IMOD);
         VM_NEXT();
     }
 
@@ -655,11 +644,11 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
 
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checknumber(V, lhsn), "Expected Number for binary operand 0");
+        VM_ASSERT(checknumber(V, lhsn), "Expected Number for binary operand 0");
 #endif
-        via_setregister(V, dst.val_register, viaT_stackvalue(V, -lhsn.val_number));
+        setregister(V, dst.val_register, stackvalue(V, -lhsn.val_number));
         VM_NEXT();
     }
 
@@ -669,20 +658,20 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        viaValue lhsn, rhsn;
+        TValue lhsn, rhsn;
 
         if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
-            lhsn = *via_getregister(V, lhs.val_register);
+            lhsn = *getregister(V, lhs.val_register);
 
         if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
-            rhsn = *via_getregister(V, rhs.val_register);
+            rhsn = *getregister(V, rhs.val_register);
 
-        bool result = via_tobool(V, lhsn).val_boolean && via_tobool(V, rhsn).val_boolean;
-        via_setregister(V, dst.val_register, viaT_stackvalue(V, result));
+        bool result = tobool(V, lhsn).val_boolean && tobool(V, rhsn).val_boolean;
+        setregister(V, dst.val_register, stackvalue(V, result));
         VM_NEXT();
     }
     case OpCode::BOR:
@@ -691,20 +680,20 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        viaValue lhsn, rhsn;
+        TValue lhsn, rhsn;
 
         if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
-            lhsn = *via_getregister(V, lhs.val_register);
+            lhsn = *getregister(V, lhs.val_register);
 
         if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
-            rhsn = *via_getregister(V, rhs.val_register);
+            rhsn = *getregister(V, rhs.val_register);
 
-        bool result = via_tobool(V, lhsn).val_boolean || via_tobool(V, rhsn).val_boolean;
-        via_setregister(V, dst.val_register, viaT_stackvalue(V, result));
+        bool result = tobool(V, lhsn).val_boolean || tobool(V, rhsn).val_boolean;
+        setregister(V, dst.val_register, stackvalue(V, result));
         VM_NEXT();
     }
     case OpCode::BXOR:
@@ -713,20 +702,20 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        viaValue lhsn, rhsn;
+        TValue lhsn, rhsn;
 
         if (VIA_LIKELY(lhs.type == OperandType::Bool))
             lhsn.val_boolean = lhs.val_boolean;
         else
-            lhsn = *via_getregister(V, lhs.val_register);
+            lhsn = *getregister(V, lhs.val_register);
 
         if (VIA_LIKELY(rhs.type == OperandType::Bool))
             rhsn.val_boolean = rhs.val_boolean;
         else
-            rhsn = *via_getregister(V, rhs.val_register);
+            rhsn = *getregister(V, rhs.val_register);
 
-        bool result = via_tobool(V, lhsn).val_boolean != via_tobool(V, rhsn).val_boolean;
-        via_setregister(V, dst.val_register, viaT_stackvalue(V, result));
+        bool result = tobool(V, lhsn).val_boolean != tobool(V, rhsn).val_boolean;
+        setregister(V, dst.val_register, stackvalue(V, result));
         VM_NEXT();
     }
 
@@ -734,11 +723,11 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checkbool(V, lhsn), "Expected Bool for logical operand 0");
+        VM_ASSERT(checkbool(V, lhsn), "Expected Bool for logical operand 0");
 #endif
-        via_setregister(V, dst.val_register, viaT_stackvalue(V, !lhsn.val_boolean));
+        setregister(V, dst.val_register, stackvalue(V, !lhsn.val_boolean));
 
         VM_NEXT();
     }
@@ -749,35 +738,35 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        viaValue lhsn, rhsn;
+        TValue lhsn, rhsn;
 
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
+        if (VIA_UNLIKELY(lhs.type == OperandType::GPRegister))
         {
-            lhsn = *via_getregister(V, lhs.val_register);
+            lhsn = *getregister(V, lhs.val_register);
             lhs_reg = true;
         }
         else
-            lhsn = via_toviavalue(V, lhs);
+            lhsn = toviavalue(V, lhs);
 
-        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
+        if (VIA_UNLIKELY(rhs.type == OperandType::GPRegister))
         {
-            rhsn = *via_getregister(V, rhs.val_register);
+            rhsn = *getregister(V, rhs.val_register);
             rhs_reg = true;
         }
         else
-            rhsn = via_toviavalue(V, rhs);
+            rhsn = toviavalue(V, rhs);
 
         if (lhs_reg && rhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, via_cmpregister(V, lhs.val_register, rhs.val_register)));
+            setregister(V, dst.val_register, stackvalue(V, cmpregister(V, lhs.val_register, rhs.val_register)));
         else if (lhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, via_compare(V, *via_getregister(V, lhs.val_register), rhsn)));
+            setregister(V, dst.val_register, stackvalue(V, compare(V, *getregister(V, lhs.val_register), rhsn)));
         else if (rhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, via_compare(V, *via_getregister(V, rhs.val_register), lhsn)));
+            setregister(V, dst.val_register, stackvalue(V, compare(V, *getregister(V, rhs.val_register), lhsn)));
         else
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, via_compare(V, lhsn, rhsn)));
+            setregister(V, dst.val_register, stackvalue(V, compare(V, lhsn, rhsn)));
 
         VM_NEXT();
     }
@@ -787,35 +776,35 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        viaValue lhsn, rhsn;
+        TValue lhsn, rhsn;
 
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
+        if (VIA_UNLIKELY(lhs.type == OperandType::GPRegister))
         {
-            lhsn = *via_getregister(V, lhs.val_register);
+            lhsn = *getregister(V, lhs.val_register);
             lhs_reg = true;
         }
         else
-            lhsn = via_toviavalue(V, lhs);
+            lhsn = toviavalue(V, lhs);
 
-        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
+        if (VIA_UNLIKELY(rhs.type == OperandType::GPRegister))
         {
-            rhsn = *via_getregister(V, rhs.val_register);
+            rhsn = *getregister(V, rhs.val_register);
             rhs_reg = true;
         }
         else
-            rhsn = via_toviavalue(V, rhs);
+            rhsn = toviavalue(V, rhs);
 
         if (lhs_reg && rhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, !via_cmpregister(V, lhs.val_register, rhs.val_register)));
+            setregister(V, dst.val_register, stackvalue(V, !cmpregister(V, lhs.val_register, rhs.val_register)));
         else if (lhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, !via_compare(V, *via_getregister(V, lhs.val_register), rhsn)));
+            setregister(V, dst.val_register, stackvalue(V, !compare(V, *getregister(V, lhs.val_register), rhsn)));
         else if (rhs_reg)
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, !via_compare(V, *via_getregister(V, rhs.val_register), lhsn)));
+            setregister(V, dst.val_register, stackvalue(V, !compare(V, *getregister(V, rhs.val_register), lhsn)));
         else
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, !via_compare(V, lhsn, rhsn)));
+            setregister(V, dst.val_register, stackvalue(V, !compare(V, lhsn, rhsn)));
 
         VM_NEXT();
     }
@@ -825,29 +814,29 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for LT destination");
-        VM_ASSERT(viaC_checkregister(lhs), "Expected register for LT lhs");
-        VM_ASSERT(viaC_checkregister(rhs), "Expected register for LT rhs");
+        VM_ASSERT(ccheckregister(dst), "Expected register for LT destination");
+        VM_ASSERT(ccheckregister(lhs), "Expected register for LT lhs");
+        VM_ASSERT(ccheckregister(rhs), "Expected register for LT rhs");
 #endif
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
-        viaValue rhsn = *via_getregister(V, rhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
+        TValue rhsn = *getregister(V, rhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checknumber(V, rhsn), "Expected Number for LT rvalue");
+        VM_ASSERT(checknumber(V, rhsn), "Expected Number for LT rvalue");
 #endif
-        if (VIA_LIKELY(viaT_checknumber(V, lhsn)))
+        if (VIA_LIKELY(checknumber(V, lhsn)))
         {
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, lhsn.val_number < rhsn.val_number));
+            setregister(V, dst.val_register, stackvalue(V, lhsn.val_number < rhsn.val_number));
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(viaT_checktable(V, lhsn)))
+        else if (VIA_UNLIKELY(checktable(V, lhsn)))
         {
-            viaValue *mm = via_getmetamethod(V, lhsn, OpCode::LT);
+            TValue *mm = getmetamethod(V, lhsn, OpCode::LT);
 #ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected callable metamethod for LT lvalue");
+            VM_ASSERT(checkcallable(V, *mm), "Expected callable metamethod for LT lvalue");
 #endif
-            via_pushargument(V, rhsn);
-            via_call(V, *mm);
-            via_setregister(V, dst.val_register, via_popargument(V));
+            pushargument(V, rhsn);
+            call(V, *mm);
+            setregister(V, dst.val_register, popargument(V));
             VM_NEXT();
         }
 #ifdef VIA_DEBUG
@@ -862,29 +851,29 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for GT destination");
-        VM_ASSERT(viaC_checkregister(lhs), "Expected register for GT lhs");
-        VM_ASSERT(viaC_checkregister(rhs), "Expected register for GT rhs");
+        VM_ASSERT(ccheckregister(dst), "Expected register for GT destination");
+        VM_ASSERT(ccheckregister(lhs), "Expected register for GT lhs");
+        VM_ASSERT(ccheckregister(rhs), "Expected register for GT rhs");
 #endif
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
-        viaValue rhsn = *via_getregister(V, rhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
+        TValue rhsn = *getregister(V, rhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checknumber(V, rhsn), "Expected Number for GT rvalue");
+        VM_ASSERT(checknumber(V, rhsn), "Expected Number for GT rvalue");
 #endif
-        if (VIA_LIKELY(viaT_checknumber(V, lhsn)))
+        if (VIA_LIKELY(checknumber(V, lhsn)))
         {
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, lhsn.val_number > rhsn.val_number));
+            setregister(V, dst.val_register, stackvalue(V, lhsn.val_number > rhsn.val_number));
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(viaT_checktable(V, lhsn)))
+        else if (VIA_UNLIKELY(checktable(V, lhsn)))
         {
-            viaValue *mm = via_getmetamethod(V, lhsn, OpCode::GT);
+            TValue *mm = getmetamethod(V, lhsn, OpCode::GT);
 #ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected callable metamethod for GT lvalue");
+            VM_ASSERT(checkcallable(V, *mm), "Expected callable metamethod for GT lvalue");
 #endif
-            via_pushargument(V, rhsn);
-            via_call(V, *mm);
-            via_setregister(V, dst.val_register, via_popargument(V));
+            pushargument(V, rhsn);
+            call(V, *mm);
+            setregister(V, dst.val_register, popargument(V));
             VM_NEXT();
         }
 #ifdef VIA_DEBUG
@@ -899,29 +888,29 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for LE destination");
-        VM_ASSERT(viaC_checkregister(lhs), "Expected register for LE lhs");
-        VM_ASSERT(viaC_checkregister(rhs), "Expected register for LE rhs");
+        VM_ASSERT(ccheckregister(dst), "Expected register for LE destination");
+        VM_ASSERT(ccheckregister(lhs), "Expected register for LE lhs");
+        VM_ASSERT(ccheckregister(rhs), "Expected register for LE rhs");
 #endif
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
-        viaValue rhsn = *via_getregister(V, rhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
+        TValue rhsn = *getregister(V, rhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checknumber(V, rhsn), "Expected Number for LE rvalue");
+        VM_ASSERT(checknumber(V, rhsn), "Expected Number for LE rvalue");
 #endif
-        if (VIA_LIKELY(viaT_checknumber(V, lhsn)))
+        if (VIA_LIKELY(checknumber(V, lhsn)))
         {
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, lhsn.val_number <= rhsn.val_number));
+            setregister(V, dst.val_register, stackvalue(V, lhsn.val_number <= rhsn.val_number));
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(viaT_checktable(V, lhsn)))
+        else if (VIA_UNLIKELY(checktable(V, lhsn)))
         {
-            viaValue *mm = via_getmetamethod(V, lhsn, OpCode::LE);
+            TValue *mm = getmetamethod(V, lhsn, OpCode::LE);
 #ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected callable metamethod for LE lvalue");
+            VM_ASSERT(checkcallable(V, *mm), "Expected callable metamethod for LE lvalue");
 #endif
-            via_pushargument(V, rhsn);
-            via_call(V, *mm);
-            via_setregister(V, dst.val_register, via_popargument(V));
+            pushargument(V, rhsn);
+            call(V, *mm);
+            setregister(V, dst.val_register, popargument(V));
             VM_NEXT();
         }
 #ifdef VIA_DEBUG
@@ -936,29 +925,29 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaC_checkregister(dst), "Expected register for GE destination");
-        VM_ASSERT(viaC_checkregister(lhs), "Expected register for GE lhs");
-        VM_ASSERT(viaC_checkregister(rhs), "Expected register for GE rhs");
+        VM_ASSERT(ccheckregister(dst), "Expected register for GE destination");
+        VM_ASSERT(ccheckregister(lhs), "Expected register for GE lhs");
+        VM_ASSERT(ccheckregister(rhs), "Expected register for GE rhs");
 #endif
-        viaValue lhsn = *via_getregister(V, lhs.val_register);
-        viaValue rhsn = *via_getregister(V, rhs.val_register);
+        TValue lhsn = *getregister(V, lhs.val_register);
+        TValue rhsn = *getregister(V, rhs.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checknumber(V, rhsn), "Expected Number for GE rvalue");
+        VM_ASSERT(checknumber(V, rhsn), "Expected Number for GE rvalue");
 #endif
-        if (VIA_LIKELY(viaT_checknumber(V, lhsn)))
+        if (VIA_LIKELY(checknumber(V, lhsn)))
         {
-            via_setregister(V, dst.val_register, viaT_stackvalue(V, lhsn.val_number >= rhsn.val_number));
+            setregister(V, dst.val_register, stackvalue(V, lhsn.val_number >= rhsn.val_number));
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(viaT_checktable(V, lhsn)))
+        else if (VIA_UNLIKELY(checktable(V, lhsn)))
         {
-            viaValue *mm = via_getmetamethod(V, lhsn, OpCode::GE);
+            TValue *mm = getmetamethod(V, lhsn, OpCode::GE);
 #ifdef VIA_DEBUG
-            VM_ASSERT(viaT_checkcallable(V, *mm), "Expected callable metamethod for GE lvalue");
+            VM_ASSERT(checkcallable(V, *mm), "Expected callable metamethod for GE lvalue");
 #endif
-            via_pushargument(V, rhsn);
-            via_call(V, *mm);
-            via_setregister(V, dst.val_register, via_popargument(V));
+            pushargument(V, rhsn);
+            call(V, *mm);
+            setregister(V, dst.val_register, popargument(V));
             VM_NEXT();
         }
 #ifdef VIA_DEBUG
@@ -972,15 +961,15 @@ dispatch:
     {
         Operand rsrc = V->ip->operand1;
 
-        viaValue *src = via_getregister(V, rsrc.val_register);
-        std::cout << via_tostring(V, *src).val_string->ptr;
+        TValue *src = getregister(V, rsrc.val_register);
+        std::cout << tostring(V, *src).val_string->ptr;
 
         VM_NEXT();
     }
 
     case OpCode::HALT:
     {
-        via_setexitdata(V, 0, "VM halted by user");
+        setexitdata(V, 0, "VM halted by user");
         VM_EXIT();
     }
 
@@ -988,10 +977,10 @@ dispatch:
     {
         Operand rcode = V->ip->operand1;
 
-        viaValue *code = via_getregister(V, rcode.val_register);
-        viaNumber ecode = via_tonumber(V, *code).val_number;
+        TValue *code = getregister(V, rcode.val_register);
+        TNumber ecode = tonumber(V, *code).val_number;
 
-        via_setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
+        setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
         VM_EXIT();
     }
 
@@ -999,7 +988,7 @@ dispatch:
     {
         Operand offset = V->ip->operand1;
 #ifdef VIA_DEBUG
-        VIA_ASSERT(viaC_checknumber(offset), "Expected number of JMP offset");
+        VIA_ASSERT(cchecknumber(offset), "Expected number of JMP offset");
 #endif
         V->ip += static_cast<JmpOffset>(offset.val_number);
         VM_NEXT();
@@ -1011,9 +1000,9 @@ dispatch:
         Operand condr = V->ip->operand1;
         Operand offset = V->ip->operand2;
 
-        viaValue cond = *via_getregister(V, condr.val_register);
+        TValue cond = *getregister(V, condr.val_register);
         // We don't need to save the return value because this function modifies `cond`
-        via_tonumber(V, cond);
+        tonumber(V, cond);
         if (V->ip->op == OpCode::JMPNZ ? (cond.val_number != 0) : (cond.val_number == 0))
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
@@ -1027,7 +1016,7 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = via_cmpregister(V, condlr.val_register, condrr.val_register);
+        bool cond = cmpregister(V, condlr.val_register, condrr.val_register);
         if (V->ip->op == OpCode::JMPEQ ? cond : !cond)
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
@@ -1040,8 +1029,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        viaValue *lhs = via_getregister(V, condlr.val_register);
-        viaValue *rhs = via_getregister(V, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number < rhs->val_number;
         if (cond)
@@ -1056,8 +1045,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        viaValue *lhs = via_getregister(V, condlr.val_register);
-        viaValue *rhs = via_getregister(V, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number > rhs->val_number;
         if (cond)
@@ -1072,8 +1061,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        viaValue *lhs = via_getregister(V, condlr.val_register);
-        viaValue *rhs = via_getregister(V, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number <= rhs->val_number;
         if (cond)
@@ -1088,8 +1077,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        viaValue *lhs = via_getregister(V, condlr.val_register);
-        viaValue *rhs = via_getregister(V, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number >= rhs->val_number;
         if (cond)
@@ -1121,7 +1110,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        viaValue *val = via_getregister(V, valr.val_register);
+        TValue *val = getregister(V, valr.val_register);
         bool cond = val->val_number == 0;
         // Jump if the condition is met
         if (V->ip->op == OpCode::JMPLBLZ ? cond : !cond)
@@ -1141,7 +1130,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        bool cond = via_cmpregister(V, lhsr.val_register, rhsr.val_register);
+        bool cond = cmpregister(V, lhsr.val_register, rhsr.val_register);
 
         // Jump if the condition is met
         if (V->ip->op == OpCode::JMPLBLEQ ? cond : !cond)
@@ -1160,7 +1149,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        bool cond = via_getregister(V, lhsr.val_register)->val_number < via_getregister(V, rhsr.val_register)->val_number;
+        bool cond = getregister(V, lhsr.val_register)->val_number < getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
         if (cond)
@@ -1179,7 +1168,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        bool cond = via_getregister(V, lhsr.val_register)->val_number > via_getregister(V, rhsr.val_register)->val_number;
+        bool cond = getregister(V, lhsr.val_register)->val_number > getregister(V, rhsr.val_register)->val_number;
         // Jump if the condition is met
         if (cond)
             V->ip = it->second + 1;
@@ -1197,7 +1186,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        bool cond = via_getregister(V, lhsr.val_register)->val_number <= via_getregister(V, rhsr.val_register)->val_number;
+        bool cond = getregister(V, lhsr.val_register)->val_number <= getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
         if (cond)
@@ -1216,7 +1205,7 @@ dispatch:
 #ifdef VIA_DEBUG
         VM_ASSERT(it != V->labels->end(), std::format("Label '{}' not found", label.val_identifier));
 #endif
-        bool cond = via_getregister(V, lhsr.val_register)->val_number >= via_getregister(V, rhsr.val_register)->val_number;
+        bool cond = getregister(V, lhsr.val_register)->val_number >= getregister(V, rhsr.val_register)->val_number;
 
         // Jump if the condition is met
         if (cond)
@@ -1234,14 +1223,14 @@ dispatch:
         V->argc = static_cast<CallArgc>(argc.val_number);
 
         // Call function
-        via_call(V, *via_getregister(V, rfn.val_register));
+        call(V, *getregister(V, rfn.val_register));
         VM_NEXT();
     }
 
     case OpCode::RET:
     {
-        viaS_pop(V->stack);
-        via_restorestate(V);
+        tspop(V->stack);
+        restorestate(V);
 
         VM_NEXT();
     }
@@ -1273,13 +1262,13 @@ dispatch:
     case OpCode::FUNC:
     {
         Operand rfn = V->ip->operand1;
-        viaFunction *fn = new viaFunction;
+        TFunction *fn = new TFunction;
         fn->line = 0;
         // TODO: Accept a valid user-set ID
         fn->id = "<anonymous-function>";
         fn->locals = {};
 
-        via_setregister(V, rfn.val_register, viaT_stackvalue(V, fn));
+        setregister(V, rfn.val_register, stackvalue(V, fn));
 
         // Directly compare instruction pointer with instruction base pointer
         // We don't need a temporary variable
@@ -1312,18 +1301,18 @@ dispatch:
         Operand rtbl = V->ip->operand2;
         Operand ridx = V->ip->operand3;
 
-        viaValue tbl = *via_getregister(V, rtbl.val_register);
-        viaValue idx = *via_getregister(V, ridx.val_register);
+        TValue tbl = *getregister(V, rtbl.val_register);
+        TValue idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
+        TableKey key = checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
 #ifdef VIA_DEBUG
         // Assert that the value is a table
-        std::string _errfmt = std::format("Attempt to load index of {}", via_type(V, tbl).val_string->ptr);
-        VM_ASSERT(viaT_checktable(V, tbl), _errfmt);
+        std::string _errfmt = std::format("Attempt to load index of {}", type(V, tbl).val_string->ptr);
+        VM_ASSERT(checktable(V, tbl), _errfmt);
 #endif
         // Load the table index
-        via_loadtableindex(V, tbl.val_table, key, rdst.val_register);
+        loadtableindex(V, tbl.val_table, key, rdst.val_register);
         VM_NEXT();
     }
 
@@ -1333,26 +1322,26 @@ dispatch:
         Operand rtbl = V->ip->operand2;
         Operand ridx = V->ip->operand3;
 
-        viaValue val;
-        viaValue tbl = *via_getregister(V, rtbl.val_register);
-        viaValue idx = *via_getregister(V, ridx.val_register);
+        TValue val;
+        TValue tbl = *getregister(V, rtbl.val_register);
+        TValue idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        TableKey key = viaT_checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
+        TableKey key = checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
 #ifdef VIA_DEBUG
         // Assert that the value is a table
         std::string _errfmt = std::format("Attempt to assign index to {}", ENUM_NAME(tbl.type));
-        VM_ASSERT(viaT_checktable(V, tbl), _errfmt);
+        VM_ASSERT(checktable(V, tbl), _errfmt);
 #endif
         // Slow-path: the value is stored in a register, load it
-        if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
-            val = *via_getregister(V, rsrc.val_register);
+        if (VIA_UNLIKELY(rsrc.type == OperandType::GPRegister))
+            val = *getregister(V, rsrc.val_register);
         else
-            val = via_toviavalue(V, rsrc);
+            val = toviavalue(V, rsrc);
 
         // Set the table index
-        viaTable *T = tbl.val_table;
-        via_settableindex(V, T, key, val);
+        TTable *T = tbl.val_table;
+        settableindex(V, T, key, val);
 
         VM_NEXT();
     }
@@ -1362,15 +1351,15 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        viaValue val;
+        TValue val;
 
         // Fast-path: object is stored in a register
-        if (VIA_LIKELY(objr.type == OperandType::Register))
-            val = *via_getregister(V, objr.val_register);
+        if (VIA_LIKELY(objr.type == OperandType::GPRegister))
+            val = *getregister(V, objr.val_register);
         else
-            val = via_toviavalue(V, objr);
+            val = toviavalue(V, objr);
 
-        via_setregister(V, rdst.val_register, via_len(V, val));
+        setregister(V, rdst.val_register, len(V, val));
 
         VM_NEXT();
     }
@@ -1380,10 +1369,10 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        viaValue *val = via_getregister(V, objr.val_register);
-        viaValue type = via_type(V, *val);
+        TValue *val = getregister(V, objr.val_register);
+        TValue ty = type(V, *val);
 
-        via_setregister(V, rdst.val_register, type);
+        setregister(V, rdst.val_register, ty);
 
         VM_NEXT();
     }
@@ -1393,10 +1382,10 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        viaValue *val = via_getregister(V, objr.val_register);
-        viaValue type = via_typeof(V, *val);
+        TValue *val = getregister(V, objr.val_register);
+        TValue type = typeof(V, *val);
 
-        via_setregister(V, rdst.val_register, type);
+        setregister(V, rdst.val_register, type);
 
         VM_NEXT();
     }
@@ -1407,22 +1396,22 @@ dispatch:
         Operand lhsr = V->ip->operand2;
         Operand rhsr = V->ip->operand3;
 
-        viaValue lhs = *via_getregister(V, lhsr.val_register);
-        viaValue rhs = *via_getregister(V, rhsr.val_register);
+        TValue lhs = *getregister(V, lhsr.val_register);
+        TValue rhs = *getregister(V, rhsr.val_register);
 #ifdef VIA_DEBUG
-        VM_ASSERT(viaT_checkstring(V, lhs), "Attempt to concatenate non-string value");
-        VM_ASSERT(viaT_checkstring(V, rhs), "Attempt to concatenate string with non-string value");
+        VM_ASSERT(checkstring(V, lhs), "Attempt to concatenate non-string value");
+        VM_ASSERT(checkstring(V, rhs), "Attempt to concatenate string with non-string value");
 #endif
         std::string str = std::string(lhs.val_string->ptr) + rhs.val_string->ptr;
-        viaString *vstr = viaT_newstring(V, str.c_str());
+        TString *vstr = newstring(V, str.c_str());
 
-        via_setregister(V, rdst.val_register, viaT_stackvalue(V, vstr));
+        setregister(V, rdst.val_register, stackvalue(V, vstr));
 
         VM_NEXT();
     }
 
     default:
-        via_setexitdata(V, 1, std::format("Unrecognized OpCode (op_id={})", static_cast<uint8_t>(V->ip->op)));
+        setexitdata(V, 1, std::format("Unrecognized OpCode (op_id={})", static_cast<uint8_t>(V->ip->op)));
         VM_EXIT();
     }
 }
@@ -1430,23 +1419,23 @@ dispatch:
 exit:;
 } // namespace via
 
-void via_killthread(viaState *V)
+void killthread(RTState *V)
 {
-    if (V->tstate == viaThreadState::RUNNING)
+    if (V->tstate == ThreadState::RUNNING)
         // TODO: Wait for the VM to exit
         V->abrt = true;
 
     // Mark as dead thread
-    V->tstate = viaThreadState::DEAD;
+    V->tstate = ThreadState::DEAD;
     // Decrement the thread_id to make room for more threads (I know you can technically make 4 billion threads ok?)
     __thread_id__--;
 }
 
-void via_pausethread(viaState *V)
+void pausethread(RTState *V)
 {
-    V->tstate = viaThreadState::PAUSED;
+    V->tstate = ThreadState::PAUSED;
     // Save the VM state to restore it when paused
-    via_savestate(V);
+    savestate(V);
 }
 
 } // namespace via

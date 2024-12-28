@@ -290,7 +290,7 @@ void Generator::evaluate_constexpr(ExprNode *expr)
 // Pushes a bytecode instruction
 void Generator::push_instruction(OpCode op, std::vector<Operand> operands)
 {
-    Instruction instruction = viaC_newinstruction(op, operands);
+    Instruction instruction = cnewinstruction(op, operands);
 
     if (initialize_with_chunk)
     {

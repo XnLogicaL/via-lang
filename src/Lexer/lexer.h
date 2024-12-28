@@ -44,7 +44,7 @@ public:
     Token get_token();
     // Reads the source file and returns a source container
     // Which contains the original source string, tokenized source string and the file name
-    viaSourceContainer tokenize();
+    SrcContainer tokenize();
 
 private:
     std::string &source;

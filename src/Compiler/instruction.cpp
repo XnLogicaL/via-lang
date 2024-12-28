@@ -6,21 +6,21 @@
 namespace via::Compilation
 {
 
-Instruction viaC_newinstruction()
+Instruction cnewinstruction()
 {
     Instruction instr;
     instr.op = OpCode::NOP;
     instr.chunk = nullptr;
-    instr.operand1 = viaC_newoperand();
-    instr.operand2 = viaC_newoperand();
-    instr.operand3 = viaC_newoperand();
+    instr.operand1 = cnewoperand();
+    instr.operand2 = cnewoperand();
+    instr.operand3 = cnewoperand();
 
     return instr;
 }
 
-Instruction viaC_newinstruction(OpCode op, const std::vector<Operand> &operands)
+Instruction cnewinstruction(OpCode op, const std::vector<Operand> &operands)
 {
-    Instruction instr = viaC_newinstruction();
+    Instruction instr = cnewinstruction();
     instr.op = op;
 
     if (operands.size() > 0)
@@ -34,12 +34,12 @@ Instruction viaC_newinstruction(OpCode op, const std::vector<Operand> &operands)
 }
 
 // clang-format off
-std::string viaC_compileinstruction(Instruction& instr) {
+std::string ccompileinstruction(Instruction& instr) {
     const std::string operands_str = std::format(
         "{} {} {}", 
-        viaC_compileoperand(instr.operand1), 
-        viaC_compileoperand(instr.operand2), 
-        viaC_compileoperand(instr.operand3)
+        ccompileoperand(instr.operand1), 
+        ccompileoperand(instr.operand2), 
+        ccompileoperand(instr.operand3)
     );
 
     return std::format(
@@ -52,13 +52,13 @@ std::string viaC_compileinstruction(Instruction& instr) {
 // clang-format on
 
 // clang-format off
-std::string viaC_compileoperand(Operand& oper) {
+std::string ccompileoperand(Operand& oper) {
     switch (oper.type) {
         case OperandType::Bool:       return oper.val_boolean ? "true" : "false";
         case OperandType::Identifier: return std::format("@{}", oper.val_identifier);
         case OperandType::Number:     return std::to_string(oper.val_number);
         case OperandType::String:     return std::format("\"{}\"", oper.val_string);
-        case OperandType::Register:   return std::format("R{}", oper.val_register);
+        case OperandType::GPRegister:   return std::format("R{}", oper.val_register);
         case OperandType::Nil:        return std::string();
         default:                      return std::string(ENUM_NAME(oper.type));
     }
@@ -66,29 +66,29 @@ std::string viaC_compileoperand(Operand& oper) {
 // clang-format on
 
 // Type-checking utility functions
-bool viaC_checkregister(const Operand &oper)
+bool ccheckregister(const Operand &oper)
 {
-    return oper.type == OperandType::Register;
+    return oper.type == OperandType::GPRegister;
 }
-bool viaC_checknumber(const Operand &oper)
+bool cchecknumber(const Operand &oper)
 {
     return oper.type == OperandType::Number;
 }
-bool viaC_checkbool(const Operand &oper)
+bool ccheckbool(const Operand &oper)
 {
     return oper.type == OperandType::Bool;
 }
-bool viaC_checkstring(const Operand &oper)
+bool ccheckstring(const Operand &oper)
 {
     return oper.type == OperandType::String;
 }
-bool viaC_checkidentifier(const Operand &oper)
+bool ccheckidentifier(const Operand &oper)
 {
     return oper.type == OperandType::Identifier;
 }
 
 // Operand creation utility functions
-Operand viaC_newoperand()
+Operand cnewoperand()
 {
     Operand operand;
     operand.type = OperandType::Nil;
@@ -96,17 +96,17 @@ Operand viaC_newoperand()
     return operand;
 }
 
-Operand viaC_newoperand(double number)
+Operand cnewoperand(double number)
 {
     return {.type = OperandType::Number, .val_number = number};
 }
 
-Operand viaC_newoperand(bool boolean)
+Operand cnewoperand(bool boolean)
 {
     return {.type = OperandType::Bool, .val_boolean = boolean};
 }
 
-Operand viaC_newoperand(const char *value, bool is_identifier)
+Operand cnewoperand(const char *value, bool is_identifier)
 {
     // clang-format off
     return is_identifier 
@@ -115,9 +115,9 @@ Operand viaC_newoperand(const char *value, bool is_identifier)
     // clang-format on
 }
 
-Operand viaC_newoperand(Register reg)
+Operand cnewoperand(GPRegister reg)
 {
-    return {.type = OperandType::Register, .val_register = reg};
+    return {.type = OperandType::GPRegister, .val_register = reg};
 }
 
 } // namespace via::Compilation

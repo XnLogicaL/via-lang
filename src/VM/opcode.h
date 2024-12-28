@@ -218,8 +218,29 @@ enum class OpCode
      * operand2: <>
      */
     SUBIN,
+    /*
+     * opcode: MULRR
+     * Performs a mul operation between operand1 and operand2 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <lhs :: Register>
+     * operand2: <rhs :: Register>
+     */
     MULRR,
+    /*
+     * opcode: MULRN
+     * Performs a mul operation between operand1 and operand2 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <lhs :: Register>
+     * operand2: <rhs :: Number>
+     */
     MULRN,
+    /*
+     * opcode: MULNR
+     * Performs a mul operation between operand1 and operand2 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <lhs :: Number>
+     * operand2: <rhs :: Register>
+     */
     MULNR,
     MULNN,
     MULIR,

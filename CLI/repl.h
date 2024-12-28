@@ -16,7 +16,7 @@ public:
     ~REPLEngine() = default;
 
     void execute(std::string, bool print);
-    via::viaState *V;
+    via::RTState *V;
 
 private:
     std::vector<via::Instruction> compile(std::string);

@@ -63,9 +63,9 @@ std::string Emitter::underline_line(int line_number, int offset, int length, con
     if (offset < static_cast<int>(underline.size()))
         underline[offset] = '^';
 
-    std::string line_number_str = std::to_string(line_number);
     // Leetcode mfers will absolutely HATE this
     // "oH iTs NoT O(1) bro" (shut the fuck up, go make your own language buddy)
+    std::string line_number_str = std::to_string(line_number);
     int line_number_width = line_number_str.length();
 
     return get_severity_header(sev) + message + "\n" + line_number_str + " | " + line + "\n" + std::string(line_number_width, ' ') + " | " +

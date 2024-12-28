@@ -10,28 +10,28 @@ using namespace AST;
 
 void Generator::generate_local_declaration_statement(LocalDeclStmtNode decl_stmt)
 {
-    Register expr = generate_expression(*decl_stmt.value);
+    GPRegister expr = generate_expression(*decl_stmt.value);
     register_pool.free_register(expr);
 
     push_instruction(
         OpCode::SETLOCAL,
         {
-            viaC_newoperand(expr),
-            viaC_newoperand(via_dupstring(decl_stmt.ident.value), true),
+            cnewoperand(expr),
+            cnewoperand(dupstring(decl_stmt.ident.value), true),
         }
     );
 }
 
 void Generator::generate_global_declaration_statement(GlobalDeclStmtNode decl_stmt)
 {
-    Register expr = generate_expression(*decl_stmt.value);
+    GPRegister expr = generate_expression(*decl_stmt.value);
     register_pool.free_register(expr);
 
     push_instruction(
         OpCode::SETGLOBAL,
         {
-            viaC_newoperand(expr),
-            viaC_newoperand(via_dupstring(decl_stmt.ident.value), true),
+            cnewoperand(expr),
+            cnewoperand(dupstring(decl_stmt.ident.value), true),
         }
     );
 }
@@ -51,20 +51,20 @@ void Generator::generate_function_declaration_statement(FunctionDeclStmtNode fun
 
     */
 
-    Register dst = register_pool.allocate_register();
+    GPRegister dst = register_pool.allocate_register();
 
-    push_instruction(OpCode::FUNC, {viaC_newoperand(dst)});
+    push_instruction(OpCode::FUNC, {cnewoperand(dst)});
 
     for (TypedParamNode param : func_stmt.params)
     {
-        Register param_reg = register_pool.allocate_register();
+        GPRegister param_reg = register_pool.allocate_register();
 
-        push_instruction(OpCode::POPARG, {viaC_newoperand(param_reg)});
+        push_instruction(OpCode::POPARG, {cnewoperand(param_reg)});
         push_instruction(
             OpCode::SETLOCAL,
             {
-                viaC_newoperand(param_reg),
-                viaC_newoperand(via_dupstring(param.ident.value), true),
+                cnewoperand(param_reg),
+                cnewoperand(dupstring(param.ident.value), true),
             }
         );
 
@@ -78,8 +78,8 @@ void Generator::generate_function_declaration_statement(FunctionDeclStmtNode fun
     push_instruction(
         func_stmt.is_global ? OpCode::SETGLOBAL : OpCode::SETLOCAL,
         {
-            viaC_newoperand(dst),
-            viaC_newoperand(via_dupstring(func_stmt.ident.value), true),
+            cnewoperand(dst),
+            cnewoperand(dupstring(func_stmt.ident.value), true),
         }
     );
 
@@ -99,20 +99,20 @@ void Generator::generate_call_statement(CallStmtNode call_stmt)
 
     */
 
-    Register callee = generate_expression(*call_stmt.callee);
+    GPRegister callee = generate_expression(*call_stmt.callee);
 
     for (ExprNode arg : call_stmt.args)
     {
-        Register arg_reg = generate_expression(arg);
+        GPRegister arg_reg = generate_expression(arg);
         register_pool.free_register(arg_reg);
-        push_instruction(OpCode::PUSHARG, {viaC_newoperand(arg_reg)});
+        push_instruction(OpCode::PUSHARG, {cnewoperand(arg_reg)});
     }
 
     push_instruction(
         OpCode::CALL,
         {
-            viaC_newoperand(callee),
-            viaC_newoperand(static_cast<double>(call_stmt.args.size())),
+            cnewoperand(callee),
+            cnewoperand(static_cast<double>(call_stmt.args.size())),
         }
     );
 }
@@ -130,27 +130,27 @@ void Generator::generate_assign_statement(AssignStmtNode asgn_stmt)
         SETIDX  Rx1 Rx2 Rx0
     */
 
-    Register value = generate_expression(*asgn_stmt.value);
+    GPRegister value = generate_expression(*asgn_stmt.value);
 
     if (VarExprNode *var_expr = std::get_if<VarExprNode>(asgn_stmt.target))
         push_instruction(
             OpCode::SETLOCAL,
             {
-                viaC_newoperand(value),
-                viaC_newoperand(via_dupstring(var_expr->ident.value), true),
+                cnewoperand(value),
+                cnewoperand(dupstring(var_expr->ident.value), true),
             }
         );
     else if (IndexExprNode *idx_expr = std::get_if<IndexExprNode>(asgn_stmt.target))
     {
-        Register table = generate_expression(*idx_expr->object);
-        Register index = generate_expression(*idx_expr->index);
+        GPRegister table = generate_expression(*idx_expr->object);
+        GPRegister index = generate_expression(*idx_expr->index);
 
         push_instruction(
             OpCode::SETIDX,
             {
-                viaC_newoperand(table),
-                viaC_newoperand(index),
-                viaC_newoperand(value),
+                cnewoperand(table),
+                cnewoperand(index),
+                cnewoperand(value),
             }
         );
 
@@ -184,58 +184,50 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
     */
 
     size_t loop_id = iota();
-    std::string loop_head_label = via_dupstring(std::format("_LOOP_{}", loop_id));
-    std::string loop_body_label = via_dupstring(std::format("_LOOP_BODY_{}", loop_id));
-    std::string loop_exit_label = via_dupstring(std::format("_LOOP_EXIT_{}", loop_id));
+    std::string loop_head_label = dupstring(std::format("_LOOP_{}", loop_id));
+    std::string loop_body_label = dupstring(std::format("_LOOP_BODY_{}", loop_id));
+    std::string loop_exit_label = dupstring(std::format("_LOOP_EXIT_{}", loop_id));
     // Allocate register before head label to avoid reallocation
-    Register expect = register_pool.allocate_register();
+    GPRegister expect = register_pool.allocate_register();
 
     // Load the value to compare with condition, true
     push_instruction(
         OpCode::LOAD,
         {
-            viaC_newoperand(expect),
-            viaC_newoperand(true),
+            cnewoperand(expect),
+            cnewoperand(true),
         }
     );
 
     push_instruction(
-        OpCode::JL,
+        OpCode::JMPLBL,
         {
-            viaC_newoperand(via_dupstring(loop_head_label), true),
+            cnewoperand(dupstring(loop_head_label), true),
         }
     );
 
     push_instruction(
         OpCode::LABEL,
         {
-            viaC_newoperand(via_dupstring(loop_head_label), true),
+            cnewoperand(dupstring(loop_head_label), true),
         }
     );
 
-    Register cond = generate_expression(*while_stmt.condition);
+    GPRegister cond = generate_expression(*while_stmt.condition);
 
     push_instruction(
-        OpCode::TOBOOL,
+        OpCode::JMPLBLEQ,
         {
-            viaC_newoperand(cond),
-            viaC_newoperand(cond),
-        }
-    );
-
-    push_instruction(
-        OpCode::JLEQ,
-        {
-            viaC_newoperand(cond),
-            viaC_newoperand(expect),
-            viaC_newoperand(via_dupstring(loop_body_label), true),
+            cnewoperand(cond),
+            cnewoperand(expect),
+            cnewoperand(dupstring(loop_body_label), true),
         }
     );
 
     push_instruction(
-        OpCode::JL,
+        OpCode::JMPLBL,
         {
-            viaC_newoperand(via_dupstring(loop_exit_label), true),
+            cnewoperand(dupstring(loop_exit_label), true),
         }
     );
 
@@ -243,7 +235,7 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
     push_instruction(
         OpCode::LABEL,
         {
-            viaC_newoperand(via_dupstring(loop_body_label), true),
+            cnewoperand(dupstring(loop_body_label), true),
         }
     );
 
@@ -251,16 +243,16 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
         generate_statement(stmt);
 
     push_instruction(
-        OpCode::JL,
+        OpCode::JMPLBL,
         {
-            viaC_newoperand(via_dupstring(loop_head_label), true),
+            cnewoperand(dupstring(loop_head_label), true),
         }
     );
 
     push_instruction(
         OpCode::LABEL,
         {
-            viaC_newoperand(via_dupstring(loop_exit_label), true),
+            cnewoperand(dupstring(loop_exit_label), true),
         }
     );
 
@@ -301,33 +293,25 @@ void Generator::generate_if_statement(IfStmtNode if_stmt)
     size_t if_id = iota();
     std::string if_exit_label = std::format("_IF_EXIT_{}", if_id);
 
-    Register test_reg = register_pool.allocate_register();
+    GPRegister test_reg = register_pool.allocate_register();
 
     push_instruction(
         OpCode::LOAD,
         {
-            viaC_newoperand(test_reg),
-            viaC_newoperand(true),
+            cnewoperand(test_reg),
+            cnewoperand(true),
         }
     );
 
-    Register cond_reg = generate_expression(*if_stmt.condition);
+    GPRegister cond_reg = generate_expression(*if_stmt.condition);
     register_pool.free_register(cond_reg);
 
     push_instruction(
-        OpCode::TOBOOL,
+        OpCode::JMPLBLEQ,
         {
-            viaC_newoperand(cond_reg),
-            viaC_newoperand(cond_reg),
-        }
-    );
-
-    push_instruction(
-        OpCode::JLEQ,
-        {
-            viaC_newoperand(cond_reg),
-            viaC_newoperand(test_reg),
-            viaC_newoperand(via_dupstring(if_exit_label), true),
+            cnewoperand(cond_reg),
+            cnewoperand(test_reg),
+            cnewoperand(dupstring(if_exit_label), true),
         }
     );
 
@@ -336,23 +320,15 @@ void Generator::generate_if_statement(IfStmtNode if_stmt)
 
     for (ElifStmtNode elif_stmt : if_stmt.elif_branches)
     {
-        Register cond_reg = generate_expression(*elif_stmt.condition);
+        GPRegister cond_reg = generate_expression(*elif_stmt.condition);
         register_pool.free_register(cond_reg);
 
         push_instruction(
-            OpCode::TOBOOL,
+            OpCode::JMPLBLEQ,
             {
-                viaC_newoperand(cond_reg),
-                viaC_newoperand(cond_reg),
-            }
-        );
-
-        push_instruction(
-            OpCode::JLEQ,
-            {
-                viaC_newoperand(cond_reg),
-                viaC_newoperand(test_reg),
-                viaC_newoperand(via_dupstring(if_exit_label), true),
+                cnewoperand(cond_reg),
+                cnewoperand(test_reg),
+                cnewoperand(dupstring(if_exit_label), true),
             }
         );
 
@@ -367,7 +343,7 @@ void Generator::generate_if_statement(IfStmtNode if_stmt)
     push_instruction(
         OpCode::LABEL,
         {
-            viaC_newoperand(via_dupstring(if_exit_label), true),
+            cnewoperand(dupstring(if_exit_label), true),
         }
     );
 
@@ -393,8 +369,8 @@ void Generator::generate_return_statement(ReturnStmtNode ret_stmt)
 
     for (ExprNode ret_value : ret_stmt.values)
     {
-        Register ret_value_reg = generate_expression(ret_value);
-        push_instruction(OpCode::PUSHRET, {viaC_newoperand(ret_value_reg)});
+        GPRegister ret_value_reg = generate_expression(ret_value);
+        push_instruction(OpCode::PUSHRET, {cnewoperand(ret_value_reg)});
         register_pool.free_register(ret_value_reg);
     }
 
@@ -412,9 +388,9 @@ void Generator::generate_break_statement()
     std::string loop_exit_label = std::format("_LOOP_EXIT_{}", __iota__);
 
     push_instruction(
-        OpCode::JL,
+        OpCode::JMPLBL,
         {
-            viaC_newoperand(via_dupstring(loop_exit_label), true),
+            cnewoperand(dupstring(loop_exit_label), true),
         }
     );
 }
@@ -430,9 +406,9 @@ void Generator::generate_continue_statement()
     std::string loop_head_label = std::format("_LOOP_{}", __iota__);
 
     push_instruction(
-        OpCode::JL,
+        OpCode::JMPLBL,
         {
-            viaC_newoperand(via_dupstring(loop_head_label), true),
+            cnewoperand(dupstring(loop_head_label), true),
         }
     );
 }
@@ -442,7 +418,6 @@ void Generator::generate_statement(Parsing::AST::StmtNode stmt)
     initialize_with_chunk = true;
     current_chunk = new Chunk;
     current_chunk->mcode = nullptr;
-    current_chunk->mlen = 0;
     current_chunk->pc = 0;
 
     if (auto *local_decl = std::get_if<Parsing::AST::LocalDeclStmtNode>(&stmt))

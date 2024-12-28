@@ -12,26 +12,26 @@
 namespace via
 {
 
-struct viaState;
-struct viaRAllocatorState
+struct RTState;
+struct RAState
 {
-    viaValue *head;
+    TValue *head;
 };
 
-inline viaValue *viaR_getregister(viaRAllocatorState *R, Register reg)
+inline TValue *rgetregister(RAState *R, GPRegister reg)
 {
-    viaValue *ptr = R->head + reg;
+    TValue *ptr = R->head + reg;
     return ptr;
 }
 
-inline void viaR_setregister(viaRAllocatorState *R, Register reg, viaValue val)
+inline void rsetregister(RAState *R, GPRegister reg, TValue val)
 {
-    viaValue *addr = R->head + reg;
+    TValue *addr = R->head + reg;
     *addr = val;
 }
 
-viaRAllocatorState *viaR_newstate(viaState *);
-void viaR_cleanupstate(viaRAllocatorState *);
-void viaR_initialize(viaRAllocatorState *);
+RAState *rnewstate(RTState *);
+void rcleanupstate(RAState *);
+void rinitialize(RAState *);
 
 } // namespace via

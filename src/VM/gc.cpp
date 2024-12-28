@@ -6,9 +6,9 @@
 namespace via
 {
 
-viaGCState *viaGC_newstate()
+GCState *gcnewstate()
 {
-    viaGCState *gc = new viaGCState;
+    GCState *gc = new GCState;
 
     gc->terminating = false;
     gc->collections = 0;
@@ -19,31 +19,31 @@ viaGCState *viaGC_newstate()
     return gc;
 }
 
-void viaGC_add(viaState *V, viaValue *p)
+void gcadd(RTState *V, TValue *p)
 {
     V->gc->dellist.push_back(p);
-    V->gc->size += sizeof(viaValue);
+    V->gc->size += sizeof(TValue);
 }
 
-void viaGC_collect(viaState *V)
+void gccollect(RTState *V)
 {
-    for (viaValue *p : V->gc->dellist)
-        viaT_cleanupval(V, p);
+    for (TValue *p : V->gc->dellist)
+        cleanupval(V, p);
 
     V->gc->size = 0;
     V->gc->collections++;
 }
 
-void viaGC_addref(viaState *V, std::shared_ptr<viaValue> val)
+void gcaddref(RTState *V, std::shared_ptr<TValue> val)
 {
     if (V->gc->terminating)
         return;
 
     V->gc->reflist.push_back(val);
-    V->gc->size += sizeof(viaValue);
+    V->gc->size += sizeof(TValue);
 }
 
-void viaGC_cleanup(viaGCState *S)
+void gccleanup(GCState *S)
 {
     S->terminating = true;
     S->reflist.clear();

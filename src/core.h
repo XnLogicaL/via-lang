@@ -17,7 +17,7 @@
         if (!(cond)) \
         { \
             std::string err = std::format("VIA_ASSERT(): {}\n  in {}:{}", (msg), __FILE__, __LINE__); \
-            throw via::viaException(err); \
+            throw via::VRTException(err); \
         } \
     }
 
@@ -25,7 +25,7 @@
 #define VIA_ASSERT_SILENT(cond, msg) \
     { \
         if (!(cond)) \
-            throw via::viaException(msg); \
+            throw via::VRTException(msg); \
     }
 
 #define UNREACHABLE() \

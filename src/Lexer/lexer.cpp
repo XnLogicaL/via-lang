@@ -282,7 +282,7 @@ Token Tokenizer::get_token()
     return TOKEN(TokenType::UNKNOWN, "", line, start_offset);
 }
 
-viaSourceContainer Tokenizer::tokenize()
+SrcContainer Tokenizer::tokenize()
 {
     std::vector<Token> tokens;
 

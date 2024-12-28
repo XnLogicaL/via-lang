@@ -21,7 +21,7 @@ public:
     };
 
     ~Emitter() = default;
-    Emitter(viaSourceContainer &container)
+    Emitter(SrcContainer &container)
         : container(container)
     {
     }
@@ -30,7 +30,7 @@ public:
     void out(size_t, std::string, Severity);
 
 private:
-    viaSourceContainer &container;
+    SrcContainer &container;
     // I forgot what this does
     std::vector<std::string> split_lines();
     // Returns a header based on the given severity

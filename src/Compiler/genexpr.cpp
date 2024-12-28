@@ -9,10 +9,10 @@ using namespace Parsing;
 using namespace AST;
 using namespace Tokenization;
 
-Register Generator::generate_literal_expression(LiteralExprNode lit_expr)
+GPRegister Generator::generate_literal_expression(LiteralExprNode lit_expr)
 {
-    Operand operand = viaC_newoperand();
-    Register reg = register_pool.allocate_register();
+    Operand operand = cnewoperand();
+    GPRegister reg = register_pool.allocate_register();
 
     switch (lit_expr.value.type)
     {
@@ -22,7 +22,7 @@ Register Generator::generate_literal_expression(LiteralExprNode lit_expr)
         break;
     case TokenType::LIT_STRING:
         operand.type = OperandType::String;
-        operand.val_string = via_dupstring(lit_expr.value.value);
+        operand.val_string = dupstring(lit_expr.value.value);
         cleaner.add_malloc(operand.val_string); // Track dynamically allocated string
         break;
     case TokenType::LIT_FLOAT:
@@ -40,7 +40,7 @@ Register Generator::generate_literal_expression(LiteralExprNode lit_expr)
     push_instruction(
         OpCode::LOAD,
         {
-            viaC_newoperand(reg),
+            cnewoperand(reg),
             operand,
         }
     );
@@ -48,16 +48,16 @@ Register Generator::generate_literal_expression(LiteralExprNode lit_expr)
     return reg;
 }
 
-Register Generator::generate_unary_expression(UnaryExprNode unary_expr)
+GPRegister Generator::generate_unary_expression(UnaryExprNode unary_expr)
 {
-    Register reg = generate_expression(*unary_expr.expr);
-    Register new_reg = register_pool.allocate_register();
+    GPRegister reg = generate_expression(*unary_expr.expr);
+    GPRegister new_reg = register_pool.allocate_register();
 
     push_instruction(
         OpCode::NEG,
         {
-            viaC_newoperand(new_reg),
-            viaC_newoperand(reg),
+            cnewoperand(new_reg),
+            cnewoperand(reg),
         }
     );
 
@@ -65,7 +65,7 @@ Register Generator::generate_unary_expression(UnaryExprNode unary_expr)
     return new_reg;
 }
 
-Register Generator::generate_binary_expression(BinaryExprNode bin_expr)
+GPRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
 {
     static const std::unordered_map<TokenType, OpCode> operator_map = {
         {TokenType::OP_ADD, OpCode::ADD},
@@ -86,16 +86,16 @@ Register Generator::generate_binary_expression(BinaryExprNode bin_expr)
     VIA_ASSERT(op_it != operator_map.end(), "Unsupported binary operator in generate_binary_expression.");
 
     OpCode op = op_it->second;
-    Register dst = register_pool.allocate_register();
-    Register lhs = generate_expression(*bin_expr.lhs);
-    Register rhs = generate_expression(*bin_expr.rhs);
+    GPRegister dst = register_pool.allocate_register();
+    GPRegister lhs = generate_expression(*bin_expr.lhs);
+    GPRegister rhs = generate_expression(*bin_expr.rhs);
 
     push_instruction(
         op,
         {
-            viaC_newoperand(dst),
-            viaC_newoperand(lhs),
-            viaC_newoperand(rhs),
+            cnewoperand(dst),
+            cnewoperand(lhs),
+            cnewoperand(rhs),
         }
     );
 
@@ -105,20 +105,20 @@ Register Generator::generate_binary_expression(BinaryExprNode bin_expr)
     return dst;
 }
 
-Register Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
+GPRegister Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
 {
-    Register dst = register_pool.allocate_register();
-    push_instruction(OpCode::FUNC, {viaC_newoperand(dst)});
+    GPRegister dst = register_pool.allocate_register();
+    push_instruction(OpCode::FUNC, {cnewoperand(dst)});
 
     for (const TypedParamNode &param : lmd_expr.params)
     {
-        Register param_reg = register_pool.allocate_register();
-        push_instruction(OpCode::POPARG, {viaC_newoperand(param_reg)});
+        GPRegister param_reg = register_pool.allocate_register();
+        push_instruction(OpCode::POPARG, {cnewoperand(param_reg)});
         push_instruction(
             OpCode::SETLOCAL,
             {
-                viaC_newoperand(param_reg),
-                viaC_newoperand(via_dupstring(param.ident.value), true),
+                cnewoperand(param_reg),
+                cnewoperand(dupstring(param.ident.value), true),
             }
         );
         register_pool.free_register(param_reg);
@@ -132,18 +132,18 @@ Register Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
     return dst;
 }
 
-Register Generator::generate_index_expression(IndexExprNode idx_expr)
+GPRegister Generator::generate_index_expression(IndexExprNode idx_expr)
 {
-    Register dst = register_pool.allocate_register();
-    Register obj = generate_expression(*idx_expr.object);
-    Register idx = generate_expression(*idx_expr.index);
+    GPRegister dst = register_pool.allocate_register();
+    GPRegister obj = generate_expression(*idx_expr.object);
+    GPRegister idx = generate_expression(*idx_expr.index);
 
     push_instruction(
         OpCode::LOADIDX,
         {
-            viaC_newoperand(dst),
-            viaC_newoperand(obj),
-            viaC_newoperand(idx),
+            cnewoperand(dst),
+            cnewoperand(obj),
+            cnewoperand(idx),
         }
     );
 
@@ -153,49 +153,49 @@ Register Generator::generate_index_expression(IndexExprNode idx_expr)
     return dst;
 }
 
-Register Generator::generate_call_expression(CallExprNode call_expr)
+GPRegister Generator::generate_call_expression(CallExprNode call_expr)
 {
     size_t argc = call_expr.args.size();
-    Register dst = register_pool.allocate_register();
-    Register callee = generate_expression(*call_expr.callee);
+    GPRegister dst = register_pool.allocate_register();
+    GPRegister callee = generate_expression(*call_expr.callee);
 
     for (const ExprNode &arg : call_expr.args)
     {
-        Register arg_reg = generate_expression(arg);
-        push_instruction(OpCode::PUSHARG, {viaC_newoperand(arg_reg)});
+        GPRegister arg_reg = generate_expression(arg);
+        push_instruction(OpCode::PUSHARG, {cnewoperand(arg_reg)});
         register_pool.free_register(arg_reg);
     }
 
     push_instruction(
         OpCode::CALL,
         {
-            viaC_newoperand(callee),
-            viaC_newoperand(static_cast<double>(argc)),
+            cnewoperand(callee),
+            cnewoperand(static_cast<double>(argc)),
         }
     );
 
     register_pool.free_register(callee);
-    push_instruction(OpCode::POPRET, {viaC_newoperand(dst)});
+    push_instruction(OpCode::POPRET, {cnewoperand(dst)});
 
     return dst;
 }
 
-Register Generator::generate_variable_expression(VarExprNode var_expr)
+GPRegister Generator::generate_variable_expression(VarExprNode var_expr)
 {
-    Register dst = register_pool.allocate_register();
+    GPRegister dst = register_pool.allocate_register();
 
     push_instruction(
         OpCode::LOADVAR,
         {
-            viaC_newoperand(dst),
-            viaC_newoperand(via_dupstring(var_expr.ident.value), true),
+            cnewoperand(dst),
+            cnewoperand(dupstring(var_expr.ident.value), true),
         }
     );
 
     return dst;
 }
 
-Register Generator::generate_expression(ExprNode expr)
+GPRegister Generator::generate_expression(ExprNode expr)
 {
     if (LiteralExprNode *lit_expr = std::get_if<LiteralExprNode>(&expr))
         return generate_literal_expression(*lit_expr);

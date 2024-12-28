@@ -8,9 +8,9 @@
 namespace via
 {
 
-void viaD_printregistermap(viaState *, size_t);
-void viaD_printargumentstack(viaState *, size_t);
-void viaD_printreturnstack(viaState *, size_t);
-void viaD_printcallstack(viaState *, size_t);
+void dbgprintregistermap(RTState *, size_t);
+void dbgprintargumentstack(RTState *, size_t);
+void dbgprintreturnstack(RTState *, size_t);
+void dbgprintcallstack(RTState *, size_t);
 
 } // namespace via

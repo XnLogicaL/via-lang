@@ -8,7 +8,7 @@
 namespace via
 {
 
-struct viaSourceContainer
+struct SrcContainer
 {
     std::vector<Tokenization::Token> tokens;
     std::string source;

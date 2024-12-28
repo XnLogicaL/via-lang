@@ -11,21 +11,21 @@
 namespace via::lib
 {
 
-void base_print(viaState *);
+void base_print(RTState *);
 // Basically `base_print` but ends the string with a line break
-void base_println(viaState *);
-void base_error(viaState *);
-void base_exit(viaState *);
-void base_type(viaState *);
-void base_typeof(viaState *);
-void base_tostring(viaState *);
-void base_tonumber(viaState *);
-void base_tobool(viaState *);
-void base_assert(viaState *);
-void base_getmetatable(viaState *);
-void base_setmetatable(viaState *);
-void base_pcall(viaState *);
+void base_println(RTState *);
+void base_error(RTState *);
+void base_exit(RTState *);
+void base_type(RTState *);
+void base_typeof(RTState *);
+void base_tostring(RTState *);
+void base_tonumber(RTState *);
+void base_tobool(RTState *);
+void base_assert(RTState *);
+void base_getmetatable(RTState *);
+void base_setmetatable(RTState *);
+void base_pcall(RTState *);
 
-void viaL_loadbaselib(viaState *);
+void loadbaselib(RTState *);
 
 } // namespace via::lib

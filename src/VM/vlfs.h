@@ -12,6 +12,6 @@
 namespace via::lib
 {
 
-void fs_read(viaState *V);
+void fs_read(RTState *V);
 
 } // namespace via::lib
