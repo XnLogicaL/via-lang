@@ -395,20 +395,47 @@ inline TValue *getmetamethod(RTState *V, TValue val, OpCode op)
 
     switch (op)
     {
-    case OpCode::ADD:
-    case OpCode::IADD:
+    case OpCode::ADDRR:
+    case OpCode::ADDRN:
+    case OpCode::ADDNR:
+    case OpCode::ADDNN:
+    case OpCode::ADDIR:
+    case OpCode::ADDIN:
         return gettableindex(V, val.val_table, hashstring(V, "__add"), true);
-    case OpCode::SUB:
-    case OpCode::ISUB:
+    case OpCode::SUBRR:
+    case OpCode::SUBRN:
+    case OpCode::SUBNR:
+    case OpCode::SUBNN:
+    case OpCode::SUBIR:
+    case OpCode::SUBIN:
         return gettableindex(V, val.val_table, hashstring(V, "__sub"), true);
-    case OpCode::MUL:
-    case OpCode::IMUL:
+    case OpCode::MULRR:
+    case OpCode::MULRN:
+    case OpCode::MULNR:
+    case OpCode::MULNN:
+    case OpCode::MULIR:
+    case OpCode::MULIN:
         return gettableindex(V, val.val_table, hashstring(V, "__mul"), true);
-    case OpCode::DIV:
-    case OpCode::IDIV:
+    case OpCode::DIVRR:
+    case OpCode::DIVRN:
+    case OpCode::DIVNR:
+    case OpCode::DIVNN:
+    case OpCode::DIVIR:
+    case OpCode::DIVIN:
         return gettableindex(V, val.val_table, hashstring(V, "__div"), true);
-    case OpCode::MOD:
-    case OpCode::IMOD:
+    case OpCode::POWRR:
+    case OpCode::POWRN:
+    case OpCode::POWNR:
+    case OpCode::POWNN:
+    case OpCode::POWIR:
+    case OpCode::POWIN:
+        return gettableindex(V, val.val_table, hashstring(V, "__pow"), true);
+    case OpCode::MODRR:
+    case OpCode::MODRN:
+    case OpCode::MODNR:
+    case OpCode::MODNN:
+    case OpCode::MODIR:
+    case OpCode::MODIN:
         return gettableindex(V, val.val_table, hashstring(V, "__mod"), true);
     default:
         break;
@@ -444,23 +471,24 @@ inline void callf(RTState *V, TFunction *f, bool save_state)
 // Mimics stack behavior as it would behave while calling a native function.
 inline void callc(RTState *V, TCFunction *cf)
 {
-    // 15 additional characters:
-    // - 9 for "cfunction"
-    // - 1 for space
-    // - 2 for "0x"
-    // - 2 for < and >
-    // - 1 for null terminator
-    char buffer[2 * sizeof(void *) + 15];
-    // Yes, this is safe because cf is a const reference
-    const void *addr = &cf;
-
-    std::snprintf(buffer, sizeof(buffer), "<cfunction@0x%p>", addr);
+    /* Stack allocate id string
+     * 15 additional characters:
+     * +9 for 'cfunction'
+     * +1 for '@'
+     * +2 for '0x'
+     * +2 for '<' and '>'
+     * +1 for '\0'
+     */
+    char buf[2 * sizeof(void *) + 15];
+    // Implicitly cast into const void * for formatting
+    const void *addr = cf;
+    std::snprintf(buf, sizeof(buf), "<cfunction@0x%p>", addr);
 
     TFunction freplica{
         0,
         cf->error_handler,
         false,
-        buffer,
+        buf,
         *V->stack->begin(),
         {},
         {},
@@ -567,7 +595,6 @@ inline TValue typeof(RTState * V, TValue val)
             return type(V, val);
 
         TString *tystr = newstring(V, ty->val_string->ptr);
-
         return stackvalue(V, tystr);
     }
 
@@ -684,17 +711,35 @@ inline TValue arith(RTState *V, TValue lhs, TValue rhs, OpCode op)
     {
         switch (op)
         {
-        case OpCode::ADD:
+        case OpCode::ADDRR:
+        case OpCode::ADDRN:
+        case OpCode::ADDNR:
+        case OpCode::ADDNN:
             return stackvalue(V, lhs.val_number + rhs.val_number);
-        case OpCode::SUB:
+        case OpCode::SUBRR:
+        case OpCode::SUBRN:
+        case OpCode::SUBNR:
+        case OpCode::SUBNN:
             return stackvalue(V, lhs.val_number - rhs.val_number);
-        case OpCode::MUL:
+        case OpCode::MULRR:
+        case OpCode::MULRN:
+        case OpCode::MULNR:
+        case OpCode::MULNN:
             return stackvalue(V, lhs.val_number * rhs.val_number);
-        case OpCode::DIV:
+        case OpCode::DIVRR:
+        case OpCode::DIVRN:
+        case OpCode::DIVNR:
+        case OpCode::DIVNN:
             return stackvalue(V, lhs.val_number / rhs.val_number);
-        case OpCode::POW:
+        case OpCode::POWRR:
+        case OpCode::POWRN:
+        case OpCode::POWNR:
+        case OpCode::POWNN:
             return stackvalue(V, std::pow(lhs.val_number, rhs.val_number));
-        case OpCode::MOD:
+        case OpCode::MODRR:
+        case OpCode::MODRN:
+        case OpCode::MODNR:
+        case OpCode::MODNN:
             return stackvalue(V, std::fmod(lhs.val_number, rhs.val_number));
         default:
             break;
@@ -716,15 +761,6 @@ inline TValue arith(RTState *V, TValue lhs, TValue rhs, OpCode op)
     return stackvalue(V);
 }
 
-// Work around for the state object being unused
-// when `VIA_DEBUG` is not defined
-#if defined(__GNUC__) || defined(__clang__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wunused-parameter"
-#elif defined(_MSC_VER)
-#    pragma warning(push)
-#    pragma warning(disable : 4100)
-#endif
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
 inline void iarith(RTState *V, TValue *lhs, TValue rhs, OpCode op)
 {
@@ -732,34 +768,49 @@ inline void iarith(RTState *V, TValue *lhs, TValue rhs, OpCode op)
     VIA_ASSERT(checknumber(V, rhs), "arith(): Expected Number for rhs");
     VIA_ASSERT(rhs.val_number != 0.0f, "arith(): Expected non-zero Number for rhs");
 #endif
-    switch (op)
+    if (checknumber(V, *lhs))
     {
-    case OpCode::IADD:
-        lhs->val_number += rhs.val_number;
-        break;
-    case OpCode::ISUB:
-        lhs->val_number -= rhs.val_number;
-        break;
-    case OpCode::IMUL:
-        lhs->val_number *= rhs.val_number;
-        break;
-    case OpCode::IDIV:
-        lhs->val_number /= rhs.val_number;
-        break;
-    case OpCode::IPOW:
-        lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
-        break;
-    case OpCode::IMOD:
-        lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
-        break;
-    default:
-        break;
+        switch (op)
+        {
+        case OpCode::ADDIR:
+        case OpCode::ADDIN:
+            lhs->val_number += rhs.val_number;
+            break;
+        case OpCode::SUBIR:
+        case OpCode::SUBIN:
+            lhs->val_number -= rhs.val_number;
+            break;
+        case OpCode::MULIR:
+        case OpCode::MULIN:
+            lhs->val_number *= rhs.val_number;
+            break;
+        case OpCode::DIVIR:
+        case OpCode::DIVIN:
+            lhs->val_number /= rhs.val_number;
+            break;
+        case OpCode::POWIR:
+        case OpCode::POWIN:
+            lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
+            break;
+        case OpCode::MODIR:
+        case OpCode::MODIN:
+            lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
+            break;
+        default:
+            break;
+        }
     }
+    else if (checktable(V, *lhs))
+    {
+        TValue *mm = getmetamethod(V, *lhs, op);
+        pushargument(V, *lhs);
+        pushargument(V, rhs);
+        call(V, *mm);
+        *lhs = popreturn(V);
+    }
+
+    setexitdata(V, 1, "Invalid arithmetic operator");
+    V->abrt = true;
 }
-#if defined(__GNUC__) || defined(__clang__)
-#    pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#    pragma warning(pop)
-#endif
 
 } // namespace via
