@@ -3,7 +3,6 @@
 #pragma once
 
 #include "common.h"
-#include "core.h"
 #include "state.h"
 #include "instruction.h"
 #include <asmjit/asmjit.h>

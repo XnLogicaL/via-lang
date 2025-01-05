@@ -4,7 +4,6 @@
 
 #include "bitutils.h"
 #include "common.h"
-#include "core.h"
 #include "instruction.h"
 #include "types.h"
 #include <cstdlib>

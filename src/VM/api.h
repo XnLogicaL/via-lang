@@ -4,7 +4,6 @@
 
 #include "common.h"
 #include "bytecode.h"
-#include "core.h"
 #include "except.h"
 #include "gc.h"
 #include "instruction.h"

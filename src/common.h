@@ -1,5 +1,51 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
+#pragma once
+
+#define ASMJIT_STATIC
+// clang-format off
+
+// Asserts <cond>
+// If false, throws an exception that includes debug information such as file name and line that the macro was initially expanded
+#define VIA_ASSERT(cond, msg) \
+    { \
+        if (!(cond)) \
+        { \
+            std::string err = std::format("VIA_ASSERT(): {}\n  in {}:{}", (msg), __FILE__, __LINE__); \
+            throw via::VRTException(err); \
+        } \
+    }
+
+// Like VIA_ASSERT but doesn't contain debug information
+#define VIA_ASSERT_SILENT(cond, msg) \
+    { \
+        if (!(cond)) \
+            throw via::VRTException(msg); \
+    }
+
+#define ENUM_NAME(expr) magic_enum::enum_name(expr)
+#define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
+
+#if defined(__GNUC__) || defined(__clang__)
+    #define VIA_RESTRICT __restrict__
+    #define VIA_NORETURN __attribute__((__noreturn__))
+    #define VIA_NOINLINE __attribute__((noinline))
+    #define VIA_FORCEINLINE inline __attribute__((always_inline))
+    #define VIA_UNREACHABLE() __builtin_unreachable()
+    #define VIA_LIKELY(expr) __builtin_expect(!!(expr), 1)
+    #define VIA_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
+#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird)
+    #define VIA_RESTRICT __restrict
+    #define VIA_NORETURN __declspec(__noreturn__)
+    #define VIA_NOINLINE __declspec(noinline)
+    #define VIA_FORCEINLINE __forceinline
+    #define VIA_UNREACHABLE() __assume(false)
+    #define VIA_LIKELY(expr) expr
+    #define VIA_UNLIKELY(expr) expr
+#else
+    #pragma error(Unsupported compiler detected. Supported compilers are: GNU g++, clang, MSVC (partial))
+#endif
+
 #include <bitset>
 #include <cassert>
 #include <cctype>
@@ -26,10 +72,7 @@
 #include <variant>
 #include <vector>
 
-#ifndef VIA_DUPSTRING
-    #define VIA_DUPSTRING
-
-inline const char *dupstring(const std::string &str)
+VIA_FORCEINLINE char *dupstring(const std::string &str)
 {
     size_t len = str.size() + 1;
     char *chars = new char[len];
@@ -37,4 +80,4 @@ inline const char *dupstring(const std::string &str)
     return chars;
 }
 
-#endif
+

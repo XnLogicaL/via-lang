@@ -6,7 +6,6 @@
 #include "chunk.h"
 #include "cleaner.h"
 #include "common.h"
-#include "core.h"
 #include "instruction.h"
 #include "register.h"
 #include "stack.h"

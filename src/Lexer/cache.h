@@ -3,7 +3,6 @@
 #pragma once
 
 #include "common.h"
-#include "core.h"
 #include "container.h"
 #include "bytecode.h"
 #include "fileio.h"
