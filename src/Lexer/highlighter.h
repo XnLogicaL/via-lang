@@ -17,7 +17,7 @@ public:
     {
         INFO,
         WARNING,
-        ERROR
+        ERROR,
     };
 
     ~Emitter() = default;

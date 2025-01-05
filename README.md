@@ -1,43 +1,55 @@
 
 ![Logo](https://i.imgur.com/Nyp3nLb.png)
 
-[![GitHub Releases](https://img.shields.io/github/release/xnlogical/json.svg)](https://github.com/xnlgoical/via-lang/releases)
-
 # via
 
-A general purpose, performant, semi-dynamically typed scripting language.
-Heavily inspired by Lua's "Luau" dialect.
+A general purpose, performant, semi-dynamically typed scripting language. Moderately inspired by [Lua]()'s [Luau]() dialect.
 
 See [Introduction](./docs/introduction.md) for more information.
 
 # Warning
 
-This is a **PASSION PROJECT**, it is maintained by **ONE** person and may contain vulnerabilities, design flaws, etc.
-Do not use in production if you think taking said risks is not worth it.
+This is a **PASSION PROJECT**, it is maintained by **ONE** person and may contain vulnerabilities, design flaws, etc. Do not use in production if you think taking said risks is not worth it.
 
-# Build
+# Installation
 
-To build via, you need `Make`, `python3` and any modern C++ compiler (default is `g++`, using others requires editing the `Makefile` and may not work as intended).
-
-## Step 1: Install dependencies
+## Pre-built binaries
 
 {TBA}
 
-## Step 2: Run build
+## Building from source
 
-Now that you have installed all the dependencies, you can now build via from source.
-First things first, select one of these "specifications":
-- via (full via language)
-- viac (via compiler, compiles via code into bytecode and outputs)
-- viavm (via virtual machine, interprets bytecode from a file)
+To build via from source, you need `GNU Make`, `CMake`, and any modern C++ compiler. (default is `GNU g++`, using other compilers requires editing build files and may not work as intended, especially compilers such as `MSVC` that do not fully implement the C++23 standard)
+First, we need to create a clean `build` directory. This can be done with the following commands:
 
-To run the build:
 ### Linux
-```$ python3 scripts/build.py <your_build_spec>```
+```bash
+path/to/via$ mkdir build
+path/to/via$ cd build
+```
 
 ### Windows
-```python scripts/build.py <your_build_spec>```
 
-## Step 3: Run program
+{TBA}
 
-Your build will be located in the $root/build directory, you can now run the extensionless executable named after your selected spec.
+---
+The next step is to actually build the project, which we can do by first invoking `CMake` to generate build files, and follow it by invoking `Make` to compile into a binary.
+
+### Linux
+
+```bash
+path/to/via/build$ cmake ..
+path/to/via/build$ make -j$(nproc)
+```
+
+The `-j` flag in this context is used to dynamically speed up compilation using multithreading, as via is a farily large project and takes a long time to compile without multithreading. It is completely optional but heavily recommended to be included with the command. You can also specify the amount of CPU cores you'd like allocated by replacing `$(nproc)` with an integer.
+
+### Windows
+
+{TBA}
+
+---
+
+After you're done compiling via, you'll be left with a binary inside your build folder, which will function exactly like the pre-built binary distributions. Happy hacking!
+
+A fully detailed installation guide can be found [here]().

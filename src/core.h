@@ -8,6 +8,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#define ASMJIT_STATIC
+
 // clang-format off
 
 // Asserts <cond>
@@ -39,9 +41,9 @@
 
 #if defined(__GNUC__) || defined(__clang__)
 #   define VIA_RESTRICT __restrict__
-#   define VIA_INLINE inline
+#   define VIA_FORCEINLINE inline
 #else // In case of MSVC or other compilers (MSVC is fucking weird)
 #   define VIA_RESTRICT __restrict
-#   define VIA_INLINE __forceinline
+#   define VIA_FORCEINLINE __forceinline
 #endif
 

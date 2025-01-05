@@ -7,6 +7,8 @@
 #include "Lexer/lexer.h"
 #include "Lexer/preproc.h"
 #include "Lexer/syntax_analysis.h"
+#include "Lexer/cache.h"
+#include "Lexer/encoder.h"
 
 #include "Parser/parser.h"
 #include "Parser/print.h"
@@ -30,7 +32,6 @@
 #include "VM/vlutf8.h"
 #include "VM/vlutf8.h"
 #include "VM/vlbit.h"
-#include "VM/vlvec3.h"
 #include "VM/execute.h"
 
 namespace via

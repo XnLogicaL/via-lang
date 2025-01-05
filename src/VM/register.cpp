@@ -13,7 +13,7 @@ void rcleanupstate(RAState *R)
 
 void rinitialize(RAState *R)
 {
-    for (GPRegister i = 0; i < VIA_REGISTERCOUNT; i++)
+    for (GPRegister i = 0; i < VIA_REGISTER_COUNT; i++)
     {
         TValue monostate_val;
         monostate_val.type = ValueType::Monostate;
@@ -28,7 +28,7 @@ RAState *rnewstate(RTState *)
 {
     auto *state = new RAState;
 
-    void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTERCOUNT);
+    void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTER_COUNT);
     state->head = reinterpret_cast<TValue *>(alloc);
 
     rinitialize(state);

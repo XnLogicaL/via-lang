@@ -35,9 +35,7 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
     // Copy instructions into the instruction pipeline
     std::copy(pipeline.begin(), pipeline.end(), V->ip);
 
-    V->stack = tsnewstate<TFunction *>();
-    V->arguments = tsnewstate<TValue>();
-    V->returns = tsnewstate<TValue>();
+    V->stack = tsnewstate();
     // I know, the odd one out...
     V->labels = new LblMap();
     V->ralloc = rnewstate(V);
@@ -67,8 +65,8 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    TFunction *mainf = new TFunction{0, false, false, VIA_MAIN_ID, {}, {}, {}};
-    tspush(V->stack, mainf);
+    TFunction *mainf = newfunc(V, "__via_main__", nullptr, pipeline, false, false);
+    tscall(V->stack, mainf);
 
     Instruction *ip = V->ip;
     for (Instruction instr : pipeline)
@@ -95,8 +93,6 @@ void stcleanupstate(RTState *V)
     stcleanupgstate(V->G);
     gccleanup(V->gc);
     tscleanupstate(V->stack);
-    tscleanupstate(V->arguments);
-    tscleanupstate(V->returns);
     rcleanupstate(V->ralloc);
 
     // This automatically invalidates both ip and ibp
@@ -111,4 +107,5 @@ ThreadId stthreadcount(RTState *)
     // Just return the latest thread id as it represents the number of threads
     return __thread_id__;
 }
+
 } // namespace via

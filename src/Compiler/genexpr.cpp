@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "gen.h"
 
@@ -9,71 +10,42 @@ using namespace Parsing;
 using namespace AST;
 using namespace Tokenization;
 
-GPRegister Generator::generate_literal_expression(LiteralExprNode lit_expr)
+void Generator::generate_literal_expression(LiteralExprNode lit_expr = {}, GPRegister target_register = VIA_GPREGISTER_INVALID)
 {
-    Operand operand = cnewoperand();
-    GPRegister reg = register_pool.allocate_register();
+    Operand operand = generate_operand(this, lit_expr);
+    if (LOAD_TO_REGISTER)
+        // If a target register is specified, use the LOAD instruction to load the
+        // value into the register
+        load_operand(cnewoperand(target_register), operand);
+    else
+        // If no target register is specified, push the value onto the stack
+        push_instruction(OpCode::PUSH, {operand});
+}
 
-    switch (lit_expr.value.type)
-    {
-    case TokenType::LIT_BOOL:
-        operand.type = OperandType::Bool;
-        operand.val_boolean = (lit_expr.value.value == "true");
-        break;
-    case TokenType::LIT_STRING:
-        operand.type = OperandType::String;
-        operand.val_string = dupstring(lit_expr.value.value);
-        cleaner.add_malloc(operand.val_string); // Track dynamically allocated string
-        break;
-    case TokenType::LIT_FLOAT:
-    case TokenType::LIT_INT:
-        operand.type = OperandType::Number;
-        operand.val_number = std::stod(lit_expr.value.value);
-        break;
-    case TokenType::LIT_NIL:
-        operand.type = OperandType::Nil;
-        break;
-    default:
-        VIA_ASSERT(false, std::format("Unsupported literal type '{}'", ENUM_NAME(lit_expr.value.type)));
+void Generator::generate_unary_expression(UnaryExprNode unary_expr = {}, GPRegister target_register = VIA_GPREGISTER_INVALID)
+{
+    if (LOAD_TO_REGISTER)
+    { // If a target register is specified, load the unary
+      // expression into the register and perform inline
+      // negation
+        generate_expression(*unary_expr.expr, target_register);
+        push_instruction(OpCode::NEGI, {cnewoperand(target_register)});
     }
-
-    push_instruction(
-        OpCode::LOAD,
-        {
-            cnewoperand(reg),
-            operand,
-        }
-    );
-
-    return reg;
+    else
+    { // If no target register is specified, allocate a register
+        // and load the expression into that register, inline negate it and push it
+        // onto the stack
+        GPRegister reg = allocate_register();
+        generate_expression(*unary_expr.expr, reg);
+        push_instruction(OpCode::NEGI, {cnewoperand(target_register)});
+        push_instruction(OpCode::PUSH, {cnewoperand(target_register)});
+        free_register(reg);
+    }
 }
 
-GPRegister Generator::generate_unary_expression(UnaryExprNode unary_expr)
+void Generator::generate_binary_expression(BinaryExprNode bin_expr = {}, GPRegister target_register = VIA_GPREGISTER_INVALID)
 {
-    GPRegister reg = generate_expression(*unary_expr.expr);
-    GPRegister new_reg = register_pool.allocate_register();
-
-    push_instruction(
-        OpCode::NEG,
-        {
-            cnewoperand(new_reg),
-            cnewoperand(reg),
-        }
-    );
-
-    register_pool.free_register(reg);
-    return new_reg;
-}
-
-GPRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
-{
-    static const std::unordered_map<TokenType, OpCode> operator_map = {
-        {TokenType::OP_ADD, OpCode::ADD},
-        {TokenType::OP_SUB, OpCode::SUB},
-        {TokenType::OP_MUL, OpCode::MUL},
-        {TokenType::OP_DIV, OpCode::DIV},
-        {TokenType::OP_EXP, OpCode::POW},
-        {TokenType::OP_MOD, OpCode::MOD},
+    static const std::unordered_map<TokenType, OpCode> simple_operator_map = {
         {TokenType::OP_LT, OpCode::LT},
         {TokenType::OP_GT, OpCode::GT},
         {TokenType::OP_EQ, OpCode::EQ},
@@ -82,135 +54,193 @@ GPRegister Generator::generate_binary_expression(BinaryExprNode bin_expr)
         {TokenType::OP_GEQ, OpCode::GE},
     };
 
-    auto op_it = operator_map.find(bin_expr.op.type);
-    VIA_ASSERT(op_it != operator_map.end(), "Unsupported binary operator in generate_binary_expression.");
+    static const std::unordered_map<TokenType, std::array<OpCode, 6>> complex_operator_map = {
+        {TokenType::OP_ADD,
+         {
+             OpCode::ADDRR,
+             OpCode::ADDRN,
+             OpCode::ADDNR,
+             OpCode::ADDNN,
+             OpCode::ADDIR,
+             OpCode::ADDIN,
+         }},
+        {TokenType::OP_SUB,
+         {
+             OpCode::SUBRR,
+             OpCode::SUBRN,
+             OpCode::SUBNR,
+             OpCode::SUBNN,
+             OpCode::SUBIR,
+             OpCode::SUBIN,
+         }},
+        {TokenType::OP_MUL,
+         {
+             OpCode::MULRR,
+             OpCode::MULRN,
+             OpCode::MULNR,
+             OpCode::MULNN,
+             OpCode::MULIR,
+             OpCode::MULIN,
+         }},
+        {TokenType::OP_DIV,
+         {
+             OpCode::DIVRR,
+             OpCode::DIVRN,
+             OpCode::DIVNR,
+             OpCode::DIVNN,
+             OpCode::DIVIR,
+             OpCode::DIVIN,
+         }},
+        {TokenType::OP_EXP,
+         {
+             OpCode::POWRR,
+             OpCode::POWRN,
+             OpCode::POWNR,
+             OpCode::POWNN,
+             OpCode::POWIR,
+             OpCode::POWIN,
+         }},
+        {TokenType::OP_MOD,
+         {
+             OpCode::MODRR,
+             OpCode::MODRN,
+             OpCode::MODNR,
+             OpCode::MODNN,
+             OpCode::MODIR,
+             OpCode::MODIN,
+         }},
+    };
 
-    OpCode op = op_it->second;
-    GPRegister dst = register_pool.allocate_register();
-    GPRegister lhs = generate_expression(*bin_expr.lhs);
-    GPRegister rhs = generate_expression(*bin_expr.rhs);
+    OpCode op;
+    Operand dst = cnewoperand(target_register);
+    Operand lhs, rhs;
+    uint8_t complex_id;
+    GPRegister lhs_register = allocate_register();
+    GPRegister rhs_register = allocate_register();
 
-    push_instruction(
-        op,
-        {
-            cnewoperand(dst),
-            cnewoperand(lhs),
-            cnewoperand(rhs),
-        }
-    );
+    auto it = simple_operator_map.find(bin_expr.op.type);
+    auto it_complex = complex_operator_map.find(bin_expr.op.type);
 
-    register_pool.free_register(lhs);
-    register_pool.free_register(rhs);
-
-    return dst;
-}
-
-GPRegister Generator::generate_lambda_expression(LambdaExprNode lmd_expr)
-{
-    GPRegister dst = register_pool.allocate_register();
-    push_instruction(OpCode::FUNC, {cnewoperand(dst)});
-
-    for (const TypedParamNode &param : lmd_expr.params)
+    if (it == simple_operator_map.end())
     {
-        GPRegister param_reg = register_pool.allocate_register();
-        push_instruction(OpCode::POPARG, {cnewoperand(param_reg)});
-        push_instruction(
-            OpCode::SETLOCAL,
-            {
-                cnewoperand(param_reg),
-                cnewoperand(dupstring(param.ident.value), true),
-            }
-        );
-        register_pool.free_register(param_reg);
-    }
+        LiteralExprNode *lhs_literal = std::get_if<LiteralExprNode>(bin_expr.lhs);
+        LiteralExprNode *rhs_literal = std::get_if<LiteralExprNode>(bin_expr.rhs);
 
-    for (const StmtNode &lmd_stmt : lmd_expr.body->statements)
-        generate_statement(lmd_stmt);
-
-    push_instruction(OpCode::END, {});
-
-    return dst;
-}
-
-GPRegister Generator::generate_index_expression(IndexExprNode idx_expr)
-{
-    GPRegister dst = register_pool.allocate_register();
-    GPRegister obj = generate_expression(*idx_expr.object);
-    GPRegister idx = generate_expression(*idx_expr.index);
-
-    push_instruction(
-        OpCode::LOADIDX,
-        {
-            cnewoperand(dst),
-            cnewoperand(obj),
-            cnewoperand(idx),
+        if (lhs_literal && rhs_literal)
+        { // <OP>NN
+            complex_id = 3;
+            // Generate literal operands
+            lhs = generate_operand(this, *lhs_literal);
+            rhs = generate_operand(this, *rhs_literal);
         }
-    );
+        else if (rhs_literal)
+        { // <OP>RN
+            complex_id = 1;
+            // Generate lhs
+            generate_expression(*bin_expr.lhs, lhs_register);
+            // Generate rhs
+            rhs = generate_operand(this, *rhs_literal);
+            lhs = cnewoperand(lhs_register);
+        }
+        else if (lhs_literal)
+        { // <OP>NR
+            complex_id = 2;
+            // Generate lhs
+            lhs = generate_operand(this, *lhs_literal);
+            rhs = cnewoperand(rhs_register);
+            // Generate rhs
+            generate_expression(*bin_expr.rhs, rhs_register);
+        }
+        else
+        { // <OP>RR
+            complex_id = 0;
+            // Generate lhs and rhs
+            generate_expression(*bin_expr.lhs, lhs_register);
+            generate_expression(*bin_expr.rhs, rhs_register);
+            // Initialize operands
+            lhs = cnewoperand(lhs_register);
+            rhs = cnewoperand(rhs_register);
+        }
 
-    register_pool.free_register(obj);
-    register_pool.free_register(idx);
+        op = it_complex->second.at(complex_id);
+    }
+    else
+        op = it->second;
 
-    return dst;
-}
-
-GPRegister Generator::generate_call_expression(CallExprNode call_expr)
-{
-    size_t argc = call_expr.args.size();
-    GPRegister dst = register_pool.allocate_register();
-    GPRegister callee = generate_expression(*call_expr.callee);
-
-    for (const ExprNode &arg : call_expr.args)
+    if (LOAD_TO_REGISTER)
     {
-        GPRegister arg_reg = generate_expression(arg);
-        push_instruction(OpCode::PUSHARG, {cnewoperand(arg_reg)});
-        register_pool.free_register(arg_reg);
+        if (complex_id > 3)
+        {
+            // Check if OpCode is an inline arithmetic opcode
+            load_operand(dst, lhs);
+            push_instruction(op, {dst, rhs});
+            return;
+        }
+
+        push_instruction(op, {dst, lhs, rhs});
+        free_register(lhs_register);
+        free_register(rhs_register);
     }
+    else
+    {
+        GPRegister temp_register = allocate_temp_register();
+        Operand temp = cnewoperand(temp_register);
 
-    push_instruction(
-        OpCode::CALL,
-        {
-            cnewoperand(callee),
-            cnewoperand(static_cast<double>(argc)),
-        }
-    );
-
-    register_pool.free_register(callee);
-    push_instruction(OpCode::POPRET, {cnewoperand(dst)});
-
-    return dst;
+        push_instruction(op, {temp, lhs, rhs});
+        push_instruction(OpCode::PUSH, {temp});
+    }
 }
 
-GPRegister Generator::generate_variable_expression(VarExprNode var_expr)
+void Generator::generate_lambda_expression(LambdaExprNode lmd_expr = {}, GPRegister target_register = VIA_GPREGISTER_INVALID)
 {
-    GPRegister dst = register_pool.allocate_register();
+    GPRegister destination = target_register;
 
-    push_instruction(
-        OpCode::LOADVAR,
-        {
-            cnewoperand(dst),
-            cnewoperand(dupstring(var_expr.ident.value), true),
-        }
-    );
+    if (!LOAD_TO_REGISTER)
+        destination = allocate_register();
 
-    return dst;
+    // Push function load instruction
+    push_instruction(OpCode::LOADFUNCTION, {cnewoperand(destination)});
+
+    // Generate statements
+    for (StmtNode lambda_stmt : lmd_expr.body->statements)
+        generate_statement(lambda_stmt);
+
+    // Check if the lambda body has been terminated by a RET instruction
+    // If not, insert one
+    if (bytecode->instructions.back().op != OpCode::RET)
+        push_instruction(OpCode::RET, {});
+
+    // Check if the function is supposed to be pushed onto the stack
+    if (!LOAD_TO_REGISTER)
+    { // Push the function onto the stack and free the
+      // temporary holder register
+        push_instruction(OpCode::PUSH, {cnewoperand(destination)});
+        free_register(destination);
+    }
 }
 
-GPRegister Generator::generate_expression(ExprNode expr)
+void Generator::generate_index_expression(IndexExprNode idx_expr = {}, GPRegister target_register = VIA_GPREGISTER_INVALID) {}
+
+void Generator::generate_call_expression(CallExprNode call_expr, GPRegister target_register = VIA_GPREGISTER_INVALID) {}
+
+void Generator::generate_variable_expression(VarExprNode var_expr, GPRegister target_register = VIA_GPREGISTER_INVALID) {}
+
+void Generator::generate_expression(ExprNode expr, GPRegister target_register = VIA_GPREGISTER_INVALID)
 {
     if (LiteralExprNode *lit_expr = std::get_if<LiteralExprNode>(&expr))
-        return generate_literal_expression(*lit_expr);
+        generate_literal_expression(*lit_expr, target_register);
     else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr))
-        return generate_unary_expression(*un_expr);
+        generate_unary_expression(*un_expr, target_register);
     else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr))
-        return generate_binary_expression(*bin_expr);
+        generate_binary_expression(*bin_expr, target_register);
     else if (LambdaExprNode *lmd_expr = std::get_if<LambdaExprNode>(&expr))
-        return generate_lambda_expression(*lmd_expr);
+        generate_lambda_expression(*lmd_expr, target_register);
     else if (IndexExprNode *idx_expr = std::get_if<IndexExprNode>(&expr))
-        return generate_index_expression(*idx_expr);
+        generate_index_expression(*idx_expr, target_register);
     else if (CallExprNode *call_expr = std::get_if<CallExprNode>(&expr))
-        return generate_call_expression(*call_expr);
+        generate_call_expression(*call_expr, target_register);
     else if (VarExprNode *var_expr = std::get_if<VarExprNode>(&expr))
-        return generate_variable_expression(*var_expr);
+        generate_variable_expression(*var_expr, target_register);
 
     VIA_ASSERT(false, "Unsupported expression type in generate_expression.");
 }

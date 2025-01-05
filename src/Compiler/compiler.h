@@ -17,9 +17,7 @@ public:
     using Instructions_t = std::vector<Instruction>;
 
     Compiler(Parsing::AST::AST *tree)
-        : register_pool(128)
-        , register_allocator(register_pool, register_manager)
-        , generator(tree, register_pool, register_manager, register_allocator, stack)
+        : generator(tree)
     {
     }
 
@@ -37,11 +35,7 @@ public:
     const Instructions_t get() const;
 
 private:
-    RegisterPool register_pool;
-    RegisterManager register_manager;
-    RegisterAllocator register_allocator;
     Cleaner cleaner;
-    TestStack stack;
     Generator generator;
     PassManager pass_manager;
     std::unique_ptr<Bytecode> bytecode;

@@ -28,7 +28,6 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
 {
     switch (instruction.op)
     {
-    case OpCode::END:
     case OpCode::NOP:
         return a.nop(); // nop
     case OpCode::CPY:
@@ -54,7 +53,7 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
         return a.sub(x86::rsp, 16); // sub rsp, 16
     case OpCode::POP:
         return a.add(x86::rsp, 16); // add rsp, 16
-    case OpCode::ADD:
+    case OpCode::ADDRR:
     {
         x86::Gp dst = TOX86GP(instruction.operand1.val_register);
         x86::Gp lhs = TOX86GP(instruction.operand2.val_register);

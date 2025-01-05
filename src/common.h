@@ -1,7 +1,5 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#pragma once
-
 #include <bitset>
 #include <cassert>
 #include <cctype>
@@ -28,6 +26,9 @@
 #include <variant>
 #include <vector>
 
+#ifndef VIA_DUPSTRING
+    #define VIA_DUPSTRING
+
 inline const char *dupstring(const std::string &str)
 {
     size_t len = str.size() + 1;
@@ -35,3 +36,5 @@ inline const char *dupstring(const std::string &str)
     std::memcpy(chars, str.c_str(), len);
     return chars;
 }
+
+#endif

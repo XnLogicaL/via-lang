@@ -10,8 +10,10 @@ class debounce
     bool val;
 
 public:
-
-    debounce(bool v) : val(v) {}
+    debounce(bool v)
+        : val(v)
+    {
+    }
 
     bool get()
     {

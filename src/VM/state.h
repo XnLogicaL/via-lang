@@ -8,7 +8,7 @@
 // Identifier of the defacto "main" function
 // Kinda useless but it can stay
 #ifndef VIA_MAIN_ID
-#    define VIA_MAIN_ID ("__main__")
+    #define VIA_MAIN_ID ("__main__")
 #endif
 
 /*
@@ -40,7 +40,6 @@ static ThreadId __thread_id__ = 0;
 struct TFunction;
 struct TValue;
 
-template<typename T>
 struct TStack;
 struct TStackFrame;
 struct GCState;
@@ -82,12 +81,10 @@ struct alignas(64) RTState
     Instruction *ihp; // Instruction list head
     Instruction *ibp; // Instruction list base
 
-    TStack<TFunction *> *stack; // Pointer to VM Stack
-    TStack<TValue> *arguments;  // Pointer to argument stack
-    TStack<TValue> *returns;    // Pointer to return stack
-    RAState *ralloc;            // Pointer to VM Register allocator state
-    LblMap *labels;             // Pointer to VM Label address table (LAT)
-    GCState *gc;                // Pointer to VM Garbage collector state
+    TStack *stack;   // Pointer to VM Stack
+    RAState *ralloc; // Pointer to VM Register allocator state
+    LblMap *labels;  // Pointer to VM Label address table (LAT)
+    GCState *gc;     // Pointer to VM Garbage collector state
 
     int exitc;         // VM exit code
     const char *exitm; // VM exit message

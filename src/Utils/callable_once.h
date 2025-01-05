@@ -11,7 +11,7 @@ namespace via
 namespace util
 {
 
-template <typename T, typename ...K>
+template<typename T, typename... K>
 class callable_once
 {
     bool has_called = false;
@@ -19,7 +19,9 @@ class callable_once
 
 public:
     callable_once(std::function<T(K...)> f)
-        : func(std::move(f)) {}
+        : func(std::move(f))
+    {
+    }
 
     std::optional<T> call(K... _Args)
     {

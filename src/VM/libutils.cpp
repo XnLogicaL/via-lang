@@ -8,7 +8,7 @@ namespace via::lib
 void pusharguments(RTState *V, std::vector<TValue> args)
 {
     for (TValue val : args)
-        pushargument(V, val);
+        pusharg(V, val);
 }
 
 TValue *quickindex(RTState *V, TTable *T, const char *K)

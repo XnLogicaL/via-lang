@@ -15,6 +15,7 @@ struct Macro
     std::vector<Token> body;         // Macro body as a list of tokens
     size_t begin;
     size_t end;
+    size_t line;
 };
 
 } // namespace via::Tokenization

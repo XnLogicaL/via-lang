@@ -7,17 +7,17 @@ namespace via::lib
 
 void function_name(RTState *V)
 {
-    TValue func = popargument(V);
+    TValue *func = getargument(V, 0);
 
     // Check if the argument is a function
     // If so return nil
-    if (!checkfunction(V, func))
+    if (!checkfunction(V, *func))
     {
-        pushreturn(V, stackvalue(V));
+        pushret(V, stackvalue(V));
         return;
     }
 
-    pushreturn(V, stackvalue(V, func.val_function->id));
+    pushret(V, stackvalue(V, func->val_function->id));
 }
 
 } // namespace via::lib

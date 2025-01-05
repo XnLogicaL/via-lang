@@ -2,7 +2,7 @@
 
 #pragma once
 
-namespace via::util
+namespace via::utils
 {
 
 template<typename T>
@@ -40,4 +40,4 @@ public:
     }
 };
 
-} // namespace via::util
+} // namespace via::utils

@@ -16,8 +16,13 @@ Definition Preprocessor::parse_definition()
     if (pos >= toks.size())
         PREPROCESSOR_ERROR("Unexpected end of input after 'define'");
 
+    auto it = def_table.find(peek().value);
+    if (it != def_table.end())
+        PREPROCESSOR_ERROR(std::format("Redefinition of definition '{}', previously defined on line {}", it->second.identifier, it->second.line));
+
     // Consume 'define' keyword and extract identifier
     consume();
+    def.line = peek().line;
     def.identifier = consume().value;
 
     // Check and consume opening parenthesis
@@ -35,6 +40,7 @@ Definition Preprocessor::parse_definition()
     // Consume closing parenthesis
     ++pos;
     def.end = pos;
+    def_table[def.identifier] = def;
 
     return def;
 }

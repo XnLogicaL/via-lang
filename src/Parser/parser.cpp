@@ -304,8 +304,7 @@ TypeNode *Parser::parse_type()
                 peek().line,
                 peek().offset,
             },
-            {}
-        });
+            {}});
 
         // Check if the key type is explicitly specified
         if (is_type(TokenType::BRACKET_OPEN))

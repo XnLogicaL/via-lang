@@ -10,7 +10,7 @@
 // This value will be passed onto the arena allocator of the tokenizer
 // Esentially the maximum amounts of
 #ifndef VIA_LEXER_ALLOC_SIZE
-#    define VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
+    #define VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
 #endif
 
 namespace via::Tokenization

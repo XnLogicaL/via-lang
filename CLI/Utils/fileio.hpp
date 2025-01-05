@@ -6,7 +6,7 @@
 #include <string>
 #include <stdexcept>
 
-namespace viaCLI::utils
+namespace via::utils
 {
 
 // Writes the given content to the specified file path
@@ -34,4 +34,4 @@ inline std::string read_from_file(const std::string &file_path)
     return content;
 }
 
-} // namespace viaCLI::utils
+} // namespace via::utils

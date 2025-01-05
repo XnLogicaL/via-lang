@@ -22,15 +22,9 @@ bool Preprocessor::preprocess()
     for (const Token &tok : container.tokens)
     {
         if (tok.type == TokenType::KW_MACRO)
-        {
-            Macro mac = parse_macro();
-            expand_macro(mac);
-        }
+            parse_macro();
         else if (tok.type == TokenType::KW_DEFINE)
-        {
-            Definition def = parse_definition();
-            expand_definition(def);
-        }
+            parse_definition();
         else
         {
             pos++;
@@ -38,11 +32,17 @@ bool Preprocessor::preprocess()
         }
     }
 
-    for (auto it : macro_table)
-        erase_from_stream(it.second.begin, it.second.end);
-
     for (auto it : def_table)
+    {
+        expand_definition(it.second);
         erase_from_stream(it.second.begin, it.second.end);
+    }
+
+    for (auto it : macro_table)
+    {
+        expand_macro(it.second);
+        erase_from_stream(it.second.begin, it.second.end);
+    }
 
     return failed;
 }

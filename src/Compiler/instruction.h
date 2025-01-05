@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #ifndef VIA_OPERAND_COUNT
-#    define VIA_OPERAND_COUNT 4
+    #define VIA_OPERAND_COUNT 4
 #endif
 
 namespace via

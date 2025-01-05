@@ -23,7 +23,6 @@ void Interpreter::load_libraries(RTState *V)
     lib::loadbaselib(V);
     lib::loadmathlib(V);
     lib::loadrandlib(V);
-    lib::loadvec3lib(V);
 }
 
 ExecutionResult Interpreter::compile_and_run(SrcContainer &container)
@@ -32,24 +31,7 @@ ExecutionResult Interpreter::compile_and_run(SrcContainer &container)
     using namespace via::Compilation;
     using namespace via::Tokenization;
 
-    Parser parser(container);
-    AST::AST *ast = parser.parse_program();
-
-    Compiler compiler(ast);
-    compiler.add_default_passes();
-    compiler.generate();
-
-    std::vector<Instruction> bytecode = compiler.get();
-
-    RTState *V = stnewstate(bytecode);
-    load_libraries(V);
-    execute(V);
-
-    ExecutionResult result = {V->exitc, V->exitm};
-
-    stcleanupstate(V);
-
-    return result;
+    CacheManager manager;
 }
 
 } // namespace via

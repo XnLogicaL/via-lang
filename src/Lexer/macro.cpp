@@ -113,7 +113,6 @@ void Preprocessor::expand_macro(const Macro &macro)
     }
 }
 
-
 Macro Preprocessor::parse_macro()
 {
     std::vector<Token> &toks = container.tokens;
@@ -123,7 +122,12 @@ Macro Preprocessor::parse_macro()
     if (pos >= toks.size() || peek().type != TokenType::IDENTIFIER)
         PREPROCESSOR_ERROR("Expected macro identifier after 'macro' keyword");
 
+    auto it = macro_table.find(peek().value);
+    if (it != macro_table.end())
+        PREPROCESSOR_ERROR(std::format("Redefinition of macro '{}', previously defined on line {}", peek().value, it->second.line));
+
     Macro mac;
+    mac.line = peek().line;
     mac.begin = pos - 1;
     mac.name = consume().value;
 

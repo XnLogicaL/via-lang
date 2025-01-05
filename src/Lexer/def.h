@@ -14,6 +14,7 @@ struct Definition
     std::vector<Token> replacement;
     size_t begin;
     size_t end;
+    size_t line;
 };
 
 } // namespace via::Tokenization

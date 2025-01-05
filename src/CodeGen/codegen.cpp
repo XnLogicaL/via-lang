@@ -9,7 +9,7 @@ namespace via::CodeGen
 
 using namespace asmjit;
 
-JITFunc jitgenerate(Chunk *chunk)
+JITFunc jitgenerate(Chunk *)
 {
     Error g_err;
     JitRuntime rt;

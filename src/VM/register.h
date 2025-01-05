@@ -7,7 +7,7 @@
 #include "shared.h"
 #include "types.h"
 
-#define VIA_REGISTERCOUNT uintptr_t(2048)
+#define VIA_REGISTER_COUNT uintptr_t(128)
 
 namespace via
 {
@@ -18,13 +18,13 @@ struct RAState
     TValue *head;
 };
 
-inline TValue *rgetregister(RAState *R, GPRegister reg)
+VIA_FORCEINLINE TValue *rgetregister(RAState *R, GPRegister reg)
 {
     TValue *ptr = R->head + reg;
     return ptr;
 }
 
-inline void rsetregister(RAState *R, GPRegister reg, TValue val)
+VIA_FORCEINLINE void rsetregister(RAState *R, GPRegister reg, TValue val)
 {
     TValue *addr = R->head + reg;
     *addr = val;

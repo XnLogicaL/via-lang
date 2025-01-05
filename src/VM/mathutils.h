@@ -8,7 +8,7 @@
 namespace via
 {
 
-inline TNumber lerp(TNumber a, TNumber b, TNumber t)
+VIA_FORCEINLINE TNumber lerp(TNumber a, TNumber b, TNumber t)
 {
     return a + (b - a) * t;
 }

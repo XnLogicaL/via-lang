@@ -29,18 +29,17 @@ TNumber pcg32_range(TNumber a, TNumber b)
 
 void rand_range(RTState *V)
 {
-    TValue low = popargument(V);
-    TValue high = popargument(V);
+    TValue *low = getargument(V, 0);
+    TValue *high = getargument(V, 1);
+    TValue num = stackvalue(V, pcg32_range(low->val_number, high->val_number));
 
-    TValue num = stackvalue(V, pcg32_range(low.val_number, high.val_number));
-
-    pushreturn(V, num);
+    pushret(V, num);
 }
 
 void rand_int(RTState *V)
 {
     rand_range(V);
-    TValue x = popreturn(V);
+    TValue x = *popval(V);
     x.val_number = std::floor(x.val_number);
 }
 
@@ -60,7 +59,6 @@ void loadrandlib(RTState *V)
     }
 
     freeze(V, lib);
-    loadlib(V, hashstring(V, "random"), stackvalue(V, lib));
 }
 
 } // namespace via::lib

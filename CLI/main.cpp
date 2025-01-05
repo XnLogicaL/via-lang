@@ -4,6 +4,7 @@
 #include "cmdparser.hpp"
 #include "linenoise.hpp"
 #include "fileio.hpp"
+#include "encoder.h"
 #include "repl.h"
 #include "via.h"
 
@@ -26,13 +27,6 @@ void handle_test_installation()
     std::cout << "Success\n";
 }
 
-#ifdef VIA_DEBUG
-void handle_debug_enabled()
-{
-    std::cout << "true\n";
-}
-#endif
-
 void handle_compile(const std::vector<std::string> &args)
 {
     if (args.empty())
@@ -42,7 +36,7 @@ void handle_compile(const std::vector<std::string> &args)
     }
 
     std::string input = args.at(0);
-    std::string input_code = utils::read_from_file(input);
+    std::string input_code = via::utils::read_from_file(input);
 
     Tokenization::Tokenizer lexer(input_code);
     SrcContainer container = lexer.tokenize();
@@ -59,11 +53,8 @@ void handle_compile(const std::vector<std::string> &args)
     compiler.add_default_passes();
     compiler.generate();
 
-    std::string buffer;
-    for (Instruction &instr : compiler.get())
-        buffer += Compilation::ccompileinstruction(instr) + "\n";
-
-    std::cout << buffer;
+    auto instrs = compiler.get();
+    auto encoded = Compilation::encode(instrs);
 }
 
 void handle_run(const std::vector<std::string> &args)

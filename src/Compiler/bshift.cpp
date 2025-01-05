@@ -9,7 +9,7 @@ void BitShiftOptimizationPass::apply(Generator &, Bytecode &bytecode)
 {
     for (Instruction &instr : bytecode.get())
     {
-        if (instr.op != OpCode::MUL && instr.op != OpCode::DIV)
+        if (instr.op != OpCode::MULRR && instr.op != OpCode::DIVRR)
             continue;
 
         // Check if the operand is a power of 2
@@ -22,14 +22,14 @@ void BitShiftOptimizationPass::apply(Generator &, Bytecode &bytecode)
             continue;
 
         // Replace with bit-shift instructions
-        if (instr.op == OpCode::MUL)
+        if (instr.op == OpCode::MULRR)
         {
-            instr.op = OpCode::BSHL;                          // Bitwise shift left
+            instr.op = OpCode::BSHLRR;                        // Bitwise shift left
             instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
         }
-        else if (instr.op == OpCode::DIV)
+        else if (instr.op == OpCode::DIVRR)
         {
-            instr.op = OpCode::BSHR;                          // Bitwise shift right
+            instr.op = OpCode::BSHRRR;                        // Bitwise shift right
             instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
         }
     }

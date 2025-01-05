@@ -18,9 +18,11 @@ public:
     std::string file_path;
 
     BadFileException(std::string file_path)
-        : file_path(file_path) {}
+        : file_path(file_path)
+    {
+    }
 
-    const char* what() const throw()
+    const char *what() const throw()
     {
         return std::format("File '{}' does not exist", file_path).c_str();
     }
