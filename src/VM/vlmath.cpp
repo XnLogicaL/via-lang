@@ -12,7 +12,7 @@ void math_exp(RTState *V)
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(0, "Number", ENUM_NAME(num->type)));
 
     TValue val = stackvalue(V, std::exp(num->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_log(RTState *V)
@@ -24,7 +24,7 @@ void math_log(RTState *V)
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(1, "Number", ENUM_NAME(num->type)));
 
     TValue val = stackvalue(V, std::log(num->val_number) / std::log(base->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_log10(RTState *V)
@@ -34,7 +34,7 @@ void math_log10(RTState *V)
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(0, "Number", ENUM_NAME(num->type)));
 
     TValue val = stackvalue(V, std::log10(num->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_pow(RTState *V)
@@ -46,7 +46,7 @@ void math_pow(RTState *V)
     LIB_ASSERT(checknumber(V, *e), ARG_MISMATCH(1, "Number", ENUM_NAME(e->type)));
 
     TValue val = stackvalue(V, std::pow(num->val_number, e->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_cos(RTState *V)
@@ -56,7 +56,7 @@ void math_cos(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::cos(t->val_number)); // Compute the cosine
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_tan(RTState *V)
@@ -66,7 +66,7 @@ void math_tan(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::tan(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_asin(RTState *V)
@@ -76,7 +76,7 @@ void math_asin(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::asin(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_acos(RTState *V)
@@ -86,7 +86,7 @@ void math_acos(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::acos(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_atan(RTState *V)
@@ -96,7 +96,7 @@ void math_atan(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::atan(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_atan2(RTState *V)
@@ -108,7 +108,7 @@ void math_atan2(RTState *V)
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
     TValue val = stackvalue(V, std::atan2(t->val_number, x->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_sinh(RTState *V)
@@ -118,7 +118,7 @@ void math_sinh(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::sinh(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_cosh(RTState *V)
@@ -128,7 +128,7 @@ void math_cosh(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::cosh(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_tanh(RTState *V)
@@ -138,7 +138,7 @@ void math_tanh(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::tanh(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_abs(RTState *V)
@@ -148,7 +148,7 @@ void math_abs(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::fabs(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_min(RTState *V)
@@ -160,7 +160,7 @@ void math_min(RTState *V)
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
     TValue val = stackvalue(V, std::min(t->val_number, x->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_max(RTState *V)
@@ -172,7 +172,7 @@ void math_max(RTState *V)
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
     TValue val = stackvalue(V, std::max(t->val_number, x->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_round(RTState *V)
@@ -182,7 +182,7 @@ void math_round(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::round(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_floor(RTState *V)
@@ -192,7 +192,7 @@ void math_floor(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::floor(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void math_ceil(RTState *V)
@@ -202,7 +202,7 @@ void math_ceil(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
     TValue val = stackvalue(V, std::ceil(t->val_number));
-    pushret(V, val);
+    pushval(V, val);
 }
 
 void loadmathlib(RTState *V)
@@ -231,7 +231,8 @@ void loadmathlib(RTState *V)
         {"max", WRAPVAL(math_max)},
         {"round", WRAPVAL(math_round)},
         {"floor", WRAPVAL(math_floor)},
-        {"ceil", WRAPVAL(math_ceil)}};
+        {"ceil", WRAPVAL(math_ceil)}
+    };
 
     TTable *lib = newtable(V, nullptr, {});
 

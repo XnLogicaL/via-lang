@@ -91,6 +91,8 @@ struct alignas(64) RTState
     CallArgc argc;     // Argument count, for both CALL and FASTCALLX
     CallType calltype; // Stores the current calling convention
 
+    TValue *value_head;
+
     int exitc;         // VM exit code
     const char *exitm; // VM exit message
 

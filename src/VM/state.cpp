@@ -59,17 +59,18 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
 
     V->yieldfor = 0.0f;
     V->argc = 0;
-    V->retc = 0;
 
     // This is set to idle by default because the via thread manipulators (execute, pausethread, killthread)
     // are the only ones allowed to mutate this
     V->tstate = ThreadState::PAUSED;
     V->sstate = nullptr;
 
+    V->value_head = nullptr;
+
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
     TFunction *mainf = newfunc(V, "__main", nullptr, pipeline, false, false);
-    nativecall(V, mainf);
+    nativecall(V, mainf, 0);
 
     // Initialize labels
     Instruction *ip = V->ip;
@@ -98,6 +99,14 @@ void stcleanupstate(RTState *V)
     gccleanup(V->gc);
     tscleanupstate(V->stack);
     rcleanupstate(V->ralloc);
+
+    // Clean up heap values
+    TValue *current_value = V->value_head;
+    while (current_value)
+    {
+        cleanupval(V, current_value);
+        current_value = current_value->next;
+    }
 
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately

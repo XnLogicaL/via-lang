@@ -13,11 +13,12 @@ void function_name(RTState *V)
     // If so return nil
     if (!checkfunction(V, *func))
     {
-        pushret(V, stackvalue(V));
+        pushval(V, stackvalue(V));
         return;
     }
 
-    pushret(V, stackvalue(V, func->val_function->id));
+    TValue id = stackvalue(V, func->val_function->id);
+    pushval(V, id);
 }
 
 } // namespace via::lib

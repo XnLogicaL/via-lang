@@ -33,7 +33,7 @@ void rand_range(RTState *V)
     TValue *high = getargument(V, 1);
     TValue num = stackvalue(V, pcg32_range(low->val_number, high->val_number));
 
-    pushret(V, num);
+    pushval(V, num);
 }
 
 void rand_int(RTState *V)

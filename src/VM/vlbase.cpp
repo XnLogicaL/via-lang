@@ -22,6 +22,8 @@ void base_print(RTState *V)
 
     // Output the accumulated string
     std::cout << oss.str();
+
+    nativeret(V, 0);
 }
 
 // Identical to `base_print` but ends the string with a line break
@@ -39,14 +41,20 @@ void base_println(RTState *V)
 
     // Output the accumulated string
     std::cout << oss.str() << "\n";
+
+    nativeret(V, 0);
 }
 
 void base_error(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
+
     tostring(V, *arg0);
+
     V->abrt = true;
+
     LIB_ASSERT(false, arg0->val_string->ptr);
+    nativeret(V, 0);
 }
 
 void base_exit(RTState *V)
@@ -58,41 +66,53 @@ void base_exit(RTState *V)
     ExitCode code = arg0->val_number;
     setexitdata(V, code, "base_exit called by user");
     V->abrt = true; // Abort the VM execution
+
+    nativeret(V, 0);
 }
 
 void base_type(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
     TValue ty = type(V, *arg0);
-    pushret(V, ty);
+
+    pushval(V, ty);
+    nativeret(V, 1);
 }
 
 void base_typeof(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
     TValue type = typeofv(V, *arg0);
-    pushret(V, type);
+
+    pushval(V, type);
+    nativeret(V, 1);
 }
 
 void base_tostring(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
     TValue str = tostring(V, *arg0);
-    pushret(V, str);
+
+    pushval(V, str);
+    nativeret(V, 1);
 }
 
 void base_tonumber(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
     TValue num = tonumber(V, *arg0);
-    pushret(V, num);
+
+    pushval(V, num);
+    nativeret(V, 1);
 }
 
 void base_tobool(RTState *V)
 {
     TValue *arg0 = getargument(V, 0);
     TValue boole = tobool(V, *arg0);
-    pushret(V, boole);
+
+    pushval(V, boole);
+    nativeret(V, 1);
 }
 
 void base_assert(RTState *V)
@@ -107,9 +127,9 @@ void base_assert(RTState *V)
         TString *mfstrds = newstring(V, mfstr.c_str());
 
         // Push the error message onto the argument stack
-        pusharg(V, stackvalue(V, mfstrds));
+        pushval(V, stackvalue(V, mfstrds));
         // Hack solution, but works!
-        call(V, WRAPVAL(base_error));
+        call(V, WRAPVAL(base_error), 1);
     }
 }
 
@@ -120,7 +140,8 @@ void base_getmetatable(RTState *V)
     LIB_ASSERT(checktable(V, *arg0), "base_getmetatable expects a table");
 
     TValue meta = getmetatable(V, arg0->val_table);
-    pushret(V, meta);
+    pushval(V, meta);
+    nativeret(V, 1);
 }
 
 void base_setmetatable(RTState *V)
@@ -132,6 +153,7 @@ void base_setmetatable(RTState *V)
     LIB_ASSERT(checktable(V, *meta), "base_setmetatable expects a table for argument 1");
 
     setmetatable(V, tbl->val_table, meta->val_table);
+    nativeret(V, 0);
 }
 
 void base_pcall(RTState *V)
@@ -140,17 +162,17 @@ void base_pcall(RTState *V)
     // Realigns arguments by popping them and pushing them again
     for (size_t i = 0; i < V->argc; i++)
     {
-        TValue *arg = getargument(V, 0);
-        pusharg(V, *arg);
+        TValue *arg = getargument(V, i);
+        pushval(V, *arg);
     }
 
-    call(V, *callback);
+    call(V, *callback, V->argc - 1);
 
     TBool success = V->exitc != 1;
     if (success)
     {
-        pusharg(V, stackvalue(V, success));
-        pusharg(V, *popval(V));
+        pushval(V, stackvalue(V, success));
+        pushval(V, *popval(V));
     }
     else
     {
@@ -158,30 +180,32 @@ void base_pcall(RTState *V)
         TString *exit_string = newstring(V, exit_message);
         TValue exit_value = stackvalue(V, exit_string);
 
-        pusharg(V, stackvalue(V, success));
-        pusharg(V, exit_value);
+        pushval(V, stackvalue(V, success));
+        pushval(V, exit_value);
     }
+
+    nativeret(V, 2);
 }
 
 void base_xpcall(RTState *V)
 {
     TValue *callback = getargument(V, 0);
-    TValue *handler = getargument(V, 0);
+    TValue *handler = getargument(V, 1);
 
     // Realigns arguments by popping them and pushing them again
     for (size_t i = 0; i < V->argc; i++)
     {
-        TValue *arg = getargument(V, 0);
-        pusharg(V, *arg);
+        TValue *arg = getargument(V, i);
+        pushval(V, *arg);
     }
 
-    call(V, *callback);
+    call(V, *callback, V->argc - 2);
 
     TBool success = V->exitc != 1;
     if (success)
     {
-        pusharg(V, stackvalue(V, success));
-        pusharg(V, *popval(V));
+        pushval(V, stackvalue(V, success));
+        pushval(V, *popval(V));
     }
     else
     {
@@ -189,11 +213,13 @@ void base_xpcall(RTState *V)
         TString *exit_string = newstring(V, exit_message);
         TValue exit_value = stackvalue(V, exit_string);
 
-        pusharg(V, stackvalue(V, success));
-        pusharg(V, exit_value);
+        pushval(V, exit_value);
+        call(V, *handler, 1);
+        pushval(V, stackvalue(V, success));
+        pushval(V, exit_value);
     }
 
-    call(V, *handler);
+    nativeret(V, 2);
 }
 
 void loadbaselib(RTState *V)

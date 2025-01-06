@@ -10,9 +10,6 @@
 namespace via
 {
 
-// Stores the (always) previous dynamically allocated value, for linking dynamic values
-static TValue *__value_prev__ = nullptr;
-
 using TNumber = double;
 using TBool = bool;
 // Basic pointer type, currently only used internally
@@ -189,19 +186,19 @@ VIA_FORCEINLINE TCFunction *newcfunc(RTState *, void (*ptr)(RTState *), bool is_
     return cfunc;
 }
 
-VIA_FORCEINLINE TValue *newvalue(RTState *, ValueType ty)
+VIA_FORCEINLINE TValue *newvalue(RTState *V, ValueType ty)
 {
     TValue *val = new TValue;
     val->type = ty;
     // Link with the previous value
-    val->prev = __value_prev__;
+    val->prev = V->value_head;
 
     // Link the previous value with this value
-    if (__value_prev__ != nullptr)
-        __value_prev__->next = val;
+    if (V->value_head != nullptr)
+        V->value_head->next = val;
 
     // Overwrite the previous value
-    __value_prev__ = val;
+    V->value_head = val;
 
     return val;
 }

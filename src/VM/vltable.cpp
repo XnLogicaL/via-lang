@@ -70,7 +70,7 @@ void table_remove(RTState *V)
     TValue last_val = data[last_key];
 
     data.erase(last_key);
-    pushret(V, last_val);
+    pushval(V, last_val);
 }
 
 void table_removeat(RTState *V)
@@ -87,7 +87,7 @@ void table_removeat(RTState *V)
     TValue rem_val = data[index];
 
     data.erase(index);
-    pushret(V, rem_val);
+    pushval(V, rem_val);
 }
 
 void table_contains(RTState *V)
@@ -102,11 +102,11 @@ void table_contains(RTState *V)
         if (compare(V, it.second, *val))
         {
             TNumber key = static_cast<TNumber>(it.first);
-            pushret(V, stackvalue(V, key));
+            pushval(V, stackvalue(V, key));
             return;
         }
 
-    pushret(V, stackvalue(V));
+    pushval(V, stackvalue(V));
 }
 
 void table_concat(RTState *V)
@@ -128,7 +128,7 @@ void table_concat(RTState *V)
     const char *final_str = dupstring(buf);
     TValue final = stackvalue(V, final_str);
 
-    pushret(V, final);
+    pushval(V, final);
 }
 
 void table_clone(RTState *V)
@@ -146,7 +146,7 @@ void table_clone(RTState *V)
 
     TValue final = stackvalue(V, clone);
 
-    pushret(V, final);
+    pushval(V, final);
 }
 
 
@@ -168,7 +168,7 @@ void table_deepclone(RTState *V)
         if (VIA_UNLIKELY(is_table))
         {
             // Push nested table
-            pusharg(V, it.second);
+            pushval(V, it.second);
             // Call self to deep clone the nested table
             table_deepclone(V);
             data[key] = *popval(V);
@@ -179,7 +179,7 @@ void table_deepclone(RTState *V)
 
     TValue final = stackvalue(V, clone);
 
-    pushret(V, final);
+    pushval(V, final);
 }
 
 void table_len(RTState *V)
@@ -189,7 +189,7 @@ void table_len(RTState *V)
     LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
 
     TValue final = len(V, *tbl);
-    pushret(V, final);
+    pushval(V, final);
 }
 
 void table_indexof(RTState *V)
@@ -203,11 +203,11 @@ void table_indexof(RTState *V)
     for (const auto &it : data)
         if (compare(V, it.second, *val))
         {
-            pushret(V, stackvalue(V, true));
+            pushval(V, stackvalue(V, true));
             return;
         }
 
-    pushret(V, stackvalue(V));
+    pushval(V, stackvalue(V));
 }
 
 void table_keys(RTState *V)
@@ -230,7 +230,7 @@ void table_keys(RTState *V)
         table_insert(V);
     }
 
-    pushret(V, keys_table);
+    pushval(V, keys_table);
 }
 
 void table_values(RTState *V)
@@ -250,7 +250,7 @@ void table_values(RTState *V)
         table_insert(V);
     }
 
-    pushret(V, values_table);
+    pushval(V, values_table);
 }
 
 } // namespace via::lib

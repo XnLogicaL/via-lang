@@ -395,7 +395,7 @@ VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf) noexcept
+VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, CallArgc argc) noexcept
 {
     /* Stack allocate id string
      * 15 additional characters:
@@ -419,7 +419,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
         {},
     };
 
-    V->frame = &freplica;
+    nativecall(V, &freplica, argc);
     // Call function pointer
     cf->ptr(V);
 }
@@ -439,7 +439,7 @@ VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
     if (checkfunction(V, *method))
         nativecall(V, method->val_function, argc);
     else if (checkcfunction(V, *method))
-        externcall(V, method->val_cfunction);
+        externcall(V, method->val_cfunction, argc);
     else if (checktable(V, *method))
         // Attempt to call table, a.k.a __call metamethod
         methodcall(V, method->val_table, hashstring(V, "__call"), argc);
@@ -459,12 +459,11 @@ VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v)
 VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue val, CallArgc argc) noexcept
 {
     V->calltype = CallType::CALL;
-    // V->argc = static_cast<CallArgc>(V->arguments->size);
 
     if (checkfunction(V, val))
         nativecall(V, val.val_function, argc);
     else if (checkcfunction(V, val))
-        externcall(V, val.val_cfunction);
+        externcall(V, val.val_cfunction, argc);
     else if (checktable(V, val))
         methodcall(V, val.val_table, hashstring(V, "__call"), argc);
     else
