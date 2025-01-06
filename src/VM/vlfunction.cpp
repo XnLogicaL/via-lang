@@ -19,6 +19,7 @@ void function_name(RTState *V)
 
     TValue id = stackvalue(V, func->val_function->id);
     pushval(V, id);
+    nativeret(V, 1);
 }
 
 } // namespace via::lib

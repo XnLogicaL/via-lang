@@ -28,6 +28,8 @@ void table_insert(RTState *V)
     size_t size = data.size();
 
     data[size + 1] = *val;
+
+    nativeret(V, 0);
 }
 
 void table_insertat(RTState *V)
@@ -56,6 +58,8 @@ void table_insertat(RTState *V)
             data[key + 1] = data[key];
 
     data[idx] = *val;
+
+    nativeret(V, 0);
 }
 
 void table_remove(RTState *V)
@@ -88,6 +92,7 @@ void table_removeat(RTState *V)
 
     data.erase(index);
     pushval(V, rem_val);
+    nativeret(V, 1);
 }
 
 void table_contains(RTState *V)
@@ -107,6 +112,7 @@ void table_contains(RTState *V)
         }
 
     pushval(V, stackvalue(V));
+    nativeret(V, 1);
 }
 
 void table_concat(RTState *V)
@@ -129,6 +135,7 @@ void table_concat(RTState *V)
     TValue final = stackvalue(V, final_str);
 
     pushval(V, final);
+    nativeret(V, 1);
 }
 
 void table_clone(RTState *V)
@@ -147,8 +154,8 @@ void table_clone(RTState *V)
     TValue final = stackvalue(V, clone);
 
     pushval(V, final);
+    nativeret(V, 1);
 }
-
 
 void table_deepclone(RTState *V)
 {
@@ -180,6 +187,7 @@ void table_deepclone(RTState *V)
     TValue final = stackvalue(V, clone);
 
     pushval(V, final);
+    nativeret(V, 1);
 }
 
 void table_len(RTState *V)
@@ -190,6 +198,7 @@ void table_len(RTState *V)
 
     TValue final = len(V, *tbl);
     pushval(V, final);
+    nativeret(V, 1);
 }
 
 void table_indexof(RTState *V)
@@ -208,6 +217,7 @@ void table_indexof(RTState *V)
         }
 
     pushval(V, stackvalue(V));
+    nativeret(V, 1);
 }
 
 void table_keys(RTState *V)
@@ -231,6 +241,7 @@ void table_keys(RTState *V)
     }
 
     pushval(V, keys_table);
+    nativeret(V, 1);
 }
 
 void table_values(RTState *V)
@@ -251,6 +262,7 @@ void table_values(RTState *V)
     }
 
     pushval(V, values_table);
+    nativeret(V, 1);
 }
 
 } // namespace via::lib

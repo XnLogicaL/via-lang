@@ -13,6 +13,7 @@ void math_exp(RTState *V)
 
     TValue val = stackvalue(V, std::exp(num->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_log(RTState *V)
@@ -25,6 +26,7 @@ void math_log(RTState *V)
 
     TValue val = stackvalue(V, std::log(num->val_number) / std::log(base->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_log10(RTState *V)
@@ -35,6 +37,7 @@ void math_log10(RTState *V)
 
     TValue val = stackvalue(V, std::log10(num->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_pow(RTState *V)
@@ -47,6 +50,7 @@ void math_pow(RTState *V)
 
     TValue val = stackvalue(V, std::pow(num->val_number, e->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_cos(RTState *V)
@@ -57,6 +61,7 @@ void math_cos(RTState *V)
 
     TValue val = stackvalue(V, std::cos(t->val_number)); // Compute the cosine
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_tan(RTState *V)
@@ -67,6 +72,7 @@ void math_tan(RTState *V)
 
     TValue val = stackvalue(V, std::tan(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_asin(RTState *V)
@@ -77,6 +83,7 @@ void math_asin(RTState *V)
 
     TValue val = stackvalue(V, std::asin(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_acos(RTState *V)
@@ -87,6 +94,7 @@ void math_acos(RTState *V)
 
     TValue val = stackvalue(V, std::acos(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_atan(RTState *V)
@@ -97,6 +105,7 @@ void math_atan(RTState *V)
 
     TValue val = stackvalue(V, std::atan(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_atan2(RTState *V)
@@ -109,6 +118,7 @@ void math_atan2(RTState *V)
 
     TValue val = stackvalue(V, std::atan2(t->val_number, x->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_sinh(RTState *V)
@@ -119,6 +129,7 @@ void math_sinh(RTState *V)
 
     TValue val = stackvalue(V, std::sinh(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_cosh(RTState *V)
@@ -129,6 +140,7 @@ void math_cosh(RTState *V)
 
     TValue val = stackvalue(V, std::cosh(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_tanh(RTState *V)
@@ -139,6 +151,7 @@ void math_tanh(RTState *V)
 
     TValue val = stackvalue(V, std::tanh(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_abs(RTState *V)
@@ -149,6 +162,7 @@ void math_abs(RTState *V)
 
     TValue val = stackvalue(V, std::fabs(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_min(RTState *V)
@@ -161,6 +175,7 @@ void math_min(RTState *V)
 
     TValue val = stackvalue(V, std::min(t->val_number, x->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_max(RTState *V)
@@ -173,6 +188,7 @@ void math_max(RTState *V)
 
     TValue val = stackvalue(V, std::max(t->val_number, x->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_round(RTState *V)
@@ -183,6 +199,7 @@ void math_round(RTState *V)
 
     TValue val = stackvalue(V, std::round(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_floor(RTState *V)
@@ -193,6 +210,7 @@ void math_floor(RTState *V)
 
     TValue val = stackvalue(V, std::floor(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void math_ceil(RTState *V)
@@ -203,6 +221,7 @@ void math_ceil(RTState *V)
 
     TValue val = stackvalue(V, std::ceil(t->val_number));
     pushval(V, val);
+    nativeret(V, 1);
 }
 
 void loadmathlib(RTState *V)

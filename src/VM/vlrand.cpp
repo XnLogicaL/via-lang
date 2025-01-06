@@ -34,6 +34,7 @@ void rand_range(RTState *V)
     TValue num = stackvalue(V, pcg32_range(low->val_number, high->val_number));
 
     pushval(V, num);
+    nativeret(V, 1);
 }
 
 void rand_int(RTState *V)
@@ -41,6 +42,9 @@ void rand_int(RTState *V)
     rand_range(V);
     TValue x = *popval(V);
     x.val_number = std::floor(x.val_number);
+
+    pushval(V, x);
+    nativeret(V, 1);
 }
 
 void loadrandlib(RTState *V)
