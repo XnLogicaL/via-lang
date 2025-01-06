@@ -3,7 +3,6 @@
 #include "execute.h"
 #include "api.h"
 #include "chunk.h"
-#include "shared.h"
 #include "state.h"
 #include "types.h"
 #include <chrono>

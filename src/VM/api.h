@@ -8,7 +8,6 @@
 #include "instruction.h"
 #include "opcode.h"
 #include "register.h"
-#include "shared.h"
 #include "stack.h"
 #include "state.h"
 #include "types.h"
@@ -76,10 +75,10 @@ VIA_FORCEINLINE bool cmpregister(RTState *VIA_RESTRICT V, GPRegister reg0, GPReg
         return v0.val_string->ptr == v1.val_string->ptr;
     case ValueType::Nil:
         return true; // Nil values are always equal
-    case ValueType::Ptr:
+    case ValueType::Pointer:
         return v0.val_pointer == v1.val_pointer;
     default:
-        return false; // Unique objects (CFunc, Func, Table, etc.) are never equal
+        return false; // Unique objects (CFunction, Function, Table, etc.) are never equal
     }
 
     // If the type isn't matched, return false by default
@@ -105,11 +104,11 @@ VIA_FORCEINLINE bool compare(RTState *VIA_RESTRICT, TValue V0, TValue V1) noexce
         return true;
     case ValueType::String:
         return !std::strcmp(V0.val_string->ptr, V1.val_string->ptr);
-    case ValueType::Ptr:
+    case ValueType::Pointer:
         return V0.val_pointer == V1.val_pointer;
-    case ValueType::Func:
+    case ValueType::Function:
         return V0.val_function == V1.val_function;
-    case ValueType::CFunc:
+    case ValueType::CFunction:
         return V0.val_cfunction == V1.val_cfunction;
     default:
         // Unique objects (such as table) are never equal
@@ -179,14 +178,14 @@ VIA_FORCEINLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
         val.val_string = newstring(V, str.c_str());
         break;
     }
-    case ValueType::Func:
+    case ValueType::Function:
     {
         const void *faddr = val.val_function;
         TString *str = newstring(V, std::format("<function@{}>", faddr).c_str());
         val.val_string = str;
         break;
     }
-    case ValueType::CFunc:
+    case ValueType::CFunction:
     {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = reinterpret_cast<const void *>(val.val_cfunction);

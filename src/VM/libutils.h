@@ -3,7 +3,6 @@
 #pragma once
 
 #include "api.h"
-#include "shared.h"
 #include "types.h"
 #include "state.h"
 #include "instruction.h"

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "common.h"
-#include "shared.h"
 #include "types.h"
 
 #define VIA_REGISTER_COUNT uintptr_t(128)

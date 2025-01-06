@@ -3,7 +3,7 @@
 #pragma once
 
 #include "common.h"
-#include "shared.h"
+#include "instruction.h"
 
 // Identifier of the defacto "main" function
 // Kinda useless but it can stay
@@ -20,8 +20,7 @@
  * Context switching in via has some special traits; for example,
  * the state (e.g stack state) of pointers inside the RTState
  * object are never saved, instead they are passed onto the copy as-is, since they're pointers,
- * creating an efficient way to "shallow-save" the state
- * of the VM
+ * creating an efficient way to "shallow-save" the state of the VM
  */
 namespace via
 {
@@ -73,34 +72,26 @@ struct GState
 // More likely to be cached (hopefully...)
 struct alignas(64) RTState
 {
-    // Metadata
-    ThreadId id; // Thread id
-    GState *G;   // Global state
-
-    Instruction *ip;  // Instruction pointer
-    Instruction *ihp; // Instruction list head
-    Instruction *ibp; // Instruction list base
-
-    TStack *stack;   // Pointer to VM Stack
-    RAState *ralloc; // Pointer to VM Register allocator state
-    LblMap *labels;  // Pointer to VM Label address table (LAT)
-    GCState *gc;     // Pointer to VM Garbage collector state
-
-    uintptr_t ssp;     // Saved stack pointer
-    TFunction *frame;  // Callstack pointer
-    CallArgc argc;     // Argument count, for both CALL and FASTCALLX
-    CallType calltype; // Stores the current calling convention
-
-    TValue *value_head;
-
-    int exitc;         // VM exit code
-    const char *exitm; // VM exit message
-
-    bool abrt;         // Aborts on the next VM cycle
-    bool skip;         // Skips the next instruction on the next VM cycle
-    bool yield;        // Tells the VM to yield or not on the next VM cycle (debounces, meaning gets flipped every VM clock, if set to true)
-    bool restorestate; // Tells the VM to restore the state on the next VM cycle (to sstate)
-
+    ThreadId id;        // Thread id
+    GState *G;          // Global state
+    Instruction *ip;    // Instruction pointer
+    Instruction *ihp;   // Instruction list head
+    Instruction *ibp;   // Instruction list base
+    TStack *stack;      // Pointer to VM Stack
+    RAState *ralloc;    // Pointer to VM Register allocator state
+    LblMap *labels;     // Pointer to VM Label address table (LAT)
+    GCState *gc;        // Pointer to VM Garbage collector state
+    uintptr_t ssp;      // Saved stack pointer
+    TFunction *frame;   // Callstack pointer
+    CallArgc argc;      // Argument count, for both CALL and FASTCALLX
+    CallType calltype;  // Stores the current calling convention
+    TValue *heapvhead;  // Pointer to the first heap allocated value
+    int exitc;          // VM exit code
+    const char *exitm;  // VM exit message
+    bool abrt;          // Aborts on the next VM cycle
+    bool skip;          // Skips the next instruction on the next VM cycle
+    bool yield;         // Tells the VM to yield or not on the next VM cycle (debounces, meaning gets flipped every VM clock, if set to true)
+    bool restorestate;  // Tells the VM to restore the state on the next VM cycle (to sstate)
     float yieldfor;     // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
     ThreadState tstate; // Thread state
     RTState *sstate;    // Saved state

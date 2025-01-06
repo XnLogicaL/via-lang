@@ -108,7 +108,7 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator &it)
             temp.push_back(*it++);
         ++it; // Skip null terminator
         char *buf = new char[temp.size() + 1];
-        std::strcpy(buf, temp.c_str());
+        strcpy_s(buf, temp.size() + 1, temp.c_str());
         (operand.type == OperandType::String ? operand.val_string : operand.val_identifier) = buf;
         break;
     }

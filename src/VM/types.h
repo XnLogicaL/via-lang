@@ -4,7 +4,6 @@
 
 #include "common.h"
 #include "state.h"
-#include "shared.h"
 #include "Utils/modifiable_once.h"
 
 namespace via
@@ -26,16 +25,15 @@ struct TCFunction;
 
 enum class ValueType : uint8_t
 {
-    // Represents uninitialized values
-    Monostate,
-    Nil,
-    Number,
-    Bool,
-    String,
-    Ptr,
-    Func,
-    CFunc,
-    Table,
+    Monostate, // Represents uninitialized values
+    Nil,       // Empty values, like null, does not contain a union counterpart
+    Number,    // Unified number type, f64
+    Bool,      // Bool type, wrapper for `bool`
+    String,    // String type, pointer to owning string object
+    Pointer,   // Pointer type, wrapper for `uintptr_t`
+    Function,  // Function type (custom object)
+    CFunction, // CFunction type, C function pointer wrapper
+    Table,     // Table type (custom object)
 };
 
 // Tagged union that holds a primitive via value
@@ -100,17 +98,17 @@ struct TTable
     HashMap<TableKey, TValue> data = {};
 };
 
-// ! Random hashing algo, may need to be replaced later
+// Random hashing algo, may need to be replaced later
 VIA_FORCEINLINE Hash hashstring(RTState *, const char *str)
 {
     Hash hash = 0;
-    // Automatically breaks when it hits the nullbyte, quite clever
     while (*str)
         hash = (hash * 31) + *str++;
 
     return hash;
 }
 
+// Creates an owning string object with internal string interning optimizations.
 VIA_FORCEINLINE TString *newstring(RTState *V = nullptr, const char *s = "")
 {
     // Retrieve the string table
@@ -134,7 +132,7 @@ VIA_FORCEINLINE TString *newstring(RTState *V = nullptr, const char *s = "")
     char *sptr = new char[slen + 1];
 
     // Copy the constant string into the owned string
-    std::strcpy(sptr, s);
+    strcpy_s(sptr, slen + 1, s);
 
     nstr->len = slen;
     nstr->ptr = sptr; // No need for static_cast<const char*>
@@ -191,14 +189,14 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, ValueType ty)
     TValue *val = new TValue;
     val->type = ty;
     // Link with the previous value
-    val->prev = V->value_head;
+    val->prev = V->heapvhead;
 
     // Link the previous value with this value
-    if (V->value_head != nullptr)
-        V->value_head->next = val;
+    if (V->heapvhead != nullptr)
+        V->heapvhead->next = val;
 
     // Overwrite the previous value
-    V->value_head = val;
+    V->heapvhead = val;
 
     return val;
 }
@@ -226,7 +224,7 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, TBool b)
 
 VIA_FORCEINLINE TValue *newvalue(RTState *V, TPointer p)
 {
-    TValue *val = newvalue(V, ValueType::Ptr);
+    TValue *val = newvalue(V, ValueType::Pointer);
     val->val_pointer = p;
 
     return val;
@@ -234,7 +232,7 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, TPointer p)
 
 VIA_FORCEINLINE TValue *newvalue(RTState *V, TCFunction *cf)
 {
-    TValue *val = newvalue(V, ValueType::CFunc);
+    TValue *val = newvalue(V, ValueType::CFunction);
     val->val_cfunction = cf;
 
     return val;
@@ -242,7 +240,7 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, TCFunction *cf)
 
 VIA_FORCEINLINE TValue *newvalue(RTState *V, void (*cf)(RTState *))
 {
-    TValue *val = newvalue(V, ValueType::CFunc);
+    TValue *val = newvalue(V, ValueType::CFunction);
     val->val_cfunction = new TCFunction{cf, false};
 
     return val;
@@ -276,7 +274,7 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, TTable *t)
 
 VIA_FORCEINLINE TValue *newvalue(RTState *V, TFunction *f)
 {
-    TValue *val = newvalue(V, ValueType::Func);
+    TValue *val = newvalue(V, ValueType::Function);
     val->val_function = f;
 
     return val;
@@ -315,7 +313,7 @@ VIA_FORCEINLINE TValue stackvalue(RTState *V, TBool b)
 
 VIA_FORCEINLINE TValue stackvalue(RTState *V, TPointer p)
 {
-    TValue val = stackvalue(V, ValueType::Ptr);
+    TValue val = stackvalue(V, ValueType::Pointer);
     val.val_pointer = p;
 
     return val;
@@ -323,7 +321,7 @@ VIA_FORCEINLINE TValue stackvalue(RTState *V, TPointer p)
 
 VIA_FORCEINLINE TValue stackvalue(RTState *V, TCFunction *cf)
 {
-    TValue val = stackvalue(V, ValueType::CFunc);
+    TValue val = stackvalue(V, ValueType::CFunction);
     val.val_cfunction = cf;
 
     return val;
@@ -333,7 +331,7 @@ template<typename T>
     requires std::same_as<T, void (*)(RTState *)>
 VIA_FORCEINLINE TValue stackvalue(RTState *V, T cf)
 {
-    TValue val = stackvalue(V, ValueType::CFunc);
+    TValue val = stackvalue(V, ValueType::CFunction);
     val.val_cfunction = new TCFunction{cf, false};
 
     return val;
@@ -367,7 +365,7 @@ VIA_FORCEINLINE TValue stackvalue(RTState *V, TTable *t)
 
 VIA_FORCEINLINE TValue stackvalue(RTState *V, TFunction *f)
 {
-    TValue val = stackvalue(V, ValueType::Func);
+    TValue val = stackvalue(V, ValueType::Function);
     val.val_function = f;
 
     return val;
@@ -418,7 +416,7 @@ VIA_FORCEINLINE void cleanupval(RTState *V, TValue *val)
     case ValueType::Table:
         cleanuptable(V, val->val_table);
         break;
-    case ValueType::Func:
+    case ValueType::Function:
         cleanupfunc(V, val->val_function);
         break;
     default:
@@ -450,7 +448,7 @@ VIA_FORCEINLINE bool checknil(RTState *, TValue val)
 
 VIA_FORCEINLINE bool checkptr(RTState *, TValue val)
 {
-    return val.type == ValueType::Ptr;
+    return val.type == ValueType::Pointer;
 }
 
 VIA_FORCEINLINE bool checkstring(RTState *, TValue val)
@@ -465,12 +463,12 @@ VIA_FORCEINLINE bool checktable(RTState *, TValue val)
 
 VIA_FORCEINLINE bool checkcfunction(RTState *, TValue val)
 {
-    return val.type == ValueType::CFunc;
+    return val.type == ValueType::CFunction;
 }
 
 VIA_FORCEINLINE bool checkfunction(RTState *, TValue val)
 {
-    return val.type == ValueType::Func;
+    return val.type == ValueType::Function;
 }
 
 VIA_FORCEINLINE bool checkempty(RTState *V, TValue val)

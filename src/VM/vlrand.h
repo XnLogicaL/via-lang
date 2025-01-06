@@ -3,7 +3,6 @@
 #pragma once
 
 #include "bytecode.h"
-#include "shared.h"
 #include "state.h"
 #include "api.h"
 #include "types.h"

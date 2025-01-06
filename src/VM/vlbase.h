@@ -4,7 +4,6 @@
 
 #include "api.h"
 #include "libutils.h"
-#include "shared.h"
 #include "types.h"
 #include "state.h"
 

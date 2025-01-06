@@ -65,7 +65,7 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
     V->tstate = ThreadState::PAUSED;
     V->sstate = nullptr;
 
-    V->value_head = nullptr;
+    V->heapvhead = nullptr;
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
@@ -101,7 +101,7 @@ void stcleanupstate(RTState *V)
     rcleanupstate(V->ralloc);
 
     // Clean up heap values
-    TValue *current_value = V->value_head;
+    TValue *current_value = V->heapvhead;
     while (current_value)
     {
         cleanupval(V, current_value);
