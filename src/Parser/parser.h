@@ -6,7 +6,6 @@
 #include "ast.h"
 #include "arena.hpp"
 #include "token.h"
-#include "container.h"
 
 #ifndef VIA_PARSER_ALLOC_SIZE
     #define VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024) // 8MB

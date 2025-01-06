@@ -30,7 +30,6 @@ class Generator
 public:
     Generator(Parsing::AST::AST *tree)
         : alloc(VIA_GENERATOR_ALLOC_SIZE) // Custom size for the allocator
-        , __iota__(0)
         , bytecode(std::make_unique<Bytecode>())
     {
         bytecode->ast = tree;
@@ -68,7 +67,6 @@ public:
     bool initialize_with_chunk;
 
 private:
-    size_t __iota__;                    // Counter for unique operations
     std::unique_ptr<Bytecode> bytecode; // Bytecode object
     std::unordered_map<GPRegister, bool> register_pool;
 

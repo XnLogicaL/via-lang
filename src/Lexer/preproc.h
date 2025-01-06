@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "common.h"
-#include "container.h"
 #include "highlighter.h"
 #include "token.h"
 #include "def.h"

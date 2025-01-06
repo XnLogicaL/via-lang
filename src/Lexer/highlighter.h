@@ -3,7 +3,6 @@
 #pragma once
 
 #include "common.h"
-#include "container.h"
 
 namespace via::Tokenization
 {

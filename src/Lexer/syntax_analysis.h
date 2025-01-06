@@ -4,7 +4,6 @@
 #pragma once
 
 #include "common.h"
-#include "container.h"
 #include "highlighter.h"
 #include "token.h"
 

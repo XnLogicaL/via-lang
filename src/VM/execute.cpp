@@ -6,7 +6,6 @@
 #include "shared.h"
 #include "state.h"
 #include "types.h"
-#include "debug.h"
 #include <chrono>
 #include <cstdint>
 
@@ -76,7 +75,7 @@ using namespace Compilation;
 
 // Internal function that optimizes a sequence of empty instructions (such as NOP or END)
 // By replacing the first instruction with a jmp instruction that jumps over the sequence
-VIA_FORCEINLINE void _optimize_empty_instruction_sequence(RTState *V)
+VIA_FORCEINLINE void optimize_empty_instruction_sequence(RTState *VIA_RESTRICT V)
 {
     // Check for an empty instruction at the current IP
     if (VIA_UNLIKELY(V->ip->op == OpCode::NOP))
@@ -97,7 +96,7 @@ VIA_FORCEINLINE void _optimize_empty_instruction_sequence(RTState *V)
 }
 
 // Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
-void execute(RTState *V)
+void execute(RTState *VIA_RESTRICT V)
 {
     VIA_ASSERT(V->tstate != ThreadState::RUNNING, "execute() called on running thread (tstate=RUNNING)");
     VIA_ASSERT(V->tstate != ThreadState::DEAD, "execute() called on dead thread (tstate=DEAD)");
@@ -180,7 +179,7 @@ dispatch:
         // Unless a very certain flag is provided
 #if !defined(VIA_DEBUG) || defined(VIA_DEBUG) && defined(VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE)
         // Attempt to optimize empty instruction sequence
-        _optimize_empty_instruction_sequence(V);
+        optimize_empty_instruction_sequence(V);
 #endif
         VM_NEXT();
     }
@@ -271,56 +270,53 @@ dispatch:
     {
         Operand src = V->ip->operand1;
         TValue *val = rgetregister(V->ralloc, src.val_register);
-        uintptr_t ptr = reinterpret_cast<uintptr_t>(val);
 
-        tspush(V->stack, ptr);
+        tspush(V->stack, val);
         VM_NEXT();
     }
 
     case OpCode::POP:
     {
         Operand dst = V->ip->operand1;
-        uintptr_t ptr = tspop(V->stack);
-        TValue *val = reinterpret_cast<TValue *>(ptr);
+        TValue *val = popval(V);
 
         rsetregister(V->ralloc, dst.val_register, *val);
         VM_NEXT();
     }
 
-    case OpCode::PUSHARG:
-    {
-        Operand arg = V->ip->operand1;
-        TValue *arg_val;
-
-        if (VIA_LIKELY(ccheckregister(arg)))
-            arg_val = rgetregister(V->ralloc, arg.val_register);
-        else
-            // Copy the object and move it to the heap to push
-            arg_val = new TValue(toviavalue(V, arg));
-
-        tspusharg(V->stack, arg_val);
-        VM_NEXT();
-    }
-
-    case OpCode::PUSHRET:
-    {
-        Operand ret = V->ip->operand1;
-        TValue *ret_val;
-
-        if (VIA_LIKELY(ccheckregister(ret)))
-            ret_val = rgetregister(V->ralloc, ret.val_register);
-        else
-            ret_val = new TValue(toviavalue(V, ret));
-
-        tspush(V->stack, reinterpret_cast<uintptr_t>(ret_val));
-        VM_NEXT();
-    }
-
-    case OpCode::LOADARG:
+    case OpCode::GETSTACK:
     {
         Operand dst = V->ip->operand1;
-        Operand idx = V->ip->operand2;
-        TValue *val = getargument(V, static_cast<size_t>(idx.val_number));
+        Operand off = V->ip->operand2;
+
+        size_t stack_offset = static_cast<size_t>(off.val_number);
+        uintptr_t val_ptr = *(V->stack->sbp + stack_offset);
+        TValue *val = reinterpret_cast<TValue *>(val_ptr);
+
+        rsetregister(V->ralloc, dst.val_register, *val);
+        VM_NEXT();
+    }
+
+    case OpCode::SETSTACK:
+    {
+        Operand src = V->ip->operand1;
+        Operand off = V->ip->operand2;
+
+        size_t stack_offset = static_cast<size_t>(off.val_number);
+        TValue *val = rgetregister(V->ralloc, src.val_register);
+        uintptr_t val_ptr = reinterpret_cast<uintptr_t>(val);
+
+        *(V->stack->sbp + stack_offset) = val_ptr;
+        VM_NEXT();
+    }
+
+    case OpCode::GETARGUMENT:
+    {
+        Operand dst = V->ip->operand1;
+        Operand off = V->ip->operand2;
+
+        uint32_t offv = static_cast<uint32_t>(off.val_number);
+        TValue *val = getargument(V, offv);
 
         rsetregister(V->ralloc, dst.val_register, *val);
         VM_NEXT();
@@ -1351,8 +1347,9 @@ dispatch:
         {
             TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
 
-            tspusharg(V->stack, rhsn);
-            call(V, *mm);
+            tspush(V->stack, lhsn);
+            tspush(V->stack, lhsn);
+            call(V, *mm, 2);
 
             uintptr_t ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
@@ -1381,8 +1378,9 @@ dispatch:
         {
             TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
 
-            tspusharg(V->stack, rhsn);
-            call(V, *mm);
+            tspush(V->stack, lhsn);
+            tspush(V->stack, rhsn);
+            call(V, *mm, 2);
 
             uintptr_t ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
@@ -1411,8 +1409,9 @@ dispatch:
         {
             TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
 
-            tspusharg(V->stack, rhsn);
-            call(V, *mm);
+            tspush(V->stack, lhsn);
+            tspush(V->stack, rhsn);
+            call(V, *mm, 2);
 
             uintptr_t ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
@@ -1441,8 +1440,9 @@ dispatch:
         {
             TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
 
-            tspusharg(V->stack, rhsn);
-            call(V, *mm);
+            tspush(V->stack, lhsn);
+            tspush(V->stack, rhsn);
+            call(V, *mm, 2);
 
             uintptr_t ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
@@ -1670,19 +1670,19 @@ dispatch:
     case OpCode::CALL:
     {
         Operand rfn = V->ip->operand1;
-        Operand argc = V->ip->operand2;
-
-        // Set argc
-        V->argc = static_cast<CallArgc>(argc.val_number);
-
+        Operand argco = V->ip->operand2;
+        CallArgc argc = static_cast<CallArgc>(argco.val_number);
         // Call function
-        call(V, *rgetregister(V->ralloc, rfn.val_register));
+        call(V, *rgetregister(V->ralloc, rfn.val_register), argc);
         VM_NEXT();
     }
 
     case OpCode::RET:
     {
-        tsret(V->stack);
+        Operand retcv = V->ip->operand1;
+        CallArgc retc = static_cast<CallArgc>(retcv.val_number);
+
+        nativeret(V, retc);
         VM_NEXT();
     }
 
@@ -1698,13 +1698,9 @@ dispatch:
 
         while (V->ip < V->ibp)
         {
-            if (V->ip->op == OpCode::RET)
-            {
-                V->ip++;
-                break;
-            }
-
             V->ip++;
+            if (V->ip->op == OpCode::RET)
+                break;
         }
 
         VM_DISPATCH();
@@ -1812,7 +1808,7 @@ dispatch:
 exit:;
 }
 
-void killthread(RTState *V)
+void killthread(RTState *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
         // TODO: Wait for the VM to exit
@@ -1824,7 +1820,7 @@ void killthread(RTState *V)
     __thread_id__--;
 }
 
-void pausethread(RTState *V)
+void pausethread(RTState *VIA_RESTRICT V)
 {
     V->tstate = ThreadState::PAUSED;
     // Save the VM state to restore it when paused

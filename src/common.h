@@ -2,8 +2,34 @@
 
 #pragma once
 
+#include <bitset>
+#include <cassert>
+#include <cctype>
+#include <cstdbool>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <format>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <unordered_map>
+#include <utility>
+#include <variant>
+#include <vector>
+#include "magic_enum.hpp"
+
 #define ASMJIT_STATIC
-// clang-format off
 
 // Asserts <cond>
 // If false, throws an exception that includes debug information such as file name and line that the macro was initially expanded
@@ -43,34 +69,16 @@
     #define VIA_LIKELY(expr) expr
     #define VIA_UNLIKELY(expr) expr
 #else
-    #pragma error(Unsupported compiler detected. Supported compilers are: GNU g++, clang, MSVC (partial))
+    #pragma error(Unsupported compiler detected.Supported compilers are : GNU g++, clang, MSVC(partial))
 #endif
 
-#include <bitset>
-#include <cassert>
-#include <cctype>
-#include <cstdbool>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <filesystem>
-#include <format>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <optional>
-#include <stack>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <unordered_map>
-#include <utility>
-#include <variant>
-#include <vector>
+namespace via
+{
+
+namespace Tokenization
+{
+struct Token;
+}
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)
 {
@@ -80,4 +88,27 @@ VIA_FORCEINLINE char *dupstring(const std::string &str)
     return chars;
 }
 
+class VRTException : public std::exception
+{
+public:
+    std::string message;
 
+    VRTException(const std::string &message)
+        : message(message)
+    {
+    }
+
+    const char *what() const throw()
+    {
+        return message.c_str();
+    }
+};
+
+struct SrcContainer
+{
+    std::vector<Tokenization::Token> tokens;
+    std::string source;
+    std::string file_name;
+};
+
+} // namespace via

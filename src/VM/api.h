@@ -4,7 +4,6 @@
 
 #include "common.h"
 #include "bytecode.h"
-#include "except.h"
 #include "gc.h"
 #include "instruction.h"
 #include "opcode.h"
@@ -13,8 +12,6 @@
 #include "stack.h"
 #include "state.h"
 #include "types.h"
-#include "bitutils.h"
-#include <cmath>
 
 namespace via
 {
@@ -129,22 +126,6 @@ VIA_FORCEINLINE void pushval(RTState *VIA_RESTRICT V, TValue val)
     TValue *cpy = new TValue(val);
     uintptr_t ptr = reinterpret_cast<uintptr_t>(cpy);
     tspush(V->stack, ptr);
-}
-
-// Pushes a value onto the stack. Tags the pointer as an argument.
-// Wrapper for tspusharg. Copies the value.
-VIA_FORCEINLINE void pusharg(RTState *VIA_RESTRICT V, TValue val)
-{
-    TValue *cpy = new TValue(val);
-    tspusharg(V->stack, cpy);
-}
-
-// Pushes a value onto the stack. Tags the pointer as a return value.
-// Wrapper for tspusharg. Copies the value.
-VIA_FORCEINLINE void pushret(RTState *VIA_RESTRICT V, TValue val)
-{
-    TValue *cpy = new TValue(val);
-    tspushret(V->stack, cpy);
 }
 
 // Pops a value from the stack. Returns it as a TValue *.
@@ -358,32 +339,58 @@ VIA_FORCEINLINE TValue *getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCod
     return newvalue(V);
 }
 
-VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, size_t idx) noexcept
+VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, uint32_t offset)
 {
-    // The frame pointer is stored at position fp
-    size_t fp = V->stack->fp; // Frame pointer
-    // Arguments start from the top of the stack (SP) and go down to the FP
-    // Argument N is located just before FP, so we can calculate the address of each argument.
-    // Calculate the index of the argument in the stack (starting from 0 as the topmost argument)
-    size_t arg_position = fp - (idx + 1); // Arguments are pushed first-to-last
-    // Return the argument from the stack, dereference to get the value
-    uintptr_t arg_value = V->stack->sbp[arg_position];
-    // If you want to get the value itself, you would need to convert it to the correct type.
-    return reinterpret_cast<TValue *>(arg_value);
+    // Check if the argument is out of bounds, return nil if so
+    if (offset >= V->argc)
+        return newvalue(V);
+
+    // Calculate the stack position of the argument
+    size_t stack_address = V->ssp + V->argc - 1 - offset;
+    // Retrieve stack value
+    uintptr_t ptr = V->stack->sbp[stack_address];
+
+    return reinterpret_cast<TValue *>(ptr);
 }
 
-VIA_FORCEINLINE void ret(RTState *VIA_RESTRICT V) noexcept
+VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
 {
-    tsret(V->stack);
-    V->ip = V->stack->pc->ret_addr;
+    std::vector<TValue *> ret_values;
+    // Restore state
+    V->ip = V->frame->ret_addr;
+    V->frame = V->frame->caller;
+
+    // Save return values
+    for (CallArgc i = 0; i < retc; i++)
+    {
+        TValue *ret_val = popval(V);
+        ret_values.push_back(ret_val);
+    }
+
+    // Restore stack pointer
+    V->stack->sp = V->ssp;
+
+    // Clean up arguments
+    for (CallArgc i = 0; i < V->argc; i++)
+        popval(V);
+
+    // Restore return values
+    for (int i = retc - 1; i >= 0; i--) // Reverse order for pushing return values
+        pushval(V, *ret_values[i]);
 }
 
 // Calls a native function.
-VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee) noexcept
+VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, CallArgc argc) noexcept
 {
-    tscall(V->stack, callee);
+    // Save state
+    callee->caller = V->frame;
     callee->ret_addr = V->ip;
+
+    // Setup call information
+    V->frame = callee;
     V->ip = callee->bytecode.data();
+    V->argc = argc;
+    V->ssp = V->stack->sp;
 }
 
 // Calls a C function pointer.
@@ -408,18 +415,17 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
         cf->error_handler,
         false,
         buf,
-        {},
+        V->frame,
         {},
     };
 
-    tscall(V->stack, &freplica);
+    V->frame = &freplica;
     // Call function pointer
     cf->ptr(V);
-    tsret(V->stack);
 }
 
 // Calls a table method.
-VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key) noexcept
+VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
 {
     TValue *method = gettableindex(V, tbl, key, true);
     if (!checkcallable(V, *method))
@@ -431,12 +437,12 @@ VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
     }
 
     if (checkfunction(V, *method))
-        nativecall(V, method->val_function);
+        nativecall(V, method->val_function, argc);
     else if (checkcfunction(V, *method))
         externcall(V, method->val_cfunction);
     else if (checktable(V, *method))
         // Attempt to call table, a.k.a __call metamethod
-        methodcall(V, method->val_table, hashstring(V, "__call"));
+        methodcall(V, method->val_table, hashstring(V, "__call"), argc);
     // No else-block because the method object is pre-guaranteed to be callable
 }
 
@@ -450,17 +456,17 @@ VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v)
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue val, CallArgc argc) noexcept
 {
     V->calltype = CallType::CALL;
     // V->argc = static_cast<CallArgc>(V->arguments->size);
 
     if (checkfunction(V, val))
-        nativecall(V, val.val_function);
+        nativecall(V, val.val_function, argc);
     else if (checkcfunction(V, val))
         externcall(V, val.val_cfunction);
     else if (checktable(V, val))
-        methodcall(V, val.val_table, hashstring(V, "__call"));
+        methodcall(V, val.val_table, hashstring(V, "__call"), argc);
     else
     {
         TValue callt = type(V, val);
@@ -482,7 +488,7 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
         if (checknil(V, *mmlen))
             return stackvalue(V, static_cast<TNumber>(val.val_table->data.size()));
 
-        call(V, *mmlen);
+        call(V, *mmlen, 1);
         return *reinterpret_cast<TValue *>(tspop(V->stack));
     }
 
@@ -649,9 +655,9 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
     else if (checktable(V, lhs))
     {
         TValue *mm = getmetamethod(V, lhs, op);
-        tspusharg(V->stack, &lhs); // self
-        tspusharg(V->stack, &rhs); // other
-        call(V, *mm);
+        pushval(V, lhs); // self
+        pushval(V, rhs); // other
+        call(V, *mm, 2);
         return *reinterpret_cast<TValue *>(tspop(V->stack));
     }
 
@@ -702,9 +708,9 @@ VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, Op
     else if (checktable(V, *lhs))
     {
         TValue *mm = getmetamethod(V, *lhs, op);
-        tspusharg(V->stack, lhs);  // self
-        tspusharg(V->stack, &rhs); // other
-        call(V, *mm);
+        pushval(V, *lhs); // self
+        pushval(V, rhs);  // other
+        call(V, *mm, 2);
         *lhs = *reinterpret_cast<TValue *>(tspop(V->stack));
     }
 

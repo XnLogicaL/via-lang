@@ -86,6 +86,11 @@ struct alignas(64) RTState
     LblMap *labels;  // Pointer to VM Label address table (LAT)
     GCState *gc;     // Pointer to VM Garbage collector state
 
+    uintptr_t ssp;     // Saved stack pointer
+    TFunction *frame;  // Callstack pointer
+    CallArgc argc;     // Argument count, for both CALL and FASTCALLX
+    CallType calltype; // Stores the current calling convention
+
     int exitc;         // VM exit code
     const char *exitm; // VM exit message
 
@@ -95,8 +100,6 @@ struct alignas(64) RTState
     bool restorestate; // Tells the VM to restore the state on the next VM cycle (to sstate)
 
     float yieldfor;     // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
-    CallArgc argc;      // Argument count, for both CALL and FASTCALLX
-    CallType calltype;  // Stores the current calling convention
     ThreadState tstate; // Thread state
     RTState *sstate;    // Saved state
 };

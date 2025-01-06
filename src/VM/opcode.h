@@ -59,42 +59,29 @@ enum class OpCode
      */
     POP,
     /*
-     * opcode: SETLOCAL
-     * Sets a local variable with the value of operand0 and identifier of
-     * operand1. operand0: <src :: Register> operand1: <id :: Identifier>
-     * operand2: <>
-     */
-    SETLOCAL,
-    /*
-     * opcode: LOADLOCAL
-     * Loads a local variable with identifier operand1 into operand0.
+     * opcode: GETSTACK
+     * Loads a local variable relative to the sbp (stack base pointer) into register <dst> with offset <off>.
      * operand0: <dst :: Register>
-     * operand1: <id :: Identifier>
+     * operand1: <off :: Number>
      * operand2: <>
      */
-    LOADLOCAL,
+    GETSTACK,
     /*
-     * opcode: SETGLOBAL
-     * Sets a global variable with the value of operand0 and identifier of
-     * operand1. operand0: <src :: Register> operand1: <id :: Identifier>
+     * opcode: SETSTACK
+     * Sets a local variable relative to the sbp (stack base pointer) to the value in <src> with offset <off>.
+     * operand0: <src :: Register>
+     * operand1: <off :: Number>
      * operand2: <>
      */
-    SETGLOBAL,
+    SETSTACK,
     /*
-     * opcode: LOADGLOBAL
-     * Loads a global variable with identifier operand1 into operand0.
+     * opcode: GETARGUMENT
+     * Loads the argument at stack offset [ssp + argc - 1 - off] into register <dst>.
      * operand0: <dst :: Register>
-     * operand1: <id :: Identifier>
+     * operand1: <off :: Number>
      * operand2: <>
      */
-    LOADGLOBAL,
-    /*
-     * opcode: LOADVAR
-     * Loads a variable with identifier operand1 into operand0. Unwinds the stack
-     * to find the requested variable, unlike LOADLOCAL or LOADGLOBAL, which
-     * search in a predefined stack frame. operand0: <> operand1: <> operand2: <>
-     */
-    LOADVAR,
+    GETARGUMENT,
     /*
      * opcode: ADDRR
      * Performs an add operation between operand1 and operand2 and stores the

@@ -63,6 +63,7 @@ std::unique_ptr<Bytecode> Generator::generate()
 // Returns the successor of iota everytime it's called
 size_t Generator::iota()
 {
+    static size_t __iota__ = 0;
     return ++__iota__;
 }
 
@@ -149,7 +150,8 @@ void Generator::load_operand(Operand dst, Operand operand)
         {OperandType::Nil, OpCode::LOADNIL},
         {OperandType::Bool, OpCode::LOADBOOL},
         {OperandType::Number, OpCode::LOADNUMBER},
-        {OperandType::String, OpCode::LOADSTRING}};
+        {OperandType::String, OpCode::LOADSTRING}
+    };
 
     auto it = load_op.find(operand.type);
     if (it != load_op.end())

@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "state.h"
+#include "api.h"
 #include "stack.h"
 #include "register.h"
 #include "gc.h"
@@ -35,6 +36,7 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
     // Copy instructions into the instruction pipeline
     std::copy(pipeline.begin(), pipeline.end(), V->ip);
 
+    V->frame = nullptr;
     V->stack = tsnewstate();
     // I know, the odd one out...
     V->labels = new LblMap();
@@ -57,6 +59,7 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
 
     V->yieldfor = 0.0f;
     V->argc = 0;
+    V->retc = 0;
 
     // This is set to idle by default because the via thread manipulators (execute, pausethread, killthread)
     // are the only ones allowed to mutate this
@@ -65,9 +68,10 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    TFunction *mainf = newfunc(V, "__via_main__", nullptr, pipeline, false, false);
-    tscall(V->stack, mainf);
+    TFunction *mainf = newfunc(V, "__main", nullptr, pipeline, false, false);
+    nativecall(V, mainf);
 
+    // Initialize labels
     Instruction *ip = V->ip;
     for (Instruction instr : pipeline)
     {

@@ -4,7 +4,6 @@
 
 #include "arena.hpp"
 #include "common.h"
-#include "container.h"
 #include "token.h"
 
 // This value will be passed onto the arena allocator of the tokenizer
