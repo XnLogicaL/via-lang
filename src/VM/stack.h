@@ -18,12 +18,12 @@ namespace via
 
 struct TStack
 {
-    uintptr_t *sbp; // Bottom of the stack
-    size_t sp = 0;
+    StkAddr sbp; // Bottom of the stack
+    StkPos sp = 0;
 };
 
 // Push a value onto the stack
-VIA_FORCEINLINE void tspush(TStack *VIA_RESTRICT S, uintptr_t ptr) noexcept
+VIA_FORCEINLINE void tspush(TStack *VIA_RESTRICT S, StkVal ptr) noexcept
 {
     S->sbp[S->sp++] = ptr;
 }
@@ -31,19 +31,19 @@ VIA_FORCEINLINE void tspush(TStack *VIA_RESTRICT S, uintptr_t ptr) noexcept
 // Push a value onto the stack
 VIA_FORCEINLINE void tspush(TStack *VIA_RESTRICT S, TValue *ptr) noexcept
 {
-    S->sbp[S->sp++] = reinterpret_cast<uintptr_t>(ptr);
+    S->sbp[S->sp++] = reinterpret_cast<StkVal>(ptr);
 }
 
 // Pop a value from the stack
-VIA_FORCEINLINE uintptr_t tspop(TStack *VIA_RESTRICT S) noexcept
+VIA_FORCEINLINE StkVal tspop(TStack *VIA_RESTRICT S) noexcept
 {
     S->sp--;
-    uintptr_t value = S->sbp[S->sp];
+    StkVal value = S->sbp[S->sp];
     return value & ~0x7;
 }
 
 // Get the top value from the stack
-VIA_FORCEINLINE uintptr_t tstop(TStack *VIA_RESTRICT S) noexcept
+VIA_FORCEINLINE StkVal tstop(TStack *VIA_RESTRICT S) noexcept
 {
     return S->sbp[S->sp];
 }
@@ -60,8 +60,8 @@ VIA_FORCEINLINE TStack *tsnewstate()
     // Allocate memory for the stack state
     TStack *state = new TStack;
     // Allocate memory for the stack
-    void *mem = std::malloc(VIA_STACK_SIZE * sizeof(uintptr_t));
-    state->sbp = static_cast<uintptr_t *>(mem);
+    void *mem = std::malloc(VIA_STACK_SIZE * sizeof(StkVal));
+    state->sbp = static_cast<StkVal *>(mem);
 
     VIA_ASSERT_SILENT(state->sbp, "TStack allocation failed");
 

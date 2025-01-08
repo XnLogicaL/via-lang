@@ -111,24 +111,21 @@ VIA_FORCEINLINE Hash hashstring(RTState *, const char *str)
 // Creates an owning string object with internal string interning optimizations.
 VIA_FORCEINLINE TString *newstring(RTState *V = nullptr, const char *s = "")
 {
-    // Retrieve the string table
-    STable *stable = V->G->stable;
-
-    // Compute the hash first
     Hash hash = hashstring(V, s);
+    // For compiler compatability
+    if (V != nullptr)
+    {
+        // Retrieve the string table
+        StrTable *stable = V->G->stable;
+        // Check if the string already exists in the stable
+        auto it = stable->find(hash);
+        if (it != stable->end())
+            // String already exists, return the existing entry
+            return it->second;
+    }
 
-    // Check if the string already exists in the stable
-    auto it = stable->find(hash);
-    if (it != stable->end())
-        // String already exists, return the existing entry
-        return it->second;
-
-    // Allocate and initialize a new TString
     TString *nstr = new TString();
-
-    // Store the constant string length for later use
     size_t slen = std::strlen(s);
-    // Dynamically allocated copy string
     char *sptr = new char[slen + 1];
 
     // Copy the constant string into the owned string
@@ -138,8 +135,12 @@ VIA_FORCEINLINE TString *newstring(RTState *V = nullptr, const char *s = "")
     nstr->ptr = sptr; // No need for static_cast<const char*>
     nstr->hash = hash;
 
-    // Insert the new string into the stable
-    (*stable)[hash] = nstr;
+    if (V != nullptr)
+    {
+        StrTable *stable = V->G->stable;
+        // Insert the new string into the stable
+        (*stable)[hash] = nstr;
+    }
 
     return nstr;
 }
@@ -188,15 +189,20 @@ VIA_FORCEINLINE TValue *newvalue(RTState *V, ValueType ty)
 {
     TValue *val = new TValue;
     val->type = ty;
-    // Link with the previous value
-    val->prev = V->heapvhead;
 
-    // Link the previous value with this value
-    if (V->heapvhead != nullptr)
-        V->heapvhead->next = val;
+    // For compiler compatability
+    if (V != nullptr)
+    {
+        // Link with the previous value
+        val->prev = V->heapptr;
 
-    // Overwrite the previous value
-    V->heapvhead = val;
+        // Link the previous value with this value
+        if (V->heapptr != nullptr)
+            V->heapptr->next = val;
+
+        // Overwrite the previous value
+        V->heapptr = val;
+    }
 
     return val;
 }
@@ -373,15 +379,18 @@ VIA_FORCEINLINE TValue stackvalue(RTState *V, TFunction *f)
 
 VIA_FORCEINLINE void cleanupstring(RTState *V, TString *str)
 {
-    STable *stable = V->G->stable;
     uint32_t hash = str->hash;
 
-    auto it = stable->find(hash);
-
-    // Check if the string is interned
-    if (it != stable->end())
-        // If so, remove it from the STable
-        stable->erase(hash);
+    // For compiler compatability
+    if (V != nullptr)
+    {
+        StrTable *stable = V->G->stable;
+        auto it = stable->find(hash);
+        // Check if the string is interned
+        if (it != stable->end())
+            // If so, remove it from the STable
+            stable->erase(hash);
+    }
 
     // Cleanup the owned char *
     delete[] str->ptr;

@@ -91,7 +91,7 @@ void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> o
     bytecode->add_instruction(instruction);
 }
 
-Operand generate_operand(Generator *gen, LiteralExprNode lit_expr)
+Operand Generator::generate_operand(LiteralExprNode lit_expr)
 {
     Operand operand = cnewoperand();
     switch (lit_expr.value.type)
@@ -103,7 +103,7 @@ Operand generate_operand(Generator *gen, LiteralExprNode lit_expr)
     case TokenType::LIT_STRING:
         operand.type = OperandType::String;
         operand.val_string = dupstring(lit_expr.value.value);
-        gen->cleaner.add_malloc(operand.val_string); // Track dynamically allocated string
+        cleaner.add_malloc(operand.val_string); // Track dynamically allocated string
         break;
     case TokenType::LIT_FLOAT:
     case TokenType::LIT_INT:
@@ -118,6 +118,22 @@ Operand generate_operand(Generator *gen, LiteralExprNode lit_expr)
     }
 
     return operand;
+}
+
+TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
+{
+    switch (lit_expr.value.type)
+    {
+    case TokenType::LIT_INT:
+    case TokenType::LIT_FLOAT:
+        return stackvalue(nullptr, std::stod(lit_expr.value.value));
+    case TokenType::LIT_BOOL:
+        return stackvalue(nullptr, lit_expr.value.value == "true");
+    case TokenType::LIT_STRING:
+        return stackvalue(nullptr, newstring(nullptr, lit_expr.value.value.c_str()));
+    default:
+        return stackvalue(nullptr);
+    }
 }
 
 GPRegister Generator::allocate_temp_register()

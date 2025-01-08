@@ -172,6 +172,21 @@ ExprNode *Parser::parse_prim_expr()
 
             base_expr = alloc.emplace<ExprNode>(*index_expr);
         }
+        else if (is_type(TokenType::OP_INC))
+        {
+            IncExprNode *inc_expr = alloc.emplace<IncExprNode>();
+            inc_expr->expr = base_expr;
+
+            base_expr = alloc.emplace<ExprNode>(*inc_expr);
+        }
+
+        else if (is_type(TokenType::OP_DEC))
+        {
+            DecExprNode *dec_expr = alloc.emplace<DecExprNode>();
+            dec_expr->expr = base_expr;
+
+            base_expr = alloc.emplace<ExprNode>(*dec_expr);
+        }
         else
             break;
     }
@@ -304,7 +319,8 @@ TypeNode *Parser::parse_type()
                 peek().line,
                 peek().offset,
             },
-            {}});
+            {}
+        });
 
         // Check if the key type is explicitly specified
         if (is_type(TokenType::BRACKET_OPEN))
@@ -535,8 +551,14 @@ SwitchStmtNode *Parser::parse_switch_statement()
 FunctionDeclStmtNode *Parser::parse_function_declaration()
 {
     bool is_global = is_type(TokenType::KW_GLOBAL);
-    consume();
-    consume();
+
+    consume(); // Consume 'local/global'
+
+    // Useless qualifier for now
+    if (is_type(TokenType::KW_CONST))
+        consume();
+
+    consume(); // Consume 'func'
 
     FunctionDeclStmtNode *decl = alloc.emplace<FunctionDeclStmtNode>();
     decl->is_global = is_global;

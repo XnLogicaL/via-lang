@@ -1,7 +1,6 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "debug.h"
-#include "bitutils.h"
 
 namespace via
 {
@@ -20,8 +19,8 @@ void dbgprintregistermap(RTState *VIA_RESTRICT V = nullptr, size_t count = VIA_R
 
 void dbgprintstack(RTState *VIA_RESTRICT V = nullptr)
 {
-    uintptr_t *sp = V->stack->sbp + V->stack->sp;
-    for (uintptr_t *i = sp; i < V->stack->sbp; i++)
+    StkVal *sp = V->stack->sbp + V->stack->sp;
+    for (StkVal *i = sp; i < V->stack->sbp; i++)
         std::cout << std::format("|{}| {}\n", reinterpret_cast<const void *>(i), reinterpret_cast<const void *>(*i));
 }
 

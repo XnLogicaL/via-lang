@@ -118,12 +118,20 @@ VIA_FORCEINLINE bool compare(RTState *VIA_RESTRICT, TValue V0, TValue V1) noexce
     return false;
 };
 
-// Pushes a value onto the stack. Does not tag the pointer.
+// Pushes a value onto the stack.
 // Wrapper for tspush. Copies the value.
 VIA_FORCEINLINE void pushval(RTState *VIA_RESTRICT V, TValue val)
 {
     TValue *cpy = new TValue(val);
-    uintptr_t ptr = reinterpret_cast<uintptr_t>(cpy);
+    StkVal ptr = reinterpret_cast<StkVal>(cpy);
+    tspush(V->stack, ptr);
+}
+
+// Pushes a value onto the stack.
+// Wrapper for tspush.
+VIA_FORCEINLINE void pushval(RTState *VIA_RESTRICT V, TValue *val)
+{
+    StkVal ptr = reinterpret_cast<StkVal>(val);
     tspush(V->stack, ptr);
 }
 
@@ -131,7 +139,7 @@ VIA_FORCEINLINE void pushval(RTState *VIA_RESTRICT V, TValue val)
 // Wrapper for tspop. Does not clear pointer tags.
 VIA_FORCEINLINE TValue *popval(RTState *VIA_RESTRICT V)
 {
-    uintptr_t ptr = tspop(V->stack);
+    StkVal ptr = tspop(V->stack);
     return reinterpret_cast<TValue *>(ptr);
 }
 
@@ -338,22 +346,78 @@ VIA_FORCEINLINE TValue *getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCod
     return newvalue(V);
 }
 
-VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, uint32_t offset)
+// Returns a local variable located at <offset>, relative to the stack base.
+VIA_FORCEINLINE TValue *getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcept
+{
+    // Check if LocalId is out of bounds;
+    // this is CRUCIAL, and prevents UB upon stack dereferencing
+    if (offset > V->stack->sp)
+        return newvalue(V);
+
+    StkAddr stack_address = V->stack->sbp + offset;
+    // BIG WARNING: This is UB without bound checks!!!
+    StkVal ptr = *stack_address;
+
+    return reinterpret_cast<TValue *>(ptr);
+}
+
+// Reassigns the stack value at offset <offset> to <val>.
+VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue *val)
+{
+    // Check if LocalId is out of bounds;
+    // this is CRUCIAL, and prevents UB upon stack dereferencing
+    if (offset > V->stack->sp)
+    {
+        std::string identifier("<unknown-symbol>");
+        if (V->G->symtable->size() >= offset)
+            identifier = V->G->symtable->at(offset);
+
+        VIA_ASSERT_SILENT(false, std::format("Attempt to reassign undeclared identifier '{}'", identifier));
+    }
+
+    StkAddr stack_address = V->stack->sbp + offset;
+    // BIG WARNING: This is UB without bound checks!!!
+    *stack_address = reinterpret_cast<StkVal>(val);
+}
+
+// Returns the global with id <ident>, nil if it has not been declared.
+VIA_FORCEINLINE TValue getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexcept
+{
+    auto it = V->G->gtable->find(ident);
+    if (it != V->G->gtable->end())
+        return it->second;
+
+    return stackvalue(V);
+}
+
+// Attempts to declare a new global constant.
+VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue val)
+{
+    auto it = V->G->gtable->find(ident);
+    VIA_ASSERT(it == V->G->gtable->end(), "setglobal(): attempt to reassign global constant");
+    (*V->G->gtable)[ident] = val;
+}
+
+// Returns the nth argument relative to the saved stack pointer of the current stack frame.
+VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, LocalId offset)
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
         return newvalue(V);
 
     // Calculate the stack position of the argument
-    size_t stack_address = V->ssp + V->argc - 1 - offset;
+    StkPos stack_offset = V->ssp + V->argc - 1 - offset;
     // Retrieve stack value
-    uintptr_t ptr = V->stack->sbp[stack_address];
+    StkVal ptr = V->stack->sbp[stack_offset];
 
     return reinterpret_cast<TValue *>(ptr);
 }
 
-VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
+// Performs a native return operation, restores the stack and some other state information.
+VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc)
 {
+    VIA_ASSERT(V->stack->sp == 0, "nativeret(): invalid return: nothing to return from");
+
     std::vector<TValue *> ret_values;
     // Restore state
     V->ip = V->frame->ret_addr;
@@ -397,19 +461,19 @@ VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT
 VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, CallArgc argc) noexcept
 {
     /* Stack allocate id string
-     * 15 additional characters:
-     * +9 for 'cfunction'
-     * +1 for '@'
-     * +2 for '0x'
-     * +2 for '<' and '>'
-     * +1 for '\0'
-     */
+        15 additional characters:
+        +9 for 'cfunction'
+        +1 for '@'
+        +2 for '0x'
+        +2 for '<' and '>'
+        +1 for '\0'
+    */
     char buf[2 * sizeof(void *) + 15];
     // Implicitly cast into const void * for formatting
     const void *addr = cf;
     std::snprintf(buf, sizeof(buf), "<cfunction@0x%p>", addr);
 
-    TFunction freplica{
+    TFunction func{
         0,
         cf->error_handler,
         false,
@@ -418,7 +482,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
         {},
     };
 
-    nativecall(V, &freplica, argc);
+    nativecall(V, &func, argc);
     // Call function pointer
     cf->ptr(V);
 }
@@ -429,8 +493,8 @@ VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
     TValue *method = gettableindex(V, tbl, key, true);
     if (!checkcallable(V, *method))
     {
-        std::string err_fmt_str = std::format("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method->type));
-        setexitdata(V, 1, err_fmt_str);
+        std::string err = std::format("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method->type));
+        setexitdata(V, 1, err);
         V->abrt = true;
         return;
     }
@@ -572,8 +636,8 @@ VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operan
         return stackvalue(V);
     default:
     {
-        std::string err_fmt_str = std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type));
-        setexitdata(V, 1, err_fmt_str);
+        std::string err = std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type));
+        setexitdata(V, 1, err);
         V->abrt = true;
         break;
     }
@@ -584,7 +648,7 @@ VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operan
 
 // Schedules a yield <ms>.
 // Only yields the VM thread.
-VIA_FORCEINLINE void yield(RTState *VIA_RESTRICT V, float ms) noexcept
+VIA_FORCEINLINE void yield(RTState *VIA_RESTRICT V, YldTime ms) noexcept
 {
     if (V->tstate == ThreadState::RUNNING)
         V->yield = ms;

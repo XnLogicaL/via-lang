@@ -5,8 +5,6 @@
 #include "chunk.h"
 #include "state.h"
 #include "types.h"
-#include <chrono>
-#include <cstdint>
 
 // Define the hot path threshold for the instruction dispatch loop
 // How many times a chunk needs to be executed before being flagged as "hot"
@@ -89,7 +87,7 @@ VIA_FORCEINLINE void optimize_empty_instruction_sequence(RTState *VIA_RESTRICT V
         if (skip_count > 1)
         {
             V->ip->op = OpCode::JMP;
-            V->ip->operand1 = {.type = OperandType::Number, .val_number = static_cast<double>(skip_count)};
+            V->ip->operand1 = Compilation::cnewoperand(static_cast<double>(skip_count));
         }
     }
 }
@@ -132,6 +130,8 @@ dispatch:
         V->restorestate = false;
         *V = *V->sstate;
         V->sstate = nullptr;
+        // This is necessary because the old instruction pointer may be dangling from now on
+        VM_NEXT();
     }
 
     // This is unlikely because it only occurs once
@@ -187,8 +187,8 @@ dispatch:
     {
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
-
         TValue *src_val = rgetregister(V->ralloc, rsrc.val_register);
+
         rsetregister(V->ralloc, rdst.val_register, *src_val);
         VM_NEXT();
     }
@@ -215,7 +215,6 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-
         TValue tbool = stackvalue(V, val.val_boolean);
 
         rsetregister(V->ralloc, dst.val_register, tbool);
@@ -226,7 +225,6 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-
         TValue tnumber = stackvalue(V, val.val_number);
 
         rsetregister(V->ralloc, dst.val_register, tnumber);
@@ -237,7 +235,6 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-
         TValue tstring = stackvalue(V, val.val_string);
 
         rsetregister(V->ralloc, dst.val_register, tstring);
@@ -288,8 +285,8 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand off = V->ip->operand2;
 
-        size_t stack_offset = static_cast<size_t>(off.val_number);
-        uintptr_t val_ptr = *(V->stack->sbp + stack_offset);
+        StkPos stack_offset = static_cast<StkPos>(off.val_number);
+        StkVal val_ptr = *(V->stack->sbp + stack_offset);
         TValue *val = reinterpret_cast<TValue *>(val_ptr);
 
         rsetregister(V->ralloc, dst.val_register, *val);
@@ -301,9 +298,9 @@ dispatch:
         Operand src = V->ip->operand1;
         Operand off = V->ip->operand2;
 
-        size_t stack_offset = static_cast<size_t>(off.val_number);
+        StkPos stack_offset = static_cast<StkPos>(off.val_number);
         TValue *val = rgetregister(V->ralloc, src.val_register);
-        uintptr_t val_ptr = reinterpret_cast<uintptr_t>(val);
+        StkVal val_ptr = reinterpret_cast<StkVal>(val);
 
         *(V->stack->sbp + stack_offset) = val_ptr;
         VM_NEXT();
@@ -314,7 +311,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand off = V->ip->operand2;
 
-        uint32_t offv = static_cast<uint32_t>(off.val_number);
+        LocalId offv = static_cast<LocalId>(off.val_number);
         TValue *val = getargument(V, offv);
 
         rsetregister(V->ralloc, dst.val_register, *val);
@@ -1350,7 +1347,7 @@ dispatch:
             tspush(V->stack, lhsn);
             call(V, *mm, 2);
 
-            uintptr_t ptr = tspop(V->stack);
+            StkVal ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
 
             rsetregister(V->ralloc, dst.val_register, *val);
@@ -1381,7 +1378,7 @@ dispatch:
             tspush(V->stack, rhsn);
             call(V, *mm, 2);
 
-            uintptr_t ptr = tspop(V->stack);
+            StkVal ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
 
             rsetregister(V->ralloc, dst.val_register, *val);
@@ -1412,7 +1409,7 @@ dispatch:
             tspush(V->stack, rhsn);
             call(V, *mm, 2);
 
-            uintptr_t ptr = tspop(V->stack);
+            StkVal ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
 
             rsetregister(V->ralloc, dst.val_register, *val);
@@ -1443,7 +1440,7 @@ dispatch:
             tspush(V->stack, rhsn);
             call(V, *mm, 2);
 
-            uintptr_t ptr = tspop(V->stack);
+            StkVal ptr = tspop(V->stack);
             TValue *val = reinterpret_cast<TValue *>(ptr);
 
             rsetregister(V->ralloc, dst.val_register, *val);
@@ -1675,6 +1672,43 @@ dispatch:
         call(V, *rgetregister(V->ralloc, rfn.val_register), argc);
         VM_NEXT();
     }
+    case OpCode::EXTERNCALL:
+    {
+        Operand rfn = V->ip->operand1;
+        Operand argco = V->ip->operand2;
+        CallArgc argc = static_cast<CallArgc>(argco.val_number);
+        TValue *cfunc = rgetregister(V->ralloc, rfn.val_register);
+
+        // Call function
+        externcall(V, cfunc->val_cfunction, argc);
+        VM_NEXT();
+    }
+    case OpCode::NATIVECALL:
+    {
+        Operand rfn = V->ip->operand1;
+        Operand argco = V->ip->operand2;
+        CallArgc argc = static_cast<CallArgc>(argco.val_number);
+        TValue *func = rgetregister(V->ralloc, rfn.val_register);
+
+        // Call function
+        nativecall(V, func->val_function, argc);
+        VM_NEXT();
+    }
+    case OpCode::METHODCALL:
+    {
+        Operand robj = V->ip->operand1;
+        Operand rfn = V->ip->operand2;
+        Operand argco = V->ip->operand3;
+
+        CallArgc argc = static_cast<CallArgc>(argco.val_number);
+        TValue *func = rgetregister(V->ralloc, rfn.val_register);
+        TValue *obj = rgetregister(V->ralloc, robj.val_register);
+
+        pushval(V, obj);
+        // Call function, with [argc + 1] to account for the self argument
+        nativecall(V, func->val_function, argc + 1);
+        VM_NEXT();
+    }
 
     case OpCode::RET:
     {
@@ -1807,6 +1841,7 @@ dispatch:
 exit:;
 }
 
+// Permanently kills the thread. Does not clean up the state object.
 void killthread(RTState *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
@@ -1816,9 +1851,10 @@ void killthread(RTState *VIA_RESTRICT V)
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
     // Decrement the thread_id to make room for more threads (I know you can technically make 4 billion threads ok?)
-    __thread_id__--;
+    V->G->threads--;
 }
 
+// Temporarily pauses the thread. Saves the state.
 void pausethread(RTState *VIA_RESTRICT V)
 {
     V->tstate = ThreadState::PAUSED;

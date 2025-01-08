@@ -13,18 +13,22 @@ GState *stnewgstate()
 {
     GState *G = new GState;
 
-    G->stable = new STable();
+    G->threads = 0;
+    G->stable = new StrTable();
+    G->gtable = new GlbTable();
+    G->ktable = new kTable();
+    G->symtable = new SymTable();
 
     return G;
 }
 
 // Initializes and returns a new RTState object
-RTState *stnewstate(const std::vector<Instruction> &pipeline)
+RTState *stnewstate(GState *G, const std::vector<Instruction> &pipeline)
 {
     RTState *V = new RTState;
 
-    V->id = __thread_id__++;
-    V->G = stnewgstate();
+    V->id = G->threads++;
+    V->G = G;
 
     // Allocate ihp (Instruction head pointer)
     V->ihp = new Instruction[pipeline.size()];
@@ -65,12 +69,12 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
     V->tstate = ThreadState::PAUSED;
     V->sstate = nullptr;
 
-    V->heapvhead = nullptr;
+    V->heapptr = nullptr;
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    TFunction *mainf = newfunc(V, "__main", nullptr, pipeline, false, false);
-    nativecall(V, mainf, 0);
+    TFunction *main = newfunc(V, VIA_MAIN_ID, nullptr, pipeline, false, false);
+    nativecall(V, main, 0);
 
     // Initialize labels
     Instruction *ip = V->ip;
@@ -90,6 +94,7 @@ RTState *stnewstate(const std::vector<Instruction> &pipeline)
 void stcleanupgstate(GState *G)
 {
     delete G->stable;
+    delete G->gtable;
     delete G;
 }
 
@@ -100,8 +105,12 @@ void stcleanupstate(RTState *V)
     tscleanupstate(V->stack);
     rcleanupstate(V->ralloc);
 
+    // Clean up saved state, if there is one
+    if (V->sstate)
+        stcleanupstate(V->sstate);
+
     // Clean up heap values
-    TValue *current_value = V->heapvhead;
+    TValue *current_value = V->heapptr;
     while (current_value)
     {
         cleanupval(V, current_value);
@@ -113,12 +122,6 @@ void stcleanupstate(RTState *V)
     delete[] V->ihp;
     delete V->labels;
     delete V;
-}
-
-ThreadId stthreadcount(RTState *)
-{
-    // Just return the latest thread id as it represents the number of threads
-    return __thread_id__;
 }
 
 } // namespace via

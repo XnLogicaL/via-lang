@@ -8,7 +8,10 @@ namespace via::Compilation
 using namespace Parsing;
 using namespace AST;
 
-void Generator::generate_local_declaration_statement(LocalDeclStmtNode decl_stmt) {}
+void Generator::generate_local_declaration_statement(LocalDeclStmtNode decl_stmt)
+{
+    stack_pointer++;
+}
 
 void Generator::generate_global_declaration_statement(GlobalDeclStmtNode decl_stmt) {}
 
@@ -20,13 +23,12 @@ void Generator::generate_assign_statement(AssignStmtNode asgn_stmt) {}
 
 void Generator::generate_while_statement(WhileStmtNode while_stmt) {}
 
-// TODO
-void Generator::generate_for_statement(ForStmtNode) {}
-void Generator::generate_scope_statement(ScopeStmtNode) {}
+void Generator::generate_for_statement(ForStmtNode for_stmt) {}
+
+void Generator::generate_scope_statement(ScopeStmtNode scope_stmt) {}
 
 void Generator::generate_if_statement(IfStmtNode if_stmt) {}
 
-// TODO
 void Generator::generate_switch_statement(SwitchStmtNode) {}
 
 void Generator::generate_return_statement(ReturnStmtNode ret_stmt) {}
@@ -69,7 +71,7 @@ void Generator::generate_statement(Parsing::AST::StmtNode stmt)
     else if (std::get_if<Parsing::AST::ContinueStmtNode>(&stmt))
         generate_continue_statement();
     else
-        UNREACHABLE();
+        VIA_UNREACHABLE();
 }
 
 } // namespace via::Compilation

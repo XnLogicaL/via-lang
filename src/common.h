@@ -75,35 +75,33 @@
 namespace via
 {
 
-// Default hashmap used in via, can be changed with an appropriate alternative
-template<typename K, typename T>
-using HashMap = std::unordered_map<K, T>;
-
-// Default hash type
-using Hash = uint32_t;
-
-// Default label key
-using LabelId = std::string_view;
-
-// Default variable identifiers
-using VarId = Hash;
-
-// VM related
-using CallArgc = uint16_t;
-using ExitCode = int8_t;
-#ifdef VIA_LONGJMP
-using JmpOffset = long int;
-#else
-using JmpOffset = int;
-#endif
-using ThreadId = uint32_t;
-
 namespace Tokenization
 {
 
 struct Token;
 
 }
+
+#ifdef VIA_LONGJMP
+using JmpOffset = std::int64_t;
+#else
+using JmpOffset = std::int32_t;
+#endif
+
+template<typename K, typename T>
+using HashMap = std::unordered_map<K, T>; // General purpose hashmap.
+using Hash = std::uint32_t;               // Hash type.
+using LabelId = std::string_view;         // Label identifier.
+using CallArgc = std::uint8_t;            // Argument count type.
+using ExitCode = std::int8_t;             // Exit code type.
+using ExitMsg = const char *;             // Exit message type.
+using ThreadId = std::uint32_t;           // Thread identifier.
+using LocalId = std::uint32_t;            // Local variable identifier (stack offset).
+using kGlobId = std::string_view;         // Global constant identifier.
+using StkPos = std::size_t;               // Stack position.
+using StkVal = std::uintptr_t;            // Stack value, castable pointer
+using StkAddr = StkVal *;                 // Stack address
+using YldTime = float;                    // Yield time type, for the VM.
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)
 {

@@ -83,6 +83,22 @@ enum class OpCode
      */
     GETARGUMENT,
     /*
+     * opcode: GETGLOBAL
+     * Loads the global with id <id> into <dst>, nil if impossible.
+     * operand0: <dst :: Register>
+     * operand1: <id :: Identifier>
+     * operand2: <>
+     */
+    GETGLOBAL,
+    /*
+     * opcode: SETGLOBAL
+     * Attempts to declare a new global constant.
+     * operand0: <val :: Register>
+     * operand1: <id :: Identifier>
+     * operand2: <>
+     */
+    SETGLOBAL,
+    /*
      * opcode: ADDRR
      * Performs an add operation between operand1 and operand2 and stores the
      * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
@@ -716,11 +732,36 @@ enum class OpCode
     JMPLBLGE,
     /*
      * opcode: CALL
-     * Calls the value in operand0 with arg count in operand1. Works for all
-     * callable types. operand0: <callee :: Register> operand1: <argc :: Number>
+     * Calls the value in operand0 with arg count in operand1. Works for all callable types.
+     * operand0: <callee :: Register>
+     * operand1: <argc :: Number>
      * operand2: <>
      */
     CALL,
+    /*
+     * opcode: EXTERNCALL
+     * Calls the value in operand0 with arg count in operand1. Only works for C functions.
+     * operand0: <callee :: Register>
+     * operand1: <argc :: Number>
+     * operand2: <>
+     */
+    EXTERNCALL,
+    /*
+     * opcode: NATIVECALL
+     * Calls the value in operand0 with arg count in operand1. Only works for native functions.
+     * operand0: <callee :: Register>
+     * operand1: <argc :: Number>
+     * operand2: <>
+     */
+    NATIVECALL,
+    /*
+     * opcode: METHODCALL
+     * Calls the value in operand0 with arg count in operand1, loads object as self (arg0). Only works for native functions.
+     * operand0: <object :: Register>
+     * operand1: <method :: Register>
+     * operand2: <argc :: Number>
+     */
+    METHODCALL,
     /*
      * opcode: RET
      * Performs a return operation by jumping back to the return address of the

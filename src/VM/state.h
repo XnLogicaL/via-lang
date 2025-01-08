@@ -8,93 +8,98 @@
 // Identifier of the defacto "main" function
 // Kinda useless but it can stay
 #ifndef VIA_MAIN_ID
-    #define VIA_MAIN_ID ("__main__")
+    #define VIA_MAIN_ID ("__main")
 #endif
 
-/*
- * Context switching in via consists of 2 steps;
- * - Saving the state
- * - Restoring the state (either by setting V->savestate to true
- * (requires waiting for the next VM cycle, exists for multithreading support) or by calling restorestate(V))
- * This allows for a very fast context switching systen--at least one with minimal overhead
- * Context switching in via has some special traits; for example,
- * the state (e.g stack state) of pointers inside the RTState
- * object are never saved, instead they are passed onto the copy as-is, since they're pointers,
- * creating an efficient way to "shallow-save" the state of the VM
- */
+/* Context switching
+
+    Context switching is pretty straight forward, the state is copied to the heap,
+    and then simply referenced inside the original state until it needs to be restored.
+
+*/
 namespace via
 {
-
-/*
- * Stores the amount of threads
- * Has this attribute because
- * the compiler doesn't like the fact that it's used in other translation units but not this particular one
- */
-#if defined(__GNUC__) || defined(__clang__)
-[[maybe_unused]]
-#endif
-static ThreadId __thread_id__ = 0;
 
 // Forward declarations
 struct TFunction;
 struct TValue;
-
 struct TStack;
-struct TStackFrame;
 struct GCState;
 struct RAState;
 struct TString;
 
 // Type aliases for convenience, not much else
 using LblMap = HashMap<LabelId, Instruction *>;
-using STable = HashMap<Hash, TString *>;
+using StrTable = HashMap<Hash, TString *>;
+using GlbTable = HashMap<kGlobId, TValue>;
+using kTable = std::vector<TValue>;
+using SymTable = std::vector<std::string>;
 
-// Calling convention that is actively being used by the VM
-enum class CallType : uint8_t
+// Calling convention
+enum class CallType
 {
     NOCALL,
     CALL,
     FASTCALL,
 };
 
-enum class ThreadState : uint8_t
+// State of an RTState (thread) execution
+enum class ThreadState
 {
     RUNNING,
     PAUSED,
     DEAD
 };
 
+// Global state, should only be instantiated once, and shared across all RTState's. (threads)
 struct GState
 {
-    STable *stable; // Global string lookup table, derrived from Lua's string interning
+    StrTable *stable;   // Global string lookup table, derrived from Lua's string interning
+    GlbTable *gtable;   // Global environment
+    kTable *ktable;     // Constant table. Provided by the compiler.
+    SymTable *symtable; // Symbol table, maps the stack offsets of variables to their identifiers. Provided by the compiler.
+    ThreadId threads;   // Number of threads
 };
 
 // More likely to be cached (hopefully...)
 struct alignas(64) RTState
 {
-    ThreadId id;        // Thread id
-    GState *G;          // Global state
-    Instruction *ip;    // Instruction pointer
-    Instruction *ihp;   // Instruction list head
-    Instruction *ibp;   // Instruction list base
-    TStack *stack;      // Pointer to VM Stack
-    RAState *ralloc;    // Pointer to VM Register allocator state
-    LblMap *labels;     // Pointer to VM Label address table (LAT)
-    GCState *gc;        // Pointer to VM Garbage collector state
-    uintptr_t ssp;      // Saved stack pointer
-    TFunction *frame;   // Callstack pointer
-    CallArgc argc;      // Argument count, for both CALL and FASTCALLX
-    CallType calltype;  // Stores the current calling convention
-    TValue *heapvhead;  // Pointer to the first heap allocated value
-    int exitc;          // VM exit code
-    const char *exitm;  // VM exit message
-    bool abrt;          // Aborts on the next VM cycle
-    bool skip;          // Skips the next instruction on the next VM cycle
-    bool yield;         // Tells the VM to yield or not on the next VM cycle (debounces, meaning gets flipped every VM clock, if set to true)
-    bool restorestate;  // Tells the VM to restore the state on the next VM cycle (to sstate)
-    float yieldfor;     // Time (in ms) to yield on the next VM cycle (only goes thru if V->yield is true)
-    ThreadState tstate; // Thread state
-    RTState *sstate;    // Saved state
+    // Thread and global state
+    ThreadId id; // Thread ID
+    GState *G;   // Global state
+
+    // Instruction pointers
+    Instruction *ip;  // Current instruction pointer
+    Instruction *ihp; // Instruction list head pointer
+    Instruction *ibp; // Instruction list base pointer
+
+    // VM execution state
+    TStack *stack;   // Pointer to VM stack
+    RAState *ralloc; // Pointer to VM register allocator state
+    LblMap *labels;  // Pointer to VM label address table (LAT)
+    GCState *gc;     // Pointer to VM garbage collector state
+
+    // Call and frame management
+    size_t ssp;        // Saved stack pointer
+    TFunction *frame;  // Call stack pointer
+    CallArgc argc;     // Argument count (for CALL and FASTCALLX)
+    CallType calltype; // Current calling convention
+
+    // Heap and memory management
+    TValue *heapptr; // Pointer to the first heap-allocated value
+
+    // VM control and debugging
+    ExitCode exitc;    // VM exit code
+    ExitMsg exitm;     // VM exit message
+    bool abrt;         // Abort on the next VM cycle
+    bool skip;         // Skip the next instruction on the next VM cycle
+    bool yield;        // Yield on the next VM cycle (debounced)
+    bool restorestate; // Restore state on the next VM cycle (to `sstate`)
+    YldTime yieldfor;  // Time (in ms) to yield on the next VM cycle (if `yield` is true)
+
+    // Thread state
+    ThreadState tstate; // Current thread state
+    RTState *sstate;    // Saved thread state
 };
 
 // Creates a new global state object

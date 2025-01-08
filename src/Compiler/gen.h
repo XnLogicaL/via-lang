@@ -30,6 +30,10 @@ class Generator
 public:
     Generator(Parsing::AST::AST *tree)
         : alloc(VIA_GENERATOR_ALLOC_SIZE) // Custom size for the allocator
+        , current_chunk(nullptr)
+        , initialize_with_chunk(false)
+        , stack_pointer(0)
+        , saved_stack_pointer(0)
         , bytecode(std::make_unique<Bytecode>())
     {
         bytecode->ast = tree;
@@ -43,8 +47,8 @@ public:
     ~Generator()
     {
         // Clean up resources using the cleaner
-        cleaner.clean();
         // Bytecode is managed by the generator object, no need to delete manually
+        cleaner.clean();
     }
 
     // Main function to generate the bytecode
@@ -53,7 +57,9 @@ public:
     // Utility functions
     size_t iota();
     bool is_constexpr(Parsing::AST::ExprNode, int);
-    void evaluate_constexpr(Parsing::AST::ExprNode *expr);
+    void evaluate_constexpr(Parsing::AST::ExprNode *);
+    Operand generate_operand(Parsing::AST::LiteralExprNode);
+    TValue generate_tvalue(Parsing::AST::LiteralExprNode);
 
     // Register management functions
     GPRegister allocate_temp_register();
@@ -65,6 +71,10 @@ public:
     Cleaner cleaner;      // Resource cleaner
     Chunk *current_chunk;
     bool initialize_with_chunk;
+    StkPos stack_pointer;
+    StkPos saved_stack_pointer;
+    HashMap<std::string, LocalId> symbols;
+    HashMap<kGlobId, TValue> globals;
 
 private:
     std::unique_ptr<Bytecode> bytecode; // Bytecode object
@@ -83,6 +93,8 @@ private:
     void generate_index_expression(Parsing::AST::IndexExprNode, GPRegister);
     void generate_call_expression(Parsing::AST::CallExprNode, GPRegister);
     void generate_variable_expression(Parsing::AST::VarExprNode, GPRegister);
+    void generate_increment_expression(Parsing::AST::IncExprNode, GPRegister);
+    void generate_decrement_expression(Parsing::AST::DecExprNode, GPRegister);
     void generate_expression(Parsing::AST::ExprNode, GPRegister);
 
     // Statement generators

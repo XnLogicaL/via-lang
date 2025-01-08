@@ -77,8 +77,11 @@ struct LambdaExprNode;
 struct CallExprNode;
 struct IndexExprNode;
 struct VarExprNode;
+struct IncExprNode;
+struct DecExprNode;
 
-using ExprNode = std::variant<LiteralExprNode, UnaryExprNode, BinaryExprNode, LambdaExprNode, CallExprNode, IndexExprNode, VarExprNode>;
+using ExprNode =
+    std::variant<LiteralExprNode, UnaryExprNode, BinaryExprNode, LambdaExprNode, CallExprNode, IndexExprNode, VarExprNode, IncExprNode, DecExprNode>;
 
 struct LiteralExprNode
 {
@@ -119,6 +122,16 @@ struct IndexExprNode
 struct VarExprNode
 {
     Token ident;
+};
+
+struct IncExprNode
+{
+    ExprNode *expr;
+};
+
+struct DecExprNode
+{
+    ExprNode *expr;
 };
 
 // StatementNode Variants and Definitions

@@ -10,54 +10,54 @@ namespace via::Tokenization
 enum class TokenType
 {
     // Keywords
-    KW_DO,
-    KW_IN,
-    KW_LOCAL,
-    KW_GLOBAL,
-    KW_AS,
-    KW_IF,
-    KW_ELSE,
-    KW_ELIF,
-    KW_WHILE,
-    KW_FOR,
-    KW_RETURN,
-    KW_FUNC,
-    KW_VAR,
-    KW_CONST,
-    KW_NEW,
-    KW_BREAK,
-    KW_CONTINUE, // continue
-    KW_SWITCH,   // switch
-    KW_CASE,     // case
-    KW_DEFAULT,  // default
-    KW_DELETE,   // delete
-    KW_AND,      // and
-    KW_NOT,      // not
-    KW_OR,       // or
-    KW_STRUCT,
-    KW_NAMESPACE,
-    KW_PROPERTY,
-    KW_IMPORT,
-    KW_EXPORT,
-    KW_MACRO,
-    KW_DEFINE,
+    KW_DO,        // do
+    KW_IN,        // in
+    KW_LOCAL,     // local
+    KW_GLOBAL,    // global
+    KW_AS,        // as
+    KW_IF,        // if
+    KW_ELSE,      // else
+    KW_ELIF,      // elif
+    KW_WHILE,     // while
+    KW_FOR,       // for
+    KW_RETURN,    // return
+    KW_FUNC,      // func
+    KW_VAR,       // var
+    KW_CONST,     // const
+    KW_NEW,       // new
+    KW_BREAK,     // break
+    KW_CONTINUE,  // continue
+    KW_SWITCH,    // switch
+    KW_CASE,      // case
+    KW_DEFAULT,   // default
+    KW_DELETE,    // delete
+    KW_AND,       // and
+    KW_NOT,       // not
+    KW_OR,        // or
+    KW_STRUCT,    // struct
+    KW_NAMESPACE, // namespace
+    KW_PROPERTY,  // property
+    KW_IMPORT,    // import
+    KW_EXPORT,    // export
+    KW_MACRO,     // macro
+    KW_DEFINE,    // define
 
     // Operators
-    OP_EXP, // ^
-    OP_ADD, // +
-    OP_SUB, // -
-    OP_MUL, // *
-    OP_DIV, // /
-    OP_MOD, // %
-    OP_EQ,  // ==
-    OP_NEQ, // !=
-    OP_LT,  // <
-    OP_GT,  // >
-    OP_LEQ, // <=
-    OP_GEQ, // >=
-    OP_INC, // ++
-    OP_DEC, // --
-    OP_ASGN,
+    OP_EXP,  // ^
+    OP_ADD,  // +
+    OP_SUB,  // -
+    OP_MUL,  // *
+    OP_DIV,  // /
+    OP_MOD,  // %
+    OP_EQ,   // ==
+    OP_NEQ,  // !=
+    OP_LT,   // <
+    OP_GT,   // >
+    OP_LEQ,  // <=
+    OP_GEQ,  // >=
+    OP_INC,  // ++
+    OP_DEC,  // --
+    OP_ASGN, // =
 
     // Literals
     LIT_INT,    // Integer literals
