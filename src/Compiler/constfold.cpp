@@ -2,12 +2,8 @@
 
 #include "constfold.h"
 
-namespace via::Compilation
+namespace via
 {
-
-using namespace via::Parsing;
-using namespace via::Tokenization;
-using namespace AST;
 
 // Folds a constant expression into a constant value
 // eg. `1 + 2 * 4` into `9`
@@ -19,11 +15,11 @@ void ConstFoldOptimizationPass::fold_constexpr(Generator &gen, ExprNode *expr)
     gen.evaluate_constexpr(expr);
 }
 
-// Folds all possible constants in the AST
-void ConstFoldOptimizationPass::apply(Generator &gen, Bytecode &bytecode)
+// Folds all possible constants in the AbstractSyntaxTree
+void ConstFoldOptimizationPass::apply(Generator &gen)
 {
 #define CHECK(ident, type) type *ident = std::get_if<type>(&stmt)
-    for (StmtNode stmt : bytecode.ast->statements)
+    for (StmtNode stmt : gen.program.ast->statements)
     {
         if (CHECK(decl_stmt, LocalDeclStmtNode))
             fold_constexpr(gen, &decl_stmt->value.value());
@@ -39,10 +35,10 @@ void ConstFoldOptimizationPass::apply(Generator &gen, Bytecode &bytecode)
 #undef CHECK
 }
 
-bool ConstFoldOptimizationPass::is_applicable(const Bytecode &bytecode) const
+bool ConstFoldOptimizationPass::is_applicable(Generator &gen) const
 {
     // Check if the AST has already been optimized
-    return bytecode.ast != nullptr;
+    return gen.program.ast != nullptr;
 }
 
-} // namespace via::Compilation
+} // namespace via

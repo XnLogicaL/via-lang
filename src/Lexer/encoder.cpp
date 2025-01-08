@@ -23,16 +23,15 @@ std::vector<char> Encoder::encode_operand(Operand oper)
     switch (oper.type)
     {
     case OperandType::Bool:
-    case OperandType::GPRegister:
-        // For Bool, we store the boolean value. For GPRegister, we store the register number
+    case OperandType::Register:
+        // For Bool, we store the boolean value. For Register, we store the register number
         encoding.push_back(static_cast<char>(oper.type == OperandType::Bool ? oper.val_boolean : oper.val_register));
         break;
 
     case OperandType::String:
-    case OperandType::Identifier:
     {
         // For strings and identifiers, encode them as a sequence of characters (null-terminated)
-        const char *ptr = oper.type == OperandType::String ? oper.val_string : oper.val_identifier;
+        const char *ptr = oper.val_string;
         while (*ptr)
             encoding.push_back(*ptr++);
         // Optionally add a null-terminator to the end of the string/identifier
@@ -97,11 +96,10 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator &it)
     case OperandType::Bool:
         operand.val_boolean = static_cast<bool>(*it++);
         break;
-    case OperandType::GPRegister:
-        operand.val_register = static_cast<GPRegister>(*it++);
+    case OperandType::Register:
+        operand.val_register = static_cast<RegId>(*it++);
         break;
     case OperandType::String:
-    case OperandType::Identifier:
     {
         std::string temp;
         while (*it != '\0')
@@ -109,7 +107,7 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator &it)
         ++it; // Skip null terminator
         char *buf = new char[temp.size() + 1];
         strcpy_s(buf, temp.size() + 1, temp.c_str());
-        (operand.type == OperandType::String ? operand.val_string : operand.val_identifier) = buf;
+        operand.val_string = buf;
         break;
     }
     case OperandType::Number:

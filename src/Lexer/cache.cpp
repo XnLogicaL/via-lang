@@ -70,7 +70,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     return CacheResult::SUCCESS;
 }
 
-CacheFile CacheManager::read_cache(SrcContainer file)
+CacheFile CacheManager::read_cache(ProgramData file)
 {
     size_t offset = 0;
     CacheFile cache_file{file};

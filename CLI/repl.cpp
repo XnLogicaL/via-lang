@@ -7,19 +7,19 @@ namespace viaCLI
 
 std::vector<via::Instruction> REPLEngine::compile(std::string source)
 {
-    via::Tokenization::Tokenizer lexer(source);
-    via::SrcContainer container = lexer.tokenize();
-    container.file_name = "<repl>";
+    via::Tokenizer lexer(source);
+    via::ProgramData program = lexer.tokenize();
+    program.file_name = "<repl>";
 
-    /*Tokenization::SyntaxAnalyzer analyzer(container);
+    /*Tokenization::SyntaxAnalyzer analyzer(program);
     bool fail = analyzer.analyze();
 
     VIA_ASSERT_SILENT(!fail, "Syntax analysis failed");*/
 
-    via::Parsing::Parser parser(container);
-    via::Parsing::AST::AST *ast = parser.parse_program();
+    via::Parser parser(program);
+    via::AbstractSyntaxTree *ast = parser.parse_program();
 
-    via::Compilation::Compiler compiler(ast);
+    via::Compiler compiler(ast);
     compiler.add_default_passes();
     compiler.generate();
 
@@ -38,7 +38,7 @@ void REPLEngine::execute(std::string code, bool print)
     {
         std::cout << "Program bytecode:\n";
         for (via::Instruction instr : bytecode)
-            std::cout << via::Compilation::ccompileinstruction(instr) << "\n";
+            std::cout << via::ccompileinstruction(instr) << "\n";
     }
 
     if (!V)

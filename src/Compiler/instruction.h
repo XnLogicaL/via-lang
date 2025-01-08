@@ -3,8 +3,7 @@
 #pragma once
 
 #include "common.h"
-#include "VM/opcode.h"
-#include <cstdint>
+#include "opcode.h"
 
 #ifndef VIA_OPERAND_COUNT
     #define VIA_OPERAND_COUNT 4
@@ -14,17 +13,15 @@ namespace via
 {
 
 struct Chunk;
-using GPRegister = uint32_t;
 
 // Operand declarations
-enum class OperandType : uint8_t
+enum class OperandType
 {
     Nil,
     Number,
     Bool,
     String,
-    GPRegister,
-    Identifier,
+    Register,
 };
 
 struct Operand
@@ -32,12 +29,24 @@ struct Operand
     OperandType type;
     union
     {
-        double val_number;
-        bool val_boolean;
+        TNumber val_number;
+        TBool val_boolean;
         const char *val_string;
-        const char *val_identifier;
-        GPRegister val_register;
+        RegId val_register;
     };
+
+    Operand();
+    Operand(TNumber);
+    Operand(TBool);
+    Operand(const char *);
+    Operand(RegId);
+
+    bool check_type(OperandType);
+    bool check_nil();
+    bool check_number();
+    bool check_boolean();
+    bool check_string();
+    bool check_register();
 };
 
 struct Instruction
@@ -47,29 +56,9 @@ struct Instruction
     Operand operand2;
     Operand operand3;
     Chunk *chunk;
+
+    Instruction();
+    Instruction(OpCode, std::vector<Operand>);
 };
-
-namespace Compilation
-{
-
-Instruction cnewinstruction();
-Instruction cnewinstruction(OpCode, const std::vector<Operand> &);
-
-std::string ccompileinstruction(Instruction &);
-std::string ccompileoperand(Operand &);
-
-bool ccheckregister(const Operand &);
-bool cchecknumber(const Operand &);
-bool ccheckbool(const Operand &);
-bool ccheckstring(const Operand &);
-bool ccheckidentifier(const Operand &);
-
-Operand cnewoperand();
-Operand cnewoperand(double);
-Operand cnewoperand(bool);
-Operand cnewoperand(const char *, bool);
-Operand cnewoperand(GPRegister);
-
-} // namespace Compilation
 
 } // namespace via

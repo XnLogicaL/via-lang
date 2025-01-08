@@ -1,8 +1,9 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "token.h"
+#include "common.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 // Returns the stringified version of the token
@@ -55,4 +56,4 @@ int Token::bin_prec() const noexcept
     }
 }
 
-} // namespace via::Tokenization
+} // namespace via

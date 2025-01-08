@@ -7,7 +7,7 @@ namespace via
 
 void dbgprintregistermap(RTState *VIA_RESTRICT V = nullptr, size_t count = VIA_REGISTER_COUNT)
 {
-    for (GPRegister reg = 0; reg <= count; reg++)
+    for (RegId reg = 0; reg <= count; reg++)
     {
         TValue *val = rgetregister(V->ralloc, reg);
         TValue val_clone = *val;

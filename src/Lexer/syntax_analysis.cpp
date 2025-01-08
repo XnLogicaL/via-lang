@@ -22,7 +22,7 @@
             REPORT_ERROR(std::format("Unexpected token '{}', Expected type {}", peek().value, magic_enum::enum_name(expected_type))); \
     }
 
-namespace via::Tokenization
+namespace via
 {
 
 // Returns the primitive value type of a literal
@@ -49,18 +49,18 @@ const std::string get_value_type(const Token &tok) noexcept
 constexpr bool SyntaxAnalyzer::in_bounds() noexcept
 {
     // Since `pos` is unsigned, we don't need to check if it's larger than or equal to 0
-    return pos < container.tokens.size();
+    return pos < program.tokens->size();
 }
 
 // Returns the token that's <ahead> ahead of the current position
 Token SyntaxAnalyzer::peek(size_t ahead) noexcept // This should never throw, in theory
 {
     // Bound check
-    if (pos + ahead >= container.tokens.size())
+    if (pos + ahead >= program.tokens->size())
         // Return a special token if out of bounds
         return Token(TokenType::EOF_, "", 0, 0);
 
-    return container.tokens.at(pos + ahead);
+    return program.tokens->at(pos + ahead);
 }
 
 // Consumes all the tokens until <pos> + <ahead>
@@ -74,7 +74,7 @@ Token SyntaxAnalyzer::consume(size_t ahead) noexcept
         // Return a special token if out of bounds
         return Token(TokenType::EOF_, "", 0, 0);
 
-    return container.tokens.at(pos);
+    return program.tokens->at(pos);
 }
 
 // Returns if the a sequence of tokens starting from the current one can form a syntactically correct expression
@@ -460,7 +460,7 @@ void SyntaxAnalyzer::check_decl()
                 pos - 1,
                 std::format(
                     "Type not explicitly specified for variable '{}'; automatically deduced type '{}'",
-                    container.tokens.at(pos - 1).value,
+                    program.tokens->at(pos - 1).value,
                     get_value_type(peek(1))
                 ),
                 Emitter::Severity::INFO
@@ -613,7 +613,7 @@ void SyntaxAnalyzer::check_func()
 
             // Check if parameters were closed with a comma before the parantheses
             // This is forbidden, just like function calls
-            if (container.tokens.at(pos - 1).type == TokenType::COMMA)
+            if (program.tokens->at(pos - 1).type == TokenType::COMMA)
             {
                 REPORT_ERROR("Function parameters closed with ','");
                 return;
@@ -699,7 +699,7 @@ void SyntaxAnalyzer::match()
 // Function for performing full syntactic analysis on a source file
 bool SyntaxAnalyzer::analyze()
 {
-    while (pos < container.tokens.size())
+    while (pos < program.tokens->size())
     {
         // Track position to detect non-consuming `match` calls
         auto prev_pos = pos;
@@ -716,4 +716,4 @@ bool SyntaxAnalyzer::analyze()
     return failed;
 }
 
-} // namespace via::Tokenization
+} // namespace via

@@ -1298,7 +1298,7 @@ dispatch:
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == OperandType::GPRegister))
+        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
         {
             lhsn = *rgetregister(V->ralloc, lhs.val_register);
             lhs_reg = true;
@@ -1306,7 +1306,7 @@ dispatch:
         else
             lhsn = toviavalue(V, lhs);
 
-        if (VIA_UNLIKELY(rhs.type == OperandType::GPRegister))
+        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
         {
             rhsn = *rgetregister(V->ralloc, rhs.val_register);
             rhs_reg = true;
@@ -1768,7 +1768,7 @@ dispatch:
         // Get table key based on the index type (string or number)
         TableKey key = checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
         // Slow-path: the value is stored in a register, load it
-        if (VIA_UNLIKELY(rsrc.type == OperandType::GPRegister))
+        if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
             val = *rgetregister(V->ralloc, rsrc.val_register);
         else
             val = toviavalue(V, rsrc);

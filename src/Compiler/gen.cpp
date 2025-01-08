@@ -1,19 +1,14 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "gen.h"
 #include "instruction.h"
-#include <cmath>
 
 #ifndef VIA_CONSTEXPR_MAX_DEPTH
     #define VIA_CONSTEXPR_MAX_DEPTH 5
 #endif
 
-namespace via::Compilation
+namespace via
 {
-
-using namespace via::Parsing;
-using namespace AST;
 
 template<typename T, typename K>
 using BinaryEvaluator = std::function<K(T, T)>;
@@ -51,13 +46,10 @@ bool are_compatible_types(TokenType lhs_type, TokenType rhs_type)
 }
 
 // Generates bytecode and returns it
-std::unique_ptr<Bytecode> Generator::generate()
+void Generator::generate()
 {
-    for (StmtNode stmt : bytecode->ast->statements)
+    for (StmtNode stmt : program.ast->statements)
         generate_statement(stmt);
-
-    // Transfer ownership of bytecode object
-    return std::move(bytecode);
 }
 
 // Returns the successor of iota everytime it's called
@@ -80,7 +72,7 @@ void Generator::evaluate_constexpr(ExprNode *)
 // Pushes a bytecode instruction
 void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> operands = {})
 {
-    Instruction instruction = cnewinstruction(op, operands);
+    Instruction instruction(op, operands);
 
     if (initialize_with_chunk)
     {
@@ -88,12 +80,13 @@ void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> o
         instruction.chunk = current_chunk;
     }
 
-    bytecode->add_instruction(instruction);
+    program.bytecode->add_instruction(instruction);
 }
 
 Operand Generator::generate_operand(LiteralExprNode lit_expr)
 {
-    Operand operand = cnewoperand();
+    Operand operand;
+
     switch (lit_expr.value.type)
     {
     case TokenType::LIT_BOOL:
@@ -136,14 +129,14 @@ TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
     }
 }
 
-GPRegister Generator::allocate_temp_register()
+RegId Generator::allocate_temp_register()
 {
-    GPRegister reg = allocate_register();
+    RegId reg = allocate_register();
     free_register(reg);
     return reg;
 }
 
-GPRegister Generator::allocate_register()
+RegId Generator::allocate_register()
 {
     for (auto it : register_pool)
         if (it.second == false)
@@ -152,17 +145,17 @@ GPRegister Generator::allocate_register()
             return it.first;
         }
 
-    return VIA_GPREGISTER_INVALID;
+    return VIA_REGISTER_INVALID;
 }
 
-void Generator::free_register(GPRegister reg)
+void Generator::free_register(RegId reg)
 {
     register_pool[reg] = true;
 }
 
 void Generator::load_operand(Operand dst, Operand operand)
 {
-    static const std::unordered_map<OperandType, OpCode> load_op = {
+    static const HashMap<OperandType, OpCode> load_op = {
         {OperandType::Nil, OpCode::LOADNIL},
         {OperandType::Bool, OpCode::LOADBOOL},
         {OperandType::Number, OpCode::LOADNUMBER},
@@ -174,4 +167,4 @@ void Generator::load_operand(Operand dst, Operand operand)
         push_instruction(it->second, {dst, operand});
 }
 
-} // namespace via::Compilation
+} // namespace via

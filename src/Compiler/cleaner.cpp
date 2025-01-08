@@ -2,7 +2,7 @@
 
 #include "cleaner.h"
 
-namespace via::Compilation
+namespace via
 {
 
 void Cleaner::clean()
@@ -27,4 +27,4 @@ void Cleaner::add_callback(std::function<void(void)> callback)
     callback_list.push_back(callback);
 }
 
-} // namespace via::Compilation
+} // namespace via

@@ -8,7 +8,7 @@
 #include "instruction.h"
 #include "Parser/ast.h"
 
-namespace via::Compilation
+namespace via
 {
 
 class Compiler
@@ -16,8 +16,9 @@ class Compiler
 public:
     using Instructions_t = std::vector<Instruction>;
 
-    Compiler(Parsing::AST::AST *tree)
-        : generator(tree)
+    Compiler(ProgramData &program)
+        : program(program)
+        , generator(program)
     {
     }
 
@@ -35,10 +36,10 @@ public:
     const Instructions_t get() const;
 
 private:
+    ProgramData &program;
     Cleaner cleaner;
     Generator generator;
     PassManager pass_manager;
-    std::unique_ptr<Bytecode> bytecode;
 };
 
-} // namespace via::Compilation
+} // namespace via

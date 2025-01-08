@@ -7,25 +7,25 @@
 #include "highlighter.h"
 #include "token.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 class SyntaxAnalyzer
 {
 public:
-    // Constructs a SyntaxAnalyzer instance with the provided source container
-    explicit SyntaxAnalyzer(SrcContainer &container)
-        : container(container)
-        , emitter(container)
+    // Constructs a SyntaxAnalyzer instance with the provided source program
+    explicit SyntaxAnalyzer(ProgramData &program)
+        : program(program)
+        , emitter(program)
     {
     }
 
-    // Analyzes the tokens in the source container for syntactical correctness.
+    // Analyzes the tokens in the source program for syntactical correctness.
     // Returns true if the analysis is successful, otherwise false.
     bool analyze();
 
 private:
-    SrcContainer &container;
+    ProgramData &program;
     Emitter emitter;
     size_t pos = 0;
     bool failed = false;
@@ -97,4 +97,4 @@ private:
     void check_invalid_token();
 };
 
-} // namespace via::Tokenization
+} // namespace via

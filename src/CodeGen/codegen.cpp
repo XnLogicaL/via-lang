@@ -4,7 +4,7 @@
 #include "chunk.h"
 #include "linux_syscalls.h"
 
-namespace via::CodeGen
+namespace via
 {
 
 using namespace asmjit;
@@ -46,4 +46,4 @@ JITFunc jitgenerate(Chunk *)
     return fn;
 };
 
-} // namespace via::CodeGen
+} // namespace via

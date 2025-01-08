@@ -39,15 +39,15 @@ void handle_compile(const std::vector<std::string> &args)
     std::string input_code = via::utils::read_from_file(input);
 
     Tokenization::Tokenizer lexer(input_code);
-    SrcContainer container = lexer.tokenize();
+    ProgramData program = lexer.tokenize();
 
-    Tokenization::Preprocessor preprocessor(container);
+    Tokenization::Preprocessor preprocessor(program);
     bool failed = preprocessor.preprocess();
 
     VIA_ASSERT_SILENT(!failed, "Preprocessor failed");
 
-    Parsing::Parser parser(container);
-    Parsing::AST::AST *ast = parser.parse_program();
+    Parser parser(program);
+    AbstractSyntaxTree *ast = parser.parse_program();
 
     Compilation::Compiler compiler(ast);
     compiler.add_default_passes();

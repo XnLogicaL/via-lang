@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace via::Compilation
+namespace via
 {
 
 static const std::vector<std::string> built_in = {
@@ -12,4 +12,4 @@ static const std::vector<std::string> built_in = {
     "math",  "table",   "string", "random", "http", "buffer", "bit32",    "utf8",     "fs",     "os",     "debug", "function",
 };
 
-} // namespace via::Compilation
+} // namespace via

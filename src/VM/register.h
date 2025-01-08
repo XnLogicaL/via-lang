@@ -16,13 +16,13 @@ struct RAState
     TValue *head;
 };
 
-VIA_FORCEINLINE TValue *rgetregister(RAState *R, GPRegister reg)
+VIA_FORCEINLINE TValue *rgetregister(RAState *R, RegId reg)
 {
     TValue *ptr = R->head + reg;
     return ptr;
 }
 
-VIA_FORCEINLINE void rsetregister(RAState *R, GPRegister reg, TValue val)
+VIA_FORCEINLINE void rsetregister(RAState *R, RegId reg, TValue val)
 {
     TValue *addr = R->head + reg;
     *addr = val;

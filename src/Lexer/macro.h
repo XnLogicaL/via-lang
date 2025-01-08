@@ -5,7 +5,7 @@
 #include "common.h"
 #include "token.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 struct Macro
@@ -18,4 +18,4 @@ struct Macro
     size_t line;
 };
 
-} // namespace via::Tokenization
+} // namespace via

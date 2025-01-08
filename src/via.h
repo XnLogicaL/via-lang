@@ -11,7 +11,7 @@
 #include "Lexer/encoder.h"
 
 #include "Parser/parser.h"
-#include "Parser/print.h"
+#include "Parser/ast.h"
 
 #include "Compiler/compiler.h"
 #include "Compiler/optimizer.h"
@@ -43,14 +43,20 @@ using ExecutionResult = std::pair<int, std::string>;
 class Interpreter
 {
 public:
-    Interpreter() = default;
     ~Interpreter() = default;
+    ExecutionResult run(std::string);
 
-    ExecutionResult run(std::string code);
+public:
+    ProgramData &program;
 
 private:
-    void load_libraries(RTState *V);
-    ExecutionResult compile_and_run(SrcContainer &container);
+    void tokenize();
+    void preprocess();
+    void analyze_syntax();
+    void parse();
+    void analyze_semantics();
+    void compile();
+    void interpret();
 };
 
 } // namespace via

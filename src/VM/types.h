@@ -9,20 +9,6 @@
 namespace via
 {
 
-using TNumber = double;
-using TBool = bool;
-// Basic pointer type, currently only used internally
-using TPointer = uintptr_t;
-// Type alias for Hash
-using TableKey = Hash;
-
-// Forward declarations
-struct TValue;
-struct TTable;
-struct TString;
-struct TFunction;
-struct TCFunction;
-
 enum class ValueType : uint8_t
 {
     Monostate, // Represents uninitialized values

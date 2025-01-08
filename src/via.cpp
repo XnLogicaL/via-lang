@@ -5,33 +5,21 @@
 namespace via
 {
 
-ExecutionResult Interpreter::run(std::string code)
+void Interpreter::tokenize()
 {
-    Tokenization::Tokenizer tokenizer(code);
-    SrcContainer container = tokenizer.tokenize();
-
-    Tokenization::Preprocessor preprocessor(container);
-    bool failed = preprocessor.preprocess();
-
-    VIA_ASSERT_SILENT(!failed, "Preprocessor fail");
-
-    return compile_and_run(container);
+    Tokenizer tokenizer(program);
+    tokenizer.tokenize();
 }
 
-void Interpreter::load_libraries(RTState *V)
+void Interpreter::analyze_syntax()
 {
-    lib::loadbaselib(V);
-    lib::loadmathlib(V);
-    lib::loadrandlib(V);
+    SyntaxAnalyzer analyzer(program);
+    analyzer.analyze();
 }
 
-ExecutionResult Interpreter::compile_and_run(SrcContainer &container)
+void Interpreter::parse()
 {
-    using namespace via::Parsing;
-    using namespace via::Compilation;
-    using namespace via::Tokenization;
-
-    CacheManager manager;
+    Parser parser(program);
 }
 
 } // namespace via

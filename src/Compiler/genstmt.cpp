@@ -2,11 +2,8 @@
 
 #include "gen.h"
 
-namespace via::Compilation
+namespace via
 {
-
-using namespace Parsing;
-using namespace AST;
 
 void Generator::generate_local_declaration_statement(LocalDeclStmtNode decl_stmt)
 {
@@ -37,41 +34,41 @@ void Generator::generate_break_statement() {}
 
 void Generator::generate_continue_statement() {}
 
-void Generator::generate_statement(Parsing::AST::StmtNode stmt)
+void Generator::generate_statement(StmtNode stmt)
 {
     initialize_with_chunk = true;
     current_chunk = new Chunk;
     current_chunk->mcode = nullptr;
     current_chunk->pc = 0;
 
-    if (auto *local_decl = std::get_if<Parsing::AST::LocalDeclStmtNode>(&stmt))
+    if (auto *local_decl = std::get_if<LocalDeclStmtNode>(&stmt))
         generate_local_declaration_statement(*local_decl);
-    else if (auto *global_decl = std::get_if<Parsing::AST::GlobalDeclStmtNode>(&stmt))
+    else if (auto *global_decl = std::get_if<GlobalDeclStmtNode>(&stmt))
         generate_global_declaration_statement(*global_decl);
-    else if (auto *func_decl = std::get_if<Parsing::AST::FunctionDeclStmtNode>(&stmt))
+    else if (auto *func_decl = std::get_if<FunctionDeclStmtNode>(&stmt))
         generate_function_declaration_statement(*func_decl);
-    else if (auto *call_stmt = std::get_if<Parsing::AST::CallStmtNode>(&stmt))
+    else if (auto *call_stmt = std::get_if<CallStmtNode>(&stmt))
         generate_call_statement(*call_stmt);
-    else if (auto *assign_stmt = std::get_if<Parsing::AST::AssignStmtNode>(&stmt))
+    else if (auto *assign_stmt = std::get_if<AssignStmtNode>(&stmt))
         generate_assign_statement(*assign_stmt);
-    else if (auto *while_stmt = std::get_if<Parsing::AST::WhileStmtNode>(&stmt))
+    else if (auto *while_stmt = std::get_if<WhileStmtNode>(&stmt))
         generate_while_statement(*while_stmt);
-    else if (auto *for_stmt = std::get_if<Parsing::AST::ForStmtNode>(&stmt))
+    else if (auto *for_stmt = std::get_if<ForStmtNode>(&stmt))
         generate_for_statement(*for_stmt);
-    else if (auto *scope_stmt = std::get_if<Parsing::AST::ScopeStmtNode>(&stmt))
+    else if (auto *scope_stmt = std::get_if<ScopeStmtNode>(&stmt))
         generate_scope_statement(*scope_stmt);
-    else if (auto *if_stmt = std::get_if<Parsing::AST::IfStmtNode>(&stmt))
+    else if (auto *if_stmt = std::get_if<IfStmtNode>(&stmt))
         generate_if_statement(*if_stmt);
-    else if (auto *switch_stmt = std::get_if<Parsing::AST::SwitchStmtNode>(&stmt))
+    else if (auto *switch_stmt = std::get_if<SwitchStmtNode>(&stmt))
         generate_switch_statement(*switch_stmt);
-    else if (auto *return_stmt = std::get_if<Parsing::AST::ReturnStmtNode>(&stmt))
+    else if (auto *return_stmt = std::get_if<ReturnStmtNode>(&stmt))
         generate_return_statement(*return_stmt);
-    else if (std::get_if<Parsing::AST::BreakStmtNode>(&stmt))
+    else if (std::get_if<BreakStmtNode>(&stmt))
         generate_break_statement();
-    else if (std::get_if<Parsing::AST::ContinueStmtNode>(&stmt))
+    else if (std::get_if<ContinueStmtNode>(&stmt))
         generate_continue_statement();
     else
         VIA_UNREACHABLE();
 }
 
-} // namespace via::Compilation
+} // namespace via

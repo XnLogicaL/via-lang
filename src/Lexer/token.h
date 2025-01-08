@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "common.h"
+#include <string>
 
-namespace via::Tokenization
+namespace via
 {
 
 enum class TokenType
@@ -119,4 +119,4 @@ struct Token
     int bin_prec() const noexcept;
 };
 
-} // namespace via::Tokenization
+} // namespace via

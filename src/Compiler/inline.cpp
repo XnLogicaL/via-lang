@@ -3,11 +3,9 @@
 #include "inline.h"
 #include "Parser/ast.h"
 
-using namespace via::Parsing;
-
-namespace via::Compilation
+namespace via
 {
 
 
 
-} // namespace via::Compilation
+} // namespace via

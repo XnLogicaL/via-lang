@@ -2,13 +2,10 @@
 
 #include "deadcode.h"
 
-namespace via::Compilation
+namespace via
 {
 
-using namespace via::Parsing;
-using namespace AST;
-
-void DeadCodeEliminationOptimizationPass::apply(Generator &, Bytecode &) {}
+void DeadCodeEliminationOptimizationPass::apply(Generator &) {}
 
 bool DeadCodeEliminationOptimizationPass::always_true(Generator &gen, IfStmtNode if_stmt)
 {
@@ -70,4 +67,4 @@ void DeadCodeEliminationOptimizationPass::remove_unreachable_code_in_scope(Gener
     scope->statements = new_stmts;
 }
 
-} // namespace via::Compilation
+} // namespace via

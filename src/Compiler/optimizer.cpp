@@ -2,7 +2,7 @@
 
 #include "optimizer.h"
 
-namespace via::Compilation
+namespace via
 {
 
 // Adds an AST optimization pass to the manager
@@ -17,28 +17,28 @@ void PassManager::add_bytecode_pass(std::unique_ptr<OptimizationPass> pass)
     bytecode_passes.push_back(std::move(pass));
 }
 
-void PassManager::apply_astree(Generator &gen, Bytecode &bytecode)
+void PassManager::apply_astree(Generator &gen)
 {
     for (auto &pass : astree_passes)
     {
-        if (pass->is_applicable(bytecode))
-            pass->apply(gen, bytecode);
+        if (pass->is_applicable(gen))
+            pass->apply(gen);
     }
 }
 
-void PassManager::apply_bytecode(Generator &gen, Bytecode &bytecode)
+void PassManager::apply_bytecode(Generator &gen)
 {
     for (auto &pass : bytecode_passes)
     {
-        if (pass->is_applicable(bytecode))
-            pass->apply(gen, bytecode);
+        if (pass->is_applicable(gen))
+            pass->apply(gen);
     }
 }
 
-void PassManager::apply_all(Generator &gen, Bytecode &bytecode)
+void PassManager::apply_all(Generator &gen)
 {
-    apply_astree(gen, bytecode);
-    apply_bytecode(gen, bytecode);
+    apply_astree(gen);
+    apply_bytecode(gen);
 }
 
-} // namespace via::Compilation
+} // namespace via

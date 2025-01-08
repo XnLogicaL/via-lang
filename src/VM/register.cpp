@@ -12,7 +12,7 @@ RAState *rnewstate(RTState *)
     void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTER_COUNT);
     state->head = reinterpret_cast<TValue *>(alloc);
 
-    for (GPRegister i = 0; i < VIA_REGISTER_COUNT; i++)
+    for (RegId i = 0; i < VIA_REGISTER_COUNT; i++)
     {
         TValue val;
         val.type = ValueType::Monostate;

@@ -5,7 +5,7 @@
 #include "common.h"
 #include "token.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 struct Definition
@@ -17,4 +17,4 @@ struct Definition
     size_t line;
 };
 
-} // namespace via::Tokenization
+} // namespace via

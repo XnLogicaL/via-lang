@@ -3,9 +3,9 @@
 #include "common.h"
 #include "Parser/ast.h"
 
-namespace via::Compilation
+namespace via
 {
 
 
 
-} // namespace via::Compilation
+} // namespace via

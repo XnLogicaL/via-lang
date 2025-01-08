@@ -4,6 +4,8 @@
 
 #include "common.h"
 #include "bytecode.h"
+#include "instruction.h"
+#include "opcode.h"
 
 namespace via
 {

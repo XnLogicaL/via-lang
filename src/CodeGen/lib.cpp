@@ -4,7 +4,7 @@
 
 #define TOX86GP(reg) x86::Gp::fromTypeAndId(RegType::kX86_KReg, reg)
 
-namespace via::CodeGen
+namespace via
 {
 
 using namespace asmjit;
@@ -30,18 +30,11 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
     {
     case OpCode::NOP:
         return a.nop(); // nop
-    case OpCode::CPY:
     case OpCode::MOV:
     {
         x86::Gp dst = TOX86GP(instruction.operand1.val_register);
         x86::Gp src = TOX86GP(instruction.operand2.val_register);
         return a.mov(dst, src); // mov dst, src
-    }
-    case OpCode::LOAD:
-    {
-        x86::Gp dst = TOX86GP(instruction.operand1.val_register);
-        Imm val = jittranslateoperand(instruction.operand2);
-        return a.mov(dst, val); // mov dst, imm
     }
     case OpCode::SWAP:
     {
@@ -68,4 +61,4 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
     return a.nop(); // nop
 }
 
-} // namespace via::CodeGen
+} // namespace via

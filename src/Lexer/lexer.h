@@ -12,7 +12,7 @@
     #define VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
 #endif
 
-namespace via::Tokenization
+namespace via
 {
 
 // Lexer class
@@ -21,8 +21,8 @@ namespace via::Tokenization
 class Tokenizer
 {
 public:
-    Tokenizer(std::string &source)
-        : source(source)
+    Tokenizer(ProgramData &program)
+        : program(program)
         , pos(0)
         , line(1)
         , offset(0)
@@ -30,6 +30,11 @@ public:
     {
     }
 
+    // Reads the source file and returns a source program
+    // Which contains the original source string, tokenized source string and the file name
+    void tokenize();
+
+private:
     // Starts reading a "number" literal
     // Which can be a negative/positive floating point or integer
     Token read_number();
@@ -41,16 +46,13 @@ public:
     Token read_string();
     // Reads and returns the current token
     Token get_token();
-    // Reads the source file and returns a source container
-    // Which contains the original source string, tokenized source string and the file name
-    SrcContainer tokenize();
 
 private:
-    std::string &source;
+    ProgramData &program;
     size_t pos;
     size_t line;
     size_t offset;
     ArenaAllocator alloc;
 };
 
-} // namespace via::Tokenization
+} // namespace via

@@ -1,19 +1,16 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "highlighter.h"
-#include <cmath>
+#include "token.h"
 
-namespace via::Tokenization
+namespace via
 {
-
-// This is an internal "flag" that determines if the file name has been displayed before any errors
-static bool has_printed_file_name = false;
 
 // Splits a source string into lines
 std::vector<std::string> Emitter::split_lines()
 {
     std::vector<std::string> lines;
-    std::istringstream stream(container.source);
+    std::istringstream stream(program.source);
     std::string line;
 
     // Loop through lines and split them
@@ -35,7 +32,7 @@ std::string Emitter::get_severity_header(Severity sev)
     case Severity::ERROR:
         return "\033[1;31merror:\033[0m "; // Red color for error
     default:
-        UNREACHABLE();
+        VIA_UNREACHABLE();
         return "";
     }
 }
@@ -75,19 +72,22 @@ std::string Emitter::underline_line(int line_number, int offset, int length, con
 // Emits an output message
 void Emitter::out(size_t idx, std::string message, Severity sev)
 {
+    // This is an internal "flag" that determines if the file name has been displayed before any errors
+    static bool has_printed_file_name = false;
+
     // Check if file information has been printed
-    if (!has_printed_file_name && container.file_name != "<repl>")
+    if (!has_printed_file_name && program.file_name != "<repl>")
     {
         has_printed_file_name = true;
-        std::cout << std::format("In file {}:\n", container.file_name);
+        std::cout << std::format("In file {}:\n", program.file_name);
     }
 
     // Find token
-    Token tok = container.tokens.at(idx);
+    Token tok = program.tokens->at(idx);
     size_t line = tok.line;
     size_t offset = tok.offset;
     size_t length = tok.value.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 
-} // namespace via::Tokenization
+} // namespace via

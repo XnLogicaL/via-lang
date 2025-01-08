@@ -4,12 +4,12 @@
 
 #include "common.h"
 
-namespace via::CodeGen
+namespace via
 {
 
 struct JITState
 {
-    std::unordered_map<std::string_view, int> symbol_table;
+    HashMap<std::string_view, int> symbol_table;
 };
 
-} // namespace via::CodeGen
+} // namespace via

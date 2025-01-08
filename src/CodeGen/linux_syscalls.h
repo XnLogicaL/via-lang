@@ -5,7 +5,7 @@
 #include "common.h"
 #include <asmjit/asmjit.h>
 
-namespace via::CodeGen
+namespace via
 {
 
 enum class LinuxSyscall
@@ -75,4 +75,4 @@ enum class LinuxSyscall
 
 void jitsyscall(asmjit::x86::Assembler &, LinuxSyscall, std::vector<asmjit::Operand>);
 
-} // namespace via::CodeGen
+} // namespace via

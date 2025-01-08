@@ -2,14 +2,14 @@
 
 #include "linux_syscalls.h"
 
-namespace via::CodeGen
+namespace via
 {
 
 using namespace asmjit;
 
 void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Operand> ops)
 {
-    static std::unordered_map<size_t, x86::Gp> arg_map = {
+    static HashMap<size_t, x86::Gp> arg_map = {
         {0, x86::rdi},
         {1, x86::rsi},
         {2, x86::rdx},
@@ -41,4 +41,4 @@ void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Ope
     a.syscall();
 }
 
-} // namespace via::CodeGen
+} // namespace via

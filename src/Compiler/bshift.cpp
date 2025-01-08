@@ -2,12 +2,12 @@
 
 #include "bshift.h"
 
-namespace via::Compilation
+namespace via
 {
 
-void BitShiftOptimizationPass::apply(Generator &, Bytecode &bytecode)
+void BitShiftOptimizationPass::apply(Generator &gen)
 {
-    for (Instruction &instr : bytecode.get())
+    for (Instruction &instr : gen.program.bytecode->get())
     {
         if (instr.op != OpCode::MULRR && instr.op != OpCode::DIVRR)
             continue;
@@ -24,13 +24,13 @@ void BitShiftOptimizationPass::apply(Generator &, Bytecode &bytecode)
         // Replace with bit-shift instructions
         if (instr.op == OpCode::MULRR)
         {
-            instr.op = OpCode::BSHLRR;                        // Bitwise shift left
-            instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
+            instr.op = OpCode::BSHLRR;           // Bitwise shift left
+            instr.operand1 = power_of_2.value(); // Use the shift count
         }
         else if (instr.op == OpCode::DIVRR)
         {
-            instr.op = OpCode::BSHRRR;                        // Bitwise shift right
-            instr.operand1 = cnewoperand(power_of_2.value()); // Use the shift count
+            instr.op = OpCode::BSHRRR;           // Bitwise shift right
+            instr.operand1 = power_of_2.value(); // Use the shift count
         }
     }
 }
@@ -49,4 +49,4 @@ std::optional<double> BitShiftOptimizationPass::is_power_of_2(double value)
     return std::nullopt;
 }
 
-} // namespace via::Compilation
+} // namespace via

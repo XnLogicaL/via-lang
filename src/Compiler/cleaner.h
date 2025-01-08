@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace via::Compilation
+namespace via
 {
 
 class Cleaner
@@ -22,4 +22,4 @@ private:
     std::vector<std::function<void(void)>> callback_list;
 };
 
-} // namespace via::Compilation
+} // namespace via

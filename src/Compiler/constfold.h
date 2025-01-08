@@ -6,17 +6,17 @@
 #include "optimizer.h"
 #include "Parser/ast.h"
 
-namespace via::Compilation
+namespace via
 {
 
 class ConstFoldOptimizationPass : public OptimizationPass
 {
 public:
-    void apply(Generator &, Bytecode &) override;
-    bool is_applicable(const Bytecode &) const override;
+    void apply(Generator &) override;
+    bool is_applicable(Generator &) const override;
 
 private:
-    void fold_constexpr(Generator &, Parsing::AST::ExprNode *);
+    void fold_constexpr(Generator &, ExprNode *);
 };
 
-} // namespace via::Compilation
+} // namespace via

@@ -2,6 +2,7 @@
 
 #pragma once
 
+// C++ std imports
 #include <bitset>
 #include <cassert>
 #include <cctype>
@@ -27,7 +28,14 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+// External imports
+#include "bytecode.h"
 #include "magic_enum.hpp"
+
+// Internal imports
+#include "Lexer/token.h"
+#include "Parser/ast.h"
 
 #define ASMJIT_STATIC
 
@@ -75,13 +83,6 @@
 namespace via
 {
 
-namespace Tokenization
-{
-
-struct Token;
-
-}
-
 #ifdef VIA_LONGJMP
 using JmpOffset = std::int64_t;
 #else
@@ -98,10 +99,23 @@ using ExitMsg = const char *;             // Exit message type.
 using ThreadId = std::uint32_t;           // Thread identifier.
 using LocalId = std::uint32_t;            // Local variable identifier (stack offset).
 using kGlobId = std::string_view;         // Global constant identifier.
+using RegId = uint32_t;                   // Register
 using StkPos = std::size_t;               // Stack position.
 using StkVal = std::uintptr_t;            // Stack value, castable pointer
 using StkAddr = StkVal *;                 // Stack address
 using YldTime = float;                    // Yield time type, for the VM.
+using TNumber = double;
+using TBool = bool;
+using TPointer = uintptr_t;
+using TableKey = Hash;
+
+// Forward declarations
+struct TValue;
+struct TTable;
+struct TString;
+struct TFunction;
+struct TCFunction;
+using TokenHolder = std::vector<Token>;
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)
 {
@@ -127,11 +141,19 @@ public:
     }
 };
 
-struct SrcContainer
+struct ProgramData
 {
-    std::vector<Tokenization::Token> tokens;
-    std::string source;
     std::string file_name;
+    std::string source;
+    TokenHolder *tokens;
+    AbstractSyntaxTree *ast;
+    BytecodeHolder *bytecode;
+
+    ProgramData(std::string file_name, std::string file_source)
+        : file_name(file_name)
+        , source(file_source)
+    {
+    }
 };
 
 } // namespace via

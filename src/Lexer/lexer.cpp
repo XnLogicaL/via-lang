@@ -7,8 +7,8 @@
 // Uses arena allocator for emplacing the newly created token
 #define TOKEN(type, val, line, off) *alloc.emplace<Token>(type, val, line, off)
 
-// We use this rather than `using namespace via::Tokenization`
-namespace via::Tokenization
+// We use this rather than `using namespace via`
+namespace via
 {
 
 Token Tokenizer::read_number()
@@ -23,26 +23,26 @@ Token Tokenizer::read_number()
     std::string value;
 
     // Read the number until the current character isn't numeric
-    while (pos < source.size() && isdigit(source.at(pos)))
+    while (pos < program.source.size() && isdigit(program.source.at(pos)))
     {
-        value.push_back(source.at(pos));
+        value.push_back(program.source.at(pos));
         pos++;
         offset++;
     }
 
     // Check for floating point
-    if (pos < source.size() && source.at(pos) == '.')
+    if (pos < program.source.size() && program.source.at(pos) == '.')
     {
-        value.push_back(source.at(pos));
+        value.push_back(program.source.at(pos));
         // Since it's proven that there is a floating point in the number literal
         // We can safely categorize it as a float literal
         type = TokenType::LIT_FLOAT;
         pos++;
         offset++;
 
-        while (pos < source.size() && isdigit(source.at(pos)))
+        while (pos < program.source.size() && isdigit(program.source.at(pos)))
         {
-            value.push_back(source.at(pos));
+            value.push_back(program.source.at(pos));
             pos++;
             offset++;
         }
@@ -72,14 +72,14 @@ Token Tokenizer::read_ident()
         bool is_alnum = isalnum(ch);
         // I love std::find and the ridiculous iterator template
         // Like, who the fuck thought it was a good idea to make people write .begin() and .end() every single fuckin time?
-        bool is_allowed = std::find(allow_list.begin(), allow_list.end(), source.at(pos)) != allow_list.end();
+        bool is_allowed = std::find(allow_list.begin(), allow_list.end(), program.source.at(pos)) != allow_list.end();
         return is_alnum || is_allowed;
     };
 
     // Read identifier while position is inside bounds and the current character is allowed within an identifier
-    while (pos < source.size() && is_allowed(source.at(pos)))
+    while (pos < program.source.size() && is_allowed(program.source.at(pos)))
     {
-        identifier.push_back(source.at(pos));
+        identifier.push_back(program.source.at(pos));
         pos++;
         offset++;
     }
@@ -87,7 +87,7 @@ Token Tokenizer::read_ident()
     // Have to turn off clang-format here because it make a tower out of these
     // Sorry but I'm not clang-format literate!
     // clang-format off
-    static const std::unordered_map<std::string, TokenType> keyword_map = { 
+    static const HashMap<std::string, TokenType> keyword_map = { 
         { "do", TokenType::KW_DO }, { "in", TokenType::KW_IN },
         { "local", TokenType::KW_LOCAL }, { "global", TokenType::KW_GLOBAL },
         { "as", TokenType::KW_AS }, { "const", TokenType::KW_CONST },
@@ -130,16 +130,16 @@ Token Tokenizer::read_string()
     pos++;                        // Skip opening quote
     offset++;
 
-    while (pos < source.size() && source.at(pos) != '"')
+    while (pos < program.source.size() && program.source.at(pos) != '"')
     {
-        if (source.at(pos) == '\\')
+        if (program.source.at(pos) == '\\')
         {
             pos++;
             offset++;
 
-            if (pos < source.size())
+            if (pos < program.source.size())
             {
-                char escape_char = source.at(pos);
+                char escape_char = program.source.at(pos);
                 switch (escape_char)
                 {
                 case 'n':
@@ -158,7 +158,7 @@ Token Tokenizer::read_string()
             }
         }
         else
-            value.push_back(source.at(pos));
+            value.push_back(program.source.at(pos));
 
         pos++;
         offset++;
@@ -173,11 +173,11 @@ Token Tokenizer::read_string()
 Token Tokenizer::get_token()
 {
     // Skip whitespace
-    while (pos < source.size() && isspace(source.at(pos)))
+    while (pos < program.source.size() && isspace(program.source.at(pos)))
     {
         // Check if there is a line break
         // If so, increment line and reset offset
-        if (source.at(pos) == '\n')
+        if (program.source.at(pos) == '\n')
         {
             line++;
             offset = 0;
@@ -188,27 +188,27 @@ Token Tokenizer::get_token()
         pos++; // Ensure this increments regardless of newline
     }
 
-    // Check if the position is at the end of the source string
+    // Check if the position is at the end of the program.source string
     // If so, return an EOF token meant as a sentinel
-    if (pos >= source.size())
+    if (pos >= program.source.size())
         return {TokenType::EOF_, "", line, offset};
 
     size_t start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
-    if (isdigit(source.at(pos)))
+    if (isdigit(program.source.at(pos)))
         return read_number();
 
     // Handle string literals
-    if (source.at(pos) == '"')
+    if (program.source.at(pos) == '"')
         return read_string();
 
     // Handle identifiers and keywords
-    if (isalpha(source.at(pos)))
+    if (isalpha(program.source.at(pos)))
         return read_ident();
 
     // Handle special characters (operators, delimiters, etc.)
-    char ch = source.at(pos);
+    char ch = program.source.at(pos);
 
     pos++;
     offset++;
@@ -228,7 +228,7 @@ Token Tokenizer::get_token()
     case '^':
         return TOKEN(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
-        if (pos < source.size() && source.at(pos) == '=')
+        if (pos < program.source.size() && program.source.at(pos) == '=')
         {
             pos++;
             offset++;
@@ -236,7 +236,7 @@ Token Tokenizer::get_token()
         }
         return TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
-        if (pos < source.size() && source.at(pos) == '=')
+        if (pos < program.source.size() && program.source.at(pos) == '=')
         {
             pos++;
             offset++;
@@ -282,20 +282,20 @@ Token Tokenizer::get_token()
     return TOKEN(TokenType::UNKNOWN, "", line, start_offset);
 }
 
-SrcContainer Tokenizer::tokenize()
+void Tokenizer::tokenize()
 {
-    std::vector<Token> tokens;
+    TokenHolder *tokens = new TokenHolder;
 
     while (true)
     {
         auto token = get_token();
-        tokens.push_back(token);
+        tokens->push_back(token);
 
         if (token.type == TokenType::EOF_)
             break;
     }
 
-    return {tokens, source, ""};
+    program.tokens = tokens;
 }
 
-} // namespace via::Tokenization
+} // namespace via

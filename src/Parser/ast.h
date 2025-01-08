@@ -2,17 +2,13 @@
 
 #pragma once
 
-#include "common.h"
 #include "token.h"
 #include <optional>
 #include <variant>
 #include <vector>
-#include <memory>
 
-namespace via::Parsing::AST
+namespace via
 {
-
-using namespace Tokenization;
 
 // Forward declarations
 struct ScopeStmtNode;
@@ -286,9 +282,9 @@ struct ContinueStmtNode
 
 // Root AST Node
 // ---------------
-struct AST
+struct AbstractSyntaxTree
 {
     std::vector<StmtNode> statements;
 };
 
-} // namespace via::Parsing::AST
+} // namespace via

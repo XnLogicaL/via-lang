@@ -10,13 +10,7 @@ namespace via
 {
 
 struct Chunk;
-
-namespace CodeGen
-{
-
 using JITFunc = int (*)();
 JITFunc jitgenerate(Chunk *);
-
-} // namespace CodeGen
 
 } // namespace via

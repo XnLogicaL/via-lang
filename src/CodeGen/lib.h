@@ -7,11 +7,11 @@
 #include "instruction.h"
 #include <asmjit/asmjit.h>
 
-namespace via::CodeGen
+namespace via
 {
 
 asmjit::Error jitcompileinstruction(asmjit::x86::Assembler &, Instruction &);
 asmjit::Imm jittranslateoperand(Operand &);
-asmjit::x86::Gp jitgetregister(GPRegister);
+asmjit::x86::Gp jitgetregister(RegId);
 
-} // namespace via::CodeGen
+} // namespace via

@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 class Emitter
@@ -20,8 +20,8 @@ public:
     };
 
     ~Emitter() = default;
-    Emitter(SrcContainer &container)
-        : container(container)
+    Emitter(ProgramData &program)
+        : program(program)
     {
     }
 
@@ -29,7 +29,7 @@ public:
     void out(size_t, std::string, Severity);
 
 private:
-    SrcContainer &container;
+    ProgramData &program;
     // I forgot what this does
     std::vector<std::string> split_lines();
     // Returns a header based on the given severity
@@ -41,4 +41,4 @@ private:
     std::string underline_line(int, int, int, const std::string &, Severity);
 };
 
-} // namespace via::Tokenization
+} // namespace via

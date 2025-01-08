@@ -14,7 +14,7 @@ namespace via
 struct Chunk
 {
     // Pointer to the machine code of the chunk, function pointer
-    CodeGen::JITFunc mcode = nullptr;
+    JITFunc mcode = nullptr;
     // Pointer to the first instruction contained in the chunk
     Instruction *begin = nullptr;
     // Pointer to the last instruction contained in the chunk

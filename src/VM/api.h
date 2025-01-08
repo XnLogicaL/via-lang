@@ -32,20 +32,20 @@ VIA_FORCEINLINE bool isvalidjmpaddr(RTState *VIA_RESTRICT V, Instruction *VIA_RE
 // Wrapper for `rsetregister`.
 template<typename T = TValue>
     requires(!std::is_pointer_v<T> && std::same_as<T, TValue>)
-VIA_FORCEINLINE void setregister(RTState *VIA_RESTRICT V, GPRegister reg, T val) noexcept
+VIA_FORCEINLINE void setregister(RTState *VIA_RESTRICT V, RegId reg, T val) noexcept
 {
     rsetregister(V->ralloc, reg, val);
 }
 
 // Returns the value of register <reg>.
 // Wrapper for `rgetregister`.
-VIA_FORCEINLINE TValue *getregister(RTState *VIA_RESTRICT V, GPRegister reg) noexcept
+VIA_FORCEINLINE TValue *getregister(RTState *VIA_RESTRICT V, RegId reg) noexcept
 {
     return rgetregister(V->ralloc, reg);
 }
 
 // Compares the values of two registers and returns whether if they are equivalent.
-VIA_FORCEINLINE bool cmpregister(RTState *VIA_RESTRICT V, GPRegister reg0, GPRegister reg1) noexcept
+VIA_FORCEINLINE bool cmpregister(RTState *VIA_RESTRICT V, RegId reg0, RegId reg1) noexcept
 {
     // Early return if registers are equivalent
     if (getregister(V, reg0) == getregister(V, reg1))
@@ -295,6 +295,7 @@ VIA_FORCEINLINE TValue *getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCod
     if (!checktable(V, val))
         return newvalue(V);
 
+#define GET_METHOD(id) (gettableindex(V, val.val_table, hashstring(V, id), true))
     switch (op)
     {
     case OpCode::ADDRR:
@@ -303,47 +304,62 @@ VIA_FORCEINLINE TValue *getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCod
     case OpCode::ADDNN:
     case OpCode::ADDIR:
     case OpCode::ADDIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__add"), true);
+        return GET_METHOD("__add");
     case OpCode::SUBRR:
     case OpCode::SUBRN:
     case OpCode::SUBNR:
     case OpCode::SUBNN:
     case OpCode::SUBIR:
     case OpCode::SUBIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__sub"), true);
+        return GET_METHOD("__sub");
     case OpCode::MULRR:
     case OpCode::MULRN:
     case OpCode::MULNR:
     case OpCode::MULNN:
     case OpCode::MULIR:
     case OpCode::MULIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__mul"), true);
+        return GET_METHOD("__mul");
     case OpCode::DIVRR:
     case OpCode::DIVRN:
     case OpCode::DIVNR:
     case OpCode::DIVNN:
     case OpCode::DIVIR:
     case OpCode::DIVIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__div"), true);
+        return GET_METHOD("__div");
     case OpCode::POWRR:
     case OpCode::POWRN:
     case OpCode::POWNR:
     case OpCode::POWNN:
     case OpCode::POWIR:
     case OpCode::POWIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__pow"), true);
+        return GET_METHOD("__pow");
     case OpCode::MODRR:
     case OpCode::MODRN:
     case OpCode::MODNR:
     case OpCode::MODNN:
     case OpCode::MODIR:
     case OpCode::MODIN:
-        return gettableindex(V, val.val_table, hashstring(V, "__mod"), true);
+        return GET_METHOD("__mod");
+    case OpCode::NEGI:
+    case OpCode::NEGR:
+        return GET_METHOD("__neg");
+    case OpCode::INC:
+        return GET_METHOD("__inc");
+    case OpCode::DEC:
+        return GET_METHOD("__dec");
+    case OpCode::CONCATRR:
+    case OpCode::CONCATRS:
+    case OpCode::CONCATSR:
+    case OpCode::CONCATSS:
+    case OpCode::CONCATIR:
+    case OpCode::CONCATIS:
+        return GET_METHOD("__con");
     default:
         break;
     }
 
     return newvalue(V);
+#undef GET_METHOD
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
@@ -558,7 +574,7 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
 }
 
 // Loads the value of key <key> in table <tbl> into register <reg>, if present in table.
-VIA_FORCEINLINE TValue *loadtableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, GPRegister reg) noexcept
+VIA_FORCEINLINE TValue *loadtableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, RegId reg) noexcept
 {
     TValue *val = gettableindex(V, tbl, key, true);
     setregister(V, reg, *val);
@@ -669,11 +685,10 @@ VIA_FORCEINLINE void restorestate(RTState *VIA_RESTRICT V) noexcept
 }
 
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
-VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, OpCode op) noexcept
+VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, OpCode op)
 {
-#ifdef VIA_DEBUG
-    VIA_ASSERT(checknumber(V, rhs), "arith(): Expected Number for rhs");
-#endif
+    VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+
     if (checknumber(V, lhs))
     {
         switch (op)
@@ -729,12 +744,10 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
 }
 
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
-VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, OpCode op) noexcept
+VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, OpCode op)
 {
-#ifdef VIA_DEBUG
-    VIA_ASSERT(checknumber(V, rhs), "arith(): Expected Number for rhs");
-    VIA_ASSERT(rhs.val_number != 0.0f, "arith(): Expected non-zero Number for rhs");
-#endif
+    VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+
     if (checknumber(V, *lhs))
     {
         switch (op)

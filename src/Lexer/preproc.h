@@ -17,29 +17,29 @@
         failed = true; \
     }
 
-namespace via::Tokenization
+namespace via
 {
 
 class Preprocessor
 {
 public:
     ~Preprocessor() = default;
-    Preprocessor(SrcContainer &container)
-        : pos(0)
+    Preprocessor(ProgramData &program)
+        : program(program)
+        , pos(0)
         , failed(false)
-        , container(container)
-        , emitter(container)
+        , emitter(program)
     {
     }
 
     bool preprocess();
 
 private:
+    ProgramData &program;
     size_t pos;
     bool failed;
-    SrcContainer &container;
-    std::unordered_map<std::string, Macro> macro_table;
-    std::unordered_map<std::string, Definition> def_table;
+    HashMap<std::string, Macro> macro_table;
+    HashMap<std::string, Definition> def_table;
     Emitter emitter;
 
 private:
@@ -53,4 +53,4 @@ private:
     void erase_from_stream(size_t, size_t);
 };
 
-} // namespace via::Tokenization
+} // namespace via

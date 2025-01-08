@@ -1,25 +1,22 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "parser.h"
-#include "Parser/ast.h"
+#include "ast.h"
 #include "token.h"
 #include <vector>
 
-using namespace via::Tokenization;
-using namespace via::Parsing::AST;
-
-namespace via::Parsing
+namespace via
 {
 
 Token Parser::consume()
 {
     VIA_ASSERT(!is_type(TokenType::EOF_), "Attempt to consume EOF");
-    return container.tokens.at(current_position++);
+    return program.tokens->at(current_position++);
 }
 
 Token Parser::peek(int offset) const
 {
-    return container.tokens.at(current_position + offset);
+    return program.tokens->at(current_position + offset);
 }
 
 bool Parser::is_value(const std::string &value, int offset) const
@@ -44,7 +41,7 @@ ExprNode *Parser::parse_bin_expr(int precedence)
 
     while (true)
     {
-        if (current_position >= container.tokens.size())
+        if (current_position >= program.tokens->size())
             break;
 
         // Check if there are more tokens to process
@@ -123,7 +120,7 @@ ExprNode *Parser::parse_prim_expr()
     // Parse the chain of operations
     while (true)
     {
-        if (current_position >= container.tokens.size())
+        if (current_position >= program.tokens->size())
             break;
 
         if (is_type(TokenType::DOT)) // Member access: obj.prop
@@ -419,8 +416,6 @@ GlobalDeclStmtNode *Parser::parse_global_declaration()
 
 CallStmtNode *Parser::parse_call_statement(ExprNode *expr)
 {
-    std::cout << "Parsing call at " << peek().to_string() << "\n";
-
     CallStmtNode *call = alloc.emplace<CallStmtNode>();
     call->callee = expr;
 
@@ -686,11 +681,11 @@ invalid_statement:
 #undef emplace
 }
 
-AST::AST *Parser::parse_program()
+AbstractSyntaxTree *Parser::parse_program()
 {
-    AST::AST *ast = alloc.emplace<AST::AST>();
+    AbstractSyntaxTree *ast = alloc.emplace<AbstractSyntaxTree>();
 
-    for (Token tok : container.tokens)
+    for (Token tok : *program.tokens)
     {
         if (peek().type == TokenType::EOF_)
             break;
@@ -701,4 +696,4 @@ AST::AST *Parser::parse_program()
     return ast;
 }
 
-} // namespace via::Parsing
+} // namespace via

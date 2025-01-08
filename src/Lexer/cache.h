@@ -72,8 +72,8 @@ struct CacheFile
     uint64_t checksum_b;       // 8 bytes
     std::vector<char> bytecode;
 
-    explicit CacheFile(SrcContainer &container)
-        : file_name(container.file_name)
+    explicit CacheFile(ProgramData &program)
+        : file_name(program.file_name)
         , magic_value(0xDEADBEEFULL)
         , version(VIA_CACHE_MANAGER_VERSION)
         , compilation_date(std::chrono::steady_clock::now().time_since_epoch().count())
@@ -86,7 +86,7 @@ struct CacheFile
         , bytecode({})
     {
         // Assuming the hash is 32 bytes
-        uint8_t *hash_data = hash_file(container.source);
+        uint8_t *hash_data = hash_file(program.source);
         std::memcpy(file_hash, hash_data, 32);
         delete[] hash_data; // Remember to free the dynamically allocated memory
     }
@@ -96,7 +96,7 @@ class CacheManager
 {
 public:
     CacheResult write_cache(std::filesystem::path, const CacheFile &);
-    CacheFile read_cache(SrcContainer);
+    CacheFile read_cache(ProgramData);
 
 private:
     CacheResult make_cache(std::filesystem::path);

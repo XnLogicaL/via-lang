@@ -2,24 +2,24 @@
 
 #include "preproc.h"
 
-namespace via::Tokenization
+namespace via
 {
 
 Token Preprocessor::consume(size_t ahead)
 {
     size_t old_pos = pos;
     pos += ahead;
-    return container.tokens.at(old_pos);
+    return program.tokens->at(old_pos);
 }
 
 Token Preprocessor::peek(int ahead)
 {
-    return container.tokens.at(pos + ahead);
+    return program.tokens->at(pos + ahead);
 }
 
 bool Preprocessor::preprocess()
 {
-    for (const Token &tok : container.tokens)
+    for (const Token &tok : *program.tokens)
     {
         if (tok.type == TokenType::KW_MACRO)
             parse_macro();
@@ -49,8 +49,8 @@ bool Preprocessor::preprocess()
 
 void Preprocessor::erase_from_stream(size_t begin, size_t end)
 {
-    auto tokens_begin = container.tokens.begin();
-    container.tokens.erase(tokens_begin + begin, tokens_begin + end);
+    auto tokens_begin = program.tokens->begin();
+    program.tokens->erase(tokens_begin + begin, tokens_begin + end);
 }
 
-} // namespace via::Tokenization
+} // namespace via
