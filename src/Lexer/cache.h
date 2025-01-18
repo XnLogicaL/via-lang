@@ -7,14 +7,13 @@
 #include "fileio.h"
 #include "sha256.h"
 
-#define VIA_CACHE_MANAGER_VERSION (0x1)
 #define VIA_CACHE_DIR_NAME ("_viac")
-#define VIA_ASM_EXT ("viac")
-#define VIA_READABLE_ASM_EXT ("viac.s")
+#define VIA_BIN_EXT ("viac")
+#define VIA_ASM_EXT ("viac.s")
 
 /* Binary file format (VBFF):
     |===========|
-    |8 bytes    | Magic value. (0xDEADBEEF)
+    |8 bytes    | Magic value. (0xDEADBEEFULL)
     |4 bytes    | Version information for compatibility.
     |8 bytes    | Compilation date. (seconds since UNIX Epoch)
     |32 bytes   | File hash. (SHA-256)
@@ -75,7 +74,7 @@ struct CacheFile
     explicit CacheFile(ProgramData &program)
         : file_name(program.file_name)
         , magic_value(0xDEADBEEFULL)
-        , version(VIA_CACHE_MANAGER_VERSION)
+        , version(std::stoi(VIA_VERSION))
         , compilation_date(std::chrono::steady_clock::now().time_since_epoch().count())
         , platform_info("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         , runtime_flags("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")

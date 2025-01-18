@@ -1207,6 +1207,8 @@ StmtNode *Parser::parse_statement()
 
     switch (peek().type)
     {
+    case TokenType::EOF_:
+        return nullptr;
     case TokenType::KW_LOCAL:
         if (is_type(TokenType::KW_FUNC, 1))
             return emplace(*parse_function_declaration());
@@ -1274,7 +1276,7 @@ StmtNode *Parser::parse_statement()
     }
     }
 invalid_statement:
-    PARSER_ERROR("Invalid statement; expected declaration, function call or assignment");
+    PARSER_ERROR(std::format("Unexpected token '{}' while parsing statement", peek().value));
     panic_and_recover();
     return nullptr;
 #undef emplace
