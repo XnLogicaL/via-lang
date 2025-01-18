@@ -40,13 +40,6 @@ struct Operand
     Operand(TBool);
     Operand(const char *);
     Operand(RegId);
-
-    bool check_type(OperandType);
-    bool check_nil();
-    bool check_number();
-    bool check_boolean();
-    bool check_string();
-    bool check_register();
 };
 
 struct Instruction
@@ -58,7 +51,10 @@ struct Instruction
     Chunk *chunk;
 
     Instruction();
-    Instruction(OpCode, std::vector<Operand>);
+    Instruction(OpCode, std::vector<Operand>, Chunk *);
 };
+
+std::string to_string(Operand);
+std::string to_string(Instruction);
 
 } // namespace via

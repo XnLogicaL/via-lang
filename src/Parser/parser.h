@@ -5,6 +5,7 @@
 #include "common.h"
 #include "ast.h"
 #include "arena.hpp"
+#include "highlighter.h"
 #include "token.h"
 
 #ifndef VIA_PARSER_ALLOC_SIZE
@@ -18,20 +19,21 @@ class Parser
 {
 public:
     Parser(ProgramData &program)
-        : alloc(VIA_PARSER_ALLOC_SIZE)
-        , program(program)
+        : program(program)
+        , emitter(program)
         , current_position(0)
+        , failed(false)
     {
     }
 
-    AbstractSyntaxTree *parse_program();
+    void parse_program();
 
 private:
-    // Memory allocator
-    ArenaAllocator alloc;
-    // Token management
     ProgramData &program;
-    size_t current_position;
+    ArenaAllocator *alloc;   // Memory allocator
+    Emitter emitter;         // Error emitter
+    size_t current_position; // Token management
+    bool failed;
 
 private:
     // Core token manipulation functions
@@ -42,13 +44,20 @@ private:
     bool is_value(const std::string &value = "", int offset = 0) const;
     bool is_type(TokenType type = TokenType::UNKNOWN, int offset = 0) const;
 
+    // Panic related
+    bool is_keyword();
+    void panic_and_recover();
+
     // Parsing helper functions
-    std::vector<ExprNode> parse_call_arguments();
-    std::vector<TypeNode> parse_call_type_arguments();
+    std::vector<ExprNode *> parse_call_arguments();
+    std::vector<TypeNode *> parse_call_type_arguments();
+    Pragma parse_pragma();
+    StatementModifiers parse_modifiers(std::function<bool(void)>);
 
     template<typename IndexExprType, typename IndexCallExprType>
     ExprNode *parse_index_expr(ExprNode *);
     ExprNode *parse_literal_or_group_expr(Token);
+    ExprNode *parse_table_expr();
 
     // Type and expression parsing functions
     TypeNode *parse_type_generic();
@@ -69,6 +78,7 @@ private:
     IfStmtNode *parse_if_statement();
     SwitchStmtNode *parse_switch_statement();
     FunctionDeclStmtNode *parse_function_declaration();
+    StructDeclStmtNode *parse_struct_declaration();
     ScopeStmtNode *parse_scope_statement();
     StmtNode *parse_statement();
 };

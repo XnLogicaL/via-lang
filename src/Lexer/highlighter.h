@@ -7,18 +7,18 @@
 namespace via
 {
 
+// Returns the severity of the highlight
+// ERROR will affect the returned `fail` value
+enum class OutputSeverity
+{
+    INFO,
+    WARNING,
+    ERROR_,
+};
+
 class Emitter
 {
 public:
-    // Returns the severity of the highlight
-    // ERROR will affect the returned `fail` value
-    enum class Severity
-    {
-        INFO,
-        WARNING,
-        ERROR,
-    };
-
     ~Emitter() = default;
     Emitter(ProgramData &program)
         : program(program)
@@ -26,7 +26,7 @@ public:
     }
 
     // Main "entry point" for underlined/highlighted errors
-    void out(size_t, std::string, Severity);
+    void out(size_t, std::string, OutputSeverity);
 
 private:
     ProgramData &program;
@@ -34,11 +34,11 @@ private:
     std::vector<std::string> split_lines();
     // Returns a header based on the given severity
     // These headers will vary in terms of color, text, etc.
-    std::string get_severity_header(Severity);
+    std::string get_severity_header(OutputSeverity);
     // Draws a horizontal line under the line line_number of source
     // The dimensions of the line is determined by the offset and length parameters of this function
     // Attaches a message to the top of the underlined line, with the given severity
-    std::string underline_line(int, int, int, const std::string &, Severity);
+    std::string underline_line(int, int, int, const std::string &, OutputSeverity);
 };
 
 } // namespace via

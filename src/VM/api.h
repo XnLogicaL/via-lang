@@ -11,6 +11,8 @@
 #include "stack.h"
 #include "state.h"
 #include "types.h"
+// Fuck.
+#include <cmath>
 
 namespace via
 {
@@ -145,7 +147,9 @@ VIA_FORCEINLINE TValue *popval(RTState *VIA_RESTRICT V)
 
 // Returns a value that contains a String that represents the stringified version of <val>.
 // The return value is guaranteed to be a String type.
-VIA_FORCEINLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
+// The only purpose of this function being inline is to be defined in a header file.
+// Otherwise this function cannot be inlined due to recursive calls.
+VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled by the end user.

@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "arena.hpp"
 #include <string>
+#include <vector>
 
 namespace via
 {
@@ -22,7 +24,6 @@ enum class TokenType
     KW_FOR,       // for
     KW_RETURN,    // return
     KW_FUNC,      // func
-    KW_VAR,       // var
     KW_CONST,     // const
     KW_NEW,       // new
     KW_BREAK,     // break
@@ -30,7 +31,6 @@ enum class TokenType
     KW_SWITCH,    // switch
     KW_CASE,      // case
     KW_DEFAULT,   // default
-    KW_DELETE,    // delete
     KW_AND,       // and
     KW_NOT,       // not
     KW_OR,        // or
@@ -41,6 +41,10 @@ enum class TokenType
     KW_EXPORT,    // export
     KW_MACRO,     // macro
     KW_DEFINE,    // define
+    KW_STRICT,    // strict
+    KW_TYPE,      // type
+    KW_TYPEOF,    // typeof
+    KW_DEFINED,   // defined
 
     // Operators
     OP_EXP,  // ^
@@ -117,6 +121,17 @@ struct Token
     // Returns the tokens binary precedence
     // Returns -1 if invalid, eg. if not an operator
     int bin_prec() const noexcept;
+};
+
+struct TokenHolder
+{
+    ArenaAllocator alloc;
+    std::vector<Token> tokens;
+
+    TokenHolder(const size_t alloc_size)
+        : alloc(alloc_size)
+    {
+    }
 };
 
 } // namespace via

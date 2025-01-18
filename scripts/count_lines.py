@@ -6,35 +6,53 @@ if len(sys.argv) != 2:
     log_message('Usage: python3 count_lines.py <directory_path>')
     sys.exit(1)
 
-directory = sys.argv[1]
-possible_submodules = ['luau', 'AsmJit']
-accepted_extensions = ('.cpp', '.h')
+DIR = sys.argv[1]
+SUBDIR_WHITELIST = ['src', 'tests', 'CLI']
+EXT_WHITELIST = ('.c', '.cpp', '.h', '.hpp')
 
-def get_lines_in_directory(file_path: str):
-    with open(file_path, 'r') as f:
-        return f.readlines()
+def get_lines_in_file(file_path: str) -> int:
+    """
+    Reads the file and returns the number of lines.
+    """
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return sum(1 for _ in f)
+
+def is_whitelisted_directory(dirpath: str) -> bool:
+    """
+    Check if the directory path starts with one of the whitelisted subdirectories.
+    """
+    rel_path = os.path.relpath(dirpath, DIR)
+    if rel_path == ".":
+        return True  # Root directory should always be included
+    first_component = rel_path.split(os.sep)[0]
+    return first_component in SUBDIR_WHITELIST
 
 def main():
-    log_message('Getting lines of code in directory')
-    total = 0
-    for dirpath, dirnames, filenames in os.walk(directory):
-        # Skip submodules by name
-        if any(submodule in dirpath for submodule in possible_submodules):
-            print(f'Skipping submodule: {dirpath}')
+    log_message(f"Counting lines of code in directory '{DIR}'")
+    total_lines = 0
+
+    # Traverse the directory
+    for dirpath, _, filenames in os.walk(DIR):
+        # Skip directories that are not in the whitelist
+        if not is_whitelisted_directory(dirpath):
             continue
         
-        # Only count lines for files, not directories
+        # Process files in the current directory
         for filename in filenames:
             file_path = os.path.join(dirpath, filename)
-            try:
-                if file_path.endswith(accepted_extensions):
-                    lines = get_lines_in_directory(file_path)
-                    total += len(lines)
-                    print(f'Directory: {dirpath}, File: {filename}, Lines: {len(lines)}')
-            except Exception as e:
-                print(f'Error reading file {file_path}: {e}')
-                
-    print(f'Total Lines: {total}')
+            _, ext = os.path.splitext(filename)
+            if ext in EXT_WHITELIST:
+                try:
+                    lines = get_lines_in_file(file_path)
+                    total_lines += lines
+                    print(f' File: {dirpath}/{filename}, Lines: {lines}')
+                except Exception as err:
+                    print(f' Error reading file {file_path}: {err}')
+
+    log_message(f'Total Lines: {total_lines}')
 
 if __name__ == '__main__':
+    if not os.path.isdir(DIR):
+        log_message(f'Error: {DIR} is not a valid directory.')
+        sys.exit(1)
     main()

@@ -67,9 +67,6 @@
 namespace via
 {
 
-// Get compilation stuff in the namespace
-using namespace Compilation;
-
 // Internal function that optimizes a sequence of empty instructions (such as NOP or END)
 // By replacing the first instruction with a jmp instruction that jumps over the sequence
 VIA_FORCEINLINE void optimize_empty_instruction_sequence(RTState *VIA_RESTRICT V)
@@ -87,7 +84,7 @@ VIA_FORCEINLINE void optimize_empty_instruction_sequence(RTState *VIA_RESTRICT V
         if (skip_count > 1)
         {
             V->ip->op = OpCode::JMP;
-            V->ip->operand1 = Compilation::cnewoperand(static_cast<double>(skip_count));
+            V->ip->operand1 = static_cast<TNumber>(skip_count);
         }
     }
 }
@@ -1564,7 +1561,7 @@ dispatch:
     case OpCode::JMPLBL:
     {
         Operand label = V->ip->operand1;
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         // +1 Because if we jump to the exact position of the label, the VM will interpret it as
         // a declaration, not a jump
         V->ip = it->second + 1;
@@ -1577,7 +1574,7 @@ dispatch:
         Operand valr = V->ip->operand1;
         Operand label = V->ip->operand2;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         TValue *val = rgetregister(V->ralloc, valr.val_register);
         bool cond = val->val_number == 0;
         // Jump if the condition is met
@@ -1594,7 +1591,7 @@ dispatch:
         Operand rhsr = V->ip->operand2;
         Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(LabelId(label.val_identifier));
+        auto it = V->labels->find(LabelId(label.val_string));
         bool cond = cmpregister(V, lhsr.val_register, rhsr.val_register);
         // Jump if the condition is met
         if (V->ip->op == OpCode::JMPLBLEQ ? cond : !cond)
@@ -1609,7 +1606,7 @@ dispatch:
         Operand rhsr = V->ip->operand2;
         Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number < rgetregister(V->ralloc, rhsr.val_register)->val_number;
         // Jump if the condition is met
         if (cond)
@@ -1624,7 +1621,7 @@ dispatch:
         Operand rhsr = V->ip->operand2;
         Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number > rgetregister(V->ralloc, rhsr.val_register)->val_number;
         // Jump if the condition is met
         if (cond)
@@ -1639,7 +1636,7 @@ dispatch:
         Operand rhsr = V->ip->operand2;
         Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number <= rgetregister(V->ralloc, rhsr.val_register)->val_number;
         // Jump if the condition is met
         if (cond)
@@ -1654,7 +1651,7 @@ dispatch:
         Operand rhsr = V->ip->operand2;
         Operand label = V->ip->operand3;
 
-        auto it = V->labels->find(std::string_view(label.val_identifier));
+        auto it = V->labels->find(std::string_view(label.val_string));
         bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number >= rgetregister(V->ralloc, rhsr.val_register)->val_number;
         // Jump if the condition is met
         if (cond)
@@ -1722,7 +1719,7 @@ dispatch:
     case OpCode::LABEL:
     {
         Operand id = V->ip->operand1;
-        LabelId key = id.val_identifier;
+        LabelId key = id.val_string;
         Instruction *instr = V->ip;
 
         auto it = V->labels->find(key);

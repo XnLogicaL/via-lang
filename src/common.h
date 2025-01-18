@@ -28,14 +28,12 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
 // External imports
-#include "bytecode.h"
 #include "magic_enum.hpp"
-
+#include "arena.hpp"
+#include "linenoise.hpp"
 // Internal imports
-#include "Lexer/token.h"
-#include "Parser/ast.h"
+#include "token.h"
 
 #define ASMJIT_STATIC
 
@@ -60,24 +58,30 @@
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
 
+// TODO: Make sure this is accurate
+#define VIA_VERSION ("0.4")
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__
     #define VIA_NORETURN __attribute__((__noreturn__))
     #define VIA_NOINLINE __attribute__((noinline))
+    #define VIA_INLINE inline
     #define VIA_FORCEINLINE inline __attribute__((always_inline))
     #define VIA_UNREACHABLE() __builtin_unreachable()
     #define VIA_LIKELY(expr) __builtin_expect(!!(expr), 1)
     #define VIA_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
-#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird)
+#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT use it)
     #define VIA_RESTRICT __restrict
     #define VIA_NORETURN __declspec(__noreturn__)
     #define VIA_NOINLINE __declspec(noinline)
+    #define VIA_INLINE
     #define VIA_FORCEINLINE __forceinline
     #define VIA_UNREACHABLE() __assume(false)
     #define VIA_LIKELY(expr) expr
     #define VIA_UNLIKELY(expr) expr
 #else
-    #pragma error(Unsupported compiler detected.Supported compilers are : GNU g++, clang, MSVC(partial))
+// clang-format off
+    #pragma error(Unsupported compiler detected, supported compilers include: GNU g++, clang, MSVC (partial))
+// clang-format on
 #endif
 
 namespace via
@@ -115,7 +119,10 @@ struct TTable;
 struct TString;
 struct TFunction;
 struct TCFunction;
-using TokenHolder = std::vector<Token>;
+
+struct TokenHolder;
+struct AbstractSyntaxTree;
+struct BytecodeHolder;
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)
 {
@@ -123,6 +130,20 @@ VIA_FORCEINLINE char *dupstring(const std::string &str)
     char *chars = new char[len];
     std::memcpy(chars, str.c_str(), len);
     return chars;
+}
+
+template<typename T, typename F>
+    requires std::invocable<F> && std::is_same_v<std::invoke_result_t<F>, T>
+VIA_FORCEINLINE T safe_call(F func, T default_value)
+{
+    try
+    {
+        return func();
+    }
+    catch (std::exception &)
+    {
+        return default_value;
+    }
 }
 
 class VRTException : public std::exception
@@ -149,11 +170,8 @@ struct ProgramData
     AbstractSyntaxTree *ast;
     BytecodeHolder *bytecode;
 
-    ProgramData(std::string file_name, std::string file_source)
-        : file_name(file_name)
-        , source(file_source)
-    {
-    }
+    ProgramData(std::string, std::string);
+    ~ProgramData();
 };
 
 } // namespace via

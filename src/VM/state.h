@@ -105,13 +105,11 @@ struct alignas(64) RTState
 // Creates a new global state object
 GState *stnewgstate();
 // Creats a new state object
-RTState *stnewstate(const std::vector<Instruction> &);
+RTState *stnewstate(GState *, ProgramData &);
+void stloadinstructions(RTState *, BytecodeHolder &);
 // Cleans up a global state object
 void stcleanupgstate(GState *);
 // Cleans up a state object
 void stcleanupstate(RTState *);
-// Returns the thread count, no matter their state
-// Equivalent to `__thread_id__`
-ThreadId stthreadcount(RTState *);
 
 } // namespace via

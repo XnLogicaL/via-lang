@@ -34,34 +34,54 @@ Operand::Operand(RegId reg)
 {
 }
 
-bool Operand::check_type(OperandType ty)
+Instruction::Instruction()
+    : op(OpCode::NOP)
+    , operand1()
+    , operand2()
+    , operand3()
+    , chunk(nullptr)
 {
-    return type == ty;
 }
 
-bool Operand::check_boolean()
+Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk)
+    : op(op)
+    // clang-format off
+    , operand1(safe_call([&operands](){return operands.at(0);}, Operand()))
+    , operand2(safe_call([&operands](){return operands.at(1);}, Operand()))
+    , operand3(safe_call([&operands](){return operands.at(2);}, Operand()))
+    // clang-format on
+    , chunk(chunk)
 {
-    return check_type(OperandType::Bool);
 }
 
-bool Operand::check_number()
+
+std::string to_string(Operand operand)
 {
-    return check_type(OperandType::Number);
+    switch (operand.type)
+    {
+    case OperandType::Bool:
+        return std::string(operand.val_boolean ? "true" : "false");
+    case OperandType::String:
+        return std::format("'{}'", operand.val_string);
+    case OperandType::Number:
+        return std::format("{:03g}", operand.val_number);
+    case OperandType::Register:
+        return std::format("R{:02}", operand.val_register);
+    default:
+        return "";
+    }
 }
 
-bool Operand::check_string()
+std::string to_string(Instruction instruction)
 {
-    return check_type(OperandType::String);
-}
-
-bool Operand::check_register()
-{
-    return check_type(OperandType::Register);
-}
-
-bool Operand::check_nil()
-{
-    return check_type(OperandType::Nil);
+    return std::format(
+        "{:<#5x} {:<12} {:<3} {:<3} {:<3}",
+        static_cast<uint8_t>(instruction.op),
+        ENUM_NAME(instruction.op),
+        to_string(instruction.operand1),
+        to_string(instruction.operand2),
+        to_string(instruction.operand3)
+    );
 }
 
 } // namespace via

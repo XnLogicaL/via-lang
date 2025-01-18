@@ -26,7 +26,6 @@ public:
         , pos(0)
         , line(1)
         , offset(0)
-        , alloc(VIA_LEXER_ALLOC_SIZE)
     {
     }
 
@@ -52,7 +51,19 @@ private:
     size_t pos;
     size_t line;
     size_t offset;
-    ArenaAllocator alloc;
+    ArenaAllocator *alloc;
 };
+
+VIA_INLINE std::vector<Token> fast_tokenize(std::string source)
+{
+    ProgramData program("<unknown>", source);
+    Tokenizer tokenizer(program);
+    tokenizer.tokenize();
+
+    if (!program.tokens)
+        return {};
+
+    return std::move(program.tokens->tokens);
+}
 
 } // namespace via

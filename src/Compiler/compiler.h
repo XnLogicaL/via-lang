@@ -32,8 +32,6 @@ public:
     void generate();
     void add_default_passes();
     void add_pass(std::unique_ptr<OptimizationPass>);
-    Instructions_t get();
-    const Instructions_t get() const;
 
 private:
     ProgramData &program;

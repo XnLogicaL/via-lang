@@ -1,0 +1,211 @@
+## Example 1: Variable Declaration and Assignment
+local x = 10
+local y = 20
+print(x + y)  ## Output: 30
+
+## Example 2: Conditionals (if-else)
+local number = 5
+if number > 0 {
+    print("Positive")
+} else {
+    print("Negative or Zero")
+}  ## Output: Positive
+
+## Example 3: Looping (for loop)
+for i = 1, 5 {
+    print(i)
+}  ## Output: 1 2 3 4 5
+
+## Example 4: While Loop
+local counter = 0
+while counter < 3 {
+    print(counter)
+    counter++
+
+}  ## Output: 0 1 2
+
+## Example 5: Functions and Return
+local strict func add(const a: Number, const b: Number) {
+    return a + b
+}
+
+print(add(3, 4))  ## Output: 7
+
+## Example 6: Functions with Default Parameters
+local func greet(const name: String = "Guest") {
+    print("Hello, " .. name)
+}
+
+greet("Alice")  ## Output: Hello, Alice
+greet()  ## Output: Hello, Guest
+
+## Example 7: Recursion (Factorial Function)
+local strict func factorial(const n: Number) {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+print(factorial(5))  ## Output: 120
+
+## Example 8: Closures (Functions Returning Functions)
+local func outer(strict const x: Integral) {
+    return func(strict const y: Integral) {
+        return x + y
+    }
+}
+
+local add5 = outer(5)
+print(add5(10))  ## Output: 15
+
+## Example 9: Higher-Order Functions (Function as an Argument)
+local func strict apply(fun: Callable, x: Integral) {
+    return fun(x)
+}
+
+local func strict square(x: Integral) {
+    return x * x
+}
+
+print(apply(square, 5))  ## Output: 25
+
+## Example 10: Anonymous Functions (Lambdas)
+local multiply = func(strict x: Integral, strict y: Integral) {
+    return x * y
+}
+
+print(multiply(2, 3))  ## Output: 6
+
+## Example 11: Maps and Arrays (Mapping)
+local numbers = {1, 2, 3, 4}
+local doubled = table.map(numbers, func(strict x: Number) {
+    return x * 2 
+})
+
+print(doubled)  ## Output: {2, 4, 6, 8}
+
+## Example 12: Arrays (Access and Modification)
+local arr = {1, 2, 3, 4}
+arr[2] = 10
+print(arr[2])  ## Output: 10
+
+## Example 13: Error Handling (Try-Catch type)
+local func strict divide(x: Integral, y: Integral) {
+    if y == 0 {
+        error("Division by zero")
+    }
+
+    return x / y
+}
+
+local success, result = pcall(divide, 20, 10)
+print(success, result) ## Output: true 2
+
+## Example 14: Objects and Classes (Simple Class)
+struct Point {
+    property x: Number
+    property y: Number
+
+    property func strict __new(x: Number, y: Number) -> Nil {
+        self.x = x
+        self.y = y
+    }
+
+    property func display() -> Nil {
+        printf("Point(x: %d, y: %d)", self.x, self.y)
+    }
+}
+
+local p = new Point(2, 3)
+p.display()  ## Output: Point(x: 2, y: 3)
+
+## Example 20: Metatables (as inheritance)
+local table1 = {}
+setmetatable(table1, {
+    __index = func(self, k, v) {
+        return 69
+    },
+    meta_print = func(self, msg) {
+        printf!("%s says: %s", tostring(self), msg)
+    }
+})
+
+print(table1["example"]) ## Output: 69
+print(table1.meta_print("Hello")) ## Output: <table@0x--------> says: Hello
+
+## Example 16: Modules (Import/Export)
+## File: math.via
+local add = func(a, b) { return a + b }
+local multiply = func(a, b) { return a * b }
+
+export {
+    add = add,
+    multiply = multiply
+}
+
+## File: main.via
+import math
+print(math.add(2, 3))  ## Output: 5
+print(math.multiply(2, 3))  ## Output: 6
+
+## Example 17: Type Checking and Constraints (Strict Typing)
+local func strict add(x: Number, y: Number) -> Number {
+    return x + y
+}
+
+print(add(3, 4))  ## Output: 7
+## add("hello", 3)  ## Error: Type mismatch
+
+## Example 18: Local vs Global Scopes
+local x = 100
+local func1 = func() {
+    local x = 50
+    print(x)  ## Output: 50
+}
+func1()
+print(x)  ## Output: 100
+
+## Example 19: String Manipulation
+local str = "Hello, World!"
+print(str[0])  ## Output: H
+print(str .. " How are you?")  ## Output: Hello, World! How are you?
+
+## Example 20: Macros
+
+define formatString ("Hello, %s!")
+macro printfln(fmt, ...) {
+    println(string.format(fmt, ...))
+}
+
+if defined(printfln) {
+    println("printfln macro found")
+}
+
+## Pre-preprocessing
+printfln!(formatString, "World")
+## Post-preprocessing
+println(string.format("Hello, %s!", "World"))
+
+## Example 21: Importing/exporting
+
+## Type 1: Static imports (preprocessor)
+import "path/to/module.via" as module
+
+## Type 2: Dynamic imports (base library)
+local module = require("path/to/module.via")
+
+## Exporting
+local value = 69 ## Can be literally anything
+export value     ## Classified as a return statement, everything after it is considered dead code
+
+## Example 22: Pragmas
+
+@deprecated
+local func deprecatedFunction() {
+    print("Hey, from deprecated function")
+}
+
+deprecatedFunction() ## Output: [compiler warning about deprecation] Hey, from deprecated function
+
+local printfSupported = defined(printf)

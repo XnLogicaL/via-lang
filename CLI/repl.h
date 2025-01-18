@@ -2,24 +2,38 @@
 
 #pragma once
 
-#include "common.h"
 #include "via.h"
 
-namespace viaCLI
+namespace via
 {
 
 class REPLEngine
 {
 public:
     REPLEngine()
-        : V(nullptr){};
-    ~REPLEngine() = default;
+        : program("", "")       // Initialize program data object with temporary data
+        , gstate(stnewgstate()) // Initialize global state
+        , rtstate(nullptr)      // Initialize runtime state
+    {
+    }
 
-    void execute(std::string, bool print);
-    via::RTState *V;
+    ~REPLEngine() {}
+
+    void execute(const std::string &, bool);
 
 private:
-    std::vector<via::Instruction> compile(std::string);
+    ProgramData program;
+    GState *gstate;
+    RTState *rtstate;
+    std::string stage;
+
+private:
+    void tokenize();
+    void preprocess();
+    void parse();
+    void analyze();
+    void compile();
+    void interpret();
 };
 
-} // namespace viaCLI
+} // namespace via

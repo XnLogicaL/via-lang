@@ -18,7 +18,7 @@ void ConstFoldOptimizationPass::fold_constexpr(Generator &gen, ExprNode *expr)
 // Folds all possible constants in the AbstractSyntaxTree
 void ConstFoldOptimizationPass::apply(Generator &gen)
 {
-#define CHECK(ident, type) type *ident = std::get_if<type>(&stmt)
+#define CHECK(ident, type) type *ident = std::get_if<type>(&stmt.stmt)
     for (StmtNode stmt : gen.program.ast->statements)
     {
         if (CHECK(decl_stmt, LocalDeclStmtNode))
@@ -28,8 +28,8 @@ void ConstFoldOptimizationPass::apply(Generator &gen)
         else if (CHECK(call_stmt, CallStmtNode))
         {
             fold_constexpr(gen, call_stmt->callee);
-            for (ExprNode arg : call_stmt->args)
-                fold_constexpr(gen, &arg);
+            for (ExprNode *arg : call_stmt->args)
+                fold_constexpr(gen, arg);
         }
     }
 #undef CHECK

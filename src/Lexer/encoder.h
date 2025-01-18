@@ -20,7 +20,7 @@ private:
     char encode_opcode(OpCode);
     std::vector<char> encode_operand(Operand);
     OpCode decode_opcode(char);
-    Operand decode_operand(std::vector<char>::const_iterator &);
+    Operand decode_operand(std::vector<char>::const_iterator);
 };
 
 } // namespace via

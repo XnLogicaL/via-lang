@@ -11,15 +11,54 @@ void Interpreter::tokenize()
     tokenizer.tokenize();
 }
 
-void Interpreter::analyze_syntax()
+void Interpreter::preprocess()
 {
-    SyntaxAnalyzer analyzer(program);
-    analyzer.analyze();
+    Preprocessor preprocessor(program);
+    preprocessor.declare_default();
+    preprocessor.preprocess();
 }
 
 void Interpreter::parse()
 {
     Parser parser(program);
+    parser.parse_program();
+}
+
+void Interpreter::analyze() {}
+
+void Interpreter::compile()
+{
+    Compiler compiler(program);
+    compiler.add_default_passes();
+    compiler.generate();
+}
+
+void Interpreter::interpret()
+{
+    via::stloadinstructions(rtstate, *program.bytecode);
+    via::execute(rtstate);
+    via::pausethread(rtstate);
+}
+
+ExecutionResult Interpreter::execute(ProgramData &program_data)
+{
+    program = program_data;
+
+    try
+    {
+        tokenize();
+        preprocess();
+        parse();
+        analyze();
+        compile();
+        interpret();
+    }
+    catch (VRTException &e)
+    {
+        return {1, e.what()};
+    }
+
+    return {0, ""};
 }
 
 } // namespace via

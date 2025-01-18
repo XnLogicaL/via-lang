@@ -115,7 +115,7 @@ VIA_FORCEINLINE TString *newstring(RTState *V = nullptr, const char *s = "")
     char *sptr = new char[slen + 1];
 
     // Copy the constant string into the owned string
-    strcpy_s(sptr, slen + 1, s);
+    std::strcpy(sptr, s);
 
     nstr->len = slen;
     nstr->ptr = sptr; // No need for static_cast<const char*>

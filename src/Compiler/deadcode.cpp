@@ -10,11 +10,11 @@ void DeadCodeEliminationOptimizationPass::apply(Generator &) {}
 bool DeadCodeEliminationOptimizationPass::always_true(Generator &gen, IfStmtNode if_stmt)
 {
     // Attempt to fold the expression, if not already
-    if (!std::get_if<LiteralExprNode>(if_stmt.condition) && gen.is_constexpr(*if_stmt.condition, 0))
+    if (!std::get_if<LiteralExprNode>(&if_stmt.condition->expr) && gen.is_constexpr(*if_stmt.condition, 0))
         gen.evaluate_constexpr(if_stmt.condition);
 
     // Check if the condition is a constant expression
-    if (LiteralExprNode *lit_cond_expr = std::get_if<LiteralExprNode>(if_stmt.condition))
+    if (LiteralExprNode *lit_cond_expr = std::get_if<LiteralExprNode>(&if_stmt.condition->expr))
         // Only `false` and `nil` are considered falsy values in via
         return lit_cond_expr->value.value != "false" || lit_cond_expr->value.value != "nil";
 
@@ -30,9 +30,9 @@ void DeadCodeEliminationOptimizationPass::remove_unreachable_code_in_scope(Gener
     {
         // Check if the statement is either a return, break or continue statement
         // These statements always alter the control flow of the program that makes the code under them unreachable
-        if (std::get_if<ReturnStmtNode>(&stmt) || std::get_if<BreakStmtNode>(&stmt) || std::get_if<ContinueStmtNode>(&stmt))
+        if (std::get_if<ReturnStmtNode>(&stmt.stmt) || std::get_if<BreakStmtNode>(&stmt.stmt) || std::get_if<ContinueStmtNode>(&stmt.stmt))
             break;
-        else if (IfStmtNode *if_stmt = std::get_if<IfStmtNode>(&stmt))
+        else if (IfStmtNode *if_stmt = std::get_if<IfStmtNode>(&stmt.stmt))
         {
             // Check if the if statements condition always resolves as true
             // if so; get rid of the if statement and just emplace it's body into the scope
@@ -52,13 +52,13 @@ void DeadCodeEliminationOptimizationPass::remove_unreachable_code_in_scope(Gener
             }
             // TODO: Optimize the if statement in other cases such as replacing always false if statements with the else body
         }
-        else if (WhileStmtNode *while_stmt = std::get_if<WhileStmtNode>(&stmt))
+        else if (WhileStmtNode *while_stmt = std::get_if<WhileStmtNode>(&stmt.stmt))
             remove_unreachable_code_in_scope(gen, while_stmt->body);
-        else if (ForStmtNode *for_stmt = std::get_if<ForStmtNode>(&stmt))
+        else if (ForStmtNode *for_stmt = std::get_if<ForStmtNode>(&stmt.stmt))
             remove_unreachable_code_in_scope(gen, for_stmt->body);
-        else if (FunctionDeclStmtNode *func_stmt = std::get_if<FunctionDeclStmtNode>(&stmt))
+        else if (FunctionDeclStmtNode *func_stmt = std::get_if<FunctionDeclStmtNode>(&stmt.stmt))
             remove_unreachable_code_in_scope(gen, func_stmt->body);
-        else if (ScopeStmtNode *scope_stmt = std::get_if<ScopeStmtNode>(&stmt))
+        else if (ScopeStmtNode *scope_stmt = std::get_if<ScopeStmtNode>(&stmt.stmt))
             remove_unreachable_code_in_scope(gen, scope_stmt);
 
         new_stmts.push_back(stmt);

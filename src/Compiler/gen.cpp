@@ -72,7 +72,7 @@ void Generator::evaluate_constexpr(ExprNode *)
 // Pushes a bytecode instruction
 void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> operands = {})
 {
-    Instruction instruction(op, operands);
+    Instruction instruction(op, operands, nullptr);
 
     if (initialize_with_chunk)
     {
@@ -139,7 +139,7 @@ RegId Generator::allocate_temp_register()
 RegId Generator::allocate_register()
 {
     for (auto it : register_pool)
-        if (it.second == false)
+        if (it.second == true)
         {
             register_pool[it.first] = false;
             return it.first;
@@ -164,7 +164,7 @@ void Generator::load_operand(Operand dst, Operand operand)
 
     auto it = load_op.find(operand.type);
     if (it != load_op.end())
-        push_instruction(it->second, {dst, operand});
+        push_instruction(it->second, {Operand(dst), Operand(operand)});
 }
 
 } // namespace via

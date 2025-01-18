@@ -3,22 +3,22 @@
 #pragma once
 
 #include "Parser/ast.h"
+#include "instruction.h"
 
 namespace via
 {
 
-struct Instruction;
-class BytecodeHolder
+struct BytecodeHolder
 {
-public:
-    BytecodeHolder() = default;
+    using Instructions = std::vector<Instruction>;
 
-    std::vector<Instruction> instructions;
+    BytecodeHolder() = default;
+    Instructions instructions;
 
     void add_instruction(const Instruction &);
     void remove_instruction(size_t index);
-    std::vector<Instruction> &get();
-    const std::vector<Instruction> &get() const;
+    Instructions &get();
+    const Instructions &get() const;
 };
 
 } // namespace via

@@ -6,7 +6,6 @@
 
 #include "Lexer/lexer.h"
 #include "Lexer/preproc.h"
-#include "Lexer/syntax_analysis.h"
 #include "Lexer/cache.h"
 #include "Lexer/encoder.h"
 
@@ -17,6 +16,10 @@
 #include "Compiler/optimizer.h"
 
 #include "VM/api.h"
+#include "VM/state.h"
+#include "VM/types.h"
+#include "VM/stack.h"
+#include "VM/register.h"
 #include "VM/debug.h"
 #include "VM/vlbase.h"
 #include "VM/vltable.h"
@@ -43,18 +46,34 @@ using ExecutionResult = std::pair<int, std::string>;
 class Interpreter
 {
 public:
-    ~Interpreter() = default;
-    ExecutionResult run(std::string);
+    Interpreter(ProgramData &program)
+        : program(program)
+        , gstate(stnewgstate())
+        , rtstate(stnewstate(gstate, program))
+    {
+        lib::loadbaselib(rtstate);
+        lib::loadmathlib(rtstate);
+        lib::loadrandlib(rtstate);
+    }
+
+    ~Interpreter()
+    {
+        stcleanupgstate(gstate);
+        stcleanupstate(rtstate);
+    }
+
+    ExecutionResult execute(ProgramData &);
 
 public:
     ProgramData &program;
+    GState *gstate;
+    RTState *rtstate;
 
 private:
     void tokenize();
     void preprocess();
-    void analyze_syntax();
     void parse();
-    void analyze_semantics();
+    void analyze();
     void compile();
     void interpret();
 };

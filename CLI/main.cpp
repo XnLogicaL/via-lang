@@ -8,7 +8,6 @@
 #include "repl.h"
 #include "via.h"
 
-using namespace viaCLI;
 using namespace via;
 
 namespace
@@ -21,6 +20,7 @@ const char REPL_HELP[] = "repl commands:\n"
                          "  ;quit - Quits repl\n"
                          "  ;help - Prints this \"menu\"\n"
                          "  ;exitinfo - Displays the last exit info returned by the VM\n";
+const char REPL_HEAD[] = ">> ";
 
 void handle_test_installation()
 {
@@ -38,23 +38,26 @@ void handle_compile(const std::vector<std::string> &args)
     std::string input = args.at(0);
     std::string input_code = via::utils::read_from_file(input);
 
-    Tokenization::Tokenizer lexer(input_code);
-    ProgramData program = lexer.tokenize();
+    ProgramData program(input, input_code);
 
-    Tokenization::Preprocessor preprocessor(program);
+    Tokenizer lexer(program);
+    lexer.tokenize();
+
+    Preprocessor preprocessor(program);
     bool failed = preprocessor.preprocess();
 
-    VIA_ASSERT_SILENT(!failed, "Preprocessor failed");
+    if (failed)
+        return;
 
     Parser parser(program);
-    AbstractSyntaxTree *ast = parser.parse_program();
+    parser.parse_program();
 
-    Compilation::Compiler compiler(ast);
+    Compiler compiler(program);
     compiler.add_default_passes();
     compiler.generate();
 
-    auto instrs = compiler.get();
-    auto encoded = Compilation::encode(instrs);
+    for (Instruction instr : program.bytecode->get())
+        std::cout << to_string(instr) << "\n";
 }
 
 void handle_run(const std::vector<std::string> &args)
@@ -66,17 +69,19 @@ void handle_run(const std::vector<std::string> &args)
     }
 
     std::string file_path = args.at(0);
-    std::string source_code = utils::read_from_file(file_path);
+    std::string source_code = via::utils::read_from_file(file_path);
 
-    Interpreter interpreter;
-    interpreter.run(source_code);
+    ProgramData program(file_path, source_code);
+
+    Interpreter interpreter(program);
+    interpreter.execute(program);
 }
 
 void handle_repl(const std::vector<std::string> &args)
 {
     std::cout << REPL_WELCOME;
 
-    REPLEngine repl;
+    REPLEngine engine;
     bool print_bytecode = std::any_of(
         args.begin(),
         args.end(),
@@ -89,7 +94,7 @@ void handle_repl(const std::vector<std::string> &args)
     while (true)
     {
         std::string code;
-        bool quit = linenoise::Readline(">> ", code);
+        bool quit = linenoise::Readline(REPL_HEAD, code);
 
         if (quit)
             break;
@@ -103,13 +108,12 @@ void handle_repl(const std::vector<std::string> &args)
                 std::cout << REPL_HELP;
             else if (command == "exitinfo" || command == "ei")
             {
-                if (!repl.V)
+                if (false)
                     std::cout << "<none>\n";
                 else
-                    std::cout << "Exit code:    " << repl.V->exitc << "\n"
-                              << "Exit message: '" << repl.V->exitm << "'\n"
-                              << "At instruction: " << reinterpret_cast<const void *>(repl.V->ip)
-                              << std::format(" (position={} opcode={})\n", repl.V->ip - repl.V->ihp, ENUM_NAME(repl.V->ip->op));
+                    std::cout << "Exit code:    " << 0 << "\n"
+                              << "Exit message: '" << "" << "'\n"
+                              << "At instruction: " << 0 << std::format(" (position={} opcode={})\n", 0, "");
             }
             else
                 std::cerr << "Unknown command: " << command << "\n";
@@ -117,14 +121,7 @@ void handle_repl(const std::vector<std::string> &args)
             continue;
         }
 
-        try
-        {
-            repl.execute(code, print_bytecode);
-        }
-        catch (const std::exception &e)
-        {
-            std::cout << "Error during execution: " << e.what() << "\n";
-        }
+        engine.execute(code, print_bytecode);
     }
 }
 

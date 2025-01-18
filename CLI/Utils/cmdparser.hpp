@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-namespace viaCLI
+namespace via
 {
 
 class CmdParser
@@ -36,4 +36,4 @@ private:
     char **const argv;
 };
 
-} // namespace viaCLI
+} // namespace via

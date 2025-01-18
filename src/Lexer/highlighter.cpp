@@ -3,6 +3,10 @@
 #include "highlighter.h"
 #include "token.h"
 
+#define ILLFORMED_ERROR \
+    "\n  (This is an illformed error, likely caused by an internal compiler bug.\n   If this error persists, please " \
+    "create an issue at https://github.com/XnLogicaL/via-lang)"
+
 namespace via
 {
 
@@ -21,15 +25,15 @@ std::vector<std::string> Emitter::split_lines()
 }
 
 // Returns a "title" or "header" for output messages based on severity
-std::string Emitter::get_severity_header(Severity sev)
+std::string Emitter::get_severity_header(OutputSeverity sev)
 {
     switch (sev)
     {
-    case Severity::INFO:
+    case OutputSeverity::INFO:
         return "\033[1;34minfo:\033[0m "; // Blue color for info
-    case Severity::WARNING:
+    case OutputSeverity::WARNING:
         return "\033[1;33mwarning:\033[0m "; // Yellow color for warning
-    case Severity::ERROR:
+    case OutputSeverity::ERROR_:
         return "\033[1;31merror:\033[0m "; // Red color for error
     default:
         VIA_UNREACHABLE();
@@ -38,19 +42,19 @@ std::string Emitter::get_severity_header(Severity sev)
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string Emitter::underline_line(int line_number, int offset, int length, const std::string &message, Severity sev)
+std::string Emitter::underline_line(int line_number, int offset, int length, const std::string &message, OutputSeverity sev)
 {
     std::vector<std::string> lines = split_lines();
 
     if (line_number < 1 || line_number > static_cast<int>(lines.size()))
-        return "<error-invalid-line>";
+        return std::format("{}<at-invalid-line {}:{}> {}" ILLFORMED_ERROR, get_severity_header(sev), line_number, offset, message);
 
     // Lines are 1-based, vector is 0-based
     const std::string &line = lines[line_number - 1];
     std::string underline;
 
     if (offset < 0 || offset >= static_cast<int>(line.size()))
-        return "<error-invalid-line>";
+        return std::format("{}<at-invalid-offset {}:{}> {}" ILLFORMED_ERROR, get_severity_header(sev), line_number, offset, message);
 
     underline = std::string(offset, ' ') + std::string(length, '~');
 
@@ -70,7 +74,7 @@ std::string Emitter::underline_line(int line_number, int offset, int length, con
 }
 
 // Emits an output message
-void Emitter::out(size_t idx, std::string message, Severity sev)
+void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
 {
     // This is an internal "flag" that determines if the file name has been displayed before any errors
     static bool has_printed_file_name = false;
@@ -83,7 +87,7 @@ void Emitter::out(size_t idx, std::string message, Severity sev)
     }
 
     // Find token
-    Token tok = program.tokens->at(idx);
+    Token tok = program.tokens->tokens.at(idx);
     size_t line = tok.line;
     size_t offset = tok.offset;
     size_t length = tok.value.length();

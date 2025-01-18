@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.via": "via",
         "algorithm": "cpp",
         "atomic": "cpp",
         "bit": "cpp",

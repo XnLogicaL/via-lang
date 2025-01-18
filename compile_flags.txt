@@ -9,6 +9,7 @@
 -I./src/Lexer
 -I./src/VM
 -I./src/Utils
+-I./src/Parser
 -I./src/Compiler
 -I./src/CodeGen
 -I./CLI

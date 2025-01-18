@@ -2,72 +2,80 @@
 
 #include "repl.h"
 
-namespace viaCLI
+namespace via
 {
 
-std::vector<via::Instruction> REPLEngine::compile(std::string source)
+void REPLEngine::tokenize()
 {
-    via::Tokenizer lexer(source);
-    via::ProgramData program = lexer.tokenize();
-    program.file_name = "<repl>";
+    stage = "Tokenization";
 
-    /*Tokenization::SyntaxAnalyzer analyzer(program);
-    bool fail = analyzer.analyze();
+    Tokenizer tokenizer(program);
+    tokenizer.tokenize();
+}
 
-    VIA_ASSERT_SILENT(!fail, "Syntax analysis failed");*/
+void REPLEngine::preprocess()
+{
+    stage = "Preprocessing";
 
-    via::Parser parser(program);
-    via::AbstractSyntaxTree *ast = parser.parse_program();
+    Preprocessor preprocessor(program);
+    preprocessor.preprocess();
+}
 
-    via::Compiler compiler(ast);
+void REPLEngine::parse()
+{
+    stage = "Parsing";
+
+    Parser parser(program);
+    parser.parse_program();
+}
+
+void REPLEngine::analyze()
+{
+    stage = "Analysis";
+}
+
+void REPLEngine::compile()
+{
+    stage = "Compilation";
+
+    Compiler compiler(program);
     compiler.add_default_passes();
     compiler.generate();
-
-    return compiler.get();
 }
 
-void REPLEngine::execute(std::string code, bool print)
+void REPLEngine::interpret()
 {
-    static bool libs_loaded = false;
-    auto bytecode = compile(code);
+    stage = "Interpreting";
 
-    if (bytecode.empty())
-        return;
-
-    if (print)
-    {
-        std::cout << "Program bytecode:\n";
-        for (via::Instruction instr : bytecode)
-            std::cout << via::ccompileinstruction(instr) << "\n";
-    }
-
-    if (!V)
-        V = stnewstate(bytecode);
-    else
-    {
-        V->ihp = new via::Instruction[bytecode.size()];
-        V->ibp = V->ihp + bytecode.size();
-        V->ip = V->ihp;
-
-        std::copy(bytecode.begin(), bytecode.end(), V->ip);
-    }
-
-    if (!libs_loaded)
-    {
-        libs_loaded = true;
-        via::lib::loadbaselib(V);
-        via::lib::loadmathlib(V);
-    }
-
-    if (print)
-        std::cout << "Program output:\n";
-
-    via::execute(V);
-    via::pausethread(V);
-
-    delete[] V->ihp;
-
-    VIA_ASSERT_SILENT(V->exitc == 0, V->exitm);
+    via::stloadinstructions(rtstate, *program.bytecode);
+    via::execute(rtstate);
+    via::pausethread(rtstate);
 }
 
-} // namespace viaCLI
+void REPLEngine::execute(const std::string &code, bool print_bytecode_flag)
+{
+    // Setup program data object
+    program.file_name = "<repl>";
+    program.source = code;
+
+    try
+    {
+        tokenize();
+        preprocess();
+        parse();
+        analyze();
+        compile();
+
+        if (print_bytecode_flag)
+            for (Instruction instr : program.bytecode->get())
+                std::cout << to_string(instr) << "\n";
+
+        interpret();
+    }
+    catch (VRTException &e)
+    {
+        std::cout << std::format("REPL Failed during stage {}\n  ", stage) << e.what();
+    }
+}
+
+} // namespace via

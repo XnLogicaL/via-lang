@@ -20,13 +20,13 @@ void BytecodeHolder::remove_instruction(size_t index)
 }
 
 // Return the instruction program
-std::vector<Instruction> &BytecodeHolder::get()
+BytecodeHolder::Instructions &BytecodeHolder::get()
 {
     return instructions;
 }
 
 // Return the constant instruction program if applicable
-const std::vector<Instruction> &BytecodeHolder::get() const
+const BytecodeHolder::Instructions &BytecodeHolder::get() const
 {
     return instructions;
 }

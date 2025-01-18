@@ -86,7 +86,7 @@ OpCode Encoder::decode_opcode(char op)
     return static_cast<OpCode>(op);
 }
 
-Operand Encoder::decode_operand(std::vector<char>::const_iterator &it)
+Operand Encoder::decode_operand(std::vector<char>::const_iterator it)
 {
     Operand operand;
     operand.type = static_cast<OperandType>(*it++);
@@ -106,7 +106,7 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator &it)
             temp.push_back(*it++);
         ++it; // Skip null terminator
         char *buf = new char[temp.size() + 1];
-        strcpy_s(buf, temp.size() + 1, temp.c_str());
+        std::strcpy(buf, temp.c_str());
         operand.val_string = buf;
         break;
     }

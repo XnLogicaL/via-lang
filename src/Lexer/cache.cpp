@@ -141,7 +141,7 @@ CacheFile CacheManager::read_cache(ProgramData file)
 exit:
 #endif
 
-    std::free(const_cast<char *>(raw_source));
+    delete[] const_cast<char *>(raw_source);
     return cache_file;
 }
 

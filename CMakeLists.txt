@@ -23,7 +23,6 @@ target_compile_options(via
     PRIVATE
     -Wall              # Enable all warnings
     -Wextra            # Enable extra warnings
-    -Werror            # Treat warnings as errors
     -g                 # Enable debugging symbols
     -O3                # Optimization level 3
 )

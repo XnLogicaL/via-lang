@@ -36,7 +36,6 @@ public:
         , stack_pointer(0)
         , saved_stack_pointer(0)
     {
-        register_pool.reserve(VIA_REGISTER_COUNT);
         for (RegId gpr = 0; gpr < VIA_REGISTER_COUNT; gpr++)
             register_pool[gpr] = true;
     }
@@ -73,7 +72,7 @@ private:
     StkPos saved_stack_pointer;
     HashMap<std::string, LocalId> symbols;
     HashMap<kGlobId, TValue> globals;
-    HashMap<RegId, bool> register_pool;
+    std::map<RegId, bool> register_pool;
 
 private:
     // Instruction handling functions

@@ -11,14 +11,14 @@ namespace via
 // - Restricted access to keywords, specifically the preprocessor keywords
 void Preprocessor::expand_macro(const Macro &macro)
 {
-    std::vector<Token> *toks = program.tokens;
+    std::vector<Token> toks = program.tokens->tokens;
 
-    while (pos < toks->size())
+    while (pos < toks.size())
     {
         const Token &tok = peek();
 
         // Match macro_name!( pattern
-        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name && pos + 1 < toks->size() &&
+        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name && pos + 1 < toks.size() &&
             peek(1).type == TokenType::PAREN_OPEN)
         {
             size_t start_pos = pos;
@@ -30,7 +30,7 @@ void Preprocessor::expand_macro(const Macro &macro)
             size_t depth = 1;
 
             // Loop to parse arguments within parentheses
-            while (pos < toks->size())
+            while (pos < toks.size())
             {
                 const Token &current = peek();
 
@@ -60,7 +60,7 @@ void Preprocessor::expand_macro(const Macro &macro)
                     current_arg.push_back(current);
 
                 // Avoid consuming past EOF
-                if (pos < toks->size())
+                if (pos < toks.size())
                     consume();
                 else
                     break; // Prevent consuming EOF
@@ -101,8 +101,8 @@ void Preprocessor::expand_macro(const Macro &macro)
             }
 
             // Replace macro invocation with expanded body
-            toks->erase(toks->begin() + start_pos, toks->begin() + pos + 1);
-            toks->insert(toks->begin() + start_pos, expanded_body.begin(), expanded_body.end());
+            toks.erase(toks.begin() + start_pos, toks.begin() + pos + 1);
+            toks.insert(toks.begin() + start_pos, expanded_body.begin(), expanded_body.end());
 
             // Reset pos to start of the macro replacement
             pos = start_pos;
@@ -115,11 +115,11 @@ void Preprocessor::expand_macro(const Macro &macro)
 
 Macro Preprocessor::parse_macro()
 {
-    std::vector<Token> *toks = program.tokens;
+    std::vector<Token> toks = program.tokens->tokens;
     // Consume 'macro' keyword
     pos++;
 
-    if (pos >= toks->size() || peek().type != TokenType::IDENTIFIER)
+    if (pos >= toks.size() || peek().type != TokenType::IDENTIFIER)
         PREPROCESSOR_ERROR("Expected macro identifier after 'macro' keyword");
 
     auto it = macro_table.find(peek().value);
@@ -132,13 +132,13 @@ Macro Preprocessor::parse_macro()
     mac.name = consume().value;
 
     // Expect opening parenthesis
-    if (pos >= toks->size() || peek().type != TokenType::PAREN_OPEN)
+    if (pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
         PREPROCESSOR_ERROR("Expected '(' after macro name");
 
     consume(); // Consume '('
 
     // Parse macro parameters
-    while (pos < toks->size() && peek().type != TokenType::PAREN_CLOSE)
+    while (pos < toks.size() && peek().type != TokenType::PAREN_CLOSE)
     {
         if (peek().type == TokenType::COMMA)
         {
@@ -153,23 +153,23 @@ Macro Preprocessor::parse_macro()
     }
 
     // Expect closing parenthesis
-    if (pos >= toks->size() || peek().type != TokenType::PAREN_CLOSE)
+    if (pos >= toks.size() || peek().type != TokenType::PAREN_CLOSE)
         PREPROCESSOR_ERROR("Expected ')' after macro parameters");
 
     consume(); // Consume ')'
 
     // Expect opening brace for macro body
-    if (pos >= toks->size() || peek().type != TokenType::BRACE_OPEN)
+    if (pos >= toks.size() || peek().type != TokenType::BRACE_OPEN)
         PREPROCESSOR_ERROR("Expected '{' to start macro body.");
 
     consume(); // Consume '{'
 
     // Parse macro body
-    while (pos < toks->size() && peek().type != TokenType::BRACE_CLOSE)
-        mac.body.push_back(toks->at(pos++));
+    while (pos < toks.size() && peek().type != TokenType::BRACE_CLOSE)
+        mac.body.push_back(toks.at(pos++));
 
     // Expect closing brace
-    if (pos >= toks->size() || peek().type != TokenType::BRACE_CLOSE)
+    if (pos >= toks.size() || peek().type != TokenType::BRACE_CLOSE)
         PREPROCESSOR_ERROR("Expected '}' to close macro body.");
 
     consume(); // Consume '}'

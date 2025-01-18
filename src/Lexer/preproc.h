@@ -13,7 +13,7 @@
 
 #define PREPROCESSOR_ERROR(message) \
     { \
-        emitter.out(pos, (message), Emitter::Severity::ERROR); \
+        emitter.out(pos, (message), OutputSeverity::ERROR_); \
         failed = true; \
     }
 
@@ -33,6 +33,9 @@ public:
     }
 
     bool preprocess();
+    void declare_default();
+    void declare_macro(Macro);
+    void declare_definition(Definition);
 
 private:
     ProgramData &program;

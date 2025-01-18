@@ -23,8 +23,10 @@ GState *stnewgstate()
 }
 
 // Initializes and returns a new RTState object
-RTState *stnewstate(GState *G, const std::vector<Instruction> &pipeline)
+RTState *stnewstate(GState *G, ProgramData &program)
 {
+    std::vector<Instruction> pipeline = program.bytecode->get();
+
     RTState *V = new RTState;
 
     V->id = G->threads++;
@@ -83,12 +85,24 @@ RTState *stnewstate(GState *G, const std::vector<Instruction> &pipeline)
         if (instr.op == OpCode::LABEL)
         {
             Operand ident = instr.operand1;
-            (*V->labels)[LabelId(ident.val_identifier)] = ip;
+            (*V->labels)[LabelId(ident.val_string)] = ip;
         }
         ++ip;
     }
 
     return V;
+}
+
+void stloadinstructions(RTState *VIA_RESTRICT V, BytecodeHolder &bytecode)
+{
+    // Clean up previous instruction pipeline
+    delete[] V->ihp;
+
+    std::vector<Instruction> pipeline = bytecode.get();
+
+    V->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
+    V->ibp = V->ihp + pipeline.size();         // Initialize ibp (Instruction base pointer)
+    V->ip = V->ihp;                            // Initialize ip (Instruction pointer)
 }
 
 void stcleanupgstate(GState *G)

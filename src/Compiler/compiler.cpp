@@ -30,18 +30,4 @@ void Compiler::add_pass(std::unique_ptr<OptimizationPass>)
     // pass_manager.add_pass(std::move(pass));
 }
 
-Compiler::Instructions_t Compiler::get()
-{
-    // Copy the vector to make sure it doesn't get cleaned up along with the bytecode object
-    Compiler::Instructions_t vec = program.bytecode->get();
-    return vec;
-}
-
-const Compiler::Instructions_t Compiler::get() const
-{
-    // Copy the vector to make sure it doesn't get cleaned up along with the bytecode object
-    Compiler::Instructions_t vec = program.bytecode->get();
-    return vec;
-}
-
 } // namespace via

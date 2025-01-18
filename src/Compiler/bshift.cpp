@@ -13,8 +13,7 @@ void BitShiftOptimizationPass::apply(Generator &gen)
             continue;
 
         // Check if the operand is a power of 2
-        bool is_number = instr.operand1.type == OperandType::Number;
-        if (!is_number)
+        if (instr.operand1.type != OperandType::Number)
             continue;
 
         std::optional<double> power_of_2 = is_power_of_2(instr.operand1.val_number);

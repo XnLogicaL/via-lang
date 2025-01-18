@@ -1,8 +1,11 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #pragma once
 
 #include "common.h"
 
+// Yes I got lazy and decided to make ChatGPT generate this crap.
+// I was not about to use some goofy ass platform specific library.
 namespace via
 {
 

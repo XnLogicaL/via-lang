@@ -5,7 +5,7 @@
 
 // Macro for quickly construction tokens
 // Uses arena allocator for emplacing the newly created token
-#define TOKEN(type, val, line, off) *alloc.emplace<Token>(type, val, line, off)
+#define CREATE_TOKEN(type, val, line, off) *alloc->emplace<Token>(type, val, line, off)
 
 // We use this rather than `using namespace via`
 namespace via
@@ -49,7 +49,7 @@ Token Tokenizer::read_number()
     }
 
     // Use start_offset here to denote where the token begins
-    return TOKEN(type, value, line, start_offset);
+    return CREATE_TOKEN(type, value, line, start_offset);
 }
 
 Token Tokenizer::read_ident()
@@ -84,27 +84,38 @@ Token Tokenizer::read_ident()
         offset++;
     }
 
-    // Have to turn off clang-format here because it make a tower out of these
-    // Sorry but I'm not clang-format literate!
-    // clang-format off
-    static const HashMap<std::string, TokenType> keyword_map = { 
-        { "do", TokenType::KW_DO }, { "in", TokenType::KW_IN },
-        { "local", TokenType::KW_LOCAL }, { "global", TokenType::KW_GLOBAL },
-        { "as", TokenType::KW_AS }, { "const", TokenType::KW_CONST },
-        { "if", TokenType::KW_IF }, { "else", TokenType::KW_ELSE },
-        { "elseif", TokenType::KW_ELIF }, { "while", TokenType::KW_WHILE },
-        { "for", TokenType::KW_FOR }, { "return", TokenType::KW_RETURN },
-        { "func", TokenType::KW_FUNC }, { "break", TokenType::KW_BREAK },
-        { "continue", TokenType::KW_CONTINUE }, { "switch", TokenType::KW_SWITCH },
-        { "case", TokenType::KW_CASE }, { "default", TokenType::KW_DEFAULT },
-        { "delete", TokenType::KW_DELETE }, { "new", TokenType::KW_NEW },
-        { "and", TokenType::KW_AND }, { "not", TokenType::KW_NOT },
-        { "or", TokenType::KW_OR }, { "struct", TokenType::KW_STRUCT },
-        { "namespace", TokenType::KW_NAMESPACE }, { "property", TokenType::KW_PROPERTY },
-        { "import", TokenType::KW_IMPORT }, { "export", TokenType::KW_EXPORT },
-        { "macro", TokenType::KW_MACRO }, { "define", TokenType::KW_DEFINE }
+    static const HashMap<std::string, TokenType> keyword_map = {
+        {"do", TokenType::KW_DO},
+        {"in", TokenType::KW_IN},
+        {"local", TokenType::KW_LOCAL},
+        {"global", TokenType::KW_GLOBAL},
+        {"as", TokenType::KW_AS},
+        {"const", TokenType::KW_CONST},
+        {"if", TokenType::KW_IF},
+        {"else", TokenType::KW_ELSE},
+        {"elif", TokenType::KW_ELIF},
+        {"while", TokenType::KW_WHILE},
+        {"for", TokenType::KW_FOR},
+        {"return", TokenType::KW_RETURN},
+        {"func", TokenType::KW_FUNC},
+        {"break", TokenType::KW_BREAK},
+        {"continue", TokenType::KW_CONTINUE},
+        {"switch", TokenType::KW_SWITCH},
+        {"case", TokenType::KW_CASE},
+        {"default", TokenType::KW_DEFAULT},
+        {"new", TokenType::KW_NEW},
+        {"and", TokenType::KW_AND},
+        {"not", TokenType::KW_NOT},
+        {"or", TokenType::KW_OR},
+        {"struct", TokenType::KW_STRUCT},
+        {"namespace", TokenType::KW_NAMESPACE},
+        {"property", TokenType::KW_PROPERTY},
+        {"import", TokenType::KW_IMPORT},
+        {"export", TokenType::KW_EXPORT},
+        {"macro", TokenType::KW_MACRO},
+        {"define", TokenType::KW_DEFINE},
+        {"strict", TokenType::KW_STRICT}
     };
-    // clang-format on
 
     // Checks if the identifier is a keyword or not
     auto it = keyword_map.find(identifier);
@@ -120,7 +131,7 @@ Token Tokenizer::read_ident()
     if (identifier == "nil")
         type = TokenType::LIT_NIL;
 
-    return TOKEN(type, identifier, line, start_offset); // Use start_offset here
+    return CREATE_TOKEN(type, identifier, line, start_offset); // Use start_offset here
 }
 
 Token Tokenizer::read_string()
@@ -167,25 +178,68 @@ Token Tokenizer::read_string()
     pos++; // Skip closing quote
     offset++;
 
-    return TOKEN(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
+    return CREATE_TOKEN(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
 }
 
 Token Tokenizer::get_token()
 {
-    // Skip whitespace
-    while (pos < program.source.size() && isspace(program.source.at(pos)))
+    // Skip whitespace and single-line comments
+    while (pos < program.source.size())
     {
-        // Check if there is a line break
-        // If so, increment line and reset offset
-        if (program.source.at(pos) == '\n')
+        // Skip whitespace
+        if (isspace(program.source.at(pos)))
         {
-            line++;
-            offset = 0;
+            if (program.source.at(pos) == '\n')
+            {
+                line++;
+                offset = 0;
+            }
+            else
+            {
+                offset++;
+            }
+            pos++;
+            continue;
         }
-        else
-            offset++;
 
-        pos++; // Ensure this increments regardless of newline
+        // Skip single-line comments
+        if (program.source.at(pos) == '#' && pos + 1 < program.source.size() && program.source.at(pos + 1) == '#')
+        {
+            pos += 2;
+            offset += 2;
+            while (pos < program.source.size() && program.source.at(pos) != '\n')
+            {
+                pos++;
+                offset++;
+            }
+            continue;
+        }
+
+        // Skip block comments
+        if (program.source.at(pos) == '#' && pos + 1 < program.source.size() && program.source.at(pos + 1) == '[')
+        {
+            pos += 2;
+            offset += 2;
+            while (pos + 1 < program.source.size() && !(program.source.at(pos) == ']' && program.source.at(pos + 1) == '#'))
+            {
+                if (program.source.at(pos) == '\n')
+                {
+                    line++;
+                    offset = 0;
+                }
+                pos++;
+                offset++;
+            }
+            if (pos + 1 < program.source.size())
+            {
+                pos += 2; // Skip ']#'
+                offset += 2;
+            }
+            continue;
+        }
+
+        // If no match, break
+        break;
     }
 
     // Check if the position is at the end of the program.source string
@@ -204,7 +258,7 @@ Token Tokenizer::get_token()
         return read_string();
 
     // Handle identifiers and keywords
-    if (isalpha(program.source.at(pos)))
+    if (isalpha(program.source.at(pos)) || program.source.at(pos) == '_')
         return read_ident();
 
     // Handle special characters (operators, delimiters, etc.)
@@ -216,80 +270,81 @@ Token Tokenizer::get_token()
     switch (ch)
     {
     case '+':
-        return TOKEN(TokenType::OP_ADD, "+", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_ADD, "+", line, start_offset);
     case '-':
-        return TOKEN(TokenType::OP_SUB, "-", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_SUB, "-", line, start_offset);
     case '*':
-        return TOKEN(TokenType::OP_MUL, "*", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_MUL, "*", line, start_offset);
     case '/':
-        return TOKEN(TokenType::OP_DIV, "/", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_DIV, "/", line, start_offset);
     case '%':
-        return TOKEN(TokenType::OP_MOD, "%", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_MOD, "%", line, start_offset);
     case '^':
-        return TOKEN(TokenType::OP_EXP, "^", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
         if (pos < program.source.size() && program.source.at(pos) == '=')
         {
             pos++;
             offset++;
-            return TOKEN(TokenType::OP_EQ, "==", line, start_offset);
+            return CREATE_TOKEN(TokenType::OP_EQ, "==", line, start_offset);
         }
-        return TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
         if (pos < program.source.size() && program.source.at(pos) == '=')
         {
             pos++;
             offset++;
-            return TOKEN(TokenType::OP_NEQ, "!=", line, start_offset);
+            return CREATE_TOKEN(TokenType::OP_NEQ, "!=", line, start_offset);
         }
-        return TOKEN(TokenType::EXCLAMATION, "!", line, start_offset);
+        return CREATE_TOKEN(TokenType::EXCLAMATION, "!", line, start_offset);
     case '<':
-        return TOKEN(TokenType::OP_LT, "<", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_LT, "<", line, start_offset);
     case '>':
-        return TOKEN(TokenType::OP_GT, ">", line, start_offset);
+        return CREATE_TOKEN(TokenType::OP_GT, ">", line, start_offset);
     case '&':
-        return TOKEN(TokenType::AMPERSAND, "&", line, start_offset);
+        return CREATE_TOKEN(TokenType::AMPERSAND, "&", line, start_offset);
     case '|':
-        return TOKEN(TokenType::PIPE, "|", line, start_offset);
+        return CREATE_TOKEN(TokenType::PIPE, "|", line, start_offset);
     case ';':
-        return TOKEN(TokenType::SEMICOLON, ";", line, start_offset);
+        return CREATE_TOKEN(TokenType::SEMICOLON, ";", line, start_offset);
     case ',':
-        return TOKEN(TokenType::COMMA, ",", line, start_offset);
+        return CREATE_TOKEN(TokenType::COMMA, ",", line, start_offset);
     case '(':
-        return TOKEN(TokenType::PAREN_OPEN, "(", line, start_offset);
+        return CREATE_TOKEN(TokenType::PAREN_OPEN, "(", line, start_offset);
     case ')':
-        return TOKEN(TokenType::PAREN_CLOSE, ")", line, start_offset);
+        return CREATE_TOKEN(TokenType::PAREN_CLOSE, ")", line, start_offset);
     case '{':
-        return TOKEN(TokenType::BRACE_OPEN, "{", line, start_offset);
+        return CREATE_TOKEN(TokenType::BRACE_OPEN, "{", line, start_offset);
     case '}':
-        return TOKEN(TokenType::BRACE_CLOSE, "}", line, start_offset);
+        return CREATE_TOKEN(TokenType::BRACE_CLOSE, "}", line, start_offset);
     case '[':
-        return TOKEN(TokenType::BRACKET_OPEN, "[", line, start_offset);
+        return CREATE_TOKEN(TokenType::BRACKET_OPEN, "[", line, start_offset);
     case ']':
-        return TOKEN(TokenType::BRACKET_CLOSE, "]", line, start_offset);
+        return CREATE_TOKEN(TokenType::BRACKET_CLOSE, "]", line, start_offset);
     case '.':
-        return TOKEN(TokenType::DOT, ".", line, start_offset);
+        return CREATE_TOKEN(TokenType::DOT, ".", line, start_offset);
     case ':':
-        return TOKEN(TokenType::COLON, ":", line, start_offset);
+        return CREATE_TOKEN(TokenType::COLON, ":", line, start_offset);
     case '@':
-        return TOKEN(TokenType::AT, "@", line, start_offset);
+        return CREATE_TOKEN(TokenType::AT, "@", line, start_offset);
     case '?':
-        return TOKEN(TokenType::QUESTION, "?", line, start_offset);
+        return CREATE_TOKEN(TokenType::QUESTION, "?", line, start_offset);
     default:
-        return TOKEN(TokenType::UNKNOWN, std::string(1, ch), line, start_offset);
+        return CREATE_TOKEN(TokenType::UNKNOWN, std::string(1, ch), line, start_offset);
     }
 
-    return TOKEN(TokenType::UNKNOWN, "", line, start_offset);
+    return CREATE_TOKEN(TokenType::UNKNOWN, "", line, start_offset);
 }
 
 void Tokenizer::tokenize()
 {
-    TokenHolder *tokens = new TokenHolder;
+    TokenHolder *tokens = new TokenHolder(VIA_LEXER_ALLOC_SIZE);
+    this->alloc = &tokens->alloc;
 
     while (true)
     {
-        auto token = get_token();
-        tokens->push_back(token);
+        Token token = get_token();
+        tokens->tokens.push_back(token);
 
         if (token.type == TokenType::EOF_)
             break;
