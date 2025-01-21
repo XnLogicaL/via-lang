@@ -21,9 +21,7 @@ void ConstFoldOptimizationPass::apply(Generator &gen)
 #define CHECK(ident, type) type *ident = std::get_if<type>(&stmt.stmt)
     for (StmtNode stmt : gen.program.ast->statements)
     {
-        if (CHECK(decl_stmt, LocalDeclStmtNode))
-            fold_constexpr(gen, &decl_stmt->value.value());
-        else if (CHECK(decl_stmt, GlobalDeclStmtNode))
+        if (CHECK(decl_stmt, VariableDeclStmtNode))
             fold_constexpr(gen, &decl_stmt->value.value());
         else if (CHECK(call_stmt, CallStmtNode))
         {

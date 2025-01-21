@@ -75,6 +75,22 @@ void Parser::panic_and_recover()
         consume();
 }
 
+DeclarationType Parser::get_decl_type(TokenType type)
+{
+    static const HashMap<TokenType, DeclarationType> decl_type_table = {
+        {TokenType::KW_LOCAL, DeclarationType::Local},
+        {TokenType::KW_GLOBAL, DeclarationType::Global},
+        {TokenType::KW_PROPERTY, DeclarationType::Property},
+        // TODO: Add 'meta' keyword support
+    };
+
+    auto it = decl_type_table.find(type);
+    if (it != decl_type_table.end())
+        return it->second;
+
+    return DeclarationType::Local;
+}
+
 Pragma Parser::parse_pragma()
 {
     bool failed_inner = false;
@@ -318,6 +334,8 @@ ExprNode *Parser::parse_prim_expr()
 
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
+    case TokenType::LIT_HEX:
+    case TokenType::LIT_BINARY:
     case TokenType::LIT_STRING:
     case TokenType::LIT_BOOL:
     case TokenType::LIT_NIL:
@@ -466,7 +484,7 @@ ExprNode *Parser::parse_prim_expr()
 
             base_expr = alloc->emplace<ExprNode>(*index_expr);
         }
-        else if (is_type(TokenType::OP_INC))
+        else if (is_type(TokenType::OP_INCREMENT))
         {
             IncExprNode *inc_expr = alloc->emplace<IncExprNode>();
             inc_expr->expr = base_expr;
@@ -474,7 +492,7 @@ ExprNode *Parser::parse_prim_expr()
             base_expr = alloc->emplace<ExprNode>(*inc_expr);
         }
 
-        else if (is_type(TokenType::OP_DEC))
+        else if (is_type(TokenType::OP_DECREMENT))
         {
             DecExprNode *dec_expr = alloc->emplace<DecExprNode>();
             dec_expr->expr = base_expr;
@@ -752,11 +770,9 @@ TypedParamNode *Parser::parse_parameter()
     return param;
 }
 
-LocalDeclStmtNode *Parser::parse_local_declaration()
+VariableDeclStmtNode *Parser::parse_var_declaration()
 {
-    // Consume 'local'
-    consume();
-
+    Token declaration_type_token = consume();
     StatementModifiers modifiers = parse_modifiers(
         [this]()
         {
@@ -770,9 +786,10 @@ LocalDeclStmtNode *Parser::parse_local_declaration()
     if (!is_type(TokenType::IDENTIFIER))
         PARSER_ERROR("Expected identifier for local variable identifier");
 
-    LocalDeclStmtNode *decl = alloc->emplace<LocalDeclStmtNode>();
+    VariableDeclStmtNode *decl = alloc->emplace<VariableDeclStmtNode>();
     decl->ident = consume();
     decl->modifiers = modifiers;
+    decl->decl_type = get_decl_type(declaration_type_token.type);
 
     if (is_type(TokenType::COLON))
     {
@@ -795,58 +812,6 @@ LocalDeclStmtNode *Parser::parse_local_declaration()
         else
             decl->value = *expr;
     }
-
-    return decl;
-}
-
-GlobalDeclStmtNode *Parser::parse_global_declaration()
-{
-    // Consume 'global'
-    consume();
-
-    StatementModifiers modifiers = parse_modifiers(
-        [this]()
-        {
-            return !is_type(TokenType::IDENTIFIER);
-        }
-    );
-
-    if (modifiers.is_strict)
-        PARSER_ERROR("Using 'strict' modifier on variable declaration")
-
-    if (!is_type(TokenType::IDENTIFIER))
-        PARSER_ERROR("Expected identifier for global variable identifier");
-
-    GlobalDeclStmtNode *decl = alloc->emplace<GlobalDeclStmtNode>();
-    decl->ident = consume();
-    decl->modifiers = modifiers;
-
-    if (is_type(TokenType::COLON))
-    {
-        consume();
-
-        TypeNode *type = parse_type();
-        if (!type)
-            consume();
-        else
-            decl->type = *type;
-    }
-
-    if (is_type(TokenType::OP_ASGN))
-    {
-        consume();
-
-        ExprNode *expr = parse_expr();
-        if (!expr)
-            consume();
-        else
-            decl->value = *expr;
-    }
-    else
-        PARSER_ERROR("Global variables cannot be uninitialized");
-
-    if (failed)
-        panic_and_recover();
 
     return decl;
 }
@@ -1020,12 +985,9 @@ SwitchStmtNode *Parser::parse_switch_statement()
 }
 
 // Parses a statement that follows the function-grammar
-FunctionDeclStmtNode *Parser::parse_function_declaration()
+FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_type)
 {
     bool failed_inner = false;
-    // bool is_global = is_type(TokenType::KW_GLOBAL);
-
-    consume(); // Consume 'local/global/property'
     // No need to check this
     consume(); // Consume 'func'
 
@@ -1044,6 +1006,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration()
 
     FunctionDeclStmtNode *decl = alloc->emplace<FunctionDeclStmtNode>();
     decl->modifiers = modifiers;
+    decl->decl_type = decl_type;
     decl->ident = consume();
 
     // TODO: Make this safe
@@ -1112,7 +1075,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration()
 }
 
 // Parses a statement that follows the struct-grammar
-StructDeclStmtNode *Parser::parse_struct_declaration()
+StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 {
     bool failed_inner = false;
 
@@ -1126,6 +1089,7 @@ StructDeclStmtNode *Parser::parse_struct_declaration()
 
     StructDeclStmtNode *struct_decl = alloc->emplace<StructDeclStmtNode>();
     struct_decl->ident = consume();
+    struct_decl->decl_type = decl_type;
 
     if (!is_type(TokenType::BRACE_OPEN))
     {
@@ -1140,7 +1104,8 @@ StructDeclStmtNode *Parser::parse_struct_declaration()
         if (is_type(TokenType::BRACE_CLOSE))
             break;
 
-        if (!is_type(TokenType::KW_PROPERTY))
+        bool is_property = is_type(TokenType::KW_PROPERTY);
+        if (!is_property /* TODO: Add 'meta' keyword support */)
         {
             PARSER_ERROR(std::format("Unexpected token '{}' while parsing struct properties", peek().value));
             failed_inner = true;
@@ -1149,15 +1114,15 @@ StructDeclStmtNode *Parser::parse_struct_declaration()
         // We do not consume 'property' because it's an essential sentinel keyword for both subparser functions
         if (is_type(TokenType::KW_FUNC, 1))
         {
-            FunctionDeclStmtNode *func_decl = parse_function_declaration();
+            FunctionDeclStmtNode *func_decl = parse_function_declaration(is_property ? DeclarationType::Property : DeclarationType::Meta);
             StmtNode *func_decl_stmt = alloc->emplace<StmtNode>(*func_decl);
             struct_decl->declarations.push_back(*func_decl_stmt);
         }
         else
         {
-            LocalDeclStmtNode *local_decl = parse_local_declaration();
-            StmtNode *local_decl_stmt = alloc->emplace<StmtNode>(*local_decl);
-            struct_decl->declarations.push_back(*local_decl_stmt);
+            VariableDeclStmtNode *var_decl = parse_var_declaration();
+            StmtNode *var_decl_stmt = alloc->emplace<StmtNode>(*var_decl);
+            struct_decl->declarations.push_back(*var_decl_stmt);
             // TODO: Perform checks like type presence here
         }
     }
@@ -1209,14 +1174,18 @@ StmtNode *Parser::parse_statement()
     {
     case TokenType::EOF_:
         return nullptr;
-    case TokenType::KW_LOCAL:
-        if (is_type(TokenType::KW_FUNC, 1))
-            return emplace(*parse_function_declaration());
-        return emplace(*parse_local_declaration());
     case TokenType::KW_GLOBAL:
+    case TokenType::KW_LOCAL:
+    {
+        DeclarationType decl_type = get_decl_type(peek().type);
+
         if (is_type(TokenType::KW_FUNC, 1))
-            return emplace(*parse_function_declaration());
-        return emplace(*parse_global_declaration());
+            return emplace(*parse_function_declaration(decl_type));
+        else if (is_type(TokenType::KW_STRUCT, 1))
+            return emplace(*parse_struct_declaration(decl_type));
+
+        return emplace(*parse_var_declaration());
+    }
     case TokenType::KW_RETURN:
         return emplace(*parse_return_statement());
     case TokenType::KW_WHILE:
@@ -1227,11 +1196,13 @@ StmtNode *Parser::parse_statement()
         return emplace(*parse_if_statement());
     case TokenType::KW_SWITCH:
         return emplace(*parse_switch_statement());
+    case TokenType::KW_FUNC:
+        return emplace(*parse_function_declaration(DeclarationType::Local));
     case TokenType::KW_STRUCT:
-        return emplace(*parse_struct_declaration());
+        return emplace(*parse_struct_declaration(DeclarationType::Local));
     case TokenType::KW_NAMESPACE:
         // TODO: Self explanatory...
-        goto invalid_statement;
+        break;
     case TokenType::KW_BREAK:
         return emplace(*alloc->emplace<BreakStmtNode>());
     case TokenType::KW_CONTINUE:

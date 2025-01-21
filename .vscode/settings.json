@@ -113,4 +113,5 @@
         "__bit_reference": "cpp",
         "__node_handle": "cpp"
     },
+    "git.ignoreLimitWarning": true,
 }

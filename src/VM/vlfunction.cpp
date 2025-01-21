@@ -13,11 +13,11 @@ void function_name(RTState *V)
     // If so return nil
     if (!checkfunction(V, *func))
     {
-        pushval(V, stackvalue(V));
+        pushval(V, TValue());
         return;
     }
 
-    TValue id = stackvalue(V, func->val_function->id);
+    TValue id = TValue(func->val_function->id);
     pushval(V, id);
     nativeret(V, 1);
 }

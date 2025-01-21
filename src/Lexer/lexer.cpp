@@ -3,6 +3,9 @@
 #include "lexer.h"
 #include "token.h"
 
+#define BINARY_LITERAL_SENTINEL ('b')
+#define HEX_LITERAL_SENTINEL ('x')
+
 // Macro for quickly construction tokens
 // Uses arena allocator for emplacing the newly created token
 #define CREATE_TOKEN(type, val, line, off) *alloc->emplace<Token>(type, val, line, off)
@@ -11,38 +14,69 @@
 namespace via
 {
 
+// Simple function that returns whether if a character is allowed within a hexadecimal literal
+bool Tokenizer::is_hex_char(char chr)
+{
+    return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
+}
+
+size_t Tokenizer::source_size()
+{
+    return program.source.size();
+}
+
+char Tokenizer::peek(size_t ahead)
+{
+    return program.source.at(pos + ahead);
+}
+
+char Tokenizer::consume(size_t ahead)
+{
+    return program.source.at(pos += ahead);
+}
+
 Token Tokenizer::read_number()
 {
-    // Specify default type as integer literal
-    // This is because there's no way to know if the literal is a float before reading it
-    // Therefore it is assumed to be an integer literal until proven otherwise
-    TokenType type = TokenType::LIT_INT;
-    // Record starting offset of the number
-    size_t start_offset = offset;
-    // Value of the number, as a string for convenience
-    std::string value;
+    TokenType type = TokenType::LIT_INT; // Specify default type as integer literal
+    size_t start_offset = offset;        // Record starting offset of the number
+    std::string value;                   // Value of the number, as a string for convenience
+
+    // Check for binary or hex literals
+    if (peek() == '0' && !std::isdigit(peek(1)))
+    {
+        consume(); // Consume '0'
+
+        if (peek() == BINARY_LITERAL_SENTINEL)
+            type = TokenType::LIT_BINARY;
+        else if (peek() == HEX_LITERAL_SENTINEL)
+            type = TokenType::LIT_HEX;
+        else // Unknown number literal
+            type = TokenType::UNKNOWN;
+
+        consume(); // Consume 'b' or 'x'
+    }
 
     // Read the number until the current character isn't numeric
-    while (pos < program.source.size() && isdigit(program.source.at(pos)))
+    while (pos < source_size() && (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek()))))
     {
-        value.push_back(program.source.at(pos));
+        value.push_back(peek());
         pos++;
         offset++;
     }
 
     // Check for floating point
-    if (pos < program.source.size() && program.source.at(pos) == '.')
+    if (pos < source_size() && peek() == '.')
     {
-        value.push_back(program.source.at(pos));
+        value.push_back(peek());
         // Since it's proven that there is a floating point in the number literal
         // We can safely categorize it as a float literal
         type = TokenType::LIT_FLOAT;
         pos++;
         offset++;
 
-        while (pos < program.source.size() && isdigit(program.source.at(pos)))
+        while (pos < source_size() && std::isdigit(peek()))
         {
-            value.push_back(program.source.at(pos));
+            value.push_back(peek());
             pos++;
             offset++;
         }
@@ -66,20 +100,18 @@ Token Tokenizer::read_ident()
     std::string identifier;
 
     // Lambda for checking if a character is allowed within an identifier
-    auto is_allowed = [this](char ch) -> bool
+    auto is_allowed = [this](char chr) -> bool
     {
         auto allow_list = allowed_identifier_spec_chars;
-        bool is_alnum = isalnum(ch);
-        // I love std::find and the ridiculous iterator template
-        // Like, who the fuck thought it was a good idea to make people write .begin() and .end() every single fuckin time?
-        bool is_allowed = std::find(allow_list.begin(), allow_list.end(), program.source.at(pos)) != allow_list.end();
+        bool is_alnum = isalnum(chr);
+        bool is_allowed = std::ranges::find(allow_list, peek()) != allow_list.end();
         return is_alnum || is_allowed;
     };
 
     // Read identifier while position is inside bounds and the current character is allowed within an identifier
-    while (pos < program.source.size() && is_allowed(program.source.at(pos)))
+    while (pos < source_size() && is_allowed(peek()))
     {
-        identifier.push_back(program.source.at(pos));
+        identifier.push_back(peek());
         pos++;
         offset++;
     }
@@ -114,7 +146,9 @@ Token Tokenizer::read_ident()
         {"export", TokenType::KW_EXPORT},
         {"macro", TokenType::KW_MACRO},
         {"define", TokenType::KW_DEFINE},
-        {"strict", TokenType::KW_STRICT}
+        {"strict", TokenType::KW_STRICT},
+        {"meta", TokenType::KW_META},
+        {"defined", TokenType::KW_DEFINED},
     };
 
     // Checks if the identifier is a keyword or not
@@ -141,16 +175,16 @@ Token Tokenizer::read_string()
     pos++;                        // Skip opening quote
     offset++;
 
-    while (pos < program.source.size() && program.source.at(pos) != '"')
+    while (pos < source_size() && peek() != '"')
     {
-        if (program.source.at(pos) == '\\')
+        if (peek() == '\\')
         {
             pos++;
             offset++;
 
-            if (pos < program.source.size())
+            if (pos < source_size())
             {
-                char escape_char = program.source.at(pos);
+                char escape_char = peek();
                 switch (escape_char)
                 {
                 case 'n':
@@ -169,7 +203,7 @@ Token Tokenizer::read_string()
             }
         }
         else
-            value.push_back(program.source.at(pos));
+            value.push_back(peek());
 
         pos++;
         offset++;
@@ -184,12 +218,12 @@ Token Tokenizer::read_string()
 Token Tokenizer::get_token()
 {
     // Skip whitespace and single-line comments
-    while (pos < program.source.size())
+    while (pos < source_size())
     {
         // Skip whitespace
-        if (isspace(program.source.at(pos)))
+        if (isspace(peek()))
         {
-            if (program.source.at(pos) == '\n')
+            if (peek() == '\n')
             {
                 line++;
                 offset = 0;
@@ -203,11 +237,11 @@ Token Tokenizer::get_token()
         }
 
         // Skip single-line comments
-        if (program.source.at(pos) == '#' && pos + 1 < program.source.size() && program.source.at(pos + 1) == '#')
+        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '#')
         {
             pos += 2;
             offset += 2;
-            while (pos < program.source.size() && program.source.at(pos) != '\n')
+            while (pos < source_size() && peek() != '\n')
             {
                 pos++;
                 offset++;
@@ -216,13 +250,13 @@ Token Tokenizer::get_token()
         }
 
         // Skip block comments
-        if (program.source.at(pos) == '#' && pos + 1 < program.source.size() && program.source.at(pos + 1) == '[')
+        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '[')
         {
             pos += 2;
             offset += 2;
-            while (pos + 1 < program.source.size() && !(program.source.at(pos) == ']' && program.source.at(pos + 1) == '#'))
+            while (pos + 1 < source_size() && !(peek() == ']' && peek(1) == '#'))
             {
-                if (program.source.at(pos) == '\n')
+                if (peek() == '\n')
                 {
                     line++;
                     offset = 0;
@@ -230,7 +264,7 @@ Token Tokenizer::get_token()
                 pos++;
                 offset++;
             }
-            if (pos + 1 < program.source.size())
+            if (pos + 1 < source_size())
             {
                 pos += 2; // Skip ']#'
                 offset += 2;
@@ -244,30 +278,30 @@ Token Tokenizer::get_token()
 
     // Check if the position is at the end of the program.source string
     // If so, return an EOF token meant as a sentinel
-    if (pos >= program.source.size())
+    if (pos >= source_size())
         return {TokenType::EOF_, "", line, offset};
 
     size_t start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
-    if (isdigit(program.source.at(pos)))
+    if (std::isdigit(peek()))
         return read_number();
 
     // Handle string literals
-    if (program.source.at(pos) == '"')
+    if (peek() == '"')
         return read_string();
 
     // Handle identifiers and keywords
-    if (isalpha(program.source.at(pos)) || program.source.at(pos) == '_')
+    if (std::isalpha(peek()) || peek() == '_')
         return read_ident();
 
     // Handle special characters (operators, delimiters, etc.)
-    char ch = program.source.at(pos);
+    char chr = peek();
 
     pos++;
     offset++;
 
-    switch (ch)
+    switch (chr)
     {
     case '+':
         return CREATE_TOKEN(TokenType::OP_ADD, "+", line, start_offset);
@@ -282,7 +316,7 @@ Token Tokenizer::get_token()
     case '^':
         return CREATE_TOKEN(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
-        if (pos < program.source.size() && program.source.at(pos) == '=')
+        if (pos < source_size() && peek() == '=')
         {
             pos++;
             offset++;
@@ -290,7 +324,7 @@ Token Tokenizer::get_token()
         }
         return CREATE_TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
-        if (pos < program.source.size() && program.source.at(pos) == '=')
+        if (pos < source_size() && peek() == '=')
         {
             pos++;
             offset++;
@@ -330,7 +364,7 @@ Token Tokenizer::get_token()
     case '?':
         return CREATE_TOKEN(TokenType::QUESTION, "?", line, start_offset);
     default:
-        return CREATE_TOKEN(TokenType::UNKNOWN, std::string(1, ch), line, start_offset);
+        return CREATE_TOKEN(TokenType::UNKNOWN, std::string(1, chr), line, start_offset);
     }
 
     return CREATE_TOKEN(TokenType::UNKNOWN, "", line, start_offset);

@@ -34,6 +34,11 @@ public:
     void tokenize();
 
 private:
+    bool is_hex_char(char);
+    size_t source_size();
+    char peek(size_t ahead = 0);
+    char consume(size_t ahead = 1);
+
     // Starts reading a "number" literal
     // Which can be a negative/positive floating point or integer
     Token read_number();

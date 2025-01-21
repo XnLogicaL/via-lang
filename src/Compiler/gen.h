@@ -58,6 +58,7 @@ public:
     // Register management functions
     RegId allocate_temp_register();
     RegId allocate_register();
+    size_t load_constant(LiteralExprNode);
     void free_register(RegId);
 
 public:
@@ -66,13 +67,14 @@ public:
 private:
     ArenaAllocator alloc; // Custom allocator
     Cleaner cleaner;      // Resource cleaner
+    kTable constants;
+    HashMap<std::string, LocalId> symbols;
+    HashMap<kGlobId, TValue> globals;
+    std::map<RegId, bool> register_pool;
     Chunk *current_chunk;
     bool initialize_with_chunk;
     StkPos stack_pointer;
     StkPos saved_stack_pointer;
-    HashMap<std::string, LocalId> symbols;
-    HashMap<kGlobId, TValue> globals;
-    std::map<RegId, bool> register_pool;
 
 private:
     // Instruction handling functions
@@ -92,8 +94,7 @@ private:
     void generate_expression(ExprNode, RegId);
 
     // Statement generators
-    void generate_local_declaration_statement(LocalDeclStmtNode);
-    void generate_global_declaration_statement(GlobalDeclStmtNode);
+    void generate_variable_declaration_statement(VariableDeclStmtNode);
     void generate_function_declaration_statement(FunctionDeclStmtNode);
     void generate_call_statement(CallStmtNode);
     void generate_assign_statement(AssignStmtNode);

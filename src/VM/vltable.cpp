@@ -107,11 +107,11 @@ void table_contains(RTState *V)
         if (compare(V, it.second, *val))
         {
             TNumber key = static_cast<TNumber>(it.first);
-            pushval(V, stackvalue(V, key));
+            pushval(V, TValue(key));
             return;
         }
 
-    pushval(V, stackvalue(V));
+    pushval(V, TValue());
     nativeret(V, 1);
 }
 
@@ -132,7 +132,7 @@ void table_concat(RTState *V)
     }
 
     const char *final_str = dupstring(buf);
-    TValue final = stackvalue(V, final_str);
+    TValue final = TValue(final_str);
 
     pushval(V, final);
     nativeret(V, 1);
@@ -145,13 +145,13 @@ void table_clone(RTState *V)
     LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
 
     TTable *original = tbl->val_table;
-    TTable *clone = newtable(V);
+    TTable *clone = new TTable();
 
     auto &data = clone->data;
     for (const auto &it : original->data)
         data[it.first] = it.second;
 
-    TValue final = stackvalue(V, clone);
+    TValue final = TValue(clone);
 
     pushval(V, final);
     nativeret(V, 1);
@@ -164,7 +164,7 @@ void table_deepclone(RTState *V)
     LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
 
     TTable *original = tbl->val_table;
-    TTable *clone = newtable(V);
+    TTable *clone = new TTable();
 
     auto &data = clone->data;
     for (const auto &it : original->data)
@@ -184,7 +184,7 @@ void table_deepclone(RTState *V)
             data[key] = it.second;
     }
 
-    TValue final = stackvalue(V, clone);
+    TValue final = TValue(clone);
 
     pushval(V, final);
     nativeret(V, 1);
@@ -212,11 +212,11 @@ void table_indexof(RTState *V)
     for (const auto &it : data)
         if (compare(V, it.second, *val))
         {
-            pushval(V, stackvalue(V, true));
+            pushval(V, TValue(true));
             return;
         }
 
-    pushval(V, stackvalue(V));
+    pushval(V, TValue());
     nativeret(V, 1);
 }
 
@@ -227,14 +227,14 @@ void table_keys(RTState *V)
     LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
 
     auto &data = tbl->val_table->data;
-    TTable *keys = newtable(V);
-    TValue keys_table = stackvalue(V, keys);
+    TTable *keys = new TTable();
+    TValue keys_table = TValue(keys);
 
     for (const auto &it : data)
     {
         // TODO: Find a way to un-hash the string so that it's not just some random numbers
         TNumber key_num = static_cast<TNumber>(it.first);
-        TValue key_val = stackvalue(V, key_num);
+        TValue key_val = TValue(key_num);
 
         pusharguments(V, {keys_table, key_val});
         table_insert(V);
@@ -251,8 +251,8 @@ void table_values(RTState *V)
     LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
 
     auto &data = tbl->val_table->data;
-    TTable *values = newtable(V);
-    TValue values_table = stackvalue(V, values);
+    TTable *values = new TTable();
+    TValue values_table = TValue(values);
 
     for (const auto &it : data)
     {

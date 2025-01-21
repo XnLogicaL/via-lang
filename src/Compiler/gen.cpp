@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "gen.h"
+#include "api.h"
 #include "instruction.h"
 
 #ifndef VIA_CONSTEXPR_MAX_DEPTH
@@ -119,13 +120,13 @@ TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
     {
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
-        return stackvalue(nullptr, std::stod(lit_expr.value.value));
+        return TValue(nullptr, std::stod(lit_expr.value.value));
     case TokenType::LIT_BOOL:
-        return stackvalue(nullptr, lit_expr.value.value == "true");
+        return TValue(nullptr, lit_expr.value.value == "true");
     case TokenType::LIT_STRING:
-        return stackvalue(nullptr, newstring(nullptr, lit_expr.value.value.c_str()));
+        return TValue(nullptr, new TString(nullptr, lit_expr.value.value.c_str()));
     default:
-        return stackvalue(nullptr);
+        return TValue(static_cast<RTState *>(nullptr));
     }
 }
 
@@ -146,6 +147,23 @@ RegId Generator::allocate_register()
         }
 
     return VIA_REGISTER_INVALID;
+}
+
+size_t Generator::load_constant(LiteralExprNode expr)
+{
+    TValue val = generate_tvalue(expr);
+    size_t idx = 0;
+
+    for (TValue const_val : constants)
+    {
+        if (compare(nullptr, val, const_val))
+            return idx;
+
+        idx++;
+    }
+
+    constants.push_back(val);
+    return idx++;
 }
 
 void Generator::free_register(RegId reg)

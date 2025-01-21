@@ -11,7 +11,7 @@ void math_exp(RTState *V)
 
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(0, "Number", ENUM_NAME(num->type)));
 
-    TValue val = stackvalue(V, std::exp(num->val_number));
+    TValue val = TValue(std::exp(num->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -24,7 +24,7 @@ void math_log(RTState *V)
     LIB_ASSERT(checknumber(V, *base), ARG_MISMATCH(0, "Number", ENUM_NAME(base->type)));
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(1, "Number", ENUM_NAME(num->type)));
 
-    TValue val = stackvalue(V, std::log(num->val_number) / std::log(base->val_number));
+    TValue val = TValue(std::log(num->val_number) / std::log(base->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -35,7 +35,7 @@ void math_log10(RTState *V)
 
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(0, "Number", ENUM_NAME(num->type)));
 
-    TValue val = stackvalue(V, std::log10(num->val_number));
+    TValue val = TValue(std::log10(num->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -48,7 +48,7 @@ void math_pow(RTState *V)
     LIB_ASSERT(checknumber(V, *num), ARG_MISMATCH(0, "Number", ENUM_NAME(num->type)));
     LIB_ASSERT(checknumber(V, *e), ARG_MISMATCH(1, "Number", ENUM_NAME(e->type)));
 
-    TValue val = stackvalue(V, std::pow(num->val_number, e->val_number));
+    TValue val = TValue(std::pow(num->val_number, e->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -59,7 +59,7 @@ void math_cos(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::cos(t->val_number)); // Compute the cosine
+    TValue val = TValue(std::cos(t->val_number)); // Compute the cosine
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -70,7 +70,7 @@ void math_tan(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::tan(t->val_number));
+    TValue val = TValue(std::tan(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -81,7 +81,7 @@ void math_asin(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::asin(t->val_number));
+    TValue val = TValue(std::asin(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -92,7 +92,7 @@ void math_acos(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::acos(t->val_number));
+    TValue val = TValue(std::acos(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -103,7 +103,7 @@ void math_atan(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::atan(t->val_number));
+    TValue val = TValue(std::atan(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -116,7 +116,7 @@ void math_atan2(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
-    TValue val = stackvalue(V, std::atan2(t->val_number, x->val_number));
+    TValue val = TValue(std::atan2(t->val_number, x->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -127,7 +127,7 @@ void math_sinh(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::sinh(t->val_number));
+    TValue val = TValue(std::sinh(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -138,7 +138,7 @@ void math_cosh(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::cosh(t->val_number));
+    TValue val = TValue(std::cosh(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -149,7 +149,7 @@ void math_tanh(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::tanh(t->val_number));
+    TValue val = TValue(std::tanh(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -160,7 +160,7 @@ void math_abs(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::fabs(t->val_number));
+    TValue val = TValue(std::fabs(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -173,7 +173,7 @@ void math_min(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
-    TValue val = stackvalue(V, std::min(t->val_number, x->val_number));
+    TValue val = TValue(std::min(t->val_number, x->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -186,7 +186,7 @@ void math_max(RTState *V)
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
     LIB_ASSERT(checknumber(V, *x), ARG_MISMATCH(1, "Number", ENUM_NAME(x->type)));
 
-    TValue val = stackvalue(V, std::max(t->val_number, x->val_number));
+    TValue val = TValue(std::max(t->val_number, x->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -197,7 +197,7 @@ void math_round(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::round(t->val_number));
+    TValue val = TValue(std::round(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -208,7 +208,7 @@ void math_floor(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::floor(t->val_number));
+    TValue val = TValue(std::floor(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -219,7 +219,7 @@ void math_ceil(RTState *V)
 
     LIB_ASSERT(checknumber(V, *t), ARG_MISMATCH(0, "Number", ENUM_NAME(t->type)));
 
-    TValue val = stackvalue(V, std::ceil(t->val_number));
+    TValue val = TValue(std::ceil(t->val_number));
     pushval(V, val);
     nativeret(V, 1);
 }
@@ -229,7 +229,7 @@ void loadmathlib(RTState *V)
     static const HashMap<const char *, TValue> math_properties = {
 
         // Constants
-        {"pi", stackvalue(V, 3.1415926535)},
+        {"pi", TValue(3.1415926535)},
 
         // Functions
         {"exp", WRAPVAL(math_exp)},
@@ -253,7 +253,7 @@ void loadmathlib(RTState *V)
         {"ceil", WRAPVAL(math_ceil)}
     };
 
-    TTable *lib = newtable(V, nullptr, {});
+    TTable *lib = new TTable(nullptr, false, {});
 
     for (auto it : math_properties)
     {

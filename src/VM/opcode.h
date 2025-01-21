@@ -9,6 +9,7 @@ namespace via
 /*
  * OpCode operand convention
  * <opcode> <registers> <identifiers> <everything-else>
+ * Ordered from most likely to be executed to the least. (Except NOP)
  */
 enum class OpCode
 {
@@ -21,19 +22,173 @@ enum class OpCode
      */
     NOP,
     /*
-     * opcode: MOV
+     * opcode: ADD
+     * Adds the value in operand1 to operand0.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    ADD,
+    /*
+     * opcode: ADDK
+     * Adds the constant value from the table at operand1 to operand0.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    ADDK,
+    /*
+     * opcode: ADDI
+     * Adds the immediate value in operand1 to operand0.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    ADDI,
+    /*
+     * opcode: SUB
+     * Subtracts the value in operand1 from operand0.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    SUB,
+    /*
+     * opcode: SUBK
+     * Subtracts the constant value from the table at operand1 from operand0.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    SUBK,
+    /*
+     * opcode: SUBI
+     * Subtracts the immediate value in operand1 from operand0.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    SUBI,
+    /*
+     * opcode: MUL
+     * Multiplies operand0 by the value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    MUL,
+    /*
+     * opcode: MULK
+     * Multiplies operand0 by the constant value from the table at operand1.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    MULK,
+    /*
+     * opcode: MULI
+     * Multiplies operand0 by the immediate value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    MULI,
+    /*
+     * opcode: DIV
+     * Divides operand0 by the value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    DIV,
+    /*
+     * opcode: DIVK
+     * Divides operand0 by the constant value from the table at operand1.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    DIVK,
+    /*
+     * opcode: DIVI
+     * Divides operand0 by the immediate value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    DIVI,
+    /*
+     * opcode: MOD
+     * Computes the remainder of operand0 divided by the value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    MOD,
+    /*
+     * opcode: MODK
+     * Computes the remainder of operand0 divided by the constant value from the table at operand1.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    MODK,
+    /*
+     * opcode: MODI
+     * Computes the remainder of operand0 divided by the immediate value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    MODI,
+    /*
+     * opcode: POW
+     * Raises operand0 to the power of the value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <src :: Register>
+     * operand2: <>
+     */
+    POW,
+    /*
+     * opcode: POWK
+     * Raises operand0 to the power of the constant value from the table at operand1.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    POWK,
+    /*
+     * opcode: POWI
+     * Raises operand0 to the power of the immediate value in operand1.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: Number>
+     * operand2: <>
+     */
+    POWI,
+    /*
+     * opcode: NEG
+     * Negates the value in operand0.
+     * operand0: <val :: Register>
+     * operand1: <>
+     * operand2: <>
+     */
+    NEG,
+    /*
+     * opcode: NEGK
+     * Negates the constant at idx operand1 and loads the result into operand0.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    NEGK,
+    /*
+     * opcode: MOVE
      * Moves the value in operand0 to operand1.
      * operand0: <dst :: Register>
      * operand1: <src :: Register>
      * operand2: <>
      */
-    MOV,
-    LOADNIL,
-    LOADNUMBER,
-    LOADBOOL,
-    LOADSTRING,
-    LOADTABLE,
-    LOADFUNCTION,
+    MOVE,
     /*
      * opcode: SWAP
      * Swaps the values of operand0 and operand1.
@@ -43,21 +198,77 @@ enum class OpCode
      */
     SWAP,
     /*
-     * opcode: PUSH
+     * opcode: LOADK
+     * Loads constant from the constant table at idx operand1 into operand0.
+     * operand0: <dst :: Register>
+     * operand1: <idx :: Number>
+     * operand2: <>
+     */
+    LOADK,
+    /*
+     * opcode: LOADNIL
+     * Loads immediate nil into dst.
+     * operand0: <dst :: Register>
+     * operand1: <>
+     * operand2: <>
+     */
+    LOADNIL,
+    /*
+     * opcode: LOADNUMBER
+     * Loads immediate number operand1 into dst.
+     * operand0: <dst :: Register>
+     * operand1: <num :: Number>
+     * operand2: <>
+     */
+    LOADNUMBER,
+    /*
+     * opcode: LOADBOOL
+     * Loads immediate bool operand1 into dst.
+     * operand0: <dst :: Register>
+     * operand1: <num :: Boolean>
+     * operand2: <>
+     */
+    LOADBOOL,
+    /*
+     * opcode: LOADSTRING
+     * Loads immediate string operand1 into dst.
+     * operand0: <dst :: Register>
+     * operand1: <str :: String>
+     * operand2: <>
+     */
+    LOADSTRING,
+    /*
+     * opcode: LOADTABLE
+     * Loads empty immediate table into dst.
+     * operand0: <dst :: Register>
+     * operand1: <>
+     * operand2: <>
+     */
+    LOADTABLE,
+    /*
+     * opcode: LOADFUNCTION
+     * Loads immediate function into dst, captures all bytecode from itself to the next RETURN instruction.
+     * operand0: <dst :: Register>
+     * operand1: <>
+     * operand2: <>
+     */
+    LOADFUNCTION,
+    /*
+     * opcode: PUSHSTACK
      * Pushes a value onto the stack.
      * operand0: <src :: Register>
      * operand1: <>
      * operand2: <>
      */
-    PUSH,
+    PUSHSTACK,
     /*
-     * opcode: POP
+     * opcode: POPSTACK
      * Pops and loads the top-most element of the stack onto a register.
      * operand0: <dst :: Register>
      * operand1: <>
      * operand2: <>
      */
-    POP,
+    POPSTACK,
     /*
      * opcode: GETSTACK
      * Loads a local variable relative to the sbp (stack base pointer) into register <dst> with offset <off>.
@@ -99,637 +310,219 @@ enum class OpCode
      */
     SETGLOBAL,
     /*
-     * opcode: ADDRR
-     * Performs an add operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    ADDRR,
-    /*
-     * opcode: ADDRN
-     * Performs an add operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    ADDRN,
-    /*
-     * opcode: ADDRN
-     * Performs an add operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    ADDNR,
-    /*
-     * opcode: ADDNN
-     * Performs an add operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    ADDNN,
-    /*
-     * opcode: ADDIR
-     * Performs an inline add operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <>
-     */
-    ADDIR,
-    /*
-     * opcode: ADDIN
-     * Performs an inline add operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <>
-     */
-    ADDIN,
-    /*
-     * opcode: SUBRR
-     * Performs a sub operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    SUBRR,
-    /*
-     * opcode: SUBRN
-     * Performs a sub operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    SUBRN,
-    /*
-     * opcode: SUBNR
-     * Performs a sub operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    SUBNR,
-    /*
-     * opcode: SUBNN
-     * Performs a sub operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    SUBNN,
-    /*
-     * opcode: SUBIR
-     * Performs an inline sub operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <>
-     */
-    SUBIR,
-    /*
-     * opcode: SUBIN
-     * Performs an inline sub operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <>
-     */
-    SUBIN,
-    /*
-     * opcode: MULRR
-     * Performs a mul operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    MULRR,
-    /*
-     * opcode: MULRN
-     * Performs a mul operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    MULRN,
-    /*
-     * opcode: MULNR
-     * Performs a mul operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    MULNR,
-    /*
-     * opcode: MULNN
-     * Performs a mul operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    MULNN,
-    /*
-     * opcode: MULIR
-     * Performs an inline mul operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Register> operand2: <>
-     */
-    MULIR,
-    /*
-     * opcode: MULIN
-     * Performs an inline mul operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Number> operand2: <>
-     */
-    MULIN,
-    /*
-     * opcode: DIVRR
-     * Performs a div operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    DIVRR,
-    /*
-     * opcode: DIVRN
-     * Performs a div operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    DIVRN,
-    /*
-     * opcode: DIVNR
-     * Performs a div operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    DIVNR,
-    /*
-     * opcode: DIVNN
-     * Performs a div operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    DIVNN,
-    /*
-     * opcode: DIVIR
-     * Performs an inline div operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Register> operand2: <>
-     */
-    DIVIR,
-    /*
-     * opcode: DIVIN
-     * Performs an inline div operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Number> operand2: <>
-     */
-    DIVIN,
-    /*
-     * opcode: POWRR
-     * Performs a pow operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    POWRR,
-    /*
-     * opcode: POWRN
-     * Performs a pow operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    POWRN,
-    /*
-     * opcode: POWNR
-     * Performs a pow operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    POWNR,
-    /*
-     * opcode: POWNN
-     * Performs a pow operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    POWNN,
-    /*
-     * opcode: POWIR
-     * Performs an inline pow operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Register> operand2: <>
-     */
-    POWIR,
-    /*
-     * opcode: POWIN
-     * Performs an inline pow operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Number> operand2: <>
-     */
-    POWIN,
-    /*
-     * opcode: MODRR
-     * Performs a mod operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
-     */
-    MODRR,
-    /*
-     * opcode: MODRN
-     * Performs a mod operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Register>
-     * operand2: <rhs :: Number>
-     */
-    MODRN,
-    /*
-     * opcode: MODNR
-     * Performs a mod operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Register>
-     */
-    MODNR,
-    /*
-     * opcode: MODNN
-     * Performs a mod operation between operand1 and operand2 and stores the
-     * result in operand0. operand0: <dst :: Register> operand1: <lhs :: Number>
-     * operand2: <rhs :: Number>
-     */
-    MODNN,
-    /*
-     * opcode: MODIR
-     * Performs an inline mod operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Register> operand2: <>
-     */
-    MODIR,
-    /*
-     * opcode: MODIN
-     * Performs an inline mod operation between operand0 and operand1. Modifies
-     * the value of operand0. operand0: <dst :: Register> operand1: <rhs ::
-     * Number> operand2: <>
-     */
-    MODIN,
-    /*
-     * opcode: NEGR
-     * Negates the value in operand1 and stores the result in operand0.
-     * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
-     */
-    NEGR,
-    /*
-     * opcode: NEGI
-     * Negates the value in operand0 in place.
-     * operand0: <dst :: Register>
-     * operand1: <>
-     * operand2: <>
-     */
-    NEGI,
-    /*
-     * opcode: INC
+     * opcode: INCREMENT
      * Increments the value in operand0.
      * operand0: <dst :: Register>
      * operand1: <>
      * operand2: <>
      */
-    INC,
+    INCREMENT,
     /*
-     * opcode: DEC
+     * opcode: DECREMENT
      * Decrements the value in operand0.
      * operand0: <dst :: Register>
      * operand1: <>
      * operand2: <>
      */
-    DEC,
+    DECREMENT,
+
+    LOADARGUMENT,
     /*
-     * opcode: BANDRR
-     * Performs a bitwise AND operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Register>
-     */
-    BANDRR,
-    /*
-     * opcode: BANDRN
-     * Performs a bitwise AND operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Number>
-     */
-    BANDRN,
-    /*
-     * opcode: BANDNR
-     * Performs a bitwise AND operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Register>
-     */
-    BANDNR,
-    /*
-     * opcode: BANDNN
-     * Performs a bitwise AND operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Number>
-     */
-    BANDNN,
-    /*
-     * opcode: BANDIR
-     * Performs an inline bitwise AND operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Register> operand2: <>
-     */
-    BANDIR,
-    /*
-     * opcode: BANDIN
-     * Performs an inline bitwise AND operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Number> operand2: <>
-     */
-    BANDIN,
-    /*
-     * opcode: BORRR
-     * Performs a bitwise OR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Register>
-     */
-    BORRR,
-    /*
-     * opcode: BORRN
-     * Performs a bitwise OR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Number>
-     */
-    BORRN,
-    /*
-     * opcode: BORNR
-     * Performs a bitwise OR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Register>
-     */
-    BORNR,
-    /*
-     * opcode: BORNN
-     * Performs a bitwise OR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Number>
-     */
-    BORNN,
-    /*
-     * opcode: BORIR
-     * Performs an inline bitwise OR operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Register> operand2: <>
-     */
-    BORIR,
-    /*
-     * opcode: BORIN
-     * Performs an inline bitwise OR operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Boolean> operand2: <>
-     */
-    BORIN,
-    /*
-     * opcode: BXORRR
-     * Performs a bitwise XOR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Register>
-     */
-    BXORRR,
-    /*
-     * opcode: BXORRN
-     * Performs a bitwise XOR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Register> operand2: <rhs :: Number>
-     */
-    BXORRN,
-    /*
-     * opcode: BXORNR
-     * Performs a bitwise XOR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Register>
-     */
-    BXORNR,
-    /*
-     * opcode: BXORNN
-     * Performs a bitwise XOR operation between operand1 and operand2 and stores
-     * the result in operand0. operand0: <dst :: Register> operand1: <lhs ::
-     * Number> operand2: <rhs :: Number>
-     */
-    BXORNN,
-    /*
-     * opcode: BXORIR
-     * Performs an inline bitwise XOR operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Register> operand2: <>
-     */
-    BXORIR,
-    /*
-     * opcode: BXORIN
-     * Performs an inline bitwise XOR operation between operand0 and operand1.
-     * Modifies the value of operand0. operand0: <dst :: Register> operand1: <rhs
-     * :: Number> operand2: <>
-     */
-    BXORIN,
-    BNOTR,
-    BNOTI,
-    /*
-     * opcode: BSHLRR
-     * Performs a bitwise shift left operation on operand1 by the amount specified
-     * in operand2 and stores the result in operand0. operand0: <dst :: Register>
-     * operand1: <lhs :: Register>
-     * operand2: <shift :: Register>
-     */
-    BSHLRR,
-    BSHLRN,
-    BSHLNR,
-    BSHLNN,
-    BSHLIR,
-    BSHLIN,
-    /*
-     * opcode: BSHRRR
-     * Performs a bitwise shift right operation on operand1 by the amount
-     * specified in operand2 and stores the result in operand0. operand0: <dst ::
-     * Register> operand1: <lhs :: Register> operand2: <shift :: Register>
-     */
-    BSHRRR,
-    BSHRNR,
-    BSHRRN,
-    BSHRNN,
-    BSHRIR,
-    BSHRIN,
-    LOADARG,
-    /*
-     * opcode: PUSHARG
+     * opcode: PUSHARGUMENT
      * Pushes value in operand0 onto the argument stack.
      * operand0: <src :: Register>
      * operand1: <>
      * operand2: <>
      */
-    PUSHARG,
+    PUSHARGUMENT,
     /*
-     * opcode: PUSHRET
+     * opcode: PUSHRETURN
      * Pushes the value of operand0 onto the return stack.
      * operand0: <src :: Register>
      * operand1: <>
      * operand2: <>
      */
-    PUSHRET,
+    PUSHRETURN,
     /*
-     * opcode: EQ
+     * opcode: EQUAL
      * Performs a comparison operation between operand1 and operand2. Stores the
-     * result in operand0. operand0: <src :: Register> operand1: <lhs :: Register>
+     * result in operand0.
+     * operand0: <src :: Register>
+     * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    EQ,
+    EQUAL,
     /*
-     * opcode: NEQ
+     * opcode: NOTEQUAL
      * Performs a reversed comparison operation between operand1 and operand2.
      * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
      * :: Register> operand2: <rhs :: Register>
      */
-    NEQ,
+    NOTEQUAL,
     /*
-     * opcode: LT
+     * opcode: LESS
      * Performs a less-than comparison operation between operand1 and operand2.
      * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
      * :: Register> operand2: <rhs :: Register>
      */
-    LT,
+    LESS,
     /*
-     * opcode: GT
+     * opcode: GREATER
      * Performs a greater-than comparison operation between operand1 and operand2.
      * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
      * :: Register> operand2: <rhs :: Register>
      */
-    GT,
+    GREATER,
     /*
-     * opcode: LE
+     * opcode: LESSOREQUAL
      * Performs a less-than-or-equal-to comparison operation between operand1 and
      * operand2. Stores the result in operand0. operand0: <src :: Register>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    LE,
+    LESSOREQUAL,
     /*
-     * opcode: GE
+     * opcode: GREATEROREQUAL
      * Performs a greater-than-or-equal-to comparison operation between operand1
      * and operand2. Stores the result in operand0. operand0: <src :: Register>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    GE,
+    GREATEROREQUAL,
     /*
-     * opcode: JMP
+     * opcode: JUMP
      * Unconditinally jumps given offset in operand0. Does not save the state.
      * operand0: <off :: Number>
      * operand1: <>
      * operand2: <>
      */
-    JMP,
+    JUMP,
     /*
-     * opcode: JMPNZ
+     * opcode: JUMPIFNOT
      * Jumps given offset in operand0 if the value in operand1 is not equal to 0.
      * Does not save the state. operand0: <off :: Number> operand1: <cnd ::
      * Register> operand2: <>
      */
-    JMPNZ,
+    JUMPIFNOT,
     /*
-     * opcode: JMPZ
+     * opcode: JUMPIF
      * Jumps given offset in operand0 if the value in operand1 is equal to 0. Does
      * not save the state. operand0: <off :: Number> operand1: <cnd :: Register>
      * operand2: <>
      */
-    JMPZ,
+    JUMPIF,
     /*
-     * opcode: JMPEQ
+     * opcode: JUMPIFEQUAL
      * Jumps given offset in operand0 if the value in operand1 is equal to the
      * value in operand2. Does not save the state. operand0: <off :: Number>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    JMPEQ,
+    JUMPIFEQUAL,
     /*
-     * opcode: JMPMEQ
+     * opcode: JUMPIFNOTEQUAL
      * Jumps given offset in operand0 if the value in operand1 is not equal to the
      * value in operand2. Does not save the state. operand0: <off :: Number>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    JMPNEQ,
+    JUMPIFNOTEQUAL,
     /*
-     * opcode: JMPLT
+     * opcode: JUMPIFLESS
      * Jumps given offset in operand0 if the value in operand1 is less than the
      * value in operand2. Does not save the state. operand0: <off :: Number>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    JMPLT,
+    JUMPIFLESS,
     /*
-     * opcode: JMPGT
+     * opcode: JUMPIFGREATER
      * Jumps given offset in operand0 if the value in operand1 greater than the
      * value in operand2. Does not save the state. operand0: <off :: Number>
      * operand1: <lhs :: Register>
      * operand2: <rhs :: Register>
      */
-    JMPGT,
+    JUMPIFGREATER,
     /*
-     * opcode: JMPLE
+     * opcode: JUMPIFLESSOREQUAL
      * Jumps given offset in operand0 if the value in operand1 is less than or
      * equal to the value in operand2. Does not save the state. operand0: <off ::
      * Number> operand1: <lhs :: Register> operand2: <rhs :: Register>
      */
-    JMPLE,
+    JUMPIFLESSOREQUAL,
     /*
-     * opcode: JMPGE
+     * opcode: JUMPIFGREATEROREQUAL
      * Jumps given offset in operand0 if the value in operand1 is greater than or
      * equal to the value in operand2. Does not save the state. operand0: <off ::
      * Number> operand1: <lhs :: Register> operand2: <rhs :: Register>
      */
-    JMPGE,
+    JUMPIFGREATEROREQUAL,
     /*
-     * opcode: JMPLBL
+     * opcode: JUMPLABEL
      * Unconditionally jumps to label in operand0. Saves state.
      * operand0: <lbl :: Identifier>
      * operand1: <>
      * operand2: <>
      */
-    JMPLBL,
+    JUMPLABEL,
     /*
-     * opcode: JMPLBLNZ
-     * Jumps to label in operand1 if the value in operand0 is not equal to 0.
+     * opcode: JUMPLABELIFNOT
+     * Jumps to label in operand1 if the value in operand0 is not falsy.
      * Saves state. operand0: <lhs :: Register> operand1: <lbl :: Identifier>
      * operand2: <>
      */
-    JMPLBLNZ,
+    JUMPLABELIFNOT,
     /*
-     * opcode: JMPLBLZ
-     * Jumps to label in operand1 if the value in operand0 is equal to 0. Saves
+     * opcode: JUMPLABELIF
+     * Jumps to label in operand1 if the value in operand0 is falsy. Saves
      * state. operand0: <lhs :: Register> operand1: <lbl :: Identifier> operand2:
      * <>
      */
-    JMPLBLZ,
+    JUMPLABELIF,
     /*
-     * opcode: JMPLBLEQ
+     * opcode: JUMPLABELIFEQUAL
      * Jumps to label in operand2 if the value in operand0 is equal to the value
      * in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs ::
      * Register> operand2: <lbl :: Identifier>
      */
-    JMPLBLEQ,
+    JUMPLABELIFEQUAL,
     /*
-     * opcode: JMPLBLEQ
+     * opcode: JUMPLABELIFNOTEQUAL
      * Jumps to label in operand2 if the value in operand0 is not equal to the
      * value in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs
      * :: Register> operand2: <lbl :: Identifier>
      */
-    JMPLBLNEQ,
+    JUMPLABELIFNOTEQUAL,
     /*
-     * opcode: JMPLBLT
+     * opcode: JUMPLABELT
      * Jumps to label in operand2 if the value in operand0 is less than the value
      * in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs ::
      * Register> operand2: <lbl :: Identifier>
      */
-    JMPLBLLT,
+    JUMPLABELIFLESS,
     /*
-     * opcode: JMPLBGT
+     * opcode: JUMPLABELIFGREATER
      * Jumps to label in operand2 if the value in operand0 is greater than the
      * value in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs
      * :: Register> operand2: <lbl :: Identifier>
      */
-    JMPLBLGT,
+    JUMPLABELIFGREATER,
     /*
-     * opcode: JMPLBLE
+     * opcode: JUMPLABELIFLESSOREQUAL
      * Jumps to label in operand2 if the value in operand0 is less than or equal
      * to the value in operand1. Saves state. operand0: <lhs :: Register>
      * operand1: <rhs :: Register>
      * operand2: <lbl :: Identifier>
      */
-    JMPLBLLE,
+    JUMPLABELIFLESSOREQUAL,
     /*
-     * opcode: JMPLBGE
+     * opcode: JUMPLABELIFGREATEROREQUAL
      * Jumps to label in operand2 if the value in operand0 is greater than or
      * equal to the value in operand1. Saves state. operand0: <lhs :: Register>
      * operand1: <rhs :: Register>
      * operand2: <lbl :: Identifier>
      */
-    JMPLBLGE,
+    JUMPLABELIFGREATEROREQUAL,
     /*
      * opcode: CALL
      * Calls the value in operand0 with arg count in operand1. Works for all callable types.
@@ -763,12 +556,12 @@ enum class OpCode
      */
     METHODCALL,
     /*
-     * opcode: RET
+     * opcode: RETURN
      * Performs a return operation by jumping back to the return address of the
      * current stack, and popping it. Only works inside function scopes. operand0:
      * <> operand1: <> operand2: <>
      */
-    RET,
+    RETURN,
     /*
      * opcode: EXIT
      * Performs an exit with the exit code in operand0 and an automatically
@@ -839,61 +632,43 @@ enum class OpCode
      */
     TYPE,
     /*
-     * opcode: CONCATRR
-     * Concatenates the strings in operand1 and operand2 and stores the result in
-     * operand0. operand0: <dst :: Register> operand1: <lhs :: Register> operand2:
-     * <rhs :: Register>
-     */
-    CONCATRR,
-    /*
-     * opcode: CONCATRR
-     * Concatenates the strings in operand1 and operand2 and stores the result in
-     * operand0. operand0: <dst :: Register> operand1: <lhs :: Register> operand2:
-     * <rhs :: String>
-     */
-    CONCATRS,
-    /*
-     * opcode: CONCATRR
-     * Concatenates the strings in operand1 and operand2 and stores the result in
-     * operand0. operand0: <dst :: Register> operand1: <lhs :: String> operand2:
-     * <rhs :: Register>
-     */
-    CONCATSR,
-    /*
-     * opcode: CONCATRR
-     * Concatenates the strings in operand1 and operand2 and stores the result in
-     * operand0. operand0: <dst :: Register> operand1: <lhs :: String> operand2:
-     * <rhs :: String>
-     */
-    CONCATSS,
-    /*
-     * opcode: CONCATIR
-     * Concatenates string in operand0 with operand1. Modifies operand0.
-     * operand0: <lhs :: Register>
-     * operand1: <rhs :: Register>
+     * opcode: CONCAT
+     * Concatenates operand0 with operand1 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
      * operand2: <>
      */
-    CONCATIR,
+    CONCAT,
     /*
-     * opcode: CONCATIS
-     * Concatenates string in operand0 with operand1. Modifies operand0.
-     * operand0: <lhs :: Register>
-     * operand1: <rhs :: String>
+     * opcode: CONCATK
+     * Concatenates operand0 with constant at index operand1 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
      * operand2: <>
      */
-    CONCATIS,
+    CONCATK,
+    /*
+     * opcode: CONCATI
+     * Concatenates operand0 with immedate operand1 and stores the result in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <imm :: String>
+     * operand2: <>
+     */
+    CONCATI,
     /*
      * opcode: SETSTRING
-     * Indexes into string in operand1 with operand2 and loads the value into
-     * operand0. operand0: <dst :: Register> operand1: <str :: Register> operand2:
-     * <idx :: Register>
+     * Numberes into string in operand1 with operand2 and loads the value into operand0.
+     * operand0: <dst :: Register>
+     * operand1: <str :: Register>
+     * operand2: <idx :: Register>
      */
     GETSTRING,
     /*
      * opcode: SETSTRING
-     * Sets the index in operand1 of string stored in operand0 to value in
-     * operand2. operand0: <str :: Register> operand1: <idx :: Register> operand2:
-     * <val :: Register>
+     * Sets the index in operand1 of string stored in operand0 to value in operand2.
+     * operand0: <str :: Register>
+     * operand1: <idx :: Register>
+     * operand2: <val :: Register>
      */
     SETSTRING,
 };

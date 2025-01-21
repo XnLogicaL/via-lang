@@ -28,7 +28,7 @@ void gcadd(RTState *V, TValue *p)
 void gccollect(RTState *V)
 {
     for (TValue *p : V->gc->dellist)
-        cleanupval(V, p);
+        delete p;
 
     V->gc->size = 0;
     V->gc->collections++;

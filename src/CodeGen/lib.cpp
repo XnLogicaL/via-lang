@@ -30,7 +30,7 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
     {
     case OpCode::NOP:
         return a.nop(); // nop
-    case OpCode::MOV:
+    case OpCode::MOVE:
     {
         x86::Gp dst = TOX86GP(instruction.operand1.val_register);
         x86::Gp src = TOX86GP(instruction.operand2.val_register);
@@ -42,9 +42,9 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
         x86::Gp src = TOX86GP(instruction.operand2.val_register);
         return a.xchg(dst, src); // xchg dst, src
     }
-    case OpCode::PUSH:
+    case OpCode::PUSHSTACK:
         return a.sub(x86::rsp, 16); // sub rsp, 16
-    case OpCode::POP:
+    case OpCode::POPSTACK:
         return a.add(x86::rsp, 16); // add rsp, 16
     case OpCode::ADDRR:
     {

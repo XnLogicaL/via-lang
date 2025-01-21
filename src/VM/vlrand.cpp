@@ -31,7 +31,7 @@ void rand_range(RTState *V)
 {
     TValue *low = getargument(V, 0);
     TValue *high = getargument(V, 1);
-    TValue num = stackvalue(V, pcg32_range(low->val_number, high->val_number));
+    TValue num = TValue(pcg32_range(low->val_number, high->val_number));
 
     pushval(V, num);
     nativeret(V, 1);
@@ -50,11 +50,11 @@ void rand_int(RTState *V)
 void loadrandlib(RTState *V)
 {
     static const HashMap<const char *, TValue> rand_properties = {
-        {"range", stackvalue(V, rand_range)},
-        {"int", stackvalue(V, rand_int)},
+        {"range", TValue(new TCFunction(rand_range))},
+        {"int", TValue(new TCFunction(rand_int))},
     };
 
-    TTable *lib = newtable(V);
+    TTable *lib = new TTable();
 
     for (auto it : rand_properties)
     {

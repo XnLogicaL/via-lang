@@ -13,6 +13,14 @@
 namespace via
 {
 
+enum class DeclarationType
+{
+    Local,
+    Global,
+    Property,
+    Meta
+};
+
 struct Pragma
 {
     Token body;
@@ -324,8 +332,7 @@ struct ExprNode
 // StatementNode Variants and Definitions
 // ----------------------------------------
 
-struct LocalDeclStmtNode;
-struct GlobalDeclStmtNode;
+struct VariableDeclStmtNode;
 struct CallStmtNode;
 struct AssignStmtNode;
 struct WhileStmtNode;
@@ -353,36 +360,18 @@ struct TypedParamNode
     }
 };
 
-struct LocalDeclStmtNode
+struct VariableDeclStmtNode
 {
     Token ident;
     TypeNode type;
     std::optional<ExprNode> value;
     StatementModifiers modifiers;
+    DeclarationType decl_type;
 
     std::string to_string()
     {
         return std::format(
-            "LocalDeclStmtNode(\n  ident: {},\n  type: {},\n  value: {},\n  modifiers: {}\n)",
-            ident.to_string(),
-            type.to_string(),
-            value.has_value() ? value->to_string() : "Nil",
-            modifiers.to_string()
-        );
-    }
-};
-
-struct GlobalDeclStmtNode
-{
-    Token ident;
-    TypeNode type;
-    std::optional<ExprNode> value;
-    StatementModifiers modifiers;
-
-    std::string to_string()
-    {
-        return std::format(
-            "GlobalDeclStmtNode(\n  ident: {},\n  type: {},\n  value: {},\n  modifiers: {}\n)",
+            "VariableDeclStmtNode(\n  ident: {},\n  type: {},\n  value: {},\n  modifiers: {}\n)",
             ident.to_string(),
             type.to_string(),
             value.has_value() ? value->to_string() : "Nil",
@@ -451,7 +440,6 @@ struct ScopeStmtNode
     }
 };
 
-
 struct ForStmtNode
 {
     Token keys;
@@ -479,6 +467,7 @@ struct FunctionDeclStmtNode
     std::optional<TypeNode> return_type;
     ScopeStmtNode *body;
     StatementModifiers modifiers;
+    DeclarationType decl_type;
 
     std::string to_string()
     {
@@ -598,6 +587,7 @@ struct ReturnStmtNode
 struct StructDeclStmtNode
 {
     Token ident;
+    DeclarationType decl_type;
     std::vector<StmtNode> declarations;
 
     std::string to_string()
@@ -609,6 +599,7 @@ struct StructDeclStmtNode
 struct NamespaceDeclStmtNode
 {
     Token ident;
+    DeclarationType decl_type;
     std::vector<StmtNode> declarations;
 
     std::string to_string()
@@ -636,8 +627,7 @@ struct ContinueStmtNode
 struct StmtNode
 {
     std::variant<
-        LocalDeclStmtNode,
-        GlobalDeclStmtNode,
+        VariableDeclStmtNode,
         CallStmtNode,
         AssignStmtNode,
         WhileStmtNode,

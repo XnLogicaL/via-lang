@@ -124,10 +124,10 @@ void base_assert(RTState *V)
     {
         TString *mvstr = tostring(V, *arg1).val_string;
         std::string mfstr = std::format("base_assert assertion failed: {}", mvstr->ptr);
-        TString *mfstrds = newstring(V, mfstr.c_str());
+        TString *mfstrds = new TString(V, mfstr.c_str());
 
         // Push the error message onto the argument stack
-        pushval(V, stackvalue(V, mfstrds));
+        pushval(V, TValue(mfstrds));
         // Hack solution, but works!
         call(V, WRAPVAL(base_error), 1);
     }
@@ -171,16 +171,16 @@ void base_pcall(RTState *V)
     TBool success = V->exitc != 1;
     if (success)
     {
-        pushval(V, stackvalue(V, success));
+        pushval(V, TValue(success));
         pushval(V, *popval(V));
     }
     else
     {
         const char *exit_message = dupstring(V->exitm);
-        TString *exit_string = newstring(V, exit_message);
-        TValue exit_value = stackvalue(V, exit_string);
+        TString *exit_string = new TString(V, exit_message);
+        TValue exit_value = TValue(exit_string);
 
-        pushval(V, stackvalue(V, success));
+        pushval(V, TValue(success));
         pushval(V, exit_value);
     }
 
@@ -204,18 +204,18 @@ void base_xpcall(RTState *V)
     TBool success = V->exitc != 1;
     if (success)
     {
-        pushval(V, stackvalue(V, success));
+        pushval(V, TValue(success));
         pushval(V, *popval(V));
     }
     else
     {
         const char *exit_message = dupstring(V->exitm);
-        TString *exit_string = newstring(V, exit_message);
-        TValue exit_value = stackvalue(V, exit_string);
+        TString *exit_string = new TString(V, exit_message);
+        TValue exit_value = TValue(exit_string);
 
         pushval(V, exit_value);
         call(V, *handler, 1);
-        pushval(V, stackvalue(V, success));
+        pushval(V, TValue(success));
         pushval(V, exit_value);
     }
 
@@ -235,8 +235,8 @@ void loadbaselib(RTState *V)
         {"tonumber", WRAPVAL(base_tonumber)},
         {"tobool", WRAPVAL(base_tobool)},
         {"assert", WRAPVAL(base_assert)},
-        {"pcall", stackvalue(V, newcfunc(V, base_pcall, true))},
-        {"xpcall", stackvalue(V, newcfunc(V, base_xpcall, true))},
+        {"pcall", TValue(new TCFunction(base_pcall, true))},
+        {"xpcall", TValue(new TCFunction(base_xpcall, true))},
     };
 
     for (auto it : base_properties)

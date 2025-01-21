@@ -87,7 +87,7 @@
 namespace via
 {
 
-#ifdef VIA_LONGJMP
+#ifdef VIA_LONGJUMP
 using JmpOffset = std::int64_t;
 #else
 using JmpOffset = std::int32_t;

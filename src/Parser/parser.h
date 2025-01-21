@@ -53,6 +53,7 @@ private:
     std::vector<TypeNode *> parse_call_type_arguments();
     Pragma parse_pragma();
     StatementModifiers parse_modifiers(std::function<bool(void)>);
+    DeclarationType get_decl_type(TokenType);
 
     template<typename IndexExprType, typename IndexCallExprType>
     ExprNode *parse_index_expr(ExprNode *);
@@ -68,8 +69,7 @@ private:
 
     // Statement parsing functions
     TypedParamNode *parse_parameter();
-    LocalDeclStmtNode *parse_local_declaration();
-    GlobalDeclStmtNode *parse_global_declaration();
+    VariableDeclStmtNode *parse_var_declaration();
     CallStmtNode *parse_call_statement(ExprNode *);
     AssignStmtNode *parse_assignment_statement(ExprNode *);
     ReturnStmtNode *parse_return_statement();
@@ -77,8 +77,8 @@ private:
     ForStmtNode *parse_for_statement();
     IfStmtNode *parse_if_statement();
     SwitchStmtNode *parse_switch_statement();
-    FunctionDeclStmtNode *parse_function_declaration();
-    StructDeclStmtNode *parse_struct_declaration();
+    FunctionDeclStmtNode *parse_function_declaration(DeclarationType);
+    StructDeclStmtNode *parse_struct_declaration(DeclarationType);
     ScopeStmtNode *parse_scope_statement();
     StmtNode *parse_statement();
 };

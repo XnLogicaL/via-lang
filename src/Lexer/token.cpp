@@ -23,8 +23,8 @@ bool Token::is_literal() const noexcept
 
 bool Token::is_operator() const noexcept
 {
-    return type == TokenType::OP_ADD || type == TokenType::OP_DEC || type == TokenType::OP_DIV || type == TokenType::OP_EQ ||
-           type == TokenType::OP_EXP || type == TokenType::OP_GEQ || type == TokenType::OP_GT || type == TokenType::OP_INC ||
+    return type == TokenType::OP_ADD || type == TokenType::OP_DECREMENT || type == TokenType::OP_DIV || type == TokenType::OP_EQ ||
+           type == TokenType::OP_EXP || type == TokenType::OP_GEQ || type == TokenType::OP_GT || type == TokenType::OP_INCREMENT ||
            type == TokenType::OP_LEQ || type == TokenType::OP_LT || type == TokenType::OP_MOD || type == TokenType::OP_MUL ||
            type == TokenType::OP_NEQ || type == TokenType::OP_SUB || type == TokenType::OP_ASGN;
 }

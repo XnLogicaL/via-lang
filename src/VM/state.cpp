@@ -75,7 +75,7 @@ RTState *stnewstate(GState *G, ProgramData &program)
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    TFunction *main = newfunc(V, VIA_MAIN_ID, nullptr, pipeline, false, false);
+    TFunction *main = new TFunction(V, VIA_MAIN_ID, V->ip, V->frame, {}, false, false);
     nativecall(V, main, 0);
 
     // Initialize labels
@@ -127,7 +127,7 @@ void stcleanupstate(RTState *V)
     TValue *current_value = V->heapptr;
     while (current_value)
     {
-        cleanupval(V, current_value);
+        delete current_value;
         current_value = current_value->next;
     }
 

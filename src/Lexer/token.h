@@ -45,27 +45,30 @@ enum class TokenType
     KW_TYPE,      // type
     KW_TYPEOF,    // typeof
     KW_DEFINED,   // defined
+    KW_META,      // meta
 
     // Operators
-    OP_EXP,  // ^
-    OP_ADD,  // +
-    OP_SUB,  // -
-    OP_MUL,  // *
-    OP_DIV,  // /
-    OP_MOD,  // %
-    OP_EQ,   // ==
-    OP_NEQ,  // !=
-    OP_LT,   // <
-    OP_GT,   // >
-    OP_LEQ,  // <=
-    OP_GEQ,  // >=
-    OP_INC,  // ++
-    OP_DEC,  // --
-    OP_ASGN, // =
+    OP_EXP,       // ^
+    OP_ADD,       // +
+    OP_SUB,       // -
+    OP_MUL,       // *
+    OP_DIV,       // /
+    OP_MOD,       // %
+    OP_EQ,        // ==
+    OP_NEQ,       // !=
+    OP_LT,        // <
+    OP_GT,        // >
+    OP_LEQ,       // <=
+    OP_GEQ,       // >=
+    OP_INCREMENT, // ++
+    OP_DECREMENT, // --
+    OP_ASGN,      // =
 
     // Literals
     LIT_INT,    // Integer literals
     LIT_FLOAT,  // Floating-point literals
+    LIT_HEX,    // Hexadecimal number literals
+    LIT_BINARY, // Binary number literals
     LIT_STRING, // String literals
     LIT_BOOL,   // Boolean literals
     LIT_NIL,    // Nil literal (just "nil" lol)

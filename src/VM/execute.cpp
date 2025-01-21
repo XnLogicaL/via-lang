@@ -12,14 +12,6 @@
     #define VIA_HOTPATH_THRESHOLD 64
 #endif
 
-// Check for debug mode and warn the user about it's possible effects on behavior
-#ifdef VIA_DEBUG
-    #pragma message(Compiling via in debug mode; some optimizations may be disabled)
-    #ifdef VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE
-        #pragma message(Enabling optimizations in debug mode may cause instability issues)
-    #endif
-#endif
-
 // Simple macro for exiting the VM
 // Technically not necessary but makes it a tiny bit more readable
 #define VM_EXIT() \
@@ -66,28 +58,6 @@
 
 namespace via
 {
-
-// Internal function that optimizes a sequence of empty instructions (such as NOP or END)
-// By replacing the first instruction with a jmp instruction that jumps over the sequence
-VIA_FORCEINLINE void optimize_empty_instruction_sequence(RTState *VIA_RESTRICT V)
-{
-    // Check for an empty instruction at the current IP
-    if (VIA_UNLIKELY(V->ip->op == OpCode::NOP))
-    {
-        JmpOffset skip_count = 1;
-
-        // Find the end of the sequence of empty instructions
-        while (V->ip + skip_count < V->ibp && V->ip->op == OpCode::NOP)
-            skip_count++;
-
-        // If there are multiple empty instructions, replace the first one with a JMP
-        if (skip_count > 1)
-        {
-            V->ip->op = OpCode::JMP;
-            V->ip->operand1 = static_cast<TNumber>(skip_count);
-        }
-    }
-}
 
 // Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
 void execute(RTState *VIA_RESTRICT V)
@@ -170,17 +140,399 @@ dispatch:
     switch (V->ip->op)
     {
     case OpCode::NOP:
+        VM_NEXT();
+
+    case OpCode::ADD:
     {
-        // Optimizations that modify the program are not allowed in debug mode
-        // Unless a very certain flag is provided
-#if !defined(VIA_DEBUG) || defined(VIA_DEBUG) && defined(VIA_ALLOW_OPTIMIZATIONS_IN_DEBUG_MODE)
-        // Attempt to optimize empty instruction sequence
-        optimize_empty_instruction_sequence(V);
-#endif
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::ADDK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::ADDI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
         VM_NEXT();
     }
 
-    case OpCode::MOV:
+    case OpCode::SUB:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::SUBK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::SUBI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+
+    case OpCode::MUL:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::MULK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::MULI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+
+    case OpCode::DIV:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::DIVK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::DIVI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+
+    case OpCode::POW:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::POWK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::POWI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+
+    case OpCode::MOD:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand rhs = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val->val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::MODK:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+
+        size_t const_idx = idx.val_number;
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = V->G->ktable->at(const_idx);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+    case OpCode::MODI:
+    {
+        Operand lhs = V->ip->operand1;
+        Operand imm = V->ip->operand2;
+
+        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue rhs_val = toviavalue(V, imm);
+
+        // Fast-path: lvalue is a number
+        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+            lhs_val->val_number += rhs_val.val_number;
+        else if (checktable(V, *lhs_val))
+        {
+            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, lhs_val); // Push self
+            pushval(V, rhs_val); // Push other
+            call(V, *add_metamethod, 2);
+        }
+
+        VM_NEXT();
+    }
+
+    case OpCode::MOVE:
     {
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
@@ -190,10 +542,25 @@ dispatch:
         VM_NEXT();
     }
 
+    case OpCode::LOADK:
+    {
+        Operand dst = V->ip->operand1;
+        Operand idx = V->ip->operand2;
+        kTable::size_type kid = idx.val_number;
+
+        // Check if the kId is valid
+        VM_ASSERT(kid > V->G->ktable->size(), "LOADK: Invalid constant index (out of range)");
+
+        TValue kval = V->G->ktable->at(kid);
+
+        rsetregister(V->ralloc, dst.val_register, kval);
+        VM_NEXT();
+    }
+
     case OpCode::LOADNIL:
     {
         Operand dst = V->ip->operand1;
-        TValue tnil = stackvalue(V);
+        TValue tnil = TValue();
 
         rsetregister(V->ralloc, dst.val_register, tnil);
         VM_NEXT();
@@ -202,7 +569,7 @@ dispatch:
     case OpCode::LOADTABLE:
     {
         Operand dst = V->ip->operand1;
-        TValue ttable = stackvalue(V, newtable(V));
+        TValue ttable = TValue(new TTable());
 
         rsetregister(V->ralloc, dst.val_register, ttable);
         VM_NEXT();
@@ -212,7 +579,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tbool = stackvalue(V, val.val_boolean);
+        TValue tbool = TValue(val.val_boolean);
 
         rsetregister(V->ralloc, dst.val_register, tbool);
         VM_NEXT();
@@ -222,7 +589,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tnumber = stackvalue(V, val.val_number);
+        TValue tnumber = TValue(val.val_number);
 
         rsetregister(V->ralloc, dst.val_register, tnumber);
         VM_NEXT();
@@ -232,7 +599,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tstring = stackvalue(V, val.val_string);
+        TValue tstring = TValue(val.val_string);
 
         rsetregister(V->ralloc, dst.val_register, tstring);
         VM_NEXT();
@@ -241,11 +608,11 @@ dispatch:
     case OpCode::LOADFUNCTION:
     {
         Operand dst = V->ip->operand1;
-        TFunction *func = newfunc(V, "<anonymous>", V->ip, {}, false, false);
+        TFunction *func = new TFunction(V, "<anonymous>", V->ip, V->frame, {}, false, false);
 
         while (V->ip < V->ibp)
         {
-            if (V->ip->op == OpCode::RET)
+            if (V->ip->op == OpCode::RETURN)
             {
                 V->ip++;
                 break;
@@ -254,12 +621,12 @@ dispatch:
             func->bytecode.push_back(*(V->ip++));
         }
 
-        rsetregister(V->ralloc, dst.val_register, stackvalue(V, func));
+        rsetregister(V->ralloc, dst.val_register, TValue(func));
         // Dispatch instead of invoking VM_NEXT
         VM_DISPATCH();
     }
 
-    case OpCode::PUSH:
+    case OpCode::PUSHSTACK:
     {
         Operand src = V->ip->operand1;
         TValue *val = rgetregister(V->ralloc, src.val_register);
@@ -268,7 +635,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::POP:
+    case OpCode::POPSTACK:
     {
         Operand dst = V->ip->operand1;
         TValue *val = popval(V);
@@ -315,976 +682,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::ADDRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::ADDRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::ADDRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::ADDRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::ADDNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::ADDNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::ADDNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::ADDNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::ADDIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::ADDIR);
-        VM_NEXT();
-    }
-    case OpCode::ADDIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-
-        iarith(V, lhsv, rhsv, OpCode::ADDIN);
-        VM_NEXT();
-    }
-
-    case OpCode::SUBRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::SUBRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::SUBRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::SUBRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::SUBNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::SUBNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::SUBNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::SUBNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::SUBIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::SUBIR);
-        VM_NEXT();
-    }
-    case OpCode::SUBIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::SUBIN);
-        VM_NEXT();
-    }
-
-    case OpCode::MULRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::MULRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MULRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::MULRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MULNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::MULNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MULNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::MULNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MULIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::MULIR);
-        VM_NEXT();
-    }
-    case OpCode::MULIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::MULIN);
-        VM_NEXT();
-    }
-
-    case OpCode::DIVRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::DIVRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::DIVRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::DIVRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::DIVNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::DIVNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::DIVNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::DIVNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::DIVIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::DIVIR);
-        VM_NEXT();
-    }
-    case OpCode::DIVIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::DIVIN);
-        VM_NEXT();
-    }
-
-    case OpCode::POWRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::POWRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::POWRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::POWRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::POWNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::POWNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::POWNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::POWNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::POWIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::POWIR);
-        VM_NEXT();
-    }
-    case OpCode::POWIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::POWIN);
-        VM_NEXT();
-    }
-
-    case OpCode::MODRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, *lhsv, *rhsv, OpCode::MODRR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MODRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, *lhsv, rhsv, OpCode::MODRN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MODNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        TValue result = arith(V, lhsv, *rhsv, OpCode::MODNR);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MODNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue lhsv = stackvalue(V, lhs.val_number);
-        TValue rhsv = stackvalue(V, rhs.val_number);
-        TValue result = arith(V, lhsv, rhsv, OpCode::MODNN);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::MODIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::MODIR);
-        VM_NEXT();
-    }
-    case OpCode::MODIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        iarith(V, lhsv, *rhsv, OpCode::MODIN);
-        VM_NEXT();
-    }
-
-    case OpCode::NEGR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand src = V->ip->operand2;
-
-        TValue *srcv = rgetregister(V->ralloc, src.val_register);
-        TValue result = tobool(V, *srcv);
-        result.val_boolean = !result.val_boolean;
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::NEGI:
-    {
-        Operand dst = V->ip->operand1;
-
-        TValue *dstv = rgetregister(V->ralloc, dst.val_register);
-        TValue result = tobool(V, *dstv);
-        dstv->val_boolean = !result.val_boolean;
-
-        VM_NEXT();
-    }
-
-    case OpCode::BANDRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val & rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BANDRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val & rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BANDNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_boolean);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val & rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BANDNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val & rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BANDIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val & rhs_val);
-
-        VM_NEXT();
-    }
-    case OpCode::BANDIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val & rhs_val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::BORRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val | rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BORRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val | rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BORNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_boolean);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val | rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BORNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val | rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BORIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val | rhs_val);
-
-        VM_NEXT();
-    }
-    case OpCode::BORIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val | rhs_val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::BXORRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val ^ rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BXORRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val ^ rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BXORNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_boolean);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val ^ rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BXORNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val ^ rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BXORIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val ^ rhs_val);
-
-        VM_NEXT();
-    }
-    case OpCode::BXORIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val ^ rhs_val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::BNOTR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand src = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, dst.val_register);
-        int64_t rhsv = static_cast<int64_t>(src.val_number);
-        lhsv->val_number = static_cast<TNumber>(~rhsv);
-
-        VM_NEXT();
-    }
-    case OpCode::BNOTI:
-    {
-        Operand dst = V->ip->operand1;
-
-        TValue *lhsv = rgetregister(V->ralloc, dst.val_register);
-        uint64_t result = ~static_cast<uint64_t>(lhsv->val_number);
-        lhsv->val_number = static_cast<TNumber>(result);
-
-        VM_NEXT();
-    }
-
-    case OpCode::BSHLRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val << rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHLRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val << rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHLNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_boolean);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val << rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHLNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val << rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHLIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val << rhs_val);
-
-        VM_NEXT();
-    }
-    case OpCode::BSHLIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val << rhs_val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::BSHRRR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val >> rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHRRN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val >> rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHRNR:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_boolean);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        TNumber resultb = lhs_val >> rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHRNN:
-    {
-        Operand dst = V->ip->operand1;
-        Operand lhs = V->ip->operand2;
-        Operand rhs = V->ip->operand3;
-
-        int64_t lhs_val = static_cast<int64_t>(lhs.val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        TNumber resultb = lhs_val >> rhs_val;
-        TValue result = stackvalue(V, resultb);
-
-        rsetregister(V->ralloc, dst.val_register, result);
-        VM_NEXT();
-    }
-    case OpCode::BSHRIR:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsv = rgetregister(V->ralloc, rhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhsv->val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val >> rhs_val);
-
-        VM_NEXT();
-    }
-    case OpCode::BSHRIN:
-    {
-        Operand lhs = V->ip->operand1;
-        Operand rhs = V->ip->operand2;
-
-        TValue *lhsv = rgetregister(V->ralloc, lhs.val_register);
-
-        int64_t lhs_val = static_cast<int64_t>(lhsv->val_number);
-        int64_t rhs_val = static_cast<int64_t>(rhs.val_number);
-
-        lhsv->val_number = static_cast<TNumber>(lhs_val >> rhs_val);
-
-        VM_NEXT();
-    }
-
-    case OpCode::NEQ:
+    case OpCode::NOTEQUAL:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
@@ -1312,17 +710,17 @@ dispatch:
             rhsn = toviavalue(V, rhs);
 
         if (lhs_reg && rhs_reg)
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, !cmpregister(V, lhs.val_register, rhs.val_register)));
+            rsetregister(V->ralloc, dst.val_register, TValue(!cmpregister(V, lhs.val_register, rhs.val_register)));
         else if (lhs_reg)
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, !compare(V, *rgetregister(V->ralloc, lhs.val_register), rhsn)));
+            rsetregister(V->ralloc, dst.val_register, TValue(!compare(V, *rgetregister(V->ralloc, lhs.val_register), rhsn)));
         else if (rhs_reg)
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, !compare(V, *rgetregister(V->ralloc, rhs.val_register), lhsn)));
+            rsetregister(V->ralloc, dst.val_register, TValue(!compare(V, *rgetregister(V->ralloc, rhs.val_register), lhsn)));
         else
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, !compare(V, lhsn, rhsn)));
+            rsetregister(V->ralloc, dst.val_register, TValue(!compare(V, lhsn, rhsn)));
 
         VM_NEXT();
     }
-    case OpCode::LT:
+    case OpCode::LESS:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
@@ -1333,12 +731,12 @@ dispatch:
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, lhsn->val_number < rhsn->val_number));
+            rsetregister(V->ralloc, dst.val_register, TValue(lhsn->val_number < rhsn->val_number));
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
+            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
 
             tspush(V->stack, lhsn);
             tspush(V->stack, lhsn);
@@ -1353,7 +751,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::GT:
+    case OpCode::GREATER:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
@@ -1364,12 +762,12 @@ dispatch:
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, lhsn->val_number > rhsn->val_number));
+            rsetregister(V->ralloc, dst.val_register, TValue(lhsn->val_number > rhsn->val_number));
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
+            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
 
             tspush(V->stack, lhsn);
             tspush(V->stack, rhsn);
@@ -1384,7 +782,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::LE:
+    case OpCode::LESSOREQUAL:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
@@ -1395,12 +793,12 @@ dispatch:
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, lhsn->val_number <= rhsn->val_number));
+            rsetregister(V->ralloc, dst.val_register, TValue(lhsn->val_number <= rhsn->val_number));
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
+            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
 
             tspush(V->stack, lhsn);
             tspush(V->stack, rhsn);
@@ -1415,7 +813,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::GE:
+    case OpCode::GREATEROREQUAL:
     {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
@@ -1426,12 +824,12 @@ dispatch:
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
-            rsetregister(V->ralloc, dst.val_register, stackvalue(V, lhsn->val_number >= rhsn->val_number));
+            rsetregister(V->ralloc, dst.val_register, TValue(lhsn->val_number >= rhsn->val_number));
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LT);
+            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
 
             tspush(V->stack, lhsn);
             tspush(V->stack, rhsn);
@@ -1458,15 +856,15 @@ dispatch:
         VM_EXIT();
     }
 
-    case OpCode::JMP:
+    case OpCode::JUMP:
     {
         Operand offset = V->ip->operand1;
         V->ip += static_cast<JmpOffset>(offset.val_number);
         VM_NEXT();
     }
 
-    case OpCode::JMPNZ:
-    case OpCode::JMPZ:
+    case OpCode::JUMPIFNOT:
+    case OpCode::JUMPIF:
     {
         Operand condr = V->ip->operand1;
         Operand offset = V->ip->operand2;
@@ -1474,27 +872,27 @@ dispatch:
         TValue cond = *rgetregister(V->ralloc, condr.val_register);
         // We don't need to save the return value because this function modifies `cond`
         tonumber(V, cond);
-        if (V->ip->op == OpCode::JMPNZ ? (cond.val_number != 0) : (cond.val_number == 0))
+        if (V->ip->op == OpCode::JUMPIFNOT ? (cond.val_number != 0) : (cond.val_number == 0))
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JMPEQ:
-    case OpCode::JMPNEQ:
+    case OpCode::JUMPIFEQUAL:
+    case OpCode::JUMPIFNOTEQUAL:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
         bool cond = cmpregister(V, condlr.val_register, condrr.val_register);
-        if (V->ip->op == OpCode::JMPEQ ? cond : !cond)
+        if (V->ip->op == OpCode::JUMPIFEQUAL ? cond : !cond)
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
     }
 
-    case OpCode::JMPLT:
+    case OpCode::JUMPIFLESS:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
@@ -1510,7 +908,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPGT:
+    case OpCode::JUMPIFGREATER:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
@@ -1526,7 +924,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLE:
+    case OpCode::JUMPIFLESSOREQUAL:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
@@ -1542,7 +940,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPGE:
+    case OpCode::JUMPIFGREATEROREQUAL:
     {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
@@ -1558,7 +956,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLBL:
+    case OpCode::JUMPLABEL:
     {
         Operand label = V->ip->operand1;
         auto it = V->labels->find(std::string_view(label.val_string));
@@ -1568,8 +966,8 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLZ:
-    case OpCode::JMPLBLNZ:
+    case OpCode::JUMPLABELIF:
+    case OpCode::JUMPLABELIFNOT:
     {
         Operand valr = V->ip->operand1;
         Operand label = V->ip->operand2;
@@ -1578,14 +976,14 @@ dispatch:
         TValue *val = rgetregister(V->ralloc, valr.val_register);
         bool cond = val->val_number == 0;
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JMPLBLZ ? cond : !cond)
+        if (V->ip->op == OpCode::JUMPLABELIFNOT ? cond : !cond)
             V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLEQ:
-    case OpCode::JMPLBLNEQ:
+    case OpCode::JUMPLABELIFEQUAL:
+    case OpCode::JUMPLABELIFNOTEQUAL:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1594,13 +992,13 @@ dispatch:
         auto it = V->labels->find(LabelId(label.val_string));
         bool cond = cmpregister(V, lhsr.val_register, rhsr.val_register);
         // Jump if the condition is met
-        if (V->ip->op == OpCode::JMPLBLEQ ? cond : !cond)
+        if (V->ip->op == OpCode::JUMPLABELIFEQUAL ? cond : !cond)
             V->ip = it->second + 1;
 
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLLT:
+    case OpCode::JUMPLABELIFLESS:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1615,7 +1013,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLGT:
+    case OpCode::JUMPLABELIFGREATER:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1630,7 +1028,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLLE:
+    case OpCode::JUMPLABELIFLESSOREQUAL:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1645,7 +1043,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JMPLBLGE:
+    case OpCode::JUMPLABELIFGREATEROREQUAL:
     {
         Operand lhsr = V->ip->operand1;
         Operand rhsr = V->ip->operand2;
@@ -1707,7 +1105,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::RET:
+    case OpCode::RETURN:
     {
         Operand retcv = V->ip->operand1;
         CallArgc retc = static_cast<CallArgc>(retcv.val_number);
@@ -1725,13 +1123,6 @@ dispatch:
         auto it = V->labels->find(key);
         if (it == V->labels->end())
             (*V->labels)[key] = instr;
-
-        while (V->ip < V->ibp)
-        {
-            V->ip++;
-            if (V->ip->op == OpCode::RET)
-                break;
-        }
 
         VM_DISPATCH();
     }
@@ -1784,7 +1175,7 @@ dispatch:
         TValue *val = rgetregister(V->ralloc, objr.val_register);
         TNumber len = static_cast<TNumber>(val->val_string->len);
 
-        rsetregister(V->ralloc, rdst.val_register, stackvalue(V, len));
+        rsetregister(V->ralloc, rdst.val_register, TValue(len));
         VM_NEXT();
     }
 
@@ -1814,23 +1205,26 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::CONCATRR:
+    case OpCode::GETSTRING:
     {
-        Operand rdst = V->ip->operand1;
-        Operand lhsr = V->ip->operand2;
-        Operand rhsr = V->ip->operand3;
+        Operand dst = V->ip->operand1;
+        Operand str = V->ip->operand2;
+        Operand idx = V->ip->operand3;
 
-        TValue lhs = *rgetregister(V->ralloc, lhsr.val_register);
-        TValue rhs = *rgetregister(V->ralloc, rhsr.val_register);
-        std::string str = std::string(lhs.val_string->ptr) + rhs.val_string->ptr;
-        TString *vstr = newstring(V, str.c_str());
+        TValue *str_val = rgetregister(V->ralloc, str.val_register);
+        TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
 
-        rsetregister(V->ralloc, rdst.val_register, stackvalue(V, vstr));
-        VM_NEXT();
+        // TODO: When debug levels are implemented, make sure to remove this horribly cryptic message caused by abstraction.
+        VM_ASSERT(checkstring(V, *str_val), "GETSTRING: Invoked on non-string value");
+        VM_ASSERT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
+
+        size_t index = idx_val->val_number;
+        if (VIA_UNLIKELY(index > str_val->val_string->len))
+            rsetregister(V->ralloc, dst.val_register, TValue());
     }
 
     default:
-        setexitdata(V, 1, std::format("Unrecognized OpCode (op_id={})", static_cast<uint8_t>(V->ip->op)));
+        setexitdata(V, 1, std::format("Unknown opcode (op_id={})", static_cast<uint8_t>(V->ip->op)));
         VM_EXIT();
     }
 }

@@ -162,13 +162,13 @@ VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
     case ValueType::Number:
     {
         std::string str = std::to_string(val.val_number);
-        TString *tstr = newstring(V, str.c_str());
+        TString *tstr = new TString(V, str.c_str());
         val.val_string = tstr;
         break;
     }
     case ValueType::Bool:
     {
-        TString *str = newstring(V, val.val_boolean ? "true" : "false");
+        TString *str = new TString(V, val.val_boolean ? "true" : "false");
         val.val_string = str;
         break;
     }
@@ -187,13 +187,13 @@ VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
         str += "}";
 
-        val.val_string = newstring(V, str.c_str());
+        val.val_string = new TString(V, str.c_str());
         break;
     }
     case ValueType::Function:
     {
         const void *faddr = val.val_function;
-        TString *str = newstring(V, std::format("<function@{}>", faddr).c_str());
+        TString *str = new TString(V, std::format("<function@{}>", faddr).c_str());
         val.val_string = str;
         break;
     }
@@ -201,12 +201,12 @@ VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
     {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = reinterpret_cast<const void *>(val.val_cfunction);
-        TString *str = newstring(V, std::format("<cfunction@{}>", cfaddr).c_str());
+        TString *str = new TString(V, std::format("<cfunction@{}>", cfaddr).c_str());
         val.val_string = str;
         break;
     }
     default:
-        val.val_string = newstring(V, "nil");
+        val.val_string = new TString(V, "nil");
         break;
     }
 
@@ -276,7 +276,7 @@ VIA_FORCEINLINE TValue *gettableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTR
         return gettableindex(V, tbl->meta, key, false);
 
     // This has to be a pointer because we don't know if the value is a non-pointer primitive type
-    return newvalue(V);
+    return new TValue(V);
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
@@ -297,72 +297,51 @@ VIA_FORCEINLINE void settableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT
 VIA_FORCEINLINE TValue *getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCode op) noexcept
 {
     if (!checktable(V, val))
-        return newvalue(V);
+        return new TValue(V);
 
 #define GET_METHOD(id) (gettableindex(V, val.val_table, hashstring(V, id), true))
     switch (op)
     {
-    case OpCode::ADDRR:
-    case OpCode::ADDRN:
-    case OpCode::ADDNR:
-    case OpCode::ADDNN:
-    case OpCode::ADDIR:
-    case OpCode::ADDIN:
+    case OpCode::ADD:
+    case OpCode::ADDK:
+    case OpCode::ADDI:
         return GET_METHOD("__add");
-    case OpCode::SUBRR:
-    case OpCode::SUBRN:
-    case OpCode::SUBNR:
-    case OpCode::SUBNN:
-    case OpCode::SUBIR:
-    case OpCode::SUBIN:
+    case OpCode::SUB:
+    case OpCode::SUBK:
+    case OpCode::SUBI:
         return GET_METHOD("__sub");
-    case OpCode::MULRR:
-    case OpCode::MULRN:
-    case OpCode::MULNR:
-    case OpCode::MULNN:
-    case OpCode::MULIR:
-    case OpCode::MULIN:
+    case OpCode::MUL:
+    case OpCode::MULK:
+    case OpCode::MULI:
         return GET_METHOD("__mul");
-    case OpCode::DIVRR:
-    case OpCode::DIVRN:
-    case OpCode::DIVNR:
-    case OpCode::DIVNN:
-    case OpCode::DIVIR:
-    case OpCode::DIVIN:
+    case OpCode::DIV:
+    case OpCode::DIVK:
+    case OpCode::DIVI:
         return GET_METHOD("__div");
-    case OpCode::POWRR:
-    case OpCode::POWRN:
-    case OpCode::POWNR:
-    case OpCode::POWNN:
-    case OpCode::POWIR:
-    case OpCode::POWIN:
+    case OpCode::POW:
+    case OpCode::POWK:
+    case OpCode::POWI:
         return GET_METHOD("__pow");
-    case OpCode::MODRR:
-    case OpCode::MODRN:
-    case OpCode::MODNR:
-    case OpCode::MODNN:
-    case OpCode::MODIR:
-    case OpCode::MODIN:
+    case OpCode::MOD:
+    case OpCode::MODK:
+    case OpCode::MODI:
         return GET_METHOD("__mod");
-    case OpCode::NEGI:
-    case OpCode::NEGR:
+    case OpCode::NEG:
+    case OpCode::NEGK:
         return GET_METHOD("__neg");
-    case OpCode::INC:
+    case OpCode::INCREMENT:
         return GET_METHOD("__inc");
-    case OpCode::DEC:
+    case OpCode::DECREMENT:
         return GET_METHOD("__dec");
-    case OpCode::CONCATRR:
-    case OpCode::CONCATRS:
-    case OpCode::CONCATSR:
-    case OpCode::CONCATSS:
-    case OpCode::CONCATIR:
-    case OpCode::CONCATIS:
+    case OpCode::CONCAT:
+    case OpCode::CONCATK:
+    case OpCode::CONCATI:
         return GET_METHOD("__con");
     default:
         break;
     }
 
-    return newvalue(V);
+    return new TValue(V);
 #undef GET_METHOD
 }
 
@@ -372,7 +351,7 @@ VIA_FORCEINLINE TValue *getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexce
     // Check if LocalId is out of bounds;
     // this is CRUCIAL, and prevents UB upon stack dereferencing
     if (offset > V->stack->sp)
-        return newvalue(V);
+        return new TValue(V);
 
     StkAddr stack_address = V->stack->sbp + offset;
     // BIG WARNING: This is UB without bound checks!!!
@@ -407,7 +386,7 @@ VIA_FORCEINLINE TValue getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexcep
     if (it != V->G->gtable->end())
         return it->second;
 
-    return stackvalue(V);
+    return TValue();
 }
 
 // Attempts to declare a new global constant.
@@ -423,7 +402,7 @@ VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, LocalId offset)
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
-        return newvalue(V);
+        return new TValue(V);
 
     // Calculate the stack position of the argument
     StkPos stack_offset = V->ssp + V->argc - 1 - offset;
@@ -436,8 +415,6 @@ VIA_FORCEINLINE TValue *getargument(RTState *VIA_RESTRICT V, LocalId offset)
 // Performs a native return operation, restores the stack and some other state information.
 VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc)
 {
-    VIA_ASSERT(V->stack->sp == 0, "nativeret(): invalid return: nothing to return from");
-
     std::vector<TValue *> ret_values;
     // Restore state
     V->ip = V->frame->ret_addr;
@@ -493,14 +470,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
     const void *addr = cf;
     std::snprintf(buf, sizeof(buf), "<cfunction@0x%p>", addr);
 
-    TFunction func{
-        0,
-        cf->error_handler,
-        false,
-        buf,
-        V->frame,
-        {},
-    };
+    TFunction func(0, buf, V->ip, V->frame, {}, cf->error_handler, false);
 
     nativecall(V, &func, argc);
     // Call function pointer
@@ -508,7 +478,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
 }
 
 // Calls a table method.
-VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
+VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
 {
     TValue *method = gettableindex(V, tbl, key, true);
     if (!checkcallable(V, *method))
@@ -523,9 +493,6 @@ VIA_FORCEINLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
         nativecall(V, method->val_function, argc);
     else if (checkcfunction(V, *method))
         externcall(V, method->val_cfunction, argc);
-    else if (checktable(V, *method))
-        // Attempt to call table, a.k.a __call metamethod
-        methodcall(V, method->val_table, hashstring(V, "__call"), argc);
     // No else-block because the method object is pre-guaranteed to be callable
 }
 
@@ -534,7 +501,7 @@ VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v)
 {
     auto enum_name = ENUM_NAME(v.type);
     const char *str = dupstring(std::string(enum_name));
-    return stackvalue(V, newstring(V, str));
+    return TValue(new TString(V, str));
 }
 
 // Unified call interface.
@@ -561,20 +528,20 @@ VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue val, CallArgc argc) no
 VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
 {
     if (checkstring(V, val))
-        return stackvalue(V, static_cast<TNumber>(strlen(val.val_string->ptr)));
+        return TValue(static_cast<TNumber>(strlen(val.val_string->ptr)));
     else if (checktable(V, val))
     {
         TableKey mhash = hashstring(V, "__len");
         TValue *mmlen = gettableindex(V, val.val_table, mhash, true);
 
         if (checknil(V, *mmlen))
-            return stackvalue(V, static_cast<TNumber>(val.val_table->data.size()));
+            return TValue(static_cast<TNumber>(val.val_table->data.size()));
 
         call(V, *mmlen, 1);
         return *reinterpret_cast<TValue *>(tspop(V->stack));
     }
 
-    return stackvalue(V);
+    return TValue();
 }
 
 // Loads the value of key <key> in table <tbl> into register <reg>, if present in table.
@@ -599,8 +566,8 @@ VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue val) noexcept
         if (checknil(V, *ty))
             return type(V, val);
 
-        TString *tystr = newstring(V, ty->val_string->ptr);
-        return stackvalue(V, tystr);
+        TString *tystr = new TString(V, ty->val_string->ptr);
+        return TValue(tystr);
     }
 
     return type(V, val);
@@ -632,13 +599,13 @@ VIA_FORCEINLINE void setmetatable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT 
 }
 
 // Returns the metatable of <tbl>, nil if impossible.
-VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl)
+VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT tbl)
 {
     if (tbl->meta)
         // We don't need to return a value pointer as the underlying table value is already a pointer
-        return stackvalue(V, tbl->meta);
+        return TValue(tbl->meta);
 
-    return stackvalue(V);
+    return TValue();
 }
 
 // Converts an Operand objecti into a TValue object.
@@ -647,13 +614,13 @@ VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operan
     switch (operand.type)
     {
     case OperandType::Number:
-        return stackvalue(V, operand.val_number);
+        return TValue(operand.val_number);
     case OperandType::Bool:
-        return stackvalue(V, operand.val_boolean);
+        return TValue(operand.val_boolean);
     case OperandType::String:
-        return stackvalue(V, newstring(V, operand.val_string));
+        return TValue(new TString(V, operand.val_string));
     case via::OperandType::Nil:
-        return stackvalue(V);
+        return TValue();
     default:
     {
         std::string err = std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type));
@@ -663,7 +630,7 @@ VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operan
     }
     }
 
-    return stackvalue(V);
+    return TValue();
 }
 
 // Schedules a yield <ms>.
@@ -695,43 +662,8 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
 
     if (checknumber(V, lhs))
     {
-        switch (op)
-        {
-        case OpCode::ADDRR:
-        case OpCode::ADDRN:
-        case OpCode::ADDNR:
-        case OpCode::ADDNN:
-            return stackvalue(V, lhs.val_number + rhs.val_number);
-        case OpCode::SUBRR:
-        case OpCode::SUBRN:
-        case OpCode::SUBNR:
-        case OpCode::SUBNN:
-            return stackvalue(V, lhs.val_number - rhs.val_number);
-        case OpCode::MULRR:
-        case OpCode::MULRN:
-        case OpCode::MULNR:
-        case OpCode::MULNN:
-            return stackvalue(V, lhs.val_number * rhs.val_number);
-        case OpCode::DIVRR:
-        case OpCode::DIVRN:
-        case OpCode::DIVNR:
-        case OpCode::DIVNN:
-            return stackvalue(V, lhs.val_number / rhs.val_number);
-        case OpCode::POWRR:
-        case OpCode::POWRN:
-        case OpCode::POWNR:
-        case OpCode::POWNN:
-            return stackvalue(V, std::pow(lhs.val_number, rhs.val_number));
-        case OpCode::MODRR:
-        case OpCode::MODRN:
-        case OpCode::MODNR:
-        case OpCode::MODNN:
-            return stackvalue(V, std::fmod(lhs.val_number, rhs.val_number));
-        default:
-            break;
-        }
-
-        return stackvalue(V);
+        // TODO: Implement arithmetic logic
+        return TValue();
     }
     else if (checktable(V, lhs))
     {
@@ -744,7 +676,7 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
 
     setexitdata(V, 1, "Invalid arithmetic operator");
     V->abrt = true;
-    return stackvalue(V);
+    return TValue();
 }
 
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
@@ -754,35 +686,7 @@ VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, Op
 
     if (checknumber(V, *lhs))
     {
-        switch (op)
-        {
-        case OpCode::ADDIR:
-        case OpCode::ADDIN:
-            lhs->val_number += rhs.val_number;
-            break;
-        case OpCode::SUBIR:
-        case OpCode::SUBIN:
-            lhs->val_number -= rhs.val_number;
-            break;
-        case OpCode::MULIR:
-        case OpCode::MULIN:
-            lhs->val_number *= rhs.val_number;
-            break;
-        case OpCode::DIVIR:
-        case OpCode::DIVIN:
-            lhs->val_number /= rhs.val_number;
-            break;
-        case OpCode::POWIR:
-        case OpCode::POWIN:
-            lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
-            break;
-        case OpCode::MODIR:
-        case OpCode::MODIN:
-            lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
-            break;
-        default:
-            break;
-        }
+        // TODO: Implement arithmetic logic
     }
     else if (checktable(V, *lhs))
     {

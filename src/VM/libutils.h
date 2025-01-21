@@ -14,7 +14,7 @@
         return; \
     }
 
-#define WRAPVAL(val) stackvalue(V, new TCFunction{.ptr = val, .error_handler = false})
+#define WRAPVAL(val) TValue(new TCFunction(val, false))
 #define ARG_MISMATCH(i, e, g) std::format("Expected {}, got {} for argument #{}\n", (e), (g), (i))
 
 namespace via::lib
