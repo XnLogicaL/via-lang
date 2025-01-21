@@ -5,12 +5,10 @@
 namespace via
 {
 
-RAState *rnewstate(RTState *)
+RAState::RAState()
 {
-    auto *state = new RAState;
-
     void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTER_COUNT);
-    state->head = reinterpret_cast<TValue *>(alloc);
+    this->head = reinterpret_cast<TValue *>(alloc);
 
     for (RegId i = 0; i < VIA_REGISTER_COUNT; i++)
     {
@@ -18,16 +16,13 @@ RAState *rnewstate(RTState *)
         val.type = ValueType::Monostate;
         val.next = nullptr;
         val.prev = nullptr;
-        rsetregister(state, i, val);
+        rsetregister(this, i, val);
     }
-
-    return state;
 }
 
-void rcleanupstate(RAState *R)
+RAState::~RAState()
 {
-    std::free(R->head);
-    delete R;
+    std::free(head);
 }
 
 } // namespace via

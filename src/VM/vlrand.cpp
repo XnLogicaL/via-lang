@@ -29,9 +29,9 @@ TNumber pcg32_range(TNumber a, TNumber b)
 
 void rand_range(RTState *V)
 {
-    TValue *low = getargument(V, 0);
-    TValue *high = getargument(V, 1);
-    TValue num = TValue(pcg32_range(low->val_number, high->val_number));
+    TValue low = getargument(V, 0);
+    TValue high = getargument(V, 1);
+    TValue num = TValue(pcg32_range(low.val_number, high.val_number));
 
     pushval(V, num);
     nativeret(V, 1);
@@ -40,7 +40,7 @@ void rand_range(RTState *V)
 void rand_int(RTState *V)
 {
     rand_range(V);
-    TValue x = *popval(V);
+    TValue x = popval(V);
     x.val_number = std::floor(x.val_number);
 
     pushval(V, x);

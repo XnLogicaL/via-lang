@@ -155,10 +155,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -177,10 +177,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -198,10 +198,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -220,10 +220,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -242,10 +242,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -263,10 +263,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -285,10 +285,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -307,10 +307,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -328,10 +328,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -350,10 +350,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -372,10 +372,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -393,10 +393,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -415,10 +415,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -437,10 +437,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -458,10 +458,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -480,10 +480,10 @@ dispatch:
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, *rhs_val); // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -502,10 +502,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -523,10 +523,10 @@ dispatch:
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(V, *lhs_val))
         {
-            TValue *add_metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
-            pushval(V, lhs_val); // Push self
-            pushval(V, rhs_val); // Push other
-            call(V, *add_metamethod, 2);
+            TValue metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            pushval(V, *lhs_val); // Push self
+            pushval(V, rhs_val);  // Push other
+            call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -631,16 +631,16 @@ dispatch:
         Operand src = V->ip->operand1;
         TValue *val = rgetregister(V->ralloc, src.val_register);
 
-        tspush(V->stack, val);
+        tspush(V->stack, *val);
         VM_NEXT();
     }
 
     case OpCode::POPSTACK:
     {
         Operand dst = V->ip->operand1;
-        TValue *val = popval(V);
+        TValue val = popval(V);
 
-        rsetregister(V->ralloc, dst.val_register, *val);
+        rsetregister(V->ralloc, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -650,10 +650,9 @@ dispatch:
         Operand off = V->ip->operand2;
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
-        StkVal val_ptr = *(V->stack->sbp + stack_offset);
-        TValue *val = reinterpret_cast<TValue *>(val_ptr);
+        StkVal val = *(V->stack->sbp + stack_offset);
 
-        rsetregister(V->ralloc, dst.val_register, *val);
+        rsetregister(V->ralloc, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -664,9 +663,8 @@ dispatch:
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
         TValue *val = rgetregister(V->ralloc, src.val_register);
-        StkVal val_ptr = reinterpret_cast<StkVal>(val);
 
-        *(V->stack->sbp + stack_offset) = val_ptr;
+        *(V->stack->sbp + stack_offset) = *val;
         VM_NEXT();
     }
 
@@ -676,9 +674,9 @@ dispatch:
         Operand off = V->ip->operand2;
 
         LocalId offv = static_cast<LocalId>(off.val_number);
-        TValue *val = getargument(V, offv);
+        TValue val = getargument(V, offv);
 
-        rsetregister(V->ralloc, dst.val_register, *val);
+        rsetregister(V->ralloc, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -710,7 +708,7 @@ dispatch:
             rhsn = toviavalue(V, rhs);
 
         if (lhs_reg && rhs_reg)
-            rsetregister(V->ralloc, dst.val_register, TValue(!cmpregister(V, lhs.val_register, rhs.val_register)));
+            rsetregister(V->ralloc, dst.val_register, TValue(!compareregisters(V, lhs.val_register, rhs.val_register)));
         else if (lhs_reg)
             rsetregister(V->ralloc, dst.val_register, TValue(!compare(V, *rgetregister(V->ralloc, lhs.val_register), rhsn)));
         else if (rhs_reg)
@@ -736,16 +734,15 @@ dispatch:
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
+            TValue metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
 
-            tspush(V->stack, lhsn);
-            tspush(V->stack, lhsn);
-            call(V, *mm, 2);
+            tspush(V->stack, *lhsn);
+            tspush(V->stack, *lhsn);
+            call(V, metamethod, 2);
 
-            StkVal ptr = tspop(V->stack);
-            TValue *val = reinterpret_cast<TValue *>(ptr);
+            StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, *val);
+            rsetregister(V->ralloc, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -767,16 +764,15 @@ dispatch:
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
+            TValue metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
 
-            tspush(V->stack, lhsn);
-            tspush(V->stack, rhsn);
-            call(V, *mm, 2);
+            tspush(V->stack, *lhsn);
+            tspush(V->stack, *rhsn);
+            call(V, metamethod, 2);
 
-            StkVal ptr = tspop(V->stack);
-            TValue *val = reinterpret_cast<TValue *>(ptr);
+            StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, *val);
+            rsetregister(V->ralloc, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -798,16 +794,15 @@ dispatch:
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
+            TValue metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
 
-            tspush(V->stack, lhsn);
-            tspush(V->stack, rhsn);
-            call(V, *mm, 2);
+            tspush(V->stack, *lhsn);
+            tspush(V->stack, *rhsn);
+            call(V, metamethod, 2);
 
-            StkVal ptr = tspop(V->stack);
-            TValue *val = reinterpret_cast<TValue *>(ptr);
+            StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, *val);
+            rsetregister(V->ralloc, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -829,16 +824,15 @@ dispatch:
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
         {
-            TValue *mm = getmetamethod(V, *lhsn, OpCode::LESS);
+            TValue metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
 
-            tspush(V->stack, lhsn);
-            tspush(V->stack, rhsn);
-            call(V, *mm, 2);
+            tspush(V->stack, *lhsn);
+            tspush(V->stack, *rhsn);
+            call(V, metamethod, 2);
 
-            StkVal ptr = tspop(V->stack);
-            TValue *val = reinterpret_cast<TValue *>(ptr);
+            StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, *val);
+            rsetregister(V->ralloc, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -885,7 +879,7 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        bool cond = cmpregister(V, condlr.val_register, condrr.val_register);
+        bool cond = compareregisters(V, condlr.val_register, condrr.val_register);
         if (V->ip->op == OpCode::JUMPIFEQUAL ? cond : !cond)
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
@@ -990,7 +984,7 @@ dispatch:
         Operand label = V->ip->operand3;
 
         auto it = V->labels->find(LabelId(label.val_string));
-        bool cond = cmpregister(V, lhsr.val_register, rhsr.val_register);
+        bool cond = compareregisters(V, lhsr.val_register, rhsr.val_register);
         // Jump if the condition is met
         if (V->ip->op == OpCode::JUMPLABELIFEQUAL ? cond : !cond)
             V->ip = it->second + 1;
@@ -1099,7 +1093,7 @@ dispatch:
         TValue *func = rgetregister(V->ralloc, rfn.val_register);
         TValue *obj = rgetregister(V->ralloc, robj.val_register);
 
-        pushval(V, obj);
+        pushval(V, *obj); // Push self
         // Call function, with [argc + 1] to account for the self argument
         nativecall(V, func->val_function, argc + 1);
         VM_NEXT();

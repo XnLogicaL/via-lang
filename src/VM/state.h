@@ -59,6 +59,9 @@ struct GState
     kTable *ktable;     // Constant table. Provided by the compiler.
     SymTable *symtable; // Symbol table, maps the stack offsets of variables to their identifiers. Provided by the compiler.
     ThreadId threads;   // Number of threads
+
+    GState();
+    ~GState();
 };
 
 // More likely to be cached (hopefully...)
@@ -100,16 +103,11 @@ struct alignas(64) RTState
     // Thread state
     ThreadState tstate; // Current thread state
     RTState *sstate;    // Saved thread state
-};
 
-// Creates a new global state object
-GState *stnewgstate();
-// Creats a new state object
-RTState *stnewstate(GState *, ProgramData &);
-void stloadinstructions(RTState *, BytecodeHolder &);
-// Cleans up a global state object
-void stcleanupgstate(GState *);
-// Cleans up a state object
-void stcleanupstate(RTState *);
+    RTState(GState *, ProgramData &);
+    ~RTState();
+
+    void loadinstructions(BytecodeHolder &);
+};
 
 } // namespace via

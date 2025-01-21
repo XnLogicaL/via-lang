@@ -5,10 +5,12 @@
 #define INIT_HEAP \
     { \
         if (V != nullptr) \
+        { \
+            if (V->heapptr != nullptr) \
+                V->heapptr->next = this; \
             this->prev = V->heapptr; \
-        if (V->heapptr != nullptr) \
-            V->heapptr->next = this; \
-        V->heapptr = this; \
+            V->heapptr = this; \
+        } \
     }
 
 namespace via
@@ -81,6 +83,43 @@ TValue::TValue(RTState *V, TCFunction *cfun)
 TValue::TValue(RTState *V, TTable *tbl)
     : type(ValueType::Table)
     , val_table(tbl) INIT_HEAP;
+
+TValue::TValue(RTState *V, TValue val)
+    : type(val.type)
+{
+    switch (val.type)
+    {
+    case ValueType::Number:
+        val_number = val.val_number;
+        break;
+    case ValueType::Bool:
+        val_boolean = val.val_boolean;
+        break;
+    case ValueType::String:
+        delete val_string;
+        val_string = val.val_string;
+        break;
+    case ValueType::Function:
+        delete val_function;
+        val_function = val.val_function;
+        break;
+    case ValueType::Table:
+        delete val_table;
+        val_table = val.val_table;
+        break;
+    case ValueType::CFunction:
+        delete val_cfunction;
+        val_cfunction = val.val_cfunction;
+        break;
+    case ValueType::Pointer:
+        val_pointer = val.val_pointer;
+        break;
+    default:
+        break;
+    }
+
+    INIT_HEAP;
+}
 
 TValue::~TValue()
 {

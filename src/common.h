@@ -66,6 +66,7 @@
     #define VIA_NOINLINE __attribute__((noinline))
     #define VIA_INLINE inline
     #define VIA_FORCEINLINE inline __attribute__((always_inline))
+    #define VIA_MAXOPTIMIZE inline __attribute__((always_inline, hot))
     #define VIA_UNREACHABLE() __builtin_unreachable()
     #define VIA_LIKELY(expr) __builtin_expect(!!(expr), 1)
     #define VIA_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
@@ -75,6 +76,7 @@
     #define VIA_NOINLINE __declspec(noinline)
     #define VIA_INLINE
     #define VIA_FORCEINLINE __forceinline
+    #define VIA_MAXOPTIMIZE __forceinline
     #define VIA_UNREACHABLE() __assume(false)
     #define VIA_LIKELY(expr) expr
     #define VIA_UNLIKELY(expr) expr
@@ -93,6 +95,16 @@ using JmpOffset = std::int64_t;
 using JmpOffset = std::int32_t;
 #endif
 
+// Forward declarations
+struct TValue;
+struct TTable;
+struct TString;
+struct TFunction;
+struct TCFunction;
+struct TokenHolder;
+struct AbstractSyntaxTree;
+struct BytecodeHolder;
+
 template<typename K, typename T>
 using HashMap = std::unordered_map<K, T>; // General purpose hashmap.
 using Hash = std::uint32_t;               // Hash type.
@@ -105,24 +117,13 @@ using LocalId = std::uint32_t;            // Local variable identifier (stack of
 using kGlobId = std::string_view;         // Global constant identifier.
 using RegId = uint32_t;                   // Register
 using StkPos = std::size_t;               // Stack position.
-using StkVal = std::uintptr_t;            // Stack value, castable pointer
+using StkVal = TValue;                    // Stack value, castable pointer
 using StkAddr = StkVal *;                 // Stack address
 using YldTime = float;                    // Yield time type, for the VM.
 using TNumber = double;
 using TBool = bool;
 using TPointer = uintptr_t;
 using TableKey = Hash;
-
-// Forward declarations
-struct TValue;
-struct TTable;
-struct TString;
-struct TFunction;
-struct TCFunction;
-
-struct TokenHolder;
-struct AbstractSyntaxTree;
-struct BytecodeHolder;
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)
 {

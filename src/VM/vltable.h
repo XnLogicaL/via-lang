@@ -31,5 +31,6 @@ void table_merge(RTState *);
 void table_slice(RTState *);
 void table_clear(RTState *);
 void table_compare(RTState *);
+void loadtablelib(RTState *);
 
 } // namespace via::lib

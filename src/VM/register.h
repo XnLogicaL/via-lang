@@ -14,22 +14,21 @@ struct RTState;
 struct RAState
 {
     TValue *head;
+
+    RAState();
+    ~RAState();
 };
 
-VIA_FORCEINLINE TValue *rgetregister(RAState *R, RegId reg)
+VIA_MAXOPTIMIZE TValue *rgetregister(RAState *R, RegId reg)
 {
     TValue *ptr = R->head + reg;
     return ptr;
 }
 
-VIA_FORCEINLINE void rsetregister(RAState *R, RegId reg, TValue val)
+VIA_MAXOPTIMIZE void rsetregister(RAState *R, RegId reg, TValue val)
 {
     TValue *addr = R->head + reg;
     *addr = val;
 }
-
-RAState *rnewstate(RTState *);
-void rcleanupstate(RAState *);
-void rinitialize(RAState *);
 
 } // namespace via

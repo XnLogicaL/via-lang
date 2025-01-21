@@ -60,6 +60,7 @@ struct TValue
     explicit TValue(RTState *, TFunction *);
     explicit TValue(RTState *, TCFunction *);
     explicit TValue(RTState *, TTable *);
+    explicit TValue(RTState *, TValue);
 
     ~TValue();
 };

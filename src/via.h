@@ -48,8 +48,8 @@ class Interpreter
 public:
     Interpreter(ProgramData &program)
         : program(program)
-        , gstate(stnewgstate())
-        , rtstate(stnewstate(gstate, program))
+        , gstate(new GState())
+        , rtstate(new RTState(gstate, program))
     {
         lib::loadbaselib(rtstate);
         lib::loadmathlib(rtstate);
@@ -58,8 +58,8 @@ public:
 
     ~Interpreter()
     {
-        stcleanupgstate(gstate);
-        stcleanupstate(rtstate);
+        delete gstate;
+        delete rtstate;
     }
 
     ExecutionResult execute(ProgramData &);

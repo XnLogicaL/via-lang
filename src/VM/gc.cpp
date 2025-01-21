@@ -6,49 +6,39 @@
 namespace via
 {
 
-GCState *gcnewstate()
+GCState::GCState()
+    : terminating(false)
+    , collections(0)
+    , size(0)
 {
-    GCState *gc = new GCState;
-
-    gc->terminating = false;
-    gc->collections = 0;
-    gc->size = 0;
-    gc->dellist = {};
-    gc->reflist = {};
-
-    return gc;
 }
 
-void gcadd(RTState *V, TValue *p)
+GCState::~GCState()
 {
-    V->gc->dellist.push_back(p);
+    terminating = true;
+
+    for (const GCCleanupFunction &fn : callback_list)
+        fn();
+}
+
+void gcadd(RTState *V, TValue *ptr)
+{
+    V->gc->periodic_list.push_back(ptr);
     V->gc->size += sizeof(TValue);
 }
 
 void gccollect(RTState *V)
 {
-    for (TValue *p : V->gc->dellist)
-        delete p;
+    for (TValue *ptr : V->gc->periodic_list)
+        delete ptr;
 
     V->gc->size = 0;
     V->gc->collections++;
 }
 
-void gcaddref(RTState *V, std::shared_ptr<TValue> val)
+void gcaddcallback(RTState *V, GCCleanupFunction fn)
 {
-    if (V->gc->terminating)
-        return;
-
-    V->gc->reflist.push_back(val);
-    V->gc->size += sizeof(TValue);
-}
-
-void gccleanup(GCState *S)
-{
-    S->terminating = true;
-    S->reflist.clear();
-
-    delete S;
+    V->gc->callback_list.push_back(fn);
 }
 
 } // namespace via

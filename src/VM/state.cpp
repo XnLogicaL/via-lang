@@ -9,122 +9,92 @@
 namespace via
 {
 
-GState *stnewgstate()
-{
-    GState *G = new GState;
-
-    G->threads = 0;
-    G->stable = new StrTable();
-    G->gtable = new GlbTable();
-    G->ktable = new kTable();
-    G->symtable = new SymTable();
-
-    return G;
-}
-
 // Initializes and returns a new RTState object
-RTState *stnewstate(GState *G, ProgramData &program)
+RTState::RTState(GState *G, ProgramData &program)
+    : id(G->threads++)
+    , G(G)
+    , ihp(nullptr)
+    , stack(new TStack())
+    , ralloc(new RAState())
+    , labels(new LblMap())
+    , gc(new GCState())
+    , frame(nullptr)
+    , argc(0)
+    , heapptr(nullptr)
+    , exitc(0)
+    , exitm("")
+    , abrt(false)
+    , skip(false)
+    , yield(false)
+    , restorestate(false)
+    , yieldfor(0.0f)
+    , tstate(ThreadState::PAUSED)
+    , sstate(nullptr)
 {
-    std::vector<Instruction> pipeline = program.bytecode->get();
-
-    RTState *V = new RTState;
-
-    V->id = G->threads++;
-    V->G = G;
-
-    // Allocate ihp (Instruction head pointer)
-    V->ihp = new Instruction[pipeline.size()];
-    // Initialize ibp (Instruction base pointer)
-    V->ibp = V->ihp + pipeline.size();
-    // Initialize ip (Instruction pointer)
-    V->ip = V->ihp;
-
-    // Copy instructions into the instruction pipeline
-    std::copy(pipeline.begin(), pipeline.end(), V->ip);
-
-    V->frame = nullptr;
-    V->stack = tsnewstate();
-    // I know, the odd one out...
-    V->labels = new LblMap();
-    V->ralloc = rnewstate(V);
-    V->gc = gcnewstate();
-
-    // Exit code
-    V->exitc = 0;
-    // Exit message
-    V->exitm = "";
-
-    // Abort on the next VM clock cycle
-    V->abrt = false;
-    // Skip the instruction on the next VM clock cycle
-    V->skip = false;
-    // Yield for a set amount (V->yieldfor) on the next VM cycle
-    V->yield = false;
-    // Restore the state on the next VM cycle, error if V->sstate is not valid
-    V->restorestate = false;
-
-    V->yieldfor = 0.0f;
-    V->argc = 0;
-
-    // This is set to idle by default because the via thread manipulators (execute, pausethread, killthread)
-    // are the only ones allowed to mutate this
-    V->tstate = ThreadState::PAUSED;
-    V->sstate = nullptr;
-
-    V->heapptr = nullptr;
+    loadinstructions(*program.bytecode);
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
-    TFunction *main = new TFunction(V, VIA_MAIN_ID, V->ip, V->frame, {}, false, false);
-    nativecall(V, main, 0);
+    TFunction *main = new TFunction(this, VIA_MAIN_ID, this->ip, this->frame, {}, false, false);
+    nativecall(this, main, 0);
 
     // Initialize labels
-    Instruction *ip = V->ip;
-    for (Instruction instr : pipeline)
+    Instruction *ip = this->ip;
+    for (Instruction instr : program.bytecode->get())
     {
         if (instr.op == OpCode::LABEL)
         {
             Operand ident = instr.operand1;
-            (*V->labels)[LabelId(ident.val_string)] = ip;
+            (*this->labels)[LabelId(ident.val_string)] = ip;
         }
         ++ip;
     }
-
-    return V;
 }
 
-void stloadinstructions(RTState *VIA_RESTRICT V, BytecodeHolder &bytecode)
+void RTState::loadinstructions(BytecodeHolder &bytecode)
 {
-    // Clean up previous instruction pipeline
-    delete[] V->ihp;
+    if (this->ihp)
+    { // Clean up previous instruction pipeline
+        delete[] this->ihp;
+    }
 
     std::vector<Instruction> pipeline = bytecode.get();
 
-    V->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
-    V->ibp = V->ihp + pipeline.size();         // Initialize ibp (Instruction base pointer)
-    V->ip = V->ihp;                            // Initialize ip (Instruction pointer)
+    this->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
+    this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
+    this->ip = this->ihp;                         // Initialize ip (Instruction pointer)
 }
 
-void stcleanupgstate(GState *G)
+GState::GState()
+    : stable(new StrTable())
+    , gtable(new GlbTable())
+    , ktable(new kTable())
+    , symtable(new SymTable())
+    , threads(0)
 {
-    delete G->stable;
-    delete G->gtable;
-    delete G;
 }
 
-void stcleanupstate(RTState *V)
+GState::~GState()
 {
-    stcleanupgstate(V->G);
-    gccleanup(V->gc);
-    tscleanupstate(V->stack);
-    rcleanupstate(V->ralloc);
+    delete stable;
+    delete gtable;
+    delete ktable;
+    delete symtable;
+}
+
+RTState::~RTState()
+{
+    delete this->G;
+    delete this->gc;
+    delete this->stack;
+    delete this->ralloc;
 
     // Clean up saved state, if there is one
-    if (V->sstate)
-        stcleanupstate(V->sstate);
+    if (this->sstate)
+        delete this->sstate;
 
     // Clean up heap values
-    TValue *current_value = V->heapptr;
+    TValue *current_value = this->heapptr;
     while (current_value)
     {
         delete current_value;
@@ -133,9 +103,8 @@ void stcleanupstate(RTState *V)
 
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately
-    delete[] V->ihp;
-    delete V->labels;
-    delete V;
+    delete[] this->ihp;
+    delete this->labels;
 }
 
 } // namespace via

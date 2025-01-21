@@ -35,7 +35,7 @@ void Interpreter::compile()
 
 void Interpreter::interpret()
 {
-    via::stloadinstructions(rtstate, *program.bytecode);
+    rtstate->loadinstructions(*program.bytecode);
     via::execute(rtstate);
     via::pausethread(rtstate);
 }

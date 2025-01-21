@@ -5,11 +5,11 @@
 namespace via::lib
 {
 
-TableKey _get_largest_key(TTable *tbl)
+TableKey _get_largest_key(TTable tbl)
 {
     TableKey largest = 0;
 
-    for (auto it : tbl->data)
+    for (auto it : tbl.data)
         if (it.first > largest)
             largest = it.first;
 
@@ -18,34 +18,34 @@ TableKey _get_largest_key(TTable *tbl)
 
 void table_insert(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
-    TValue *val = getargument(V, 1);
+    TValue tbl = getargument(V, 0);
+    TValue val = getargument(V, 1);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
-    LIB_ASSERT(!tbl->val_table->frozen.get(), "Attempt to modify locked table");
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
+    LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
 
-    auto data = tbl->val_table->data;
+    auto data = tbl.val_table->data;
     size_t size = data.size();
 
-    data[size + 1] = *val;
+    data[size + 1] = val;
 
     nativeret(V, 0);
 }
 
 void table_insertat(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
-    TValue *index = getargument(V, 1);
-    TValue *val = getargument(V, 2);
+    TValue tbl = getargument(V, 0);
+    TValue index = getargument(V, 1);
+    TValue val = getargument(V, 2);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
-    LIB_ASSERT(!tbl->val_table->frozen.get(), "Attempt to modify locked table");
-    LIB_ASSERT(checknumber(V, *index), ARG_MISMATCH(1, "Number", ENUM_NAME(index->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
+    LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
+    LIB_ASSERT(checknumber(V, index), ARG_MISMATCH(1, "Number", ENUM_NAME(index.type)));
 
-    TableKey idx = static_cast<TableKey>(index->val_number);
+    TableKey idx = static_cast<TableKey>(index.val_number);
     LIB_ASSERT(idx > 0, "Index must be greater than 0");
 
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
     TableKey max_key = 0;
     for (const auto &[key, _] : data)
         if (key > max_key)
@@ -57,20 +57,20 @@ void table_insertat(RTState *V)
         if (data.find(key) != data.end())
             data[key + 1] = data[key];
 
-    data[idx] = *val;
+    data[idx] = val;
 
     nativeret(V, 0);
 }
 
 void table_remove(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
-    LIB_ASSERT(!tbl->val_table->frozen.get(), "Attempt to modify locked table");
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
+    LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
 
-    auto &data = tbl->val_table->data;
-    TableKey last_key = _get_largest_key(tbl->val_table);
+    auto &data = tbl.val_table->data;
+    TableKey last_key = _get_largest_key(tbl.val_table);
     TValue last_val = data[last_key];
 
     data.erase(last_key);
@@ -79,15 +79,15 @@ void table_remove(RTState *V)
 
 void table_removeat(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
-    TValue *idx = getargument(V, 1);
+    TValue tbl = getargument(V, 0);
+    TValue idx = getargument(V, 1);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
-    LIB_ASSERT(checknumber(V, *idx), ARG_MISMATCH(1, "Number", ENUM_NAME(idx->type)));
-    LIB_ASSERT(!tbl->val_table->frozen.get(), "Attempt to modify locked table");
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
+    LIB_ASSERT(checknumber(V, idx), ARG_MISMATCH(1, "Number", ENUM_NAME(idx.type)));
+    LIB_ASSERT(!tbl.val_table->frozen.get(), "Attempt to modify locked table");
 
-    TableKey index = static_cast<TableKey>(idx->val_number);
-    auto &data = tbl->val_table->data;
+    TableKey index = static_cast<TableKey>(idx.val_number);
+    auto &data = tbl.val_table->data;
     TValue rem_val = data[index];
 
     data.erase(index);
@@ -97,14 +97,14 @@ void table_removeat(RTState *V)
 
 void table_contains(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
-    TValue *val = getargument(V, 1);
+    TValue tbl = getargument(V, 0);
+    TValue val = getargument(V, 1);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
     for (auto it : data)
-        if (compare(V, it.second, *val))
+        if (compare(V, it.second, val))
         {
             TNumber key = static_cast<TNumber>(it.first);
             pushval(V, TValue(key));
@@ -117,12 +117,12 @@ void table_contains(RTState *V)
 
 void table_concat(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
     std::string buf;
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
 
     for (auto it : data)
     {
@@ -140,11 +140,11 @@ void table_concat(RTState *V)
 
 void table_clone(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    TTable *original = tbl->val_table;
+    TTable *original = tbl.val_table;
     TTable *clone = new TTable();
 
     auto &data = clone->data;
@@ -159,11 +159,11 @@ void table_clone(RTState *V)
 
 void table_deepclone(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    TTable *original = tbl->val_table;
+    TTable *original = tbl.val_table;
     TTable *clone = new TTable();
 
     auto &data = clone->data;
@@ -178,7 +178,7 @@ void table_deepclone(RTState *V)
             pushval(V, it.second);
             // Call self to deep clone the nested table
             table_deepclone(V);
-            data[key] = *popval(V);
+            data[key] = popval(V);
         }
         else
             data[key] = it.second;
@@ -192,25 +192,25 @@ void table_deepclone(RTState *V)
 
 void table_len(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    TValue final = len(V, *tbl);
+    TValue final = len(V, tbl);
     pushval(V, final);
     nativeret(V, 1);
 }
 
 void table_indexof(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
-    TValue *val = getargument(V, 1);
+    TValue tbl = getargument(V, 0);
+    TValue val = getargument(V, 1);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
     for (const auto &it : data)
-        if (compare(V, it.second, *val))
+        if (compare(V, it.second, val))
         {
             pushval(V, TValue(true));
             return;
@@ -222,11 +222,11 @@ void table_indexof(RTState *V)
 
 void table_keys(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
     TTable *keys = new TTable();
     TValue keys_table = TValue(keys);
 
@@ -246,11 +246,11 @@ void table_keys(RTState *V)
 
 void table_values(RTState *V)
 {
-    TValue *tbl = getargument(V, 0);
+    TValue tbl = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, *tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl->type)));
+    LIB_ASSERT(checktable(V, tbl), ARG_MISMATCH(0, "Table", ENUM_NAME(tbl.type)));
 
-    auto &data = tbl->val_table->data;
+    auto &data = tbl.val_table->data;
     TTable *values = new TTable();
     TValue values_table = TValue(values);
 
@@ -263,6 +263,21 @@ void table_values(RTState *V)
 
     pushval(V, values_table);
     nativeret(V, 1);
+}
+
+void loadtablelib(RTState *V)
+{
+    const static HashMap<const char *, TValue> table_properties = {
+        {"insert", WRAPVAL(table_insert)},
+    };
+
+    TTable *table = new TTable();
+
+    for (const auto &[key, val] : table_properties)
+        settableindex(V, table, hashstring(V, key), val);
+
+    freeze(V, table);
+    setglobal(V, "table", TValue(table));
 }
 
 } // namespace via::lib
