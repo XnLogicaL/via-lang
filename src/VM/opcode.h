@@ -325,24 +325,7 @@ enum class OpCode
      * operand2: <>
      */
     DECREMENT,
-
     LOADARGUMENT,
-    /*
-     * opcode: PUSHARGUMENT
-     * Pushes value in operand0 onto the argument stack.
-     * operand0: <src :: Register>
-     * operand1: <>
-     * operand2: <>
-     */
-    PUSHARGUMENT,
-    /*
-     * opcode: PUSHRETURN
-     * Pushes the value of operand0 onto the return stack.
-     * operand0: <src :: Register>
-     * operand1: <>
-     * operand2: <>
-     */
-    PUSHRETURN,
     /*
      * opcode: EQUAL
      * Performs a comparison operation between operand1 and operand2. Stores the

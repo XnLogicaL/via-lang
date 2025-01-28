@@ -11,7 +11,7 @@ void pusharguments(RTState *V, std::vector<TValue> args)
         pushval(V, val);
 }
 
-TValue *quickindex(RTState *V, TTable *T, const char *K)
+TValue quickindex(RTState *V, TTable *T, const char *K)
 {
     return gettableindex(V, T, hashstring(V, K), false);
 }

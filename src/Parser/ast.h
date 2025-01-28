@@ -29,15 +29,7 @@ struct Pragma
     std::string to_string()
     {
         return std::format(
-            "Pragma(body: {}, arguments: {})",
-            body.to_string(),
-            format_vector<Token>(
-                arguments,
-                [](const Token tok)
-                {
-                    return tok.to_string();
-                }
-            )
+            "Pragma(body: {}, arguments: {})", body.to_string(), format_vector<Token>(arguments, [](const Token tok) { return tok.to_string(); })
         );
     }
 };
@@ -140,13 +132,7 @@ struct TypeNode
     std::variant<GenericTypeNode, UnionTypeNode, VariantTypeNode, FunctionTypeNode, TableTypeNode, OptionalTypeNode> type;
     std::string to_string()
     {
-        return std::visit(
-            [](auto &&type_)
-            {
-                return type_.to_string();
-            },
-            type
-        );
+        return std::visit([](auto &&type_) { return type_.to_string(); }, type);
     }
 };
 
@@ -165,6 +151,7 @@ struct DecExprNode;
 struct TypeExprNode;
 struct TypeofExprNode;
 struct TableExprNode;
+struct TypeCastExprNode;
 struct ExprNode;
 
 struct LiteralExprNode
@@ -300,6 +287,17 @@ struct TableExprNode
     }
 };
 
+struct TypeCastExprNode
+{
+    ExprNode *expr;
+    TypeNode *type;
+
+    std::string to_string()
+    {
+        return "TypeCastExprNode";
+    }
+};
+
 struct ExprNode
 {
     std::variant<
@@ -314,18 +312,13 @@ struct ExprNode
         DecExprNode,
         TypeExprNode,
         TypeofExprNode,
+        TypeCastExprNode,
         TableExprNode>
         expr;
 
     std::string to_string()
     {
-        return std::visit(
-            [](auto &&expr_)
-            {
-                return expr_.to_string();
-            },
-            expr
-        );
+        return std::visit([](auto &&expr_) { return expr_.to_string(); }, expr);
     }
 };
 
@@ -356,7 +349,7 @@ struct TypedParamNode
 
     std::string to_string()
     {
-        return std::format("TypedParamNode(\n  ident: {},\n  type: {},\n  modifiers: {}\n)", ident.to_string(), "<type>", modifiers.to_string());
+        return std::format("TypedParamNode( ident: {}, type: {}, modifiers: {})", ident.to_string(), "<type>", modifiers.to_string());
     }
 };
 
@@ -371,7 +364,7 @@ struct VariableDeclStmtNode
     std::string to_string()
     {
         return std::format(
-            "VariableDeclStmtNode(\n  ident: {},\n  type: {},\n  value: {},\n  modifiers: {}\n)",
+            "VariableDeclStmtNode( ident: {}, type: {}, value: {}, modifiers: {})",
             ident.to_string(),
             type.to_string(),
             value.has_value() ? value->to_string() : "Nil",
@@ -389,22 +382,10 @@ struct CallStmtNode
     std::string to_string()
     {
         return std::format(
-            "CallStmtNode(\n  callee: {},\n  args: {},\n  generics: {}\n)",
+            "CallStmtNode( callee: {}, args: {}, generics: {})",
             callee->to_string(),
-            format_vector<ExprNode *>(
-                args,
-                [](ExprNode *expr)
-                {
-                    return expr->to_string();
-                }
-            ),
-            format_vector<TypeNode *>(
-                generics,
-                [](TypeNode *type)
-                {
-                    return type->to_string();
-                }
-            )
+            format_vector<ExprNode *>(args, [](ExprNode *expr) { return expr->to_string(); }),
+            format_vector<TypeNode *>(generics, [](TypeNode *type) { return type->to_string(); })
         );
     }
 };
@@ -416,7 +397,7 @@ struct AssignStmtNode
 
     std::string to_string()
     {
-        return std::format("AssignStmtNode(\n  target: {},\n  value: {}\n)", target->to_string(), value->to_string());
+        return std::format("AssignStmtNode(target: {}, value: {})", target->to_string(), value->to_string());
     }
 };
 
@@ -427,7 +408,7 @@ struct WhileStmtNode
 
     std::string to_string()
     {
-        return std::format("WhileStmtNode(\n  condition: {}\n)", condition->to_string());
+        return std::format("WhileStmtNode(condition: {})", condition->to_string());
     }
 };
 
@@ -450,7 +431,7 @@ struct ForStmtNode
     std::string to_string()
     {
         return std::format(
-            "ForStmtNode(\n  keys: {},\n  values: {},\n  iterator: {},\n  body: {}\n)",
+            "ForStmtNode(keys: {}, values: {}, iterator: {}, body: {})",
             keys.to_string(),
             values.to_string(),
             iterator->to_string(),
@@ -472,22 +453,10 @@ struct FunctionDeclStmtNode
     std::string to_string()
     {
         return std::format(
-            "FunctionDeclStmtNode(\n  ident: {},\n  params: {},\n  generics: {},\n  return_type: {},\n  body: {},\n  modifiers: {}\n)",
+            "FunctionDeclStmtNodeident: {}, params: {}, generics: {}, return_type: {}, body: {}, modifiers: {})",
             ident.to_string(),
-            format_vector<TypedParamNode>(
-                params,
-                [](TypedParamNode param)
-                {
-                    return "\n  " + param.to_string();
-                }
-            ),
-            format_vector<Token>(
-                generics,
-                [](Token tok)
-                {
-                    return "\n  " + tok.to_string();
-                }
-            ),
+            format_vector<TypedParamNode>(params, [](TypedParamNode param) { return " " + param.to_string(); }),
+            format_vector<Token>(generics, [](Token tok) { return " " + tok.to_string(); }),
             return_type.has_value() ? return_type->to_string() : "Unknown",
             body->to_string(),
             modifiers.to_string()
@@ -502,7 +471,7 @@ struct ElifStmtNode
 
     std::string to_string()
     {
-        return std::format("ElifStmtNode(\n  condition: {},\n  body: {}\n)", condition->to_string(), body->to_string());
+        return std::format("ElifStmtNode(condition: {}, body: {})", condition->to_string(), body->to_string());
     }
 };
 
@@ -516,17 +485,11 @@ struct IfStmtNode
     std::string to_string()
     {
         return std::format(
-            "IfStmtNode(\n  condition: {},\n  body: {},\n  else_body: {},\n  elseif_bodies: {}\n)",
+            "IfStmtNode(condition: {}, body: {}, else_body: {}, elseif_bodies: {})",
             condition->to_string(),
             then_body->to_string(),
             else_body.has_value() ? else_body->to_string() : "None",
-            format_vector<ElifStmtNode>(
-                elif_branches,
-                [](ElifStmtNode elif)
-                {
-                    return elif.to_string();
-                }
-            )
+            format_vector<ElifStmtNode>(elif_branches, [](ElifStmtNode elif) { return elif.to_string(); })
         );
     }
 };
@@ -538,7 +501,7 @@ struct CaseStmtNode
 
     std::string to_string()
     {
-        return std::format("CaseStmtNode(\n  value: {},\n  body: {}\n)", value->to_string(), body->to_string());
+        return std::format("CaseStmtNode(value: {}, body: {})", value->to_string(), body->to_string());
     }
 };
 
@@ -551,15 +514,9 @@ struct SwitchStmtNode
     std::string to_string()
     {
         return std::format(
-            "SwitchStmtNode(\n  condition: {},\n  cases: {},\n  default: {}\n)",
+            "SwitchStmtNode(condition: {}, cases: {}, default: {})",
             condition->to_string(),
-            format_vector<CaseStmtNode>(
-                cases,
-                [](CaseStmtNode case_stmt)
-                {
-                    return case_stmt.to_string();
-                }
-            ),
+            format_vector<CaseStmtNode>(cases, [](CaseStmtNode case_stmt) { return case_stmt.to_string(); }),
             default_case.has_value() ? default_case->to_string() : "None"
         );
     }
@@ -571,16 +528,7 @@ struct ReturnStmtNode
 
     std::string to_string()
     {
-        return std::format(
-            "ReturnStmtNode(\n  values: {}\n)",
-            format_vector<ExprNode>(
-                values,
-                [](ExprNode expr)
-                {
-                    return expr.to_string();
-                }
-            )
-        );
+        return std::format("ReturnStmtNode( values: {})", format_vector<ExprNode>(values, [](ExprNode expr) { return expr.to_string(); }));
     }
 };
 
@@ -592,7 +540,7 @@ struct StructDeclStmtNode
 
     std::string to_string()
     {
-        return std::format("StructDeclStmtNode(ident: {})", ident.to_string());
+        return std::format("StructDeclStmtNode(ident: {})", ident.value);
     }
 };
 
@@ -604,7 +552,7 @@ struct NamespaceDeclStmtNode
 
     std::string to_string()
     {
-        return std::format("NamespaceDeclStmt(ident: {})", ident.to_string());
+        return std::format("NamespaceDeclStmt(ident: {})", ident.value);
     }
 };
 
@@ -645,13 +593,7 @@ struct StmtNode
 
     std::string to_string()
     {
-        return std::visit(
-            [](auto &&stmt_)
-            {
-                return stmt_.to_string();
-            },
-            stmt
-        );
+        return std::visit([](auto &&stmt_) { return stmt_.to_string(); }, stmt);
     }
 };
 
@@ -669,12 +611,12 @@ struct AbstractSyntaxTree
 
     std::string to_string()
     {
-        std::string str;
+        std::ostringstream oss;
 
         for (StmtNode stmt : statements)
-            str += stmt.to_string() + '\n';
+            oss << stmt.to_string() << '\n';
 
-        return str;
+        return oss.str();
     }
 };
 

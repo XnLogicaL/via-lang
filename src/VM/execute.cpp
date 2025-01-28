@@ -1208,8 +1208,6 @@ dispatch:
         TValue *str_val = rgetregister(V->ralloc, str.val_register);
         TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
 
-        // TODO: When debug levels are implemented, make sure to remove this horribly cryptic message caused by abstraction.
-        VM_ASSERT(checkstring(V, *str_val), "GETSTRING: Invoked on non-string value");
         VM_ASSERT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
 
         size_t index = idx_val->val_number;
@@ -1218,7 +1216,7 @@ dispatch:
     }
 
     default:
-        setexitdata(V, 1, std::format("Unknown opcode (op_id={})", static_cast<uint8_t>(V->ip->op)));
+        setexitdata(V, 1, std::format("Unknown opcode {:x}", static_cast<uint8_t>(V->ip->op)));
         VM_EXIT();
     }
 }

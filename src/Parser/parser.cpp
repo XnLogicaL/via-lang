@@ -405,6 +405,26 @@ ExprNode *Parser::parse_prim_expr()
         break;
     }
 
+    case TokenType::KW_TYPE:
+    {
+        consume(); // Consume 'type'
+
+        TypeExprNode *type_expr = alloc->emplace<TypeExprNode>();
+        type_expr->expr = parse_expr();
+        base_expr = alloc->emplace<ExprNode>(*type_expr);
+        break;
+    }
+
+    case TokenType::KW_TYPEOF:
+    {
+        consume(); // Consume 'typeof'
+
+        TypeofExprNode *typeof_expr = alloc->emplace<TypeofExprNode>();
+        typeof_expr->expr = parse_expr();
+        base_expr = alloc->emplace<ExprNode>(*typeof_expr);
+        break;
+    }
+
     case TokenType::BRACE_OPEN:
     {
         base_expr = parse_table_expr();
@@ -450,6 +470,23 @@ ExprNode *Parser::parse_prim_expr()
             index_expr->index = alloc->emplace<ExprNode>(*member_var);
 
             base_expr = alloc->emplace<ExprNode>(*index_expr);
+        }
+        // Typecast: expr as type
+        else if (is_type(TokenType::KW_AS))
+        {
+            consume();
+
+            TypeCastExprNode *cast_expr = alloc->emplace<TypeCastExprNode>();
+            cast_expr->expr = base_expr;
+            cast_expr->type = parse_type();
+
+            if (!cast_expr->type)
+            {
+                PARSER_ERROR("Expected type after 'as' while parsing typecast");
+                panic_and_recover();
+            }
+
+            base_expr = alloc->emplace<ExprNode>(*cast_expr);
         }
         // Function call: obj.func(args)
         else if (is_type(TokenType::PAREN_OPEN) || is_type(TokenType::OP_LT))
@@ -741,12 +778,7 @@ TypeNode *Parser::parse_type()
 
 TypedParamNode *Parser::parse_parameter()
 {
-    StatementModifiers modifiers = parse_modifiers(
-        [this]()
-        {
-            return !is_type(TokenType::IDENTIFIER);
-        }
-    );
+    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
 
     if (!is_type(TokenType::IDENTIFIER))
         PARSER_ERROR("Expected identifier for parameter identifier");
@@ -773,12 +805,7 @@ TypedParamNode *Parser::parse_parameter()
 VariableDeclStmtNode *Parser::parse_var_declaration()
 {
     Token declaration_type_token = consume();
-    StatementModifiers modifiers = parse_modifiers(
-        [this]()
-        {
-            return !is_type(TokenType::IDENTIFIER);
-        }
-    );
+    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
 
     if (modifiers.is_strict)
         PARSER_ERROR("Using 'strict' modifier on variable declaration")
@@ -991,12 +1018,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
     // No need to check this
     consume(); // Consume 'func'
 
-    StatementModifiers modifiers = parse_modifiers(
-        [this]()
-        {
-            return !is_type(TokenType::IDENTIFIER) && !is_type(TokenType::EOF_);
-        }
-    );
+    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER) && !is_type(TokenType::EOF_); });
 
     if (!is_type(TokenType::IDENTIFIER))
     {

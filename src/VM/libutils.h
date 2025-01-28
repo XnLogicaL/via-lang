@@ -20,7 +20,7 @@
 namespace via::lib
 {
 
-TValue *quickindex(RTState *, TTable *, const char *);
+TValue quickindex(RTState *, TTable *, const char *);
 void pusharguments(RTState *, std::vector<TValue>);
 
 } // namespace via::lib
