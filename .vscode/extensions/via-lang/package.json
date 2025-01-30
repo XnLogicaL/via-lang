@@ -1,0 +1,25 @@
+{
+  "name": "via-lang",
+  "displayName": "via-lang",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "via",
+      "aliases": ["via", "via"],
+      "extensions": [".via"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "via",
+      "scopeName": "source.via",
+      "path": "./syntaxes/via.tmLanguage.json"
+    }]
+  }
+}

@@ -1216,7 +1216,7 @@ StmtNode *Parser::parse_statement()
         return emplace(*parse_for_statement());
     case TokenType::KW_IF:
         return emplace(*parse_if_statement());
-    case TokenType::KW_SWITCH:
+    case TokenType::KW_MATCH:
         return emplace(*parse_switch_statement());
     case TokenType::KW_FUNC:
         return emplace(*parse_function_declaration(DeclarationType::Local));
@@ -1240,7 +1240,7 @@ StmtNode *Parser::parse_statement()
         {
             // TODO: Construct a new statement based on the call expression
             // The current implementation is bad for several reasons;
-            // - Soft memory leak (short term leak)
+            // - Soft memory leak
             // - Unscalable
             CallStmtNode *stmt = alloc->emplace<CallStmtNode>();
             stmt->callee = call->callee;
@@ -1254,7 +1254,7 @@ StmtNode *Parser::parse_statement()
             // Only binary expression allowed is an "assignment operation"
             // Which isn't a actually a real thing, it's just a quirk caused by how operators are classified
             // I guess it's beneficial in this case, although it will be HELL to debug in other cases
-            // Because it technically cannot evaluate to any value
+            // as it technically cannot evaluate to any value
             if (bin_expr->op.type != TokenType::OP_ASGN)
                 goto invalid_statement;
 

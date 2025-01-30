@@ -28,7 +28,7 @@ enum class TokenType
     KW_NEW,       // new
     KW_BREAK,     // break
     KW_CONTINUE,  // continue
-    KW_SWITCH,    // switch
+    KW_MATCH,     // switch
     KW_CASE,      // case
     KW_DEFAULT,   // default
     KW_AND,       // and

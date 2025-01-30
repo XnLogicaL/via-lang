@@ -4,8 +4,8 @@ local y = 20
 print(x + y)  ## Output: 30
 
 ## Example 2: Conditionals (if-else)
-local number = 5
-if number > 0 {
+local x = 5
+if x > 0 {
     print("Positive")
 } else {
     print("Negative or Zero")
@@ -21,13 +21,13 @@ while x > 3 {
     print("hello")
 }
 
-local func strict add(const a: Integral, const b: Integral) {
+local func strict add(a: integral, b: integral) {
     return a + b
 }
 
 print(add(4, 5) + add(68, 34683))
 
-local func strict factorial(const n: Number) {
+local func strict factorial(const n: number) {
     if n == 1 {
         return 1
     } elif n == 0 {
@@ -37,8 +37,8 @@ local func strict factorial(const n: Number) {
     return n * factorial(n - 1)
 }
 
-local func strict outer(const x: Integral) {
-    return func(strict const y: Integral) {
+local func outer(strict x: integral) {
+    return func(strict y: integral) {
         return x + y
     }
 }
@@ -47,17 +47,17 @@ local add5 = outer(5)
 print(add5(10))  ## Output: 15
 
 ## Example 9: Higher-Order Functions (Function as an Argument)
-local func strict apply(fun: Callable, x: Integral) {
+local func strict apply(fun: callable, x: integral) {
     return fun(x)
 }
 
-local func square(strict x: Integral) {
+local func square(strict x: integral) {
     return x * x
 }
 
 print(apply(square, 5))  ## Output: 25
 
-local multiply = func(strict x: Integral, strict y: Integral) {
+local multiply = func(strict x: integral, strict y: integral) {
     return x * y
 }
 
@@ -65,7 +65,7 @@ print(multiply(2))  ## Output: 6
 
 ## Example 11: Maps and Arrays (Mapping)
 local numbers = {1, 2, 3, 4}
-local doubled = table.map(numbers, func(strict x: Number) {
+local doubled = table.map(numbers, func(strict x: number) {
     return x * 2 
 })
 
@@ -78,15 +78,25 @@ print(arr[2])  ## Output: 10
 
 ## Example 14: Objects and Classes (Simple Class)
 struct Point {
-    property x: Number
-    property y: Number
+    property x: number
+    property y: number
 
-    property func strict __new(x: Number, y: Number) -> Nil {
+    meta func strict __new(x: number, y: number) -> nil {
         self.x = x
         self.y = y
     }
 
-    property func display() -> Nil {
-        printf("Point(x: %d, y: %d)", self.x, self.y)
+    meta func display() -> nil {
+        printf!("Point(x: %d, y: %d)", self.x, self.y)
     }
+}
+
+match x {
+    case 0 {
+        println("x is zero.")
+    }
+
+    default {
+        printf!()
+    } 
 }

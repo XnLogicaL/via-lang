@@ -132,7 +132,7 @@ Token Tokenizer::read_ident()
         {"func", TokenType::KW_FUNC},
         {"break", TokenType::KW_BREAK},
         {"continue", TokenType::KW_CONTINUE},
-        {"switch", TokenType::KW_SWITCH},
+        {"switch", TokenType::KW_MATCH},
         {"case", TokenType::KW_CASE},
         {"default", TokenType::KW_DEFAULT},
         {"new", TokenType::KW_NEW},
