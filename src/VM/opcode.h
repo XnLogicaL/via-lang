@@ -511,14 +511,6 @@ enum class OpCode
      */
     NEXTTABLE,
     /*
-     * opcode: LENSTRING
-     * Stores the length of the string in operand1 in operand0.
-     * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
-     */
-    LENSTRING,
-    /*
      * opcode: LENTABLE
      * Stores the length of the table in operand1 in operand0.
      * operand0: <dst :: Register>
@@ -526,22 +518,6 @@ enum class OpCode
      * operand2: <>
      */
     LENTABLE,
-    /*
-     * opcode: TYPEOF
-     * Stores the non-primitive type of operand1 in operand0.
-     * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
-     */
-    TYPEOF,
-    /*
-     * opcode: TYPE
-     * Stores the primitive type of operand1 in operand0.
-     * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
-     */
-    TYPE,
     /*
      * opcode: CONCAT
      * Concatenates operand0 with operand1 and stores the result in operand0.
@@ -582,6 +558,38 @@ enum class OpCode
      * operand2: <val :: Register>
      */
     SETSTRING,
+    /*
+     * opcode: LENSTRING
+     * Stores the length of the string in operand1 in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
+     * operand2: <>
+     */
+    LENSTRING,
+    /*
+     * opcode: LEN
+     * Stores the length of the object in operand1 in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
+     * operand2: <>
+     */
+    LEN,
+    /*
+     * opcode: TYPEOF
+     * Stores the non-primitive type of operand1 in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
+     * operand2: <>
+     */
+    TYPEOF,
+    /*
+     * opcode: TYPE
+     * Stores the primitive type of operand1 in operand0.
+     * operand0: <dst :: Register>
+     * operand1: <val :: Register>
+     * operand2: <>
+     */
+    TYPE,
 };
 
 } // namespace via

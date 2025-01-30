@@ -249,7 +249,7 @@ VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE TValue gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, const bool search_meta)
+VIA_FORCEINLINE TValue gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -341,7 +341,7 @@ VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue va
         if (V->G->symtable->size() >= offset)
             identifier = V->G->symtable->at(offset);
 
-        VIA_ASSERT_SILENT(false, std::format("Attempt to reassign undeclared identifier '{}'", identifier));
+        VIA_ASSERT_SILENT(false, std::format("Attempt to assign to undeclared variable '{}'", identifier));
     }
 
     StkAddr stack_address = V->stack->sbp + offset;
@@ -370,7 +370,7 @@ VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue va
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-VIA_FORCEINLINE TValue getargument(RTState *VIA_RESTRICT V, LocalId offset)
+VIA_FORCEINLINE TValue getargument(RTState *VIA_RESTRICT V, LocalId offset) noexcept
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
@@ -385,7 +385,7 @@ VIA_FORCEINLINE TValue getargument(RTState *VIA_RESTRICT V, LocalId offset)
 
 // Performs a native return operation, restores the stack and some other state
 // information.
-VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc)
+VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
 {
     std::vector<TValue> ret_values;
     // Restore state
@@ -469,7 +469,7 @@ VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, co
 }
 
 // Returns the primitive type of value <val>.
-VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v)
+VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v) noexcept
 {
     auto enum_name = ENUM_NAME(v.type);
     char *str = dupstring(std::string(enum_name));

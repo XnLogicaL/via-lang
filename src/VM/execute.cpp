@@ -1044,6 +1044,48 @@ dispatch:
         VM_NEXT();
     }
 
+    case OpCode::NEXTTABLE:
+    {
+        static std::unordered_map<void *, TableKey> next_table;
+
+        Operand dst = V->ip->operand1;
+        Operand valr = V->ip->operand2;
+
+        TValue *val = rgetregister(V->ralloc, valr.val_register);
+        void *ptr = topointer(V, *val);
+        TableKey key = 0;
+
+        // Look for the current key in next_table and increment it if found
+        auto it = next_table.find(ptr);
+        if (it != next_table.end())
+            key = ++it->second;
+        else
+            next_table[ptr] = 0;
+
+        auto table_map = val->val_table->data;
+        auto field_it = table_map.find(key);
+
+        if (field_it != table_map.end())
+            // If the key is found, use the corresponding value
+            rsetregister(V->ralloc, dst.val_register, field_it->second);
+        else // If not found, set the value to a default (e.g., nil)
+            rsetregister(V->ralloc, dst.val_register, TValue());
+
+        VM_NEXT();
+    }
+
+    case OpCode::LENTABLE:
+    {
+        Operand dst = V->ip->operand1;
+        Operand tblr = V->ip->operand2;
+
+        TValue *val = rgetregister(V->ralloc, tblr.val_register);
+        TNumber size = static_cast<TNumber>(val->val_table->data.size());
+
+        rsetregister(V->ralloc, dst.val_register, TValue(size));
+        VM_NEXT();
+    }
+
     case OpCode::LENSTRING:
     {
         Operand rdst = V->ip->operand1;
@@ -1053,6 +1095,34 @@ dispatch:
         TNumber len = static_cast<TNumber>(val->val_string->len);
 
         rsetregister(V->ralloc, rdst.val_register, TValue(len));
+        VM_NEXT();
+    }
+
+    case OpCode::GETSTRING:
+    {
+        Operand dst = V->ip->operand1;
+        Operand str = V->ip->operand2;
+        Operand idx = V->ip->operand3;
+
+        TValue *str_val = rgetregister(V->ralloc, str.val_register);
+        TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
+
+        VM_ASSERT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
+
+        size_t index = idx_val->val_number;
+        if (VIA_UNLIKELY(index > str_val->val_string->len))
+            rsetregister(V->ralloc, dst.val_register, TValue());
+    }
+
+    case OpCode::LEN:
+    {
+        Operand rdst = V->ip->operand1;
+        Operand objr = V->ip->operand2;
+
+        TValue *val = rgetregister(V->ralloc, objr.val_register);
+        TValue len = via::len(V, *val);
+
+        rsetregister(V->ralloc, rdst.val_register, len);
         VM_NEXT();
     }
 
@@ -1080,24 +1150,8 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETSTRING:
-    {
-        Operand dst = V->ip->operand1;
-        Operand str = V->ip->operand2;
-        Operand idx = V->ip->operand3;
-
-        TValue *str_val = rgetregister(V->ralloc, str.val_register);
-        TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
-
-        VM_ASSERT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
-
-        size_t index = idx_val->val_number;
-        if (VIA_UNLIKELY(index > str_val->val_string->len))
-            rsetregister(V->ralloc, dst.val_register, TValue());
-    }
-
     default:
-        setexitdata(V, 1, std::format("Unknown opcode {:x}", static_cast<uint8_t>(V->ip->op)));
+        setexitdata(V, 1, "Unknown opcode");
         VM_EXIT();
     }
 }
