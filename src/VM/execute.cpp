@@ -51,7 +51,19 @@
     { \
         if (!(cond)) \
         { \
-            setexitdata(V, 1, std::format("VM_ASSERT(): {}\n in file {}, line {}", (message), __FILE__, __LINE__)); \
+            setexitdata(V, 1, std::format("VM_ASSERT(): {}\n  file: {}\n  line: {}", (message), __FILE__, __LINE__)); \
+            VM_EXIT(); \
+        } \
+    }
+
+// Silent VM assertion
+// Terminates VM if the assertion fails
+// Does not contain additional information
+#define VM_ASSERT_SILENT(cond, message) \
+    { \
+        if (!(cond)) \
+        { \
+            setexitdata(V, 1, message); \
             VM_EXIT(); \
         } \
     }
@@ -124,7 +136,6 @@ dispatch:
     );
 #endif
 
-    // This is unlikely because the VM very rarely yields at all
     if (VIA_UNLIKELY(V->yield))
     {
         long long milliseconds = V->yieldfor / 1000;
@@ -133,8 +144,8 @@ dispatch:
         V->yield = false;
     }
 
-    // No LOAD protocol is present here
-    // This is because the LOAD protocol is invoked when VM_NEXT is called
+    // No LOAD protocol is present here.
+    // This is because the LOAD protocol is embedded into VM_NEXT.
     switch (V->ip->op)
     {
     case OpCode::NOP:
@@ -1107,7 +1118,7 @@ dispatch:
         TValue *str_val = rgetregister(V->ralloc, str.val_register);
         TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
 
-        VM_ASSERT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
+        VM_ASSERT_SILENT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
 
         size_t index = idx_val->val_number;
         if (VIA_UNLIKELY(index > str_val->val_string->len))
@@ -1151,8 +1162,9 @@ dispatch:
     }
 
     default:
-        setexitdata(V, 1, "Unknown opcode");
-        VM_EXIT();
+        // This should be unreachable, however, since some
+        // opcodes are yet to be implemented it is not marked as so.
+        VM_ASSERT(false, "Unknown opcode");
     }
 }
 

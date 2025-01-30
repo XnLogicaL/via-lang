@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "bytecode.h"
 #include "common.h"
 #include "gc.h"
 #include "instruction.h"
