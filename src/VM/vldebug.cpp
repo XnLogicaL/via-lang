@@ -33,7 +33,7 @@ void loaddebuglib(RTState *V)
     TTable *lib = new TTable();
 
     for (const auto &[ident, val] : debug_properties)
-        settableindex(V, lib, hashstring(V, ident), val);
+        settable(V, lib, hashstring(V, ident), val);
 
     freeze(V, lib);
     setglobal(V, "debug", TValue(lib));

@@ -62,11 +62,9 @@ namespace via
 // Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
 void execute(RTState *VIA_RESTRICT V)
 {
-    VIA_ASSERT(V->tstate != ThreadState::RUNNING, "execute() called on running thread (tstate=RUNNING)");
-    VIA_ASSERT(V->tstate != ThreadState::DEAD, "execute() called on dead thread (tstate=DEAD)");
+    VIA_ASSERT(V->tstate == ThreadState::PAUSED, "execute() must be called on paused thread");
     V->tstate = ThreadState::RUNNING;
 
-    // Not necessary, but provides clarity
     VM_DISPATCH();
 
 dispatch:
@@ -950,108 +948,6 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JUMPLABEL:
-    {
-        Operand label = V->ip->operand1;
-        auto it = V->labels->find(std::string_view(label.val_string));
-        // +1 Because if we jump to the exact position of the label, the VM will interpret it as
-        // a declaration, not a jump
-        V->ip = it->second + 1;
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIF:
-    case OpCode::JUMPLABELIFNOT:
-    {
-        Operand valr = V->ip->operand1;
-        Operand label = V->ip->operand2;
-
-        auto it = V->labels->find(std::string_view(label.val_string));
-        TValue *val = rgetregister(V->ralloc, valr.val_register);
-        bool cond = val->val_number == 0;
-        // Jump if the condition is met
-        if (V->ip->op == OpCode::JUMPLABELIFNOT ? cond : !cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIFEQUAL:
-    case OpCode::JUMPLABELIFNOTEQUAL:
-    {
-        Operand lhsr = V->ip->operand1;
-        Operand rhsr = V->ip->operand2;
-        Operand label = V->ip->operand3;
-
-        auto it = V->labels->find(LabelId(label.val_string));
-        bool cond = compareregisters(V, lhsr.val_register, rhsr.val_register);
-        // Jump if the condition is met
-        if (V->ip->op == OpCode::JUMPLABELIFEQUAL ? cond : !cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIFLESS:
-    {
-        Operand lhsr = V->ip->operand1;
-        Operand rhsr = V->ip->operand2;
-        Operand label = V->ip->operand3;
-
-        auto it = V->labels->find(std::string_view(label.val_string));
-        bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number < rgetregister(V->ralloc, rhsr.val_register)->val_number;
-        // Jump if the condition is met
-        if (cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIFGREATER:
-    {
-        Operand lhsr = V->ip->operand1;
-        Operand rhsr = V->ip->operand2;
-        Operand label = V->ip->operand3;
-
-        auto it = V->labels->find(std::string_view(label.val_string));
-        bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number > rgetregister(V->ralloc, rhsr.val_register)->val_number;
-        // Jump if the condition is met
-        if (cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIFLESSOREQUAL:
-    {
-        Operand lhsr = V->ip->operand1;
-        Operand rhsr = V->ip->operand2;
-        Operand label = V->ip->operand3;
-
-        auto it = V->labels->find(std::string_view(label.val_string));
-        bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number <= rgetregister(V->ralloc, rhsr.val_register)->val_number;
-        // Jump if the condition is met
-        if (cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
-    case OpCode::JUMPLABELIFGREATEROREQUAL:
-    {
-        Operand lhsr = V->ip->operand1;
-        Operand rhsr = V->ip->operand2;
-        Operand label = V->ip->operand3;
-
-        auto it = V->labels->find(std::string_view(label.val_string));
-        bool cond = rgetregister(V->ralloc, lhsr.val_register)->val_number >= rgetregister(V->ralloc, rhsr.val_register)->val_number;
-        // Jump if the condition is met
-        if (cond)
-            V->ip = it->second + 1;
-
-        VM_NEXT();
-    }
-
     case OpCode::CALL:
     {
         Operand rfn = V->ip->operand1;
@@ -1108,19 +1004,6 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LABEL:
-    {
-        Operand id = V->ip->operand1;
-        LabelId key = id.val_string;
-        Instruction *instr = V->ip;
-
-        auto it = V->labels->find(key);
-        if (it == V->labels->end())
-            (*V->labels)[key] = instr;
-
-        VM_DISPATCH();
-    }
-
     case OpCode::GETTABLE:
     {
         Operand rdst = V->ip->operand1;
@@ -1157,7 +1040,7 @@ dispatch:
 
         // Set the table index
         TTable *T = tbl.val_table;
-        settableindex(V, T, key, val);
+        settable(V, T, key, val);
         VM_NEXT();
     }
 
@@ -1182,7 +1065,6 @@ dispatch:
         TValue ty = type(V, *val);
 
         rsetregister(V->ralloc, rdst.val_register, ty);
-
         VM_NEXT();
     }
 
@@ -1195,7 +1077,6 @@ dispatch:
         TValue type = typeofv(V, *val);
 
         rsetregister(V->ralloc, rdst.val_register, type);
-
         VM_NEXT();
     }
 

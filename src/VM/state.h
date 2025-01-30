@@ -29,7 +29,6 @@ struct RAState;
 struct TString;
 
 // Type aliases for convenience, not much else
-using LblMap = HashMap<LabelId, Instruction *>;
 using StrTable = HashMap<Hash, TString *>;
 using GlbTable = HashMap<kGlobId, TValue>;
 using kTable = std::vector<TValue>;
@@ -79,7 +78,6 @@ struct alignas(64) RTState
     // VM execution state
     TStack *stack;   // Pointer to VM stack
     RAState *ralloc; // Pointer to VM register allocator state
-    LblMap *labels;  // Pointer to VM label address table (LAT)
     GCState *gc;     // Pointer to VM garbage collector state
 
     // Call and frame management

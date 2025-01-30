@@ -274,7 +274,7 @@ void loadtablelib(RTState *V)
     TTable *table = new TTable();
 
     for (const auto &[key, val] : table_properties)
-        settableindex(V, table, hashstring(V, key), val);
+        settable(V, table, hashstring(V, key), val);
 
     freeze(V, table);
     setglobal(V, "table", TValue(table));

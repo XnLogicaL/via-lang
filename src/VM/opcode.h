@@ -441,72 +441,6 @@ enum class OpCode
      */
     JUMPIFGREATEROREQUAL,
     /*
-     * opcode: JUMPLABEL
-     * Unconditionally jumps to label in operand0. Saves state.
-     * operand0: <lbl :: Identifier>
-     * operand1: <>
-     * operand2: <>
-     */
-    JUMPLABEL,
-    /*
-     * opcode: JUMPLABELIFNOT
-     * Jumps to label in operand1 if the value in operand0 is not falsy.
-     * Saves state. operand0: <lhs :: Register> operand1: <lbl :: Identifier>
-     * operand2: <>
-     */
-    JUMPLABELIFNOT,
-    /*
-     * opcode: JUMPLABELIF
-     * Jumps to label in operand1 if the value in operand0 is falsy. Saves
-     * state. operand0: <lhs :: Register> operand1: <lbl :: Identifier> operand2:
-     * <>
-     */
-    JUMPLABELIF,
-    /*
-     * opcode: JUMPLABELIFEQUAL
-     * Jumps to label in operand2 if the value in operand0 is equal to the value
-     * in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs ::
-     * Register> operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFEQUAL,
-    /*
-     * opcode: JUMPLABELIFNOTEQUAL
-     * Jumps to label in operand2 if the value in operand0 is not equal to the
-     * value in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs
-     * :: Register> operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFNOTEQUAL,
-    /*
-     * opcode: JUMPLABELT
-     * Jumps to label in operand2 if the value in operand0 is less than the value
-     * in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs ::
-     * Register> operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFLESS,
-    /*
-     * opcode: JUMPLABELIFGREATER
-     * Jumps to label in operand2 if the value in operand0 is greater than the
-     * value in operand1. Saves state. operand0: <lhs :: Register> operand1: <rhs
-     * :: Register> operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFGREATER,
-    /*
-     * opcode: JUMPLABELIFLESSOREQUAL
-     * Jumps to label in operand2 if the value in operand0 is less than or equal
-     * to the value in operand1. Saves state. operand0: <lhs :: Register>
-     * operand1: <rhs :: Register>
-     * operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFLESSOREQUAL,
-    /*
-     * opcode: JUMPLABELIFGREATEROREQUAL
-     * Jumps to label in operand2 if the value in operand0 is greater than or
-     * equal to the value in operand1. Saves state. operand0: <lhs :: Register>
-     * operand1: <rhs :: Register>
-     * operand2: <lbl :: Identifier>
-     */
-    JUMPLABELIFGREATEROREQUAL,
-    /*
      * opcode: CALL
      * Calls the value in operand0 with arg count in operand1. Works for all callable types.
      * operand0: <callee :: Register>
@@ -551,12 +485,6 @@ enum class OpCode
      * deduced exit message. operand0: <code :: Number> operand1: <> operand2: <>
      */
     EXIT,
-    /*
-     * opcode: LABEL
-     * Declares a label with identifier operand0. Preprocessed opcode. Terminated
-     * by opcode NOP. operand0: <lbl :: Identifier> operand1: <> operand2: <>
-     */
-    LABEL,
     /*
      * opcode: GETTABLE
      * Loads the index operand2 of table operand1 into operand0.

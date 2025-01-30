@@ -258,7 +258,7 @@ void loadmathlib(RTState *V)
     for (auto it : math_properties)
     {
         TableKey key = hashstring(V, it.first);
-        settableindex(V, lib, key, it.second);
+        settable(V, lib, key, it.second);
     }
 
     freeze(V, lib);

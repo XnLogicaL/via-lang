@@ -34,9 +34,7 @@ VIA_MAXOPTIMIZE bool isvalidjmpaddr(RTState *VIA_RESTRICT V, Instruction *VIA_RE
 
 // Sets register <reg> to the given value <val>.
 // Wrapper for `rsetregister`.
-template<typename T = TValue>
-    requires(!std::is_pointer_v<T> && std::same_as<T, TValue>)
-VIA_MAXOPTIMIZE void setregister(RTState *VIA_RESTRICT V, RegId reg, T val) noexcept
+VIA_MAXOPTIMIZE void setregister(RTState *VIA_RESTRICT V, RegId reg, TValue val) noexcept
 {
     rsetregister(V->ralloc, reg, val);
 }
@@ -47,6 +45,63 @@ VIA_MAXOPTIMIZE TValue *getregister(RTState *VIA_RESTRICT V, RegId reg) noexcept
 {
     return rgetregister(V->ralloc, reg);
 }
+
+// Returns the underlying pointer of a data type if present, nullptr if not.
+VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue val) noexcept
+{
+    switch (val.type)
+    {
+    case ValueType::CFunction:
+        return val.val_cfunction;
+    case ValueType::Function:
+        return val.val_function;
+    case ValueType::Table:
+        return val.val_table;
+    case ValueType::String:
+        return val.val_string;
+    default:
+        return nullptr;
+    }
+}
+
+// Returns whether if <val> has a heap component.
+VIA_FORCEINLINE bool isheap(RTState *VIA_RESTRICT V, TValue val) noexcept
+{
+    return topointer(V, val) != nullptr;
+}
+
+// Compares 2 values and returns whether if they are equal.
+// Optimized for maximum performance.
+VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue v0, TValue v1) noexcept
+{
+    // Early return; if types aren't the same they cannot be equivalent
+    if (v0.type != v1.type)
+        return false;
+
+    // Optimized for most efficient branching by sorting the cases from most common to least
+    switch (v0.type)
+    {
+    case ValueType::Number:
+        return v0.val_number == v1.val_number;
+    case ValueType::Bool:
+        return v0.val_boolean == v1.val_boolean;
+    case ValueType::Nil:
+        // Nil values are always equal
+        return true;
+    case ValueType::Pointer:
+        return v0.val_pointer == v1.val_pointer;
+        // Even though values with a heap component are considered unique,
+        // strings are an exception due to well... common sense,
+        // eg. you would compare strings with each other but not tables.
+    case ValueType::String:
+        return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
+    default:
+        return topointer(V, v0) == topointer(V, v1);
+    }
+
+    VIA_UNREACHABLE();
+    return false;
+};
 
 // Compares the values of two registers and returns whether if they are
 // equivalent. Optimized for maximum performance.
@@ -66,64 +121,8 @@ VIA_MAXOPTIMIZE bool compareregisters(RTState *VIA_RESTRICT V, RegId reg0, RegId
     if (v0.type != v1.type)
         return false;
 
-    // Common types first to improve branching efficiency
-    switch (v0.type)
-    {
-    case ValueType::Number:
-        return v0.val_number == v1.val_number;
-    case ValueType::Bool:
-        return v0.val_boolean == v1.val_boolean;
-    case ValueType::String:
-        if (v0.val_string->ptr && v1.val_string->ptr)
-        {
-            if (v0.val_string->len != v1.val_string->len)
-                return false;
-            return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
-        }
-        return v0.val_string->ptr == v1.val_string->ptr;
-    case ValueType::Nil:
-        // Nil values are always equal
-        return true;
-    case ValueType::Pointer:
-        return v0.val_pointer == v1.val_pointer;
-    default:
-        // Unique objects (CFunction, Function, Table, etc.) are never equal
-        return false;
-    }
-
-    VIA_UNREACHABLE();
-    return false;
+    return compare(V, v0, v1);
 }
-
-// Compares 2 values and returns whether if they are equal.
-// Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT, TValue v0, TValue v1) noexcept
-{
-    // Early return; if types aren't the same they cannot be equivalent
-    if (v0.type != v1.type)
-        return false;
-
-    switch (v0.type)
-    {
-    case ValueType::Bool:
-        return v0.val_boolean == v1.val_boolean;
-    case ValueType::Number:
-        return v0.val_number == v1.val_number;
-    case ValueType::Nil:
-        // Nil values are always equal
-        return true;
-    case ValueType::String:
-        return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
-    case ValueType::Pointer:
-        return v0.val_pointer == v1.val_pointer;
-    default:
-        // Unique objects (such as table) are never equal
-        return false;
-    }
-
-    VIA_UNREACHABLE();
-    return false;
-};
 
 // Pushes a value onto the stack.
 // Wrapper for `tspush`. Copies the value.
@@ -139,11 +138,9 @@ VIA_MAXOPTIMIZE TValue popval(RTState *VIA_RESTRICT V)
     return tspop(V->stack);
 }
 
-// Returns a value that contains a String that represents the stringified
+// Returns a value that contains a String that represents the string-ified
 // version of <val>. The return value is guaranteed to be a String type.
-//! The only purpose of this function being inline is to be defined in a header
-//! file, otherwise this function cannot be inlined due to recursive calls.
-VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue val) noexcept
 {
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
@@ -157,14 +154,12 @@ VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
     {
         std::string str = std::to_string(val.val_number);
         TString *tstr = new TString(V, str.c_str());
-        val.val_string = tstr;
-        break;
+        return TValue(tstr);
     }
     case ValueType::Bool:
     {
         TString *str = new TString(V, val.val_boolean ? "true" : "false");
-        val.val_string = str;
-        break;
+        return TValue(str);
     }
     case ValueType::Table:
     {
@@ -181,36 +176,36 @@ VIA_INLINE TValue &tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
         str += "}";
 
-        val.val_string = new TString(V, str.c_str());
-        break;
+        TString *tstr = new TString(V, str.c_str());
+        return TValue(tstr);
     }
     case ValueType::Function:
     {
         const void *faddr = val.val_function;
-        TString *str = new TString(V, std::format("<function@{}>", faddr).c_str());
-        val.val_string = str;
-        break;
+        std::string str = std::format("<function@{}>", faddr);
+        TString *tstr = new TString(V, str.c_str());
+        return TValue(tstr);
     }
     case ValueType::CFunction:
     {
         // This has to be explicitly casted because function pointers be weird
-        const void *cfaddr = reinterpret_cast<const void *>(val.val_cfunction);
-        TString *str = new TString(V, std::format("<cfunction@{}>", cfaddr).c_str());
-        val.val_string = str;
-        break;
+        const void *cfaddr = val.val_cfunction;
+        std::string str = std::format("<cfunction@{}>", cfaddr);
+        TString *tstr = new TString(V, str.c_str());
+        return TValue(tstr);
     }
     default:
-        val.val_string = new TString(V, "nil");
-        break;
+        TString *tstr = new TString(V, "nil");
+        return TValue(tstr);
     }
 
-    val.type = ValueType::String;
-    return val;
+    VIA_UNREACHABLE();
+    return TValue();
 }
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
-VIA_FORCEINLINE TValue &tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue val) noexcept
 {
     // If the TValue union is tagged as Bool type but it
     // doesn't actually contain a boolean value, that is undefined behavior
@@ -223,20 +218,18 @@ VIA_FORCEINLINE TValue &tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
     // Nil and Monostate is the only falsy type
     case ValueType::Nil:
     case ValueType::Monostate:
-        val.val_boolean = false;
-        break;
+        return TValue(false);
     default:
-        val.val_boolean = true;
-        break;
+        return TValue(true);
     }
 
-    val.type = ValueType::Bool;
-    return val;
+    VIA_UNREACHABLE();
+    return TValue();
 }
 
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
-VIA_FORCEINLINE TValue &tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     if (checknumber(V, val))
         return val;
@@ -244,22 +237,19 @@ VIA_FORCEINLINE TValue &tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
     switch (val.type)
     {
     case ValueType::String:
-        val.val_number = std::stod(val.val_string->ptr);
-        break;
+        return TValue(std::stod(val.val_string->ptr));
     case ValueType::Bool:
-        val.val_number = val.val_boolean ? 1.0f : 0.0f;
-        break;
+        return TValue(val.val_boolean ? 1.0f : 0.0f);
     default:
-        return val;
+        break;
     }
 
-    val.type = ValueType::Number;
-    return val;
+    return TValue();
 }
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE TValue gettableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, const bool search_meta)
+VIA_FORCEINLINE TValue gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, const bool search_meta)
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -267,7 +257,7 @@ VIA_FORCEINLINE TValue gettableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRI
     else if (search_meta && tbl->meta)
         // Disable metatable search to prevent chain searching
         // Which can cause infinite loops, crashes, and other bugs
-        return gettableindex(V, tbl->meta, key, false);
+        return gettable(V, tbl->meta, key, false);
 
     // This has to be a pointer because we don't know if the value is a
     // non-pointer primitive type
@@ -275,11 +265,11 @@ VIA_FORCEINLINE TValue gettableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRI
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-VIA_FORCEINLINE void settableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue val) noexcept
+VIA_FORCEINLINE void settable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue val) noexcept
 {
     if (checknil(V, val))
     {
-        TValue tbl_val = gettableindex(V, tbl, key, false);
+        TValue tbl_val = gettable(V, tbl, key, false);
 
         if (!checknil(V, val))
             tbl->data.erase(key);
@@ -289,50 +279,36 @@ VIA_FORCEINLINE void settableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
-VIA_FORCEINLINE TValue getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCode op) noexcept
+VIA_FORCEINLINE TValue getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCode op)
 {
     if (!checktable(V, val))
         return TValue(V);
 
-#define GET_METHOD(id) (gettableindex(V, val.val_table, hashstring(V, id), true))
+#define GET_METHOD(id) (gettable(V, val.val_table, hashstring(V, id), true))
     switch (op)
     {
     case OpCode::ADD:
-    case OpCode::ADDK:
-    case OpCode::ADDI:
         return GET_METHOD("__add");
     case OpCode::SUB:
-    case OpCode::SUBK:
-    case OpCode::SUBI:
         return GET_METHOD("__sub");
     case OpCode::MUL:
-    case OpCode::MULK:
-    case OpCode::MULI:
         return GET_METHOD("__mul");
     case OpCode::DIV:
-    case OpCode::DIVK:
-    case OpCode::DIVI:
         return GET_METHOD("__div");
     case OpCode::POW:
-    case OpCode::POWK:
-    case OpCode::POWI:
         return GET_METHOD("__pow");
     case OpCode::MOD:
-    case OpCode::MODK:
-    case OpCode::MODI:
         return GET_METHOD("__mod");
     case OpCode::NEG:
-    case OpCode::NEGK:
         return GET_METHOD("__neg");
     case OpCode::INCREMENT:
         return GET_METHOD("__inc");
     case OpCode::DECREMENT:
         return GET_METHOD("__dec");
     case OpCode::CONCAT:
-    case OpCode::CONCATK:
-    case OpCode::CONCATI:
         return GET_METHOD("__con");
     default:
+        VIA_ASSERT(false, "getmetamethod(): Unknown opcode");
         break;
     }
 
@@ -476,7 +452,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
 // Calls a table method.
 VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
 {
-    TValue method = gettableindex(V, tbl, key, true);
+    TValue method = gettable(V, tbl, key, true);
     if (!checkcallable(V, method))
     {
         std::string err = std::format("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
@@ -530,13 +506,13 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
     else if (checktable(V, val))
     {
         TableKey mhash = hashstring(V, "__len");
-        TValue mmlen = gettableindex(V, val.val_table, mhash, true);
+        TValue mmlen = gettable(V, val.val_table, mhash, true);
 
         if (checknil(V, mmlen))
             return TValue(static_cast<TNumber>(val.val_table->data.size()));
 
         call(V, mmlen, 1);
-        return tspop(V->stack);
+        return popval(V);
     }
 
     return TValue();
@@ -546,7 +522,7 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
 // in table.
 VIA_FORCEINLINE TValue loadtableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, RegId reg) noexcept
 {
-    TValue val = gettableindex(V, tbl, key, true);
+    TValue val = gettable(V, tbl, key, true);
     setregister(V, reg, val);
     return val;
 }
@@ -559,7 +535,7 @@ VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue val) noexcept
     if (checktable(V, val))
     {
         TTable *tbl = val.val_table;
-        TValue ty = gettableindex(V, tbl, hashstring(V, "__type"), true);
+        TValue ty = gettable(V, tbl, hashstring(V, "__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
         if (checknil(V, ty))
@@ -613,7 +589,7 @@ VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT 
     return TValue();
 }
 
-// Converts an Operand objecti into a TValue object.
+// Converts an Operand object into a TValue object.
 VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operand)
 {
     switch (operand.type)
@@ -667,11 +643,30 @@ VIA_FORCEINLINE void restorestate(RTState *VIA_RESTRICT V) noexcept
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
 VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, OpCode op)
 {
-    VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+    VIA_ASSERT(checknumber(V, rhs), "arith(): rhs must be a number");
 
     if (checknumber(V, lhs))
     {
-        // TODO: Implement arithmetic logic
+        switch (op)
+        {
+        case OpCode::ADD:
+            return TValue(lhs.val_number + rhs.val_number);
+        case OpCode::SUB:
+            return TValue(lhs.val_number - rhs.val_number);
+        case OpCode::MUL:
+            return TValue(lhs.val_number * rhs.val_number);
+        case OpCode::DIV:
+            VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+            return TValue(lhs.val_number / rhs.val_number);
+        case OpCode::POW:
+            return TValue(std::pow(lhs.val_number, rhs.val_number));
+        case OpCode::MOD:
+            return TValue(std::fmod(lhs.val_number, rhs.val_number));
+        default:
+            VIA_ASSERT(false, "arith(): Unknown opcode");
+            break;
+        }
+
         return TValue();
     }
     else if (checktable(V, lhs))
@@ -680,22 +675,43 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
         pushval(V, lhs); // self
         pushval(V, rhs); // other
         call(V, metamethod, 2);
-        return tspop(V->stack);
+        return popval(V);
     }
 
-    setexitdata(V, 1, "Invalid arithmetic operator");
-    V->abrt = true;
+    VIA_ASSERT(false, "arith(): Invalid lhs operand");
     return TValue();
 }
 
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
 VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, OpCode op)
 {
-    VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
-
     if (checknumber(V, *lhs))
     {
-        // TODO: Implement arithmetic logic
+        switch (op)
+        {
+        case OpCode::ADD:
+            lhs->val_number += rhs.val_number;
+            break;
+        case OpCode::SUB:
+            lhs->val_number -= rhs.val_number;
+            break;
+        case OpCode::MUL:
+            lhs->val_number *= rhs.val_number;
+            break;
+        case OpCode::DIV:
+            VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+            lhs->val_number /= rhs.val_number;
+            break;
+        case OpCode::POW:
+            lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
+            break;
+        case OpCode::MOD:
+            lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
+            break;
+        default:
+            VIA_ASSERT(false, "iarith(): Unknown opcode");
+            break;
+        }
     }
     else if (checktable(V, *lhs))
     {
@@ -703,11 +719,10 @@ VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, Op
         pushval(V, *lhs); // self
         pushval(V, rhs);  // other
         call(V, metamethod, 2);
-        *lhs = tspop(V->stack);
+        *lhs = popval(V);
     }
 
-    setexitdata(V, 1, "Invalid arithmetic operator");
-    V->abrt = true;
+    VIA_ASSERT(false, "iarith(): Invalid lhs operand");
 }
 
 } // namespace via

@@ -59,7 +59,7 @@ void loadrandlib(RTState *V)
     for (auto it : rand_properties)
     {
         TableKey key = hashstring(V, it.first);
-        settableindex(V, lib, key, it.second);
+        settable(V, lib, key, it.second);
     }
 
     freeze(V, lib);

@@ -16,7 +16,6 @@ RTState::RTState(GState *G, ProgramData &program)
     , ihp(nullptr)
     , stack(new TStack())
     , ralloc(new RAState())
-    , labels(new LblMap())
     , gc(new GCState())
     , frame(nullptr)
     , argc(0)
@@ -37,18 +36,6 @@ RTState::RTState(GState *G, ProgramData &program)
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
     TFunction *main = new TFunction(this, VIA_MAIN_ID, this->ip, this->frame, {}, false, false);
     nativecall(this, main, 0);
-
-    // Initialize labels
-    Instruction *ip = this->ip;
-    for (Instruction instr : program.bytecode->get())
-    {
-        if (instr.op == OpCode::LABEL)
-        {
-            Operand ident = instr.operand1;
-            (*this->labels)[LabelId(ident.val_string)] = ip;
-        }
-        ++ip;
-    }
 }
 
 void RTState::loadinstructions(BytecodeHolder &bytecode)
@@ -104,7 +91,6 @@ RTState::~RTState()
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately
     delete[] this->ihp;
-    delete this->labels;
 }
 
 } // namespace via

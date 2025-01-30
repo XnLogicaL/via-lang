@@ -13,7 +13,7 @@ void pusharguments(RTState *V, std::vector<TValue> args)
 
 TValue quickindex(RTState *V, TTable *T, const char *K)
 {
-    return gettableindex(V, T, hashstring(V, K), false);
+    return gettable(V, T, hashstring(V, K), false);
 }
 
 } // namespace via::lib
