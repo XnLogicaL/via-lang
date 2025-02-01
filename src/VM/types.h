@@ -42,7 +42,9 @@ struct TValue
     };
 
     // Stack value constructors
-    explicit TValue();
+    TValue();
+    TValue(const TValue &);
+
     explicit TValue(TNumber);
     explicit TValue(TBool);
     explicit TValue(TPointer);
@@ -50,17 +52,6 @@ struct TValue
     explicit TValue(TFunction *);
     explicit TValue(TCFunction *);
     explicit TValue(TTable *);
-
-    // Heap value constructors
-    explicit TValue(RTState *);
-    explicit TValue(RTState *, TNumber);
-    explicit TValue(RTState *, TBool);
-    explicit TValue(RTState *, TPointer);
-    explicit TValue(RTState *, TString *);
-    explicit TValue(RTState *, TFunction *);
-    explicit TValue(RTState *, TCFunction *);
-    explicit TValue(RTState *, TTable *);
-    explicit TValue(RTState *, TValue);
 
     ~TValue();
 };

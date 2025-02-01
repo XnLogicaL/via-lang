@@ -49,12 +49,13 @@ struct Instruction
     Operand operand2;
     Operand operand3;
     Chunk *chunk;
+    size_t pos;
 
     Instruction();
-    Instruction(OpCode, std::vector<Operand>, Chunk *);
+    Instruction(OpCode, std::vector<Operand>, Chunk *, size_t);
 };
 
 std::string to_string(Operand);
-std::string to_string(Instruction);
+std::string to_string(ProgramData &, Instruction);
 
 } // namespace via

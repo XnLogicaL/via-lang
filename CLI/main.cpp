@@ -1,10 +1,8 @@
 /* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#include "common.h"
 #include "cmdparser.hpp"
 #include "linenoise.hpp"
 #include "fileio.hpp"
-#include "encoder.h"
 #include "repl.h"
 #include "via.h"
 
@@ -57,7 +55,7 @@ void handle_compile(const std::vector<std::string> &args)
     compiler.generate();
 
     for (Instruction instr : program.bytecode->get())
-        std::cout << to_string(instr) << "\n";
+        std::cout << via::to_string(program, instr) << "\n";
 }
 
 void handle_run(const std::vector<std::string> &args)
@@ -82,14 +80,7 @@ void handle_repl(const std::vector<std::string> &args)
     std::cout << REPL_WELCOME;
 
     REPLEngine engine;
-    bool print_bytecode = std::any_of(
-        args.begin(),
-        args.end(),
-        [](const std::string &arg)
-        {
-            return arg == "-bc" || arg == "--bytecode";
-        }
-    );
+    bool print_bytecode = std::any_of(args.begin(), args.end(), [](const std::string &arg) { return arg == "-bc" || arg == "--bytecode"; });
 
     while (true)
     {

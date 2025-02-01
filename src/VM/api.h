@@ -139,7 +139,7 @@ VIA_MAXOPTIMIZE TValue popval(RTState *VIA_RESTRICT V)
 
 // Returns a value that contains a String that represents the string-ified
 // version of <val>. The return value is guaranteed to be a String type.
-VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
@@ -204,7 +204,7 @@ VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue val) noexcept
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
-VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     // If the TValue union is tagged as Bool type but it
     // doesn't actually contain a boolean value, that is undefined behavior
@@ -324,8 +324,7 @@ VIA_FORCEINLINE TValue getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcep
         return TValue(V);
 
     StkAddr stack_address = V->stack->sbp + offset;
-    StkVal val = *stack_address; //! BIG WARNING: This is UB without bound checks!!!
-
+    StkVal &val = *stack_address; //! BIG WARNING: This is UB without bound checks!!!
     return val;
 }
 
@@ -378,7 +377,7 @@ VIA_FORCEINLINE TValue getargument(RTState *VIA_RESTRICT V, LocalId offset) noex
     // Calculate the stack position of the argument
     StkPos stack_offset = V->ssp + V->argc - 1 - offset;
     // Retrieve stack value
-    StkVal val = V->stack->sbp[stack_offset];
+    StkVal &val = V->stack->sbp[stack_offset];
     return val;
 }
 
@@ -394,7 +393,7 @@ VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
     // Save return values
     for (CallArgc i = 0; i < retc; i++)
     {
-        TValue ret_val = popval(V);
+        StkVal ret_val = popval(V);
         ret_values.push_back(ret_val);
     }
 
@@ -515,15 +514,6 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
     }
 
     return TValue();
-}
-
-// Loads the value of key <key> in table <tbl> into register <reg>, if present
-// in table.
-VIA_FORCEINLINE TValue loadtableindex(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, RegId reg) noexcept
-{
-    TValue val = gettable(V, tbl, key, true);
-    setregister(V, reg, val);
-    return val;
 }
 
 // Returns the complex type of value <val>.

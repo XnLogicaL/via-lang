@@ -10,8 +10,8 @@ void DeadCodeEliminationOptimizationPass::apply(Generator &) {}
 bool DeadCodeEliminationOptimizationPass::always_true(Generator &gen, IfStmtNode if_stmt)
 {
     // Attempt to fold the expression, if not already
-    if (!std::get_if<LiteralExprNode>(&if_stmt.condition->expr) && gen.is_constexpr(*if_stmt.condition, 0))
-        gen.evaluate_constexpr(if_stmt.condition);
+    if (!std::get_if<LiteralExprNode>(&if_stmt.condition->expr) && gen.is_constexpr(*if_stmt.condition))
+        gen.evaluate_constexpr(*if_stmt.condition);
 
     // Check if the condition is a constant expression
     if (LiteralExprNode *lit_cond_expr = std::get_if<LiteralExprNode>(&if_stmt.condition->expr))

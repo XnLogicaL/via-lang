@@ -95,7 +95,7 @@ Pragma Parser::parse_pragma()
 {
     bool failed_inner = false;
 
-    consume();
+    consume(); // Consume '@'
 
     if (!is_type(TokenType::IDENTIFIER))
     {
@@ -1190,48 +1190,64 @@ ScopeStmtNode *Parser::parse_scope_statement()
 
 StmtNode *Parser::parse_statement()
 {
-#define emplace(expr) alloc->emplace<StmtNode>(expr)
+#define EMPLACE_AND_RETURN(expr) \
+    { \
+        StmtNode *stmt = alloc->emplace<StmtNode>(expr); \
+        if (has_pragma) \
+        { \
+            this->has_pragma = false; \
+            stmt->pragma = pragma; \
+        } \
+        return stmt; \
+    }
 
+parse:
     switch (peek().type)
     {
     case TokenType::EOF_:
         return nullptr;
+    case TokenType::AT:
+    {
+        this->pragma = parse_pragma();
+        this->has_pragma = true;
+        goto parse;
+    }
     case TokenType::KW_GLOBAL:
     case TokenType::KW_LOCAL:
     {
         DeclarationType decl_type = get_decl_type(peek().type);
 
         if (is_type(TokenType::KW_FUNC, 1))
-            return emplace(*parse_function_declaration(decl_type));
+            EMPLACE_AND_RETURN(*parse_function_declaration(decl_type))
         else if (is_type(TokenType::KW_STRUCT, 1))
-            return emplace(*parse_struct_declaration(decl_type));
+            EMPLACE_AND_RETURN(*parse_struct_declaration(decl_type));
 
-        return emplace(*parse_var_declaration());
+        EMPLACE_AND_RETURN(*parse_var_declaration());
     }
     case TokenType::KW_RETURN:
-        return emplace(*parse_return_statement());
+        EMPLACE_AND_RETURN(*parse_return_statement());
     case TokenType::KW_WHILE:
-        return emplace(*parse_while_statement());
+        EMPLACE_AND_RETURN(*parse_while_statement());
     case TokenType::KW_FOR:
-        return emplace(*parse_for_statement());
+        EMPLACE_AND_RETURN(*parse_for_statement());
     case TokenType::KW_IF:
-        return emplace(*parse_if_statement());
+        EMPLACE_AND_RETURN(*parse_if_statement());
     case TokenType::KW_MATCH:
-        return emplace(*parse_switch_statement());
+        EMPLACE_AND_RETURN(*parse_switch_statement());
     case TokenType::KW_FUNC:
-        return emplace(*parse_function_declaration(DeclarationType::Local));
+        EMPLACE_AND_RETURN(*parse_function_declaration(DeclarationType::Local));
     case TokenType::KW_STRUCT:
-        return emplace(*parse_struct_declaration(DeclarationType::Local));
+        EMPLACE_AND_RETURN(*parse_struct_declaration(DeclarationType::Local));
     case TokenType::KW_NAMESPACE:
         // TODO: Self explanatory...
         break;
     case TokenType::KW_BREAK:
-        return emplace(*alloc->emplace<BreakStmtNode>());
+        EMPLACE_AND_RETURN(*alloc->emplace<BreakStmtNode>());
     case TokenType::KW_CONTINUE:
-        return emplace(*alloc->emplace<ContinueStmtNode>());
+        EMPLACE_AND_RETURN(*alloc->emplace<ContinueStmtNode>());
     case TokenType::KW_DO:
         consume();
-        return emplace(*parse_scope_statement());
+        EMPLACE_AND_RETURN(*parse_scope_statement());
     default:
     {
         ExprNode *expr = parse_expr();
@@ -1242,12 +1258,12 @@ StmtNode *Parser::parse_statement()
             // The current implementation is bad for several reasons;
             // - Soft memory leak
             // - Unscalable
-            CallStmtNode *stmt = alloc->emplace<CallStmtNode>();
-            stmt->callee = call->callee;
-            stmt->args = call->args;
-            stmt->generics = call->type_args;
+            CallStmtNode *call_stmt = alloc->emplace<CallStmtNode>();
+            call_stmt->callee = call->callee;
+            call_stmt->args = call->args;
+            call_stmt->generics = call->type_args;
 
-            return emplace(*stmt);
+            EMPLACE_AND_RETURN(*call_stmt);
         }
         else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr->expr))
         {
@@ -1262,7 +1278,7 @@ StmtNode *Parser::parse_statement()
             asgn->target = bin_expr->lhs;
             asgn->value = bin_expr->rhs;
 
-            return emplace(*asgn);
+            EMPLACE_AND_RETURN(*asgn);
         }
 
         goto invalid_statement;
@@ -1272,9 +1288,7 @@ invalid_statement:
     PARSER_ERROR(std::format("Unexpected token '{}' while parsing statement", peek().value));
     panic_and_recover();
     return nullptr;
-#undef emplace
-#undef is_function_declaration
-}
+} // namespace via
 
 void Parser::parse_program()
 {

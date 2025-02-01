@@ -60,20 +60,64 @@ size_t Generator::iota()
     return ++__iota__;
 }
 
-bool Generator::is_constexpr(ExprNode, int)
+bool Generator::is_constexpr(ExprNode expr)
 {
+    if (std::get_if<LiteralExprNode>(&expr.expr))
+        return true;
+    else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr.expr))
+        return is_constexpr(*un_expr->expr);
+    else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr.expr))
+        return is_constexpr(*bin_expr->lhs) && is_constexpr(*bin_expr->rhs);
+
     return false;
 }
 
-void Generator::evaluate_constexpr(ExprNode *)
+ExprNode Generator::evaluate_constexpr(ExprNode expr)
 {
-    return;
+    if (is_constexpr(expr))
+        return expr;
+
+    if (std::get_if<LiteralExprNode>(&expr.expr))
+        return expr;
+    else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr.expr))
+    {
+        ExprNode un_expr_const = evaluate_constexpr(*un_expr->expr);
+        LiteralExprNode un_expr_lit = std::get<LiteralExprNode>(un_expr_const.expr);
+        Token expr_token = un_expr_lit.value;
+        switch (expr_token.type)
+        {
+        case TokenType::LIT_INT:
+        case TokenType::LIT_FLOAT:
+        case TokenType::LIT_HEX:
+        case TokenType::LIT_BINARY:
+        {
+            double x = std::stod(expr_token.value);
+            return {LiteralExprNode{
+                Token(
+                    expr_token.type == TokenType::LIT_INT ? TokenType::LIT_INT : TokenType::LIT_FLOAT,
+                    std::to_string(-x),
+                    expr_token.line,
+                    expr_token.offset,
+                    false
+                ),
+            }};
+        }
+        default:
+            break;
+        }
+    }
+    else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr.expr))
+    {
+    }
+
+    VIA_UNREACHABLE();
+    return {};
 }
 
 // Pushes a bytecode instruction
 void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> operands = {})
 {
-    Instruction instruction(op, operands, nullptr);
+    Instruction instruction(op, operands, nullptr, program.bytecode->get().size());
 
     if (initialize_with_chunk)
     {
@@ -120,13 +164,13 @@ TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
     {
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
-        return TValue(nullptr, std::stod(lit_expr.value.value));
+        return TValue(std::stod(lit_expr.value.value));
     case TokenType::LIT_BOOL:
-        return TValue(nullptr, lit_expr.value.value == "true");
+        return TValue(lit_expr.value.value == "true");
     case TokenType::LIT_STRING:
-        return TValue(nullptr, new TString(nullptr, lit_expr.value.value.c_str()));
+        return TValue(new TString(nullptr, lit_expr.value.value.c_str()));
     default:
-        return TValue(static_cast<RTState *>(nullptr));
+        return TValue();
     }
 }
 
@@ -154,7 +198,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
     TValue val = generate_tvalue(expr);
     size_t idx = 0;
 
-    for (TValue const_val : constants)
+    for (TValue &const_val : constants)
     {
         if (compare(nullptr, val, const_val))
             return idx;
@@ -183,6 +227,12 @@ void Generator::load_operand(Operand dst, Operand operand)
     auto it = load_op.find(operand.type);
     if (it != load_op.end())
         push_instruction(it->second, {Operand(dst), Operand(operand)});
+}
+
+void Generator::add_bc_info(std::string info)
+{
+    size_t pos = program.bytecode->get().size() - 1;
+    program.bytecode_info[pos] = info;
 }
 
 } // namespace via

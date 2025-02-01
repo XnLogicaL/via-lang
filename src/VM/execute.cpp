@@ -635,7 +635,7 @@ dispatch:
         VM_DISPATCH();
     }
 
-    case OpCode::PUSHSTACK:
+    case OpCode::PUSH:
     {
         Operand src = V->ip->operand1;
         TValue *val = rgetregister(V->ralloc, src.val_register);
@@ -644,7 +644,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::POPSTACK:
+    case OpCode::POP:
     {
         Operand dst = V->ip->operand1;
         TValue val = popval(V);
@@ -1027,7 +1027,9 @@ dispatch:
         // Get table key based on the index type (string or number)
         TableKey key = checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
         // Load the table index
-        loadtableindex(V, tbl.val_table, key, rdst.val_register);
+        TValue index = gettable(V, tbl.val_table, key, true);
+
+        rsetregister(V->ralloc, rdst.val_register, index);
         VM_NEXT();
     }
 

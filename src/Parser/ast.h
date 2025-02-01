@@ -129,10 +129,30 @@ struct OptionalTypeNode
 
 struct TypeNode
 {
-    std::variant<GenericTypeNode, UnionTypeNode, VariantTypeNode, FunctionTypeNode, TableTypeNode, OptionalTypeNode> type;
+    using Variant = std::variant<GenericTypeNode, UnionTypeNode, VariantTypeNode, FunctionTypeNode, TableTypeNode, OptionalTypeNode>;
+
+    TypeNode() = default;
+    TypeNode(Variant var)
+        : type(var)
+    {
+    }
+
+    Variant type;
     std::string to_string()
     {
         return std::visit([](auto &&type_) { return type_.to_string(); }, type);
+    }
+};
+
+struct TypedParamNode
+{
+    Token ident;
+    TypeNode type;
+    StatementModifiers modifiers;
+
+    std::string to_string()
+    {
+        return std::format("TypedParamNode( ident: {}, type: {}, modifiers: {})", ident.to_string(), "<type>", modifiers.to_string());
     }
 };
 
@@ -300,7 +320,7 @@ struct TypeCastExprNode
 
 struct ExprNode
 {
-    std::variant<
+    using Variant = std::variant<
         LiteralExprNode,
         UnaryExprNode,
         BinaryExprNode,
@@ -313,8 +333,15 @@ struct ExprNode
         TypeExprNode,
         TypeofExprNode,
         TypeCastExprNode,
-        TableExprNode>
-        expr;
+        TableExprNode>;
+
+    ExprNode() = default;
+    ExprNode(Variant var)
+        : expr(var)
+    {
+    }
+
+    Variant expr;
 
     std::string to_string()
     {
@@ -340,18 +367,6 @@ struct NamespaceDeclStmtNode;
 struct ContinueStmtNode;
 struct BreakStmtNode;
 struct StmtNode;
-
-struct TypedParamNode
-{
-    Token ident;
-    TypeNode type;
-    StatementModifiers modifiers;
-
-    std::string to_string()
-    {
-        return std::format("TypedParamNode( ident: {}, type: {}, modifiers: {})", ident.to_string(), "<type>", modifiers.to_string());
-    }
-};
 
 struct VariableDeclStmtNode
 {
@@ -574,7 +589,7 @@ struct ContinueStmtNode
 
 struct StmtNode
 {
-    std::variant<
+    using Variant = std::variant<
         VariableDeclStmtNode,
         CallStmtNode,
         AssignStmtNode,
@@ -588,8 +603,16 @@ struct StmtNode
         StructDeclStmtNode,
         NamespaceDeclStmtNode,
         ContinueStmtNode,
-        BreakStmtNode>
-        stmt;
+        BreakStmtNode>;
+
+    StmtNode() = default;
+    StmtNode(Variant var)
+        : stmt(var)
+    {
+    }
+
+    Pragma pragma;
+    Variant stmt;
 
     std::string to_string()
     {

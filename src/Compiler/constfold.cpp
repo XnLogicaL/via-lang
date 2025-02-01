@@ -9,10 +9,10 @@ namespace via
 // eg. `1 + 2 * 4` into `9`
 void ConstFoldOptimizationPass::fold_constexpr(Generator &gen, ExprNode *expr)
 {
-    if (!gen.is_constexpr(*expr, 0))
+    if (!gen.is_constexpr(*expr))
         return;
 
-    gen.evaluate_constexpr(expr);
+    gen.evaluate_constexpr(*expr);
 }
 
 // Folds all possible constants in the AbstractSyntaxTree

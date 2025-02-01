@@ -1,3 +1,5 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
 #pragma once
 
 #include "Parser/ast.h"
@@ -33,7 +35,6 @@ public:
         , alloc(VIA_GENERATOR_ALLOC_SIZE) // Custom size for the allocator
         , current_chunk(nullptr)
         , initialize_with_chunk(false)
-        , stack_pointer(0)
         , saved_stack_pointer(0)
     {
         for (RegId gpr = 0; gpr < VIA_REGISTER_COUNT; gpr++)
@@ -51,8 +52,8 @@ public:
     void generate();
     // Utility functions
     size_t iota();
-    bool is_constexpr(ExprNode, int);
-    void evaluate_constexpr(ExprNode *);
+    bool is_constexpr(ExprNode);
+    ExprNode evaluate_constexpr(ExprNode);
     Operand generate_operand(LiteralExprNode);
     TValue generate_tvalue(LiteralExprNode);
     // Register management functions
@@ -60,6 +61,7 @@ public:
     RegId allocate_register();
     size_t load_constant(LiteralExprNode);
     void free_register(RegId);
+    void add_bc_info(std::string);
 
 public:
     ProgramData &program;
@@ -68,12 +70,11 @@ private:
     ArenaAllocator alloc; // Custom allocator
     Cleaner cleaner;      // Resource cleaner
     kTable constants;
-    HashMap<std::string, LocalId> symbols;
     HashMap<kGlobId, TValue> globals;
+    TestStack stack;
     std::map<RegId, bool> register_pool;
     Chunk *current_chunk;
     bool initialize_with_chunk;
-    StkPos stack_pointer;
     StkPos saved_stack_pointer;
 
 private:

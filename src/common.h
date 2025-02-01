@@ -147,6 +147,27 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
     }
 }
 
+VIA_FORCEINLINE void print_memory(void *ptr, size_t size)
+{
+    unsigned char *byte_ptr = static_cast<unsigned char *>(ptr);
+
+    // Print each byte in the memory block
+    for (size_t i = 0; i < size; ++i)
+    {
+        // Print the byte in hexadecimal
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte_ptr[i]) << " ";
+
+        // Print a newline every 16 bytes for readability
+        if ((i + 1) % 16 == 0)
+        {
+            std::cout << std::endl;
+        }
+    }
+
+    // Print a newline at the end
+    std::cout << std::dec << std::endl; // Reset to decimal
+}
+
 class VRTException : public std::exception
 {
 public:
@@ -170,6 +191,7 @@ struct ProgramData
     TokenHolder *tokens;
     AbstractSyntaxTree *ast;
     BytecodeHolder *bytecode;
+    std::map<size_t, std::string> bytecode_info;
 
     ProgramData(std::string, std::string);
     ~ProgramData();

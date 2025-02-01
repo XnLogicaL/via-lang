@@ -254,21 +254,23 @@ enum class OpCode
      */
     LOADFUNCTION,
     /*
-     * opcode: PUSHSTACK
+     * opcode: PUSH
      * Pushes a value onto the stack.
      * operand0: <src :: Register>
      * operand1: <>
      * operand2: <>
      */
-    PUSHSTACK,
+    PUSH,
+    PUSHK,
+    PUSHI,
     /*
-     * opcode: POPSTACK
+     * opcode: POP
      * Pops and loads the top-most element of the stack onto a register.
      * operand0: <dst :: Register>
      * operand1: <>
      * operand2: <>
      */
-    POPSTACK,
+    POP,
     /*
      * opcode: GETSTACK
      * Loads a local variable relative to the sbp (stack base pointer) into register <dst> with offset <off>.

@@ -2,17 +2,6 @@
 
 #include "types.h"
 
-#define INIT_HEAP \
-    { \
-        if (V != nullptr) \
-        { \
-            if (V->heapptr != nullptr) \
-                V->heapptr->next = this; \
-            this->prev = V->heapptr; \
-            V->heapptr = this; \
-        } \
-    }
-
 namespace via
 {
 
@@ -20,6 +9,42 @@ TValue::TValue()
     : type(ValueType::Nil)
 {
 }
+
+TValue::TValue(const TValue &other)
+    : type(other.type)
+{
+    switch (other.type)
+    {
+    case ValueType::Number:
+        this->val_number = other.val_number;
+        break;
+    case ValueType::Bool:
+        this->val_boolean = other.val_boolean;
+        break;
+    case ValueType::String:
+        this->val_string = new TString(nullptr, other.val_string->ptr);
+        break;
+    case ValueType::Table:
+        this->val_table = new TTable(other.val_table->meta, other.val_table->frozen.get(), other.val_table->data);
+        break;
+    case ValueType::Function:
+        this->val_function = new TFunction(
+            nullptr,
+            other.val_function->id,
+            other.val_function->ret_addr,
+            other.val_function->caller,
+            other.val_function->bytecode,
+            other.val_function->error_handler,
+            other.val_function->is_vararg
+        );
+        break;
+    case ValueType::CFunction:
+        this->val_cfunction = new TCFunction(other.val_cfunction->ptr, other.val_cfunction->error_handler);
+        break;
+    default:
+        break;
+    }
+};
 
 TValue::TValue(TNumber x)
     : type(ValueType::Number)
@@ -57,77 +82,17 @@ TValue::TValue(TTable *tbl)
 {
 }
 
-TValue::TValue(RTState *V)
-    : type(ValueType::Nil) INIT_HEAP;
-
-TValue::TValue(RTState *V, TNumber x)
-    : type(ValueType::Number)
-    , val_number(x) INIT_HEAP;
-
-TValue::TValue(RTState *V, TBool b)
-    : type(ValueType::Bool)
-    , val_boolean(b) INIT_HEAP;
-
-TValue::TValue(RTState *V, TString *str)
-    : type(ValueType::String)
-    , val_string(str) INIT_HEAP;
-
-TValue::TValue(RTState *V, TFunction *fun)
-    : type(ValueType::Function)
-    , val_function(fun) INIT_HEAP;
-
-TValue::TValue(RTState *V, TCFunction *cfun)
-    : type(ValueType::CFunction)
-    , val_cfunction(cfun) INIT_HEAP;
-
-TValue::TValue(RTState *V, TTable *tbl)
-    : type(ValueType::Table)
-    , val_table(tbl) INIT_HEAP;
-
-TValue::TValue(RTState *V, TValue val)
-    : type(val.type)
-{
-    switch (val.type)
-    {
-    case ValueType::Number:
-        val_number = val.val_number;
-        break;
-    case ValueType::Bool:
-        val_boolean = val.val_boolean;
-        break;
-    case ValueType::String:
-        delete val_string;
-        val_string = val.val_string;
-        break;
-    case ValueType::Function:
-        delete val_function;
-        val_function = val.val_function;
-        break;
-    case ValueType::Table:
-        delete val_table;
-        val_table = val.val_table;
-        break;
-    case ValueType::CFunction:
-        delete val_cfunction;
-        val_cfunction = val.val_cfunction;
-        break;
-    case ValueType::Pointer:
-        val_pointer = val.val_pointer;
-        break;
-    default:
-        break;
-    }
-
-    INIT_HEAP;
-}
-
 TValue::~TValue()
 {
     // Cleanup underlying type, if present
     switch (type)
     {
     case ValueType::String:
+        if (!val_string)
+            break;
+
         delete val_string;
+        this->val_string = nullptr;
         break;
     case ValueType::Table:
         delete val_table;
@@ -149,26 +114,23 @@ TString::TString(RTState *V, const char *str)
     // For compiler compatability
     if (V != nullptr)
     {
-        // Retrieve the string table
         StrTable *stable = V->G->stable;
-        // Check if the string already exists in the stable
         auto it = stable->find(hash);
         if (it != stable->end())
         { // String already exists, return the existing entry
-            *this = *it->second;
+            // *this = *it->second;
             return;
         }
     }
 
     size_t slen = std::strlen(str);
-    // Allocate new string
     char *sptr = new char[slen + 1];
 
     // Copy the constant string into the owned string
-    std::memcpy(sptr, str, slen);
+    std::strcpy(sptr, str);
 
     this->len = slen;
-    this->ptr = sptr; // No need for static_cast<const char*>
+    this->ptr = sptr;
     this->hash = hash;
 
     if (V != nullptr)
@@ -181,7 +143,11 @@ TString::TString(RTState *V, const char *str)
 
 TString::~TString()
 {
-    delete[] ptr;
+    if (this->ptr)
+    {
+        delete[] this->ptr;
+        this->ptr = nullptr;
+    }
 }
 
 TFunction::TFunction(

@@ -1,6 +1,7 @@
 /* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "instruction.h"
+#include "bytecode.h"
 
 namespace via
 {
@@ -40,10 +41,11 @@ Instruction::Instruction()
     , operand2()
     , operand3()
     , chunk(nullptr)
+    , pos(0)
 {
 }
 
-Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk)
+Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk, size_t pos)
     : op(op)
     // clang-format off
     , operand1(safe_call([&operands](){return operands.at(0);}, Operand()))
@@ -51,9 +53,9 @@ Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk)
     , operand3(safe_call([&operands](){return operands.at(2);}, Operand()))
     // clang-format on
     , chunk(chunk)
+    , pos(pos)
 {
 }
-
 
 std::string to_string(Operand operand)
 {
@@ -72,15 +74,22 @@ std::string to_string(Operand operand)
     }
 }
 
-std::string to_string(Instruction instruction)
+std::string to_string(ProgramData &prog, Instruction instruction)
 {
+    std::string comment("");
+    auto it = prog.bytecode_info.find(instruction.pos);
+    if (it != prog.bytecode_info.end())
+        comment = std::format("; {}", it->second);
+
     return std::format(
-        "{:<#5x} {:<12} {:<3} {:<3} {:<3}",
-        static_cast<uint8_t>(instruction.op),
+        "{:<04} {:<12} {:<3} {:<3} {:<3} {:<25} {}",
+        instruction.pos,
         ENUM_NAME(instruction.op),
         to_string(instruction.operand1),
         to_string(instruction.operand2),
-        to_string(instruction.operand3)
+        to_string(instruction.operand3),
+        " ",
+        comment
     );
 }
 

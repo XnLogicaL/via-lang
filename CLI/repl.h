@@ -11,9 +11,9 @@ class REPLEngine
 {
 public:
     REPLEngine()
-        : program("", "")                      // Initialize program data object with temporary data
-        , gstate(stnewgstate())                // Initialize global state
-        , rtstate(stnewstate(gstate, program)) // Initialize runtime state
+        : program("", "")                       // Initialize program data object with temporary data
+        , gstate(new GState())                  // Initialize global state
+        , rtstate(new RTState(gstate, program)) // Initialize runtime state
     {
     }
 

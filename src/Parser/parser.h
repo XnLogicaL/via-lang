@@ -32,7 +32,9 @@ private:
     ProgramData &program;
     ArenaAllocator *alloc;   // Memory allocator
     Emitter emitter;         // Error emitter
+    Pragma pragma;           // Current pragma
     size_t current_position; // Token management
+    bool has_pragma;
     bool failed;
 
 private:

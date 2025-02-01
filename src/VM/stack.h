@@ -23,9 +23,29 @@ struct TStack
     ~TStack();
 };
 
-void tspush(TStack *VIA_RESTRICT S, StkVal val) noexcept;
-StkVal tspop(TStack *VIA_RESTRICT S) noexcept;
-StkVal tstop(TStack *VIA_RESTRICT S) noexcept;
-void tsflush(TStack *VIA_RESTRICT S) noexcept;
+// Push a value onto the stack
+VIA_MAXOPTIMIZE void tspush(TStack *VIA_RESTRICT S, StkVal val) noexcept
+{
+    S->sbp[S->sp++] = val;
+}
+
+// Pop a value from the stack
+VIA_MAXOPTIMIZE StkVal tspop(TStack *VIA_RESTRICT S) noexcept
+{
+    StkVal val = S->sbp[S->sp--]; // Copy the stack top value in order to avoid possible memory bugs
+    return TValue(val);
+}
+
+// Get the top value from the stack
+VIA_MAXOPTIMIZE StkVal tstop(TStack *VIA_RESTRICT S) noexcept
+{
+    return S->sbp[S->sp];
+}
+
+// Reset the stack pointer to the base
+VIA_MAXOPTIMIZE void tsflush(TStack *VIA_RESTRICT S) noexcept
+{
+    S->sp = 0;
+}
 
 } // namespace via

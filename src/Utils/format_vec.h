@@ -10,7 +10,7 @@ namespace via
 {
 
 template<typename T>
-VIA_FORCEINLINE std::string format_vector(const std::vector<T> &vec, std::function<std::string(const T)> func)
+inline std::string format_vector(const std::vector<T> &vec, std::function<std::string(const T)> func)
 {
     std::string str;
 

@@ -1,5 +1,3 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
-
 #include "gen.h"
 
 namespace via
@@ -7,31 +5,51 @@ namespace via
 
 void Generator::generate_variable_declaration_statement(VariableDeclStmtNode decl_stmt)
 {
-    stack_pointer++;
+    if (decl_stmt.decl_type == DeclarationType::Local)
+    {
+        RegId dst = allocate_register();
 
-    RegId dst = allocate_register();
-    TNumber sp = stack_pointer;
+        if (is_constexpr(*decl_stmt.value))
+        {
+            ExprNode const_expr = evaluate_constexpr(*decl_stmt.value);
+            LiteralExprNode const_lit = std::get<LiteralExprNode>(const_expr.expr);
+            size_t const_idx = load_constant(const_lit);
+            TNumber const_id = static_cast<TNumber>(const_idx);
 
-    generate_expression(*decl_stmt.value, dst);
-    push_instruction(OpCode::SETSTACK, {Operand(dst), Operand(sp)});
+            push_instruction(OpCode::PUSHK, {Operand(const_id)});
+            add_bc_info(std::format("local {} = {}", decl_stmt.ident.value, const_lit.value.value));
+        }
+        else
+        {
+            generate_expression(*decl_stmt.value, dst);
+            push_instruction(OpCode::PUSH, {Operand(dst)});
+            add_bc_info(std::format("local {} = <non-constexpr>", decl_stmt.ident.value));
+        }
+
+        stack.push(decl_stmt.ident.value);
+        free_register(dst);
+    }
 }
 
 void Generator::generate_function_declaration_statement(FunctionDeclStmtNode func_stmt)
 {
-    // TODO: Account for global functions
-    stack_pointer++;
-
     RegId dst = allocate_register();
     push_instruction(OpCode::LOADFUNCTION, {Operand(dst)});
+    add_bc_info(std::format("func {}", func_stmt.ident.value));
 
-    for (StmtNode stmt : func_stmt.body->statements)
-        generate_statement(stmt);
+    for (TypedParamNode param : func_stmt.params)
+        stack.push(param.ident.value);
+
+    generate_scope_statement(*func_stmt.body);
 
     if (program.bytecode->instructions.back().op != OpCode::RETURN)
         push_instruction(OpCode::RETURN, {});
 
-    push_instruction(OpCode::SETSTACK, {Operand(dst), Operand(static_cast<TNumber>(stack_pointer))});
-    free_register(dst);
+    if (func_stmt.decl_type == DeclarationType::Local)
+    {
+        push_instruction(OpCode::PUSH, {Operand(dst)});
+        free_register(dst);
+    }
 }
 
 void Generator::generate_call_statement(CallStmtNode call_stmt)
@@ -40,15 +58,32 @@ void Generator::generate_call_statement(CallStmtNode call_stmt)
     RegId callee = allocate_register();
     TNumber argc = static_cast<TNumber>(call_stmt.args.size() + is_methodcall);
 
-    // Check if the self argument is required
+    generate_expression(*call_stmt.callee, callee);
+
     if (is_methodcall)
-        push_instruction(OpCode::PUSHSTACK, {Operand(callee)});
+    {
+        push_instruction(OpCode::PUSH, {Operand(callee)});
+        add_bc_info("self");
+    }
 
     for (ExprNode *arg : call_stmt.args)
-        // Automatically push the arguments onto the stack
-        generate_expression(*arg, VIA_REGISTER_INVALID);
+    {
+        if (is_constexpr(*arg))
+        {
+            ExprNode const_expr = evaluate_constexpr(*arg);
+            LiteralExprNode const_lit = std::get<LiteralExprNode>(const_expr.expr);
+            size_t const_idx = load_constant(const_lit);
+            TNumber const_id = static_cast<TNumber>(const_idx);
 
-    generate_expression(*call_stmt.callee, callee);
+            push_instruction(OpCode::PUSHK, {Operand(const_id)});
+            add_bc_info(const_lit.value.value);
+        }
+        else
+        {
+            generate_expression(*arg, VIA_REGISTER_INVALID);
+        }
+    }
+
     push_instruction(OpCode::CALL, {Operand(callee), Operand(argc)});
     free_register(callee);
 }
@@ -57,46 +92,44 @@ void Generator::generate_assign_statement(AssignStmtNode asgn_stmt)
 {
     if (VarExprNode *var_expr = std::get_if<VarExprNode>(&asgn_stmt.target->expr))
     {
-        auto it = symbols.find(var_expr->ident.value);
-        if (it != symbols.end())
-        {
-            RegId val = allocate_register();
-            LocalId stk_offset = it->second;
-
-            generate_expression(*asgn_stmt.value, val);
-            push_instruction(OpCode::SETSTACK, {Operand(stk_offset), Operand(val)});
-            free_register(val);
-        }
     }
-    // TODO: Add support for other assignable expressions, such as index expressions
 }
 
 void Generator::generate_while_statement(WhileStmtNode while_stmt)
 {
     RegId cond = allocate_register();
-    TNumber exit_label = while_stmt.body->statements.size();
-    size_t head_offset = program.bytecode->instructions.size();
+    size_t loop_start = program.bytecode->instructions.size();
 
     generate_expression(*while_stmt.condition, cond);
-    push_instruction(
-        OpCode::JUMPIFNOT,
-        {
-            Operand(cond),
-            Operand(exit_label + 1), // +1 to skip the tail jump instruction!
-        }
-    );
+    push_instruction(OpCode::JUMPIFNOT, {Operand(cond), Operand(0.0f)});
 
-    for (StmtNode stmt : while_stmt.body->statements)
-        generate_statement(stmt);
+    size_t body_start = program.bytecode->instructions.size();
+    generate_scope_statement(*while_stmt.body);
 
-    TNumber head_label = -(program.bytecode->instructions.size() - head_offset);
+    size_t loop_end = program.bytecode->instructions.size();
 
-    push_instruction(OpCode::JUMP, {Operand(head_label)});
+    Instruction &jump_if_not_instr = program.bytecode->instructions.at(loop_start);
+    jump_if_not_instr.operand2 = Operand(TNumber(size_t(loop_end - loop_start - 1)));
+
+    push_instruction(OpCode::JUMP, {Operand(TNumber(size_t(-(loop_end - loop_start))))});
 }
 
 void Generator::generate_for_statement(ForStmtNode for_stmt) {}
 
-void Generator::generate_scope_statement(ScopeStmtNode scope_stmt) {}
+void Generator::generate_scope_statement(ScopeStmtNode scope_stmt)
+{
+    saved_stack_pointer = stack.size();
+
+    for (StmtNode stmt : scope_stmt.statements)
+        generate_statement(stmt);
+
+    size_t sp_diff = stack.size() - saved_stack_pointer;
+    for (size_t i = 0; i < sp_diff; i++)
+    {
+        stack.pop();
+        push_instruction(OpCode::POP, {Operand(RegId(VIA_REGISTER_COUNT))});
+    }
+}
 
 void Generator::generate_if_statement(IfStmtNode if_stmt) {}
 

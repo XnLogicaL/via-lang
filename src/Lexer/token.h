@@ -48,11 +48,11 @@ enum class TokenType
     KW_META,      // meta
 
     // Operators
-    OP_EXP,       // ^
     OP_ADD,       // +
     OP_SUB,       // -
     OP_MUL,       // *
     OP_DIV,       // /
+    OP_EXP,       // ^
     OP_MOD,       // %
     OP_EQ,        // ==
     OP_NEQ,       // !=

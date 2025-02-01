@@ -2,6 +2,7 @@
 
 #include "state.h"
 #include "api.h"
+#include "bytecode.h"
 #include "stack.h"
 #include "register.h"
 #include "gc.h"
@@ -79,14 +80,6 @@ RTState::~RTState()
     // Clean up saved state, if there is one
     if (this->sstate)
         delete this->sstate;
-
-    // Clean up heap values
-    TValue *current_value = this->heapptr;
-    while (current_value)
-    {
-        delete current_value;
-        current_value = current_value->next;
-    }
 
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately

@@ -47,7 +47,7 @@ void REPLEngine::interpret()
 {
     stage = "Interpreting";
 
-    via::stloadinstructions(rtstate, *program.bytecode);
+    rtstate->loadinstructions(*program.bytecode);
     via::execute(rtstate);
     via::pausethread(rtstate);
 }
@@ -68,7 +68,7 @@ void REPLEngine::execute(const std::string &code, bool print_bytecode_flag)
 
         if (print_bytecode_flag)
             for (Instruction instr : program.bytecode->get())
-                std::cout << to_string(instr) << "\n";
+                std::cout << to_string(program, instr) << "\n";
 
         interpret();
     }
