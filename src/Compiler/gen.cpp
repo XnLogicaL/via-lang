@@ -206,7 +206,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
         idx++;
     }
 
-    constants.push_back(val);
+    constants.push_back(std::move(val));
     return idx++;
 }
 

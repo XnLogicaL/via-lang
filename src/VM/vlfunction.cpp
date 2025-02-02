@@ -7,13 +7,13 @@ namespace via::lib
 
 void function_name(RTState *V)
 {
-    TValue func = getargument(V, 0);
+    TValue &func = getargument(V, 0);
 
     // Check if the argument is a function
     // If so return nil
     if (!checkfunction(V, func))
     {
-        pushval(V, TValue());
+        pushval(V, nil);
         return;
     }
 

@@ -16,7 +16,7 @@ void base_print(RTState *V)
     // Loop over argument count
     while (i++ < V->argc)
     {
-        TValue argx = getargument(V, 0);
+        TValue &argx = getargument(V, 0);
         oss << tostring(V, argx).val_string->ptr << " ";
     }
 
@@ -35,7 +35,7 @@ void base_println(RTState *V)
     // Loop over argument count
     while (i++ < V->argc)
     {
-        TValue argx = getargument(V, 0);
+        TValue &argx = getargument(V, 0);
         oss << tostring(V, argx).val_string->ptr << " ";
     }
 
@@ -47,7 +47,7 @@ void base_println(RTState *V)
 
 void base_error(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
 
     tostring(V, arg0);
 
@@ -59,7 +59,7 @@ void base_error(RTState *V)
 
 void base_exit(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, arg0), "Expected type TNumber for argument 0 of base_exit");
 
@@ -72,7 +72,7 @@ void base_exit(RTState *V)
 
 void base_type(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
     TValue ty = type(V, arg0);
 
     pushval(V, ty);
@@ -81,7 +81,7 @@ void base_type(RTState *V)
 
 void base_typeof(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
     TValue type = typeofv(V, arg0);
 
     pushval(V, type);
@@ -90,7 +90,7 @@ void base_typeof(RTState *V)
 
 void base_tostring(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
     TValue str = tostring(V, arg0);
 
     pushval(V, str);
@@ -99,7 +99,7 @@ void base_tostring(RTState *V)
 
 void base_tonumber(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
     TValue num = tonumber(V, arg0);
 
     pushval(V, num);
@@ -108,7 +108,7 @@ void base_tonumber(RTState *V)
 
 void base_tobool(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
     TValue boole = tobool(V, arg0);
 
     pushval(V, boole);
@@ -117,25 +117,27 @@ void base_tobool(RTState *V)
 
 void base_assert(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
-    TValue arg1 = getargument(V, 1);
+    TValue &arg0 = getargument(V, 0);
+    TValue &arg1 = getargument(V, 1);
 
     if (!tobool(V, arg0).val_boolean)
     {
         TString *mvstr = tostring(V, arg1).val_string;
         std::string mfstr = std::format("base_assert assertion failed: {}", mvstr->ptr);
         TString *mfstrds = new TString(V, mfstr.c_str());
+        TValue err_val(mfstrds);
+        TValue err_fn = WRAPVAL(base_error);
 
         // Push the error message onto the argument stack
-        pushval(V, TValue(mfstrds));
+        pushval(V, err_val);
         // Hack solution, but works!
-        call(V, WRAPVAL(base_error), 1);
+        call(V, err_fn, 1);
     }
 }
 
 void base_getmetatable(RTState *V)
 {
-    TValue arg0 = getargument(V, 0);
+    TValue &arg0 = getargument(V, 0);
 
     LIB_ASSERT(checktable(V, arg0), "base_getmetatable expects a table");
 
@@ -146,8 +148,8 @@ void base_getmetatable(RTState *V)
 
 void base_setmetatable(RTState *V)
 {
-    TValue tbl = getargument(V, 0);
-    TValue meta = getargument(V, 0);
+    TValue &tbl = getargument(V, 0);
+    TValue &meta = getargument(V, 0);
 
     LIB_ASSERT(checktable(V, tbl), "base_setmetatable expects a table for argument 0");
     LIB_ASSERT(checktable(V, meta), "base_setmetatable expects a table for argument 1");
@@ -158,11 +160,11 @@ void base_setmetatable(RTState *V)
 
 void base_pcall(RTState *V)
 {
-    TValue callback = getargument(V, 0);
+    TValue &callback = getargument(V, 0);
     // Realigns arguments by popping them and pushing them again
     for (size_t i = 0; i < V->argc; i++)
     {
-        TValue arg = getargument(V, i);
+        TValue &arg = getargument(V, i);
         pushval(V, arg);
     }
 
@@ -171,51 +173,20 @@ void base_pcall(RTState *V)
     TBool success = V->exitc != 1;
     if (success)
     {
-        pushval(V, TValue(success));
-        pushval(V, popval(V));
+        TValue success_val(success);
+        TValue result_val = popval(V);
+
+        pushval(V, success_val);
+        pushval(V, result_val);
     }
     else
     {
         const char *exit_message = dupstring(V->exitm);
         TString *exit_string = new TString(V, exit_message);
-        TValue exit_value = TValue(exit_string);
+        TValue exit_value(exit_string);
+        TValue success_val(success);
 
-        pushval(V, TValue(success));
-        pushval(V, exit_value);
-    }
-
-    nativeret(V, 2);
-}
-
-void base_xpcall(RTState *V)
-{
-    TValue callback = getargument(V, 0);
-    TValue handler = getargument(V, 1);
-
-    // Realigns arguments by popping them and pushing them again
-    for (size_t i = 0; i < V->argc; i++)
-    {
-        TValue arg = getargument(V, i);
-        pushval(V, arg);
-    }
-
-    call(V, callback, V->argc - 2);
-
-    TBool success = V->exitc != 1;
-    if (success)
-    {
-        pushval(V, TValue(success));
-        pushval(V, popval(V));
-    }
-    else
-    {
-        const char *exit_message = dupstring(V->exitm);
-        TString *exit_string = new TString(V, exit_message);
-        TValue exit_value = TValue(exit_string);
-
-        pushval(V, exit_value);
-        call(V, handler, 1);
-        pushval(V, TValue(success));
+        pushval(V, success_val);
         pushval(V, exit_value);
     }
 
@@ -224,22 +195,23 @@ void base_xpcall(RTState *V)
 
 void loadbaselib(RTState *V)
 {
-    HashMap<kGlobId, TValue> base_properties = {
-        {"print", WRAPVAL(base_print)},
-        {"println", WRAPVAL(base_println)},
-        {"error", WRAPVAL(base_error)},
-        {"exit", WRAPVAL(base_exit)},
-        {"type", WRAPVAL(base_type)},
-        {"typeof", WRAPVAL(base_typeof)},
-        {"tostring", WRAPVAL(base_tostring)},
-        {"tonumber", WRAPVAL(base_tonumber)},
-        {"tobool", WRAPVAL(base_tobool)},
-        {"assert", WRAPVAL(base_assert)},
-        {"pcall", TValue(new TCFunction(base_pcall, true))},
-        {"xpcall", TValue(new TCFunction(base_xpcall, true))},
-    };
+    HashMap<kGlobId, TValue> base_properties;
 
-    for (const auto [ident, val] : base_properties)
+    // Emplace each entry instead of using an initializer list
+    base_properties.emplace("print", WRAPVAL(base_print));
+    base_properties.emplace("println", WRAPVAL(base_println));
+    base_properties.emplace("error", WRAPVAL(base_error));
+    base_properties.emplace("exit", WRAPVAL(base_exit));
+    base_properties.emplace("type", WRAPVAL(base_type));
+    base_properties.emplace("typeof", WRAPVAL(base_typeof));
+    base_properties.emplace("tostring", WRAPVAL(base_tostring));
+    base_properties.emplace("tonumber", WRAPVAL(base_tonumber));
+    base_properties.emplace("tobool", WRAPVAL(base_tobool));
+    base_properties.emplace("assert", WRAPVAL(base_assert));
+    base_properties.emplace("pcall", TValue(new TCFunction(base_pcall, true)));
+
+    // Iterate and set the global variables
+    for (auto &[ident, val] : base_properties)
         setglobal(V, ident, val);
 }
 

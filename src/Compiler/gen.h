@@ -101,7 +101,7 @@ private:
     void generate_assign_statement(AssignStmtNode);
     void generate_while_statement(WhileStmtNode);
     void generate_for_statement(ForStmtNode);
-    void generate_scope_statement(ScopeStmtNode);
+    void generate_scope_statement(ScopeStmtNode, bool);
     void generate_if_statement(IfStmtNode);
     void generate_switch_statement(SwitchStmtNode);
     void generate_return_statement(ReturnStmtNode);

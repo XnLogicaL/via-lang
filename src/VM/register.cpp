@@ -14,8 +14,6 @@ RAState::RAState()
     {
         TValue val;
         val.type = ValueType::Monostate;
-        val.next = nullptr;
-        val.prev = nullptr;
         rsetregister(this, i, val);
     }
 }

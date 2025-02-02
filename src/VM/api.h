@@ -18,6 +18,8 @@
 namespace via
 {
 
+static TValue nil = TValue();
+
 // Manually sets the VM exit data.
 VIA_MAXOPTIMIZE void setexitdata(RTState *VIA_RESTRICT V, ExitCode exitc, const std::string &exitm) noexcept
 {
@@ -33,7 +35,7 @@ VIA_MAXOPTIMIZE bool isvalidjmpaddr(RTState *VIA_RESTRICT V, Instruction *VIA_RE
 
 // Sets register <reg> to the given value <val>.
 // Wrapper for `rsetregister`.
-VIA_MAXOPTIMIZE void setregister(RTState *VIA_RESTRICT V, RegId reg, TValue val) noexcept
+VIA_MAXOPTIMIZE void setregister(RTState *VIA_RESTRICT V, RegId reg, TValue &val) noexcept
 {
     rsetregister(V->ralloc, reg, val);
 }
@@ -46,7 +48,7 @@ VIA_MAXOPTIMIZE TValue *getregister(RTState *VIA_RESTRICT V, RegId reg) noexcept
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
-VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue val) noexcept
+VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue &val) noexcept
 {
     switch (val.type)
     {
@@ -64,14 +66,14 @@ VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue val) noexcept
 }
 
 // Returns whether if <val> has a heap component.
-VIA_FORCEINLINE bool isheap(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_FORCEINLINE bool isheap(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     return topointer(V, val) != nullptr;
 }
 
 // Compares 2 values and returns whether if they are equal.
 // Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue v0, TValue v1) noexcept
+VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue &v0, TValue &v1) noexcept
 {
     // Early return; if types aren't the same they cannot be equivalent
     if (v0.type != v1.type)
@@ -110,8 +112,8 @@ VIA_MAXOPTIMIZE bool compareregisters(RTState *VIA_RESTRICT V, RegId reg0, RegId
     if (reg0 == reg1)
         return true;
 
-    TValue v0 = *getregister(V, reg0);
-    TValue v1 = *getregister(V, reg1);
+    TValue &v0 = *getregister(V, reg0);
+    TValue &v1 = *getregister(V, reg1);
     // No need to assert &v0 == &v1 because
     // the first equality check is basically the same thing, just at a higher
     // level of abstraction.
@@ -125,7 +127,7 @@ VIA_MAXOPTIMIZE bool compareregisters(RTState *VIA_RESTRICT V, RegId reg0, RegId
 
 // Pushes a value onto the stack.
 // Wrapper for `tspush`. Copies the value.
-VIA_MAXOPTIMIZE void pushval(RTState *VIA_RESTRICT V, TValue val)
+VIA_MAXOPTIMIZE void pushval(RTState *VIA_RESTRICT V, TValue &val)
 {
     tspush(V->stack, val);
 }
@@ -145,7 +147,7 @@ VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
     // that is classified as undefined behavior and should be explicitly handled
     // by the end user. It is guaranteed to NEVER occur under compiled bytecode
     if (checkstring(V, val))
-        return val;
+        return TValue(new TString(*val.val_string));
 
     switch (val.type)
     {
@@ -164,7 +166,7 @@ VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
     {
         std::string str = "{";
 
-        for (auto elem : val.val_table->data)
+        for (auto &elem : val.val_table->data)
         {
             str += tostring(V, elem.second).val_string->ptr;
             str += ", ";
@@ -210,7 +212,7 @@ VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
     // doesn't actually contain a boolean value, that is undefined behavior
     // and is the responsibility of the end-user.
     if (checkbool(V, val))
-        return val;
+        return TValue(val.val_boolean);
 
     switch (val.type)
     {
@@ -231,7 +233,7 @@ VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
 VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     if (checknumber(V, val))
-        return val;
+        return TValue(val.val_number);
 
     switch (val.type)
     {
@@ -248,7 +250,7 @@ VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE TValue gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
+VIA_FORCEINLINE TValue &gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -260,28 +262,28 @@ VIA_FORCEINLINE TValue gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
 
     // This has to be a pointer because we don't know if the value is a
     // non-pointer primitive type
-    return TValue(V);
+    return nil;
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-VIA_FORCEINLINE void settable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue val) noexcept
+VIA_FORCEINLINE void settable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue &val) noexcept
 {
     if (checknil(V, val))
     {
-        TValue tbl_val = gettable(V, tbl, key, false);
+        TValue &tbl_val = gettable(V, tbl, key, false);
 
-        if (!checknil(V, val))
+        if (!checknil(V, tbl_val))
             tbl->data.erase(key);
     }
     else
-        tbl->data[key] = val;
+        tbl->data.emplace(key, std::move(val));
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
-VIA_FORCEINLINE TValue getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCode op)
+VIA_FORCEINLINE TValue &getmetamethod(RTState *VIA_RESTRICT V, TValue &val, OpCode op)
 {
     if (!checktable(V, val))
-        return TValue(V);
+        return nil;
 
 #define GET_METHOD(id) (gettable(V, val.val_table, hashstring(V, id), true))
     switch (op)
@@ -311,17 +313,17 @@ VIA_FORCEINLINE TValue getmetamethod(RTState *VIA_RESTRICT V, TValue val, OpCode
         break;
     }
 
-    return TValue(V);
+    return nil;
 #undef GET_METHOD
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
-VIA_FORCEINLINE TValue getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE TValue &getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcept
 {
     // Check if LocalId is out of bounds;
     // this is CRUCIAL, and prevents UB upon stack dereferencing
     if (offset > V->stack->sp)
-        return TValue(V);
+        return nil;
 
     StkAddr stack_address = V->stack->sbp + offset;
     StkVal &val = *stack_address; //! BIG WARNING: This is UB without bound checks!!!
@@ -329,7 +331,7 @@ VIA_FORCEINLINE TValue getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcep
 }
 
 // Reassigns the stack value at offset <offset> to <val>.
-VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue val)
+VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue &val)
 {
     // Check if LocalId is out of bounds,
     // this is CRUCIAL, and prevents UB upon stack operations.
@@ -343,36 +345,36 @@ VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue va
     }
 
     StkAddr stack_address = V->stack->sbp + offset;
-    *stack_address = val; //! BIG WARNING: This is UB without bound checks!!!
+    *stack_address = std::move(val);
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
-VIA_FORCEINLINE TValue getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexcept
+VIA_FORCEINLINE TValue &getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexcept
 {
     auto it = V->G->gtable->find(ident);
     if (it != V->G->gtable->end())
         return it->second;
 
-    return TValue();
+    return nil;
 }
 
 // Attempts to declare a new global constant.
-VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue val)
+VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue &val)
 {
     auto it = V->G->gtable->find(ident);
     // This is not a silent assertion because it is only possible if a global is
     // reassigned, which is not possible under generated bytecode.
     VIA_ASSERT(it == V->G->gtable->end(), "setglobal(): attempt to reassign global constant");
-    (*V->G->gtable)[ident] = val;
+    (*V->G->gtable).emplace(ident, std::move(val));
 }
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-VIA_FORCEINLINE TValue getargument(RTState *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE TValue &getargument(RTState *VIA_RESTRICT V, LocalId offset) noexcept
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
-        return TValue(V);
+        return nil;
 
     // Calculate the stack position of the argument
     StkPos stack_offset = V->ssp + V->argc - 1 - offset;
@@ -394,7 +396,7 @@ VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
     for (CallArgc i = 0; i < retc; i++)
     {
         StkVal ret_val = popval(V);
-        ret_values.push_back(ret_val);
+        ret_values.push_back(std::move(ret_val));
     }
 
     // Restore stack pointer
@@ -450,7 +452,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
 // Calls a table method.
 VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
 {
-    TValue method = gettable(V, tbl, key, true);
+    TValue &method = gettable(V, tbl, key, true);
     if (!checkcallable(V, method))
     {
         std::string err = std::format("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
@@ -467,9 +469,9 @@ VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, co
 }
 
 // Returns the primitive type of value <val>.
-VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v) noexcept
+VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
-    auto enum_name = ENUM_NAME(v.type);
+    auto enum_name = ENUM_NAME(val.type);
     char *str = dupstring(std::string(enum_name));
     gcaddcallback(V, [str]() { delete str; });
 
@@ -478,7 +480,7 @@ VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue v) noexcept
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue val, CallArgc argc) noexcept
+VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue &val, CallArgc argc) noexcept
 {
     V->calltype = CallType::CALL;
 
@@ -504,7 +506,7 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
     else if (checktable(V, val))
     {
         TableKey mhash = hashstring(V, "__len");
-        TValue mmlen = gettable(V, val.val_table, mhash, true);
+        TValue &mmlen = gettable(V, val.val_table, mhash, true);
 
         if (checknil(V, mmlen))
             return TValue(static_cast<TNumber>(val.val_table->data.size()));
@@ -519,12 +521,12 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
 // Returns the complex type of value <val>.
 // Practically the same as `type()`, but returns
 // the `__type` key if the given table has it defined.
-VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue &val) noexcept
 {
     if (checktable(V, val))
     {
         TTable *tbl = val.val_table;
-        TValue ty = gettable(V, tbl, hashstring(V, "__type"), true);
+        TValue &ty = gettable(V, tbl, hashstring(V, "__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
         if (checknil(V, ty))
@@ -578,31 +580,6 @@ VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT 
     return TValue();
 }
 
-// Converts an Operand object into a TValue object.
-VIA_FORCEINLINE TValue toviavalue(RTState *VIA_RESTRICT V, const Operand &operand)
-{
-    switch (operand.type)
-    {
-    case OperandType::Number:
-        return TValue(operand.val_number);
-    case OperandType::Bool:
-        return TValue(operand.val_boolean);
-    case OperandType::String:
-        return TValue(new TString(V, operand.val_string));
-    case via::OperandType::Nil:
-        return TValue();
-    default:
-    {
-        std::string err = std::format("Cannot interpret operand '{}' as a data type", ENUM_NAME(operand.type));
-        setexitdata(V, 1, err);
-        V->abrt = true;
-        break;
-    }
-    }
-
-    return TValue();
-}
-
 // Schedules a yield <ms>.
 // Only yields the VM thread.
 VIA_FORCEINLINE void yield(RTState *VIA_RESTRICT V, YldTime ms) noexcept
@@ -630,7 +607,7 @@ VIA_FORCEINLINE void restorestate(RTState *VIA_RESTRICT V) noexcept
 }
 
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
-VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, OpCode op)
+VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue &lhs, TValue &rhs, OpCode op)
 {
     VIA_ASSERT(checknumber(V, rhs), "arith(): rhs must be a number");
 
@@ -660,7 +637,7 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue lhs, TValue rhs, Op
     }
     else if (checktable(V, lhs))
     {
-        TValue metamethod = getmetamethod(V, lhs, op);
+        TValue &metamethod = getmetamethod(V, lhs, op);
         pushval(V, lhs); // self
         pushval(V, rhs); // other
         call(V, metamethod, 2);
@@ -704,7 +681,7 @@ VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, Op
     }
     else if (checktable(V, *lhs))
     {
-        TValue metamethod = getmetamethod(V, *lhs, op);
+        TValue &metamethod = getmetamethod(V, *lhs, op);
         pushval(V, *lhs); // self
         pushval(V, rhs);  // other
         call(V, metamethod, 2);

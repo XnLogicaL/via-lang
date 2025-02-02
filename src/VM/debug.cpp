@@ -10,7 +10,7 @@ void dbgprintregistermap(RTState *VIA_RESTRICT V = nullptr, size_t count = VIA_R
     for (RegId reg = 0; reg <= count; reg++)
     {
         TValue *val = rgetregister(V->ralloc, reg);
-        TValue val_clone = *val;
+        TValue &val_clone = *val;
         tostring(V, val_clone);
         std::string fmt = std::format("R{}<'{}':'{}'@{}>", reg, ENUM_NAME(val->type), val_clone.val_string->ptr, reinterpret_cast<const void *>(val));
         std::cout << fmt << "\n";

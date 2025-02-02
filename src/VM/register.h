@@ -25,10 +25,10 @@ VIA_MAXOPTIMIZE TValue *rgetregister(RAState *R, RegId reg)
     return ptr;
 }
 
-VIA_MAXOPTIMIZE void rsetregister(RAState *R, RegId reg, TValue val)
+VIA_MAXOPTIMIZE void rsetregister(RAState *R, RegId reg, TValue &val)
 {
     TValue *addr = R->head + reg;
-    *addr = val;
+    *addr = std::move(val);
 }
 
 } // namespace via

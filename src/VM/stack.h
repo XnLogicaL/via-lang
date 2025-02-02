@@ -24,22 +24,23 @@ struct TStack
 };
 
 // Push a value onto the stack
-VIA_MAXOPTIMIZE void tspush(TStack *VIA_RESTRICT S, StkVal val) noexcept
+VIA_MAXOPTIMIZE void tspush(TStack *VIA_RESTRICT S, StkVal &val) noexcept
 {
-    S->sbp[S->sp++] = val;
+    S->sbp[S->sp++] = val.clone();
 }
 
 // Pop a value from the stack
 VIA_MAXOPTIMIZE StkVal tspop(TStack *VIA_RESTRICT S) noexcept
 {
-    StkVal val = S->sbp[S->sp--]; // Copy the stack top value in order to avoid possible memory bugs
-    return TValue(val);
+    StkVal &val = S->sbp[S->sp--]; // Copy the stack top value in order to avoid possible memory bugs
+    return val.clone();
 }
 
 // Get the top value from the stack
 VIA_MAXOPTIMIZE StkVal tstop(TStack *VIA_RESTRICT S) noexcept
 {
-    return S->sbp[S->sp];
+    TValue &val = S->sbp[S->sp];
+    return val.clone();
 }
 
 // Reset the stack pointer to the base

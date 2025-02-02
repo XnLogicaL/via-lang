@@ -25,8 +25,6 @@ enum class ValueType
 // Tagged union that holds a primitive via value
 struct TValue
 {
-    TValue *prev = nullptr;
-    TValue *next = nullptr;
     ValueType type = ValueType::Monostate;
     union
     {
@@ -41,19 +39,55 @@ struct TValue
         TTable *val_table;
     };
 
-    // Stack value constructors
-    TValue();
-    TValue(const TValue &);
+    TValue(const TValue &) = delete;            // Delete copy constructor
+    TValue(TValue &&other) noexcept;            // Declare move constructor
+    TValue &operator=(const TValue &) = delete; // Delete copy assignment operator
+    TValue &operator=(TValue &&) noexcept;      // Declare move operator
+    TValue(const Operand &);                    // Declare from-operand constructor
+    ~TValue();                                  // Declare destructor
 
-    explicit TValue(TNumber);
-    explicit TValue(TBool);
-    explicit TValue(TPointer);
-    explicit TValue(TString *);
-    explicit TValue(TFunction *);
-    explicit TValue(TCFunction *);
-    explicit TValue(TTable *);
+    explicit TValue()
+        : type(ValueType::Nil)
+    {
+    }
 
-    ~TValue();
+    explicit TValue(TNumber x)
+        : type(ValueType::Number)
+        , val_number(x)
+    {
+    }
+
+    explicit TValue(TBool b)
+        : type(ValueType::Bool)
+        , val_boolean(b)
+    {
+    }
+
+    explicit TValue(TString *str)
+        : type(ValueType::String)
+        , val_string(str)
+    {
+    }
+
+    explicit TValue(TFunction *fun)
+        : type(ValueType::Function)
+        , val_function(fun)
+    {
+    }
+
+    explicit TValue(TCFunction *cfun)
+        : type(ValueType::CFunction)
+        , val_cfunction(cfun)
+    {
+    }
+
+    explicit TValue(TTable *tbl)
+        : type(ValueType::Table)
+        , val_table(tbl)
+    {
+    }
+
+    TValue clone() const;
 };
 
 struct TString
@@ -109,7 +143,6 @@ struct TTable
     HashMap<TableKey, TValue> data = {};
 
     TTable(TTable *meta = nullptr, bool frozen = false, HashMap<TableKey, TValue> init = {});
-    ~TTable() = default;
 };
 
 // Random hashing algo, may need to be replaced later
@@ -122,62 +155,62 @@ VIA_FORCEINLINE Hash hashstring(RTState *, const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool checkmonostate(RTState *, TValue val)
+VIA_FORCEINLINE bool checkmonostate(RTState *, TValue &val)
 {
     return val.type == ValueType::Monostate;
 }
 
-VIA_FORCEINLINE bool checknumber(RTState *, TValue val)
+VIA_FORCEINLINE bool checknumber(RTState *, TValue &val)
 {
     return val.type == ValueType::Number;
 }
 
-VIA_FORCEINLINE bool checkbool(RTState *, TValue val)
+VIA_FORCEINLINE bool checkbool(RTState *, TValue &val)
 {
     return val.type == ValueType::Bool;
 }
 
-VIA_FORCEINLINE bool checknil(RTState *, TValue val)
+VIA_FORCEINLINE bool checknil(RTState *, TValue &val)
 {
     return val.type == ValueType::Nil;
 }
 
-VIA_FORCEINLINE bool checkptr(RTState *, TValue val)
+VIA_FORCEINLINE bool checkptr(RTState *, TValue &val)
 {
     return val.type == ValueType::Pointer;
 }
 
-VIA_FORCEINLINE bool checkstring(RTState *, TValue val)
+VIA_FORCEINLINE bool checkstring(RTState *, TValue &val)
 {
     return val.type == ValueType::String;
 }
 
-VIA_FORCEINLINE bool checktable(RTState *, TValue val)
+VIA_FORCEINLINE bool checktable(RTState *, TValue &val)
 {
     return val.type == ValueType::Table;
 }
 
-VIA_FORCEINLINE bool checkcfunction(RTState *, TValue val)
+VIA_FORCEINLINE bool checkcfunction(RTState *, TValue &val)
 {
     return val.type == ValueType::CFunction;
 }
 
-VIA_FORCEINLINE bool checkfunction(RTState *, TValue val)
+VIA_FORCEINLINE bool checkfunction(RTState *, TValue &val)
 {
     return val.type == ValueType::Function;
 }
 
-VIA_FORCEINLINE bool checkempty(RTState *V, TValue val)
+VIA_FORCEINLINE bool checkempty(RTState *V, TValue &val)
 {
     return checknil(V, val) || checkmonostate(V, val);
 }
 
-VIA_FORCEINLINE bool checkcallable(RTState *V, TValue val)
+VIA_FORCEINLINE bool checkcallable(RTState *V, TValue &val)
 {
     return checkfunction(V, val) || checkcfunction(V, val);
 }
 
-VIA_FORCEINLINE bool checksubscriptable(RTState *V, TValue val)
+VIA_FORCEINLINE bool checksubscriptable(RTState *V, TValue &val)
 {
     return checktable(V, val) || checkstring(V, val);
 }

@@ -27,42 +27,10 @@ TNumber pcg32_range(TNumber a, TNumber b)
     return lerp(a, b, scaled);
 }
 
-void rand_range(RTState *V)
-{
-    TValue low = getargument(V, 0);
-    TValue high = getargument(V, 1);
-    TValue num = TValue(pcg32_range(low.val_number, high.val_number));
+void rand_range(RTState *) {}
 
-    pushval(V, num);
-    nativeret(V, 1);
-}
+void rand_int(RTState *) {}
 
-void rand_int(RTState *V)
-{
-    rand_range(V);
-    TValue x = popval(V);
-    x.val_number = std::floor(x.val_number);
-
-    pushval(V, x);
-    nativeret(V, 1);
-}
-
-void loadrandlib(RTState *V)
-{
-    static const HashMap<const char *, TValue> rand_properties = {
-        {"range", TValue(new TCFunction(rand_range))},
-        {"int", TValue(new TCFunction(rand_int))},
-    };
-
-    TTable *lib = new TTable();
-
-    for (auto it : rand_properties)
-    {
-        TableKey key = hashstring(V, it.first);
-        settable(V, lib, key, it.second);
-    }
-
-    freeze(V, lib);
-}
+void loadrandlib(RTState *) {}
 
 } // namespace via::lib

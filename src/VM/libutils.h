@@ -16,11 +16,3 @@
 
 #define WRAPVAL(val) TValue(new TCFunction(val, false))
 #define ARG_MISMATCH(i, e, g) std::format("Expected {}, got {} for argument #{}\n", (e), (g), (i))
-
-namespace via::lib
-{
-
-TValue quickindex(RTState *, TTable *, const char *);
-void pusharguments(RTState *, std::vector<TValue>);
-
-} // namespace via::lib

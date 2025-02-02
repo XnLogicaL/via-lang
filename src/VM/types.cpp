@@ -5,15 +5,79 @@
 namespace via
 {
 
-TValue::TValue()
-    : type(ValueType::Nil)
+TValue &TValue::operator=(TValue &&other) noexcept
 {
+    if (this != &other)
+    {
+        switch (type)
+        {
+        case ValueType::String:
+            if (!val_string)
+                break;
+
+            delete val_string;
+            this->val_string = nullptr;
+            break;
+        case ValueType::Table:
+            if (!val_table)
+                break;
+
+            delete val_table;
+            break;
+        case ValueType::Function:
+            if (!val_table)
+                break;
+
+            delete val_function;
+            break;
+        case ValueType::CFunction:
+            if (!val_cfunction)
+                break;
+
+            delete val_cfunction;
+            break;
+        default:
+            break;
+        }
+
+        // Move the new state
+        type = other.type;
+        switch (type)
+        {
+        case ValueType::Number:
+            val_number = other.val_number;
+            break;
+        case ValueType::Bool:
+            val_boolean = other.val_boolean;
+            break;
+        case ValueType::String:
+            val_string = other.val_string;
+            other.val_string = nullptr;
+            break;
+        case ValueType::Table:
+            val_table = other.val_table;
+            other.val_table = nullptr;
+            break;
+        case ValueType::Function:
+            val_function = other.val_function;
+            other.val_function = nullptr;
+            break;
+        case ValueType::CFunction:
+            val_cfunction = other.val_cfunction;
+            other.val_cfunction = nullptr;
+            break;
+        default:
+            break;
+        }
+        other.type = ValueType::Monostate;
+    }
+    return *this;
 }
 
-TValue::TValue(const TValue &other)
+TValue::TValue(TValue &&other) noexcept
     : type(other.type)
 {
-    switch (other.type)
+    switch (type)
     {
     case ValueType::Number:
         this->val_number = other.val_number;
@@ -22,64 +86,51 @@ TValue::TValue(const TValue &other)
         this->val_boolean = other.val_boolean;
         break;
     case ValueType::String:
-        this->val_string = new TString(nullptr, other.val_string->ptr);
+        this->val_string = other.val_string;
+        other.val_string = nullptr;
         break;
     case ValueType::Table:
-        this->val_table = new TTable(other.val_table->meta, other.val_table->frozen.get(), other.val_table->data);
+        this->val_table = other.val_table;
+        other.val_table = nullptr;
         break;
     case ValueType::Function:
-        this->val_function = new TFunction(
-            nullptr,
-            other.val_function->id,
-            other.val_function->ret_addr,
-            other.val_function->caller,
-            other.val_function->bytecode,
-            other.val_function->error_handler,
-            other.val_function->is_vararg
-        );
+        this->val_function = other.val_function;
+        other.val_function = nullptr;
         break;
     case ValueType::CFunction:
-        this->val_cfunction = new TCFunction(other.val_cfunction->ptr, other.val_cfunction->error_handler);
+        this->val_cfunction = other.val_cfunction;
+        other.val_cfunction = nullptr;
         break;
     default:
         break;
     }
-};
 
-TValue::TValue(TNumber x)
-    : type(ValueType::Number)
-    , val_number(x)
-{
+    other.type = ValueType::Monostate;
 }
 
-TValue::TValue(TBool b)
-    : type(ValueType::Bool)
-    , val_boolean(b)
+TValue::TValue(const Operand &operand)
 {
-}
-
-TValue::TValue(TString *str)
-    : type(ValueType::String)
-    , val_string(str)
-{
-}
-
-TValue::TValue(TFunction *fun)
-    : type(ValueType::Function)
-    , val_function(fun)
-{
-}
-
-TValue::TValue(TCFunction *cfun)
-    : type(ValueType::CFunction)
-    , val_cfunction(cfun)
-{
-}
-
-TValue::TValue(TTable *tbl)
-    : type(ValueType::Table)
-    , val_table(tbl)
-{
+    switch (operand.type)
+    {
+    case OperandType::Number:
+        this->val_number = operand.val_number;
+        this->type = ValueType::Number;
+        break;
+    case OperandType::Bool:
+        this->val_boolean = operand.val_boolean;
+        this->type = ValueType::Bool;
+        break;
+    case OperandType::String:
+        this->val_string = new TString(nullptr, operand.val_string);
+        this->type = ValueType::String;
+        break;
+    case via::OperandType::Nil:
+        this->type = ValueType::Nil;
+        break;
+    default:
+        VIA_ASSERT(false, "Failed to construct TValue from Operand: invalid data type")
+        break;
+    }
 }
 
 TValue::~TValue()
@@ -95,17 +146,56 @@ TValue::~TValue()
         this->val_string = nullptr;
         break;
     case ValueType::Table:
+        if (!val_table)
+            break;
+
         delete val_table;
         break;
     case ValueType::Function:
+        if (!val_table)
+            break;
+
         delete val_function;
         break;
     case ValueType::CFunction:
+        if (!val_cfunction)
+            break;
+
         delete val_cfunction;
         break;
     default:
         break;
     }
+}
+
+TValue TValue::clone() const
+{
+    TValue copy;
+    switch (type)
+    {
+    case ValueType::Number:
+        copy.val_number = this->val_number;
+        break;
+    case ValueType::Bool:
+        copy.val_boolean = this->val_boolean;
+        break;
+    case ValueType::String:
+        copy.val_string = new TString(*this->val_string);
+        break;
+    case ValueType::Table:
+        copy.val_table = new TTable(*this->val_table);
+        break;
+    case ValueType::Function:
+        copy.val_function = new TFunction(*this->val_function);
+        break;
+    case ValueType::CFunction:
+        copy.val_cfunction = new TCFunction(*this->val_cfunction);
+        break;
+    default:
+        break;
+    }
+    copy.type = this->type;
+    return copy;
 }
 
 TString::TString(RTState *V, const char *str)

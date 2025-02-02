@@ -82,7 +82,7 @@ std::string to_string(ProgramData &prog, Instruction instruction)
         comment = std::format("; {}", it->second);
 
     return std::format(
-        "{:<04} {:<12} {:<3} {:<3} {:<3} {:<25} {}",
+        "{:04} {:<12} {:<3} {:<3} {:<3} {:<15} {}",
         instruction.pos,
         ENUM_NAME(instruction.op),
         to_string(instruction.operand1),

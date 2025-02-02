@@ -40,7 +40,7 @@ void Generator::generate_function_declaration_statement(FunctionDeclStmtNode fun
     for (TypedParamNode param : func_stmt.params)
         stack.push(param.ident.value);
 
-    generate_scope_statement(*func_stmt.body);
+    generate_scope_statement(*func_stmt.body, true);
 
     if (program.bytecode->instructions.back().op != OpCode::RETURN)
         push_instruction(OpCode::RETURN, {});
@@ -104,30 +104,35 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
     push_instruction(OpCode::JUMPIFNOT, {Operand(cond), Operand(0.0f)});
 
     size_t body_start = program.bytecode->instructions.size();
-    generate_scope_statement(*while_stmt.body);
+    generate_scope_statement(*while_stmt.body, false);
 
     size_t loop_end = program.bytecode->instructions.size();
 
     Instruction &jump_if_not_instr = program.bytecode->instructions.at(loop_start);
-    jump_if_not_instr.operand2 = Operand(TNumber(size_t(loop_end - loop_start - 1)));
+    jump_if_not_instr.operand2 = Operand(TNumber(loop_end - loop_start - 1));
 
-    push_instruction(OpCode::JUMP, {Operand(TNumber(size_t(-(loop_end - loop_start))))});
+    push_instruction(OpCode::JUMP, {Operand(TNumber(loop_start - loop_end))});
 }
 
 void Generator::generate_for_statement(ForStmtNode for_stmt) {}
 
-void Generator::generate_scope_statement(ScopeStmtNode scope_stmt)
+void Generator::generate_scope_statement(ScopeStmtNode scope_stmt, bool is_function)
 {
     saved_stack_pointer = stack.size();
 
     for (StmtNode stmt : scope_stmt.statements)
         generate_statement(stmt);
 
-    size_t sp_diff = stack.size() - saved_stack_pointer;
-    for (size_t i = 0; i < sp_diff; i++)
+    // Check if the scope body belongs to a scope
+    // If it does, then manually clean up all variables pushed onto the stack by the scope
+    if (!is_function)
     {
-        stack.pop();
-        push_instruction(OpCode::POP, {Operand(RegId(VIA_REGISTER_COUNT))});
+        size_t sp_diff = stack.size() - saved_stack_pointer;
+        for (size_t i = 0; i < sp_diff; i++)
+        {
+            stack.pop();
+            push_instruction(OpCode::POP, {Operand(RegId(VIA_REGISTER_COUNT))});
+        }
     }
 }
 
@@ -135,7 +140,14 @@ void Generator::generate_if_statement(IfStmtNode if_stmt) {}
 
 void Generator::generate_switch_statement(SwitchStmtNode switch_stmt) {}
 
-void Generator::generate_return_statement(ReturnStmtNode ret_stmt) {}
+void Generator::generate_return_statement(ReturnStmtNode ret_stmt)
+{
+    size_t retc = ret_stmt.values.size();
+    for (ExprNode ret : ret_stmt.values)
+        generate_expression(ret, VIA_REGISTER_INVALID);
+
+    push_instruction(OpCode::RETURN, {Operand(static_cast<TNumber>(retc))});
+}
 
 void Generator::generate_break_statement() {}
 
@@ -161,7 +173,7 @@ void Generator::generate_statement(StmtNode stmt)
     else if (ForStmtNode *for_stmt = std::get_if<ForStmtNode>(&stmt.stmt))
         generate_for_statement(*for_stmt);
     else if (ScopeStmtNode *scope_stmt = std::get_if<ScopeStmtNode>(&stmt.stmt))
-        generate_scope_statement(*scope_stmt);
+        generate_scope_statement(*scope_stmt, false);
     else if (IfStmtNode *if_stmt = std::get_if<IfStmtNode>(&stmt.stmt))
         generate_if_statement(*if_stmt);
     else if (SwitchStmtNode *switch_stmt = std::get_if<SwitchStmtNode>(&stmt.stmt))

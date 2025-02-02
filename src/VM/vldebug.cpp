@@ -24,19 +24,6 @@ void debug_traceback(RTState *V)
     pushval(V, str);
 }
 
-void loaddebuglib(RTState *V)
-{
-    static const HashMap<const char *, TValue> debug_properties = {
-        {"traceback", WRAPVAL(debug_traceback)},
-    };
-
-    TTable *lib = new TTable();
-
-    for (const auto &[ident, val] : debug_properties)
-        settable(V, lib, hashstring(V, ident), val);
-
-    freeze(V, lib);
-    setglobal(V, "debug", TValue(lib));
-}
+void loaddebuglib(RTState *) {}
 
 } // namespace via
