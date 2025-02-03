@@ -29,8 +29,8 @@ struct RAState;
 struct TString;
 
 // Type aliases for convenience, not much else
-using StrTable = HashMap<Hash, TString *>;
-using GlbTable = HashMap<kGlobId, TValue>;
+using StrTable = std::unordered_map<Hash, TString *>;
+using GlbTable = std::unordered_map<kGlobId, TValue>;
 using kTable = std::vector<TValue>;
 using SymTable = std::vector<std::string>;
 

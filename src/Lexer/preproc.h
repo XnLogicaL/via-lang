@@ -41,8 +41,8 @@ private:
     ProgramData &program;
     size_t pos;
     bool failed;
-    HashMap<std::string, Macro> macro_table;
-    HashMap<std::string, Definition> def_table;
+    std::unordered_map<std::string, Macro> macro_table;
+    std::unordered_map<std::string, Definition> def_table;
     Emitter emitter;
 
 private:

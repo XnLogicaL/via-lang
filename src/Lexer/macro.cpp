@@ -83,7 +83,7 @@ void Preprocessor::expand_macro(const Macro &macro)
                 );
 
             // Map parameter names to their arguments
-            HashMap<std::string, std::vector<Token>> arg_map;
+            std::unordered_map<std::string, std::vector<Token>> arg_map;
             for (size_t i = 0; i < macro.params.size(); ++i)
                 arg_map[macro.params[i]] = macro_args[i];
 

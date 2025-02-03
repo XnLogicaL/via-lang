@@ -9,7 +9,7 @@ namespace via
 
 struct JITState
 {
-    HashMap<std::string_view, int> symbol_table;
+    std::unordered_map<std::string_view, int> symbol_table;
 };
 
 } // namespace via

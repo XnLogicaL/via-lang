@@ -9,7 +9,7 @@ using namespace asmjit;
 
 void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Operand> ops)
 {
-    static HashMap<size_t, x86::Gp> arg_map = {
+    static std::unordered_map<size_t, x86::Gp> arg_map = {
         {0, x86::rdi},
         {1, x86::rsi},
         {2, x86::rdx},

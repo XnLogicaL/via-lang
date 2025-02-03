@@ -105,24 +105,21 @@ struct TokenHolder;
 struct AbstractSyntaxTree;
 struct BytecodeHolder;
 
-template<typename K, typename T>
-using HashMap = std::unordered_map<K, T>; // General purpose hashmap.
-using Hash = std::uint32_t;               // Hash type.
-using LabelId = std::string_view;         // Label identifier.
-using CallArgc = std::uint8_t;            // Argument count type.
-using ExitCode = std::int8_t;             // Exit code type.
-using ExitMsg = const char *;             // Exit message type.
-using ThreadId = std::uint32_t;           // Thread identifier.
-using LocalId = std::uint32_t;            // Local variable identifier (stack offset).
-using kGlobId = std::string_view;         // Global constant identifier.
-using RegId = uint32_t;                   // Register
-using StkPos = std::size_t;               // Stack position.
-using StkVal = TValue;                    // Stack value, castable pointer
-using StkAddr = StkVal *;                 // Stack address
-using YldTime = float;                    // Yield time type, for the VM.
+using Hash = std::uint32_t;       // Hash type.
+using LabelId = std::string_view; // Label identifier.
+using CallArgc = std::uint8_t;    // Argument count type.
+using ExitCode = std::int8_t;     // Exit code type.
+using ExitMsg = const char *;     // Exit message type.
+using ThreadId = std::uint32_t;   // Thread identifier.
+using LocalId = std::uint32_t;    // Local variable identifier (stack offset).
+using kGlobId = std::string_view; // Global constant identifier.
+using RegId = uint32_t;           // Register
+using StkPos = std::size_t;       // Stack position.
+using StkVal = TValue;            // Stack value, castable pointer
+using StkAddr = StkVal *;         // Stack address
+using YldTime = float;            // Yield time type, for the VM.
 using TNumber = double;
 using TBool = bool;
-using TPointer = uintptr_t;
 using TableKey = Hash;
 
 VIA_FORCEINLINE char *dupstring(const std::string &str)

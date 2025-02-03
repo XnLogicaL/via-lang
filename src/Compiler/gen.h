@@ -70,7 +70,7 @@ private:
     ArenaAllocator alloc; // Custom allocator
     Cleaner cleaner;      // Resource cleaner
     kTable constants;
-    HashMap<kGlobId, TValue> globals;
+    std::unordered_map<kGlobId, TValue> globals;
     TestStack stack;
     std::map<RegId, bool> register_pool;
     Chunk *current_chunk;

@@ -195,7 +195,7 @@ void base_pcall(RTState *V)
 
 void loadbaselib(RTState *V)
 {
-    HashMap<kGlobId, TValue> base_properties;
+    std::unordered_map<kGlobId, TValue> base_properties;
 
     // Emplace each entry instead of using an initializer list
     base_properties.emplace("print", WRAPVAL(base_print));

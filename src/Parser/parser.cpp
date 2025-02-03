@@ -77,7 +77,7 @@ void Parser::panic_and_recover()
 
 DeclarationType Parser::get_decl_type(TokenType type)
 {
-    static const HashMap<TokenType, DeclarationType> decl_type_table = {
+    static const std::unordered_map<TokenType, DeclarationType> decl_type_table = {
         {TokenType::KW_LOCAL, DeclarationType::Local},
         {TokenType::KW_GLOBAL, DeclarationType::Global},
         {TokenType::KW_PROPERTY, DeclarationType::Property},

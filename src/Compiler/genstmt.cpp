@@ -102,8 +102,6 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
 
     generate_expression(*while_stmt.condition, cond);
     push_instruction(OpCode::JUMPIFNOT, {Operand(cond), Operand(0.0f)});
-
-    size_t body_start = program.bytecode->instructions.size();
     generate_scope_statement(*while_stmt.body, false);
 
     size_t loop_end = program.bytecode->instructions.size();
@@ -114,7 +112,7 @@ void Generator::generate_while_statement(WhileStmtNode while_stmt)
     push_instruction(OpCode::JUMP, {Operand(TNumber(loop_start - loop_end))});
 }
 
-void Generator::generate_for_statement(ForStmtNode for_stmt) {}
+void Generator::generate_for_statement(ForStmtNode) {}
 
 void Generator::generate_scope_statement(ScopeStmtNode scope_stmt, bool is_function)
 {
@@ -136,9 +134,9 @@ void Generator::generate_scope_statement(ScopeStmtNode scope_stmt, bool is_funct
     }
 }
 
-void Generator::generate_if_statement(IfStmtNode if_stmt) {}
+void Generator::generate_if_statement(IfStmtNode) {}
 
-void Generator::generate_switch_statement(SwitchStmtNode switch_stmt) {}
+void Generator::generate_switch_statement(SwitchStmtNode) {}
 
 void Generator::generate_return_statement(ReturnStmtNode ret_stmt)
 {

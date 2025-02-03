@@ -116,7 +116,7 @@ Token Tokenizer::read_ident()
         offset++;
     }
 
-    static const HashMap<std::string, TokenType> keyword_map = {
+    static const std::unordered_map<std::string, TokenType> keyword_map = {
         {"do", TokenType::KW_DO},
         {"in", TokenType::KW_IN},
         {"local", TokenType::KW_LOCAL},

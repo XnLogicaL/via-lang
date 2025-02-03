@@ -16,7 +16,6 @@ enum class ValueType
     Number,    // Unified number type, f64
     Bool,      // Bool type, wrapper for `bool`
     String,    // String type, pointer to owning string object
-    Pointer,   // Pointer type, wrapper for `uintptr_t`
     Function,  // Function type (custom object)
     CFunction, // CFunction type, C function pointer wrapper
     Table,     // Table type (custom object)
@@ -30,7 +29,6 @@ struct TValue
     {
         TNumber val_number;
         TBool val_boolean;
-        TPointer val_pointer;
         // These are pointers because their size is larger than 4 bytes,
         // which is what registers are supposed to hold
         TString *val_string;
@@ -140,9 +138,9 @@ struct TTable
     TTable *meta = nullptr;
     // Tells the VM if the table is modifiable
     utils::modifiable_once<bool> frozen = false;
-    HashMap<TableKey, TValue> data = {};
+    std::unordered_map<TableKey, TValue> data = {};
 
-    TTable(TTable *meta = nullptr, bool frozen = false, HashMap<TableKey, TValue> init = {});
+    TTable(TTable *meta = nullptr, bool frozen = false, std::unordered_map<TableKey, TValue> init = {});
 };
 
 // Random hashing algo, may need to be replaced later
@@ -173,11 +171,6 @@ VIA_FORCEINLINE bool checkbool(RTState *, TValue &val)
 VIA_FORCEINLINE bool checknil(RTState *, TValue &val)
 {
     return val.type == ValueType::Nil;
-}
-
-VIA_FORCEINLINE bool checkptr(RTState *, TValue &val)
-{
-    return val.type == ValueType::Pointer;
 }
 
 VIA_FORCEINLINE bool checkstring(RTState *, TValue &val)

@@ -89,11 +89,6 @@ VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue &v0, TValue &v1) no
     case ValueType::Nil:
         // Nil values are always equal
         return true;
-    case ValueType::Pointer:
-        return v0.val_pointer == v1.val_pointer;
-        // Even though values with a heap component are considered unique,
-        // strings are an exception due to well... common sense,
-        // eg. you would compare strings with each other but not tables.
     case ValueType::String:
         return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
     default:

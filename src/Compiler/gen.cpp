@@ -106,7 +106,7 @@ ExprNode Generator::evaluate_constexpr(ExprNode expr)
             break;
         }
     }
-    else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr.expr))
+    else if (/*BinaryExprNode *bin_expr =*/std::get_if<BinaryExprNode>(&expr.expr))
     {
     }
 
@@ -217,7 +217,7 @@ void Generator::free_register(RegId reg)
 
 void Generator::load_operand(Operand dst, Operand operand)
 {
-    static const HashMap<OperandType, OpCode> load_op = {
+    static const std::unordered_map<OperandType, OpCode> load_op = {
         {OperandType::Nil, OpCode::LOADNIL},
         {OperandType::Bool, OpCode::LOADBOOL},
         {OperandType::Number, OpCode::LOADNUMBER},
