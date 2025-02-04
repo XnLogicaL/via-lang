@@ -15,6 +15,8 @@
 // Fuck.
 #include <cmath>
 
+#define CHECK_JUMP_ADDRESS(addr) ((addr >= V->ihp) && (addr <= V->ibp))
+
 namespace via
 {
 
@@ -25,12 +27,6 @@ VIA_MAXOPTIMIZE void setexitdata(State *VIA_RESTRICT V, ExitCode exitc, const st
 {
     V->exitc = exitc;
     V->exitm = dupstring(exitm);
-}
-
-// Returns whether if <addr> is within the bounds of the instruction pipeline.
-VIA_MAXOPTIMIZE bool isvalidjmpaddr(State *VIA_RESTRICT V, Instruction *VIA_RESTRICT const addr) noexcept
-{
-    return (addr >= V->ihp) && (addr <= V->ibp);
 }
 
 // Sets register <reg> to the given value <val>.

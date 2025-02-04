@@ -29,7 +29,7 @@
 // Has bound checks
 #define VM_LOAD() \
     { \
-        if (!isvalidjmpaddr(V, V->ip + 1)) \
+        if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
         { \
             setexitdata(V, 0, ""); \
             VM_EXIT(); \
@@ -104,9 +104,11 @@ dispatch:
     // Check if the state needs to be restored
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
     {
+        State *original = V;
         V->restorestate = false;
         *V = *V->sstate;
         V->sstate = nullptr;
+        delete original;
         // This is necessary because the old instruction pointer may be dangling from now on
         VM_NEXT();
     }
@@ -126,7 +128,7 @@ dispatch:
     VM_ASSERT(
         // This is unlikely because for the ip to go out of bounds, the user specifically has to jump to an invalid address
         // Otherwise, this is completely impossible to be produced by the compiler
-        VIA_UNLIKELY(isvalidjmpaddr(V, V->ip)),
+        VIA_UNLIKELY(CHECK_JUMP_ADDRESS(V->ip)),
         std::format(
             "Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
             reinterpret_cast<const void *>(V->ip),
