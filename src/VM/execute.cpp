@@ -74,7 +74,7 @@ namespace via
 // Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
 void execute(State *VIA_RESTRICT V)
 {
-    VIA_ASSERT(V->tstate == ThreadState::PAUSED, "execute() must be called on paused thread");
+    VIA_ASSERT(V->tstate == ThreadState::PAUSED, "execute(): must be called on paused thread");
     V->tstate = ThreadState::RUNNING;
 
     VM_DISPATCH();

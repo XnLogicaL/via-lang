@@ -33,14 +33,14 @@ VIA_MAXOPTIMIZE void setexitdata(State *VIA_RESTRICT V, ExitCode exitc, const st
 // Wrapper for `rsetregister`.
 VIA_MAXOPTIMIZE void setregister(State *VIA_RESTRICT V, RegId reg, TValue &val) noexcept
 {
-    setregister(V, reg, val);
+    rsetregister(V->ralloc, reg, val);
 }
 
 // Returns the value of register <reg>.
 // Wrapper for `rgetregister`.
 VIA_MAXOPTIMIZE TValue *getregister(State *VIA_RESTRICT V, RegId reg) noexcept
 {
-    return getregister(V, reg);
+    return rgetregister(V->ralloc, reg);
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
