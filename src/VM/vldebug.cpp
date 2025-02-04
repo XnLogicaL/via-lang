@@ -21,7 +21,7 @@ void debug_traceback(State *V)
     }
 
     TValue str(new TString(V, oss.str().c_str()));
-    pushval(V, str);
+    push(V, str);
 }
 
 void loaddebuglib(State *) {}

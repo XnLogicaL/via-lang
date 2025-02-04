@@ -63,7 +63,7 @@ void base_exit(State *V)
 
     LIB_ASSERT(checknumber(V, arg0), "Expected type TNumber for argument 0 of base_exit");
 
-    ExitCode code = arg0.val_number;
+    int code = arg0.val_number;
     setexitdata(V, code, "base_exit called by user");
     V->abrt = true; // Abort the VM execution
 
@@ -75,7 +75,7 @@ void base_type(State *V)
     TValue &arg0 = getargument(V, 0);
     TValue ty = type(V, arg0);
 
-    pushval(V, ty);
+    push(V, ty);
     nativeret(V, 1);
 }
 
@@ -84,7 +84,7 @@ void base_typeof(State *V)
     TValue &arg0 = getargument(V, 0);
     TValue type = typeofv(V, arg0);
 
-    pushval(V, type);
+    push(V, type);
     nativeret(V, 1);
 }
 
@@ -93,7 +93,7 @@ void base_tostring(State *V)
     TValue &arg0 = getargument(V, 0);
     TValue str = tostring(V, arg0);
 
-    pushval(V, str);
+    push(V, str);
     nativeret(V, 1);
 }
 
@@ -102,7 +102,7 @@ void base_tonumber(State *V)
     TValue &arg0 = getargument(V, 0);
     TValue num = tonumber(V, arg0);
 
-    pushval(V, num);
+    push(V, num);
     nativeret(V, 1);
 }
 
@@ -111,7 +111,7 @@ void base_tobool(State *V)
     TValue &arg0 = getargument(V, 0);
     TValue boole = tobool(V, arg0);
 
-    pushval(V, boole);
+    push(V, boole);
     nativeret(V, 1);
 }
 
@@ -129,7 +129,7 @@ void base_assert(State *V)
         TValue err_fn = WRAPVAL(base_error);
 
         // Push the error message onto the argument stack
-        pushval(V, err_val);
+        push(V, err_val);
         // Hack solution, but works!
         call(V, err_fn, 1);
     }
@@ -142,7 +142,7 @@ void base_getmetatable(State *V)
     LIB_ASSERT(checktable(V, arg0), "base_getmetatable expects a table");
 
     TValue meta = getmetatable(V, arg0.val_table);
-    pushval(V, meta);
+    push(V, meta);
     nativeret(V, 1);
 }
 
@@ -165,7 +165,7 @@ void base_pcall(State *V)
     for (size_t i = 0; i < V->argc; i++)
     {
         TValue &arg = getargument(V, i);
-        pushval(V, arg);
+        push(V, arg);
     }
 
     call(V, callback, V->argc - 1);
@@ -174,10 +174,10 @@ void base_pcall(State *V)
     if (success)
     {
         TValue success_val(success);
-        TValue result_val = popval(V);
+        TValue result_val = pop(V);
 
-        pushval(V, success_val);
-        pushval(V, result_val);
+        push(V, success_val);
+        push(V, result_val);
     }
     else
     {
@@ -186,8 +186,8 @@ void base_pcall(State *V)
         TValue exit_value(exit_string);
         TValue success_val(success);
 
-        pushval(V, success_val);
-        pushval(V, exit_value);
+        push(V, success_val);
+        push(V, exit_value);
     }
 
     nativeret(V, 2);

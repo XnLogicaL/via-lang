@@ -153,57 +153,57 @@ VIA_FORCEINLINE Hash hashstring(State *, const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool checkmonostate(State *, TValue &val)
+VIA_FORCEINLINE bool checkmonostate(State *, const TValue &val)
 {
     return val.type == ValueType::Monostate;
 }
 
-VIA_FORCEINLINE bool checknumber(State *, TValue &val)
+VIA_FORCEINLINE bool checknumber(State *, const TValue &val)
 {
     return val.type == ValueType::Number;
 }
 
-VIA_FORCEINLINE bool checkbool(State *, TValue &val)
+VIA_FORCEINLINE bool checkbool(State *, const TValue &val)
 {
     return val.type == ValueType::Bool;
 }
 
-VIA_FORCEINLINE bool checknil(State *, TValue &val)
+VIA_FORCEINLINE bool checknil(State *, const TValue &val)
 {
     return val.type == ValueType::Nil;
 }
 
-VIA_FORCEINLINE bool checkstring(State *, TValue &val)
+VIA_FORCEINLINE bool checkstring(State *, const TValue &val)
 {
     return val.type == ValueType::String;
 }
 
-VIA_FORCEINLINE bool checktable(State *, TValue &val)
+VIA_FORCEINLINE bool checktable(State *, const TValue &val)
 {
     return val.type == ValueType::Table;
 }
 
-VIA_FORCEINLINE bool checkcfunction(State *, TValue &val)
+VIA_FORCEINLINE bool checkcfunction(State *, const TValue &val)
 {
     return val.type == ValueType::CFunction;
 }
 
-VIA_FORCEINLINE bool checkfunction(State *, TValue &val)
+VIA_FORCEINLINE bool checkfunction(State *, const TValue &val)
 {
     return val.type == ValueType::Function;
 }
 
-VIA_FORCEINLINE bool checkempty(State *V, TValue &val)
+VIA_FORCEINLINE bool checkempty(State *V, const TValue &val)
 {
     return checknil(V, val) || checkmonostate(V, val);
 }
 
-VIA_FORCEINLINE bool checkcallable(State *V, TValue &val)
+VIA_FORCEINLINE bool checkcallable(State *V, const TValue &val)
 {
     return checkfunction(V, val) || checkcfunction(V, val);
 }
 
-VIA_FORCEINLINE bool checksubscriptable(State *V, TValue &val)
+VIA_FORCEINLINE bool checksubscriptable(State *V, const TValue &val)
 {
     return checktable(V, val) || checkstring(V, val);
 }

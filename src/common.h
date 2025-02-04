@@ -60,6 +60,7 @@
 
 // TODO: Make sure this is accurate
 #define VIA_VERSION ("0.4")
+
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__
     #define VIA_NORETURN __attribute__((__noreturn__))
@@ -107,16 +108,11 @@ struct BytecodeHolder;
 
 using Hash = std::uint32_t;       // Hash type.
 using LabelId = std::string_view; // Label identifier.
-using CallArgc = std::uint8_t;    // Argument count type.
-using ExitCode = std::int8_t;     // Exit code type.
-using ExitMsg = const char *;     // Exit message type.
 using ThreadId = std::uint32_t;   // Thread identifier.
 using LocalId = std::uint32_t;    // Local variable identifier (stack offset).
 using kGlobId = std::string_view; // Global constant identifier.
-using RegId = uint32_t;           // Register
+using RegId = std::uint32_t;      // Register
 using StkPos = std::size_t;       // Stack position.
-using StkVal = TValue;            // Stack value, castable pointer
-using StkAddr = StkVal *;         // Stack address
 using YldTime = float;            // Yield time type, for the VM.
 using TNumber = double;
 using TBool = bool;

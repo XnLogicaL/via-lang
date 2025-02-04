@@ -19,8 +19,8 @@ void dbgprintregistermap(State *VIA_RESTRICT V = nullptr, size_t count = VIA_REG
 
 void dbgprintstack(State *VIA_RESTRICT V = nullptr)
 {
-    StkVal *sp = V->stack->sbp + V->stack->sp;
-    for (StkVal *i = sp; i < V->stack->sbp; i++)
+    TValue *sp = V->sbp + V->sp;
+    for (TValue *i = sp; i < V->sbp; i++)
         std::cout << std::format("|{}| {}\n", reinterpret_cast<const void *>(i), reinterpret_cast<const void *>(i));
 }
 

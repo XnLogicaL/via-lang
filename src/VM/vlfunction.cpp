@@ -13,12 +13,12 @@ void function_name(State *V)
     // If so return nil
     if (!checkfunction(V, func))
     {
-        pushval(V, nil);
+        push(V, nil);
         return;
     }
 
     TValue id = TValue(func.val_function->id);
-    pushval(V, id);
+    push(V, id);
     nativeret(V, 1);
 }
 

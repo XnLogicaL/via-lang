@@ -3,7 +3,6 @@
 #include "state.h"
 #include "api.h"
 #include "bytecode.h"
-#include "stack.h"
 #include "register.h"
 #include "gc.h"
 
@@ -15,12 +14,13 @@ State::State(GState *G, ProgramData &program)
     : id(G->threads++)
     , G(G)
     , ihp(nullptr)
-    , stack(new TStack())
     , ralloc(new RAState())
     , gc(new GCState())
+    , sbp(new TValue[VIA_VM_STACK_SIZE])
+    , sp(0)
+    , ssp(0)
     , frame(nullptr)
     , argc(0)
-    , heapptr(nullptr)
     , exitc(0)
     , exitm("")
     , abrt(false)
@@ -74,7 +74,6 @@ State::~State()
 {
     delete this->G;
     delete this->gc;
-    delete this->stack;
     delete this->ralloc;
 
     // Clean up saved state, if there is one
@@ -84,6 +83,7 @@ State::~State()
     // This automatically invalidates both ip and ibp
     // No need to clean them up seperately
     delete[] this->ihp;
+    delete[] this->sbp;
 }
 
 } // namespace via

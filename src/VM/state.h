@@ -11,12 +11,10 @@
     #define VIA_MAIN_ID ("__main")
 #endif
 
-/* Context switching
+#ifndef VIA_VM_STACK_SIZE
+    #define VIA_VM_STACK_SIZE (8 * 1024 * 1024) // 8 MBs
+#endif
 
-    Context switching is pretty straight forward, the state is copied to the heap,
-    and then simply referenced inside the original state until it needs to be restored.
-
-*/
 namespace via
 {
 
@@ -76,22 +74,22 @@ struct alignas(64) State
     Instruction *ibp; // Instruction list base pointer
 
     // VM execution state
-    TStack *stack;   // Pointer to VM stack
     RAState *ralloc; // Pointer to VM register allocator state
     GCState *gc;     // Pointer to VM garbage collector state
 
+    // Stack state
+    TValue *sbp; // Stack base pointer
+    size_t sp;   // Stack pointer
+    size_t ssp;  // Saved stack pointer
+
     // Call and frame management
-    size_t ssp;        // Saved stack pointer
     TFunction *frame;  // Call stack pointer
-    CallArgc argc;     // Argument count (for CALL and FASTCALLX)
+    size_t argc;       // Argument count (for CALL and FASTCALLX)
     CallType calltype; // Current calling convention
 
-    // Heap and memory management
-    TValue *heapptr; // Pointer to the first heap-allocated value
-
     // VM control and debugging
-    ExitCode exitc;    // VM exit code
-    ExitMsg exitm;     // VM exit message
+    size_t exitc;      // VM exit code
+    const char *exitm; // VM exit message
     bool abrt;         // Abort on the next VM cycle
     bool skip;         // Skip the next instruction on the next VM cycle
     bool yield;        // Yield on the next VM cycle (debounced)
