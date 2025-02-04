@@ -1,5 +1,4 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #pragma once
 
@@ -47,13 +46,13 @@ VIA_FORCEINLINE void *topointer(State *VIA_RESTRICT, const TValue &val) noexcept
 {
     switch (val.type)
     {
-    case ValueType::CFunction:
+    case ValueType::cfunction:
         return val.val_cfunction;
-    case ValueType::Function:
+    case ValueType::function:
         return val.val_function;
-    case ValueType::Table:
+    case ValueType::table:
         return val.val_table;
-    case ValueType::String:
+    case ValueType::string:
         return val.val_string;
     default:
         return nullptr;
@@ -77,14 +76,14 @@ VIA_MAXOPTIMIZE bool compare(State *VIA_RESTRICT V, const TValue &v0, const TVal
     // Optimized for most efficient branching by sorting the cases from most common to least
     switch (v0.type)
     {
-    case ValueType::Number:
+    case ValueType::number:
         return v0.val_number == v1.val_number;
-    case ValueType::Bool:
+    case ValueType::boolean:
         return v0.val_boolean == v1.val_boolean;
-    case ValueType::Nil:
+    case ValueType::nil:
         // Nil values are always equal
         return true;
-    case ValueType::String:
+    case ValueType::string:
         return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
     default:
         return topointer(V, v0) == topointer(V, v1);
@@ -145,18 +144,18 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
 
     switch (val.type)
     {
-    case ValueType::Number:
+    case ValueType::number:
     {
         std::string str = std::to_string(val.val_number);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::Bool:
+    case ValueType::boolean:
     {
         TString *str = new TString(V, val.val_boolean ? "true" : "false");
         return TValue(str);
     }
-    case ValueType::Table:
+    case ValueType::table:
     {
         std::string str = "{";
 
@@ -174,14 +173,14 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::Function:
+    case ValueType::function:
     {
         const void *faddr = val.val_function;
         std::string str = std::format("<function@{}>", faddr);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::CFunction:
+    case ValueType::cfunction:
     {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = val.val_cfunction;
@@ -211,8 +210,8 @@ VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, TValue &val) noexcept
     switch (val.type)
     {
     // Nil and Monostate is the only falsy type
-    case ValueType::Nil:
-    case ValueType::Monostate:
+    case ValueType::nil:
+    case ValueType::monostate:
         return TValue(false);
     default:
         return TValue(true);
@@ -231,9 +230,9 @@ VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, TValue &val) noexcept
 
     switch (val.type)
     {
-    case ValueType::String:
+    case ValueType::string:
         return TValue(std::stod(val.val_string->ptr));
-    case ValueType::Bool:
+    case ValueType::boolean:
         return TValue(val.val_boolean ? 1.0f : 0.0f);
     default:
         break;

@@ -31,7 +31,7 @@ State::State(GState *G, ProgramData &program)
     , tstate(ThreadState::PAUSED)
     , sstate(nullptr)
 {
-    loadinstructions(*program.bytecode);
+    load(*program.bytecode);
 
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
@@ -39,7 +39,7 @@ State::State(GState *G, ProgramData &program)
     nativecall(this, main, 0);
 }
 
-void State::loadinstructions(BytecodeHolder &bytecode)
+void State::load(BytecodeHolder &bytecode)
 {
     if (this->ihp)
     { // Clean up previous instruction pipeline

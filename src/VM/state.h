@@ -103,7 +103,7 @@ struct alignas(64) State
     State(GState *, ProgramData &);
     ~State();
 
-    void loadinstructions(BytecodeHolder &);
+    void load(BytecodeHolder &);
 };
 
 } // namespace via

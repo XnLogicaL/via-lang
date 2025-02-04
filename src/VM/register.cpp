@@ -13,8 +13,8 @@ RAState::RAState()
     for (RegId i = 0; i < VIA_REGISTER_COUNT; i++)
     {
         TValue val;
-        val.type = ValueType::Monostate;
-        rsetregister(this, i, val);
+        val.type = ValueType::monostate;
+        rsetregister(this, i, val.clone());
     }
 }
 

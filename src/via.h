@@ -18,7 +18,6 @@
 #include "VM/api.h"
 #include "VM/state.h"
 #include "VM/types.h"
-#include "VM/stack.h"
 #include "VM/register.h"
 #include "VM/debug.h"
 #include "VM/vlbase.h"
@@ -30,10 +29,7 @@
 #include "VM/vlthread.h"
 #include "VM/vlfs.h"
 #include "VM/vlfunction.h"
-#include "VM/vlhttp.h"
 #include "VM/vlstring.h"
-#include "VM/vlutf8.h"
-#include "VM/vlutf8.h"
 #include "VM/vlbit.h"
 #include "VM/execute.h"
 

@@ -11,20 +11,20 @@ namespace via
 
 enum class ValueType
 {
-    Monostate, // Represents uninitialized values
-    Nil,       // Empty values, like null, does not contain a union counterpart
-    Number,    // Unified number type, f64
-    Bool,      // Bool type, wrapper for `bool`
-    String,    // String type, pointer to owning string object
-    Function,  // Function type (custom object)
-    CFunction, // CFunction type, C function pointer wrapper
-    Table,     // Table type (custom object)
+    monostate, // Represents uninitialized values
+    nil,       // Empty values, like null, does not contain a union counterpart
+    number,    // Unified number type, f64
+    boolean,   // Bool type, wrapper for `bool`
+    string,    // String type, pointer to owning string object
+    function,  // Function type (custom object)
+    cfunction, // CFunction type, C function pointer wrapper
+    table,     // Table type (custom object)
 };
 
 // Tagged union that holds a primitive via value
 struct TValue
 {
-    ValueType type = ValueType::Monostate;
+    ValueType type = ValueType::monostate;
     union
     {
         TNumber val_number;
@@ -45,42 +45,42 @@ struct TValue
     ~TValue();                                  // Declare destructor
 
     explicit TValue()
-        : type(ValueType::Nil)
+        : type(ValueType::nil)
     {
     }
 
     explicit TValue(TNumber x)
-        : type(ValueType::Number)
+        : type(ValueType::number)
         , val_number(x)
     {
     }
 
     explicit TValue(TBool b)
-        : type(ValueType::Bool)
+        : type(ValueType::boolean)
         , val_boolean(b)
     {
     }
 
     explicit TValue(TString *str)
-        : type(ValueType::String)
+        : type(ValueType::string)
         , val_string(str)
     {
     }
 
     explicit TValue(TFunction *fun)
-        : type(ValueType::Function)
+        : type(ValueType::function)
         , val_function(fun)
     {
     }
 
     explicit TValue(TCFunction *cfun)
-        : type(ValueType::CFunction)
+        : type(ValueType::cfunction)
         , val_cfunction(cfun)
     {
     }
 
     explicit TValue(TTable *tbl)
-        : type(ValueType::Table)
+        : type(ValueType::table)
         , val_table(tbl)
     {
     }
@@ -155,42 +155,42 @@ VIA_FORCEINLINE Hash hashstring(State *, const char *str)
 
 VIA_FORCEINLINE bool checkmonostate(State *, const TValue &val)
 {
-    return val.type == ValueType::Monostate;
+    return val.type == ValueType::monostate;
 }
 
 VIA_FORCEINLINE bool checknumber(State *, const TValue &val)
 {
-    return val.type == ValueType::Number;
+    return val.type == ValueType::number;
 }
 
 VIA_FORCEINLINE bool checkbool(State *, const TValue &val)
 {
-    return val.type == ValueType::Bool;
+    return val.type == ValueType::boolean;
 }
 
 VIA_FORCEINLINE bool checknil(State *, const TValue &val)
 {
-    return val.type == ValueType::Nil;
+    return val.type == ValueType::nil;
 }
 
 VIA_FORCEINLINE bool checkstring(State *, const TValue &val)
 {
-    return val.type == ValueType::String;
+    return val.type == ValueType::string;
 }
 
 VIA_FORCEINLINE bool checktable(State *, const TValue &val)
 {
-    return val.type == ValueType::Table;
+    return val.type == ValueType::table;
 }
 
 VIA_FORCEINLINE bool checkcfunction(State *, const TValue &val)
 {
-    return val.type == ValueType::CFunction;
+    return val.type == ValueType::cfunction;
 }
 
 VIA_FORCEINLINE bool checkfunction(State *, const TValue &val)
 {
-    return val.type == ValueType::Function;
+    return val.type == ValueType::function;
 }
 
 VIA_FORCEINLINE bool checkempty(State *V, const TValue &val)
