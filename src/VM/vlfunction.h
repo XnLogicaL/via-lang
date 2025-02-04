@@ -9,9 +9,9 @@ namespace via::lib
 {
 
 // Returns the "name" aka identifier of the given function
-void function_name(RTState *);
-void function_parameters(RTState *);
-void function_returntype(RTState *);
-void function_line(RTState *);
+void function_name(State *);
+void function_parameters(State *);
+void function_returntype(State *);
+void function_line(State *);
 
 } // namespace via::lib

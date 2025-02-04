@@ -49,7 +49,7 @@ public:
     Interpreter(ProgramData &program)
         : program(program)
         , gstate(new GState())
-        , rtstate(new RTState(gstate, program))
+        , rtstate(new State(gstate, program))
     {
         lib::loadbaselib(rtstate);
         lib::loadmathlib(rtstate);
@@ -67,7 +67,7 @@ public:
 public:
     ProgramData &program;
     GState *gstate;
-    RTState *rtstate;
+    State *rtstate;
 
 private:
     void tokenize();

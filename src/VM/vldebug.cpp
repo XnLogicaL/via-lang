@@ -6,7 +6,7 @@
 namespace via
 {
 
-void debug_traceback(RTState *V)
+void debug_traceback(State *V)
 {
     TFunction *frame = V->frame;
     std::ostringstream oss;
@@ -24,6 +24,6 @@ void debug_traceback(RTState *V)
     pushval(V, str);
 }
 
-void loaddebuglib(RTState *) {}
+void loaddebuglib(State *) {}
 
 } // namespace via

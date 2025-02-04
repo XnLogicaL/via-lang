@@ -11,25 +11,25 @@
 namespace via::lib
 {
 
-void math_exp(RTState *V);
-void math_log(RTState *V);
-void math_log10(RTState *V);
-void math_pow(RTState *V);
-void math_cos(RTState *V);
-void math_tan(RTState *V);
-void math_asin(RTState *V);
-void math_acos(RTState *V);
-void math_atan(RTState *V);
-void math_atan2(RTState *V);
-void math_sinh(RTState *V);
-void math_cosh(RTState *V);
-void math_tanh(RTState *V);
-void math_abs(RTState *V);
-void math_min(RTState *V);
-void math_max(RTState *V);
-void math_round(RTState *V);
-void math_floor(RTState *V);
-void math_ceil(RTState *V);
-void loadmathlib(RTState *V);
+void math_exp(State *V);
+void math_log(State *V);
+void math_log10(State *V);
+void math_pow(State *V);
+void math_cos(State *V);
+void math_tan(State *V);
+void math_asin(State *V);
+void math_acos(State *V);
+void math_atan(State *V);
+void math_atan2(State *V);
+void math_sinh(State *V);
+void math_cosh(State *V);
+void math_tanh(State *V);
+void math_abs(State *V);
+void math_min(State *V);
+void math_max(State *V);
+void math_round(State *V);
+void math_floor(State *V);
+void math_ceil(State *V);
+void loadmathlib(State *V);
 
 } // namespace via::lib

@@ -9,8 +9,8 @@ namespace via
 {
 
 // Main VM function that starts execution
-void execute(RTState *VIA_RESTRICT V);
-void killthread(RTState *VIA_RESTRICT V);
-void pausethread(RTState *VIA_RESTRICT V);
+void execute(State *VIA_RESTRICT V);
+void killthread(State *VIA_RESTRICT V);
+void pausethread(State *VIA_RESTRICT V);
 
 } // namespace via

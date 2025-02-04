@@ -5,11 +5,11 @@
 namespace via
 {
 
-void dbgprintregistermap(RTState *VIA_RESTRICT V = nullptr, size_t count = VIA_REGISTER_COUNT)
+void dbgprintregistermap(State *VIA_RESTRICT V = nullptr, size_t count = VIA_REGISTER_COUNT)
 {
     for (RegId reg = 0; reg <= count; reg++)
     {
-        TValue *val = rgetregister(V->ralloc, reg);
+        TValue *val = getregister(V, reg);
         TValue &val_clone = *val;
         tostring(V, val_clone);
         std::string fmt = std::format("R{}<'{}':'{}'@{}>", reg, ENUM_NAME(val->type), val_clone.val_string->ptr, reinterpret_cast<const void *>(val));
@@ -17,7 +17,7 @@ void dbgprintregistermap(RTState *VIA_RESTRICT V = nullptr, size_t count = VIA_R
     }
 }
 
-void dbgprintstack(RTState *VIA_RESTRICT V = nullptr)
+void dbgprintstack(State *VIA_RESTRICT V = nullptr)
 {
     StkVal *sp = V->stack->sbp + V->stack->sp;
     for (StkVal *i = sp; i < V->stack->sbp; i++)

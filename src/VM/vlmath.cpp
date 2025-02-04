@@ -5,7 +5,7 @@
 namespace via::lib
 {
 
-void math_exp(RTState *V)
+void math_exp(State *V)
 {
     TValue &num = getargument(V, 0);
 
@@ -16,7 +16,7 @@ void math_exp(RTState *V)
     nativeret(V, 1);
 }
 
-void math_log(RTState *V)
+void math_log(State *V)
 {
     TValue &base = getargument(V, 0);
     TValue &num = getargument(V, 1);
@@ -29,7 +29,7 @@ void math_log(RTState *V)
     nativeret(V, 1);
 }
 
-void math_log10(RTState *V)
+void math_log10(State *V)
 {
     TValue &num = getargument(V, 0);
 
@@ -40,7 +40,7 @@ void math_log10(RTState *V)
     nativeret(V, 1);
 }
 
-void math_pow(RTState *V)
+void math_pow(State *V)
 {
     TValue &num = getargument(V, 0);
     TValue &e = getargument(V, 1);
@@ -53,7 +53,7 @@ void math_pow(RTState *V)
     nativeret(V, 1);
 }
 
-void math_cos(RTState *V)
+void math_cos(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -64,7 +64,7 @@ void math_cos(RTState *V)
     nativeret(V, 1);
 }
 
-void math_tan(RTState *V)
+void math_tan(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -75,7 +75,7 @@ void math_tan(RTState *V)
     nativeret(V, 1);
 }
 
-void math_asin(RTState *V)
+void math_asin(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -86,7 +86,7 @@ void math_asin(RTState *V)
     nativeret(V, 1);
 }
 
-void math_acos(RTState *V)
+void math_acos(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -97,7 +97,7 @@ void math_acos(RTState *V)
     nativeret(V, 1);
 }
 
-void math_atan(RTState *V)
+void math_atan(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -108,7 +108,7 @@ void math_atan(RTState *V)
     nativeret(V, 1);
 }
 
-void math_atan2(RTState *V)
+void math_atan2(State *V)
 {
     TValue &t = getargument(V, 0);
     TValue &x = getargument(V, 1);
@@ -121,7 +121,7 @@ void math_atan2(RTState *V)
     nativeret(V, 1);
 }
 
-void math_sinh(RTState *V)
+void math_sinh(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -132,7 +132,7 @@ void math_sinh(RTState *V)
     nativeret(V, 1);
 }
 
-void math_cosh(RTState *V)
+void math_cosh(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -143,7 +143,7 @@ void math_cosh(RTState *V)
     nativeret(V, 1);
 }
 
-void math_tanh(RTState *V)
+void math_tanh(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -154,7 +154,7 @@ void math_tanh(RTState *V)
     nativeret(V, 1);
 }
 
-void math_abs(RTState *V)
+void math_abs(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -165,7 +165,7 @@ void math_abs(RTState *V)
     nativeret(V, 1);
 }
 
-void math_min(RTState *V)
+void math_min(State *V)
 {
     TValue &t = getargument(V, 0);
     TValue &x = getargument(V, 1);
@@ -178,7 +178,7 @@ void math_min(RTState *V)
     nativeret(V, 1);
 }
 
-void math_max(RTState *V)
+void math_max(State *V)
 {
     TValue &t = getargument(V, 0);
     TValue &x = getargument(V, 1);
@@ -191,7 +191,7 @@ void math_max(RTState *V)
     nativeret(V, 1);
 }
 
-void math_round(RTState *V)
+void math_round(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -202,7 +202,7 @@ void math_round(RTState *V)
     nativeret(V, 1);
 }
 
-void math_floor(RTState *V)
+void math_floor(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -213,7 +213,7 @@ void math_floor(RTState *V)
     nativeret(V, 1);
 }
 
-void math_ceil(RTState *V)
+void math_ceil(State *V)
 {
     TValue &t = getargument(V, 0);
 
@@ -224,6 +224,6 @@ void math_ceil(RTState *V)
     nativeret(V, 1);
 }
 
-void loadmathlib(RTState *) {}
+void loadmathlib(State *) {}
 
 } // namespace via::lib

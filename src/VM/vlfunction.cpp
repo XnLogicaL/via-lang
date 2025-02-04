@@ -5,7 +5,7 @@
 namespace via::lib
 {
 
-void function_name(RTState *V)
+void function_name(State *V)
 {
     TValue &func = getargument(V, 0);
 

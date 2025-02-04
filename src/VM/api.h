@@ -21,34 +21,34 @@ namespace via
 static TValue nil = TValue();
 
 // Manually sets the VM exit data.
-VIA_MAXOPTIMIZE void setexitdata(RTState *VIA_RESTRICT V, ExitCode exitc, const std::string &exitm) noexcept
+VIA_MAXOPTIMIZE void setexitdata(State *VIA_RESTRICT V, ExitCode exitc, const std::string &exitm) noexcept
 {
     V->exitc = exitc;
     V->exitm = dupstring(exitm);
 }
 
 // Returns whether if <addr> is within the bounds of the instruction pipeline.
-VIA_MAXOPTIMIZE bool isvalidjmpaddr(RTState *VIA_RESTRICT V, Instruction *VIA_RESTRICT const addr) noexcept
+VIA_MAXOPTIMIZE bool isvalidjmpaddr(State *VIA_RESTRICT V, Instruction *VIA_RESTRICT const addr) noexcept
 {
     return (addr >= V->ihp) && (addr <= V->ibp);
 }
 
 // Sets register <reg> to the given value <val>.
 // Wrapper for `rsetregister`.
-VIA_MAXOPTIMIZE void setregister(RTState *VIA_RESTRICT V, RegId reg, TValue &val) noexcept
+VIA_MAXOPTIMIZE void setregister(State *VIA_RESTRICT V, RegId reg, TValue &val) noexcept
 {
-    rsetregister(V->ralloc, reg, val);
+    setregister(V, reg, val);
 }
 
 // Returns the value of register <reg>.
 // Wrapper for `rgetregister`.
-VIA_MAXOPTIMIZE TValue *getregister(RTState *VIA_RESTRICT V, RegId reg) noexcept
+VIA_MAXOPTIMIZE TValue *getregister(State *VIA_RESTRICT V, RegId reg) noexcept
 {
-    return rgetregister(V->ralloc, reg);
+    return getregister(V, reg);
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
-VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue &val) noexcept
+VIA_FORCEINLINE void *topointer(State *VIA_RESTRICT, TValue &val) noexcept
 {
     switch (val.type)
     {
@@ -66,14 +66,14 @@ VIA_FORCEINLINE void *topointer(RTState *VIA_RESTRICT, TValue &val) noexcept
 }
 
 // Returns whether if <val> has a heap component.
-VIA_FORCEINLINE bool isheap(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE bool isheap(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     return topointer(V, val) != nullptr;
 }
 
 // Compares 2 values and returns whether if they are equal.
 // Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue &v0, TValue &v1) noexcept
+VIA_MAXOPTIMIZE bool compare(State *VIA_RESTRICT V, TValue &v0, TValue &v1) noexcept
 {
     // Early return; if types aren't the same they cannot be equivalent
     if (v0.type != v1.type)
@@ -101,7 +101,7 @@ VIA_MAXOPTIMIZE bool compare(RTState *VIA_RESTRICT V, TValue &v0, TValue &v1) no
 
 // Compares the values of two registers and returns whether if they are
 // equivalent. Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compareregisters(RTState *VIA_RESTRICT V, RegId reg0, RegId reg1) noexcept
+VIA_MAXOPTIMIZE bool compareregisters(State *VIA_RESTRICT V, RegId reg0, RegId reg1) noexcept
 {
     // Early return if registers are equivalent
     if (reg0 == reg1)
@@ -122,21 +122,21 @@ VIA_MAXOPTIMIZE bool compareregisters(RTState *VIA_RESTRICT V, RegId reg0, RegId
 
 // Pushes a value onto the stack.
 // Wrapper for `tspush`. Copies the value.
-VIA_MAXOPTIMIZE void pushval(RTState *VIA_RESTRICT V, TValue &val)
+VIA_MAXOPTIMIZE void pushval(State *VIA_RESTRICT V, TValue &val)
 {
     tspush(V->stack, val);
 }
 
 // Pops a value from the stack. Returns it as a TValue *.
 // Wrapper for `tspop`. Does not clear pointer tags.
-VIA_MAXOPTIMIZE TValue popval(RTState *VIA_RESTRICT V)
+VIA_MAXOPTIMIZE TValue popval(State *VIA_RESTRICT V)
 {
     return tspop(V->stack);
 }
 
 // Returns a value that contains a String that represents the string-ified
 // version of <val>. The return value is guaranteed to be a String type.
-VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_INLINE TValue tostring(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
@@ -201,7 +201,7 @@ VIA_INLINE TValue tostring(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
-VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     // If the TValue union is tagged as Bool type but it
     // doesn't actually contain a boolean value, that is undefined behavior
@@ -225,7 +225,7 @@ VIA_FORCEINLINE TValue tobool(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
-VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     if (checknumber(V, val))
         return TValue(val.val_number);
@@ -245,7 +245,7 @@ VIA_FORCEINLINE TValue tonumber(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE TValue &gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
+VIA_FORCEINLINE TValue &gettable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -261,7 +261,7 @@ VIA_FORCEINLINE TValue &gettable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT t
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-VIA_FORCEINLINE void settable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue &val) noexcept
+VIA_FORCEINLINE void settable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, TValue &val) noexcept
 {
     if (checknil(V, val))
     {
@@ -275,7 +275,7 @@ VIA_FORCEINLINE void settable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl,
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
-VIA_FORCEINLINE TValue &getmetamethod(RTState *VIA_RESTRICT V, TValue &val, OpCode op)
+VIA_FORCEINLINE TValue &getmetamethod(State *VIA_RESTRICT V, TValue &val, OpCode op)
 {
     if (!checktable(V, val))
         return nil;
@@ -313,7 +313,7 @@ VIA_FORCEINLINE TValue &getmetamethod(RTState *VIA_RESTRICT V, TValue &val, OpCo
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
-VIA_FORCEINLINE TValue &getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE TValue &getlocal(State *VIA_RESTRICT V, LocalId offset) noexcept
 {
     // Check if LocalId is out of bounds;
     // this is CRUCIAL, and prevents UB upon stack dereferencing
@@ -326,7 +326,7 @@ VIA_FORCEINLINE TValue &getlocal(RTState *VIA_RESTRICT V, LocalId offset) noexce
 }
 
 // Reassigns the stack value at offset <offset> to <val>.
-VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue &val)
+VIA_FORCEINLINE void setlocal(State *VIA_RESTRICT V, LocalId offset, TValue &val)
 {
     // Check if LocalId is out of bounds,
     // this is CRUCIAL, and prevents UB upon stack operations.
@@ -344,7 +344,7 @@ VIA_FORCEINLINE void setlocal(RTState *VIA_RESTRICT V, LocalId offset, TValue &v
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
-VIA_FORCEINLINE TValue &getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexcept
+VIA_FORCEINLINE TValue &getglobal(State *VIA_RESTRICT V, kGlobId ident) noexcept
 {
     auto it = V->G->gtable->find(ident);
     if (it != V->G->gtable->end())
@@ -354,7 +354,7 @@ VIA_FORCEINLINE TValue &getglobal(RTState *VIA_RESTRICT V, kGlobId ident) noexce
 }
 
 // Attempts to declare a new global constant.
-VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue &val)
+VIA_FORCEINLINE void setglobal(State *VIA_RESTRICT V, kGlobId ident, TValue &val)
 {
     auto it = V->G->gtable->find(ident);
     // This is not a silent assertion because it is only possible if a global is
@@ -365,7 +365,7 @@ VIA_FORCEINLINE void setglobal(RTState *VIA_RESTRICT V, kGlobId ident, TValue &v
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-VIA_FORCEINLINE TValue &getargument(RTState *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE TValue &getargument(State *VIA_RESTRICT V, LocalId offset) noexcept
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
@@ -380,7 +380,7 @@ VIA_FORCEINLINE TValue &getargument(RTState *VIA_RESTRICT V, LocalId offset) noe
 
 // Performs a native return operation, restores the stack and some other state
 // information.
-VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
+VIA_FORCEINLINE void nativeret(State *VIA_RESTRICT V, CallArgc retc) noexcept
 {
     std::vector<TValue> ret_values;
     // Restore state
@@ -407,7 +407,7 @@ VIA_FORCEINLINE void nativeret(RTState *VIA_RESTRICT V, CallArgc retc) noexcept
 }
 
 // Calls a native function.
-VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, CallArgc argc) noexcept
+VIA_FORCEINLINE void nativecall(State *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, CallArgc argc) noexcept
 {
     // Save state
     callee->caller = V->frame;
@@ -422,7 +422,7 @@ VIA_FORCEINLINE void nativecall(RTState *VIA_RESTRICT V, TFunction *VIA_RESTRICT
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, CallArgc argc) noexcept
+VIA_FORCEINLINE void externcall(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, CallArgc argc) noexcept
 {
     /* Stack allocate id string
         15 additional characters:
@@ -445,7 +445,7 @@ VIA_FORCEINLINE void externcall(RTState *VIA_RESTRICT V, TCFunction *VIA_RESTRIC
 }
 
 // Calls a table method.
-VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
+VIA_INLINE void methodcall(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, const TableKey key, CallArgc argc) noexcept
 {
     TValue &method = gettable(V, tbl, key, true);
     if (!checkcallable(V, method))
@@ -464,7 +464,7 @@ VIA_INLINE void methodcall(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, co
 }
 
 // Returns the primitive type of value <val>.
-VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue type(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     auto enum_name = ENUM_NAME(val.type);
     char *str = dupstring(std::string(enum_name));
@@ -475,7 +475,7 @@ VIA_FORCEINLINE TValue type(RTState *VIA_RESTRICT V, TValue &val) noexcept
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue &val, CallArgc argc) noexcept
+VIA_FORCEINLINE void call(State *VIA_RESTRICT V, TValue &val, CallArgc argc) noexcept
 {
     V->calltype = CallType::CALL;
 
@@ -494,7 +494,7 @@ VIA_FORCEINLINE void call(RTState *VIA_RESTRICT V, TValue &val, CallArgc argc) n
 }
 
 // Returns the length of value <val>, nil if impossible.
-VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
+VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, TValue val) noexcept
 {
     if (checkstring(V, val))
         return TValue(static_cast<TNumber>(strlen(val.val_string->ptr)));
@@ -516,7 +516,7 @@ VIA_FORCEINLINE TValue len(RTState *VIA_RESTRICT V, TValue val) noexcept
 // Returns the complex type of value <val>.
 // Practically the same as `type()`, but returns
 // the `__type` key if the given table has it defined.
-VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue &val) noexcept
+VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, TValue &val) noexcept
 {
     if (checktable(V, val))
     {
@@ -535,13 +535,13 @@ VIA_FORCEINLINE TValue typeofv(RTState *VIA_RESTRICT V, TValue &val) noexcept
 }
 
 // Returns wether if table <tbl> is frozen.
-VIA_FORCEINLINE bool isfrozen(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
+VIA_FORCEINLINE bool isfrozen(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
 {
     return tbl->frozen.get();
 }
 
 // Freezes (locks, const-ifies) table <tbl>.
-VIA_FORCEINLINE void freeze(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
+VIA_FORCEINLINE void freeze(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
 {
     tbl->frozen.set(true);
 }
@@ -549,7 +549,7 @@ VIA_FORCEINLINE void freeze(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noe
 // Sets the metatable of <tbl> to <meta>.
 //! Potential UB: if <meta> and <tbl> are the same table, the pointer
 //! restriction promise will break and cause undefined behavior.
-VIA_FORCEINLINE void setmetatable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TTable *VIA_RESTRICT meta)
+VIA_FORCEINLINE void setmetatable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TTable *VIA_RESTRICT meta)
 {
     // Safeguard for the UB mentioned above, may or may not fail, all on the
     // end-user.
@@ -565,7 +565,7 @@ VIA_FORCEINLINE void setmetatable(RTState *VIA_RESTRICT V, TTable *VIA_RESTRICT 
 }
 
 // Returns the metatable of <tbl>, nil if impossible.
-VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT tbl)
+VIA_FORCEINLINE TValue getmetatable(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl)
 {
     if (tbl->meta)
         // We don't need to return a value pointer as the underlying table value is
@@ -577,32 +577,32 @@ VIA_FORCEINLINE TValue getmetatable(RTState *VIA_RESTRICT, TTable *VIA_RESTRICT 
 
 // Schedules a yield <ms>.
 // Only yields the VM thread.
-VIA_FORCEINLINE void yield(RTState *VIA_RESTRICT V, YldTime ms) noexcept
+VIA_FORCEINLINE void yield(State *VIA_RESTRICT V, YldTime ms) noexcept
 {
     if (V->tstate == ThreadState::RUNNING)
         V->yield = ms;
 }
 
 // Saves the state by copying it and storing it.
-VIA_FORCEINLINE void savestate(RTState *VIA_RESTRICT V) noexcept
+VIA_FORCEINLINE void savestate(State *VIA_RESTRICT V) noexcept
 {
     // Cleanup previously saved state, if present
     if (V->sstate)
         delete V->sstate;
 
-    V->sstate = new RTState(*V);
+    V->sstate = new State(*V);
 }
 
 // Restores the saved state by overwriting the state pointer.
 // Resets the saved state pointer.
-VIA_FORCEINLINE void restorestate(RTState *VIA_RESTRICT V) noexcept
+VIA_FORCEINLINE void restorestate(State *VIA_RESTRICT V) noexcept
 {
     *V = *V->sstate;
     V->sstate = nullptr;
 }
 
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
-VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue &lhs, TValue &rhs, OpCode op)
+VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, TValue &lhs, TValue &rhs, OpCode op)
 {
     VIA_ASSERT(checknumber(V, rhs), "arith(): rhs must be a number");
 
@@ -644,7 +644,7 @@ VIA_FORCEINLINE TValue arith(RTState *VIA_RESTRICT V, TValue &lhs, TValue &rhs, 
 }
 
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
-VIA_FORCEINLINE void iarith(RTState *VIA_RESTRICT V, TValue *lhs, TValue rhs, OpCode op)
+VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, TValue rhs, OpCode op)
 {
     if (checknumber(V, *lhs))
     {

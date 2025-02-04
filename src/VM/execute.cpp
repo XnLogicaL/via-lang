@@ -72,7 +72,7 @@ namespace via
 {
 
 // Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
-void execute(RTState *VIA_RESTRICT V)
+void execute(State *VIA_RESTRICT V)
 {
     VIA_ASSERT(V->tstate == ThreadState::PAUSED, "execute() must be called on paused thread");
     V->tstate = ThreadState::RUNNING;
@@ -156,8 +156,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -178,7 +178,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -199,7 +199,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -221,8 +221,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -243,7 +243,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -264,7 +264,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -286,8 +286,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -308,7 +308,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -329,7 +329,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -351,8 +351,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -373,7 +373,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -394,7 +394,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -416,8 +416,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -438,7 +438,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -459,7 +459,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -481,8 +481,8 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhs_val = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
+        TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -503,7 +503,7 @@ dispatch:
         Operand idx = V->ip->operand2;
 
         size_t const_idx = idx.val_number;
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
@@ -524,7 +524,7 @@ dispatch:
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
-        TValue *lhs_val = rgetregister(V->ralloc, lhs.val_register);
+        TValue *lhs_val = getregister(V, lhs.val_register);
         TValue rhs_val = TValue(imm);
 
         // Fast-path: lvalue is a number
@@ -545,9 +545,9 @@ dispatch:
     {
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
-        TValue *src_val = rgetregister(V->ralloc, rsrc.val_register);
+        TValue *src_val = getregister(V, rsrc.val_register);
 
-        rsetregister(V->ralloc, rdst.val_register, *src_val);
+        setregister(V, rdst.val_register, *src_val);
         VM_NEXT();
     }
 
@@ -562,7 +562,7 @@ dispatch:
 
         TValue &kval = V->G->ktable->at(kid);
 
-        rsetregister(V->ralloc, dst.val_register, kval);
+        setregister(V, dst.val_register, kval);
         VM_NEXT();
     }
 
@@ -571,7 +571,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         TValue tnil = TValue();
 
-        rsetregister(V->ralloc, dst.val_register, tnil);
+        setregister(V, dst.val_register, tnil);
         VM_NEXT();
     }
 
@@ -580,7 +580,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         TValue ttable = TValue(new TTable());
 
-        rsetregister(V->ralloc, dst.val_register, ttable);
+        setregister(V, dst.val_register, ttable);
         VM_NEXT();
     }
 
@@ -590,7 +590,7 @@ dispatch:
         Operand val = V->ip->operand2;
         TValue tbool = TValue(val.val_boolean);
 
-        rsetregister(V->ralloc, dst.val_register, tbool);
+        setregister(V, dst.val_register, tbool);
         VM_NEXT();
     }
 
@@ -600,7 +600,7 @@ dispatch:
         Operand val = V->ip->operand2;
         TValue tnumber = TValue(val.val_number);
 
-        rsetregister(V->ralloc, dst.val_register, tnumber);
+        setregister(V, dst.val_register, tnumber);
         VM_NEXT();
     }
 
@@ -610,7 +610,7 @@ dispatch:
         Operand val = V->ip->operand2;
         TValue tstring = TValue(val.val_string);
 
-        rsetregister(V->ralloc, dst.val_register, tstring);
+        setregister(V, dst.val_register, tstring);
         VM_NEXT();
     }
 
@@ -631,7 +631,7 @@ dispatch:
             func->bytecode.push_back(*(V->ip++));
         }
 
-        rsetregister(V->ralloc, dst.val_register, val);
+        setregister(V, dst.val_register, val);
         // Dispatch instead of invoking VM_NEXT
         VM_DISPATCH();
     }
@@ -639,7 +639,7 @@ dispatch:
     case OpCode::PUSH:
     {
         Operand src = V->ip->operand1;
-        TValue *val = rgetregister(V->ralloc, src.val_register);
+        TValue *val = getregister(V, src.val_register);
 
         tspush(V->stack, *val);
         VM_NEXT();
@@ -650,7 +650,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         TValue val = popval(V);
 
-        rsetregister(V->ralloc, dst.val_register, val);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -662,7 +662,7 @@ dispatch:
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
         StkVal &val = *(V->stack->sbp + stack_offset);
 
-        rsetregister(V->ralloc, dst.val_register, val);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -672,7 +672,7 @@ dispatch:
         Operand off = V->ip->operand2;
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
-        TValue *val = rgetregister(V->ralloc, src.val_register);
+        TValue *val = getregister(V, src.val_register);
 
         *(V->stack->sbp + stack_offset) = std::move(*val);
         VM_NEXT();
@@ -686,7 +686,7 @@ dispatch:
         LocalId offv = static_cast<LocalId>(off.val_number);
         TValue &val = getargument(V, offv);
 
-        rsetregister(V->ralloc, dst.val_register, val);
+        setregister(V, dst.val_register, val);
         VM_NEXT();
     }
 
@@ -703,7 +703,7 @@ dispatch:
 
         if (VIA_UNLIKELY(lhs.type == OperandType::Register))
         {
-            TValue &val = *rgetregister(V->ralloc, lhs.val_register);
+            TValue &val = *getregister(V, lhs.val_register);
             lhsn = std::move(val);
             lhs_reg = true;
         }
@@ -712,7 +712,7 @@ dispatch:
 
         if (VIA_UNLIKELY(rhs.type == OperandType::Register))
         {
-            TValue &val = *rgetregister(V->ralloc, rhs.val_register);
+            TValue &val = *getregister(V, rhs.val_register);
             rhsn = std::move(val);
             rhs_reg = true;
         }
@@ -722,22 +722,22 @@ dispatch:
         if (lhs_reg && rhs_reg)
         {
             TValue val(!compareregisters(V, lhs.val_register, rhs.val_register));
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
         }
         else if (lhs_reg)
         {
-            TValue val(!compare(V, *rgetregister(V->ralloc, lhs.val_register), rhsn));
-            rsetregister(V->ralloc, dst.val_register, val);
+            TValue val(!compare(V, *getregister(V, lhs.val_register), rhsn));
+            setregister(V, dst.val_register, val);
         }
         else if (rhs_reg)
         {
-            TValue val(!compare(V, *rgetregister(V->ralloc, rhs.val_register), lhsn));
-            rsetregister(V->ralloc, dst.val_register, val);
+            TValue val(!compare(V, *getregister(V, rhs.val_register), lhsn));
+            setregister(V, dst.val_register, val);
         }
         else
         {
             TValue val(!compare(V, lhsn, rhsn));
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
         }
 
         VM_NEXT();
@@ -748,13 +748,13 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        TValue *lhsn = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsn = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhsn = getregister(V, lhs.val_register);
+        TValue *rhsn = getregister(V, rhs.val_register);
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
             TValue val(lhsn->val_number < rhsn->val_number);
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
@@ -767,7 +767,7 @@ dispatch:
 
             StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -779,13 +779,13 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        TValue *lhsn = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsn = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhsn = getregister(V, lhs.val_register);
+        TValue *rhsn = getregister(V, rhs.val_register);
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
             TValue val(lhsn->val_number > rhsn->val_number);
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
@@ -798,7 +798,7 @@ dispatch:
 
             StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -810,13 +810,13 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        TValue *lhsn = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsn = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhsn = getregister(V, lhs.val_register);
+        TValue *rhsn = getregister(V, rhs.val_register);
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
             TValue val(lhsn->val_number <= rhsn->val_number);
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
@@ -829,7 +829,7 @@ dispatch:
 
             StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -841,13 +841,13 @@ dispatch:
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
 
-        TValue *lhsn = rgetregister(V->ralloc, lhs.val_register);
-        TValue *rhsn = rgetregister(V->ralloc, rhs.val_register);
+        TValue *lhsn = getregister(V, lhs.val_register);
+        TValue *rhsn = getregister(V, rhs.val_register);
 
         if (VIA_LIKELY(checknumber(V, *lhsn)))
         {
             TValue val(lhsn->val_number >= rhsn->val_number);
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
         else if (VIA_UNLIKELY(checktable(V, *lhsn)))
@@ -860,7 +860,7 @@ dispatch:
 
             StkVal val = tspop(V->stack);
 
-            rsetregister(V->ralloc, dst.val_register, val);
+            setregister(V, dst.val_register, val);
             VM_NEXT();
         }
 
@@ -871,7 +871,7 @@ dispatch:
     {
         Operand rcode = V->ip->operand1;
 
-        TValue *code = rgetregister(V->ralloc, rcode.val_register);
+        TValue *code = getregister(V, rcode.val_register);
         TNumber ecode = tonumber(V, *code).val_number;
 
         setexitdata(V, static_cast<ExitCode>(ecode), "VM exited by user");
@@ -891,7 +891,7 @@ dispatch:
         Operand condr = V->ip->operand1;
         Operand offset = V->ip->operand2;
 
-        TValue &cond = *rgetregister(V->ralloc, condr.val_register);
+        TValue &cond = *getregister(V, condr.val_register);
         // We don't need to save the return value because this function modifies `cond`
         tonumber(V, cond);
         if (V->ip->op == OpCode::JUMPIFNOT ? (cond.val_number != 0) : (cond.val_number == 0))
@@ -920,8 +920,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        TValue *lhs = rgetregister(V->ralloc, condlr.val_register);
-        TValue *rhs = rgetregister(V->ralloc, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number < rhs->val_number;
         if (cond)
@@ -936,8 +936,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        TValue *lhs = rgetregister(V->ralloc, condlr.val_register);
-        TValue *rhs = rgetregister(V->ralloc, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number > rhs->val_number;
         if (cond)
@@ -952,8 +952,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        TValue *lhs = rgetregister(V->ralloc, condlr.val_register);
-        TValue *rhs = rgetregister(V->ralloc, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number <= rhs->val_number;
         if (cond)
@@ -968,8 +968,8 @@ dispatch:
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
 
-        TValue *lhs = rgetregister(V->ralloc, condlr.val_register);
-        TValue *rhs = rgetregister(V->ralloc, condrr.val_register);
+        TValue *lhs = getregister(V, condlr.val_register);
+        TValue *rhs = getregister(V, condrr.val_register);
 
         bool cond = lhs->val_number >= rhs->val_number;
         if (cond)
@@ -984,7 +984,7 @@ dispatch:
         Operand argco = V->ip->operand2;
         CallArgc argc = static_cast<CallArgc>(argco.val_number);
         // Call function
-        call(V, *rgetregister(V->ralloc, rfn.val_register), argc);
+        call(V, *getregister(V, rfn.val_register), argc);
         VM_NEXT();
     }
     case OpCode::EXTERNCALL:
@@ -992,7 +992,7 @@ dispatch:
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         CallArgc argc = static_cast<CallArgc>(argco.val_number);
-        TValue *cfunc = rgetregister(V->ralloc, rfn.val_register);
+        TValue *cfunc = getregister(V, rfn.val_register);
 
         // Call function
         externcall(V, cfunc->val_cfunction, argc);
@@ -1003,7 +1003,7 @@ dispatch:
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         CallArgc argc = static_cast<CallArgc>(argco.val_number);
-        TValue *func = rgetregister(V->ralloc, rfn.val_register);
+        TValue *func = getregister(V, rfn.val_register);
 
         // Call function
         nativecall(V, func->val_function, argc);
@@ -1016,8 +1016,8 @@ dispatch:
         Operand argco = V->ip->operand3;
 
         CallArgc argc = static_cast<CallArgc>(argco.val_number);
-        TValue *func = rgetregister(V->ralloc, rfn.val_register);
-        TValue *obj = rgetregister(V->ralloc, robj.val_register);
+        TValue *func = getregister(V, rfn.val_register);
+        TValue *obj = getregister(V, robj.val_register);
 
         pushval(V, *obj); // Push self
         // Call function, with [argc + 1] to account for the self argument
@@ -1040,14 +1040,14 @@ dispatch:
         Operand rtbl = V->ip->operand2;
         Operand ridx = V->ip->operand3;
 
-        TValue &tbl = *rgetregister(V->ralloc, rtbl.val_register);
-        TValue &idx = *rgetregister(V->ralloc, ridx.val_register);
+        TValue &tbl = *getregister(V, rtbl.val_register);
+        TValue &idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
         TableKey key = checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
         TValue &index = gettable(V, tbl.val_table, key, true);
 
-        rsetregister(V->ralloc, rdst.val_register, index);
+        setregister(V, rdst.val_register, index);
         VM_NEXT();
     }
 
@@ -1058,15 +1058,15 @@ dispatch:
         Operand ridx = V->ip->operand3;
 
         TValue val;
-        TValue &tbl = *rgetregister(V->ralloc, rtbl.val_register);
-        TValue &idx = *rgetregister(V->ralloc, ridx.val_register);
+        TValue &tbl = *getregister(V, rtbl.val_register);
+        TValue &idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
         TableKey key = checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
         // Slow-path: the value is stored in a register, load it
         if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
         {
-            TValue &temp = *rgetregister(V->ralloc, rsrc.val_register);
+            TValue &temp = *getregister(V, rsrc.val_register);
             val = std::move(temp);
         }
         else
@@ -1085,7 +1085,7 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand valr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, valr.val_register);
+        TValue *val = getregister(V, valr.val_register);
         void *ptr = topointer(V, *val);
         TableKey key = 0;
 
@@ -1101,9 +1101,9 @@ dispatch:
 
         if (field_it != table_map.end())
             // If the key is found, use the corresponding value
-            rsetregister(V->ralloc, dst.val_register, field_it->second);
+            setregister(V, dst.val_register, field_it->second);
         else // If not found, set the value to a default (e.g., nil)
-            rsetregister(V->ralloc, dst.val_register, nil);
+            setregister(V, dst.val_register, nil);
 
         VM_NEXT();
     }
@@ -1113,11 +1113,11 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand tblr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, tblr.val_register);
+        TValue *val = getregister(V, tblr.val_register);
         TNumber size = static_cast<TNumber>(val->val_table->data.size());
         TValue val_size(size);
 
-        rsetregister(V->ralloc, dst.val_register, val_size);
+        setregister(V, dst.val_register, val_size);
         VM_NEXT();
     }
 
@@ -1126,11 +1126,11 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, objr.val_register);
+        TValue *val = getregister(V, objr.val_register);
         TNumber len = static_cast<TNumber>(val->val_string->len);
         TValue val_len(len);
 
-        rsetregister(V->ralloc, rdst.val_register, val_len);
+        setregister(V, rdst.val_register, val_len);
         VM_NEXT();
     }
 
@@ -1140,14 +1140,14 @@ dispatch:
         Operand str = V->ip->operand2;
         Operand idx = V->ip->operand3;
 
-        TValue *str_val = rgetregister(V->ralloc, str.val_register);
-        TValue *idx_val = rgetregister(V->ralloc, idx.val_register);
+        TValue *str_val = getregister(V, str.val_register);
+        TValue *idx_val = getregister(V, idx.val_register);
 
         VM_ASSERT_SILENT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
 
         size_t index = idx_val->val_number;
         if (VIA_UNLIKELY(index > str_val->val_string->len))
-            rsetregister(V->ralloc, dst.val_register, nil);
+            setregister(V, dst.val_register, nil);
 
         VM_NEXT();
     }
@@ -1157,10 +1157,10 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, objr.val_register);
+        TValue *val = getregister(V, objr.val_register);
         TValue len = via::len(V, std::move(*val));
 
-        rsetregister(V->ralloc, rdst.val_register, len);
+        setregister(V, rdst.val_register, len);
         VM_NEXT();
     }
 
@@ -1169,10 +1169,10 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, objr.val_register);
+        TValue *val = getregister(V, objr.val_register);
         TValue ty = type(V, *val);
 
-        rsetregister(V->ralloc, rdst.val_register, ty);
+        setregister(V, rdst.val_register, ty);
         VM_NEXT();
     }
 
@@ -1181,10 +1181,10 @@ dispatch:
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
-        TValue *val = rgetregister(V->ralloc, objr.val_register);
+        TValue *val = getregister(V, objr.val_register);
         TValue type = typeofv(V, *val);
 
-        rsetregister(V->ralloc, rdst.val_register, type);
+        setregister(V, rdst.val_register, type);
         VM_NEXT();
     }
 
@@ -1199,7 +1199,7 @@ exit:;
 }
 
 // Permanently kills the thread. Does not clean up the state object.
-void killthread(RTState *VIA_RESTRICT V)
+void killthread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
         // TODO: Wait for the VM to exit
@@ -1212,7 +1212,7 @@ void killthread(RTState *VIA_RESTRICT V)
 }
 
 // Temporarily pauses the thread. Saves the state.
-void pausethread(RTState *VIA_RESTRICT V)
+void pausethread(State *VIA_RESTRICT V)
 {
     V->tstate = ThreadState::PAUSED;
     // Save the VM state to restore it when paused

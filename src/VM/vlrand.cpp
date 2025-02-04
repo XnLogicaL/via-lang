@@ -27,10 +27,10 @@ TNumber pcg32_range(TNumber a, TNumber b)
     return lerp(a, b, scaled);
 }
 
-void rand_range(RTState *) {}
+void rand_range(State *) {}
 
-void rand_int(RTState *) {}
+void rand_int(State *) {}
 
-void loadrandlib(RTState *) {}
+void loadrandlib(State *) {}
 
 } // namespace via::lib

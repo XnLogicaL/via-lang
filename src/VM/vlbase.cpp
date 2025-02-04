@@ -8,7 +8,7 @@
 namespace via::lib
 {
 
-void base_print(RTState *V)
+void base_print(State *V)
 {
     uint16_t i = 0;
     std::ostringstream oss;
@@ -27,7 +27,7 @@ void base_print(RTState *V)
 }
 
 // Identical to `base_print` but ends the string with a line break
-void base_println(RTState *V)
+void base_println(State *V)
 {
     uint8_t i = 0;
     std::ostringstream oss;
@@ -45,7 +45,7 @@ void base_println(RTState *V)
     nativeret(V, 0);
 }
 
-void base_error(RTState *V)
+void base_error(State *V)
 {
     TValue &arg0 = getargument(V, 0);
 
@@ -57,7 +57,7 @@ void base_error(RTState *V)
     nativeret(V, 0);
 }
 
-void base_exit(RTState *V)
+void base_exit(State *V)
 {
     TValue &arg0 = getargument(V, 0);
 
@@ -70,7 +70,7 @@ void base_exit(RTState *V)
     nativeret(V, 0);
 }
 
-void base_type(RTState *V)
+void base_type(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue ty = type(V, arg0);
@@ -79,7 +79,7 @@ void base_type(RTState *V)
     nativeret(V, 1);
 }
 
-void base_typeof(RTState *V)
+void base_typeof(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue type = typeofv(V, arg0);
@@ -88,7 +88,7 @@ void base_typeof(RTState *V)
     nativeret(V, 1);
 }
 
-void base_tostring(RTState *V)
+void base_tostring(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue str = tostring(V, arg0);
@@ -97,7 +97,7 @@ void base_tostring(RTState *V)
     nativeret(V, 1);
 }
 
-void base_tonumber(RTState *V)
+void base_tonumber(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue num = tonumber(V, arg0);
@@ -106,7 +106,7 @@ void base_tonumber(RTState *V)
     nativeret(V, 1);
 }
 
-void base_tobool(RTState *V)
+void base_tobool(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue boole = tobool(V, arg0);
@@ -115,7 +115,7 @@ void base_tobool(RTState *V)
     nativeret(V, 1);
 }
 
-void base_assert(RTState *V)
+void base_assert(State *V)
 {
     TValue &arg0 = getargument(V, 0);
     TValue &arg1 = getargument(V, 1);
@@ -135,7 +135,7 @@ void base_assert(RTState *V)
     }
 }
 
-void base_getmetatable(RTState *V)
+void base_getmetatable(State *V)
 {
     TValue &arg0 = getargument(V, 0);
 
@@ -146,7 +146,7 @@ void base_getmetatable(RTState *V)
     nativeret(V, 1);
 }
 
-void base_setmetatable(RTState *V)
+void base_setmetatable(State *V)
 {
     TValue &tbl = getargument(V, 0);
     TValue &meta = getargument(V, 0);
@@ -158,7 +158,7 @@ void base_setmetatable(RTState *V)
     nativeret(V, 0);
 }
 
-void base_pcall(RTState *V)
+void base_pcall(State *V)
 {
     TValue &callback = getargument(V, 0);
     // Realigns arguments by popping them and pushing them again
@@ -193,7 +193,7 @@ void base_pcall(RTState *V)
     nativeret(V, 2);
 }
 
-void loadbaselib(RTState *V)
+void loadbaselib(State *V)
 {
     std::unordered_map<kGlobId, TValue> base_properties;
 

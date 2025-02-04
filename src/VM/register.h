@@ -10,7 +10,7 @@
 namespace via
 {
 
-struct RTState;
+struct State;
 struct RAState
 {
     TValue *head;

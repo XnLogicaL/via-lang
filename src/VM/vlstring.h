@@ -11,19 +11,19 @@
 namespace via::lib
 {
 
-void string_format(RTState *);
-void string_find(RTState *);
-void string_sub(RTState *);
-void string_format(RTState *);
-void string_unpack(RTState *);
-void string_char(RTState *);
-void string_len(RTState *);
-void string_format(RTState *);
-void string_lower(RTState *);
-void string_upper(RTState *);
-void string_reverse(RTState *);
-void string_byte(RTState *);
-void string_match(RTState *);
-void loadstringlib(RTState *);
+void string_format(State *);
+void string_find(State *);
+void string_sub(State *);
+void string_format(State *);
+void string_unpack(State *);
+void string_char(State *);
+void string_len(State *);
+void string_format(State *);
+void string_lower(State *);
+void string_upper(State *);
+void string_reverse(State *);
+void string_byte(State *);
+void string_match(State *);
+void loadstringlib(State *);
 
 } // namespace via::lib

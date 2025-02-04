@@ -9,7 +9,7 @@ namespace via
 
 using GCCleanupFunction = std::function<void(void)>;
 
-struct RTState;
+struct State;
 struct TValue;
 struct GCState
 {
@@ -24,9 +24,9 @@ struct GCState
 };
 
 // Adds a dynamically allocated value to the free list
-void gcadd(RTState *, TValue *);
+void gcadd(State *, TValue *);
 // Invokes garbage collection
-void gccollect(RTState *);
-void gcaddcallback(RTState *, GCCleanupFunction);
+void gccollect(State *);
+void gcaddcallback(State *, GCCleanupFunction);
 
 } // namespace via

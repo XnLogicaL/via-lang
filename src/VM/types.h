@@ -94,7 +94,7 @@ struct TString
     uint32_t len = 0;
     Hash hash = 0;
 
-    explicit TString(RTState *, const char *);
+    explicit TString(State *, const char *);
     ~TString();
 };
 
@@ -113,13 +113,13 @@ struct TFunction
     Instruction *ret_addr = nullptr;
     std::vector<Instruction> bytecode = {};
 
-    explicit TFunction(RTState *, const char *, Instruction *, TFunction *caller, std::vector<Instruction>, bool, bool);
+    explicit TFunction(State *, const char *, Instruction *, TFunction *caller, std::vector<Instruction>, bool, bool);
     ~TFunction() = default;
 };
 
 struct TCFunction
 {
-    using Ptr_t = void (*)(RTState *);
+    using Ptr_t = void (*)(State *);
 
     // Function pointer
     Ptr_t ptr = nullptr;
@@ -144,7 +144,7 @@ struct TTable
 };
 
 // Random hashing algo, may need to be replaced later
-VIA_FORCEINLINE Hash hashstring(RTState *, const char *str)
+VIA_FORCEINLINE Hash hashstring(State *, const char *str)
 {
     Hash hash = 0;
     while (*str)
@@ -153,57 +153,57 @@ VIA_FORCEINLINE Hash hashstring(RTState *, const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool checkmonostate(RTState *, TValue &val)
+VIA_FORCEINLINE bool checkmonostate(State *, TValue &val)
 {
     return val.type == ValueType::Monostate;
 }
 
-VIA_FORCEINLINE bool checknumber(RTState *, TValue &val)
+VIA_FORCEINLINE bool checknumber(State *, TValue &val)
 {
     return val.type == ValueType::Number;
 }
 
-VIA_FORCEINLINE bool checkbool(RTState *, TValue &val)
+VIA_FORCEINLINE bool checkbool(State *, TValue &val)
 {
     return val.type == ValueType::Bool;
 }
 
-VIA_FORCEINLINE bool checknil(RTState *, TValue &val)
+VIA_FORCEINLINE bool checknil(State *, TValue &val)
 {
     return val.type == ValueType::Nil;
 }
 
-VIA_FORCEINLINE bool checkstring(RTState *, TValue &val)
+VIA_FORCEINLINE bool checkstring(State *, TValue &val)
 {
     return val.type == ValueType::String;
 }
 
-VIA_FORCEINLINE bool checktable(RTState *, TValue &val)
+VIA_FORCEINLINE bool checktable(State *, TValue &val)
 {
     return val.type == ValueType::Table;
 }
 
-VIA_FORCEINLINE bool checkcfunction(RTState *, TValue &val)
+VIA_FORCEINLINE bool checkcfunction(State *, TValue &val)
 {
     return val.type == ValueType::CFunction;
 }
 
-VIA_FORCEINLINE bool checkfunction(RTState *, TValue &val)
+VIA_FORCEINLINE bool checkfunction(State *, TValue &val)
 {
     return val.type == ValueType::Function;
 }
 
-VIA_FORCEINLINE bool checkempty(RTState *V, TValue &val)
+VIA_FORCEINLINE bool checkempty(State *V, TValue &val)
 {
     return checknil(V, val) || checkmonostate(V, val);
 }
 
-VIA_FORCEINLINE bool checkcallable(RTState *V, TValue &val)
+VIA_FORCEINLINE bool checkcallable(State *V, TValue &val)
 {
     return checkfunction(V, val) || checkcfunction(V, val);
 }
 
-VIA_FORCEINLINE bool checksubscriptable(RTState *V, TValue &val)
+VIA_FORCEINLINE bool checksubscriptable(State *V, TValue &val)
 {
     return checktable(V, val) || checkstring(V, val);
 }

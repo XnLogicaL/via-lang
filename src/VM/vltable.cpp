@@ -16,30 +16,30 @@ TableKey _get_largest_key(TTable tbl)
     return largest;
 }
 
-void table_insert(RTState *) {}
+void table_insert(State *) {}
 
-void table_insertat(RTState *) {}
+void table_insertat(State *) {}
 
-void table_remove(RTState *) {}
+void table_remove(State *) {}
 
-void table_removeat(RTState *) {}
+void table_removeat(State *) {}
 
-void table_contains(RTState *) {}
+void table_contains(State *) {}
 
-void table_concat(RTState *) {}
+void table_concat(State *) {}
 
-void table_clone(RTState *) {}
+void table_clone(State *) {}
 
-void table_deepclone(RTState *) {}
+void table_deepclone(State *) {}
 
-void table_len(RTState *) {}
+void table_len(State *) {}
 
-void table_indexof(RTState *) {}
+void table_indexof(State *) {}
 
-void table_keys(RTState *) {}
+void table_keys(State *) {}
 
-void table_values(RTState *) {}
+void table_values(State *) {}
 
-void loadtablelib(RTState *) {}
+void loadtablelib(State *) {}
 
 } // namespace via::lib

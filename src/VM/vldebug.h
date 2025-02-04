@@ -9,7 +9,7 @@
 namespace via
 {
 
-void debug_traceback(RTState *);
-void loaddebuglib(RTState *);
+void debug_traceback(State *);
+void loaddebuglib(State *);
 
 } // namespace via

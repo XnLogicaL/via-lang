@@ -21,13 +21,13 @@ GCState::~GCState()
         fn();
 }
 
-void gcadd(RTState *V, TValue *ptr)
+void gcadd(State *V, TValue *ptr)
 {
     V->gc->periodic_list.push_back(ptr);
     V->gc->size += sizeof(TValue);
 }
 
-void gccollect(RTState *V)
+void gccollect(State *V)
 {
     for (TValue *ptr : V->gc->periodic_list)
         delete ptr;
@@ -36,7 +36,7 @@ void gccollect(RTState *V)
     V->gc->collections++;
 }
 
-void gcaddcallback(RTState *V, GCCleanupFunction fn)
+void gcaddcallback(State *V, GCCleanupFunction fn)
 {
     V->gc->callback_list.push_back(fn);
 }

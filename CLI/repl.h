@@ -11,9 +11,9 @@ class REPLEngine
 {
 public:
     REPLEngine()
-        : program("", "")                       // Initialize program data object with temporary data
-        , gstate(new GState())                  // Initialize global state
-        , rtstate(new RTState(gstate, program)) // Initialize runtime state
+        : program("", "")                     // Initialize program data object with temporary data
+        , gstate(new GState())                // Initialize global state
+        , rtstate(new State(gstate, program)) // Initialize runtime state
     {
     }
 
@@ -24,7 +24,7 @@ public:
 private:
     ProgramData program;
     GState *gstate;
-    RTState *rtstate;
+    State *rtstate;
     std::string stage;
 
 private:

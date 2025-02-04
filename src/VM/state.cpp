@@ -10,8 +10,8 @@
 namespace via
 {
 
-// Initializes and returns a new RTState object
-RTState::RTState(GState *G, ProgramData &program)
+// Initializes and returns a new State object
+State::State(GState *G, ProgramData &program)
     : id(G->threads++)
     , G(G)
     , ihp(nullptr)
@@ -39,7 +39,7 @@ RTState::RTState(GState *G, ProgramData &program)
     nativecall(this, main, 0);
 }
 
-void RTState::loadinstructions(BytecodeHolder &bytecode)
+void State::loadinstructions(BytecodeHolder &bytecode)
 {
     if (this->ihp)
     { // Clean up previous instruction pipeline
@@ -70,7 +70,7 @@ GState::~GState()
     delete symtable;
 }
 
-RTState::~RTState()
+State::~State()
 {
     delete this->G;
     delete this->gc;

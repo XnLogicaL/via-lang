@@ -9,28 +9,28 @@
 namespace via::lib
 {
 
-void table_insert(RTState *);
-void table_insertat(RTState *);
-void table_remove(RTState *);
-void table_removeat(RTState *);
-void table_contains(RTState *);
-void table_concat(RTState *);
-void table_clone(RTState *);
-void table_deepclone(RTState *);
-void table_len(RTState *);
-void table_indexof(RTState *);
-void table_keys(RTState *);
-void table_values(RTState *);
-void table_sort(RTState *);
-void table_reverse(RTState *);
-void table_foreach(RTState *);
-void table_map(RTState *);
-void table_filter(RTState *);
-void table_reduce(RTState *);
-void table_merge(RTState *);
-void table_slice(RTState *);
-void table_clear(RTState *);
-void table_compare(RTState *);
-void loadtablelib(RTState *);
+void table_insert(State *);
+void table_insertat(State *);
+void table_remove(State *);
+void table_removeat(State *);
+void table_contains(State *);
+void table_concat(State *);
+void table_clone(State *);
+void table_deepclone(State *);
+void table_len(State *);
+void table_indexof(State *);
+void table_keys(State *);
+void table_values(State *);
+void table_sort(State *);
+void table_reverse(State *);
+void table_foreach(State *);
+void table_map(State *);
+void table_filter(State *);
+void table_reduce(State *);
+void table_merge(State *);
+void table_slice(State *);
+void table_clear(State *);
+void table_compare(State *);
+void loadtablelib(State *);
 
 } // namespace via::lib

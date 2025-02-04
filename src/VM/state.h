@@ -42,7 +42,7 @@ enum class CallType
     FASTCALL,
 };
 
-// State of an RTState (thread) execution
+// State of an State (thread) execution
 enum class ThreadState
 {
     RUNNING,
@@ -50,7 +50,7 @@ enum class ThreadState
     DEAD
 };
 
-// Global state, should only be instantiated once, and shared across all RTState's. (threads)
+// Global state, should only be instantiated once, and shared across all State's. (threads)
 struct GState
 {
     StrTable *stable;   // Global string lookup table, derrived from Lua's string interning
@@ -64,7 +64,7 @@ struct GState
 };
 
 // More likely to be cached (hopefully...)
-struct alignas(64) RTState
+struct alignas(64) State
 {
     // Thread and global state
     ThreadId id; // Thread ID
@@ -100,10 +100,10 @@ struct alignas(64) RTState
 
     // Thread state
     ThreadState tstate; // Current thread state
-    RTState *sstate;    // Saved thread state
+    State *sstate;      // Saved thread state
 
-    RTState(GState *, ProgramData &);
-    ~RTState();
+    State(GState *, ProgramData &);
+    ~State();
 
     void loadinstructions(BytecodeHolder &);
 };

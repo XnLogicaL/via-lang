@@ -198,7 +198,7 @@ TValue TValue::clone() const
     return copy;
 }
 
-TString::TString(RTState *V, const char *str)
+TString::TString(State *V, const char *str)
 {
     Hash hash = hashstring(V, str);
     // For compiler compatability
@@ -241,7 +241,7 @@ TString::~TString()
 }
 
 TFunction::TFunction(
-    RTState *,
+    State *,
     const char *id,
     Instruction *ret_addr,
     TFunction *caller,
