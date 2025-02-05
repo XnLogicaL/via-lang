@@ -1,3 +1,5 @@
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+
 #include "gen.h"
 
 namespace via
@@ -88,9 +90,9 @@ void Generator::generate_call_statement(CallStmtNode call_stmt)
     free_register(callee);
 }
 
-void Generator::generate_assign_statement(AssignStmtNode asgn_stmt)
+void Generator::generate_assign_statement(AssignStmtNode)
 {
-    if (VarExprNode *var_expr = std::get_if<VarExprNode>(&asgn_stmt.target->expr))
+    // if (VarExprNode *var_expr = std::get_if<VarExprNode>(&asgn_stmt.target->expr))
     {
     }
 }

@@ -265,11 +265,4 @@ TCFunction::TCFunction(TCFunction::Ptr_t ptr, bool error_handler)
 {
 }
 
-TTable::TTable(TTable *meta, bool frozen, std::unordered_map<TableKey, TValue> init)
-    : meta(meta)
-    , frozen(frozen)
-    , data(init)
-{
-}
-
 } // namespace via

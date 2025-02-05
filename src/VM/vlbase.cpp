@@ -16,7 +16,7 @@ void base_print(State *V)
     // Loop over argument count
     while (i++ < V->argc)
     {
-        TValue &argx = getargument(V, 0);
+        const TValue &argx = getargument(V, 0);
         oss << tostring(V, argx).val_string->ptr << " ";
     }
 
@@ -35,7 +35,7 @@ void base_println(State *V)
     // Loop over argument count
     while (i++ < V->argc)
     {
-        TValue &argx = getargument(V, 0);
+        const TValue &argx = getargument(V, 0);
         oss << tostring(V, argx).val_string->ptr << " ";
     }
 
@@ -47,7 +47,7 @@ void base_println(State *V)
 
 void base_error(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
 
     tostring(V, arg0);
 
@@ -59,7 +59,7 @@ void base_error(State *V)
 
 void base_exit(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, arg0), "Expected type TNumber for argument 0 of base_exit");
 
@@ -72,7 +72,7 @@ void base_exit(State *V)
 
 void base_type(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
     TValue ty = type(V, arg0);
 
     push(V, ty);
@@ -81,7 +81,7 @@ void base_type(State *V)
 
 void base_typeof(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
     TValue type = typeofv(V, arg0);
 
     push(V, type);
@@ -90,7 +90,7 @@ void base_typeof(State *V)
 
 void base_tostring(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
     TValue str = tostring(V, arg0);
 
     push(V, str);
@@ -99,7 +99,7 @@ void base_tostring(State *V)
 
 void base_tonumber(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
     TValue num = tonumber(V, arg0);
 
     push(V, num);
@@ -108,7 +108,7 @@ void base_tonumber(State *V)
 
 void base_tobool(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
     TValue boole = tobool(V, arg0);
 
     push(V, boole);
@@ -117,8 +117,8 @@ void base_tobool(State *V)
 
 void base_assert(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
-    TValue &arg1 = getargument(V, 1);
+    const TValue &arg0 = getargument(V, 0);
+    const TValue &arg1 = getargument(V, 1);
 
     if (!tobool(V, arg0).val_boolean)
     {
@@ -137,7 +137,7 @@ void base_assert(State *V)
 
 void base_getmetatable(State *V)
 {
-    TValue &arg0 = getargument(V, 0);
+    const TValue &arg0 = getargument(V, 0);
 
     LIB_ASSERT(checktable(V, arg0), "base_getmetatable expects a table");
 
@@ -148,8 +148,8 @@ void base_getmetatable(State *V)
 
 void base_setmetatable(State *V)
 {
-    TValue &tbl = getargument(V, 0);
-    TValue &meta = getargument(V, 0);
+    const TValue &tbl = getargument(V, 0);
+    const TValue &meta = getargument(V, 0);
 
     LIB_ASSERT(checktable(V, tbl), "base_setmetatable expects a table for argument 0");
     LIB_ASSERT(checktable(V, meta), "base_setmetatable expects a table for argument 1");
@@ -160,11 +160,11 @@ void base_setmetatable(State *V)
 
 void base_pcall(State *V)
 {
-    TValue &callback = getargument(V, 0);
+    const TValue &callback = getargument(V, 0);
     // Realigns arguments by popping them and pushing them again
     for (size_t i = 0; i < V->argc; i++)
     {
-        TValue &arg = getargument(V, i);
+        const TValue &arg = getargument(V, i);
         push(V, arg);
     }
 
@@ -211,7 +211,7 @@ void loadbaselib(State *V)
     base_properties.emplace("pcall", TValue(new TCFunction(base_pcall, true)));
 
     // Iterate and set the global variables
-    for (auto &[ident, val] : base_properties)
+    for (const auto &[ident, val] : base_properties)
         setglobal(V, ident, val);
 }
 

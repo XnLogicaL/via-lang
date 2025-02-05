@@ -10,9 +10,6 @@ namespace via
 class Cleaner
 {
 public:
-    Cleaner() = default;
-    ~Cleaner() = default;
-
     void add_callback(std::function<void(void)>);
     void add_malloc(const void *);
     void clean();

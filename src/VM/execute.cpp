@@ -104,12 +104,11 @@ dispatch:
     // Check if the state needs to be restored
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
     {
-        State *original = V;
+        State *sstate = V->sstate;
+        delete V;
+        V = sstate;
         V->restorestate = false;
-        *V = *V->sstate;
         V->sstate = nullptr;
-        delete original;
-        // This is necessary because the old instruction pointer may be dangling from now on
         VM_NEXT();
     }
 
@@ -181,7 +180,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -202,7 +201,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -246,7 +245,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -267,7 +266,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -311,7 +310,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -332,7 +331,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -376,7 +375,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -397,7 +396,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -441,7 +440,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -462,7 +461,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -506,7 +505,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable->at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -527,7 +526,7 @@ dispatch:
         Operand imm = V->ip->operand2;
 
         TValue *lhs_val = getregister(V, lhs.val_register);
-        TValue rhs_val = TValue(imm);
+        TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -562,7 +561,7 @@ dispatch:
         // Check if the kId is valid
         VM_ASSERT(kid > V->G->ktable->size(), "LOADK: Invalid constant index (out of range)");
 
-        TValue &kval = V->G->ktable->at(kid);
+        const TValue &kval = V->G->ktable->at(kid);
 
         setregister(V, dst.val_register, kval);
         VM_NEXT();
@@ -571,16 +570,15 @@ dispatch:
     case OpCode::LOADNIL:
     {
         Operand dst = V->ip->operand1;
-        TValue tnil = TValue();
 
-        setregister(V, dst.val_register, tnil);
+        setregister(V, dst.val_register, nil);
         VM_NEXT();
     }
 
     case OpCode::LOADTABLE:
     {
         Operand dst = V->ip->operand1;
-        TValue ttable = TValue(new TTable());
+        TValue ttable(new TTable());
 
         setregister(V, dst.val_register, ttable);
         VM_NEXT();
@@ -590,7 +588,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tbool = TValue(val.val_boolean);
+        TValue tbool(val.val_boolean);
 
         setregister(V, dst.val_register, tbool);
         VM_NEXT();
@@ -600,7 +598,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tnumber = TValue(val.val_number);
+        TValue tnumber(val.val_number);
 
         setregister(V, dst.val_register, tnumber);
         VM_NEXT();
@@ -610,7 +608,7 @@ dispatch:
     {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
-        TValue tstring = TValue(val.val_string);
+        TValue tstring(val.val_string);
 
         setregister(V, dst.val_register, tstring);
         VM_NEXT();
@@ -662,7 +660,7 @@ dispatch:
         Operand off = V->ip->operand2;
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
-        TValue &val = *(V->sbp + stack_offset);
+        const TValue &val = *(V->sbp + stack_offset);
 
         setregister(V, dst.val_register, val);
         VM_NEXT();
@@ -1160,7 +1158,7 @@ dispatch:
         Operand objr = V->ip->operand2;
 
         TValue *val = getregister(V, objr.val_register);
-        TValue len = via::len(V, std::move(*val));
+        TValue len = via::len(V, *val);
 
         setregister(V, rdst.val_register, len);
         VM_NEXT();

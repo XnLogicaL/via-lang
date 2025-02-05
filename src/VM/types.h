@@ -138,9 +138,21 @@ struct TTable
     TTable *meta = nullptr;
     // Tells the VM if the table is modifiable
     utils::modifiable_once<bool> frozen = false;
-    std::unordered_map<TableKey, TValue> data = {};
+    std::unordered_map<TableKey, TValue> data;
 
-    TTable(TTable *meta = nullptr, bool frozen = false, std::unordered_map<TableKey, TValue> init = {});
+    TTable()
+        : meta(nullptr)
+        , frozen(false)
+    {
+    }
+
+    TTable(const TTable &other)
+        : meta(other.meta)
+        , frozen(other.frozen)
+    {
+        for (const auto &pair : other.data)
+            data.emplace(pair.first, pair.second.clone());
+    }
 };
 
 // Random hashing algo, may need to be replaced later

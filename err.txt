@@ -1,0 +1,111 @@
+[ 58%] Built target asmjit
+[ 59%] Building CXX object CMakeFiles/via.dir/CLI/main.cpp.o
+[ 60%] Building CXX object CMakeFiles/via.dir/src/Compiler/compiler.cpp.o
+[ 62%] Building CXX object CMakeFiles/via.dir/src/Compiler/constfold.cpp.o
+[ 62%] Building CXX object CMakeFiles/via.dir/src/Compiler/deadcode.cpp.o
+[ 63%] Building CXX object CMakeFiles/via.dir/src/Compiler/gen.cpp.o
+[ 64%] Building CXX object CMakeFiles/via.dir/src/Compiler/genexpr.cpp.o
+[ 65%] Building CXX object CMakeFiles/via.dir/src/Compiler/genstmt.cpp.o
+[ 66%] Building CXX object CMakeFiles/via.dir/src/Compiler/optimizer.cpp.o
+[ 67%] Building CXX object CMakeFiles/via.dir/src/Compiler/stack.cpp.o
+[ 68%] Building CXX object CMakeFiles/via.dir/src/VM/execute.cpp.o
+[ 69%] Building CXX object CMakeFiles/via.dir/src/VM/gc.cpp.o
+[ 70%] Building CXX object CMakeFiles/via.dir/src/VM/register.cpp.o
+[ 71%] Building CXX object CMakeFiles/via.dir/src/VM/state.cpp.o
+[ 72%] Building CXX object CMakeFiles/via.dir/src/VM/types.cpp.o
+[ 73%] Building CXX object CMakeFiles/via.dir/src/VM/vlbase.cpp.o
+[ 74%] Building CXX object CMakeFiles/via.dir/src/VM/vldebug.cpp.o
+In file included from /usr/include/c++/13/ext/alloc_traits.h:34,
+                 from /usr/include/c++/13/bits/basic_string.h:39,
+                 from /usr/include/c++/13/string:54,
+                 from /usr/include/c++/13/bitset:52,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/common.h:6,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/types.h:5,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/types.cpp:3:
+/usr/include/c++/13/bits/alloc_traits.h: In instantiation of ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}; _Tp = std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false>; allocator_type = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >]’:
+/usr/include/c++/13/bits/hashtable_policy.h:1995:36:   required from ‘std::__detail::_Hashtable_alloc<_NodeAlloc>::__node_type* std::__detail::_Hashtable_alloc<_NodeAlloc>::_M_allocate_node(_Args&& ...) [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_ptr = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >::value_type*]’
+/usr/include/c++/13/bits/hashtable_policy.h:248:32:   required from ‘std::__detail::_AllocNode<_NodeAlloc>::__node_type* std::__detail::_AllocNode<_NodeAlloc>::operator()(_Args&& ...) const [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_type = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >::__node_type]’
+/usr/include/c++/13/bits/hashtable.h:1373:20:   required from ‘void std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_M_assign(_Ht&&, const _NodeGenerator&) [with _Ht = const std::_Hashtable<unsigned int, std::pair<const unsigned int, via::TValue>, std::allocator<std::pair<const unsigned int, via::TValue> >, std::__detail::_Select1st, std::equal_to<unsigned int>, std::hash<unsigned int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >&; _NodeGenerator = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >; _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/hashtable.h:1488:16:   required from ‘std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_Hashtable(const std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>&) [with _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/unordered_map.h:188:7:   required from here
+/usr/include/c++/13/bits/alloc_traits.h:540:28: error: no matching function for call to ‘construct_at(std::pair<const unsigned int, via::TValue>*&, const std::pair<const unsigned int, via::TValue>&)’
+  540 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13/bits/stl_iterator.h:85,
+                 from /usr/include/c++/13/bits/stl_algobase.h:67,
+                 from /usr/include/c++/13/bitset:49:
+/usr/include/c++/13/bits/stl_construct.h:94:5: note: candidate: ‘template<class _Tp, class ... _Args> constexpr decltype (::new(void*(0)) _Tp) std::construct_at(_Tp*, _Args&& ...)’
+   94 |     construct_at(_Tp* __location, _Args&&... __args)
+      |     ^~~~~~~~~~~~
+/usr/include/c++/13/bits/stl_construct.h:94:5: note:   template argument deduction/substitution failed:
+/usr/include/c++/13/bits/stl_construct.h: In substitution of ‘template<class _Tp, class ... _Args> constexpr decltype (::new(void*(0)) _Tp) std::construct_at(_Tp*, _Args&& ...) [with _Tp = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}]’:
+/usr/include/c++/13/bits/alloc_traits.h:540:21:   required from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}; _Tp = std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false>; allocator_type = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >]’
+/usr/include/c++/13/bits/hashtable_policy.h:1995:36:   required from ‘std::__detail::_Hashtable_alloc<_NodeAlloc>::__node_type* std::__detail::_Hashtable_alloc<_NodeAlloc>::_M_allocate_node(_Args&& ...) [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_ptr = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >::value_type*]’
+/usr/include/c++/13/bits/hashtable_policy.h:248:32:   required from ‘std::__detail::_AllocNode<_NodeAlloc>::__node_type* std::__detail::_AllocNode<_NodeAlloc>::operator()(_Args&& ...) const [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_type = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >::__node_type]’
+/usr/include/c++/13/bits/hashtable.h:1373:20:   required from ‘void std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_M_assign(_Ht&&, const _NodeGenerator&) [with _Ht = const std::_Hashtable<unsigned int, std::pair<const unsigned int, via::TValue>, std::allocator<std::pair<const unsigned int, via::TValue> >, std::__detail::_Select1st, std::equal_to<unsigned int>, std::hash<unsigned int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >&; _NodeGenerator = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >; _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/hashtable.h:1488:16:   required from ‘std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_Hashtable(const std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>&) [with _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/unordered_map.h:188:7:   required from here
+/usr/include/c++/13/bits/stl_construct.h:96:17: error: use of deleted function ‘constexpr std::pair<_T1, _T2>::pair(const std::pair<_T1, _T2>&) [with _T1 = const unsigned int; _T2 = via::TValue]’
+   96 |     -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13/bits/stl_algobase.h:64:
+/usr/include/c++/13/bits/stl_pair.h:197:17: note: ‘constexpr std::pair<_T1, _T2>::pair(const std::pair<_T1, _T2>&) [with _T1 = const unsigned int; _T2 = via::TValue]’ is implicitly deleted because the default definition would be ill-formed:
+  197 |       constexpr pair(const pair&) = default;    ///< Copy constructor
+      |                 ^~~~
+/usr/include/c++/13/bits/stl_pair.h:197:17: error: use of deleted function ‘via::TValue::TValue(const via::TValue&)’    
+/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/types.h:40:5: note: declared here
+   40 |     TValue(const TValue &) = delete;            // Delete copy constructor
+      |     ^~~~~~
+make[2]: *** [CMakeFiles/via.dir/build.make:496: CMakeFiles/via.dir/src/VM/types.cpp.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/Compiler/genstmt.cpp: In member function ‘void via::Generator::generate_assign_statement(via::AssignStmtNode)’:
+/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/Compiler/genstmt.cpp:95:22: warning: unused variable ‘var_expr’ [-Wunused-variable]
+   95 |     if (VarExprNode *var_expr = std::get_if<VarExprNode>(&asgn_stmt.target->expr))
+      |                      ^~~~~~~~
+In file included from /usr/include/c++/13/ext/alloc_traits.h:34,
+                 from /usr/include/c++/13/bits/basic_string.h:39,
+                 from /usr/include/c++/13/string:54,
+                 from /usr/include/c++/13/bitset:52,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/common.h:6,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/execute.h:5,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/execute.cpp:3:
+/usr/include/c++/13/bits/alloc_traits.h: In instantiation of ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}; _Tp = std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false>; allocator_type = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >]’:
+/usr/include/c++/13/bits/hashtable_policy.h:1995:36:   required from ‘std::__detail::_Hashtable_alloc<_NodeAlloc>::__node_type* std::__detail::_Hashtable_alloc<_NodeAlloc>::_M_allocate_node(_Args&& ...) [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_ptr = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >::value_type*]’
+/usr/include/c++/13/bits/hashtable_policy.h:248:32:   required from ‘std::__detail::_AllocNode<_NodeAlloc>::__node_type* std::__detail::_AllocNode<_NodeAlloc>::operator()(_Args&& ...) const [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_type = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >::__node_type]’
+/usr/include/c++/13/bits/hashtable.h:1373:20:   required from ‘void std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_M_assign(_Ht&&, const _NodeGenerator&) [with _Ht = const std::_Hashtable<unsigned int, std::pair<const unsigned int, via::TValue>, std::allocator<std::pair<const unsigned int, via::TValue> >, std::__detail::_Select1st, std::equal_to<unsigned int>, std::hash<unsigned int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >&; _NodeGenerator = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >; _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/hashtable.h:1488:16:   required from ‘std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_Hashtable(const std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>&) [with _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/unordered_map.h:188:7:   required from here
+/usr/include/c++/13/bits/alloc_traits.h:540:28: error: no matching function for call to ‘construct_at(std::pair<const unsigned int, via::TValue>*&, const std::pair<const unsigned int, via::TValue>&)’
+  540 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13/bits/stl_iterator.h:85,
+                 from /usr/include/c++/13/bits/stl_algobase.h:67,
+                 from /usr/include/c++/13/bitset:49:
+/usr/include/c++/13/bits/stl_construct.h:94:5: note: candidate: ‘template<class _Tp, class ... _Args> constexpr decltype (::new(void*(0)) _Tp) std::construct_at(_Tp*, _Args&& ...)’
+   94 |     construct_at(_Tp* __location, _Args&&... __args)
+      |     ^~~~~~~~~~~~
+/usr/include/c++/13/bits/stl_construct.h:94:5: note:   template argument deduction/substitution failed:
+/usr/include/c++/13/bits/stl_construct.h: In substitution of ‘template<class _Tp, class ... _Args> constexpr decltype (::new(void*(0)) _Tp) std::construct_at(_Tp*, _Args&& ...) [with _Tp = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}]’:
+/usr/include/c++/13/bits/alloc_traits.h:540:21:   required from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = std::pair<const unsigned int, via::TValue>; _Args = {const std::pair<const unsigned int, via::TValue>&}; _Tp = std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false>; allocator_type = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >]’
+/usr/include/c++/13/bits/hashtable_policy.h:1995:36:   required from ‘std::__detail::_Hashtable_alloc<_NodeAlloc>::__node_type* std::__detail::_Hashtable_alloc<_NodeAlloc>::_M_allocate_node(_Args&& ...) [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_ptr = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >::value_type*]’
+/usr/include/c++/13/bits/hashtable_policy.h:248:32:   required from ‘std::__detail::_AllocNode<_NodeAlloc>::__node_type* std::__detail::_AllocNode<_NodeAlloc>::operator()(_Args&& ...) const [with _Args = {const std::pair<const unsigned int, via::TValue>&}; _NodeAlloc = std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> >; __node_type = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >::__node_type]’
+/usr/include/c++/13/bits/hashtable.h:1373:20:   required from ‘void std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_M_assign(_Ht&&, const _NodeGenerator&) [with _Ht = const std::_Hashtable<unsigned int, std::pair<const unsigned int, via::TValue>, std::allocator<std::pair<const unsigned int, via::TValue> >, std::__detail::_Select1st, std::equal_to<unsigned int>, std::hash<unsigned int>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, false, true> >&; _NodeGenerator = std::__detail::_AllocNode<std::allocator<std::__detail::_Hash_node<std::pair<const unsigned int, via::TValue>, false> > >; _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/hashtable.h:1488:16:   required from ‘std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>::_Hashtable(const std::_Hashtable<_Key, _Value, _Alloc, _ExtractKey, _Equal, _Hash, _RangeHash, _Unused, _RehashPolicy, _Traits>&) [with _Key = unsigned int; _Value = std::pair<const unsigned int, via::TValue>; _Alloc = std::allocator<std::pair<const unsigned int, via::TValue> >; _ExtractKey = std::__detail::_Select1st; _Equal = std::equal_to<unsigned int>; _Hash = std::hash<unsigned int>; _RangeHash = std::__detail::_Mod_range_hashing; _Unused = std::__detail::_Default_ranged_hash; _RehashPolicy = std::__detail::_Prime_rehash_policy; _Traits = std::__detail::_Hashtable_traits<false, false, true>]’
+/usr/include/c++/13/bits/unordered_map.h:188:7:   required from here
+/usr/include/c++/13/bits/stl_construct.h:96:17: error: use of deleted function ‘constexpr std::pair<_T1, _T2>::pair(const std::pair<_T1, _T2>&) [with _T1 = const unsigned int; _T2 = via::TValue]’
+   96 |     -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13/bits/stl_algobase.h:64:
+/usr/include/c++/13/bits/stl_pair.h:197:17: note: ‘constexpr std::pair<_T1, _T2>::pair(const std::pair<_T1, _T2>&) [with _T1 = const unsigned int; _T2 = via::TValue]’ is implicitly deleted because the default definition would be ill-formed:
+  197 |       constexpr pair(const pair&) = default;    ///< Copy constructor
+      |                 ^~~~
+/usr/include/c++/13/bits/stl_pair.h:197:17: error: use of deleted function ‘via::TValue::TValue(const via::TValue&)’    
+In file included from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/register.h:6,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/api.h:9,
+                 from /mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/execute.cpp:4:
+/mnt/c/Users/accel/OneDrive/Belgeler/GitHub/via/src/VM/types.h:40:5: note: declared here
+   40 |     TValue(const TValue &) = delete;            // Delete copy constructor
+      |     ^~~~~~
+make[2]: *** [CMakeFiles/via.dir/build.make:440: CMakeFiles/via.dir/src/VM/execute.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:100: CMakeFiles/via.dir/all] Error 2
+make: *** [Makefile:136: all] Error 2

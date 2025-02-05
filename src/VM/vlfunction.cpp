@@ -7,7 +7,7 @@ namespace via::lib
 
 void function_name(State *V)
 {
-    TValue &func = getargument(V, 0);
+    const TValue &func = getargument(V, 0);
 
     // Check if the argument is a function
     // If so return nil
@@ -17,7 +17,7 @@ void function_name(State *V)
         return;
     }
 
-    TValue id = TValue(func.val_function->id);
+    TValue id(func.val_function->id);
     push(V, id);
     nativeret(V, 1);
 }

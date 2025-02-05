@@ -25,7 +25,6 @@ target_compile_options(via
     -Wextra            # Enable extra warnings
     -g                 # Enable debugging symbols
     -O3                # Optimization level 3
-    -fno-common
 )
 
 # Add subdirectories for different components

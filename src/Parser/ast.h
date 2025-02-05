@@ -4,10 +4,7 @@
 
 #include "arena.hpp"
 #include "token.h"
-#include <optional>
-#include <unordered_map>
-#include <variant>
-#include <vector>
+#include "common.h"
 #include "format_vec.h"
 
 namespace via

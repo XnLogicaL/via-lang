@@ -7,7 +7,7 @@ namespace via::lib
 
 void math_exp(State *V)
 {
-    TValue &num = getargument(V, 0);
+    const TValue &num = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, num), ARG_MISMATCH(0, "Number", ENUM_NAME(num.type)));
 
@@ -18,8 +18,8 @@ void math_exp(State *V)
 
 void math_log(State *V)
 {
-    TValue &base = getargument(V, 0);
-    TValue &num = getargument(V, 1);
+    const TValue &base = getargument(V, 0);
+    const TValue &num = getargument(V, 1);
 
     LIB_ASSERT(checknumber(V, base), ARG_MISMATCH(0, "Number", ENUM_NAME(base.type)));
     LIB_ASSERT(checknumber(V, num), ARG_MISMATCH(1, "Number", ENUM_NAME(num.type)));
@@ -31,7 +31,7 @@ void math_log(State *V)
 
 void math_log10(State *V)
 {
-    TValue &num = getargument(V, 0);
+    const TValue &num = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, num), ARG_MISMATCH(0, "Number", ENUM_NAME(num.type)));
 
@@ -42,8 +42,8 @@ void math_log10(State *V)
 
 void math_pow(State *V)
 {
-    TValue &num = getargument(V, 0);
-    TValue &e = getargument(V, 1);
+    const TValue &num = getargument(V, 0);
+    const TValue &e = getargument(V, 1);
 
     LIB_ASSERT(checknumber(V, num), ARG_MISMATCH(0, "Number", ENUM_NAME(num.type)));
     LIB_ASSERT(checknumber(V, e), ARG_MISMATCH(1, "Number", ENUM_NAME(e.type)));
@@ -55,7 +55,7 @@ void math_pow(State *V)
 
 void math_cos(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -66,7 +66,7 @@ void math_cos(State *V)
 
 void math_tan(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -77,7 +77,7 @@ void math_tan(State *V)
 
 void math_asin(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -88,7 +88,7 @@ void math_asin(State *V)
 
 void math_acos(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -99,7 +99,7 @@ void math_acos(State *V)
 
 void math_atan(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -110,8 +110,8 @@ void math_atan(State *V)
 
 void math_atan2(State *V)
 {
-    TValue &t = getargument(V, 0);
-    TValue &x = getargument(V, 1);
+    const TValue &t = getargument(V, 0);
+    const TValue &x = getargument(V, 1);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
     LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
@@ -123,7 +123,7 @@ void math_atan2(State *V)
 
 void math_sinh(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -134,7 +134,7 @@ void math_sinh(State *V)
 
 void math_cosh(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -145,7 +145,7 @@ void math_cosh(State *V)
 
 void math_tanh(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -156,7 +156,7 @@ void math_tanh(State *V)
 
 void math_abs(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -167,8 +167,8 @@ void math_abs(State *V)
 
 void math_min(State *V)
 {
-    TValue &t = getargument(V, 0);
-    TValue &x = getargument(V, 1);
+    const TValue &t = getargument(V, 0);
+    const TValue &x = getargument(V, 1);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
     LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
@@ -180,8 +180,8 @@ void math_min(State *V)
 
 void math_max(State *V)
 {
-    TValue &t = getargument(V, 0);
-    TValue &x = getargument(V, 1);
+    const TValue &t = getargument(V, 0);
+    const TValue &x = getargument(V, 1);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
     LIB_ASSERT(checknumber(V, x), ARG_MISMATCH(1, "Number", ENUM_NAME(x.type)));
@@ -193,7 +193,7 @@ void math_max(State *V)
 
 void math_round(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -204,7 +204,7 @@ void math_round(State *V)
 
 void math_floor(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 
@@ -215,7 +215,7 @@ void math_floor(State *V)
 
 void math_ceil(State *V)
 {
-    TValue &t = getargument(V, 0);
+    const TValue &t = getargument(V, 0);
 
     LIB_ASSERT(checknumber(V, t), ARG_MISMATCH(0, "Number", ENUM_NAME(t.type)));
 

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Parser/ast.h"
 #include "instruction.h"
 
 namespace via
@@ -11,8 +10,6 @@ namespace via
 struct BytecodeHolder
 {
     using Instructions = std::vector<Instruction>;
-
-    BytecodeHolder() = default;
     Instructions instructions;
 
     void add_instruction(const Instruction &);

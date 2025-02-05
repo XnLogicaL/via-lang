@@ -5,18 +5,18 @@
 namespace via
 {
 
-void TestStack::push(TestStack::Ty val)
+void TestStack::push(std::string val)
 {
     sbp[sp++] = val;
 }
 
-TestStack::Ty TestStack::pop()
+std::string TestStack::pop()
 {
-    Ty val = sbp[sp--];
+    std::string val = sbp[sp--];
     return val;
 }
 
-TestStack::Ty TestStack::top()
+std::string TestStack::top()
 {
     return sbp[sp--];
 }
@@ -26,7 +26,7 @@ size_t TestStack::size()
     return sp;
 }
 
-std::optional<TestStack::Ty> TestStack::at(size_t pos)
+std::optional<std::string> TestStack::at(size_t pos)
 {
     if (pos > size())
         return std::nullopt;
@@ -34,11 +34,11 @@ std::optional<TestStack::Ty> TestStack::at(size_t pos)
     return sbp[pos];
 }
 
-size_t TestStack::find(const TestStack::Ty &val)
+size_t TestStack::find(const std::string &val)
 {
     for (size_t i = 0; i < size(); i++)
     {
-        std::optional<Ty> val_at = at(i);
+        std::optional<std::string> val_at = at(i);
         if (val_at.has_value() && val_at->compare(val) == 0)
             return i;
     }

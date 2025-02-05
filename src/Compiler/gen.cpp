@@ -158,7 +158,7 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
     return operand;
 }
 
-TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
+const TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
 {
     switch (lit_expr.value.type)
     {
@@ -198,7 +198,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
     TValue val = generate_tvalue(expr);
     size_t idx = 0;
 
-    for (TValue &const_val : constants)
+    for (const TValue &const_val : constants)
     {
         if (compare(nullptr, val, const_val))
             return idx;
@@ -206,7 +206,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
         idx++;
     }
 
-    constants.push_back(std::move(val));
+    constants.emplace_back(std::move(val));
     return idx++;
 }
 

@@ -5,17 +5,6 @@
 namespace via::lib
 {
 
-TableKey _get_largest_key(TTable tbl)
-{
-    TableKey largest = 0;
-
-    for (auto &it : tbl.data)
-        if (it.first > largest)
-            largest = it.first;
-
-    return largest;
-}
-
 void table_insert(State *) {}
 
 void table_insertat(State *) {}

@@ -13,10 +13,10 @@ void debug_traceback(State *V)
 
     while (frame)
     {
-        TValue copy = TValue(frame);
-        tostring(V, copy);
+        TValue copy(frame);
+        const TValue &result = tostring(V, copy);
 
-        oss << std::format("{}:{}\n", copy.val_string->ptr, frame->line);
+        oss << std::format("{}:{}\n", result.val_string->ptr, frame->line);
         frame = frame->caller;
     }
 

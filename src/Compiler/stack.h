@@ -14,24 +14,22 @@ namespace via
 
 class TestStack
 {
-    using Ty = std::string;
-
 public:
     TestStack()
-        : sbp(reinterpret_cast<Ty *>(std::malloc(VIA_TEST_STACK_SIZE)))
+        : sbp(reinterpret_cast<std::string *>(std::malloc(VIA_TEST_STACK_SIZE)))
         , sp(0)
     {
     }
 
-    void push(Ty);
-    Ty top();
-    Ty pop();
+    void push(std::string);
+    std::string top();
+    std::string pop();
     size_t size();
-    std::optional<Ty> at(size_t);
-    size_t find(const Ty &);
+    std::optional<std::string> at(size_t);
+    size_t find(const std::string &);
 
 private:
-    Ty *sbp;
+    std::string *sbp;
     size_t sp;
 };
 

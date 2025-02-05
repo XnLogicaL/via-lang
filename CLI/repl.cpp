@@ -46,7 +46,6 @@ void REPLEngine::compile()
 void REPLEngine::interpret()
 {
     stage = "Interpreting";
-
     rtstate->load(*program.bytecode);
     via::execute(rtstate);
     via::pausethread(rtstate);

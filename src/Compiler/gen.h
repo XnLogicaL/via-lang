@@ -55,7 +55,7 @@ public:
     bool is_constexpr(ExprNode);
     ExprNode evaluate_constexpr(ExprNode);
     Operand generate_operand(LiteralExprNode);
-    TValue generate_tvalue(LiteralExprNode);
+    const TValue generate_tvalue(LiteralExprNode);
     // Register management functions
     RegId allocate_temp_register();
     RegId allocate_register();
