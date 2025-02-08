@@ -649,6 +649,26 @@ dispatch:
         VM_NEXT();
     }
 
+    case OpCode::PUSHK:
+    {
+        Operand const_idx = V->ip->operand1;
+        size_t const_id = const_idx.val_number;
+
+        const TValue &constant = V->G->ktable.at(const_id);
+
+        push(V, constant);
+        VM_NEXT();
+    }
+
+    case OpCode::PUSHI:
+    {
+        Operand immx = V->ip->operand1;
+        TValue val(immx);
+
+        push(V, val);
+        VM_NEXT();
+    }
+
     case OpCode::POP:
     {
         Operand dst = V->ip->operand1;
@@ -691,6 +711,18 @@ dispatch:
         const TValue &val = getargument(V, offv);
 
         setregister(V, dst.val_register, val);
+        VM_NEXT();
+    }
+
+    case OpCode::GETGLOBAL:
+    {
+        Operand dst = V->ip->operand1;
+        Operand glb_idx = V->ip->operand2;
+
+        kGlobId glb_id = glb_idx.val_string;
+        const TValue &global = getglobal(V, glb_id);
+
+        setregister(V, dst.val_register, global);
         VM_NEXT();
     }
 
