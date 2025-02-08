@@ -102,9 +102,9 @@ void handle_repl(const std::vector<std::string> &args)
                 if (false)
                     std::cout << "<none>\n";
                 else
-                    std::cout << "Exit code:    " << 0 << "\n"
-                              << "Exit message: '" << "" << "'\n"
-                              << "At instruction: " << 0 << std::format(" (position={} opcode={})\n", 0, "");
+                    std::cout << "Exit code: " << engine.rtstate->exitc << "\n"
+                              << "Exit message: " << engine.rtstate->exitm << "\n"
+                              << "At instruction: " << engine.rtstate->ip - engine.rtstate->ihp << "\n";
             }
             else
                 std::cerr << "Unknown command: " << command << "\n";

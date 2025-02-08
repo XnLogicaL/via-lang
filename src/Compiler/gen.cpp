@@ -51,6 +51,8 @@ void Generator::generate()
 {
     for (StmtNode stmt : program.ast->statements)
         generate_statement(stmt);
+
+    push_instruction(OpCode::EXIT, {Operand(0.0f)});
 }
 
 // Returns the successor of iota everytime it's called

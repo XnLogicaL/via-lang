@@ -81,6 +81,8 @@ void execute(State *VIA_RESTRICT V)
 
 dispatch:
 {
+    /*//
+
     // Check if the instruction pointer is the start of a chunk
     if (VIA_UNLIKELY(V->ip->chunk != nullptr))
     {
@@ -100,6 +102,8 @@ dispatch:
             if (i->chunk != nullptr)
                 break;
     }
+
+    */
 
     // Check if the state needs to be restored
     if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
@@ -180,7 +184,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -245,7 +249,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -310,7 +314,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -375,7 +379,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -440,7 +444,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -505,7 +509,7 @@ dispatch:
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = getregister(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable->at(const_idx);
+        const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
         if (VIA_LIKELY(checknumber(V, *lhs_val)))
@@ -559,9 +563,9 @@ dispatch:
         kTable::size_type kid = idx.val_number;
 
         // Check if the kId is valid
-        VM_ASSERT(kid > V->G->ktable->size(), "LOADK: Invalid constant index (out of range)");
+        VM_ASSERT(kid > V->G->ktable.size(), "LOADK: Invalid constant index (out of range)");
 
-        const TValue &kval = V->G->ktable->at(kid);
+        const TValue &kval = V->G->ktable.at(kid);
 
         setregister(V, dst.val_register, kval);
         VM_NEXT();
@@ -874,7 +878,7 @@ dispatch:
         TValue *code = getregister(V, rcode.val_register);
         TNumber ecode = tonumber(V, *code).val_number;
 
-        setexitdata(V, ecode, "VM exited by user");
+        setexitdata(V, ecode, "<opcode-exit>");
         VM_EXIT();
     }
 
@@ -983,8 +987,11 @@ dispatch:
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         size_t argc = static_cast<size_t>(argco.val_number);
+
+        TValue *fn = getregister(V, rfn.val_register);
+
         // Call function
-        call(V, *getregister(V, rfn.val_register), argc);
+        call(V, *fn, argc);
         VM_NEXT();
     }
     case OpCode::EXTERNCALL:
@@ -1096,7 +1103,7 @@ dispatch:
         else
             next_table[ptr] = 0;
 
-        auto table_map = val->val_table->data;
+        const auto &table_map = val->val_table->data;
         auto field_it = table_map.find(key);
 
         if (field_it != table_map.end())
@@ -1191,7 +1198,7 @@ dispatch:
     default:
         // This should be unreachable, however, since some
         // opcodes are yet to be implemented it is not marked as so.
-        VM_ASSERT(false, "Unknown opcode");
+        VM_ASSERT(false, std::format("Unknown opcode (ENUM_NAME: {}, ENUM_ID: {})", ENUM_NAME(V->ip->op), static_cast<unsigned>(V->ip->op)));
     }
 }
 

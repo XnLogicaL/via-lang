@@ -21,7 +21,7 @@ public:
 
     void execute(const std::string &, bool);
 
-private:
+public:
     ProgramData program;
     GState *gstate;
     State *rtstate;

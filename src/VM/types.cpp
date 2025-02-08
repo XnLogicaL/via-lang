@@ -204,9 +204,9 @@ TString::TString(State *V, const char *str)
     // For compiler compatability
     if (V != nullptr)
     {
-        StrTable *stable = V->G->stable;
-        auto it = stable->find(hash);
-        if (it != stable->end())
+        StrTable stable = V->G->stable;
+        auto it = stable.find(hash);
+        if (it != stable.end())
         { // String already exists, return the existing entry
             // *this = *it->second;
             return;
@@ -225,9 +225,9 @@ TString::TString(State *V, const char *str)
 
     if (V != nullptr)
     {
-        StrTable *stable = V->G->stable;
+        StrTable &stable = V->G->stable;
         // Insert the new string into the stable
-        (*stable)[hash] = this;
+        stable.emplace(hash, this);
     }
 }
 

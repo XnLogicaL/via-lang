@@ -51,39 +51,45 @@ void State::load(BytecodeHolder &bytecode)
     this->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
     this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
     this->ip = this->ihp;                         // Initialize ip (Instruction pointer)
+
+    std::memcpy(ihp, pipeline.data(), pipeline.size());
 }
 
 GState::GState()
-    : stable(new StrTable())
-    , gtable(new GlbTable())
-    , ktable(new kTable())
-    , symtable(new SymTable())
-    , threads(0)
+    : threads(0)
 {
-}
-
-GState::~GState()
-{
-    delete stable;
-    delete gtable;
-    delete ktable;
-    delete symtable;
 }
 
 State::~State()
 {
-    delete this->G;
-    delete this->gc;
-    delete this->ralloc;
-
     // Clean up saved state, if there is one
-    if (this->sstate)
-        delete this->sstate;
+    if (sstate)
+    {
+        // Invalidate shared resources to avoid double frees
+        sstate->gc = nullptr;
+        sstate->ralloc = nullptr;
 
-    // This automatically invalidates both ip and ibp
-    // No need to clean them up seperately
-    delete[] this->ihp;
-    delete[] this->sbp;
+        if (sstate->ihp == ihp)
+            sstate->ihp = nullptr;
+
+        if (sstate->sbp == sbp)
+            sstate->sbp = nullptr;
+
+        delete this->sstate;
+    }
+
+
+    if (gc)
+        delete this->gc;
+
+    if (ralloc)
+        delete this->ralloc;
+
+    if (ihp)
+        delete[] this->ihp;
+
+    if (sbp)
+        delete[] this->sbp;
 }
 
 } // namespace via

@@ -51,14 +51,14 @@ enum class ThreadState
 // Global state, should only be instantiated once, and shared across all State's. (threads)
 struct GState
 {
-    StrTable *stable;   // Global string lookup table, derrived from Lua's string interning
-    GlbTable *gtable;   // Global environment
-    kTable *ktable;     // Constant table. Provided by the compiler.
-    SymTable *symtable; // Symbol table, maps the stack offsets of variables to their identifiers. Provided by the compiler.
-    ThreadId threads;   // Number of threads
+    StrTable stable;   // Global string lookup table, derrived from Lua's string interning
+    GlbTable gtable;   // Global environment
+    kTable ktable;     // Constant table. Provided by the compiler.
+    SymTable symtable; // Symbol table, maps the stack offsets of variables to their identifiers. Provided by the compiler.
+    ThreadId threads;  // Number of threads
 
     GState();
-    ~GState();
+    ~GState() = default;
 };
 
 // More likely to be cached (hopefully...)

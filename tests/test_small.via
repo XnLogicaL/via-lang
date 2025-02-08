@@ -5,3 +5,5 @@ func y(x) {
     local u = t * w * t + z + w
     return u
 }
+
+print(y(31))
