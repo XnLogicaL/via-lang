@@ -719,7 +719,9 @@ dispatch:
         Operand dst = V->ip->operand1;
         Operand glb_idx = V->ip->operand2;
 
-        kGlobId glb_id = glb_idx.val_string;
+        std::cout << "abc " << glb_idx.val_string << "\n";
+
+        kGlobId glb_id(glb_idx.val_string);
         const TValue &global = getglobal(V, glb_id);
 
         setregister(V, dst.val_register, global);

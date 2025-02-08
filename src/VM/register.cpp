@@ -14,7 +14,7 @@ RAState::RAState()
     {
         TValue val;
         val.type = ValueType::monostate;
-        rsetregister(this, i, val.clone());
+        rsetregister(this, i, val);
     }
 }
 
