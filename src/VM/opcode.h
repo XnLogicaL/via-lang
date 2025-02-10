@@ -327,7 +327,6 @@ enum class OpCode
      * operand2: <>
      */
     DECREMENT,
-    LOADARGUMENT,
     /*
      * opcode: EQUAL
      * Performs a comparison operation between operand1 and operand2. Stores the
