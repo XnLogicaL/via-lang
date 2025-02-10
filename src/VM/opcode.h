@@ -261,7 +261,21 @@ enum class OpCode
      * operand2: <>
      */
     PUSH,
+    /*
+     * opcode: PUSHK
+     * Pushes a constant value onto the stack.
+     * operand0: <const_idx :: Number>
+     * operand1: <>
+     * operand2: <>
+     */
     PUSHK,
+    /*
+     * opcode: PUSHI
+     * Pushes an immediate value onto the stack.
+     * operand0: <imm :: Any>
+     * operand1: <>
+     * operand2: <>
+     */
     PUSHI,
     /*
      * opcode: POP
