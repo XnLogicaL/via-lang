@@ -20,11 +20,25 @@ namespace via
 
 static const TValue nil = TValue();
 
-// Manually sets the VM exit data.
-VIA_MAXOPTIMIZE void setexitdata(State *VIA_RESTRICT V, int exitc, const std::string &exitm) noexcept
+VIA_INLINE void ferror(const char *message)
 {
-    V->exitc = exitc;
-    V->exitm = dupstring(exitm);
+    std::cerr << message << "\n";
+}
+
+VIA_INLINE void ferror(const std::string &message)
+{
+    std::cerr << message << "\n";
+}
+
+template<typename... Args>
+VIA_INLINE void ferror(const std::format_string<Args...> &fmt, Args &&...args)
+{
+    std::cerr << std::format(fmt, std::forward<Args...>(args...)) << "\n";
+}
+
+VIA_INLINE void setexitcode(State *V, VMExitCode code)
+{
+    V->exitc = code;
 }
 
 // Sets register <reg> to the given value <val>.
@@ -194,7 +208,7 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
     }
 
     VIA_UNREACHABLE();
-    return TValue();
+    return nil.clone();
 }
 
 // Returns the truthiness of value <val>.
@@ -218,7 +232,7 @@ VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, const TValue &val) noexcept
     }
 
     VIA_UNREACHABLE();
-    return TValue();
+    return nil.clone();
 }
 
 // Returns the number representation of value <val>.
@@ -238,7 +252,7 @@ VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, const TValue &val) noexce
         break;
     }
 
-    return TValue();
+    return nil.clone();
 }
 
 // Utility function for quick table indexing.
@@ -448,9 +462,8 @@ VIA_INLINE void methodcall(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, Tabl
     const TValue &method = gettable(V, tbl, key, true);
     if (!checkcallable(V, method))
     {
-        std::string err = std::format("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
-        setexitdata(V, 1, err);
-        V->abrt = true;
+        ferror("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
+        setexitcode(V, VMExitCode::attempt_call_non_callable);
         return;
     }
 
@@ -486,8 +499,8 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
     else
     {
         TValue callt = type(V, val);
-        setexitdata(V, 1, std::format("Attempt to call a {} value", callt.val_string->ptr));
-        V->abrt = true;
+        ferror("Attempt to call a {} value", callt.val_string->ptr);
+        setexitcode(V, VMExitCode::attempt_call_non_callable);
     }
 }
 
@@ -508,7 +521,7 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
         return pop(V);
     }
 
-    return TValue();
+    return nil.clone();
 }
 
 // Returns the complex type of value <val>.
@@ -549,14 +562,10 @@ VIA_FORCEINLINE void freeze(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexc
 //! restriction promise will break and cause undefined behavior.
 VIA_FORCEINLINE void setmetatable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TTable *VIA_RESTRICT meta)
 {
-    // Safeguard for the UB mentioned above, may or may not fail, all on the
-    // end-user.
-    VIA_ASSERT(tbl != meta, "Cannot set metatable of table to self");
-
     if (isfrozen(V, tbl))
     {
-        setexitdata(V, 1, "Cannot set metatable of frozen table");
-        V->abrt = true;
+        ferror("Cannot set metatable of frozen table");
+        setexitcode(V, VMExitCode::attempt_mutate_frozen_table);
     }
     else
         tbl->meta = meta;
@@ -570,33 +579,7 @@ VIA_FORCEINLINE TValue getmetatable(State *VIA_RESTRICT, TTable *VIA_RESTRICT tb
         // already a pointer
         return TValue(tbl->meta);
 
-    return TValue();
-}
-
-// Schedules a yield <ms>.
-// Only yields the VM thread.
-VIA_FORCEINLINE void yield(State *VIA_RESTRICT V, YldTime ms) noexcept
-{
-    if (V->tstate == ThreadState::RUNNING)
-        V->yield = ms;
-}
-
-// Saves the state by copying it and storing it.
-VIA_FORCEINLINE void savestate(State *VIA_RESTRICT V) noexcept
-{
-    // Cleanup previously saved state, if present
-    if (V->sstate)
-        delete V->sstate;
-
-    V->sstate = new State(*V);
-}
-
-// Restores the saved state by overwriting the state pointer.
-// Resets the saved state pointer.
-VIA_FORCEINLINE void restorestate(State *VIA_RESTRICT V) noexcept
-{
-    *V = *V->sstate;
-    V->sstate = nullptr;
+    return nil.clone();
 }
 
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
@@ -626,7 +609,7 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
             break;
         }
 
-        return TValue();
+        return nil.clone();
     }
     else if (checktable(V, lhs))
     {
@@ -638,7 +621,7 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
     }
 
     VIA_ASSERT(false, "arith(): Invalid lhs operand");
-    return TValue();
+    return nil.clone();
 }
 
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.

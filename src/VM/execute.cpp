@@ -12,17 +12,17 @@
     #define VIA_HOTPATH_THRESHOLD 64
 #endif
 
-// Simple macro for exiting the VM
-// Technically not necessary but makes it a tiny bit more readable
-#define VM_EXIT() \
+#define VM_ERROR(code) \
     { \
+        setexitcode(V, code); \
         goto exit; \
     }
 
-// Same as VM_EXIT, for readability
-#define VM_DISPATCH() \
+#define VM_FATAL(code) \
     { \
-        goto dispatch; \
+        int err_code = static_cast<int>(code); \
+        ferror("VM Fatal error: {:x} ({})", err_code, ENUM_NAME(code)); \
+        std::abort(); \
     }
 
 // Macro for loading the next instruction
@@ -30,10 +30,7 @@
 #define VM_LOAD() \
     { \
         if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
-        { \
-            setexitdata(V, 0, ""); \
-            VM_EXIT(); \
-        } \
+            VM_FATAL(VMExitCode::illegal_instruction_access); \
         V->ip++; \
     }
 
@@ -41,31 +38,7 @@
 #define VM_NEXT() \
     { \
         VM_LOAD(); \
-        VM_DISPATCH(); \
-    }
-
-// Standard VM assertion
-// Terminates VM if the assertion fails
-// Contains debug information, such as file, line and a custom message
-#define VM_ASSERT(cond, message) \
-    { \
-        if (!(cond)) \
-        { \
-            setexitdata(V, 1, std::format("VM_ASSERT(): {}\n  file: {}\n  line: {}", (message), __FILE__, __LINE__)); \
-            VM_EXIT(); \
-        } \
-    }
-
-// Silent VM assertion
-// Terminates VM if the assertion fails
-// Does not contain additional information
-#define VM_ASSERT_SILENT(cond, message) \
-    { \
-        if (!(cond)) \
-        { \
-            setexitdata(V, 1, message); \
-            VM_EXIT(); \
-        } \
+        goto dispatch; \
     }
 
 namespace via
@@ -77,10 +50,14 @@ void execute(State *VIA_RESTRICT V)
     VIA_ASSERT(V->tstate == ThreadState::PAUSED, "execute(): must be called on paused thread");
     V->tstate = ThreadState::RUNNING;
 
-    VM_DISPATCH();
+    goto dispatch;
 
 dispatch:
 {
+    int status_code = static_cast<int>(V->exitc);
+    if (status_code != 0)
+        goto exit;
+
     /*//
 
     // Check if the instruction pointer is the start of a chunk
@@ -105,52 +82,6 @@ dispatch:
 
     */
 
-    // Check if the state needs to be restored
-    if (VIA_UNLIKELY(V->restorestate) && VIA_LIKELY(V->sstate))
-    {
-        State *sstate = V->sstate;
-        delete V;
-        V = sstate;
-        V->restorestate = false;
-        V->sstate = nullptr;
-        VM_NEXT();
-    }
-
-    // This is unlikely because it only occurs once
-    if (VIA_UNLIKELY(V->abrt))
-        VM_EXIT();
-
-    // This is unlikely because most instructions don't invoke skip
-    if (VIA_UNLIKELY(V->skip))
-    {
-        V->skip = false;
-        VM_NEXT();
-    }
-
-#ifdef VIA_DEBUG
-    VM_ASSERT(
-        // This is unlikely because for the ip to go out of bounds, the user specifically has to jump to an invalid address
-        // Otherwise, this is completely impossible to be produced by the compiler
-        VIA_UNLIKELY(CHECK_JUMP_ADDRESS(V->ip)),
-        std::format(
-            "Instruction pointer out of bounds (ip={}, ihp={}, ibp={})",
-            reinterpret_cast<const void *>(V->ip),
-            reinterpret_cast<const void *>(V->ihp),
-            reinterpret_cast<const void *>(V->ibp)
-        )
-    );
-#endif
-
-    if (VIA_UNLIKELY(V->yield))
-    {
-        long long milliseconds = V->yieldfor / 1000;
-        std::chrono::milliseconds dur(milliseconds);
-        std::this_thread::sleep_for(dur);
-        V->yield = false;
-    }
-
-    // No LOAD protocol is present here.
-    // This is because the LOAD protocol is embedded into VM_NEXT.
     switch (V->ip->op)
     {
     case OpCode::NOP:
@@ -563,7 +494,8 @@ dispatch:
         kTable::size_type kid = idx.val_number;
 
         // Check if the kId is valid
-        VM_ASSERT(kid > V->G->ktable.size(), "LOADK: Invalid constant index (out of range)");
+        if (kid > V->G->ktable.size())
+            VM_FATAL(VMExitCode::invalid_constant_index);
 
         const TValue &kval = V->G->ktable.at(kid);
 
@@ -637,7 +569,7 @@ dispatch:
 
         setregister(V, dst.val_register, val);
         // Dispatch instead of invoking VM_NEXT
-        VM_DISPATCH();
+        goto dispatch;
     }
 
     case OpCode::PUSH:
@@ -912,8 +844,8 @@ dispatch:
         TValue *code = getregister(V, rcode.val_register);
         TNumber ecode = tonumber(V, *code).val_number;
 
-        setexitdata(V, ecode, "<opcode-exit>");
-        VM_EXIT();
+        setexitcode(V, static_cast<VMExitCode>(ecode));
+        goto exit;
     }
 
     case OpCode::JUMP:
@@ -1184,7 +1116,8 @@ dispatch:
         TValue *str_val = getregister(V, str.val_register);
         TValue *idx_val = getregister(V, idx.val_register);
 
-        VM_ASSERT_SILENT(checkstring(V, *idx_val), std::format("Attempt to subscript string with {}", idx_val->type));
+        if (!checkstring(V, *idx_val))
+            VM_ERROR(VMExitCode::invalid_string_access);
 
         size_t index = idx_val->val_number;
         if (VIA_UNLIKELY(index > str_val->val_string->len))
@@ -1232,7 +1165,7 @@ dispatch:
     default:
         // This should be unreachable, however, since some
         // opcodes are yet to be implemented it is not marked as so.
-        VM_ASSERT(false, std::format("Unknown opcode (ENUM_NAME: {}, ENUM_ID: {})", ENUM_NAME(V->ip->op), static_cast<unsigned>(V->ip->op)));
+        VM_FATAL(VMExitCode::unknown_opcode);
     }
 }
 
@@ -1244,7 +1177,7 @@ void killthread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
         // TODO: Wait for the VM to exit
-        V->abrt = true;
+        setexitcode(V, VMExitCode::force_abort);
 
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
@@ -1255,9 +1188,11 @@ void killthread(State *VIA_RESTRICT V)
 // Temporarily pauses the thread. Saves the state.
 void pausethread(State *VIA_RESTRICT V)
 {
+    if (V->tstate == ThreadState::RUNNING)
+        // TODO: Wait for the VM to exit
+        setexitcode(V, VMExitCode::force_abort);
+
     V->tstate = ThreadState::PAUSED;
-    // Save the VM state to restore it when paused
-    savestate(V);
 }
 
 } // namespace via

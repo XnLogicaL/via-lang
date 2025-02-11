@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "state.h"
+#include "error.h"
 
 namespace via
 {

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "common.h"
+#include "error.h"
 #include "instruction.h"
 
 // Identifier of the defacto "main" function
@@ -88,13 +89,7 @@ struct alignas(64) State
     CallType calltype; // Current calling convention
 
     // VM control and debugging
-    size_t exitc;      // VM exit code
-    const char *exitm; // VM exit message
-    bool abrt;         // Abort on the next VM cycle
-    bool skip;         // Skip the next instruction on the next VM cycle
-    bool yield;        // Yield on the next VM cycle (debounced)
-    bool restorestate; // Restore state on the next VM cycle (to `sstate`)
-    YldTime yieldfor;  // Time (in ms) to yield on the next VM cycle (if `yield` is true)
+    VMExitCode exitc; // VM exit code
 
     // Thread state
     ThreadState tstate; // Current thread state
