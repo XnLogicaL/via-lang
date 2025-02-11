@@ -21,7 +21,7 @@ State::State(GState *G, ProgramData &program)
     , ssp(0)
     , frame(nullptr)
     , argc(0)
-    , exitc(VMExitCode::success)
+    , exitc(VMEC::success)
     , tstate(ThreadState::PAUSED)
     , sstate(nullptr)
 {

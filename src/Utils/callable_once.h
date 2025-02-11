@@ -5,36 +5,29 @@
 #include <functional>
 #include <optional>
 
-namespace via
-{
-
-namespace util
+namespace via::utils
 {
 
 template<typename T, typename... K>
-class callable_once
+class CallableOnce
 {
     bool has_called = false;
     std::function<T(K...)> func;
 
 public:
-    callable_once(std::function<T(K...)> f)
-        : func(std::move(f))
+    CallableOnce(std::function<T(K...)> f)
+        : func(f)
     {
     }
 
-    std::optional<T> call(K... _Args)
+    std::optional<const T &> call(K... _Args)
     {
         if (has_called)
-        {
             return std::nullopt;
-        }
 
         has_called = true;
         return func(_Args...);
     }
 };
 
-} // namespace util
-
-} // namespace via
+} // namespace via::utils

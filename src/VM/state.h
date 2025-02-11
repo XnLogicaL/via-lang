@@ -5,6 +5,7 @@
 #include "common.h"
 #include "error.h"
 #include "instruction.h"
+#include "signal.h"
 
 // Identifier of the defacto "main" function
 // Kinda useless but it can stay
@@ -89,11 +90,17 @@ struct alignas(64) State
     CallType calltype; // Current calling convention
 
     // VM control and debugging
-    VMExitCode exitc; // VM exit code
+    VMEC exitc; // VM exit code
+    bool abort;
 
     // Thread state
     ThreadState tstate; // Current thread state
     State *sstate;      // Saved thread state
+
+    // Signals
+    utils::Signal<VMEC> sig_exit;
+    utils::Signal<> sig_abort;
+    utils::Signal<VMEC> sig_error;
 
     State(GState *, ProgramData &);
     ~State();

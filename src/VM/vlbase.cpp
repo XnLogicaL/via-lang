@@ -50,10 +50,9 @@ void base_error(State *V)
     const TValue &arg0 = getargument(V, 0);
 
     tostring(V, arg0);
-
-    V->abrt = true;
-
-    LIB_ASSERT(false, arg0.val_string->ptr);
+    abort(V);
+    ferror(arg0.val_string->ptr);
+    setexitcode(V, VMEC::user_error);
     nativeret(V, 0);
 }
 
@@ -61,12 +60,12 @@ void base_exit(State *V)
 {
     const TValue &arg0 = getargument(V, 0);
 
-    LIB_ASSERT(checknumber(V, arg0), "Expected type TNumber for argument 0 of base_exit");
+    LIB_ASSERT(checknumber(V, arg0), VMEC::unexpected_argument, "Expected type number for argument 0 of base_exit");
 
     int code = arg0.val_number;
-    setexitdata(V, code, "base_exit called by user");
-    V->abrt = true; // Abort the VM execution
 
+    setexitcode(V, static_cast<VMEC>(code));
+    abort(V);
     nativeret(V, 0);
 }
 
@@ -139,7 +138,7 @@ void base_getmetatable(State *V)
 {
     const TValue &arg0 = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, arg0), "base_getmetatable expects a table");
+    LIB_ASSERT(checktable(V, arg0), VMEC::unexpected_argument, "base_getmetatable expects a table");
 
     TValue meta = getmetatable(V, arg0.val_table);
     push(V, meta);
@@ -151,46 +150,11 @@ void base_setmetatable(State *V)
     const TValue &tbl = getargument(V, 0);
     const TValue &meta = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, tbl), "base_setmetatable expects a table for argument 0");
-    LIB_ASSERT(checktable(V, meta), "base_setmetatable expects a table for argument 1");
+    LIB_ASSERT(checktable(V, tbl), VMEC::unexpected_argument, "base_setmetatable expects a table for argument 0");
+    LIB_ASSERT(checktable(V, meta), VMEC::unexpected_argument, "base_setmetatable expects a table for argument 1");
 
     setmetatable(V, tbl.val_table, meta.val_table);
     nativeret(V, 0);
-}
-
-void base_pcall(State *V)
-{
-    const TValue &callback = getargument(V, 0);
-    // Realigns arguments by popping them and pushing them again
-    for (size_t i = 0; i < V->argc; i++)
-    {
-        const TValue &arg = getargument(V, i);
-        push(V, arg);
-    }
-
-    call(V, callback, V->argc - 1);
-
-    TBool success = V->exitc != 1;
-    if (success)
-    {
-        TValue success_val(success);
-        TValue result_val = pop(V);
-
-        push(V, success_val);
-        push(V, result_val);
-    }
-    else
-    {
-        const char *exit_message = dupstring(V->exitm);
-        TString *exit_string = new TString(V, exit_message);
-        TValue exit_value(exit_string);
-        TValue success_val(success);
-
-        push(V, success_val);
-        push(V, exit_value);
-    }
-
-    nativeret(V, 2);
 }
 
 void loadbaselib(State *V)
@@ -208,7 +172,6 @@ void loadbaselib(State *V)
     base_properties.emplace("tonumber", WRAPVAL(base_tonumber));
     base_properties.emplace("tobool", WRAPVAL(base_tobool));
     base_properties.emplace("assert", WRAPVAL(base_assert));
-    base_properties.emplace("pcall", TValue(new TCFunction(base_pcall, true)));
 
     // Iterate and set the global variables
     for (const auto &[ident, val] : base_properties)

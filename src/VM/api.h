@@ -36,9 +36,20 @@ VIA_INLINE void ferror(const std::format_string<Args...> &fmt, Args &&...args)
     std::cerr << std::format(fmt, std::forward<Args...>(args...)) << "\n";
 }
 
-VIA_INLINE void setexitcode(State *V, VMExitCode code)
+VIA_INLINE void setexitcode(State *V, VMEC code)
 {
     V->exitc = code;
+}
+
+VIA_INLINE void abort(State *V)
+{
+    abort(V);
+}
+
+VIA_INLINE void abort_await(State *V)
+{
+    abort(V);
+    V->sig_exit.wait();
 }
 
 // Sets register <reg> to the given value <val>.
@@ -463,7 +474,7 @@ VIA_INLINE void methodcall(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, Tabl
     if (!checkcallable(V, method))
     {
         ferror("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
-        setexitcode(V, VMExitCode::attempt_call_non_callable);
+        setexitcode(V, VMEC::attempt_call_non_callable);
         return;
     }
 
@@ -500,7 +511,7 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
     {
         TValue callt = type(V, val);
         ferror("Attempt to call a {} value", callt.val_string->ptr);
-        setexitcode(V, VMExitCode::attempt_call_non_callable);
+        setexitcode(V, VMEC::attempt_call_non_callable);
     }
 }
 
@@ -565,7 +576,7 @@ VIA_FORCEINLINE void setmetatable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tb
     if (isfrozen(V, tbl))
     {
         ferror("Cannot set metatable of frozen table");
-        setexitcode(V, VMExitCode::attempt_mutate_frozen_table);
+        setexitcode(V, VMEC::attempt_mutate_frozen_table);
     }
     else
         tbl->meta = meta;

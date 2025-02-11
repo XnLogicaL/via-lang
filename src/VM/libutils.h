@@ -7,10 +7,11 @@
 #include "state.h"
 #include "instruction.h"
 
-#define LIB_ASSERT(cond, msg) \
+#define LIB_ASSERT(cond, code, msg) \
     if (!(cond)) \
     { \
-        setexitdata(V, 1, msg); \
+        ferror(msg); \
+        setexitcode(V, code); \
         return; \
     }
 

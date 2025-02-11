@@ -2,23 +2,27 @@
 
 #pragma once
 
+#include "common.h"
+
 namespace via::utils
 {
 
 template<typename T>
-class modifiable_once
+class ModifiableOnce
 {
     bool has_modified;
     T value;
 
 public:
-    modifiable_once(T value)
+    // Initialized constructor; value is set by user
+    ModifiableOnce(T value)
         : has_modified(false)
         , value(value)
     {
     }
 
-    modifiable_once()
+    // Uninitialized constructor; value is junk data
+    ModifiableOnce()
         : has_modified(false)
     {
     }
@@ -26,15 +30,18 @@ public:
     void set(T new_value)
     {
         if (has_modified)
-        {
             return;
-        }
 
         has_modified = true;
         value = new_value;
     }
 
     T get()
+    {
+        return value;
+    }
+
+    const T &get() const
     {
         return value;
     }

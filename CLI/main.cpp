@@ -1,8 +1,8 @@
 /* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
-#include "cmdparser.hpp"
+#include "cmdparser.h"
 #include "linenoise.hpp"
-#include "fileio.hpp"
+#include "fileio.h"
 #include "repl.h"
 #include "via.h"
 
@@ -102,8 +102,7 @@ void handle_repl(const std::vector<std::string> &args)
                 if (false)
                     std::cout << "<none>\n";
                 else
-                    std::cout << "Exit code: " << engine.rtstate->exitc << "\n"
-                              << "Exit message: " << engine.rtstate->exitm << "\n"
+                    std::cout << "Exit code: " << static_cast<int>(engine.rtstate->exitc) << ENUM_NAME(engine.rtstate->exitc) << "\n"
                               << "At instruction: " << engine.rtstate->ip - engine.rtstate->ihp << "\n";
             }
             else

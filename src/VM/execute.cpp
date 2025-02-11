@@ -15,6 +15,7 @@
 #define VM_ERROR(code) \
     { \
         setexitcode(V, code); \
+        V->sig_error.fire(code); \
         goto exit; \
     }
 
@@ -30,7 +31,7 @@
 #define VM_LOAD() \
     { \
         if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
-            VM_FATAL(VMExitCode::illegal_instruction_access); \
+            VM_FATAL(VMEC::illegal_instruction_access); \
         V->ip++; \
     }
 
@@ -58,29 +59,12 @@ dispatch:
     if (status_code != 0)
         goto exit;
 
-    /*//
-
-    // Check if the instruction pointer is the start of a chunk
-    if (VIA_UNLIKELY(V->ip->chunk != nullptr))
+    // Abort is second priority due to verbosity.
+    if (V->abort)
     {
-        // Increment chunk program counter
-        V->ip->chunk->pc++;
-        // Check if the program counter exceeds a certain threshold
-        // to determine if it needs to be compiled into machine code
-        if (V->ip->chunk->pc >= VIA_HOTPATH_THRESHOLD)
-        {
-            // This function automatically compiles the chunk if it hasn't been compiled before
-            // Disabled for now due to machine code instability
-        }
-
-        // After the chunk has been executed,
-        // we need to find the next chunk and jump to it
-        for (Instruction *i = V->ip; i <= V->ihp; i++)
-            if (i->chunk != nullptr)
-                break;
+        V->sig_abort.fire();
+        goto exit;
     }
-
-    */
 
     switch (V->ip->op)
     {
@@ -495,7 +479,7 @@ dispatch:
 
         // Check if the kId is valid
         if (kid > V->G->ktable.size())
-            VM_FATAL(VMExitCode::invalid_constant_index);
+            VM_FATAL(VMEC::invalid_constant_index);
 
         const TValue &kval = V->G->ktable.at(kid);
 
@@ -844,7 +828,7 @@ dispatch:
         TValue *code = getregister(V, rcode.val_register);
         TNumber ecode = tonumber(V, *code).val_number;
 
-        setexitcode(V, static_cast<VMExitCode>(ecode));
+        setexitcode(V, static_cast<VMEC>(ecode));
         goto exit;
     }
 
@@ -1117,7 +1101,7 @@ dispatch:
         TValue *idx_val = getregister(V, idx.val_register);
 
         if (!checkstring(V, *idx_val))
-            VM_ERROR(VMExitCode::invalid_string_access);
+            VM_ERROR(VMEC::invalid_string_access);
 
         size_t index = idx_val->val_number;
         if (VIA_UNLIKELY(index > str_val->val_string->len))
@@ -1165,19 +1149,22 @@ dispatch:
     default:
         // This should be unreachable, however, since some
         // opcodes are yet to be implemented it is not marked as so.
-        VM_FATAL(VMExitCode::unknown_opcode);
+        VM_FATAL(VMEC::unknown_opcode);
     }
 }
 
-exit:;
+exit:
+    V->sig_exit.fire(V->exitc);
 }
 
 // Permanently kills the thread. Does not clean up the state object.
 void killthread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
-        // TODO: Wait for the VM to exit
-        setexitcode(V, VMExitCode::force_abort);
+    {
+        abort(V);
+        V->sig_exit.wait();
+    }
 
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
@@ -1189,8 +1176,10 @@ void killthread(State *VIA_RESTRICT V)
 void pausethread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING)
-        // TODO: Wait for the VM to exit
-        setexitcode(V, VMExitCode::force_abort);
+    {
+        abort(V);
+        V->sig_exit.wait();
+    }
 
     V->tstate = ThreadState::PAUSED;
 }

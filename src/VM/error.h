@@ -7,10 +7,10 @@
 namespace via
 {
 
-enum class VMExitCode
+enum class VMEC
 {
     success,
-    force_abort,
+    user_error,
     unknown_opcode,
     illegal_instruction_access,
     invalid_constant_index,
@@ -18,6 +18,7 @@ enum class VMExitCode
     invalid_table_access,
     attempt_call_non_callable,
     attempt_mutate_frozen_table,
+    unexpected_argument,
 };
 
 }

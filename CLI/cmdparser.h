@@ -16,17 +16,17 @@ public:
     {
     }
 
-    bool is_valid()
+    inline bool is_valid()
     {
         return argc >= 2;
     }
 
-    std::string get_subcommand()
+    inline std::string get_subcommand()
     {
         return argv[1];
     }
 
-    std::vector<std::string> get_arguments()
+    inline std::vector<std::string> get_arguments()
     {
         return std::vector<std::string>(argv + 2, argv + argc);
     }

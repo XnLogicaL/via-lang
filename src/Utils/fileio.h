@@ -2,11 +2,9 @@
 
 #pragma once
 
-#include <fstream>
-#include <string>
-#include <stdexcept>
+#include "common.h"
 
-namespace utils
+namespace via::utils
 {
 
 // Writes the given content to the specified file path
@@ -34,4 +32,4 @@ inline std::string read_from_file(const std::string &file_path)
     return content;
 }
 
-} // namespace utils
+} // namespace via::utils

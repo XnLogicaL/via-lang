@@ -4,7 +4,7 @@
 
 #include "common.h"
 #include "state.h"
-#include "Utils/modifiable_once.h"
+#include "modifiable_once.h"
 
 namespace via
 {
@@ -137,7 +137,7 @@ struct TTable
     // Pointer to metatable
     TTable *meta = nullptr;
     // Tells the VM if the table is modifiable
-    utils::modifiable_once<bool> frozen = false;
+    utils::ModifiableOnce<bool> frozen = false;
     std::unordered_map<TableKey, TValue> data;
 
     TTable()
