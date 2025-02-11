@@ -101,6 +101,7 @@ struct alignas(64) State
     utils::Signal<VMEC> sig_exit;
     utils::Signal<> sig_abort;
     utils::Signal<VMEC> sig_error;
+    utils::Signal<VMEC> sig_fatal;
 
     State(GState *, ProgramData &);
     ~State();

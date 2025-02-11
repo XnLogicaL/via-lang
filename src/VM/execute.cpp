@@ -21,8 +21,8 @@
 
 #define VM_FATAL(code) \
     { \
-        int err_code = static_cast<int>(code); \
-        ferror("VM Fatal error: {:x} ({})", err_code, ENUM_NAME(code)); \
+        ferror("VM Fatal error: {:x} ({})", static_cast<int>(code), ENUM_NAME(code)); \
+        V->sig_fatal.fire(code); \
         std::abort(); \
     }
 
@@ -1168,7 +1168,7 @@ void killthread(State *VIA_RESTRICT V)
 
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
-    // Decrement the thread_id to make room for more threads (I know you can technically make 4 billion threads ok?)
+    // Decrement the thread_id to make room for more threads (I know you can technically make 2^32 threads ok?)
     V->G->threads--;
 }
 
