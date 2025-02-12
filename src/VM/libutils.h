@@ -2,11 +2,6 @@
 
 #pragma once
 
-#include "api.h"
-#include "types.h"
-#include "state.h"
-#include "instruction.h"
-
 #define LIB_ASSERT(cond, code, msg) \
     if (!(cond)) \
     { \
@@ -15,5 +10,8 @@
         return; \
     }
 
-#define WRAPVAL(val) TValue(new TCFunction(val, false))
-#define ARG_MISMATCH(i, e, g) std::format("Expected {}, got {} for argument #{}\n", (e), (g), (i))
+#define LIB_WRAP_CFPTR(ptr) (TValue(new TCFunction(ptr)))
+#define LIB_WRAP_PRIM(val) (TValue(val))
+
+#define LIB_ERR_ARG_TYPE_MISMATCH(type0, type1, parameter) \
+    LIB_ASSERT(false, VMEC::unexpected_argument, std::format("Expected {}, got {} (parameter #{})", type0, type1, parameter));

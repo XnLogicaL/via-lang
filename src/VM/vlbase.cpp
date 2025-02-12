@@ -60,7 +60,8 @@ void base_exit(State *V)
 {
     const TValue &arg0 = getargument(V, 0);
 
-    LIB_ASSERT(checknumber(V, arg0), VMEC::unexpected_argument, "Expected type number for argument 0 of base_exit");
+    if (!checknumber(V, arg0))
+        LIB_ERR_ARG_TYPE_MISMATCH("number", ENUM_NAME(arg0.type), 0);
 
     int code = arg0.val_number;
 
@@ -124,8 +125,9 @@ void base_assert(State *V)
         TString *mvstr = tostring(V, arg1).val_string;
         std::string mfstr = std::format("base_assert assertion failed: {}", mvstr->ptr);
         TString *mfstrds = new TString(V, mfstr.c_str());
+
         TValue err_val(mfstrds);
-        TValue err_fn = WRAPVAL(base_error);
+        TValue err_fn = LIB_WRAP_CFPTR(base_error);
 
         // Push the error message onto the argument stack
         push(V, err_val);
@@ -138,7 +140,8 @@ void base_getmetatable(State *V)
 {
     const TValue &arg0 = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, arg0), VMEC::unexpected_argument, "base_getmetatable expects a table");
+    if (!checktable(V, arg0))
+        LIB_ERR_ARG_TYPE_MISMATCH("table", ENUM_NAME(arg0.type), 0);
 
     TValue meta = getmetatable(V, arg0.val_table);
     push(V, meta);
@@ -150,8 +153,11 @@ void base_setmetatable(State *V)
     const TValue &tbl = getargument(V, 0);
     const TValue &meta = getargument(V, 0);
 
-    LIB_ASSERT(checktable(V, tbl), VMEC::unexpected_argument, "base_setmetatable expects a table for argument 0");
-    LIB_ASSERT(checktable(V, meta), VMEC::unexpected_argument, "base_setmetatable expects a table for argument 1");
+    if (!checktable(V, tbl))
+        LIB_ERR_ARG_TYPE_MISMATCH("table", ENUM_NAME(tbl.type), 0);
+
+    if (!checktable(V, meta))
+        LIB_ERR_ARG_TYPE_MISMATCH("table", ENUM_NAME(meta.type), 1);
 
     setmetatable(V, tbl.val_table, meta.val_table);
     nativeret(V, 0);
@@ -161,19 +167,17 @@ void loadbaselib(State *V)
 {
     std::unordered_map<kGlobId, TValue> base_properties;
 
-    // Emplace each entry instead of using an initializer list
-    base_properties.emplace("print", WRAPVAL(base_print));
-    base_properties.emplace("println", WRAPVAL(base_println));
-    base_properties.emplace("error", WRAPVAL(base_error));
-    base_properties.emplace("exit", WRAPVAL(base_exit));
-    base_properties.emplace("type", WRAPVAL(base_type));
-    base_properties.emplace("typeof", WRAPVAL(base_typeof));
-    base_properties.emplace("tostring", WRAPVAL(base_tostring));
-    base_properties.emplace("tonumber", WRAPVAL(base_tonumber));
-    base_properties.emplace("tobool", WRAPVAL(base_tobool));
-    base_properties.emplace("assert", WRAPVAL(base_assert));
+    base_properties.emplace("print", LIB_WRAP_CFPTR(base_print));
+    base_properties.emplace("println", LIB_WRAP_CFPTR(base_println));
+    base_properties.emplace("error", LIB_WRAP_CFPTR(base_error));
+    base_properties.emplace("exit", LIB_WRAP_CFPTR(base_exit));
+    base_properties.emplace("type", LIB_WRAP_CFPTR(base_type));
+    base_properties.emplace("typeof", LIB_WRAP_CFPTR(base_typeof));
+    base_properties.emplace("tostring", LIB_WRAP_CFPTR(base_tostring));
+    base_properties.emplace("tonumber", LIB_WRAP_CFPTR(base_tonumber));
+    base_properties.emplace("tobool", LIB_WRAP_CFPTR(base_tobool));
+    base_properties.emplace("assert", LIB_WRAP_CFPTR(base_assert));
 
-    // Iterate and set the global variables
     for (const auto &[ident, val] : base_properties)
         setglobal(V, ident, val);
 }
