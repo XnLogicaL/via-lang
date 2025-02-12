@@ -15,19 +15,35 @@ struct RAState
 {
     TValue *head;
 
-    RAState();
-    ~RAState();
+    RAState()
+    {
+        void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTER_COUNT);
+        this->head = reinterpret_cast<TValue *>(alloc);
+
+        for (RegId i = 0; i < VIA_REGISTER_COUNT; i++)
+        {
+            TValue val;
+            TValue *addr = head + i;
+            val.type = ValueType::monostate;
+            *addr = val.clone();
+        }
+    }
+
+    ~RAState()
+    {
+        std::free(head);
+    }
 };
 
-VIA_MAXOPTIMIZE TValue *rgetregister(RAState *R, RegId reg)
+VIA_MAXOPTIMIZE TValue *getregister(State *V, RegId reg)
 {
-    TValue *ptr = R->head + reg;
+    TValue *ptr = V->ralloc->head + reg;
     return ptr;
 }
 
-VIA_MAXOPTIMIZE void rsetregister(RAState *R, RegId reg, const TValue &val)
+VIA_MAXOPTIMIZE void setregister(State *V, RegId reg, const TValue &val)
 {
-    TValue *addr = R->head + reg;
+    TValue *addr = V->ralloc->head + reg;
     *addr = val.clone();
 }
 

@@ -1148,8 +1148,6 @@ dispatch:
     }
 
     default:
-        // This should be unreachable, however, since some
-        // opcodes are yet to be implemented it is not marked as so.
         VM_FATAL(VMEC::unknown_opcode);
     }
 }

@@ -52,20 +52,6 @@ VIA_INLINE void abort_await(State *V)
     V->sig_exit.wait();
 }
 
-// Sets register <reg> to the given value <val>.
-// Wrapper for `rsetregister`.
-VIA_MAXOPTIMIZE void setregister(State *VIA_RESTRICT V, RegId reg, const TValue &val) noexcept
-{
-    rsetregister(V->ralloc, reg, val.clone());
-}
-
-// Returns the value of register <reg>.
-// Wrapper for `rgetregister`.
-VIA_MAXOPTIMIZE TValue *getregister(State *VIA_RESTRICT V, RegId reg) noexcept
-{
-    return rgetregister(V->ralloc, reg);
-}
-
 // Returns the underlying pointer of a data type if present, nullptr if not.
 VIA_FORCEINLINE void *topointer(const TValue &val) noexcept
 {
@@ -279,7 +265,7 @@ VIA_FORCEINLINE TValue tonumber(const TValue &val) noexcept
 }
 
 template<typename T = double>
-    requires std::is_integral_v<T>
+    requires std::is_arithmetic_v<T>
 VIA_FORCEINLINE T tocxxnumber(const TValue &val) noexcept
 {
     TValue dbl = tonumber(val);
@@ -580,23 +566,21 @@ VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcep
 }
 
 // Returns wether if table <tbl> is frozen.
-VIA_FORCEINLINE bool isfrozen(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
+VIA_FORCEINLINE bool isfrozen(TTable *VIA_RESTRICT tbl) noexcept
 {
     return tbl->frozen.get();
 }
 
 // Freezes (locks, const-ifies) table <tbl>.
-VIA_FORCEINLINE void freeze(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl) noexcept
+VIA_FORCEINLINE void freeze(TTable *VIA_RESTRICT tbl) noexcept
 {
     tbl->frozen.set(true);
 }
 
 // Sets the metatable of <tbl> to <meta>.
-//! Potential UB: if <meta> and <tbl> are the same table, the pointer
-//! restriction promise will break and cause undefined behavior.
 VIA_FORCEINLINE void setmetatable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TTable *VIA_RESTRICT meta)
 {
-    if (isfrozen(V, tbl))
+    if (isfrozen(tbl))
     {
         ferror("Cannot set metatable of frozen table");
         setexitcode(V, VMEC::attempt_mutate_frozen_table);

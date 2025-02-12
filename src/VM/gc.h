@@ -15,16 +15,13 @@ struct GCState
 {
     bool terminating;
     size_t collections;
-    size_t size; // Similar to LuaHeap
-    std::vector<TValue *> periodic_list;
+    size_t size;
     std::vector<GCCleanupFunction> callback_list;
 
     GCState();
     ~GCState();
 };
 
-// Adds a dynamically allocated value to the free list
-void gcadd(State *, TValue *);
 // Invokes garbage collection
 void gccollect(State *);
 void gcaddcallback(State *, GCCleanupFunction);

@@ -21,16 +21,9 @@ GCState::~GCState()
         fn();
 }
 
-void gcadd(State *V, TValue *ptr)
-{
-    V->gc->periodic_list.push_back(ptr);
-    V->gc->size += sizeof(TValue);
-}
-
 void gccollect(State *V)
 {
-    for (TValue *ptr : V->gc->periodic_list)
-        delete ptr;
+    // TODO: Implement collection mechanism
 
     V->gc->size = 0;
     V->gc->collections++;
