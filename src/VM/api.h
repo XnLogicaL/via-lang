@@ -43,7 +43,7 @@ VIA_INLINE void setexitcode(State *V, VMEC code)
 
 VIA_INLINE void abort(State *V)
 {
-    abort(V);
+    V->abort = true;
 }
 
 VIA_INLINE void abort_await(State *V)
@@ -222,6 +222,12 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
     return nil.clone();
 }
 
+VIA_FORCEINLINE std::string tocxxstring(State *VIA_RESTRICT V, const TValue &val) noexcept
+{
+    TValue str = tostring(V, val);
+    return std::string(str.val_string->ptr);
+}
+
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
 VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, const TValue &val) noexcept
@@ -246,6 +252,12 @@ VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, const TValue &val) noexcept
     return nil.clone();
 }
 
+VIA_FORCEINLINE bool tocxxbool(State *VIA_RESTRICT V, const TValue &val) noexcept
+{
+    TValue bl = tobool(V, val);
+    return bl.val_boolean;
+}
+
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
 VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, const TValue &val) noexcept
@@ -264,6 +276,16 @@ VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, const TValue &val) noexce
     }
 
     return nil.clone();
+}
+
+VIA_FORCEINLINE double tocxxnumber(State *VIA_RESTRICT V, const TValue &val) noexcept
+{
+    TValue dbl = tonumber(V, val);
+
+    if (checknil(V, dbl))
+        return std::numeric_limits<double>::quiet_NaN();
+
+    return dbl.val_number;
 }
 
 // Utility function for quick table indexing.

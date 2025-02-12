@@ -5,21 +5,5 @@
 namespace via::lib
 {
 
-void function_name(State *V)
-{
-    const TValue &func = getargument(V, 0);
-
-    // Check if the argument is a function
-    // If so return nil
-    if (!checkfunction(V, func))
-    {
-        push(V, nil);
-        return;
-    }
-
-    TValue id(func.val_function->id);
-    push(V, id);
-    nativeret(V, 1);
-}
 
 } // namespace via::lib

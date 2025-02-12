@@ -10,21 +10,13 @@
 namespace via::lib
 {
 
-void base_print(State *);
-// Basically `base_print` but ends the string with a line break
-void base_println(State *);
-void base_error(State *);
-void base_exit(State *);
-void base_type(State *);
-void base_typeof(State *);
-void base_tostring(State *);
-void base_tonumber(State *);
-void base_tobool(State *);
-void base_assert(State *);
-void base_getmetatable(State *);
-void base_setmetatable(State *);
-void base_pcall(State *);
-
-void loadbaselib(State *);
+LIB_DECL_FUNCTION(base_print);
+LIB_DECL_FUNCTION(base_println);
+LIB_DECL_FUNCTION(base_error);
+LIB_DECL_FUNCTION(base_exit);
+LIB_DECL_FUNCTION(base_type);
+LIB_DECL_FUNCTION(base_typeof);
+LIB_DECL_FUNCTION(base_assert);
+LIB_DECL_FUNCTION(loadbaselib);
 
 } // namespace via::lib

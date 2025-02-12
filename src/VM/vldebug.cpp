@@ -6,24 +6,6 @@
 namespace via
 {
 
-void debug_traceback(State *V)
-{
-    TFunction *frame = V->frame;
-    std::ostringstream oss;
 
-    while (frame)
-    {
-        TValue copy(frame);
-        const TValue &result = tostring(V, copy);
-
-        oss << std::format("{}:{}\n", result.val_string->ptr, frame->line);
-        frame = frame->caller;
-    }
-
-    TValue str(new TString(V, oss.str().c_str()));
-    push(V, str);
-}
-
-void loaddebuglib(State *) {}
 
 } // namespace via
