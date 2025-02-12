@@ -55,8 +55,8 @@ void execute(State *VIA_RESTRICT V)
 
 dispatch:
 {
-    int status_code = static_cast<int>(V->exitc);
-    if (status_code != 0)
+    // If the exit code is altered during runtime, it means that something went wrong.
+    if (V->exitc != VMEC::success)
         goto exit;
 
     // Abort is second priority due to verbosity.
@@ -80,11 +80,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::ADD);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -102,11 +102,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::ADD);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -123,11 +123,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::ADD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::ADD);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -145,11 +145,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::SUB);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -167,11 +167,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::SUB);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -188,11 +188,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::SUB);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::SUB);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -210,11 +210,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MUL);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -232,11 +232,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MUL);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -253,11 +253,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MUL);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MUL);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -275,11 +275,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::DIV);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -297,11 +297,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::DIV);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -318,11 +318,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::DIV);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::DIV);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -340,11 +340,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::POW);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -362,11 +362,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::POW);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -383,11 +383,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::POW);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::POW);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -405,11 +405,11 @@ dispatch:
         TValue *rhs_val = getregister(V, rhs.val_register);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MOD);
             push(V, *lhs_val); // Push self
             push(V, *rhs_val); // Push other
             call(V, metamethod, 2);
@@ -427,11 +427,11 @@ dispatch:
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MOD);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -448,11 +448,11 @@ dispatch:
         TValue rhs_val(imm);
 
         // Fast-path: lvalue is a number
-        if (VIA_LIKELY(checknumber(V, *lhs_val)))
+        if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(V, *lhs_val))
+        else if (checktable(*lhs_val))
         {
-            const TValue &metamethod = getmetamethod(V, *lhs_val, OpCode::MOD);
+            const TValue &metamethod = getmetamethod(*lhs_val, OpCode::MOD);
             push(V, *lhs_val); // Push self
             push(V, rhs_val);  // Push other
             call(V, metamethod, 2);
@@ -680,17 +680,17 @@ dispatch:
         }
         else if (lhs_reg)
         {
-            TValue val(!compare(V, *getregister(V, lhs.val_register), rhsn));
+            TValue val(!compare(*getregister(V, lhs.val_register), rhsn));
             setregister(V, dst.val_register, val);
         }
         else if (rhs_reg)
         {
-            TValue val(!compare(V, *getregister(V, rhs.val_register), lhsn));
+            TValue val(!compare(*getregister(V, rhs.val_register), lhsn));
             setregister(V, dst.val_register, val);
         }
         else
         {
-            TValue val(!compare(V, lhsn, rhsn));
+            TValue val(!compare(lhsn, rhsn));
             setregister(V, dst.val_register, val);
         }
 
@@ -705,15 +705,15 @@ dispatch:
         TValue *lhsn = getregister(V, lhs.val_register);
         TValue *rhsn = getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(V, *lhsn)))
+        if (VIA_LIKELY(checknumber(*lhsn)))
         {
             TValue val(lhsn->val_number < rhsn->val_number);
             setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(V, *lhsn)))
+        else if (VIA_UNLIKELY(checktable(*lhsn)))
         {
-            const TValue &metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
+            const TValue &metamethod = getmetamethod(*lhsn, OpCode::LESS);
 
             push(V, *lhsn);
             push(V, *lhsn);
@@ -736,15 +736,15 @@ dispatch:
         TValue *lhsn = getregister(V, lhs.val_register);
         TValue *rhsn = getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(V, *lhsn)))
+        if (VIA_LIKELY(checknumber(*lhsn)))
         {
             TValue val(lhsn->val_number > rhsn->val_number);
             setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(V, *lhsn)))
+        else if (VIA_UNLIKELY(checktable(*lhsn)))
         {
-            const TValue &metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
+            const TValue &metamethod = getmetamethod(*lhsn, OpCode::LESS);
 
             push(V, *lhsn);
             push(V, *rhsn);
@@ -767,15 +767,15 @@ dispatch:
         TValue *lhsn = getregister(V, lhs.val_register);
         TValue *rhsn = getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(V, *lhsn)))
+        if (VIA_LIKELY(checknumber(*lhsn)))
         {
             TValue val(lhsn->val_number <= rhsn->val_number);
             setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(V, *lhsn)))
+        else if (VIA_UNLIKELY(checktable(*lhsn)))
         {
-            const TValue &metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
+            const TValue &metamethod = getmetamethod(*lhsn, OpCode::LESS);
 
             push(V, *lhsn);
             push(V, *rhsn);
@@ -798,15 +798,15 @@ dispatch:
         TValue *lhsn = getregister(V, lhs.val_register);
         TValue *rhsn = getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(V, *lhsn)))
+        if (VIA_LIKELY(checknumber(*lhsn)))
         {
             TValue val(lhsn->val_number >= rhsn->val_number);
             setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(V, *lhsn)))
+        else if (VIA_UNLIKELY(checktable(*lhsn)))
         {
-            const TValue &metamethod = getmetamethod(V, *lhsn, OpCode::LESS);
+            const TValue &metamethod = getmetamethod(*lhsn, OpCode::LESS);
 
             push(V, *lhsn);
             push(V, *rhsn);
@@ -826,9 +826,9 @@ dispatch:
         Operand rcode = V->ip->operand1;
 
         TValue *code = getregister(V, rcode.val_register);
-        TNumber ecode = tonumber(V, *code).val_number;
+        int err_code = tocxxnumber<int>(*code);
 
-        setexitcode(V, static_cast<VMEC>(ecode));
+        setexitcode(V, static_cast<VMEC>(err_code));
         goto exit;
     }
 
@@ -846,9 +846,9 @@ dispatch:
         Operand offset = V->ip->operand2;
 
         TValue &cond = *getregister(V, condr.val_register);
-        // We don't need to save the return value because this function modifies `cond`
-        tonumber(V, cond);
-        if (V->ip->op == OpCode::JUMPIFNOT ? (cond.val_number != 0) : (cond.val_number == 0))
+        bool cond_val = tocxxbool(cond);
+
+        if (V->ip->op == OpCode::JUMPIFNOT ? !cond_val : cond_val)
             V->ip += static_cast<JmpOffset>(offset.val_number);
 
         VM_NEXT();
@@ -1001,8 +1001,8 @@ dispatch:
         TValue &idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        TableKey key = checkstring(V, idx) ? idx.val_string->hash : idx.val_number;
-        const TValue &index = gettable(V, tbl.val_table, key, true);
+        TableKey key = checkstring(idx) ? idx.val_string->hash : idx.val_number;
+        const TValue &index = gettable(tbl.val_table, key, true);
 
         setregister(V, rdst.val_register, index);
         VM_NEXT();
@@ -1019,7 +1019,7 @@ dispatch:
         TValue &idx = *getregister(V, ridx.val_register);
 
         // Get table key based on the index type (string or number)
-        TableKey key = checkstring(V, idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
+        TableKey key = checkstring(idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
         // Slow-path: the value is stored in a register, load it
         if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
         {
@@ -1030,8 +1030,9 @@ dispatch:
             val = TValue(rsrc);
 
         // Set the table index
-        TTable *T = tbl.val_table;
-        settable(V, T, key, val);
+        TTable *ltbl = tbl.val_table;
+        settable(ltbl, key, val);
+
         VM_NEXT();
     }
 
@@ -1043,7 +1044,7 @@ dispatch:
         Operand valr = V->ip->operand2;
 
         TValue *val = getregister(V, valr.val_register);
-        void *ptr = topointer(V, *val);
+        void *ptr = topointer(*val);
         TableKey key = 0;
 
         // Look for the current key in next_table and increment it if found
@@ -1100,7 +1101,7 @@ dispatch:
         TValue *str_val = getregister(V, str.val_register);
         TValue *idx_val = getregister(V, idx.val_register);
 
-        if (!checkstring(V, *idx_val))
+        if (!checkstring(*idx_val))
             VM_ERROR(VMEC::invalid_string_access);
 
         size_t index = idx_val->val_number;

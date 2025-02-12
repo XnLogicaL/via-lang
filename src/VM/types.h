@@ -156,7 +156,7 @@ struct TTable
 };
 
 // Random hashing algo, may need to be replaced later
-VIA_FORCEINLINE Hash hashstring(State *, const char *str)
+VIA_FORCEINLINE Hash hashstring(const char *str)
 {
     Hash hash = 0;
     while (*str)
@@ -165,59 +165,59 @@ VIA_FORCEINLINE Hash hashstring(State *, const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool checkmonostate(State *, const TValue &val)
+VIA_FORCEINLINE bool checkmonostate(const TValue &val)
 {
     return val.type == ValueType::monostate;
 }
 
-VIA_FORCEINLINE bool checknumber(State *, const TValue &val)
+VIA_FORCEINLINE bool checknumber(const TValue &val)
 {
     return val.type == ValueType::number;
 }
 
-VIA_FORCEINLINE bool checkbool(State *, const TValue &val)
+VIA_FORCEINLINE bool checkbool(const TValue &val)
 {
     return val.type == ValueType::boolean;
 }
 
-VIA_FORCEINLINE bool checknil(State *, const TValue &val)
+VIA_FORCEINLINE bool checknil(const TValue &val)
 {
     return val.type == ValueType::nil;
 }
 
-VIA_FORCEINLINE bool checkstring(State *, const TValue &val)
+VIA_FORCEINLINE bool checkstring(const TValue &val)
 {
     return val.type == ValueType::string;
 }
 
-VIA_FORCEINLINE bool checktable(State *, const TValue &val)
+VIA_FORCEINLINE bool checktable(const TValue &val)
 {
     return val.type == ValueType::table;
 }
 
-VIA_FORCEINLINE bool checkcfunction(State *, const TValue &val)
+VIA_FORCEINLINE bool checkcfunction(const TValue &val)
 {
     return val.type == ValueType::cfunction;
 }
 
-VIA_FORCEINLINE bool checkfunction(State *, const TValue &val)
+VIA_FORCEINLINE bool checkfunction(const TValue &val)
 {
     return val.type == ValueType::function;
 }
 
-VIA_FORCEINLINE bool checkempty(State *V, const TValue &val)
+VIA_FORCEINLINE bool checkempty(const TValue &val)
 {
-    return checknil(V, val) || checkmonostate(V, val);
+    return checknil(val) || checkmonostate(val);
 }
 
-VIA_FORCEINLINE bool checkcallable(State *V, const TValue &val)
+VIA_FORCEINLINE bool checkcallable(const TValue &val)
 {
-    return checkfunction(V, val) || checkcfunction(V, val);
+    return checkfunction(val) || checkcfunction(val);
 }
 
-VIA_FORCEINLINE bool checksubscriptable(State *V, const TValue &val)
+VIA_FORCEINLINE bool checksubscriptable(const TValue &val)
 {
-    return checktable(V, val) || checkstring(V, val);
+    return checktable(val) || checkstring(val);
 }
 
 } // namespace via

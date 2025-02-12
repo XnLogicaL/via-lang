@@ -200,7 +200,7 @@ TValue TValue::clone() const
 
 TString::TString(State *V, const char *str)
 {
-    Hash hash = hashstring(V, str);
+    Hash hash = hashstring(str);
     // For compiler compatability
     if (V != nullptr)
     {

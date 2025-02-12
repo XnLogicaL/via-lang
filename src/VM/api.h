@@ -67,7 +67,7 @@ VIA_MAXOPTIMIZE TValue *getregister(State *VIA_RESTRICT V, RegId reg) noexcept
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
-VIA_FORCEINLINE void *topointer(State *VIA_RESTRICT, const TValue &val) noexcept
+VIA_FORCEINLINE void *topointer(const TValue &val) noexcept
 {
     switch (val.type)
     {
@@ -85,14 +85,14 @@ VIA_FORCEINLINE void *topointer(State *VIA_RESTRICT, const TValue &val) noexcept
 }
 
 // Returns whether if <val> has a heap component.
-VIA_FORCEINLINE bool isheap(State *VIA_RESTRICT V, const TValue &val) noexcept
+VIA_FORCEINLINE bool isheap(const TValue &val) noexcept
 {
-    return topointer(V, val) != nullptr;
+    return topointer(val) != nullptr;
 }
 
 // Compares 2 values and returns whether if they are equal.
 // Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare(State *VIA_RESTRICT V, const TValue &v0, const TValue &v1) noexcept
+VIA_MAXOPTIMIZE bool compare(const TValue &v0, const TValue &v1) noexcept
 {
     // Early return; if types aren't the same they cannot be equivalent
     if (v0.type != v1.type)
@@ -111,7 +111,7 @@ VIA_MAXOPTIMIZE bool compare(State *VIA_RESTRICT V, const TValue &v0, const TVal
     case ValueType::string:
         return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
     default:
-        return topointer(V, v0) == topointer(V, v1);
+        return topointer(v0) == topointer(v1);
     }
 
     VIA_UNREACHABLE();
@@ -136,7 +136,7 @@ VIA_MAXOPTIMIZE bool compareregisters(State *VIA_RESTRICT V, RegId reg0, RegId r
     if (v0.type != v1.type)
         return false;
 
-    return compare(V, v0, v1);
+    return compare(v0, v1);
 }
 
 // Pushes a copy of the given value onto the stack.
@@ -164,7 +164,7 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
     // by the end user. It is guaranteed to NEVER occur under compiled bytecode
-    if (checkstring(V, val))
+    if (checkstring(val))
         return val.clone();
 
     switch (val.type)
@@ -230,12 +230,12 @@ VIA_FORCEINLINE std::string tocxxstring(State *VIA_RESTRICT V, const TValue &val
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
-VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, const TValue &val) noexcept
+VIA_FORCEINLINE TValue tobool(const TValue &val) noexcept
 {
     // If the TValue union is tagged as Bool type but it
     // doesn't actually contain a boolean value, that is undefined behavior
     // and is the responsibility of the end-user.
-    if (checkbool(V, val))
+    if (checkbool(val))
         return val.clone();
 
     switch (val.type)
@@ -252,17 +252,17 @@ VIA_FORCEINLINE TValue tobool(State *VIA_RESTRICT V, const TValue &val) noexcept
     return nil.clone();
 }
 
-VIA_FORCEINLINE bool tocxxbool(State *VIA_RESTRICT V, const TValue &val) noexcept
+VIA_FORCEINLINE bool tocxxbool(const TValue &val) noexcept
 {
-    TValue bl = tobool(V, val);
+    TValue bl = tobool(val);
     return bl.val_boolean;
 }
 
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
-VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, const TValue &val) noexcept
+VIA_FORCEINLINE TValue tonumber(const TValue &val) noexcept
 {
-    if (checknumber(V, val))
+    if (checknumber(val))
         return val.clone();
 
     switch (val.type)
@@ -278,19 +278,21 @@ VIA_FORCEINLINE TValue tonumber(State *VIA_RESTRICT V, const TValue &val) noexce
     return nil.clone();
 }
 
-VIA_FORCEINLINE double tocxxnumber(State *VIA_RESTRICT V, const TValue &val) noexcept
+template<typename T = double>
+    requires std::is_integral_v<T>
+VIA_FORCEINLINE T tocxxnumber(const TValue &val) noexcept
 {
-    TValue dbl = tonumber(V, val);
+    TValue dbl = tonumber(val);
 
-    if (checknil(V, dbl))
-        return std::numeric_limits<double>::quiet_NaN();
+    if (checknil(dbl))
+        return std::numeric_limits<T>::quiet_NaN();
 
-    return dbl.val_number;
+    return static_cast<T>(dbl.val_number);
 }
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE const TValue &gettable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
+VIA_FORCEINLINE const TValue &gettable(TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -298,7 +300,7 @@ VIA_FORCEINLINE const TValue &gettable(State *VIA_RESTRICT V, TTable *VIA_RESTRI
     else if (search_meta && tbl->meta)
         // Disable metatable search to prevent chain searching
         // Which can cause infinite loops, crashes, and other bugs
-        return gettable(V, tbl->meta, key, false);
+        return gettable(tbl->meta, key, false);
 
     // This has to be a pointer because we don't know if the value is a
     // non-pointer primitive type
@@ -306,13 +308,13 @@ VIA_FORCEINLINE const TValue &gettable(State *VIA_RESTRICT V, TTable *VIA_RESTRI
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-VIA_FORCEINLINE void settable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, const TValue &val) noexcept
+VIA_FORCEINLINE void settable(TTable *VIA_RESTRICT tbl, TableKey key, const TValue &val) noexcept
 {
-    if (checknil(V, val))
+    if (checknil(val))
     {
-        const TValue &tbl_val = gettable(V, tbl, key, false);
+        const TValue &tbl_val = gettable(tbl, key, false);
 
-        if (!checknil(V, tbl_val))
+        if (!checknil(tbl_val))
             tbl->data.erase(key);
     }
     else
@@ -320,12 +322,12 @@ VIA_FORCEINLINE void settable(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, T
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
-VIA_FORCEINLINE const TValue &getmetamethod(State *VIA_RESTRICT V, const TValue &val, OpCode op)
+VIA_FORCEINLINE const TValue &getmetamethod(const TValue &val, OpCode op)
 {
-    if (!checktable(V, val))
+    if (!checktable(val))
         return nil;
 
-#define GET_METHOD(id) (gettable(V, val.val_table, hashstring(V, id), true))
+#define GET_METHOD(id) (gettable(val.val_table, hashstring(id), true))
     switch (op)
     {
     case OpCode::ADD:
@@ -492,17 +494,17 @@ VIA_FORCEINLINE void externcall(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT 
 // Calls a table method.
 VIA_INLINE void methodcall(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, size_t argc) noexcept
 {
-    const TValue &method = gettable(V, tbl, key, true);
-    if (!checkcallable(V, method))
+    const TValue &method = gettable(tbl, key, true);
+    if (!checkcallable(method))
     {
         ferror("Attempt to methodcall non-callable type '{}'", ENUM_NAME(method.type));
         setexitcode(V, VMEC::attempt_call_non_callable);
         return;
     }
 
-    if (checkfunction(V, method))
+    if (checkfunction(method))
         nativecall(V, method.val_function, argc);
-    else if (checkcfunction(V, method))
+    else if (checkcfunction(method))
         externcall(V, method.val_cfunction, argc);
     // No else-block because the method object is pre-guaranteed to be callable
 }
@@ -510,8 +512,7 @@ VIA_INLINE void methodcall(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, Tabl
 // Returns the primitive type of value <val>.
 VIA_FORCEINLINE TValue type(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    auto enum_name = ENUM_NAME(val.type);
-    char *str = dupstring(std::string(enum_name));
+    char *str = dupstring(std::string(ENUM_NAME(val.type)));
     gcaddcallback(V, [str]() { delete str; });
 
     return TValue(new TString(V, str));
@@ -523,12 +524,12 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
 {
     V->calltype = CallType::CALL;
 
-    if (checkfunction(V, val))
+    if (checkfunction(val))
         nativecall(V, val.val_function, argc);
-    else if (checkcfunction(V, val))
+    else if (checkcfunction(val))
         externcall(V, val.val_cfunction, argc);
-    else if (checktable(V, val))
-        methodcall(V, val.val_table, hashstring(V, "__call"), argc);
+    else if (checktable(val))
+        methodcall(V, val.val_table, hashstring("__call"), argc);
     else
     {
         TValue callt = type(V, val);
@@ -540,14 +541,14 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
 // Returns the length of value <val>, nil if impossible.
 VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    if (checkstring(V, val))
+    if (checkstring(val))
         return TValue(static_cast<TNumber>(strlen(val.val_string->ptr)));
-    else if (checktable(V, val))
+    else if (checktable(val))
     {
-        TableKey metamethod_key = hashstring(V, "__len");
-        const TValue &metamethod = gettable(V, val.val_table, metamethod_key, true);
+        TableKey metamethod_key = hashstring("__len");
+        const TValue &metamethod = gettable(val.val_table, metamethod_key, true);
 
-        if (checknil(V, metamethod))
+        if (checknil(metamethod))
             return TValue(static_cast<TNumber>(val.val_table->data.size()));
 
         call(V, metamethod, 1);
@@ -562,13 +563,13 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 // the `__type` key if the given table has it defined.
 VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    if (checktable(V, val))
+    if (checktable(val))
     {
         TTable *tbl = val.val_table;
-        const TValue &ty = gettable(V, tbl, hashstring(V, "__type"), true);
+        const TValue &ty = gettable(tbl, hashstring("__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
-        if (checknil(V, ty))
+        if (checknil(ty))
             return type(V, val);
 
         TString *tystr = new TString(V, ty.val_string->ptr);
@@ -618,9 +619,9 @@ VIA_FORCEINLINE TValue getmetatable(State *VIA_RESTRICT, TTable *VIA_RESTRICT tb
 // Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
 VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TValue &rhs, OpCode op)
 {
-    VIA_ASSERT(checknumber(V, rhs), "arith(): rhs must be a number");
+    VIA_ASSERT(checknumber(rhs), "arith(): rhs must be a number");
 
-    if (checknumber(V, lhs))
+    if (checknumber(lhs))
     {
         switch (op)
         {
@@ -631,7 +632,13 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
         case OpCode::MUL:
             return TValue(lhs.val_number * rhs.val_number);
         case OpCode::DIV:
-            VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+            if (rhs.val_number == 0.0f)
+            {
+                ferror("Division by zero");
+                setexitcode(V, VMEC::division_by_zero);
+                abort(V);
+            }
+
             return TValue(lhs.val_number / rhs.val_number);
         case OpCode::POW:
             return TValue(std::pow(lhs.val_number, rhs.val_number));
@@ -644,9 +651,9 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
 
         return nil.clone();
     }
-    else if (checktable(V, lhs))
+    else if (checktable(lhs))
     {
-        const TValue &metamethod = getmetamethod(V, lhs, op);
+        const TValue &metamethod = getmetamethod(lhs, op);
         push(V, lhs); // self
         push(V, rhs); // other
         call(V, metamethod, 2);
@@ -660,7 +667,7 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
 VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rhs, OpCode op)
 {
-    if (checknumber(V, *lhs))
+    if (checknumber(*lhs))
     {
         switch (op)
         {
@@ -674,7 +681,13 @@ VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rh
             lhs->val_number *= rhs.val_number;
             break;
         case OpCode::DIV:
-            VIA_ASSERT_SILENT(rhs.val_number != 0.0f, "Division by zero");
+            if (rhs.val_number == 0.0f)
+            {
+                ferror("Division by zero");
+                setexitcode(V, VMEC::division_by_zero);
+                abort(V);
+            }
+
             lhs->val_number /= rhs.val_number;
             break;
         case OpCode::POW:
@@ -688,9 +701,9 @@ VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rh
             break;
         }
     }
-    else if (checktable(V, *lhs))
+    else if (checktable(*lhs))
     {
-        const TValue &metamethod = getmetamethod(V, *lhs, op);
+        const TValue &metamethod = getmetamethod(*lhs, op);
         push(V, *lhs); // self
         push(V, rhs);  // other
         call(V, metamethod, 2);

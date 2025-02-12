@@ -19,6 +19,7 @@ enum class VMEC
     attempt_call_non_callable,
     attempt_mutate_frozen_table,
     unexpected_argument,
+    division_by_zero,
 };
 
 }

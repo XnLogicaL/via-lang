@@ -56,7 +56,7 @@ LIB_DECL_FUNCTION(base_exit)
 {
     LIB_DECL_PARAMETER(arg0, 0);
 
-    if (!checknumber(V, arg0))
+    if (!checknumber(arg0))
         LIB_ERR_ARG_TYPE_MISMATCH("number", ENUM_NAME(arg0.type), 0);
 
     int code = arg0.val_number;
@@ -91,7 +91,7 @@ LIB_DECL_FUNCTION(base_assert)
     LIB_DECL_PARAMETER(arg0, 0);
     LIB_DECL_PARAMETER(arg1, 1);
 
-    if (!tocxxbool(V, arg0))
+    if (!tocxxbool(arg0))
     {
         std::string err_cxx_str = std::format("base_assert assertion failed: {}", tocxxstring(V, arg1));
         TString *err_str = new TString(V, err_cxx_str.c_str());
