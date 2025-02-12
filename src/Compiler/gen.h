@@ -49,7 +49,7 @@ public:
     }
 
     // Main function to generate the bytecode
-    void generate();
+    bool generate();
     // Utility functions
     size_t iota();
     bool is_constexpr(ExprNode);
@@ -65,6 +65,7 @@ public:
 
 public:
     ProgramData &program;
+    bool failed;
 
 private:
     ArenaAllocator alloc; // Custom allocator

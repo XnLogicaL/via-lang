@@ -1,9 +1,9 @@
 /* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "cmdparser.h"
+#include "interpreter.h"
 #include "linenoise.hpp"
 #include "fileio.h"
-#include "repl.h"
 #include "via.h"
 
 using namespace via;
@@ -13,7 +13,8 @@ namespace
 
 const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
 const char REPL_WELCOME[] = "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
-                            "Use ';help' to see a list of commands.\n";
+                            "Use ';help' to see a list of commands.\n"
+                            "WARNING: repl has not been fully implemented.\n";
 const char REPL_HELP[] = "repl commands:\n"
                          "  ;quit - Quits repl\n"
                          "  ;help - Prints this \"menu\"\n"
@@ -75,12 +76,9 @@ void handle_run(const std::vector<std::string> &args)
     interpreter.execute(program);
 }
 
-void handle_repl(const std::vector<std::string> &args)
+void handle_repl(const std::vector<std::string> &)
 {
     std::cout << REPL_WELCOME;
-
-    REPLEngine engine;
-    bool print_bytecode = std::any_of(args.begin(), args.end(), [](const std::string &arg) { return arg == "-bc" || arg == "--bytecode"; });
 
     while (true)
     {
@@ -102,16 +100,14 @@ void handle_repl(const std::vector<std::string> &args)
                 if (false)
                     std::cout << "<none>\n";
                 else
-                    std::cout << "Exit code: " << static_cast<int>(engine.rtstate->exitc) << ENUM_NAME(engine.rtstate->exitc) << "\n"
-                              << "At instruction: " << engine.rtstate->ip - engine.rtstate->ihp << "\n";
+                    std::cout << "Exit code: \n"
+                              << "At instruction: \n";
             }
             else
                 std::cerr << "Unknown command: " << command << "\n";
 
             continue;
         }
-
-        engine.execute(code, print_bytecode);
     }
 }
 

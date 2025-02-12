@@ -9,12 +9,14 @@ namespace via
 using namespace via;
 
 // Compiles the AST into instructions
-void Compiler::generate()
+bool Compiler::generate()
 {
     // Optimize AST before generating bytecode
     pass_manager.apply_astree(generator);
     generator.generate();
     pass_manager.apply_bytecode(generator);
+
+    return generator.failed;
 }
 
 void Compiler::add_default_passes()

@@ -37,22 +37,21 @@
 
 #define ASMJIT_STATIC
 
-// Asserts <cond>
-// If false, throws an exception that includes debug information such as file name and line that the macro was initially expanded
+// Asserts <cond>.
+// If false, raises a fatal error that immediately terminates the program.
 #define VIA_ASSERT(cond, msg) \
+    if (!(cond)) \
     { \
-        if (!(cond)) \
-        { \
-            std::string err = std::format("VIA_ASSERT(): {}\n  in {}:{}", (msg), __FILE__, __LINE__); \
-            throw via::VRTException(err); \
-        } \
+        std::cerr << std::format("VIA_ASSERT(): {}\n  in {}:{}\n", (msg), __FILE__, __LINE__); \
+        std::abort(); \
     }
 
 // Like VIA_ASSERT but doesn't contain debug information
 #define VIA_ASSERT_SILENT(cond, msg) \
+    if (!(cond)) \
     { \
-        if (!(cond)) \
-            throw via::VRTException(msg); \
+        std::cerr << msg << "\n"; \
+        std::abort(); \
     }
 
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
@@ -160,22 +159,6 @@ VIA_FORCEINLINE void print_memory(void *ptr, size_t size)
     // Print a newline at the end
     std::cout << std::dec << std::endl; // Reset to decimal
 }
-
-class VRTException : public std::exception
-{
-public:
-    std::string message;
-
-    VRTException(const std::string &message)
-        : message(message)
-    {
-    }
-
-    const char *what() const throw()
-    {
-        return message.c_str();
-    }
-};
 
 struct ProgramData
 {

@@ -4,27 +4,17 @@
 #include "ast.h"
 #include "token.h"
 
-#define PARSER_ERROR(msg) \
-    { \
-        emitter.out(current_position, (msg), OutputSeverity::ERROR_); \
-        failed = true; \
-    }
+#define PARSER_WARNING(msg) emitter.out(current_position, (msg), OutputSeverity::WARNING);
+#define PARSER_WARNING_AT(msg, at) emitter.out((at), (msg), OutputSeverity::WARNING);
 
-#define PARSER_WARNING(msg) \
-    { \
-        emitter.out(current_position, (msg), OutputSeverity::WARNING); \
-    }
+#define PARSER_ERROR(msg) \
+    emitter.out(current_position, (msg), OutputSeverity::ERROR_); \
+    failed = true;
 
 #define PARSER_ERROR_AT(msg, at) \
-    { \
-        emitter.out((at), (msg), OutputSeverity::ERROR_); \
-        failed = true; \
-    }
+    emitter.out((at), (msg), OutputSeverity::ERROR_); \
+    failed = true;
 
-#define PARSER_WARNING_AT(msg, at) \
-    { \
-        emitter.out((at), (msg), OutputSeverity::WARNING); \
-    }
 
 namespace via
 {
@@ -1290,7 +1280,7 @@ invalid_statement:
     return nullptr;
 } // namespace via
 
-void Parser::parse_program()
+bool Parser::parse_program()
 {
     AbstractSyntaxTree *ast = new AbstractSyntaxTree(VIA_PARSER_ALLOC_SIZE);
     this->alloc = &ast->allocator;
@@ -1311,6 +1301,7 @@ void Parser::parse_program()
     }
 
     program.ast = ast;
+    return failed;
 }
 
 } // namespace via

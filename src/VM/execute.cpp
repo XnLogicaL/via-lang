@@ -13,34 +13,26 @@
 #endif
 
 #define VM_ERROR(code) \
-    { \
-        setexitcode(V, code); \
-        V->sig_error.fire(code); \
-        goto exit; \
-    }
+    setexitcode(V, code); \
+    V->sig_error.fire(code); \
+    goto exit;
 
 #define VM_FATAL(code) \
-    { \
-        ferror("VM Fatal error: {:x} ({})", static_cast<int>(code), ENUM_NAME(code)); \
-        V->sig_fatal.fire(code); \
-        std::abort(); \
-    }
+    ferror("VM Fatal error: {:x} ({})", static_cast<int>(code), ENUM_NAME(code)); \
+    V->sig_fatal.fire(code); \
+    std::abort();
 
 // Macro for loading the next instruction
 // Has bound checks
 #define VM_LOAD() \
-    { \
-        if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
-            VM_FATAL(VMEC::illegal_instruction_access); \
-        V->ip++; \
-    }
+    if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
+        VM_FATAL(VMEC::illegal_instruction_access); \
+    V->ip++;
 
 // Macro that "signals" the VM has completed an execution cycle
 #define VM_NEXT() \
-    { \
-        VM_LOAD(); \
-        goto dispatch; \
-    }
+    VM_LOAD(); \
+    goto dispatch;
 
 namespace via
 {

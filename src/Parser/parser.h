@@ -26,7 +26,7 @@ public:
     {
     }
 
-    void parse_program();
+    bool parse_program();
 
 private:
     ProgramData &program;

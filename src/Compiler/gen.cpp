@@ -202,7 +202,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
 
     for (const TValue &const_val : constants)
     {
-        if (compare(nullptr, val, const_val))
+        if (compare(val, const_val))
             return idx;
 
         idx++;

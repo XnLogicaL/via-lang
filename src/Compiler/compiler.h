@@ -29,7 +29,7 @@ public:
         // Everything else should be automatically cleaned up
     }
 
-    void generate();
+    bool generate();
     void add_default_passes();
     void add_pass(std::unique_ptr<OptimizationPass>);
 
