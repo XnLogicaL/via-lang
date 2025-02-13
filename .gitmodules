@@ -1,3 +1,6 @@
-[submodule "AsmJit"]
-	path = AsmJit
+[submodule "asmjit"]
+	path = asmjit
 	url = https://github.com/asmjit/asmjit.git
+[submodule "SHA256"]
+	path = SHA256
+	url = https://github.com/System-Glitch/SHA256.git

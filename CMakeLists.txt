@@ -12,8 +12,6 @@ file(GLOB_RECURSE MAIN_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp"
 file(GLOB_RECURSE CLI_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/CLI/*.cpp")
 # Recursively get all directories in the src folder
 file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/*)
-# Recursively get all directories in the CLI folder
-file(GLOB_RECURSE CLI_INCLUDES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/CLI/*)
 
 # Create the executable
 add_executable(via "${CMAKE_SOURCE_DIR}/CLI/main.cpp" ${MAIN_SOURCES} ${CLI_SOURCES})
@@ -30,7 +28,8 @@ target_compile_options(via
 )
 
 # Add subdirectories for different components
-add_subdirectory("AsmJit")
+add_subdirectory(asmjit)
+add_subdirectory(SHA256)
 
 # Include directories
 target_include_directories(via PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
@@ -43,12 +42,6 @@ foreach(dir ${SRC_INCLUDES})
     endif()
 endforeach()
 
-# Apply include directories for each subdirectory in CLI
-foreach(dir ${CLI_INCLUDES})
-    if(IS_DIRECTORY ${dir})
-        target_include_directories(via PRIVATE ${dir})
-    endif()
-endforeach()
-
 # Link libraries
 target_link_libraries(via PUBLIC asmjit)
+target_link_libraries(via PUBLIC SHA256)

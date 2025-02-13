@@ -16,4 +16,5 @@
 -I./CLI/Utils
 -I./CLI/Config
 -I./CLI/Commands
--I./AsmJit/src
+-I./asmjit/src
+-I./SHA256/include

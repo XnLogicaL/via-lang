@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <openssl/sha.h>
+#include "SHA256.h"
 #include "common.h"
 #include "bytecode.h"
 #include "fileio.h"
@@ -31,8 +31,11 @@ namespace via
 
 VIA_FORCEINLINE uint8_t *hash_file(const std::string &src)
 {
-    SHA256 sha256;
-    std::string hash = sha256.hash_string(src);
+    SHA256 sha;
+    sha.update(src);
+
+    std::array<uint8_t, 32> digest = sha.digest();
+    std::string hash = sha.toString(digest);
 
     // Assuming the hash is a 64-character hex string for SHA-256
     uint8_t *hash_final = new uint8_t[32]; // Allocate memory for 32 bytes (SHA-256)
