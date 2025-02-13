@@ -11,17 +11,15 @@ via is maintained by **one** person and may contain major security issues, bugs,
 
 # Motivation
 
-While Lua is still widely used and loved by a lot of programmers all over the globe, it still has major flaws that make it bug-prone, unportable (in some cases) and too feature-lacking. via attempts to fix these issues by taking a familiar but completely different approach to Lua's goals. It retains Lua's simplicity by making most features optional to the programmer, while also providing very powerful features at the same time. It also completely reimagines Lua's C/C++ API, making it more friendly to the end-user.
+While Lua is still widely used and loved by a lot of programmers all over the globe, it still has major flaws that make it bug-prone, unportable (in some cases) and too feature-lacking. via attempts to fix these issues by taking a familiar but completely different approach to Lua's goals. It retains Lua's simplicity by making most features optional to the programmer, while also providing very powerful features at the same time. It takes Lua's (specifically Luau's) type system and completely overhauls it with common metaprogramming practices, semi-static typing, and more. It also completely reimagines Lua's C/C++ API, making it more friendly to the end-user.
 
 # Installation
 
 ## Standalone
----
 
 Standalone binaries of via can be found in [Releases](https://github.com/XnLogicaL/via-lang/releases).
 
 ## Building from source
----
 
 Building via from source only requires a few steps. If you're looking on how to embed via into your project using [CMake], {TBA}.
 
