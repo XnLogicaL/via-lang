@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions to via are not commonly accepted but welcome, however since via has a single maintainer, your pull requests might take a lot of time to be accepted. They will be thoroughly inspected to make sure they contain no intentionally malicious/harmful changes.
+Contributions to via are not commonly accepted but welcome, however since via has a single maintainer, your pull requests might take a lot of time to be accepted. They will be thoroughly inspected to ensure they contain no kind of malicious/harmful changes.
 
 # Format
 
