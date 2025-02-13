@@ -1,5 +1,9 @@
-
 ![Logo](https://i.imgur.com/Nyp3nLb.png)
+![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
+![Latest commit](https://img.shields.io/github/last-commit/XnLogicaL/via-lang)
+![Latest release](https://img.shields.io/github/v/release/XnLogicaL/via-lang)
+![File count](https://img.shields.io/github/directory-file-count/XnLogicaL/via-lang)
+![Language](https://img.shields.io/github/languages/top/XnLogicaL/via-lang)
 
 # via
 
