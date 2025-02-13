@@ -80,7 +80,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -102,7 +102,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -123,7 +123,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -145,7 +145,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -167,7 +167,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -188,7 +188,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -210,7 +210,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -232,7 +232,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -253,7 +253,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -275,7 +275,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -297,7 +297,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -318,7 +318,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -340,7 +340,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -362,7 +362,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -383,7 +383,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -405,7 +405,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue *rhs_val = __getregister(V, rhs.val_register);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
         else if (checktable(*lhs_val))
@@ -427,7 +427,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
@@ -448,7 +448,7 @@ dispatch:
         TValue *lhs_val = __getregister(V, lhs.val_register);
         TValue rhs_val(imm);
 
-        // Fast-path: lvalue is a number
+        // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
         else if (checktable(*lhs_val))
