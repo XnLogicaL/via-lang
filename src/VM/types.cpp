@@ -242,7 +242,7 @@ TString::~TString()
 
 TFunction::TFunction(
     State *,
-    const char *id,
+    std::string id,
     Instruction *ret_addr,
     TFunction *caller,
     std::vector<Instruction> bytecode,

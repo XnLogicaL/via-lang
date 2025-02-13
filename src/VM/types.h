@@ -108,12 +108,12 @@ struct TFunction
     // Tells the VM if the last argument is a variadic argument
     bool is_vararg = false;
     // Function identifier
-    const char *id = "<anonymous-function>";
+    std::string id = "<anonymous-function>";
     TFunction *caller = nullptr;
     Instruction *ret_addr = nullptr;
     std::vector<Instruction> bytecode = {};
 
-    explicit TFunction(State *, const char *, Instruction *, TFunction *caller, std::vector<Instruction>, bool, bool);
+    explicit TFunction(State *, std::string, Instruction *, TFunction *caller, std::vector<Instruction>, bool, bool);
     ~TFunction() = default;
 };
 

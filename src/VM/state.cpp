@@ -13,17 +13,10 @@ namespace via
 State::State(GState *G, ProgramData &program)
     : id(G->threads++)
     , G(G)
-    , ihp(nullptr)
     , ralloc(new RAState())
     , gc(new GCState())
     , sbp(new TValue[VIA_VM_STACK_SIZE])
-    , sp(0)
-    , ssp(0)
-    , frame(nullptr)
-    , argc(0)
-    , exitc(VMEC::success)
-    , tstate(ThreadState::PAUSED)
-    , sstate(nullptr)
+    , err(new ErrorState())
 {
     load(*program.bytecode);
 

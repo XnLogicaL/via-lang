@@ -39,20 +39,7 @@
 
 // Asserts <cond>.
 // If false, raises a fatal error that immediately terminates the program.
-#define VIA_ASSERT(cond, msg) \
-    if (!(cond)) \
-    { \
-        std::cerr << std::format("VIA_ASSERT(): {}\n  in {}:{}\n", (msg), __FILE__, __LINE__); \
-        std::abort(); \
-    }
-
-// Like VIA_ASSERT but doesn't contain debug information
-#define VIA_ASSERT_SILENT(cond, msg) \
-    if (!(cond)) \
-    { \
-        std::cerr << msg << "\n"; \
-        std::abort(); \
-    }
+#define VIA_ASSERT(cond, msg) assert(cond &&msg);
 
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)

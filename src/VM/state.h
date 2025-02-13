@@ -3,7 +3,6 @@
 #pragma once
 
 #include "common.h"
-#include "error.h"
 #include "instruction.h"
 #include "signal.h"
 
@@ -50,6 +49,12 @@ enum class ThreadState
     DEAD
 };
 
+struct ErrorState
+{
+    TFunction *frame = nullptr;
+    std::string message = "";
+};
+
 // Global state, should only be instantiated once, and shared across all State's. (threads)
 struct GState
 {
@@ -71,37 +76,37 @@ struct alignas(64) State
     GState *G;   // Global state
 
     // Instruction pointers
-    Instruction *ip;  // Current instruction pointer
-    Instruction *ihp; // Instruction list head pointer
-    Instruction *ibp; // Instruction list base pointer
+    Instruction *ip = nullptr;  // Current instruction pointer
+    Instruction *ihp = nullptr; // Instruction list head pointer
+    Instruction *ibp = nullptr; // Instruction list base pointer
 
     // VM execution state
     RAState *ralloc; // Pointer to VM register allocator state
     GCState *gc;     // Pointer to VM garbage collector state
 
     // Stack state
-    TValue *sbp; // Stack base pointer
-    size_t sp;   // Stack pointer
-    size_t ssp;  // Saved stack pointer
+    TValue *sbp;    // Stack base pointer
+    size_t sp = 0;  // Stack pointer
+    size_t ssp = 0; // Saved stack pointer
 
     // Call and frame management
-    TFunction *frame;  // Call stack pointer
-    size_t argc;       // Argument count (for CALL and FASTCALLX)
-    CallType calltype; // Current calling convention
+    TFunction *frame = nullptr;         // Call stack pointer
+    size_t argc = 0;                    // Argument count (for CALL and FASTCALLX)
+    CallType calltype = CallType::CALL; // Current calling convention
 
     // VM control and debugging
-    VMEC exitc; // VM exit code
-    bool abort;
+    bool abort = false;
+    ErrorState *err;
 
     // Thread state
-    ThreadState tstate; // Current thread state
-    State *sstate;      // Saved thread state
+    ThreadState tstate = ThreadState::PAUSED; // Current thread state
+    State *sstate = nullptr;                  // Saved thread state
 
     // Signals
-    utils::Signal<VMEC> sig_exit;
+    utils::Signal<> sig_exit;
     utils::Signal<> sig_abort;
-    utils::Signal<VMEC> sig_error;
-    utils::Signal<VMEC> sig_fatal;
+    utils::Signal<> sig_error;
+    utils::Signal<> sig_fatal;
 
     State(GState *, ProgramData &);
     ~State();
