@@ -1,4 +1,8 @@
-/* Shortcut for the magic_enum directory */
+/* Shortcut to the magic_enum directory */
 
-#pragma once
+#ifndef MAGIC_ENUM_HPP
+#define MAGIC_ENUM_HPP
+
 #include "magic_enum/magic_enum_all.hpp"
+
+#endif
