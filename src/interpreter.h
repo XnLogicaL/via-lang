@@ -17,8 +17,6 @@ public:
         , state(new State(gstate, program))
     {
         lib::loadbaselib(state);
-        lib::loadmathlib(state);
-        lib::loadrandlib(state);
     }
 
     ~Interpreter()

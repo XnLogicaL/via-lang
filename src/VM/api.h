@@ -31,9 +31,9 @@ VIA_INLINE void ferror(const std::string &message)
 }
 
 template<typename... Args>
-VIA_INLINE void ferror(const std::format_string<Args...> &fmt, Args &&...args)
+VIA_INLINE void ferror(const std::format_string<Args...> fmt, Args &&...args)
 {
-    std::cerr << std::format(fmt, std::forward<Args...>(args...)) << "\n";
+    std::cerr << std::format(fmt, std::forward<Args>(args)...) << "\n";
 }
 
 VIA_INLINE void setexitcode(State *V, VMEC code)

@@ -47,12 +47,14 @@ bool are_compatible_types(TokenType lhs_type, TokenType rhs_type)
 }
 
 // Generates bytecode and returns it
-void Generator::generate()
+bool Generator::generate()
 {
     for (StmtNode stmt : program.ast->statements)
         generate_statement(stmt);
 
     push_instruction(OpCode::EXIT, {Operand(0.0f)});
+
+    return failed;
 }
 
 // Returns the successor of iota everytime it's called
