@@ -14,18 +14,21 @@
 #endif
 
 #define VM_ERROR(message) \
-    __seterrorstate(V, message); \
-    V->sig_error.fire(); \
-    goto exit;
+    while (0) { \
+        __seterrorstate(V, message); \
+        V->sig_error.fire(); \
+        goto exit; \
+    }
 
 #define VM_FATAL(message) \
-    std::cerr << "VM terminated with message: " << message << '\n'; \
-    V->sig_fatal.fire(); \
-    std::abort();
+    while (0) { \
+        std::cerr << "VM terminated with message: " << message << '\n'; \
+        V->sig_fatal.fire(); \
+        std::abort(); \
+    }
 
 #define VM_ASSERT(cond, message) \
-    if (cond) \
-    { \
+    if (cond) { \
         VM_ERROR(message); \
     }
 
@@ -54,26 +57,22 @@ void execute(State *VIA_RESTRICT V)
 
     goto dispatch;
 
-dispatch:
-{
+dispatch: {
     // If the exit code is altered during runtime, it means that something went wrong.
     if (__haserror(V))
         goto exit;
 
     // Abort is second priority due to verbosity.
-    if (V->abort)
-    {
+    if (V->abort) {
         V->sig_abort.fire();
         goto exit;
     }
 
-    switch (V->ip->op)
-    {
+    switch (V->ip->op) {
     case OpCode::NOP:
         VM_NEXT();
 
-    case OpCode::ADD:
-    {
+    case OpCode::ADD: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -83,8 +82,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::ADD);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -93,8 +91,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::ADDK:
-    {
+    case OpCode::ADDK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -105,8 +102,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::ADD);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -115,8 +111,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::ADDI:
-    {
+    case OpCode::ADDI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -126,8 +121,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::ADD);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -137,8 +131,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::SUB:
-    {
+    case OpCode::SUB: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -148,8 +141,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::SUB);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -158,8 +150,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::SUBK:
-    {
+    case OpCode::SUBK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -170,8 +161,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::SUB);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -180,8 +170,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::SUBI:
-    {
+    case OpCode::SUBI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -191,8 +180,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::SUB);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -202,8 +190,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::MUL:
-    {
+    case OpCode::MUL: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -213,8 +200,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MUL);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -223,8 +209,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::MULK:
-    {
+    case OpCode::MULK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -235,8 +220,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MUL);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -245,8 +229,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::MULI:
-    {
+    case OpCode::MULI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -256,8 +239,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MUL);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -267,8 +249,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::DIV:
-    {
+    case OpCode::DIV: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -278,8 +259,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::DIV);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -288,8 +268,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::DIVK:
-    {
+    case OpCode::DIVK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -300,8 +279,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::DIV);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -310,8 +288,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::DIVI:
-    {
+    case OpCode::DIVI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -321,8 +298,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::DIV);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -332,8 +308,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::POW:
-    {
+    case OpCode::POW: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -343,8 +318,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::POW);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -353,8 +327,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::POWK:
-    {
+    case OpCode::POWK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -365,8 +338,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::POW);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -375,8 +347,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::POWI:
-    {
+    case OpCode::POWI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -386,8 +357,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::POW);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -397,8 +367,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::MOD:
-    {
+    case OpCode::MOD: {
         Operand lhs = V->ip->operand1;
         Operand rhs = V->ip->operand2;
 
@@ -408,8 +377,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val->val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MOD);
             __push(V, *lhs_val); // Push self
             __push(V, *rhs_val); // Push other
@@ -418,8 +386,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::MODK:
-    {
+    case OpCode::MODK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
@@ -430,8 +397,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MOD);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -440,8 +406,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::MODI:
-    {
+    case OpCode::MODI: {
         Operand lhs = V->ip->operand1;
         Operand imm = V->ip->operand2;
 
@@ -451,8 +416,7 @@ dispatch:
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(checknumber(*lhs_val)))
             lhs_val->val_number += rhs_val.val_number;
-        else if (checktable(*lhs_val))
-        {
+        else if (checktable(*lhs_val)) {
             const TValue &metamethod = __getmetamethod(*lhs_val, OpCode::MOD);
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
@@ -462,8 +426,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::MOVE:
-    {
+    case OpCode::MOVE: {
         Operand rdst = V->ip->operand1;
         Operand rsrc = V->ip->operand2;
         TValue *src_val = __getregister(V, rsrc.val_register);
@@ -472,8 +435,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADK:
-    {
+    case OpCode::LOADK: {
         Operand dst = V->ip->operand1;
         Operand idx = V->ip->operand2;
         kTable::size_type kid = idx.val_number;
@@ -488,16 +450,14 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADNIL:
-    {
+    case OpCode::LOADNIL: {
         Operand dst = V->ip->operand1;
 
         __setregister(V, dst.val_register, _Nil);
         VM_NEXT();
     }
 
-    case OpCode::LOADTABLE:
-    {
+    case OpCode::LOADTABLE: {
         Operand dst = V->ip->operand1;
         TValue ttable(new TTable());
 
@@ -505,8 +465,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADBOOL:
-    {
+    case OpCode::LOADBOOL: {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
         TValue tbool(val.val_boolean);
@@ -515,8 +474,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADNUMBER:
-    {
+    case OpCode::LOADNUMBER: {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
         TValue tnumber(val.val_number);
@@ -525,8 +483,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADSTRING:
-    {
+    case OpCode::LOADSTRING: {
         Operand dst = V->ip->operand1;
         Operand val = V->ip->operand2;
         TValue tstring(val.val_string);
@@ -535,16 +492,13 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LOADFUNCTION:
-    {
+    case OpCode::LOADFUNCTION: {
         Operand dst = V->ip->operand1;
         TFunction *func = new TFunction(V, "<anonymous>", V->ip, V->frame, {}, false, false);
         TValue val(func);
 
-        while (V->ip < V->ibp)
-        {
-            if (V->ip->op == OpCode::RETURN)
-            {
+        while (V->ip < V->ibp) {
+            if (V->ip->op == OpCode::RETURN) {
                 V->ip++;
                 break;
             }
@@ -557,8 +511,7 @@ dispatch:
         goto dispatch;
     }
 
-    case OpCode::PUSH:
-    {
+    case OpCode::PUSH: {
         Operand src = V->ip->operand1;
         TValue *val = __getregister(V, src.val_register);
 
@@ -566,8 +519,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::PUSHK:
-    {
+    case OpCode::PUSHK: {
         Operand const_idx = V->ip->operand1;
         size_t const_id = const_idx.val_number;
 
@@ -577,8 +529,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::PUSHI:
-    {
+    case OpCode::PUSHI: {
         Operand immx = V->ip->operand1;
         TValue val(immx);
 
@@ -586,8 +537,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::POP:
-    {
+    case OpCode::POP: {
         Operand dst = V->ip->operand1;
         TValue val = __pop(V);
 
@@ -595,8 +545,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETSTACK:
-    {
+    case OpCode::GETSTACK: {
         Operand dst = V->ip->operand1;
         Operand off = V->ip->operand2;
 
@@ -607,8 +556,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::SETSTACK:
-    {
+    case OpCode::SETSTACK: {
         Operand src = V->ip->operand1;
         Operand off = V->ip->operand2;
 
@@ -619,8 +567,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETARGUMENT:
-    {
+    case OpCode::GETARGUMENT: {
         Operand dst = V->ip->operand1;
         Operand off = V->ip->operand2;
 
@@ -631,8 +578,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETGLOBAL:
-    {
+    case OpCode::GETGLOBAL: {
         Operand dst = V->ip->operand1;
         Operand glb_idx = V->ip->operand2;
 
@@ -645,8 +591,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::NOTEQUAL:
-    {
+    case OpCode::NOTEQUAL: {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
@@ -656,8 +601,7 @@ dispatch:
         bool lhs_reg = false;
         bool rhs_reg = false;
 
-        if (VIA_UNLIKELY(lhs.type == OperandType::Register))
-        {
+        if (VIA_UNLIKELY(lhs.type == OperandType::Register)) {
             TValue &val = *__getregister(V, lhs.val_register);
             lhsn = std::move(val);
             lhs_reg = true;
@@ -665,8 +609,7 @@ dispatch:
         else
             lhsn = TValue(lhs);
 
-        if (VIA_UNLIKELY(rhs.type == OperandType::Register))
-        {
+        if (VIA_UNLIKELY(rhs.type == OperandType::Register)) {
             TValue &val = *__getregister(V, rhs.val_register);
             rhsn = std::move(val);
             rhs_reg = true;
@@ -674,31 +617,26 @@ dispatch:
         else
             rhsn = TValue(rhs);
 
-        if (lhs_reg && rhs_reg)
-        {
+        if (lhs_reg && rhs_reg) {
             TValue val(!__compareregisters(V, lhs.val_register, rhs.val_register));
             __setregister(V, dst.val_register, val);
         }
-        else if (lhs_reg)
-        {
+        else if (lhs_reg) {
             TValue val(!__compare(*__getregister(V, lhs.val_register), rhsn));
             __setregister(V, dst.val_register, val);
         }
-        else if (rhs_reg)
-        {
+        else if (rhs_reg) {
             TValue val(!__compare(*__getregister(V, rhs.val_register), lhsn));
             __setregister(V, dst.val_register, val);
         }
-        else
-        {
+        else {
             TValue val(!__compare(lhsn, rhsn));
             __setregister(V, dst.val_register, val);
         }
 
         VM_NEXT();
     }
-    case OpCode::LESS:
-    {
+    case OpCode::LESS: {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
@@ -706,14 +644,12 @@ dispatch:
         TValue *lhsn = __getregister(V, lhs.val_register);
         TValue *rhsn = __getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(*lhsn)))
-        {
+        if (VIA_LIKELY(checknumber(*lhsn))) {
             TValue val(lhsn->val_number < rhsn->val_number);
             __setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(*lhsn)))
-        {
+        else if (VIA_UNLIKELY(checktable(*lhsn))) {
             const TValue &metamethod = __getmetamethod(*lhsn, OpCode::LESS);
 
             __push(V, *lhsn);
@@ -728,8 +664,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::GREATER:
-    {
+    case OpCode::GREATER: {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
@@ -737,14 +672,12 @@ dispatch:
         TValue *lhsn = __getregister(V, lhs.val_register);
         TValue *rhsn = __getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(*lhsn)))
-        {
+        if (VIA_LIKELY(checknumber(*lhsn))) {
             TValue val(lhsn->val_number > rhsn->val_number);
             __setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(*lhsn)))
-        {
+        else if (VIA_UNLIKELY(checktable(*lhsn))) {
             const TValue &metamethod = __getmetamethod(*lhsn, OpCode::LESS);
 
             __push(V, *lhsn);
@@ -759,8 +692,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::LESSOREQUAL:
-    {
+    case OpCode::LESSOREQUAL: {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
@@ -768,14 +700,12 @@ dispatch:
         TValue *lhsn = __getregister(V, lhs.val_register);
         TValue *rhsn = __getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(*lhsn)))
-        {
+        if (VIA_LIKELY(checknumber(*lhsn))) {
             TValue val(lhsn->val_number <= rhsn->val_number);
             __setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(*lhsn)))
-        {
+        else if (VIA_UNLIKELY(checktable(*lhsn))) {
             const TValue &metamethod = __getmetamethod(*lhsn, OpCode::LESS);
 
             __push(V, *lhsn);
@@ -790,8 +720,7 @@ dispatch:
 
         VM_NEXT();
     }
-    case OpCode::GREATEROREQUAL:
-    {
+    case OpCode::GREATEROREQUAL: {
         Operand dst = V->ip->operand1;
         Operand lhs = V->ip->operand2;
         Operand rhs = V->ip->operand3;
@@ -799,14 +728,12 @@ dispatch:
         TValue *lhsn = __getregister(V, lhs.val_register);
         TValue *rhsn = __getregister(V, rhs.val_register);
 
-        if (VIA_LIKELY(checknumber(*lhsn)))
-        {
+        if (VIA_LIKELY(checknumber(*lhsn))) {
             TValue val(lhsn->val_number >= rhsn->val_number);
             __setregister(V, dst.val_register, val);
             VM_NEXT();
         }
-        else if (VIA_UNLIKELY(checktable(*lhsn)))
-        {
+        else if (VIA_UNLIKELY(checktable(*lhsn))) {
             const TValue &metamethod = __getmetamethod(*lhsn, OpCode::LESS);
 
             __push(V, *lhsn);
@@ -825,21 +752,19 @@ dispatch:
     case OpCode::EXIT:
         goto exit;
 
-    case OpCode::JUMP:
-    {
+    case OpCode::JUMP: {
         Operand offset = V->ip->operand1;
         V->ip += static_cast<JmpOffset>(offset.val_number);
         VM_NEXT();
     }
 
     case OpCode::JUMPIFNOT:
-    case OpCode::JUMPIF:
-    {
+    case OpCode::JUMPIF: {
         Operand condr = V->ip->operand1;
         Operand offset = V->ip->operand2;
 
         TValue &cond = *__getregister(V, condr.val_register);
-        bool cond_val = tocxxbool(cond);
+        bool cond_val = __tocxxbool(cond);
 
         if (V->ip->op == OpCode::JUMPIFNOT ? !cond_val : cond_val)
             V->ip += static_cast<JmpOffset>(offset.val_number);
@@ -848,8 +773,7 @@ dispatch:
     }
 
     case OpCode::JUMPIFEQUAL:
-    case OpCode::JUMPIFNOTEQUAL:
-    {
+    case OpCode::JUMPIFNOTEQUAL: {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
@@ -861,8 +785,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JUMPIFLESS:
-    {
+    case OpCode::JUMPIFLESS: {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
@@ -877,8 +800,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JUMPIFGREATER:
-    {
+    case OpCode::JUMPIFGREATER: {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
@@ -893,8 +815,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JUMPIFLESSOREQUAL:
-    {
+    case OpCode::JUMPIFLESSOREQUAL: {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
@@ -909,8 +830,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::JUMPIFGREATEROREQUAL:
-    {
+    case OpCode::JUMPIFGREATEROREQUAL: {
         Operand condlr = V->ip->operand1;
         Operand condrr = V->ip->operand2;
         Operand offset = V->ip->operand3;
@@ -925,8 +845,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::CALL:
-    {
+    case OpCode::CALL: {
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         size_t argc = static_cast<size_t>(argco.val_number);
@@ -937,8 +856,7 @@ dispatch:
         __call(V, *fn, argc);
         VM_NEXT();
     }
-    case OpCode::EXTERNCALL:
-    {
+    case OpCode::EXTERNCALL: {
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         size_t argc = static_cast<size_t>(argco.val_number);
@@ -948,8 +866,7 @@ dispatch:
         __externcall(V, cfunc->val_cfunction, argc);
         VM_NEXT();
     }
-    case OpCode::NATIVECALL:
-    {
+    case OpCode::NATIVECALL: {
         Operand rfn = V->ip->operand1;
         Operand argco = V->ip->operand2;
         size_t argc = static_cast<size_t>(argco.val_number);
@@ -959,8 +876,7 @@ dispatch:
         __nativecall(V, func->val_function, argc);
         VM_NEXT();
     }
-    case OpCode::METHODCALL:
-    {
+    case OpCode::METHODCALL: {
         Operand robj = V->ip->operand1;
         Operand rfn = V->ip->operand2;
         Operand argco = V->ip->operand3;
@@ -975,8 +891,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::RETURN:
-    {
+    case OpCode::RETURN: {
         Operand retcv = V->ip->operand1;
         size_t retc = static_cast<size_t>(retcv.val_number);
 
@@ -984,8 +899,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETTABLE:
-    {
+    case OpCode::GETTABLE: {
         Operand rdst = V->ip->operand1;
         Operand rtbl = V->ip->operand2;
         Operand ridx = V->ip->operand3;
@@ -1001,8 +915,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::SETTABLE:
-    {
+    case OpCode::SETTABLE: {
         Operand rsrc = V->ip->operand1;
         Operand rtbl = V->ip->operand2;
         Operand ridx = V->ip->operand3;
@@ -1014,8 +927,7 @@ dispatch:
         // Get table key based on the index type (string or number)
         TableKey key = checkstring(idx) ? idx.val_string->hash : static_cast<Hash>(idx.val_number);
         // Slow-path: the value is stored in a register, load it
-        if (VIA_UNLIKELY(rsrc.type == OperandType::Register))
-        {
+        if (VIA_UNLIKELY(rsrc.type == OperandType::Register)) {
             TValue &temp = *__getregister(V, rsrc.val_register);
             val = std::move(temp);
         }
@@ -1028,8 +940,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::NEXTTABLE:
-    {
+    case OpCode::NEXTTABLE: {
         static std::unordered_map<void *, TableKey> next_table;
 
         Operand dst = V->ip->operand1;
@@ -1058,8 +969,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LENTABLE:
-    {
+    case OpCode::LENTABLE: {
         Operand dst = V->ip->operand1;
         Operand tblr = V->ip->operand2;
 
@@ -1071,8 +981,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LENSTRING:
-    {
+    case OpCode::LENSTRING: {
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
@@ -1084,8 +993,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::GETSTRING:
-    {
+    case OpCode::GETSTRING: {
         Operand dst = V->ip->operand1;
         Operand str = V->ip->operand2;
         Operand idx = V->ip->operand3;
@@ -1102,8 +1010,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::LEN:
-    {
+    case OpCode::LEN: {
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
@@ -1114,8 +1021,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::TYPE:
-    {
+    case OpCode::TYPE: {
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
@@ -1126,8 +1032,7 @@ dispatch:
         VM_NEXT();
     }
 
-    case OpCode::TYPEOF:
-    {
+    case OpCode::TYPEOF: {
         Operand rdst = V->ip->operand1;
         Operand objr = V->ip->operand2;
 
@@ -1150,8 +1055,7 @@ exit:
 // Permanently kills the thread. Does not clean up the state object.
 void killthread(State *VIA_RESTRICT V)
 {
-    if (V->tstate == ThreadState::RUNNING)
-    {
+    if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
     }
@@ -1165,8 +1069,7 @@ void killthread(State *VIA_RESTRICT V)
 // Temporarily pauses the thread.
 void pausethread(State *VIA_RESTRICT V)
 {
-    if (V->tstate == ThreadState::RUNNING)
-    {
+    if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
     }

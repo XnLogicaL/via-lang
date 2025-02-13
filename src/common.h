@@ -37,15 +37,14 @@
 
 #define ASMJIT_STATIC
 
-// Asserts <cond>.
-// If false, raises a fatal error that immediately terminates the program.
+// Asserts a condition along with a message.
 #define VIA_ASSERT(cond, msg) assert(cond &&msg);
 
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION ("0.4")
+#define VIA_VERSION ("0.13")
 
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__

@@ -310,10 +310,9 @@ VIA_FORCEINLINE TValue __tobool(const TValue &_Val) noexcept
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE bool tocxxbool(const TValue &_Val) noexcept
+VIA_FORCEINLINE bool __tocxxbool(const TValue &_Val) noexcept
 {
-    TValue _Bool = __tobool(_Val);
-    return _Bool.val_boolean;
+    return __tobool(_Val).val_boolean;
 }
 
 VIA_FORCEINLINE TValue __tonumber(const TValue &_Val) noexcept

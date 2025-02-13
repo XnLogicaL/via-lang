@@ -25,8 +25,7 @@ enum class ValueType
 struct TValue
 {
     ValueType type = ValueType::monostate;
-    union
-    {
+    union {
         TNumber val_number;
         TBool val_boolean;
         // These are pointers because their size is larger than 4 bytes,

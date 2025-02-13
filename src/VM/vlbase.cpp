@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
 
 #include "vlbase.h"
 #include "api.h"
@@ -43,26 +44,7 @@ LIB_DECL_FUNCTION(base_println)
 LIB_DECL_FUNCTION(base_error)
 {
     LIB_DECL_PARAMETER(arg0, 0);
-
-    tostring(V, arg0);
-    abort(V);
-    ferror(arg0.val_string->ptr);
-    setexitcode(V, VMEC::user_error);
-
-    LIB_RETURN(0);
-}
-
-LIB_DECL_FUNCTION(base_exit)
-{
-    LIB_DECL_PARAMETER(arg0, 0);
-
-    if (!checknumber(arg0))
-        LIB_ERR_ARG_TYPE_MISMATCH("number", ENUM_NAME(arg0.type), 0);
-
-    int code = arg0.val_number;
-    setexitcode(V, static_cast<VMEC>(code));
-    abort(V);
-
+    impl::__seterrorstate(V, tocxxstring(V, arg0));
     LIB_RETURN(0);
 }
 
@@ -113,7 +95,6 @@ LIB_DECL_FUNCTION(loadbaselib)
     base_properties.emplace("print", LIB_WRAP_CFPTR(base_print));
     base_properties.emplace("println", LIB_WRAP_CFPTR(base_println));
     base_properties.emplace("error", LIB_WRAP_CFPTR(base_error));
-    base_properties.emplace("exit", LIB_WRAP_CFPTR(base_exit));
     base_properties.emplace("type", LIB_WRAP_CFPTR(base_type));
     base_properties.emplace("typeof", LIB_WRAP_CFPTR(base_typeof));
     base_properties.emplace("assert", LIB_WRAP_CFPTR(base_assert));

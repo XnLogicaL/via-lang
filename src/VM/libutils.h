@@ -2,11 +2,10 @@
 
 #pragma once
 
-#define LIB_ASSERT(cond, code, msg) \
+#define LIB_ASSERT(cond, message) \
     if (!(cond)) \
     { \
-        ferror(msg); \
-        setexitcode(V, code); \
+        impl::__seterrorstate(V, message); \
         return; \
     }
 
@@ -18,4 +17,4 @@
 #define LIB_WRAP_PRIM(val) (TValue(val))
 
 #define LIB_ERR_ARG_TYPE_MISMATCH(type0, type1, parameter) \
-    LIB_ASSERT(false, VMEC::unexpected_argument, std::format("Expected {}, got {} (parameter #{})", type0, type1, parameter));
+    LIB_ASSERT(false, std::format("Expected {}, got {} (parameter #{})", type0, type1, parameter));

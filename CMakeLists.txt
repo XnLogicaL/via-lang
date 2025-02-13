@@ -32,6 +32,7 @@ add_subdirectory(asmjit)
 add_subdirectory(SHA256)
 
 # Include directories
+target_include_directories(via PUBLIC "${CMAKE_SOURCE_DIR}/SHA256/include")
 target_include_directories(via PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_include_directories(via PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
@@ -44,4 +45,4 @@ endforeach()
 
 # Link libraries
 target_link_libraries(via PUBLIC asmjit)
-target_link_libraries(via PUBLIC SHA256)
+target_link_libraries(via PUBLIC sha256)

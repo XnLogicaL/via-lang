@@ -13,7 +13,6 @@ namespace via::lib
 LIB_DECL_FUNCTION(base_print);
 LIB_DECL_FUNCTION(base_println);
 LIB_DECL_FUNCTION(base_error);
-LIB_DECL_FUNCTION(base_exit);
 LIB_DECL_FUNCTION(base_type);
 LIB_DECL_FUNCTION(base_typeof);
 LIB_DECL_FUNCTION(base_assert);

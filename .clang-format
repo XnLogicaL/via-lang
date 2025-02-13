@@ -7,7 +7,17 @@ AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
 BreakConstructorInitializers: BeforeComma
 BreakInheritanceList: BeforeComma
 ColumnLimit: 150
@@ -28,6 +38,6 @@ BinPackArguments: false
 BinPackParameters: false
 PenaltyReturnTypeOnItsOwnLine: 10000
 
-# Add these lines to ensure proper indentation for macros
-IndentPPDirectives: BeforeHash  # Indent preprocessor directives like #define
-MacroBlockBegin: ''  # Prevent special indentation for macro blocks
+# Ensure proper macro indentation
+IndentPPDirectives: BeforeHash
+MacroBlockBegin: ''

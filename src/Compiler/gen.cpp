@@ -156,7 +156,7 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
         operand.type = OperandType::Nil;
         break;
     default:
-        VIA_ASSERT(false, std::format("Unsupported literal type '{}'", ENUM_NAME(lit_expr.value.type)));
+        VIA_ASSERT(false, "unsupported literal type (you're seeing this because for whatever reason the developer forgot to handle this error)");
     }
 
     return operand;
