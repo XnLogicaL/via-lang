@@ -21,11 +21,6 @@ const char REPL_HELP[] = "repl commands:\n"
                          "  ;exitinfo - Displays the last exit info returned by the VM\n";
 const char REPL_HEAD[] = ">> ";
 
-void handle_test_installation()
-{
-    std::cout << "Success\n";
-}
-
 void handle_compile(const std::vector<std::string> &args)
 {
     if (args.empty())
@@ -138,9 +133,7 @@ int main(int argc, char **argv)
         }
     );
 
-    if (subcom == "--test-installation")
-        handle_test_installation();
-    else if (subcom == "compile")
+    if (subcom == "compile")
         handle_compile(args);
     else if (subcom == "run")
         handle_run(args);

@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include <openssl/sha.h>
 #include "common.h"
 #include "bytecode.h"
 #include "fileio.h"
-#include "sha256.h"
 
 #define VIA_CACHE_DIR_NAME ("_viac")
 #define VIA_BIN_EXT ("viac")
