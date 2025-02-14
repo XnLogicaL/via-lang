@@ -29,9 +29,40 @@ VIA_MAXOPTIMIZE void __clearerrorstate(State *_V)
     _V->err->message = "";
 }
 
-VIA_MAXOPTIMIZE bool __haserror(State *_V)
+VIA_MAXOPTIMIZE bool __has_error(State *_V)
 {
     return _V->err->frame == _V->frame;
+}
+
+VIA_FORCEINLINE int __handle_error(State *_V)
+{
+    TFunction *_Current_frame = _V->frame;
+    TFunction *_Error_frame = _V->frame;
+    while (_Current_frame)
+    {
+        if (_Current_frame->error_handler)
+        {
+            _V->err->frame = _Current_frame;
+            break;
+        }
+
+        _Current_frame = _Current_frame->caller;
+    }
+
+    if (!_Current_frame)
+    {
+        std::cerr << std::format("<frame@{:x}>: {}\n", reinterpret_cast<uintptr_t>(_Error_frame), _V->err->message) << '\n';
+        _Error_frame = _Error_frame->caller;
+
+        size_t _Idx = 0;
+        while (_Error_frame)
+        {
+            std::cerr << std::format("#{} <frame@{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame));
+            _Error_frame = _Error_frame->caller;
+        }
+    }
+
+    return static_cast<bool>(_Current_frame);
 }
 
 VIA_MAXOPTIMIZE void __setregister(State *_V, RegId _Reg, const TValue &_Val)
@@ -232,19 +263,16 @@ VIA_INLINE TValue __tostring(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
 
     switch (_Val.type)
     {
-    case ValueType::number:
-    {
+    case ValueType::number: {
         std::string _Str = std::to_string(_Val.val_number);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::boolean:
-    {
+    case ValueType::boolean: {
         TString *_Str = new TString(_V, _Val.val_boolean ? "true" : "false");
         return TValue(_Str);
     }
-    case ValueType::table:
-    {
+    case ValueType::table: {
         std::string _Str = "{";
 
         for (auto &_Elem : _Val.val_table->data)
@@ -261,15 +289,13 @@ VIA_INLINE TValue __tostring(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::function:
-    {
+    case ValueType::function: {
         const void *_Faddr = _Val.val_function;
         std::string _Str = std::format("<function@{}>", _Faddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::cfunction:
-    {
+    case ValueType::cfunction: {
         // This has to be explicitly casted because function pointers be weird
         const void *_Cfaddr = _Val.val_cfunction;
         std::string _Str = std::format("<cfunction@{}>", _Cfaddr);

@@ -73,7 +73,7 @@ int Interpreter::execute(ProgramData &program_data)
     // This is still volatile, however it uses a built-in error handler.
     interpret();
 
-    return impl::__haserror(state);
+    return impl::__has_error(state);
 }
 
 } // namespace via
