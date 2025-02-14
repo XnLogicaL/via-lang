@@ -2,8 +2,7 @@
 
 #include "vlmath.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 
 

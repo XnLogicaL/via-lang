@@ -9,14 +9,12 @@
     #define VIA_OPERAND_COUNT 4
 #endif
 
-namespace via
-{
+namespace via {
 
 struct Chunk;
 
 // Operand declarations
-enum class OperandType
-{
+enum class OperandType {
     Nil,
     Number,
     Bool,
@@ -24,11 +22,9 @@ enum class OperandType
     Register,
 };
 
-struct Operand
-{
+struct Operand {
     OperandType type;
-    union
-    {
+    union {
         TNumber val_number;
         TBool val_boolean;
         const char *val_string;
@@ -42,8 +38,7 @@ struct Operand
     Operand(RegId);
 };
 
-struct Instruction
-{
+struct Instruction {
     OpCode op;
     Operand operand1;
     Operand operand2;

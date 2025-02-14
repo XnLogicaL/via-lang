@@ -7,8 +7,7 @@
 #include "types.h"
 #include "state.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 LIB_DECL_FUNCTION(base_print);
 LIB_DECL_FUNCTION(base_println);

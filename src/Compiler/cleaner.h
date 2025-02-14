@@ -4,11 +4,9 @@
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
-class Cleaner
-{
+class Cleaner {
 public:
     void add_callback(std::function<void(void)>);
     void add_malloc(const void *);

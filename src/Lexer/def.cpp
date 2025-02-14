@@ -3,8 +3,7 @@
 #include "def.h"
 #include "preproc.h"
 
-namespace via
-{
+namespace via {
 
 Definition Preprocessor::parse_definition()
 {
@@ -50,13 +49,11 @@ void Preprocessor::expand_definition(const Definition &def)
     std::vector<Token> toks = program.tokens->tokens;
 
     // Iterate through all tokens in the program
-    for (size_t i = 0; i < toks.size(); ++i)
-    {
+    for (size_t i = 0; i < toks.size(); ++i) {
         const Token &tok = toks.at(i);
 
         // If we find the definition identifier, replace it
-        if (tok.value == def.identifier && tok.type == TokenType::IDENTIFIER)
-        {
+        if (tok.value == def.identifier && tok.type == TokenType::IDENTIFIER) {
             // Erase the identifier token
             toks.erase(toks.begin() + i);
             // Insert the replacement tokens at the same position

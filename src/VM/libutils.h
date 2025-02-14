@@ -3,8 +3,7 @@
 #pragma once
 
 #define LIB_ASSERT(cond, message) \
-    if (!(cond)) \
-    { \
+    if (!(cond)) { \
         impl::__set_error_state(V, message); \
         return; \
     }

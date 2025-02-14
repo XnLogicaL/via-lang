@@ -5,12 +5,10 @@
 #include <functional>
 #include <optional>
 
-namespace via::utils
-{
+namespace via::utils {
 
 template<typename T, typename... K>
-class CallableOnce
-{
+class CallableOnce {
     bool has_called = false;
     std::function<T(K...)> func;
 

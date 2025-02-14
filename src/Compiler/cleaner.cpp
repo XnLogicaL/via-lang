@@ -2,8 +2,7 @@
 
 #include "cleaner.h"
 
-namespace via
-{
+namespace via {
 
 void Cleaner::clean()
 {

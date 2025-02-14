@@ -16,8 +16,7 @@
     #define VIA_VM_STACK_SIZE (8 * 1024 * 1024) // 8 MBs
 #endif
 
-namespace via
-{
+namespace via {
 
 // Forward declarations
 struct TFunction;
@@ -34,30 +33,22 @@ using kTable = std::vector<TValue>;
 using SymTable = std::vector<std::string>;
 
 // Calling convention
-enum class CallType
-{
+enum class CallType {
     NOCALL,
     CALL,
     FASTCALL,
 };
 
 // State of an State (thread) execution
-enum class ThreadState
-{
-    RUNNING,
-    PAUSED,
-    DEAD
-};
+enum class ThreadState { RUNNING, PAUSED, DEAD };
 
-struct ErrorState
-{
+struct ErrorState {
     TFunction *frame = nullptr;
     std::string message = "";
 };
 
 // Global state, should only be instantiated once, and shared across all State's. (threads)
-struct GState
-{
+struct GState {
     StrTable stable;   // Global string lookup table, derrived from Lua's string interning
     GlbTable gtable;   // Global environment
     kTable ktable;     // Constant table. Provided by the compiler.
@@ -69,8 +60,7 @@ struct GState
 };
 
 // More likely to be cached (hopefully...)
-struct alignas(64) State
-{
+struct alignas(64) State {
     // Thread and global state
     ThreadId id; // Thread ID
     GState *G;   // Global state

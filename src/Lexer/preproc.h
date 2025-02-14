@@ -17,11 +17,9 @@
         failed = true; \
     }
 
-namespace via
-{
+namespace via {
 
-class Preprocessor
-{
+class Preprocessor {
 public:
     ~Preprocessor() = default;
     Preprocessor(ProgramData &program)

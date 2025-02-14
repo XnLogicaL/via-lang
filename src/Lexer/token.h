@@ -6,11 +6,9 @@
 #include <string>
 #include <vector>
 
-namespace via
-{
+namespace via {
 
-enum class TokenType
-{
+enum class TokenType {
     // Keywords
     KW_DO,        // do
     KW_IN,        // in
@@ -104,8 +102,7 @@ enum class TokenType
     UNKNOWN // Unknown token
 };
 
-struct Token
-{
+struct Token {
     TokenType type;
     std::string value;
     size_t line;
@@ -126,8 +123,7 @@ struct Token
     int bin_prec() const noexcept;
 };
 
-struct TokenHolder
-{
+struct TokenHolder {
     ArenaAllocator alloc;
     std::vector<Token> tokens;
 

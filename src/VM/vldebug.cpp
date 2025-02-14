@@ -3,8 +3,7 @@
 #include "vldebug.h"
 #include "libutils.h"
 
-namespace via
-{
+namespace via {
 
 
 

@@ -7,8 +7,7 @@
 #include "instruction.h"
 #include <asmjit/asmjit.h>
 
-namespace via
-{
+namespace via {
 
 asmjit::Error jitcompileinstruction(asmjit::x86::Assembler &, Instruction &);
 asmjit::Imm jittranslateoperand(Operand &);

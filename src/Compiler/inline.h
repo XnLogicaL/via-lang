@@ -3,8 +3,7 @@
 #include "common.h"
 #include "Parser/ast.h"
 
-namespace via
-{
+namespace via {
 
 
 

@@ -10,8 +10,7 @@
     if (failed) \
         return 1;
 
-namespace via
-{
+namespace via {
 
 void Interpreter::tokenize()
 {

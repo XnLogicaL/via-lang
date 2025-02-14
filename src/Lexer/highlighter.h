@@ -4,20 +4,17 @@
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
 // Returns the severity of the highlight
 // ERROR will affect the returned `fail` value
-enum class OutputSeverity
-{
+enum class OutputSeverity {
     INFO,
     WARNING,
     ERROR_,
 };
 
-class Emitter
-{
+class Emitter {
 public:
     ~Emitter() = default;
     Emitter(ProgramData &program)

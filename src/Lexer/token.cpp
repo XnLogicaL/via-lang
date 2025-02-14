@@ -3,8 +3,7 @@
 #include "token.h"
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
 // Returns the stringified version of the token
 // eg. Token(type: TokenType::OP_ADD, value: "+", line: 1, offset: 8)
@@ -31,8 +30,7 @@ bool Token::is_operator() const noexcept
 
 int Token::bin_prec() const noexcept
 {
-    switch (type)
-    {
+    switch (type) {
     case TokenType::OP_EXP:
         return 4;
     case TokenType::OP_MUL:

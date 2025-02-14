@@ -7,11 +7,9 @@
 #include "instruction.h"
 #include "opcode.h"
 
-namespace via
-{
+namespace via {
 
-class Encoder
-{
+class Encoder {
 public:
     std::vector<char> encode(std::vector<Instruction>);
     std::vector<Instruction> decode(std::vector<char>);

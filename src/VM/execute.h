@@ -5,8 +5,7 @@
 #include "common.h"
 #include "state.h"
 
-namespace via
-{
+namespace via {
 
 // Main VM function that starts execution
 void execute(State *VIA_RESTRICT V);

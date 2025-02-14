@@ -3,8 +3,7 @@
 #include "inline.h"
 #include "Parser/ast.h"
 
-namespace via
-{
+namespace via {
 
 
 

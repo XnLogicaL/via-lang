@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from utils import run_command
 
 def format_files_in_directory(directory):
     # Check if the directory exists
@@ -16,7 +17,7 @@ def format_files_in_directory(directory):
                 file_path = os.path.join(root, file)
                 try:
                     # Run clang-format on the file
-                    subprocess.run(['clang-format', '-i', file_path], check=True)
+                    run_command(f"clang-format -i {file_path}")
                     print(f"Formatted: {file_path}")
                 except subprocess.CalledProcessError as e:
                     print(f"Error formatting file: {file_path}")

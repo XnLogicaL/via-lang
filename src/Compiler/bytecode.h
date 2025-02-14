@@ -4,11 +4,9 @@
 
 #include "instruction.h"
 
-namespace via
-{
+namespace via {
 
-struct BytecodeHolder
-{
+struct BytecodeHolder {
     using Instructions = std::vector<Instruction>;
     Instructions instructions;
 

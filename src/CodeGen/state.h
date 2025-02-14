@@ -4,11 +4,9 @@
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
-struct JITState
-{
+struct JITState {
     std::unordered_map<std::string_view, int> symbol_table;
 };
 

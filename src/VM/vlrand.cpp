@@ -2,8 +2,7 @@
 
 #include "vlrand.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 template<typename T>
     requires std::is_arithmetic_v<T>

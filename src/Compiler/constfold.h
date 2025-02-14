@@ -6,11 +6,9 @@
 #include "optimizer.h"
 #include "Parser/ast.h"
 
-namespace via
-{
+namespace via {
 
-class ConstFoldOptimizationPass : public OptimizationPass
-{
+class ConstFoldOptimizationPass : public OptimizationPass {
 public:
     void apply(Generator &) override;
     bool is_applicable(Generator &) const override;

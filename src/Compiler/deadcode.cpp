@@ -2,8 +2,7 @@
 
 #include "deadcode.h"
 
-namespace via
-{
+namespace via {
 
 void DeadCodeEliminationOptimizationPass::apply(Generator &) {}
 
@@ -26,18 +25,15 @@ void DeadCodeEliminationOptimizationPass::remove_unreachable_code_in_scope(Gener
 {
     std::vector<StmtNode> new_stmts = {};
 
-    for (StmtNode stmt : scope->statements)
-    {
+    for (StmtNode stmt : scope->statements) {
         // Check if the statement is either a return, break or continue statement
         // These statements always alter the control flow of the program that makes the code under them unreachable
         if (std::get_if<ReturnStmtNode>(&stmt.stmt) || std::get_if<BreakStmtNode>(&stmt.stmt) || std::get_if<ContinueStmtNode>(&stmt.stmt))
             break;
-        else if (IfStmtNode *if_stmt = std::get_if<IfStmtNode>(&stmt.stmt))
-        {
+        else if (IfStmtNode *if_stmt = std::get_if<IfStmtNode>(&stmt.stmt)) {
             // Check if the if statements condition always resolves as true
             // if so; get rid of the if statement and just emplace it's body into the scope
-            if (always_true(gen, *if_stmt))
-            {
+            if (always_true(gen, *if_stmt)) {
                 // Check if the if statement is empty
                 if (if_stmt->then_body->statements.size() == 0)
                     continue;

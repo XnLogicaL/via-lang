@@ -4,8 +4,7 @@
 #include "chunk.h"
 #include "linux_syscalls.h"
 
-namespace via
-{
+namespace via {
 
 using namespace asmjit;
 

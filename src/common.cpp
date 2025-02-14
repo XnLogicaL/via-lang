@@ -5,8 +5,7 @@
 #include "token.h"
 #include "bytecode.h"
 
-namespace via
-{
+namespace via {
 
 ProgramData::ProgramData(std::string file_name, std::string file_source)
     : file_name(file_name)

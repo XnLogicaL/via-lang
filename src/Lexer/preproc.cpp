@@ -3,8 +3,7 @@
 #include "preproc.h"
 #include "lexer.h"
 
-namespace via
-{
+namespace via {
 
 void Preprocessor::declare_macro(Macro mac)
 {
@@ -58,27 +57,23 @@ Token Preprocessor::peek(int ahead)
 
 bool Preprocessor::preprocess()
 {
-    for (const Token &tok : program.tokens->tokens)
-    {
+    for (const Token &tok : program.tokens->tokens) {
         if (tok.type == TokenType::KW_MACRO)
             parse_macro();
         else if (tok.type == TokenType::KW_DEFINE)
             parse_definition();
-        else
-        {
+        else {
             pos++;
             continue;
         }
     }
 
-    for (auto it : def_table)
-    {
+    for (auto it : def_table) {
         expand_definition(it.second);
         erase_from_stream(it.second.begin, it.second.end);
     }
 
-    for (auto it : macro_table)
-    {
+    for (auto it : macro_table) {
         expand_macro(it.second);
         erase_from_stream(it.second.begin, it.second.end);
     }

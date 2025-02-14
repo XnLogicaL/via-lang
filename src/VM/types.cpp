@@ -2,15 +2,12 @@
 
 #include "types.h"
 
-namespace via
-{
+namespace via {
 
 TValue &TValue::operator=(TValue &&other) noexcept
 {
-    if (this != &other)
-    {
-        switch (type)
-        {
+    if (this != &other) {
+        switch (type) {
         case ValueType::string:
             if (!val_string)
                 break;
@@ -42,8 +39,7 @@ TValue &TValue::operator=(TValue &&other) noexcept
 
         // Move the new state
         type = other.type;
-        switch (type)
-        {
+        switch (type) {
         case ValueType::number:
             val_number = other.val_number;
             break;
@@ -77,8 +73,7 @@ TValue &TValue::operator=(TValue &&other) noexcept
 TValue::TValue(TValue &&other) noexcept
     : type(other.type)
 {
-    switch (type)
-    {
+    switch (type) {
     case ValueType::number:
         this->val_number = other.val_number;
         break;
@@ -110,8 +105,7 @@ TValue::TValue(TValue &&other) noexcept
 
 TValue::TValue(const Operand &operand)
 {
-    switch (operand.type)
-    {
+    switch (operand.type) {
     case OperandType::Number:
         this->val_number = operand.val_number;
         this->type = ValueType::number;
@@ -136,8 +130,7 @@ TValue::TValue(const Operand &operand)
 TValue::~TValue()
 {
     // Cleanup underlying type, if present
-    switch (type)
-    {
+    switch (type) {
     case ValueType::string:
         if (!val_string)
             break;
@@ -171,8 +164,7 @@ TValue::~TValue()
 TValue TValue::clone() const
 {
     TValue copy;
-    switch (type)
-    {
+    switch (type) {
     case ValueType::number:
         copy.val_number = this->val_number;
         break;
@@ -202,12 +194,10 @@ TString::TString(State *V, const char *str)
 {
     Hash hash = hashstring(str);
     // For compiler compatability
-    if (V != nullptr)
-    {
+    if (V != nullptr) {
         StrTable stable = V->G->stable;
         auto it = stable.find(hash);
-        if (it != stable.end())
-        { // String already exists, return the existing entry
+        if (it != stable.end()) { // String already exists, return the existing entry
             // *this = *it->second;
             return;
         }
@@ -223,8 +213,7 @@ TString::TString(State *V, const char *str)
     this->ptr = sptr;
     this->hash = hash;
 
-    if (V != nullptr)
-    {
+    if (V != nullptr) {
         StrTable &stable = V->G->stable;
         // Insert the new string into the stable
         stable.emplace(hash, this);
@@ -233,8 +222,7 @@ TString::TString(State *V, const char *str)
 
 TString::~TString()
 {
-    if (this->ptr)
-    {
+    if (this->ptr) {
         delete[] this->ptr;
         this->ptr = nullptr;
     }

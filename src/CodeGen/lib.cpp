@@ -4,15 +4,13 @@
 
 #define TOX86GP(reg) x86::Gp::fromTypeAndId(RegType::kX86_KReg, reg)
 
-namespace via
-{
+namespace via {
 
 using namespace asmjit;
 
 Imm jittranslateoperand(Operand &oper)
 {
-    switch (oper.type)
-    {
+    switch (oper.type) {
     case OperandType::Bool:
         return Imm(oper.val_boolean);
     case OperandType::Number:
@@ -26,18 +24,15 @@ Imm jittranslateoperand(Operand &oper)
 
 Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
 {
-    switch (instruction.op)
-    {
+    switch (instruction.op) {
     case OpCode::NOP:
         return a.nop(); // nop
-    case OpCode::MOVE:
-    {
+    case OpCode::MOVE: {
         x86::Gp dst = TOX86GP(instruction.operand1.val_register);
         x86::Gp src = TOX86GP(instruction.operand2.val_register);
         return a.mov(dst, src); // mov dst, src
     }
-    case OpCode::SWAP:
-    {
+    case OpCode::SWAP: {
         x86::Gp dst = TOX86GP(instruction.operand1.val_register);
         x86::Gp src = TOX86GP(instruction.operand2.val_register);
         return a.xchg(dst, src); // xchg dst, src
@@ -46,8 +41,7 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
         return a.sub(x86::rsp, 16); // sub rsp, 16
     case OpCode::POP:
         return a.add(x86::rsp, 16); // add rsp, 16
-    case OpCode::ADD:
-    {
+    case OpCode::ADD: {
         x86::Gp lhs = TOX86GP(instruction.operand1.val_register);
         x86::Gp rhs = TOX86GP(instruction.operand2.val_register);
         return a.add(lhs, rhs); // add lhs, rhs

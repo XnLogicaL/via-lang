@@ -8,11 +8,9 @@
 #include "instruction.h"
 #include "Parser/ast.h"
 
-namespace via
-{
+namespace via {
 
-class Compiler
-{
+class Compiler {
 public:
     using Instructions_t = std::vector<Instruction>;
 

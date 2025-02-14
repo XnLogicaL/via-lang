@@ -7,11 +7,9 @@
 #include "gen.h"
 #include "instruction.h"
 
-namespace via
-{
+namespace via {
 
-class OptimizationPass
-{
+class OptimizationPass {
 public:
     OptimizationPass() = default;
     virtual ~OptimizationPass() = default;
@@ -23,8 +21,7 @@ public:
     }
 };
 
-class PassManager
-{
+class PassManager {
 public:
     PassManager() = default;
     ~PassManager() = default;

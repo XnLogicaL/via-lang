@@ -7,8 +7,7 @@
     "\n  (This is an illformed error, likely caused by an internal compiler bug.\n   If this error persists, please " \
     "create an issue at https://github.com/XnLogicaL/via-lang)"
 
-namespace via
-{
+namespace via {
 
 // Splits a source string into lines
 std::vector<std::string> Emitter::split_lines()
@@ -27,8 +26,7 @@ std::vector<std::string> Emitter::split_lines()
 // Returns a "title" or "header" for output messages based on severity
 std::string Emitter::get_severity_header(OutputSeverity sev)
 {
-    switch (sev)
-    {
+    switch (sev) {
     case OutputSeverity::INFO:
         return "\033[1;34minfo:\033[0m "; // Blue color for info
     case OutputSeverity::WARNING:
@@ -80,8 +78,7 @@ void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
     static bool has_printed_file_name = false;
 
     // Check if file information has been printed
-    if (!has_printed_file_name && program.file_name != "<repl>")
-    {
+    if (!has_printed_file_name && program.file_name != "<repl>") {
         has_printed_file_name = true;
         std::cout << std::format("In file {}:\n", program.file_name);
     }

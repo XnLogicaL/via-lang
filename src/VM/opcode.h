@@ -3,16 +3,14 @@
 
 #pragma once
 
-namespace via
-{
+namespace via {
 
 /*
  * OpCode operand convention
  * <opcode> <registers> <identifiers> <everything-else>
  * Ordered from most likely to be executed to the least. (Except NOP)
  */
-enum class OpCode
-{
+enum class OpCode {
     /*
      * opcode: NOP
      * No operation. Can invoke empty instruction jump optimizations.

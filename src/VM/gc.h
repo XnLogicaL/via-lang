@@ -4,15 +4,13 @@
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
 using GCCleanupFunction = std::function<void(void)>;
 
 struct State;
 struct TValue;
-struct GCState
-{
+struct GCState {
     bool terminating;
     size_t collections;
     size_t size;

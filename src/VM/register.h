@@ -7,12 +7,10 @@
 
 #define VIA_REGISTER_COUNT (128ULL)
 
-namespace via
-{
+namespace via {
 
 struct State;
-struct RAState
-{
+struct RAState {
     TValue *head;
 
     RAState()
@@ -20,8 +18,7 @@ struct RAState
         void *alloc = std::malloc(sizeof(TValue) * VIA_REGISTER_COUNT);
         this->head = reinterpret_cast<TValue *>(alloc);
 
-        for (RegId i = 0; i < VIA_REGISTER_COUNT; i++)
-        {
+        for (RegId i = 0; i < VIA_REGISTER_COUNT; i++) {
             TValue val;
             TValue *addr = head + i;
             val.type = ValueType::monostate;

@@ -2,8 +2,7 @@
 
 #include "vlfunction.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 
 } // namespace via::lib

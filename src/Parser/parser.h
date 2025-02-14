@@ -12,11 +12,9 @@
     #define VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024) // 8MB
 #endif
 
-namespace via
-{
+namespace via {
 
-class Parser
-{
+class Parser {
 public:
     Parser(ProgramData &program)
         : program(program)

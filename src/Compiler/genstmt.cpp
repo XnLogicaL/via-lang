@@ -2,17 +2,14 @@
 
 #include "gen.h"
 
-namespace via
-{
+namespace via {
 
 void Generator::generate_variable_declaration_statement(VariableDeclStmtNode decl_stmt)
 {
-    if (decl_stmt.decl_type == DeclarationType::Local)
-    {
+    if (decl_stmt.decl_type == DeclarationType::Local) {
         RegId dst = allocate_register();
 
-        if (is_constexpr(*decl_stmt.value))
-        {
+        if (is_constexpr(*decl_stmt.value)) {
             ExprNode const_expr = evaluate_constexpr(*decl_stmt.value);
             LiteralExprNode const_lit = std::get<LiteralExprNode>(const_expr.expr);
             size_t const_idx = load_constant(const_lit);
@@ -21,8 +18,7 @@ void Generator::generate_variable_declaration_statement(VariableDeclStmtNode dec
             push_instruction(OpCode::PUSHK, {Operand(const_id)});
             add_bc_info(std::format("local {} = {}", decl_stmt.ident.value, const_lit.value.value));
         }
-        else
-        {
+        else {
             generate_expression(*decl_stmt.value, dst);
             push_instruction(OpCode::PUSH, {Operand(dst)});
             add_bc_info(std::format("local {} = <non-constexpr>", decl_stmt.ident.value));
@@ -47,8 +43,7 @@ void Generator::generate_function_declaration_statement(FunctionDeclStmtNode fun
     if (program.bytecode->instructions.back().op != OpCode::RETURN)
         push_instruction(OpCode::RETURN, {});
 
-    if (func_stmt.decl_type == DeclarationType::Local)
-    {
+    if (func_stmt.decl_type == DeclarationType::Local) {
         push_instruction(OpCode::PUSH, {Operand(dst)});
         free_register(dst);
     }
@@ -62,16 +57,13 @@ void Generator::generate_call_statement(CallStmtNode call_stmt)
 
     generate_expression(*call_stmt.callee, callee);
 
-    if (is_methodcall)
-    {
+    if (is_methodcall) {
         push_instruction(OpCode::PUSH, {Operand(callee)});
         add_bc_info("self");
     }
 
-    for (ExprNode *arg : call_stmt.args)
-    {
-        if (is_constexpr(*arg))
-        {
+    for (ExprNode *arg : call_stmt.args) {
+        if (is_constexpr(*arg)) {
             ExprNode const_expr = evaluate_constexpr(*arg);
             LiteralExprNode const_lit = std::get<LiteralExprNode>(const_expr.expr);
             size_t const_idx = load_constant(const_lit);
@@ -80,8 +72,7 @@ void Generator::generate_call_statement(CallStmtNode call_stmt)
             push_instruction(OpCode::PUSHK, {Operand(const_id)});
             add_bc_info(const_lit.value.value);
         }
-        else
-        {
+        else {
             generate_expression(*arg, VIA_REGISTER_INVALID);
         }
     }
@@ -125,11 +116,9 @@ void Generator::generate_scope_statement(ScopeStmtNode scope_stmt, bool is_funct
 
     // Check if the scope body belongs to a scope
     // If it does, then manually clean up all variables pushed onto the stack by the scope
-    if (!is_function)
-    {
+    if (!is_function) {
         size_t sp_diff = stack.size() - saved_stack_pointer;
-        for (size_t i = 0; i < sp_diff; i++)
-        {
+        for (size_t i = 0; i < sp_diff; i++) {
             stack.pop();
             push_instruction(OpCode::POP, {Operand(RegId(VIA_REGISTER_COUNT))});
         }

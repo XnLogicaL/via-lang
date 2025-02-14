@@ -8,8 +8,7 @@
     #define VIA_CONSTEXPR_MAX_DEPTH 5
 #endif
 
-namespace via
-{
+namespace via {
 
 template<typename T, typename K>
 using BinaryEvaluator = std::function<K(T, T)>;
@@ -83,18 +82,15 @@ ExprNode Generator::evaluate_constexpr(ExprNode expr)
 
     if (std::get_if<LiteralExprNode>(&expr.expr))
         return expr;
-    else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr.expr))
-    {
+    else if (UnaryExprNode *un_expr = std::get_if<UnaryExprNode>(&expr.expr)) {
         ExprNode un_expr_const = evaluate_constexpr(*un_expr->expr);
         LiteralExprNode un_expr_lit = std::get<LiteralExprNode>(un_expr_const.expr);
         Token expr_token = un_expr_lit.value;
-        switch (expr_token.type)
-        {
+        switch (expr_token.type) {
         case TokenType::LIT_INT:
         case TokenType::LIT_FLOAT:
         case TokenType::LIT_HEX:
-        case TokenType::LIT_BINARY:
-        {
+        case TokenType::LIT_BINARY: {
             double x = std::stod(expr_token.value);
             return {LiteralExprNode{
                 Token(
@@ -110,8 +106,7 @@ ExprNode Generator::evaluate_constexpr(ExprNode expr)
             break;
         }
     }
-    else if (/*BinaryExprNode *bin_expr =*/std::get_if<BinaryExprNode>(&expr.expr))
-    {
+    else if (/*BinaryExprNode *bin_expr =*/std::get_if<BinaryExprNode>(&expr.expr)) {
     }
 
     VIA_UNREACHABLE();
@@ -123,8 +118,7 @@ void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> o
 {
     Instruction instruction(op, operands, nullptr, program.bytecode->get().size());
 
-    if (initialize_with_chunk)
-    {
+    if (initialize_with_chunk) {
         initialize_with_chunk = false;
         instruction.chunk = current_chunk;
     }
@@ -136,8 +130,7 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
 {
     Operand operand;
 
-    switch (lit_expr.value.type)
-    {
+    switch (lit_expr.value.type) {
     case TokenType::LIT_BOOL:
         operand.type = OperandType::Bool;
         operand.val_boolean = (lit_expr.value.value == "true");
@@ -164,8 +157,7 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
 
 const TValue Generator::generate_tvalue(LiteralExprNode lit_expr)
 {
-    switch (lit_expr.value.type)
-    {
+    switch (lit_expr.value.type) {
     case TokenType::LIT_INT:
     case TokenType::LIT_FLOAT:
         return TValue(std::stod(lit_expr.value.value));
@@ -188,8 +180,7 @@ RegId Generator::allocate_temp_register()
 RegId Generator::allocate_register()
 {
     for (auto it : register_pool)
-        if (it.second == true)
-        {
+        if (it.second == true) {
             register_pool[it.first] = false;
             return it.first;
         }
@@ -202,8 +193,7 @@ size_t Generator::load_constant(LiteralExprNode expr)
     TValue val = generate_tvalue(expr);
     size_t idx = 0;
 
-    for (const TValue &const_val : constants)
-    {
+    for (const TValue &const_val : constants) {
         if (compare(val, const_val))
             return idx;
 

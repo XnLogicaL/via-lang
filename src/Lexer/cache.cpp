@@ -7,8 +7,7 @@
 #define VIA_CACHE_DIR_FS_FILE_PATH(file) (dir.concat(VIA_CACHE_DIR_NAME).concat(file))
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
-namespace via
-{
+namespace via {
 
 namespace fs = std::filesystem;
 
@@ -40,8 +39,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
         return CacheResult::FAIL;
 
     // Helper lambda to write data
-    auto write_data = [&failed, &ofs](const void *data, size_t size)
-    {
+    auto write_data = [&failed, &ofs](const void *data, size_t size) {
         ofs.write(static_cast<const char *>(data), size);
         if (!ofs)
             failed = true;
@@ -76,8 +74,7 @@ CacheFile CacheManager::read_cache(ProgramData file)
     CacheFile cache_file{file};
     const char *raw_source = dupstring(file.source);
     // Ensure the file is large enough to contain the metadata.
-    if (file.source.size() < sizeof(CacheFile))
-    { // Check if goto statements are supported in this compiler. (FUCK MSVC!)
+    if (file.source.size() < sizeof(CacheFile)) { // Check if goto statements are supported in this compiler. (FUCK MSVC!)
 #if defined(__GNUC__) || defined(__clang__)
         goto exit;
 #else
@@ -125,8 +122,7 @@ CacheFile CacheManager::read_cache(ProgramData file)
     offset += sizeof(cache_file.checksum_a);
 
     // Read the bytecode if code_size > 0
-    if (cache_file.code_size > 0)
-    {
+    if (cache_file.code_size > 0) {
         cache_file.bytecode.resize(cache_file.code_size);
         std::memcpy(cache_file.bytecode.data(), raw_source + offset, cache_file.code_size);
         offset += cache_file.code_size;

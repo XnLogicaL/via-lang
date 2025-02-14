@@ -6,8 +6,7 @@
 #include "api.h"
 #include "libutils.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 void table_insert(State *);
 void table_insertat(State *);

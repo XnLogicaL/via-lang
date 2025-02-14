@@ -6,8 +6,7 @@
 #include "api.h"
 #include "state.h"
 
-namespace via
-{
+namespace via {
 
 void debug_traceback(State *);
 void loaddebuglib(State *);

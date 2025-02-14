@@ -4,12 +4,10 @@
 
 #include "via.h"
 
-namespace via
-{
+namespace via {
 
 // Minimal interpreter implementation for quick usage without touching the API
-class Interpreter
-{
+class Interpreter {
 public:
     Interpreter(ProgramData &program)
         : program(program)

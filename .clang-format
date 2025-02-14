@@ -9,13 +9,13 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterClass: true
-  AfterControlStatement: true
-  AfterEnum: true
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
   AfterFunction: true
-  AfterNamespace: true
-  AfterStruct: true
-  AfterUnion: true
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
   BeforeCatch: true
   BeforeElse: true
 BreakConstructorInitializers: BeforeComma

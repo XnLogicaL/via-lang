@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace via::utils
-{
+namespace via::utils {
 
 template<typename T>
 inline std::string format_vector(const std::vector<T> &vec, std::function<std::string(const T &)> to_str)

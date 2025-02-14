@@ -4,8 +4,7 @@
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
 static const std::vector<std::string> built_in = {
     "print", "println", "error",  "exit",   "type", "typeof", "tostring", "tonumber", "tobool", "assert", "pcall", "xpcall",

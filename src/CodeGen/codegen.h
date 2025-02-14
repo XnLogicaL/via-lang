@@ -6,8 +6,7 @@
 #include "state.h"
 #include <asmjit/asmjit.h>
 
-namespace via
-{
+namespace via {
 
 struct Chunk;
 using JITFunc = int (*)();

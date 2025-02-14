@@ -6,11 +6,9 @@
 #include "state.h"
 #include "modifiable_once.h"
 
-namespace via
-{
+namespace via {
 
-enum class ValueType
-{
+enum class ValueType {
     monostate, // Represents uninitialized values
     nil,       // Empty values, like null, does not contain a union counterpart
     number,    // Unified number type, f64
@@ -22,8 +20,7 @@ enum class ValueType
 };
 
 // Tagged union that holds a primitive via value
-struct TValue
-{
+struct TValue {
     ValueType type = ValueType::monostate;
     union {
         TNumber val_number;
@@ -87,8 +84,7 @@ struct TValue
     TValue clone() const;
 };
 
-struct TString
-{
+struct TString {
     const char *ptr = nullptr;
     uint32_t len = 0;
     Hash hash = 0;
@@ -97,8 +93,7 @@ struct TString
     ~TString();
 };
 
-struct TFunction
-{
+struct TFunction {
     // Line information, determined during compile time,
     // Inherited from the instruction that declares this function
     size_t line = 0;
@@ -116,8 +111,7 @@ struct TFunction
     ~TFunction() = default;
 };
 
-struct TCFunction
-{
+struct TCFunction {
     using Ptr_t = void (*)(State *);
 
     // Function pointer
@@ -131,8 +125,7 @@ struct TCFunction
     ~TCFunction() = default;
 };
 
-struct TTable
-{
+struct TTable {
     // Pointer to metatable
     TTable *meta = nullptr;
     // Tells the VM if the table is modifiable

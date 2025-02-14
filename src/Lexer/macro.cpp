@@ -3,8 +3,7 @@
 #include "macro.h"
 #include "preproc.h"
 
-namespace via
-{
+namespace via {
 
 // TODO: Add safety mechanisms such as;
 // - Expansion depth limit
@@ -13,14 +12,12 @@ void Preprocessor::expand_macro(const Macro &macro)
 {
     std::vector<Token> toks = program.tokens->tokens;
 
-    while (pos < toks.size())
-    {
+    while (pos < toks.size()) {
         const Token &tok = peek();
 
         // Match macro_name!( pattern
         if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name && pos + 1 < toks.size() &&
-            peek(1).type == TokenType::PAREN_OPEN)
-        {
+            peek(1).type == TokenType::PAREN_OPEN) {
             size_t start_pos = pos;
             consume(2); // Consume macro_name! and the opening parenthesis
 
@@ -30,24 +27,20 @@ void Preprocessor::expand_macro(const Macro &macro)
             size_t depth = 1;
 
             // Loop to parse arguments within parentheses
-            while (pos < toks.size())
-            {
+            while (pos < toks.size()) {
                 const Token &current = peek();
 
                 // Handle nested parentheses
                 if (current.type == TokenType::PAREN_OPEN)
                     depth++;
-                else if (current.type == TokenType::PAREN_CLOSE)
-                {
+                else if (current.type == TokenType::PAREN_CLOSE) {
                     depth--;
                     if (depth == 0)
                         break; // End of arguments
                 }
-                else if (current.type == TokenType::COMMA && depth == 1)
-                {
+                else if (current.type == TokenType::COMMA && depth == 1) {
                     // End of current argument
-                    if (!current_arg.empty())
-                    {
+                    if (!current_arg.empty()) {
                         macro_args.push_back(current_arg);
                         current_arg.clear();
                     }
@@ -67,8 +60,7 @@ void Preprocessor::expand_macro(const Macro &macro)
             }
 
             // Check for unmatched parentheses (error handling)
-            if (depth > 0)
-            {
+            if (depth > 0) {
                 PREPROCESSOR_ERROR("Unmatched parentheses in macro invocation");
                 return;
             }
@@ -89,10 +81,8 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Replace parameters in the macro body
             std::vector<Token> expanded_body;
-            for (const Token &body_tok : macro.body)
-            {
-                if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value))
-                {
+            for (const Token &body_tok : macro.body) {
+                if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value)) {
                     const std::vector<Token> &replacement = arg_map[body_tok.value];
                     expanded_body.insert(expanded_body.end(), replacement.begin(), replacement.end());
                 }
@@ -138,10 +128,8 @@ Macro Preprocessor::parse_macro()
     consume(); // Consume '('
 
     // Parse macro parameters
-    while (pos < toks.size() && peek().type != TokenType::PAREN_CLOSE)
-    {
-        if (peek().type == TokenType::COMMA)
-        {
+    while (pos < toks.size() && peek().type != TokenType::PAREN_CLOSE) {
+        if (peek().type == TokenType::COMMA) {
             consume();
             continue;
         }

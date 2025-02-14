@@ -3,8 +3,7 @@
 #include "gc.h"
 #include "types.h"
 
-namespace via
-{
+namespace via {
 
 GCState::GCState()
     : terminating(false)

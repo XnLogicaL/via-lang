@@ -5,11 +5,9 @@
 #include "common.h"
 #include "token.h"
 
-namespace via
-{
+namespace via {
 
-struct Macro
-{
+struct Macro {
     std::string name;                // Name of the macro
     std::vector<std::string> params; // Macro parameter names
     std::vector<Token> body;         // Macro body as a list of tokens

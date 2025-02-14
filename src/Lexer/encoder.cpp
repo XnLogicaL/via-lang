@@ -5,8 +5,7 @@
 #define INSTR_SEP 0xff
 #define OPERAND_SEP 0xfe
 
-namespace via
-{
+namespace via {
 
 char Encoder::encode_opcode(OpCode op)
 {
@@ -20,16 +19,14 @@ std::vector<char> Encoder::encode_operand(Operand oper)
     // Encode type (just the type value for now)
     encoding.push_back(static_cast<char>(oper.type));
 
-    switch (oper.type)
-    {
+    switch (oper.type) {
     case OperandType::Bool:
     case OperandType::Register:
         // For Bool, we store the boolean value. For Register, we store the register number
         encoding.push_back(static_cast<char>(oper.type == OperandType::Bool ? oper.val_boolean : oper.val_register));
         break;
 
-    case OperandType::String:
-    {
+    case OperandType::String: {
         // For strings and identifiers, encode them as a sequence of characters (null-terminated)
         const char *ptr = oper.val_string;
         while (*ptr)
@@ -59,8 +56,7 @@ std::vector<char> Encoder::encode(std::vector<Instruction> instrs)
 {
     std::vector<char> encoding;
 
-    for (Instruction instr : instrs)
-    {
+    for (Instruction instr : instrs) {
         std::vector<char> encoded_operand1 = encode_operand(instr.operand1);
         std::vector<char> encoded_operand2 = encode_operand(instr.operand2);
         std::vector<char> encoded_operand3 = encode_operand(instr.operand3);
@@ -91,16 +87,14 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator it)
     Operand operand;
     operand.type = static_cast<OperandType>(*it++);
 
-    switch (operand.type)
-    {
+    switch (operand.type) {
     case OperandType::Bool:
         operand.val_boolean = static_cast<bool>(*it++);
         break;
     case OperandType::Register:
         operand.val_register = static_cast<RegId>(*it++);
         break;
-    case OperandType::String:
-    {
+    case OperandType::String: {
         std::string temp;
         while (*it != '\0')
             temp.push_back(*it++);
@@ -110,8 +104,7 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator it)
         operand.val_string = buf;
         break;
     }
-    case OperandType::Number:
-    {
+    case OperandType::Number: {
         double num;
         std::memcpy(&num, &(*it), sizeof(double));
         operand.val_number = num;
@@ -128,10 +121,8 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator it)
 std::vector<Instruction> Encoder::decode(std::vector<char> encoding)
 {
     std::vector<Instruction> instructions;
-    for (auto it = encoding.begin(); it != encoding.end();)
-    {
-        if (static_cast<unsigned char>(*it) == INSTR_SEP)
-        {
+    for (auto it = encoding.begin(); it != encoding.end();) {
+        if (static_cast<unsigned char>(*it) == INSTR_SEP) {
             ++it; // Skip instruction separator
             Instruction instr;
             instr.op = decode_opcode(*it++);

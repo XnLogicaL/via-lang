@@ -2,8 +2,7 @@
 
 #include "stack.h"
 
-namespace via
-{
+namespace via {
 
 void TestStack::push(std::string val)
 {
@@ -36,8 +35,7 @@ std::optional<std::string> TestStack::at(size_t pos)
 
 size_t TestStack::find(const std::string &val)
 {
-    for (size_t i = 0; i < size(); i++)
-    {
+    for (size_t i = 0; i < size(); i++) {
         std::optional<std::string> val_at = at(i);
         if (val_at.has_value() && val_at->compare(val) == 0)
             return i;

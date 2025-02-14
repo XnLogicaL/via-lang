@@ -8,11 +8,9 @@
 #include "optimizer.h"
 #include "Parser/ast.h"
 
-namespace via
-{
+namespace via {
 
-class DeadCodeEliminationOptimizationPass : public OptimizationPass
-{
+class DeadCodeEliminationOptimizationPass : public OptimizationPass {
 public:
     void apply(Generator &) override;
 

@@ -4,8 +4,7 @@
 #include "instruction.h"
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
 // Add an instruction to the program
 void BytecodeHolder::add_instruction(const Instruction &instruction)

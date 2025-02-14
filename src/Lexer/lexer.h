@@ -12,14 +12,12 @@
     #define VIA_LEXER_ALLOC_SIZE 8 * 1024 * 1024 // 8 MiB
 #endif
 
-namespace via
-{
+namespace via {
 
 // Lexer class
 // Tokenizes a string into tokens, cannot fail
 // Can be used universally, has no dependencies, as seen in both viac and viaVM bytecode parser
-class Tokenizer
-{
+class Tokenizer {
 public:
     Tokenizer(ProgramData &program)
         : program(program)

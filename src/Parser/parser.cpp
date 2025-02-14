@@ -19,8 +19,7 @@
         failed = true; \
     }
 
-namespace via
-{
+namespace via {
 
 Token Parser::consume()
 {
@@ -90,8 +89,7 @@ Pragma Parser::parse_pragma()
 
     consume(); // Consume '@'
 
-    if (!is_type(TokenType::IDENTIFIER))
-    {
+    if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR(std::format("Unexpected token '{}' while parsing pragma", peek().value));
         failed_inner = true;
     }
@@ -99,12 +97,10 @@ Pragma Parser::parse_pragma()
     Pragma pragma;
     pragma.body = consume();
 
-    if (is_type(TokenType::PAREN_OPEN))
-    {
+    if (is_type(TokenType::PAREN_OPEN)) {
         consume();
 
-        while (true)
-        {
+        while (true) {
             if (is_type(TokenType::PAREN_CLOSE))
                 break;
 
@@ -114,8 +110,7 @@ Pragma Parser::parse_pragma()
             if (is_type(TokenType::PAREN_CLOSE))
                 break;
 
-            if (is_type(TokenType::COMMA))
-            {
+            if (is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate pragma arguments");
                 failed_inner = true;
             }
@@ -123,8 +118,7 @@ Pragma Parser::parse_pragma()
             consume();
         }
 
-        if (!is_type(TokenType::PAREN_CLOSE))
-        {
+        if (!is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Expected ')' to close pragma arguments");
             failed_inner = true;
         }
@@ -146,20 +140,16 @@ StatementModifiers Parser::parse_modifiers(std::function<bool(void)> predecate)
     if (!predecate())
         return modifiers;
 
-    while (predecate())
-    {
-        if (is_type(TokenType::KW_STRICT))
-        {
+    while (predecate()) {
+        if (is_type(TokenType::KW_STRICT)) {
             modifiers.is_strict = true;
             consume();
         }
-        else if (is_type(TokenType::KW_CONST))
-        {
+        else if (is_type(TokenType::KW_CONST)) {
             modifiers.is_const = true;
             consume();
         }
-        else
-        {
+        else {
             PARSER_ERROR(std::format("Unexpected token '{}' while parsing statement modifiers", peek().value));
             failed_inner = true;
             consume();
@@ -178,14 +168,12 @@ ExprNode *Parser::parse_table_expr()
     size_t index = 0;
 
     auto parse_kv_pair = [this, &failed_inner, &index]() -> TableExprNode::KVPair {
-        if (is_type(TokenType::BRACKET_OPEN))
-        {
+        if (is_type(TokenType::BRACKET_OPEN)) {
             consume(); // Consume '['
 
             ExprNode *key = parse_expr();
 
-            if (!is_type(TokenType::BRACKET_CLOSE))
-            {
+            if (!is_type(TokenType::BRACKET_CLOSE)) {
                 // TODO: Find a better error message for this, the current one is dogshit
                 PARSER_ERROR("Expected ']' to close table key expression container");
                 failed_inner = true;
@@ -193,8 +181,7 @@ ExprNode *Parser::parse_table_expr()
 
             consume(); // Consume ']'
 
-            if (!is_type(TokenType::OP_ASGN))
-            {
+            if (!is_type(TokenType::OP_ASGN)) {
                 PARSER_ERROR("Expected '=' to assign table key value pair");
                 failed_inner = true;
             }
@@ -225,8 +212,7 @@ ExprNode *Parser::parse_table_expr()
 
     TableExprNode *table_expr = alloc->emplace<TableExprNode>();
 
-    while (!is_type(TokenType::EOF_))
-    {
+    while (!is_type(TokenType::EOF_)) {
         if (is_type(TokenType::BRACE_CLOSE))
             break;
 
@@ -236,8 +222,7 @@ ExprNode *Parser::parse_table_expr()
         if (is_type(TokenType::BRACE_CLOSE))
             break;
 
-        if (!is_type(TokenType::COMMA))
-        {
+        if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate table key-value pairs");
             failed_inner = true;
         }
@@ -245,8 +230,7 @@ ExprNode *Parser::parse_table_expr()
         consume();
     }
 
-    if (!is_type(TokenType::BRACE_CLOSE))
-    {
+    if (!is_type(TokenType::BRACE_CLOSE)) {
         PARSER_ERROR("Expected '}' to close table key-value pairs");
         failed_inner = true;
     }
@@ -269,8 +253,7 @@ ExprNode *Parser::parse_bin_expr(int precedence)
     // Parse the left-hand side of the expression
     ExprNode *lhs = parse_prim_expr();
 
-    while (true)
-    {
+    while (true) {
         if (current_position >= program.tokens->tokens.size())
             break;
 
@@ -313,8 +296,7 @@ ExprNode *Parser::parse_prim_expr()
     // Start with the base expression
     ExprNode *base_expr = nullptr;
 
-    switch (token.type)
-    {
+    switch (token.type) {
     case TokenType::IDENTIFIER: {
         // Initial identifier (variable or function)
         VarExprNode *varid = alloc->emplace<VarExprNode>();
@@ -339,8 +321,7 @@ ExprNode *Parser::parse_prim_expr()
     case TokenType::PAREN_OPEN: {
         base_expr = parse_expr();
 
-        if (!is_type(TokenType::PAREN_CLOSE))
-        {
+        if (!is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Expected ')' to close group expression");
             failed_inner = true;
         }
@@ -350,8 +331,7 @@ ExprNode *Parser::parse_prim_expr()
     }
 
     case TokenType::KW_FUNC: {
-        if (!is_type(TokenType::PAREN_OPEN))
-        {
+        if (!is_type(TokenType::PAREN_OPEN)) {
             PARSER_ERROR("Expected '(' to open anonymous function (lambda) arguments");
             failed_inner = true;
         }
@@ -360,8 +340,7 @@ ExprNode *Parser::parse_prim_expr()
 
         LambdaExprNode *lambda = alloc->emplace<LambdaExprNode>();
 
-        while (!is_type(TokenType::EOF_))
-        {
+        while (!is_type(TokenType::EOF_)) {
             if (is_type(TokenType::PAREN_CLOSE))
                 break;
 
@@ -371,8 +350,7 @@ ExprNode *Parser::parse_prim_expr()
             if (is_type(TokenType::PAREN_CLOSE))
                 break;
 
-            if (!is_type(TokenType::COMMA))
-            {
+            if (!is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate anonymous function (lambda) arguments");
                 failed_inner = true;
             }
@@ -382,8 +360,7 @@ ExprNode *Parser::parse_prim_expr()
 
         consume(); // Consume ')'
 
-        if (!is_type(TokenType::BRACE_OPEN))
-        {
+        if (!is_type(TokenType::BRACE_OPEN)) {
             PARSER_ERROR("Expected '{' to open anonymous function (lambda) body")
             failed_inner = true;
         }
@@ -423,10 +400,8 @@ ExprNode *Parser::parse_prim_expr()
     }
 
     // Parse the chain of operations
-    while (true)
-    {
-        if (current_position >= program.tokens->tokens.size())
-        {
+    while (true) {
+        if (current_position >= program.tokens->tokens.size()) {
             PARSER_ERROR("Unexpected end to expression");
             failed_inner = true;
             break;
@@ -436,8 +411,7 @@ ExprNode *Parser::parse_prim_expr()
         {
             consume(); // Consume '.'
 
-            if (!is_type(TokenType::IDENTIFIER))
-            {
+            if (!is_type(TokenType::IDENTIFIER)) {
                 PARSER_ERROR("Expected identifier for table member access key");
                 failed_inner = true;
             }
@@ -457,16 +431,14 @@ ExprNode *Parser::parse_prim_expr()
             base_expr = alloc->emplace<ExprNode>(*index_expr);
         }
         // Typecast: expr as type
-        else if (is_type(TokenType::KW_AS))
-        {
+        else if (is_type(TokenType::KW_AS)) {
             consume();
 
             TypeCastExprNode *cast_expr = alloc->emplace<TypeCastExprNode>();
             cast_expr->expr = base_expr;
             cast_expr->type = parse_type();
 
-            if (!cast_expr->type)
-            {
+            if (!cast_expr->type) {
                 PARSER_ERROR("Expected type after 'as' while parsing typecast");
                 panic_and_recover();
             }
@@ -474,8 +446,7 @@ ExprNode *Parser::parse_prim_expr()
             base_expr = alloc->emplace<ExprNode>(*cast_expr);
         }
         // Function call: obj.func(args)
-        else if (is_type(TokenType::PAREN_OPEN) || is_type(TokenType::OP_LT))
-        {
+        else if (is_type(TokenType::PAREN_OPEN) || is_type(TokenType::OP_LT)) {
             bool has_generics = is_type(TokenType::OP_LT);
             consume(); // Consume '(' or '<'
 
@@ -488,16 +459,14 @@ ExprNode *Parser::parse_prim_expr()
             base_expr = alloc->emplace<ExprNode>(*call_expr);
         }
         // Array indexing: obj[index]
-        else if (is_type(TokenType::BRACKET_OPEN))
-        {
+        else if (is_type(TokenType::BRACKET_OPEN)) {
             consume(); // Consume '['
 
             IndexExprNode *index_expr = alloc->emplace<IndexExprNode>();
             index_expr->object = base_expr;
             index_expr->index = parse_expr();
 
-            if (!is_type(TokenType::BRACKET_CLOSE))
-            {
+            if (!is_type(TokenType::BRACKET_CLOSE)) {
                 PARSER_ERROR("Expected ']' to close member access statement");
                 failed_inner = true;
             }
@@ -506,16 +475,14 @@ ExprNode *Parser::parse_prim_expr()
 
             base_expr = alloc->emplace<ExprNode>(*index_expr);
         }
-        else if (is_type(TokenType::OP_INCREMENT))
-        {
+        else if (is_type(TokenType::OP_INCREMENT)) {
             IncExprNode *inc_expr = alloc->emplace<IncExprNode>();
             inc_expr->expr = base_expr;
 
             base_expr = alloc->emplace<ExprNode>(*inc_expr);
         }
 
-        else if (is_type(TokenType::OP_DECREMENT))
-        {
+        else if (is_type(TokenType::OP_DECREMENT)) {
             DecExprNode *dec_expr = alloc->emplace<DecExprNode>();
             dec_expr->expr = base_expr;
 
@@ -536,11 +503,9 @@ std::vector<ExprNode *> Parser::parse_call_arguments()
     bool failed_inner = false;
     std::vector<ExprNode *> arguments;
 
-    while (!is_type(TokenType::PAREN_CLOSE))
-    {
+    while (!is_type(TokenType::PAREN_CLOSE)) {
         ExprNode *expr = parse_expr();
-        if (!expr)
-        {
+        if (!expr) {
             consume();
             continue;
         }
@@ -550,23 +515,20 @@ std::vector<ExprNode *> Parser::parse_call_arguments()
         if (is_type(TokenType::PAREN_CLOSE))
             break;
 
-        if (!is_type(TokenType::COMMA))
-        {
+        if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate call arguments");
             failed_inner = true;
         }
 
         consume(); // Consume ','
 
-        if (is_type(TokenType::PAREN_CLOSE))
-        {
+        if (is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Function call arguments cannot be closed with ','");
             failed_inner = true;
         }
     }
 
-    if (!is_type(TokenType::PAREN_CLOSE))
-    {
+    if (!is_type(TokenType::PAREN_CLOSE)) {
         PARSER_ERROR("Expected ')' to close call arguments");
         failed_inner = true;
     }
@@ -584,19 +546,16 @@ std::vector<TypeNode *> Parser::parse_call_type_arguments()
     bool failed_inner = false;
     std::vector<TypeNode *> arguments;
 
-    while (!is_type(TokenType::OP_GT))
-    {
+    while (!is_type(TokenType::OP_GT)) {
         TypeNode *type = parse_type();
-        if (!type)
-        {
+        if (!type) {
             consume();
             continue;
         }
 
         arguments.push_back(type);
 
-        if (!is_type(TokenType::COMMA))
-        {
+        if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate call type generics");
             failed_inner = true;
         }
@@ -615,8 +574,7 @@ TypeNode *Parser::parse_type_generic()
     bool failed_inner = false;
     Token token = consume();
 
-    if (token.type != TokenType::IDENTIFIER)
-    {
+    if (token.type != TokenType::IDENTIFIER) {
         PARSER_ERROR("Expected identifier for type generic body");
         failed_inner = true;
     }
@@ -625,23 +583,19 @@ TypeNode *Parser::parse_type_generic()
     type.name = token;
 
     // Handle generic types like List<int>
-    if (is_type(TokenType::OP_LT))
-    {
+    if (is_type(TokenType::OP_LT)) {
         consume(); // Consume '<'
 
-        while (!is_type(TokenType::OP_GT))
-        {
+        while (!is_type(TokenType::OP_GT)) {
             TypeNode *type_ = parse_type();
-            if (!type_)
-            {
+            if (!type_) {
                 consume();
                 continue;
             }
 
             type.generics.push_back(*type_);
 
-            if (!is_type(TokenType::COMMA))
-            {
+            if (!is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate type generics");
                 failed_inner = true;
             }
@@ -660,12 +614,10 @@ TypeNode *Parser::parse_type_generic()
 
 TypeNode *Parser::parse_type()
 {
-    if (is_type(TokenType::IDENTIFIER))
-    {
+    if (is_type(TokenType::IDENTIFIER)) {
         TypeNode *gen = parse_type_generic();
 
-        switch (peek().type)
-        {
+        switch (peek().type) {
         case TokenType::AMPERSAND: {
             consume();
 
@@ -679,13 +631,11 @@ TypeNode *Parser::parse_type()
         case TokenType::PIPE: {
             std::vector<TypeNode> types{*gen};
 
-            while (is_type(TokenType::PIPE))
-            {
+            while (is_type(TokenType::PIPE)) {
                 consume();
 
                 TypeNode *type = parse_type();
-                if (!type)
-                {
+                if (!type) {
                     consume();
                     continue;
                 }
@@ -712,8 +662,7 @@ TypeNode *Parser::parse_type()
 
         return gen;
     }
-    else if (is_type(TokenType::BRACE_OPEN))
-    {
+    else if (is_type(TokenType::BRACE_OPEN)) {
         consume();
 
         TypeNode *ktype = alloc->emplace<TypeNode>(GenericTypeNode{
@@ -727,8 +676,7 @@ TypeNode *Parser::parse_type()
         });
 
         // Check if the key type is explicitly specified
-        if (is_type(TokenType::BRACKET_OPEN))
-        {
+        if (is_type(TokenType::BRACKET_OPEN)) {
             consume(); // Consume '['
             ktype = parse_type();
 
@@ -749,8 +697,7 @@ TypeNode *Parser::parse_type()
 
         return alloc->emplace<TypeNode>(table);
     }
-    else if (is_type(TokenType::PAREN_OPEN))
-    {
+    else if (is_type(TokenType::PAREN_OPEN)) {
     }
 
     PARSER_ERROR(std::format("Unexpected token '{}' while parsing type", peek().value));
@@ -770,8 +717,7 @@ TypedParamNode *Parser::parse_parameter()
     param->ident = consume();
     param->modifiers = modifiers;
 
-    if (is_type(TokenType::COLON))
-    {
+    if (is_type(TokenType::COLON)) {
         consume();
 
         TypeNode *type = parse_type();
@@ -800,8 +746,7 @@ VariableDeclStmtNode *Parser::parse_var_declaration()
     decl->modifiers = modifiers;
     decl->decl_type = get_decl_type(declaration_type_token.type);
 
-    if (is_type(TokenType::COLON))
-    {
+    if (is_type(TokenType::COLON)) {
         consume();
 
         TypeNode *type = parse_type();
@@ -811,8 +756,7 @@ VariableDeclStmtNode *Parser::parse_var_declaration()
             decl->type = *type;
     }
 
-    if (is_type(TokenType::OP_ASGN))
-    {
+    if (is_type(TokenType::OP_ASGN)) {
         consume();
 
         ExprNode *expr = parse_expr();
@@ -830,8 +774,7 @@ CallStmtNode *Parser::parse_call_statement(ExprNode *expr)
     CallStmtNode *call = alloc->emplace<CallStmtNode>();
     call->callee = expr;
 
-    if (is_type(TokenType::OP_LT))
-    {
+    if (is_type(TokenType::OP_LT)) {
         consume();
         call->generics = parse_call_type_arguments();
     }
@@ -866,21 +809,18 @@ ReturnStmtNode *Parser::parse_return_statement()
 
     ReturnStmtNode *ret = alloc->emplace<ReturnStmtNode>();
     ExprNode *expr = parse_expr();
-    if (!expr)
-    {
+    if (!expr) {
         consume();
         return ret;
     }
 
     ret->values.push_back(*expr);
 
-    while (is_type(TokenType::COMMA))
-    {
+    while (is_type(TokenType::COMMA)) {
         consume();
 
         ExprNode *expr = parse_expr();
-        if (!expr)
-        {
+        if (!expr) {
             consume();
             continue;
         }
@@ -946,8 +886,7 @@ IfStmtNode *Parser::parse_if_statement()
     ifs->condition = parse_expr();
     ifs->then_body = parse_scope_statement();
 
-    while (is_type(TokenType::KW_ELIF))
-    {
+    while (is_type(TokenType::KW_ELIF)) {
         consume();
 
         ElifStmtNode *elif = alloc->emplace<ElifStmtNode>();
@@ -957,8 +896,7 @@ IfStmtNode *Parser::parse_if_statement()
         ifs->elif_branches.push_back(*elif);
     }
 
-    if (is_type(TokenType::KW_ELSE))
-    {
+    if (is_type(TokenType::KW_ELSE)) {
         consume();
         ifs->else_body = *parse_scope_statement();
     }
@@ -973,8 +911,7 @@ SwitchStmtNode *Parser::parse_switch_statement()
     SwitchStmtNode *switchs = alloc->emplace<SwitchStmtNode>();
     switchs->condition = parse_expr();
 
-    while (is_type(TokenType::KW_CASE))
-    {
+    while (is_type(TokenType::KW_CASE)) {
         consume();
 
         CaseStmtNode *cases = alloc->emplace<CaseStmtNode>();
@@ -984,8 +921,7 @@ SwitchStmtNode *Parser::parse_switch_statement()
         switchs->cases.push_back(*cases);
     }
 
-    if (is_type(TokenType::KW_DEFAULT))
-    {
+    if (is_type(TokenType::KW_DEFAULT)) {
         consume();
         switchs->default_case = *parse_scope_statement();
     }
@@ -1002,8 +938,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
 
     StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER) && !is_type(TokenType::EOF_); });
 
-    if (!is_type(TokenType::IDENTIFIER))
-    {
+    if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for function/method declaration");
         failed_inner = true;
     }
@@ -1014,12 +949,10 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
     decl->ident = consume();
 
     // TODO: Make this safe
-    if (is_type(TokenType::OP_LT))
-    {
+    if (is_type(TokenType::OP_LT)) {
         consume();
 
-        while (!is_type(TokenType::OP_GT))
-        {
+        while (!is_type(TokenType::OP_GT)) {
             decl->generics.push_back(consume());
 
             if (is_type(TokenType::COMMA))
@@ -1029,8 +962,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
         consume();
     }
 
-    if (!is_type(TokenType::PAREN_OPEN))
-    {
+    if (!is_type(TokenType::PAREN_OPEN)) {
         PARSER_ERROR("Expected '(' to open function parameters");
         failed_inner = true;
     }
@@ -1038,8 +970,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
     consume(); // Consume '('
 
     // TODO: Make this safe
-    while (!is_type(TokenType::PAREN_CLOSE))
-    {
+    while (!is_type(TokenType::PAREN_CLOSE)) {
         decl->params.push_back(*parse_parameter());
 
         if (is_type(TokenType::COMMA))
@@ -1049,12 +980,10 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
     consume(); // Consume ')'
 
     // Check for return type specifier
-    if (is_type(TokenType::OP_SUB))
-    {
+    if (is_type(TokenType::OP_SUB)) {
         consume(); // Consume '-'
 
-        if (!is_type(TokenType::OP_GT))
-        {
+        if (!is_type(TokenType::OP_GT)) {
             PARSER_ERROR("Expected '->' for return type specifier");
             failed_inner = true;
         }
@@ -1085,8 +1014,7 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 
     consume(); // Consume 'struct'
 
-    if (!is_type(TokenType::IDENTIFIER))
-    {
+    if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for struct declaration");
         failed_inner = true;
     }
@@ -1095,35 +1023,30 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
     struct_decl->ident = consume();
     struct_decl->decl_type = decl_type;
 
-    if (!is_type(TokenType::BRACE_OPEN))
-    {
+    if (!is_type(TokenType::BRACE_OPEN)) {
         PARSER_ERROR("Expected '{' to open struct body");
         failed_inner = true;
     }
 
     consume(); // Consume '{'
 
-    while (!is_type(TokenType::EOF_))
-    {
+    while (!is_type(TokenType::EOF_)) {
         if (is_type(TokenType::BRACE_CLOSE))
             break;
 
         bool is_property = is_type(TokenType::KW_PROPERTY);
-        if (!is_property /* TODO: Add 'meta' keyword support */)
-        {
+        if (!is_property /* TODO: Add 'meta' keyword support */) {
             PARSER_ERROR(std::format("Unexpected token '{}' while parsing struct properties", peek().value));
             failed_inner = true;
         }
 
         // We do not consume 'property' because it's an essential sentinel keyword for both subparser functions
-        if (is_type(TokenType::KW_FUNC, 1))
-        {
+        if (is_type(TokenType::KW_FUNC, 1)) {
             FunctionDeclStmtNode *func_decl = parse_function_declaration(is_property ? DeclarationType::Property : DeclarationType::Meta);
             StmtNode *func_decl_stmt = alloc->emplace<StmtNode>(*func_decl);
             struct_decl->declarations.push_back(*func_decl_stmt);
         }
-        else
-        {
+        else {
             VariableDeclStmtNode *var_decl = parse_var_declaration();
             StmtNode *var_decl_stmt = alloc->emplace<StmtNode>(*var_decl);
             struct_decl->declarations.push_back(*var_decl_stmt);
@@ -1131,8 +1054,7 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
         }
     }
 
-    if (!is_type(TokenType::BRACE_CLOSE))
-    {
+    if (!is_type(TokenType::BRACE_CLOSE)) {
         PARSER_ERROR("Expected '}' to close struct body");
         failed_inner = true;
     }
@@ -1152,12 +1074,10 @@ ScopeStmtNode *Parser::parse_scope_statement()
     // Instantiate scope statement node
     ScopeStmtNode *scope = alloc->emplace<ScopeStmtNode>();
 
-    while (!is_type(TokenType::BRACE_CLOSE))
-    {
+    while (!is_type(TokenType::BRACE_CLOSE)) {
         StmtNode *stmt = parse_statement();
         // Check if statement is invalid
-        if (!stmt)
-        {
+        if (!stmt) {
             consume();
             continue;
         }
@@ -1175,8 +1095,7 @@ StmtNode *Parser::parse_statement()
 #define EMPLACE_AND_RETURN(expr) \
     { \
         StmtNode *stmt = alloc->emplace<StmtNode>(expr); \
-        if (has_pragma) \
-        { \
+        if (has_pragma) { \
             this->has_pragma = false; \
             stmt->pragma = pragma; \
         } \
@@ -1184,8 +1103,7 @@ StmtNode *Parser::parse_statement()
     }
 
 parse:
-    switch (peek().type)
-    {
+    switch (peek().type) {
     case TokenType::EOF_:
         return nullptr;
     case TokenType::AT: {
@@ -1231,8 +1149,7 @@ parse:
     default: {
         ExprNode *expr = parse_expr();
 
-        if (CallExprNode *call = std::get_if<CallExprNode>(&expr->expr))
-        {
+        if (CallExprNode *call = std::get_if<CallExprNode>(&expr->expr)) {
             // TODO: Construct a new statement based on the call expression
             // The current implementation is bad for several reasons;
             // - Soft memory leak
@@ -1244,8 +1161,7 @@ parse:
 
             EMPLACE_AND_RETURN(*call_stmt);
         }
-        else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr->expr))
-        {
+        else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr->expr)) {
             // Only binary expression allowed is an "assignment operation"
             // Which isn't a actually a real thing, it's just a quirk caused by how operators are classified
             // I guess it's beneficial in this case, although it will be HELL to debug in other cases
@@ -1274,14 +1190,12 @@ bool Parser::parse_program()
     AbstractSyntaxTree *ast = new AbstractSyntaxTree(VIA_PARSER_ALLOC_SIZE);
     this->alloc = &ast->allocator;
 
-    for (Token tok : program.tokens->tokens)
-    {
+    for (Token tok : program.tokens->tokens) {
         if (is_type(TokenType::EOF_))
             break;
 
         StmtNode *stmt = parse_statement();
-        if (!stmt)
-        {
+        if (!stmt) {
             consume();
             continue;
         }

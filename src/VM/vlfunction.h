@@ -5,8 +5,7 @@
 #include "common.h"
 #include "api.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 // Returns the "name" aka identifier of the given function
 void function_name(State *);

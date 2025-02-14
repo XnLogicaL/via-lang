@@ -11,8 +11,7 @@
 #define CREATE_TOKEN(type, val, line, off) *alloc->emplace<Token>(type, val, line, off)
 
 // We use this rather than `using namespace via`
-namespace via
-{
+namespace via {
 
 // Simple function that returns whether if a character is allowed within a hexadecimal literal
 bool Tokenizer::is_hex_char(char chr)
@@ -42,8 +41,7 @@ Token Tokenizer::read_number()
     std::string value;                   // Value of the number, as a string for convenience
 
     // Check for binary or hex literals
-    if (peek() == '0' && !std::isdigit(peek(1)))
-    {
+    if (peek() == '0' && !std::isdigit(peek(1))) {
         consume(); // Consume '0'
 
         if (peek() == BINARY_LITERAL_SENTINEL)
@@ -57,16 +55,14 @@ Token Tokenizer::read_number()
     }
 
     // Read the number until the current character isn't numeric
-    while (pos < source_size() && (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek()))))
-    {
+    while (pos < source_size() && (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek())))) {
         value.push_back(peek());
         pos++;
         offset++;
     }
 
     // Check for floating point
-    if (pos < source_size() && peek() == '.')
-    {
+    if (pos < source_size() && peek() == '.') {
         value.push_back(peek());
         // Since it's proven that there is a floating point in the number literal
         // We can safely categorize it as a float literal
@@ -74,8 +70,7 @@ Token Tokenizer::read_number()
         pos++;
         offset++;
 
-        while (pos < source_size() && std::isdigit(peek()))
-        {
+        while (pos < source_size() && std::isdigit(peek())) {
             value.push_back(peek());
             pos++;
             offset++;
@@ -100,8 +95,7 @@ Token Tokenizer::read_ident()
     std::string identifier;
 
     // Lambda for checking if a character is allowed within an identifier
-    auto is_allowed = [this](char chr) -> bool
-    {
+    auto is_allowed = [this](char chr) -> bool {
         auto allow_list = allowed_identifier_spec_chars;
         bool is_alnum = isalnum(chr);
         bool is_allowed = std::ranges::find(allow_list, peek()) != allow_list.end();
@@ -109,8 +103,7 @@ Token Tokenizer::read_ident()
     };
 
     // Read identifier while position is inside bounds and the current character is allowed within an identifier
-    while (pos < source_size() && is_allowed(peek()))
-    {
+    while (pos < source_size() && is_allowed(peek())) {
         identifier.push_back(peek());
         pos++;
         offset++;
@@ -175,18 +168,14 @@ Token Tokenizer::read_string()
     pos++;                        // Skip opening quote
     offset++;
 
-    while (pos < source_size() && peek() != '"')
-    {
-        if (peek() == '\\')
-        {
+    while (pos < source_size() && peek() != '"') {
+        if (peek() == '\\') {
             pos++;
             offset++;
 
-            if (pos < source_size())
-            {
+            if (pos < source_size()) {
                 char escape_char = peek();
-                switch (escape_char)
-                {
+                switch (escape_char) {
                 case 'n':
                     value.push_back('\n');
                     break;
@@ -218,18 +207,14 @@ Token Tokenizer::read_string()
 Token Tokenizer::get_token()
 {
     // Skip whitespace and single-line comments
-    while (pos < source_size())
-    {
+    while (pos < source_size()) {
         // Skip whitespace
-        if (isspace(peek()))
-        {
-            if (peek() == '\n')
-            {
+        if (isspace(peek())) {
+            if (peek() == '\n') {
                 line++;
                 offset = 0;
             }
-            else
-            {
+            else {
                 offset++;
             }
             pos++;
@@ -237,12 +222,10 @@ Token Tokenizer::get_token()
         }
 
         // Skip single-line comments
-        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '#')
-        {
+        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '#') {
             pos += 2;
             offset += 2;
-            while (pos < source_size() && peek() != '\n')
-            {
+            while (pos < source_size() && peek() != '\n') {
                 pos++;
                 offset++;
             }
@@ -250,22 +233,18 @@ Token Tokenizer::get_token()
         }
 
         // Skip block comments
-        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '[')
-        {
+        if (peek() == '#' && pos + 1 < source_size() && peek(1) == '[') {
             pos += 2;
             offset += 2;
-            while (pos + 1 < source_size() && !(peek() == ']' && peek(1) == '#'))
-            {
-                if (peek() == '\n')
-                {
+            while (pos + 1 < source_size() && !(peek() == ']' && peek(1) == '#')) {
+                if (peek() == '\n') {
                     line++;
                     offset = 0;
                 }
                 pos++;
                 offset++;
             }
-            if (pos + 1 < source_size())
-            {
+            if (pos + 1 < source_size()) {
                 pos += 2; // Skip ']#'
                 offset += 2;
             }
@@ -301,8 +280,7 @@ Token Tokenizer::get_token()
     pos++;
     offset++;
 
-    switch (chr)
-    {
+    switch (chr) {
     case '+':
         return CREATE_TOKEN(TokenType::OP_ADD, "+", line, start_offset);
     case '-':
@@ -316,16 +294,14 @@ Token Tokenizer::get_token()
     case '^':
         return CREATE_TOKEN(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
-        if (pos < source_size() && peek() == '=')
-        {
+        if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
             return CREATE_TOKEN(TokenType::OP_EQ, "==", line, start_offset);
         }
         return CREATE_TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
-        if (pos < source_size() && peek() == '=')
-        {
+        if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
             return CREATE_TOKEN(TokenType::OP_NEQ, "!=", line, start_offset);
@@ -375,8 +351,7 @@ void Tokenizer::tokenize()
     TokenHolder *tokens = new TokenHolder(VIA_LEXER_ALLOC_SIZE);
     this->alloc = &tokens->alloc;
 
-    while (true)
-    {
+    while (true) {
         Token token = get_token();
         tokens->tokens.push_back(token);
 

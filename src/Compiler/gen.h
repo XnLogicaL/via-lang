@@ -24,11 +24,9 @@
     #define VIA_GENERATOR_ALLOC_SIZE 8 * 1024 * 1024 // 8 MB
 #endif
 
-namespace via
-{
+namespace via {
 
-class Generator
-{
+class Generator {
 public:
     Generator(ProgramData &program)
         : program(program)

@@ -9,11 +9,9 @@
     #define VIA_TEST_STACK_SIZE 1024 * 1024 // 1 MB
 #endif
 
-namespace via
-{
+namespace via {
 
-class TestStack
-{
+class TestStack {
 public:
     TestStack()
         : sbp(reinterpret_cast<std::string *>(std::malloc(VIA_TEST_STACK_SIZE)))

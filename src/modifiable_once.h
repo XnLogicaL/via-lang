@@ -4,12 +4,10 @@
 
 #include "common.h"
 
-namespace via::utils
-{
+namespace via::utils {
 
 template<typename T>
-class ModifiableOnce
-{
+class ModifiableOnce {
     bool has_modified;
     T value;
 

@@ -3,15 +3,13 @@
 #include "builtins.h"
 #include "gen.h"
 
-namespace via
-{
+namespace via {
 
 // Generates and emits a literal expression
 void Generator::generate_literal_expression(LiteralExprNode lit_expr, RegId target_register)
 {
     Operand operand = generate_operand(lit_expr);
-    if (LOAD_TO_REGISTER)
-    {
+    if (LOAD_TO_REGISTER) {
         size_t const_idx = load_constant(lit_expr);
         TNumber const_idx_num = const_idx;
         push_instruction(OpCode::LOADK, {Operand(target_register), Operand(const_idx_num)});
@@ -24,15 +22,13 @@ void Generator::generate_literal_expression(LiteralExprNode lit_expr, RegId targ
 // Generates and emits a unary expression
 void Generator::generate_unary_expression(UnaryExprNode unary_expr, RegId target_register)
 {
-    if (LOAD_TO_REGISTER)
-    { // If a target register is specified, load the unary
-      // expression into the register and perform inline negation
+    if (LOAD_TO_REGISTER) { // If a target register is specified, load the unary
+                            // expression into the register and perform inline negation
         generate_expression(*unary_expr.expr, target_register);
         push_instruction(OpCode::NEG, {Operand(target_register)});
     }
-    else
-    { // If no target register is specified, allocate a register
-      // and load the expression into that register, inline negate it and push it onto the stack
+    else { // If no target register is specified, allocate a register
+           // and load the expression into that register, inline negate it and push it onto the stack
         RegId reg = allocate_register();
         generate_expression(*unary_expr.expr, reg);
         push_instruction(OpCode::NEG, {Operand(target_register)});
@@ -52,8 +48,7 @@ void Generator::generate_binary_expression(BinaryExprNode bin_expr, RegId target
     RegId dst = LOAD_TO_REGISTER ? target_register : allocate_register();
 
     // TODO: Handle case where lhs is also a constexpr, which in that case the expression should be folded instead
-    if (is_constexpr(*bin_expr.rhs))
-    {
+    if (is_constexpr(*bin_expr.rhs)) {
         opcode_index += 1; // OPK
 
         OpCode opcode = static_cast<OpCode>(opcode_index);
@@ -65,8 +60,7 @@ void Generator::generate_binary_expression(BinaryExprNode bin_expr, RegId target
         push_instruction(opcode, {Operand(dst), Operand(const_id)});
         add_bc_info(const_lit.value.value);
     }
-    else
-    {
+    else {
         OpCode opcode = static_cast<OpCode>(opcode_index);
         RegId rhs = allocate_register();
 
@@ -76,8 +70,7 @@ void Generator::generate_binary_expression(BinaryExprNode bin_expr, RegId target
         free_register(rhs);
     }
 
-    if (!LOAD_TO_REGISTER)
-    {
+    if (!LOAD_TO_REGISTER) {
         push_instruction(OpCode::PUSH, {Operand(dst)});
         free_register(dst);
     }
@@ -114,8 +107,7 @@ void Generator::generate_index_expression(IndexExprNode idx_expr, RegId target_r
     free_register(index);
 
     // Check if the result needs to be pushed or not
-    if (!LOAD_TO_REGISTER)
-    {
+    if (!LOAD_TO_REGISTER) {
         // Push result and free allocated holder register
         push_instruction(OpCode::PUSH, {Operand(target)});
         free_register(target);
@@ -163,8 +155,7 @@ void Generator::generate_call_expression(CallExprNode call_expr, RegId target_re
 void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_register)
 {
     size_t pos = stack.find(var_expr.ident.value);
-    if (pos != SIZE_MAX)
-    {
+    if (pos != SIZE_MAX) {
         RegId target;
 
         // Determine destination
@@ -183,8 +174,7 @@ void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_
         );
         add_bc_info(var_expr.ident.value);
 
-        if (!LOAD_TO_REGISTER)
-        {
+        if (!LOAD_TO_REGISTER) {
             push_instruction(OpCode::PUSH, {Operand(target)});
             free_register(target);
         }
@@ -194,8 +184,7 @@ void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_
 
     // Look for the symbol in the global table
     auto glob_it = std::find(built_in.begin(), built_in.end(), var_expr.ident.value);
-    if (glob_it != built_in.end())
-    {
+    if (glob_it != built_in.end()) {
         RegId target;
 
         // Determine destination register
@@ -217,8 +206,7 @@ void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_
         );
 
         // Check if the result needs to be stored in a register or not
-        if (!LOAD_TO_REGISTER)
-        {
+        if (!LOAD_TO_REGISTER) {
             // Emit push instruction
             push_instruction(OpCode::PUSH, {Operand(target)});
             // Free allocated register
@@ -248,8 +236,7 @@ void Generator::generate_increment_expression(IncExprNode inc_expr, RegId target
     generate_expression(*inc_expr.expr, target);
     push_instruction(OpCode::INCREMENT, {Operand(target)});
 
-    if (!LOAD_TO_REGISTER)
-    {
+    if (!LOAD_TO_REGISTER) {
         push_instruction(OpCode::PUSH, {Operand(target)});
         free_register(target);
     }
@@ -267,8 +254,7 @@ void Generator::generate_decrement_expression(DecExprNode dec_expr, RegId target
     generate_expression(*dec_expr.expr, target);
     push_instruction(OpCode::DECREMENT, {Operand(target)});
 
-    if (!LOAD_TO_REGISTER)
-    {
+    if (!LOAD_TO_REGISTER) {
         push_instruction(OpCode::PUSH, {Operand(target)});
         free_register(target);
     }

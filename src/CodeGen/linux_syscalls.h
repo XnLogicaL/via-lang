@@ -5,11 +5,9 @@
 #include "common.h"
 #include <asmjit/asmjit.h>
 
-namespace via
-{
+namespace via {
 
-enum class LinuxSyscall
-{
+enum class LinuxSyscall {
     read = 0,
     write = 1,
     open = 2,

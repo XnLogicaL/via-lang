@@ -8,8 +8,7 @@
 #include "libutils.h"
 #include <cmath>
 
-namespace via::lib
-{
+namespace via::lib {
 
 void math_exp(State *V);
 void math_log(State *V);

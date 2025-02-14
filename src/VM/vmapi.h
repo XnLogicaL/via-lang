@@ -12,8 +12,7 @@
 
 #define CHECK_JUMP_ADDRESS(addr) ((addr >= V->ihp) && (addr <= V->ibp))
 
-namespace via::impl
-{
+namespace via::impl {
 
 static const TValue _Nil = TValue();
 
@@ -38,10 +37,8 @@ VIA_FORCEINLINE int __handle_error(State *_V)
 {
     TFunction *_Current_frame = _V->frame;
     TFunction *_Error_frame = _V->frame;
-    while (_Current_frame)
-    {
-        if (_Current_frame->error_handler)
-        {
+    while (_Current_frame) {
+        if (_Current_frame->error_handler) {
             _V->err->frame = _Current_frame;
             break;
         }
@@ -49,14 +46,12 @@ VIA_FORCEINLINE int __handle_error(State *_V)
         _Current_frame = _Current_frame->caller;
     }
 
-    if (!_Current_frame)
-    {
+    if (!_Current_frame) {
         std::cerr << std::format("<frame@{:x}>: {}\n", reinterpret_cast<uintptr_t>(_Error_frame), _V->err->message) << '\n';
         _Error_frame = _Error_frame->caller;
 
         size_t _Idx = 0;
-        while (_Error_frame)
-        {
+        while (_Error_frame) {
             std::cerr << std::format("#{} <frame@{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame));
             _Error_frame = _Error_frame->caller;
         }
@@ -79,8 +74,7 @@ VIA_MAXOPTIMIZE TValue *__get_register(State *_V, RegId _Reg)
 VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
 {
     constexpr static const size_t _Stack_size = VIA_VM_STACK_SIZE / sizeof(TValue);
-    if (VIA_UNLIKELY(_V->sp > _Stack_size))
-    {
+    if (VIA_UNLIKELY(_V->sp > _Stack_size)) {
         __set_error_state(_V, "stack overflow");
         return;
     }
@@ -90,8 +84,7 @@ VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
 
 VIA_MAXOPTIMIZE TValue __pop(State *_V)
 {
-    if (VIA_UNLIKELY(_V->sp == 0))
-    {
+    if (VIA_UNLIKELY(_V->sp == 0)) {
         __set_error_state(_V, "stack underflow");
         return _Nil.clone();
     }
@@ -133,8 +126,7 @@ VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Se
 
 VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const TValue &_Val) noexcept
 {
-    if (checknil(_Val))
-    {
+    if (checknil(_Val)) {
         const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
         if (!checknil(_Tbl_val))
             _Tbl->data.erase(_Key);
@@ -145,8 +137,7 @@ VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const
 
 VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
 {
-    if (checktable(_Val))
-    {
+    if (checktable(_Val)) {
         TTable *_Tbl = _Val.val_table;
         const TValue &ty = __get_table(_Tbl, hashstring("__type"), true);
         if (checknil(ty))
@@ -212,8 +203,7 @@ VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
 {
     if (checkstring(_Val))
         return TValue(static_cast<TNumber>(strlen(_Val.val_string->ptr)));
-    else if (checktable(_Val))
-    {
+    else if (checktable(_Val)) {
         TableKey _Metamethod_key = hashstring("__len");
         const TValue &_Metamethod = __get_table(_Val.val_table, _Metamethod_key, true);
 
@@ -233,8 +223,7 @@ VIA_FORCEINLINE void __native_ret(State *VIA_RESTRICT _V, size_t _Retc) noexcept
     _V->ip = _V->frame->ret_addr;
     _V->frame = _V->frame->caller;
 
-    for (size_t i = 0; i < _Retc; i++)
-    {
+    for (size_t i = 0; i < _Retc; i++) {
         TValue _Ret_val = __pop(_V);
         _Ret_values.push_back(std::move(_Ret_val));
     }
@@ -261,8 +250,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
     if (checkstring(_Val))
         return _Val.clone();
 
-    switch (_Val.type)
-    {
+    switch (_Val.type) {
     case ValueType::number: {
         std::string _Str = std::to_string(_Val.val_number);
         TString *_Tstr = new TString(_V, _Str.c_str());
@@ -275,8 +263,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
     case ValueType::table: {
         std::string _Str = "{";
 
-        for (auto &_Elem : _Val.val_table->data)
-        {
+        for (auto &_Elem : _Val.val_table->data) {
             _Str += __to_string(_V, _Elem.second).val_string->ptr;
             _Str += ", ";
         }
@@ -322,8 +309,7 @@ VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
     if (checkbool(_Val))
         return _Val.clone();
 
-    switch (_Val.type)
-    {
+    switch (_Val.type) {
     // Nil and Monostate is the only falsy type
     case ValueType::nil:
     case ValueType::monostate:
@@ -346,8 +332,7 @@ VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
     if (checknumber(_Val))
         return _Val.clone();
 
-    switch (_Val.type)
-    {
+    switch (_Val.type) {
     case ValueType::string:
         return TValue(std::stod(_Val.val_string->ptr));
     case ValueType::boolean:
@@ -373,8 +358,7 @@ VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
 
 VIA_FORCEINLINE void *__to_pointer(const TValue &_Val) noexcept
 {
-    switch (_Val.type)
-    {
+    switch (_Val.type) {
     case ValueType::cfunction:
         return _Val.val_cfunction;
     case ValueType::function:
@@ -393,8 +377,7 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
     if (_Val_0.type != _Val_1.type)
         return false;
 
-    switch (_Val_0.type)
-    {
+    switch (_Val_0.type) {
     case ValueType::number:
         return _Val_0.val_number == _Val_1.val_number;
     case ValueType::boolean:
@@ -429,8 +412,7 @@ VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
         return _Nil.clone();
 
 #define GET_METHOD(id) (__get_table(_Val.val_table, hashstring(id), true))
-    switch (_Op)
-    {
+    switch (_Op) {
     case OpCode::ADD:
         return GET_METHOD("__add");
     case OpCode::SUB:

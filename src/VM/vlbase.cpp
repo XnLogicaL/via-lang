@@ -6,16 +6,14 @@
 #include "libutils.h"
 #include "types.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 LIB_DECL_FUNCTION(base_print)
 {
     uint16_t i = 0;
     std::ostringstream oss;
 
-    while (i++ < V->argc)
-    {
+    while (i++ < V->argc) {
         LIB_DECL_PARAMETER(argx, i);
         oss << tocxxstring(V, argx) << " ";
     }
@@ -30,8 +28,7 @@ LIB_DECL_FUNCTION(base_println)
     uint8_t i = 0;
     std::ostringstream oss;
 
-    while (i++ < V->argc)
-    {
+    while (i++ < V->argc) {
         LIB_DECL_PARAMETER(argx, i);
         oss << tocxxstring(V, argx) << " ";
     }
@@ -73,8 +70,7 @@ LIB_DECL_FUNCTION(base_assert)
     LIB_DECL_PARAMETER(arg0, 0);
     LIB_DECL_PARAMETER(arg1, 1);
 
-    if (!tocxxbool(arg0))
-    {
+    if (!tocxxbool(arg0)) {
         std::string err_cxx_str = std::format("base_assert assertion failed: {}", tocxxstring(V, arg1));
         TString *err_str = new TString(V, err_cxx_str.c_str());
 

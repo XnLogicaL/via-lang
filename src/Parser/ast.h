@@ -7,34 +7,23 @@
 #include "common.h"
 #include "format_vec.h"
 
-namespace via
-{
+namespace via {
 
-enum class DeclarationType
-{
-    Local,
-    Global,
-    Property,
-    Meta
-};
+enum class DeclarationType { Local, Global, Property, Meta };
 
-struct Pragma
-{
+struct Pragma {
     Token body;
     std::vector<Token> arguments;
 
     std::string to_string()
     {
-        return std::format(
-            "Pragma(body: {}, arguments: {})",
-            body.to_string(),
-            utils::format_vector<Token>(arguments, [](const Token tok) { return tok.to_string(); })
-        );
+        return std::format("Pragma(body: {}, arguments: {})", body.to_string(), utils::format_vector<Token>(arguments, [](const Token tok) {
+                               return tok.to_string();
+                           }));
     }
 };
 
-struct StatementModifiers
-{
+struct StatementModifiers {
     bool is_const;
     bool is_strict;
 
@@ -62,8 +51,7 @@ struct TableTypeNode;
 struct OptionalTypeNode;
 struct TypeNode;
 
-struct GenericTypeNode
-{
+struct GenericTypeNode {
     Token name;
     std::vector<TypeNode> generics;
 
@@ -73,8 +61,7 @@ struct GenericTypeNode
     }
 };
 
-struct UnionTypeNode
-{
+struct UnionTypeNode {
     TypeNode *lhs;
     TypeNode *rhs;
 
@@ -84,8 +71,7 @@ struct UnionTypeNode
     }
 };
 
-struct VariantTypeNode
-{
+struct VariantTypeNode {
     std::vector<TypeNode> types;
 
     std::string to_string()
@@ -94,8 +80,7 @@ struct VariantTypeNode
     }
 };
 
-struct FunctionTypeNode
-{
+struct FunctionTypeNode {
     std::vector<TypeNode> input;
     std::vector<TypeNode> output;
 
@@ -105,8 +90,7 @@ struct FunctionTypeNode
     }
 };
 
-struct TableTypeNode
-{
+struct TableTypeNode {
     TypeNode *ktype;
     TypeNode *vtype;
 
@@ -116,8 +100,7 @@ struct TableTypeNode
     }
 };
 
-struct OptionalTypeNode
-{
+struct OptionalTypeNode {
     TypeNode *type;
 
     std::string to_string()
@@ -126,8 +109,7 @@ struct OptionalTypeNode
     }
 };
 
-struct TypeNode
-{
+struct TypeNode {
     using Variant = std::variant<GenericTypeNode, UnionTypeNode, VariantTypeNode, FunctionTypeNode, TableTypeNode, OptionalTypeNode>;
 
     TypeNode() = default;
@@ -143,8 +125,7 @@ struct TypeNode
     }
 };
 
-struct TypedParamNode
-{
+struct TypedParamNode {
     Token ident;
     TypeNode type;
     StatementModifiers modifiers;
@@ -173,8 +154,7 @@ struct TableExprNode;
 struct TypeCastExprNode;
 struct ExprNode;
 
-struct LiteralExprNode
-{
+struct LiteralExprNode {
     Token value;
 
     std::string to_string()
@@ -183,8 +163,7 @@ struct LiteralExprNode
     }
 };
 
-struct UnaryExprNode
-{
+struct UnaryExprNode {
     ExprNode *expr;
 
     std::string to_string()
@@ -193,8 +172,7 @@ struct UnaryExprNode
     }
 };
 
-struct BinaryExprNode
-{
+struct BinaryExprNode {
     Token op;
     ExprNode *lhs;
     ExprNode *rhs;
@@ -205,8 +183,7 @@ struct BinaryExprNode
     }
 };
 
-struct LambdaExprNode
-{
+struct LambdaExprNode {
     std::vector<TypedParamNode> params;
     ScopeStmtNode *body;
 
@@ -216,8 +193,7 @@ struct LambdaExprNode
     }
 };
 
-struct CallExprNode
-{
+struct CallExprNode {
     ExprNode *callee;
     std::vector<ExprNode *> args;
     std::vector<TypeNode *> type_args;
@@ -228,8 +204,7 @@ struct CallExprNode
     }
 };
 
-struct IndexExprNode
-{
+struct IndexExprNode {
     ExprNode *object;
     ExprNode *index;
 
@@ -239,8 +214,7 @@ struct IndexExprNode
     }
 };
 
-struct VarExprNode
-{
+struct VarExprNode {
     Token ident;
 
     std::string to_string()
@@ -249,8 +223,7 @@ struct VarExprNode
     }
 };
 
-struct IncExprNode
-{
+struct IncExprNode {
     ExprNode *expr;
 
     std::string to_string()
@@ -259,8 +232,7 @@ struct IncExprNode
     }
 };
 
-struct DecExprNode
-{
+struct DecExprNode {
     ExprNode *expr;
 
     std::string to_string()
@@ -269,8 +241,7 @@ struct DecExprNode
     }
 };
 // type(expr)
-struct TypeExprNode
-{
+struct TypeExprNode {
     ExprNode *expr;
 
     std::string to_string()
@@ -280,8 +251,7 @@ struct TypeExprNode
 };
 
 // typeof(expr)
-struct TypeofExprNode
-{
+struct TypeofExprNode {
     ExprNode *expr;
 
     std::string to_string()
@@ -291,10 +261,8 @@ struct TypeofExprNode
 };
 
 // {KVPair...}
-struct TableExprNode
-{
-    struct KVPair
-    {
+struct TableExprNode {
+    struct KVPair {
         ExprNode *key;
         ExprNode *val;
     };
@@ -306,8 +274,7 @@ struct TableExprNode
     }
 };
 
-struct TypeCastExprNode
-{
+struct TypeCastExprNode {
     ExprNode *expr;
     TypeNode *type;
 
@@ -317,8 +284,7 @@ struct TypeCastExprNode
     }
 };
 
-struct ExprNode
-{
+struct ExprNode {
     using Variant = std::variant<
         LiteralExprNode,
         UnaryExprNode,
@@ -367,8 +333,7 @@ struct ContinueStmtNode;
 struct BreakStmtNode;
 struct StmtNode;
 
-struct VariableDeclStmtNode
-{
+struct VariableDeclStmtNode {
     Token ident;
     TypeNode type;
     std::optional<ExprNode> value;
@@ -387,8 +352,7 @@ struct VariableDeclStmtNode
     }
 };
 
-struct CallStmtNode
-{
+struct CallStmtNode {
     ExprNode *callee;
     std::vector<ExprNode *> args;
     std::vector<TypeNode *> generics;
@@ -404,8 +368,7 @@ struct CallStmtNode
     }
 };
 
-struct AssignStmtNode
-{
+struct AssignStmtNode {
     ExprNode *target;
     ExprNode *value;
 
@@ -415,8 +378,7 @@ struct AssignStmtNode
     }
 };
 
-struct WhileStmtNode
-{
+struct WhileStmtNode {
     ExprNode *condition;
     ScopeStmtNode *body;
 
@@ -426,8 +388,7 @@ struct WhileStmtNode
     }
 };
 
-struct ScopeStmtNode
-{
+struct ScopeStmtNode {
     std::vector<StmtNode> statements;
     std::string to_string()
     {
@@ -435,8 +396,7 @@ struct ScopeStmtNode
     }
 };
 
-struct ForStmtNode
-{
+struct ForStmtNode {
     Token keys;
     Token values;
     ExprNode *iterator;
@@ -454,8 +414,7 @@ struct ForStmtNode
     }
 };
 
-struct FunctionDeclStmtNode
-{
+struct FunctionDeclStmtNode {
     Token ident;
     std::vector<TypedParamNode> params;
     std::vector<Token> generics;
@@ -478,8 +437,7 @@ struct FunctionDeclStmtNode
     }
 };
 
-struct ElifStmtNode
-{
+struct ElifStmtNode {
     ExprNode *condition;
     ScopeStmtNode *body;
 
@@ -489,8 +447,7 @@ struct ElifStmtNode
     }
 };
 
-struct IfStmtNode
-{
+struct IfStmtNode {
     ExprNode *condition;
     ScopeStmtNode *then_body;
     std::optional<ScopeStmtNode> else_body;
@@ -508,8 +465,7 @@ struct IfStmtNode
     }
 };
 
-struct CaseStmtNode
-{
+struct CaseStmtNode {
     ExprNode *value;
     ScopeStmtNode *body;
 
@@ -519,8 +475,7 @@ struct CaseStmtNode
     }
 };
 
-struct SwitchStmtNode
-{
+struct SwitchStmtNode {
     ExprNode *condition;
     std::vector<CaseStmtNode> cases;
     std::optional<ScopeStmtNode> default_case;
@@ -536,8 +491,7 @@ struct SwitchStmtNode
     }
 };
 
-struct ReturnStmtNode
-{
+struct ReturnStmtNode {
     std::vector<ExprNode> values;
 
     std::string to_string()
@@ -546,8 +500,7 @@ struct ReturnStmtNode
     }
 };
 
-struct StructDeclStmtNode
-{
+struct StructDeclStmtNode {
     Token ident;
     DeclarationType decl_type;
     std::vector<StmtNode> declarations;
@@ -558,8 +511,7 @@ struct StructDeclStmtNode
     }
 };
 
-struct NamespaceDeclStmtNode
-{
+struct NamespaceDeclStmtNode {
     Token ident;
     DeclarationType decl_type;
     std::vector<StmtNode> declarations;
@@ -570,24 +522,21 @@ struct NamespaceDeclStmtNode
     }
 };
 
-struct BreakStmtNode
-{
+struct BreakStmtNode {
     std::string to_string()
     {
         return "BreakStmtNode";
     }
 };
 
-struct ContinueStmtNode
-{
+struct ContinueStmtNode {
     std::string to_string()
     {
         return "ContinueStmtNode";
     }
 };
 
-struct StmtNode
-{
+struct StmtNode {
     using Variant = std::variant<
         VariableDeclStmtNode,
         CallStmtNode,
@@ -621,8 +570,7 @@ struct StmtNode
 
 // Root AST Node
 // ---------------
-struct AbstractSyntaxTree
-{
+struct AbstractSyntaxTree {
     ArenaAllocator allocator;
     std::vector<StmtNode> statements;
 

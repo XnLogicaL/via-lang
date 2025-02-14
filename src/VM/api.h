@@ -14,8 +14,7 @@
 // Fuck.
 #include <cmath>
 
-namespace via
-{
+namespace via {
 
 static const TValue nil = TValue();
 
@@ -40,8 +39,7 @@ VIA_MAXOPTIMIZE bool compare(const TValue &v0, const TValue &v1) noexcept
         return false;
 
     // Optimized for most efficient branching by sorting the cases from most common to least
-    switch (v0.type)
-    {
+    switch (v0.type) {
     case ValueType::number:
         return v0.val_number == v1.val_number;
     case ValueType::boolean:
@@ -109,8 +107,7 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
     if (checkstring(val))
         return val.clone();
 
-    switch (val.type)
-    {
+    switch (val.type) {
     case ValueType::number: {
         std::string str = std::to_string(val.val_number);
         TString *tstr = new TString(V, str.c_str());
@@ -123,8 +120,7 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
     case ValueType::table: {
         std::string str = "{";
 
-        for (auto &elem : val.val_table->data)
-        {
+        for (auto &elem : val.val_table->data) {
             str += tostring(V, elem.second).val_string->ptr;
             str += ", ";
         }
@@ -175,8 +171,7 @@ VIA_FORCEINLINE TValue tobool(const TValue &val) noexcept
     if (checkbool(val))
         return val.clone();
 
-    switch (val.type)
-    {
+    switch (val.type) {
     // Nil and Monostate is the only falsy type
     case ValueType::nil:
     case ValueType::monostate:
@@ -202,8 +197,7 @@ VIA_FORCEINLINE TValue tonumber(const TValue &val) noexcept
     if (checknumber(val))
         return val.clone();
 
-    switch (val.type)
-    {
+    switch (val.type) {
     case ValueType::string:
         return TValue(std::stod(val.val_string->ptr));
     case ValueType::boolean:
@@ -247,8 +241,7 @@ VIA_FORCEINLINE TValue gettable(TTable *VIA_RESTRICT tbl, TableKey key, bool sea
 // Assigns the given value <val> to key <key> in table <tbl>.
 VIA_FORCEINLINE void settable(TTable *VIA_RESTRICT tbl, TableKey key, const TValue &val) noexcept
 {
-    if (checknil(val))
-    {
+    if (checknil(val)) {
         const TValue &tbl_val = gettable(tbl, key, false);
 
         if (!checknil(tbl_val))
@@ -265,8 +258,7 @@ VIA_FORCEINLINE TValue getmetamethod(const TValue &val, OpCode op)
         return nil.clone();
 
 #define GET_METHOD(id) (gettable(val.val_table, hashstring(id), true))
-    switch (op)
-    {
+    switch (op) {
     case OpCode::ADD:
         return GET_METHOD("__add");
     case OpCode::SUB:
@@ -313,8 +305,7 @@ VIA_FORCEINLINE void setlocal(State *VIA_RESTRICT V, LocalId offset, const TValu
 {
     // Check if LocalId is out of bounds,
     // this is CRUCIAL, and prevents UB upon stack operations.
-    if (offset > V->sp)
-    {
+    if (offset > V->sp) {
         std::string identifier("<unknown-symbol>");
         if (V->G->symtable.size() >= offset)
             identifier = V->G->symtable.at(offset);
@@ -367,8 +358,7 @@ VIA_FORCEINLINE void nativeret(State *VIA_RESTRICT V, size_t retc) noexcept
     V->frame = V->frame->caller;
 
     // Save return values
-    for (size_t i = 0; i < retc; i++)
-    {
+    for (size_t i = 0; i < retc; i++) {
         TValue ret_val = pop(V);
         ret_values.push_back(std::move(ret_val));
     }
@@ -466,8 +456,7 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     if (checkstring(val))
         return TValue(static_cast<TNumber>(strlen(val.val_string->ptr)));
-    else if (checktable(val))
-    {
+    else if (checktable(val)) {
         TableKey metamethod_key = hashstring("__len");
         const TValue &metamethod = gettable(val.val_table, metamethod_key, true);
 
@@ -486,8 +475,7 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 // the `__type` key if the given table has it defined.
 VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    if (checktable(val))
-    {
+    if (checktable(val)) {
         TTable *tbl = val.val_table;
         const TValue &ty = gettable(tbl, hashstring("__type"), true);
         // Check if the __type property is Nil
@@ -535,10 +523,8 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
 {
     VIA_ASSERT(checknumber(rhs), "rhs is not a number");
 
-    if (checknumber(lhs))
-    {
-        switch (op)
-        {
+    if (checknumber(lhs)) {
+        switch (op) {
         case OpCode::ADD:
             return TValue(lhs.val_number + rhs.val_number);
         case OpCode::SUB:
@@ -559,8 +545,7 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
 
         return nil.clone();
     }
-    else if (checktable(lhs))
-    {
+    else if (checktable(lhs)) {
         const TValue &metamethod = getmetamethod(lhs, op);
         push(V, lhs); // self
         push(V, rhs); // other
@@ -575,10 +560,8 @@ VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TVa
 // Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
 VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rhs, OpCode op)
 {
-    if (checknumber(*lhs))
-    {
-        switch (op)
-        {
+    if (checknumber(*lhs)) {
+        switch (op) {
         case OpCode::ADD:
             lhs->val_number += rhs.val_number;
             break;
@@ -604,8 +587,7 @@ VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rh
             break;
         }
     }
-    else if (checktable(*lhs))
-    {
+    else if (checktable(*lhs)) {
         const TValue &metamethod = getmetamethod(*lhs, op);
         push(V, *lhs); // self
         push(V, rhs);  // other

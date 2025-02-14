@@ -5,11 +5,9 @@
 #include "common.h"
 #include "token.h"
 
-namespace via
-{
+namespace via {
 
-struct Definition
-{
+struct Definition {
     std::string identifier;
     std::vector<Token> replacement;
     size_t begin;

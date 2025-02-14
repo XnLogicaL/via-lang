@@ -26,8 +26,7 @@
     |=total=====|
     |116 bytes  |
 */
-namespace via
-{
+namespace via {
 
 VIA_FORCEINLINE uint8_t *hash_file(const std::string &src)
 {
@@ -41,8 +40,7 @@ VIA_FORCEINLINE uint8_t *hash_file(const std::string &src)
     uint8_t *hash_final = new uint8_t[32]; // Allocate memory for 32 bytes (SHA-256)
 
     // Copy the hash into the uint8_t array (hex string to bytes)
-    for (size_t i = 0; i < 32; ++i)
-    {
+    for (size_t i = 0; i < 32; ++i) {
         std::stringstream ss;
         ss << std::hex << hash.substr(i * 2, 2); // Each byte is 2 hex digits
         int byte_value;
@@ -53,14 +51,9 @@ VIA_FORCEINLINE uint8_t *hash_file(const std::string &src)
     return hash_final; // You should manage memory properly to avoid leaks
 }
 
-enum class CacheResult
-{
-    SUCCESS,
-    FAIL
-};
+enum class CacheResult { SUCCESS, FAIL };
 
-struct CacheFile
-{
+struct CacheFile {
     std::string file_name;
     uint64_t magic_value;      // 8 bytes
     uint32_t version;          // 4 bytes
@@ -94,8 +87,7 @@ struct CacheFile
     }
 };
 
-class CacheManager
-{
+class CacheManager {
 public:
     CacheResult write_cache(std::filesystem::path, const CacheFile &);
     CacheFile read_cache(ProgramData);

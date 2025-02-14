@@ -7,16 +7,13 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace via::utils
-{
+namespace via::utils {
 
 template<typename... Args>
-class Signal
-{
+class Signal {
 public:
     using Slot = std::function<void(Args...)>;
-    class Connection
-    {
+    class Connection {
     public:
         Connection(std::vector<Slot> &_Slots, std::mutex &_Mutex, size_t _Connection_id)
             : slots(_Slots)

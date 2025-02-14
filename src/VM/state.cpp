@@ -6,8 +6,7 @@
 #include "register.h"
 #include "gc.h"
 
-namespace via
-{
+namespace via {
 
 // Initializes and returns a new State object
 State::State(GState *G, ProgramData &program)
@@ -28,8 +27,7 @@ State::State(GState *G, ProgramData &program)
 
 void State::load(BytecodeHolder &bytecode)
 {
-    if (this->ihp)
-    { // Clean up previous instruction pipeline
+    if (this->ihp) { // Clean up previous instruction pipeline
         delete[] this->ihp;
     }
 
@@ -50,8 +48,7 @@ GState::GState()
 State::~State()
 {
     // Clean up saved state, if there is one
-    if (sstate)
-    {
+    if (sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
         sstate->ralloc = nullptr;

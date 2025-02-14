@@ -8,8 +8,7 @@
 #include "types.h"
 #include "libutils.h"
 
-namespace via::lib
-{
+namespace via::lib {
 
 void string_format(State *);
 void string_find(State *);

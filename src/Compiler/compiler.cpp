@@ -3,8 +3,7 @@
 #include "compiler.h"
 #include "constfold.h"
 
-namespace via
-{
+namespace via {
 
 using namespace via;
 

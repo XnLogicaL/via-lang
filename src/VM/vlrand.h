@@ -10,8 +10,7 @@
 #include <cmath>
 #include <chrono>
 
-namespace via::lib
-{
+namespace via::lib {
 
 // Function to generate a random double in the range [a, b].
 TNumber pcg32_range(TNumber a, TNumber b);
