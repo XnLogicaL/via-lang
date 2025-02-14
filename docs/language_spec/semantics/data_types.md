@@ -77,7 +77,7 @@ As of via 0.x.x, string interpolation is **not supported**. `string.format` can 
 
 ## Table type
 
-The `Table` type is a highly dynamic container type that can be used as an array, dictionary or map. It can be indexed with any key which is either a `Number`, a `string`, or has a `__tostring` method for hashing. 
+The `Table` type is a highly dynamic container type that can be used as an array, dictionary or map. It can be indexed with any key which is either a `Number`, a `string`, or has a `__to_string` method for hashing. 
 
 Declaring a variable with `Table`:
 ```lua

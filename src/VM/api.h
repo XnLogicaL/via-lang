@@ -22,7 +22,7 @@ static const TValue nil = TValue();
 // Returns the underlying pointer of a data type if present, nullptr if not.
 VIA_FORCEINLINE void *topointer(const TValue &val) noexcept
 {
-    return impl::__topointer(val);
+    return impl::__to_pointer(val);
 }
 
 // Returns whether if <val> has a heap component.
@@ -111,19 +111,16 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
 
     switch (val.type)
     {
-    case ValueType::number:
-    {
+    case ValueType::number: {
         std::string str = std::to_string(val.val_number);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::boolean:
-    {
+    case ValueType::boolean: {
         TString *str = new TString(V, val.val_boolean ? "true" : "false");
         return TValue(str);
     }
-    case ValueType::table:
-    {
+    case ValueType::table: {
         std::string str = "{";
 
         for (auto &elem : val.val_table->data)
@@ -140,15 +137,13 @@ VIA_INLINE TValue tostring(State *VIA_RESTRICT V, const TValue &val) noexcept
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::function:
-    {
+    case ValueType::function: {
         const void *faddr = val.val_function;
         std::string str = std::format("<function@{}>", faddr);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::cfunction:
-    {
+    case ValueType::cfunction: {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = val.val_cfunction;
         std::string str = std::format("<cfunction@{}>", cfaddr);

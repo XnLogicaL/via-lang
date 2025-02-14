@@ -5,7 +5,7 @@
 #define LIB_ASSERT(cond, message) \
     if (!(cond)) \
     { \
-        impl::__seterrorstate(V, message); \
+        impl::__set_error_state(V, message); \
         return; \
     }
 

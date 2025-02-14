@@ -44,7 +44,7 @@ LIB_DECL_FUNCTION(base_println)
 LIB_DECL_FUNCTION(base_error)
 {
     LIB_DECL_PARAMETER(arg0, 0);
-    impl::__seterrorstate(V, tocxxstring(V, arg0));
+    impl::__set_error_state(V, tocxxstring(V, arg0));
     LIB_RETURN(0);
 }
 
