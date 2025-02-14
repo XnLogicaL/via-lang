@@ -19,12 +19,12 @@ add_executable(via "${CMAKE_SOURCE_DIR}/CLI/main.cpp" ${MAIN_SOURCES} ${CLI_SOUR
 # Set compiler flags
 target_compile_options(via
     PRIVATE
-    -Wall              # Enable all warnings
-    -Wextra            # Enable extra warnings
-    -g                 # Enable debugging symbols
-    -O3                # Optimization level 3
+    -Wall                   # Enable all warnings
+    -Wextra                 # Enable extra warnings
+    -Werror
+    -g                      # Enable debugging symbols
+    -O3                     # Optimization level 3
     -fno-common
-    -Wno-multistatement-macros
 )
 
 # Add subdirectories for different components
@@ -46,3 +46,4 @@ endforeach()
 # Link libraries
 target_link_libraries(via PUBLIC asmjit)
 target_link_libraries(via PUBLIC sha256)
+target_link_libraries(via PUBLIC stdc++_libbacktrace) # For std::backtrace

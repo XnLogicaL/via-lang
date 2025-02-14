@@ -14,7 +14,6 @@
 #endif
 
 #define VM_ERROR(message) \
-    while (0) \
     { \
         __set_error_state(V, message); \
         V->sig_error.fire(); \
@@ -22,7 +21,6 @@
     }
 
 #define VM_FATAL(message) \
-    while (0) \
     { \
         std::cerr << "VM terminated with message: " << message << '\n'; \
         V->sig_fatal.fire(); \
@@ -31,9 +29,7 @@
 
 #define VM_ASSERT(cond, message) \
     if (cond) \
-    { \
-        VM_ERROR(message); \
-    }
+        VM_ERROR(message);
 
 // Macro for loading the next instruction
 // Has bound checks

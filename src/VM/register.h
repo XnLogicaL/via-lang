@@ -5,7 +5,7 @@
 #include "common.h"
 #include "types.h"
 
-#define VIA_REGISTER_COUNT uintptr_t(128)
+#define VIA_REGISTER_COUNT (128ULL)
 
 namespace via
 {
@@ -37,12 +37,15 @@ struct RAState
 
 VIA_MAXOPTIMIZE TValue *getregister(State *V, RegId reg)
 {
-    TValue *ptr = V->ralloc->head + reg;
-    return ptr;
+    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+    return V->ralloc->head + reg;
 }
 
 VIA_MAXOPTIMIZE void setregister(State *V, RegId reg, const TValue &val)
 {
+    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+    VIA_ASSERT(!checkmonostate(val), "invalid value");
+
     TValue *addr = V->ralloc->head + reg;
     *addr = val.clone();
 }

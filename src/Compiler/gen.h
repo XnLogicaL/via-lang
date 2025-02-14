@@ -32,6 +32,7 @@ class Generator
 public:
     Generator(ProgramData &program)
         : program(program)
+        , failed(false)
         , alloc(VIA_GENERATOR_ALLOC_SIZE) // Custom size for the allocator
         , current_chunk(nullptr)
         , initialize_with_chunk(false)

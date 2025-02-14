@@ -28,6 +28,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <stacktrace>
 // External imports
 #include "magic_enum.hpp"
 #include "arena.hpp"
@@ -38,7 +39,15 @@
 #define ASMJIT_STATIC
 
 // Asserts a condition along with a message.
-#define VIA_ASSERT(cond, msg) assert(cond &&msg);
+#define VIA_ASSERT(cond, message) \
+    if (!(cond)) \
+    { \
+        std::cerr << "VIA_ASSERT(): assertion '" << #cond << "' failed.\n" \
+                  << " message: " << message << "\n" \
+                  << " callstack:\n" \
+                  << std::stacktrace::current() << '\n'; \
+        std::abort(); \
+    }
 
 #define ENUM_NAME(expr) magic_enum::enum_name(expr)
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)

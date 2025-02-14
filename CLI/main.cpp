@@ -8,9 +8,6 @@
 
 using namespace via;
 
-namespace
-{
-
 const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
 const char REPL_WELCOME[] = "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
                             "Use ';help' to see a list of commands.\n"
@@ -106,8 +103,6 @@ void handle_repl(const std::vector<std::string> &)
     }
 }
 
-} // namespace
-
 int main(int argc, char **argv)
 {
     CmdParser parser(argc, argv);
@@ -121,17 +116,14 @@ int main(int argc, char **argv)
     const auto &args = parser.get_arguments();
     const auto &subcom = parser.get_subcommand();
 
-    linenoise::SetCompletionCallback(
-        [](const char *editBuffer, std::vector<std::string> &completions)
+    linenoise::SetCompletionCallback([](const char *editBuffer, std::vector<std::string> &completions) {
+        if (editBuffer[0] == ';')
         {
-            if (editBuffer[0] == ';')
-            {
-                completions.push_back(";quit");
-                completions.push_back(";help");
-                completions.push_back(";exitinfo");
-            }
+            completions.push_back(";quit");
+            completions.push_back(";help");
+            completions.push_back(";exitinfo");
         }
-    );
+    });
 
     if (subcom == "compile")
         handle_compile(args);

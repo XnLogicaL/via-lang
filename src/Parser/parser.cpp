@@ -8,13 +8,16 @@
 #define PARSER_WARNING_AT(msg, at) emitter.out((at), (msg), OutputSeverity::WARNING);
 
 #define PARSER_ERROR(msg) \
-    emitter.out(current_position, (msg), OutputSeverity::ERROR_); \
-    failed = true;
+    { \
+        emitter.out(current_position, (msg), OutputSeverity::ERROR_); \
+        failed = true; \
+    }
 
 #define PARSER_ERROR_AT(msg, at) \
-    emitter.out((at), (msg), OutputSeverity::ERROR_); \
-    failed = true;
-
+    { \
+        emitter.out((at), (msg), OutputSeverity::ERROR_); \
+        failed = true; \
+    }
 
 namespace via
 {
@@ -174,8 +177,7 @@ ExprNode *Parser::parse_table_expr()
     bool failed_inner = false;
     size_t index = 0;
 
-    auto parse_kv_pair = [this, &failed_inner, &index]() -> TableExprNode::KVPair
-    {
+    auto parse_kv_pair = [this, &failed_inner, &index]() -> TableExprNode::KVPair {
         if (is_type(TokenType::BRACKET_OPEN))
         {
             consume(); // Consume '['
@@ -313,8 +315,7 @@ ExprNode *Parser::parse_prim_expr()
 
     switch (token.type)
     {
-    case TokenType::IDENTIFIER:
-    {
+    case TokenType::IDENTIFIER: {
         // Initial identifier (variable or function)
         VarExprNode *varid = alloc->emplace<VarExprNode>();
         varid->ident = token;
@@ -328,16 +329,14 @@ ExprNode *Parser::parse_prim_expr()
     case TokenType::LIT_BINARY:
     case TokenType::LIT_STRING:
     case TokenType::LIT_BOOL:
-    case TokenType::LIT_NIL:
-    {
+    case TokenType::LIT_NIL: {
         LiteralExprNode *lit = alloc->emplace<LiteralExprNode>();
         lit->value = token;
         base_expr = alloc->emplace<ExprNode>(*lit);
         break;
     }
 
-    case TokenType::PAREN_OPEN:
-    {
+    case TokenType::PAREN_OPEN: {
         base_expr = parse_expr();
 
         if (!is_type(TokenType::PAREN_CLOSE))
@@ -350,8 +349,7 @@ ExprNode *Parser::parse_prim_expr()
         break;
     }
 
-    case TokenType::KW_FUNC:
-    {
+    case TokenType::KW_FUNC: {
         if (!is_type(TokenType::PAREN_OPEN))
         {
             PARSER_ERROR("Expected '(' to open anonymous function (lambda) arguments");
@@ -395,8 +393,7 @@ ExprNode *Parser::parse_prim_expr()
         break;
     }
 
-    case TokenType::KW_TYPE:
-    {
+    case TokenType::KW_TYPE: {
         consume(); // Consume 'type'
 
         TypeExprNode *type_expr = alloc->emplace<TypeExprNode>();
@@ -405,8 +402,7 @@ ExprNode *Parser::parse_prim_expr()
         break;
     }
 
-    case TokenType::KW_TYPEOF:
-    {
+    case TokenType::KW_TYPEOF: {
         consume(); // Consume 'typeof'
 
         TypeofExprNode *typeof_expr = alloc->emplace<TypeofExprNode>();
@@ -415,8 +411,7 @@ ExprNode *Parser::parse_prim_expr()
         break;
     }
 
-    case TokenType::BRACE_OPEN:
-    {
+    case TokenType::BRACE_OPEN: {
         base_expr = parse_table_expr();
         break;
     }
@@ -671,8 +666,7 @@ TypeNode *Parser::parse_type()
 
         switch (peek().type)
         {
-        case TokenType::AMPERSAND:
-        {
+        case TokenType::AMPERSAND: {
             consume();
 
             TypeNode *rtype = parse_type_generic();
@@ -682,8 +676,7 @@ TypeNode *Parser::parse_type()
 
             return alloc->emplace<TypeNode>(utype);
         }
-        case TokenType::PIPE:
-        {
+        case TokenType::PIPE: {
             std::vector<TypeNode> types{*gen};
 
             while (is_type(TokenType::PIPE))
@@ -705,8 +698,7 @@ TypeNode *Parser::parse_type()
 
             return alloc->emplace<TypeNode>(var);
         }
-        case TokenType::QUESTION:
-        {
+        case TokenType::QUESTION: {
             consume();
 
             OptionalTypeNode opt;
@@ -1196,15 +1188,13 @@ parse:
     {
     case TokenType::EOF_:
         return nullptr;
-    case TokenType::AT:
-    {
+    case TokenType::AT: {
         this->pragma = parse_pragma();
         this->has_pragma = true;
         goto parse;
     }
     case TokenType::KW_GLOBAL:
-    case TokenType::KW_LOCAL:
-    {
+    case TokenType::KW_LOCAL: {
         DeclarationType decl_type = get_decl_type(peek().type);
 
         if (is_type(TokenType::KW_FUNC, 1))
@@ -1238,8 +1228,7 @@ parse:
     case TokenType::KW_DO:
         consume();
         EMPLACE_AND_RETURN(*parse_scope_statement());
-    default:
-    {
+    default: {
         ExprNode *expr = parse_expr();
 
         if (CallExprNode *call = std::get_if<CallExprNode>(&expr->expr))
