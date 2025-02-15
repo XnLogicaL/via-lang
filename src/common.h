@@ -52,7 +52,7 @@
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION ("0.13")
+#define VIA_VERSION ("0.14")
 
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__
@@ -103,23 +103,28 @@ using LabelId = std::string_view; // Label identifier.
 using ThreadId = std::uint32_t;   // Thread identifier.
 using LocalId = std::uint32_t;    // Local variable identifier (stack offset).
 using kGlobId = std::string_view; // Global constant identifier.
-using RegId = std::uint32_t;      // Register
+using RegId = std::uint32_t;      // Register Id
 using StkPos = std::size_t;       // Stack position.
-using YldTime = float;            // Yield time type, for the VM.
 using TNumber = double;
 using TBool = bool;
 using TableKey = Hash;
 
-VIA_FORCEINLINE char *dupstring(const std::string &str)
+VIA_FORCEINLINE char *dup_string(const char *str)
 {
-    size_t len = str.size() + 1;
-    char *chars = new char[len];
-    std::memcpy(chars, str.c_str(), len);
+    char *chars = new char[std::strlen(str)];
+    std::strcpy(chars, str);
+    return chars;
+}
+
+VIA_FORCEINLINE char *dup_string(const std::string &str)
+{
+    char *chars = new char[str.size() + 1];
+    std::strcpy(chars, str.c_str());
     return chars;
 }
 
 template<typename T, typename F>
-    requires std::invocable<F> && std::is_same_v<std::invoke_result_t<F>, T>
+    requires(std::invocable<F> && std::is_same_v<std::invoke_result_t<F>, T>)
 VIA_FORCEINLINE T safe_call(F func, T default_value)
 {
     try {
@@ -128,25 +133,6 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
     catch (std::exception &) {
         return default_value;
     }
-}
-
-VIA_FORCEINLINE void print_memory(void *ptr, size_t size)
-{
-    unsigned char *byte_ptr = static_cast<unsigned char *>(ptr);
-
-    // Print each byte in the memory block
-    for (size_t i = 0; i < size; ++i) {
-        // Print the byte in hexadecimal
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte_ptr[i]) << " ";
-
-        // Print a newline every 16 bytes for readability
-        if ((i + 1) % 16 == 0) {
-            std::cout << std::endl;
-        }
-    }
-
-    // Print a newline at the end
-    std::cout << std::dec << std::endl; // Reset to decimal
 }
 
 struct ProgramData {

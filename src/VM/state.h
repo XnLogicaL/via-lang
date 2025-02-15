@@ -22,7 +22,7 @@ namespace via {
 struct TFunction;
 struct TValue;
 struct TStack;
-struct GCState;
+struct GarbageCollector;
 struct RAState;
 struct TString;
 
@@ -71,8 +71,8 @@ struct alignas(64) State {
     Instruction *ibp = nullptr; // Instruction list base pointer
 
     // VM execution state
-    RAState *ralloc; // Pointer to VM register allocator state
-    GCState *gc;     // Pointer to VM garbage collector state
+    RAState *ralloc;      // Pointer to VM register allocator state
+    GarbageCollector *gc; // Pointer to VM garbage collector state
 
     // Stack state
     TValue *sbp;    // Stack base pointer

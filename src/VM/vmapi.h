@@ -103,8 +103,7 @@ VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, LocalId _Offset) n
 
 VIA_FORCEINLINE TValue __type(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    char *_Str = dupstring(std::string(ENUM_NAME(_Val.type)));
-    gcaddcallback(_V, [&_Str]() { delete _Str; });
+    char *_Str = dup_string(std::string(ENUM_NAME(_Val.type)));
     return TValue(new TString(_V, _Str));
 }
 

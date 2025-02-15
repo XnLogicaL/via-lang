@@ -2,30 +2,22 @@
 
 #pragma once
 
-#include <functional>
-#include <optional>
+#include "common.h"
 
 namespace via::utils {
 
 template<typename T, typename... K>
 class CallableOnce {
-    bool has_called = false;
-    std::function<T(K...)> func;
-
 public:
-    CallableOnce(std::function<T(K...)> f)
-        : func(f)
-    {
-    }
+    CallableOnce(std::function<T(K...)>);
 
-    std::optional<const T &> call(K... _Args)
-    {
-        if (has_called)
-            return std::nullopt;
+    bool was_called() noexcept;
+    std::optional<T> call_s(K...) noexcept;
+    T call(K...);
 
-        has_called = true;
-        return func(_Args...);
-    }
+private:
+    bool called = false;
+    std::function<T(K...)> func;
 };
 
 } // namespace via::utils

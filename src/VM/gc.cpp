@@ -5,32 +5,36 @@
 
 namespace via {
 
-GCState::GCState()
-    : terminating(false)
-    , collections(0)
-    , size(0)
-{
-}
-
-GCState::~GCState()
+GarbageCollector::~GarbageCollector()
 {
     terminating = true;
 
-    for (const GCCleanupFunction &fn : callback_list)
+    for (const GCCleanupFunction &fn : defered_callback_list) {
         fn();
+    }
 }
 
-void gccollect(State *V)
+void GarbageCollector::collect()
 {
-    // TODO: Implement collection mechanism
+    // TODO: Implement non-callback collection mechanism
 
-    V->gc->size = 0;
-    V->gc->collections++;
+    for (const GCCleanupFunction &fn : periodic_callback_list) {
+        fn();
+    }
+
+    periodic_callback_list.clear();
+    this->size = 0;
+    this->collections++;
 }
 
-void gcaddcallback(State *V, GCCleanupFunction fn)
+void GarbageCollector::add_periodic_callback(const GCCleanupFunction &fn)
 {
-    V->gc->callback_list.push_back(fn);
+    periodic_callback_list.push_back(fn);
+}
+
+void GarbageCollector::add_defered_callback(const GCCleanupFunction &fn)
+{
+    defered_callback_list.push_back(fn);
 }
 
 } // namespace via

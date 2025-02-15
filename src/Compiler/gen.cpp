@@ -137,7 +137,7 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
         break;
     case TokenType::LIT_STRING:
         operand.type = OperandType::String;
-        operand.val_string = dupstring(lit_expr.value.value);
+        operand.val_string = dup_string(lit_expr.value.value);
         cleaner.add_malloc(operand.val_string); // Track dynamically allocated string
         break;
     case TokenType::LIT_FLOAT:

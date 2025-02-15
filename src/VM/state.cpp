@@ -13,7 +13,7 @@ State::State(GState *G, ProgramData &program)
     : id(G->threads++)
     , G(G)
     , ralloc(new RAState())
-    , gc(new GCState())
+    , gc(new GarbageCollector())
     , sbp(new TValue[VIA_VM_STACK_SIZE])
     , err(new ErrorState())
 {

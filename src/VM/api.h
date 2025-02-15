@@ -429,9 +429,7 @@ VIA_INLINE void method_call(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, Tab
 // Returns the primitive type of value <val>.
 VIA_FORCEINLINE TValue type(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    char *str = dupstring(std::string(ENUM_NAME(val.type)));
-    gcaddcallback(V, [&str]() { delete str; });
-
+    char *str = dup_string(std::string(ENUM_NAME(val.type)));
     return TValue(new TString(V, str));
 }
 

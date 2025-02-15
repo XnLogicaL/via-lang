@@ -193,7 +193,7 @@ void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_
         else
             target = allocate_register();
 
-        char *ident_string = dupstring(var_expr.ident.value);
+        char *ident_string = dup_string(var_expr.ident.value);
         cleaner.add_malloc(ident_string);
 
         // Emit global retriaval instruction

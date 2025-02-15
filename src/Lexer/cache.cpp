@@ -72,7 +72,7 @@ CacheFile CacheManager::read_cache(ProgramData file)
 {
     size_t offset = 0;
     CacheFile cache_file{file};
-    const char *raw_source = dupstring(file.source);
+    const char *raw_source = dup_string(file.source);
     // Ensure the file is large enough to contain the metadata.
     if (file.source.size() < sizeof(CacheFile)) { // Check if goto statements are supported in this compiler. (FUCK MSVC!)
 #if defined(__GNUC__) || defined(__clang__)

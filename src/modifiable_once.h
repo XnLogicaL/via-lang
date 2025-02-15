@@ -8,41 +8,16 @@ namespace via::utils {
 
 template<typename T>
 class ModifiableOnce {
-    bool has_modified;
-    T value;
-
 public:
-    // Initialized constructor; value is set by user
-    ModifiableOnce(T value)
-        : has_modified(false)
-        , value(value)
-    {
-    }
+    ModifiableOnce(T);
 
-    // Uninitialized constructor; value is junk data
-    ModifiableOnce()
-        : has_modified(false)
-    {
-    }
+    void set(T new_value);
+    const T &get() const;
+    T get();
 
-    void set(T new_value)
-    {
-        if (has_modified)
-            return;
-
-        has_modified = true;
-        value = new_value;
-    }
-
-    T get()
-    {
-        return value;
-    }
-
-    const T &get() const
-    {
-        return value;
-    }
+private:
+    bool has_modified = false;
+    T value;
 };
 
 } // namespace via::utils
