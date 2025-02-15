@@ -15,7 +15,7 @@ LIB_DECL_FUNCTION(base_print)
 
     while (i++ < V->argc) {
         LIB_DECL_PARAMETER(argx, i);
-        oss << tocxxstring(V, argx) << " ";
+        oss << to_cxxstring(V, argx) << " ";
     }
 
     std::cout << oss.str();
@@ -30,7 +30,7 @@ LIB_DECL_FUNCTION(base_println)
 
     while (i++ < V->argc) {
         LIB_DECL_PARAMETER(argx, i);
-        oss << tocxxstring(V, argx) << " ";
+        oss << to_cxxstring(V, argx) << " ";
     }
 
     std::cout << oss.str() << "\n";
@@ -41,7 +41,7 @@ LIB_DECL_FUNCTION(base_println)
 LIB_DECL_FUNCTION(base_error)
 {
     LIB_DECL_PARAMETER(arg0, 0);
-    impl::__set_error_state(V, tocxxstring(V, arg0));
+    impl::__set_error_state(V, to_cxxstring(V, arg0));
     LIB_RETURN(0);
 }
 
@@ -70,8 +70,8 @@ LIB_DECL_FUNCTION(base_assert)
     LIB_DECL_PARAMETER(arg0, 0);
     LIB_DECL_PARAMETER(arg1, 1);
 
-    if (!tocxxbool(arg0)) {
-        std::string err_cxx_str = std::format("base_assert assertion failed: {}", tocxxstring(V, arg1));
+    if (!to_cxxbool(arg0)) {
+        std::string err_cxx_str = std::format("base_assert assertion failed: {}", to_cxxstring(V, arg1));
         TString *err_str = new TString(V, err_cxx_str.c_str());
 
         TValue err_val(err_str);
@@ -96,7 +96,7 @@ LIB_DECL_FUNCTION(loadbaselib)
     base_properties.emplace("assert", LIB_WRAP_CFPTR(base_assert));
 
     for (const auto &[ident, val] : base_properties)
-        setglobal(V, ident, val);
+        set_global(V, ident, val);
 }
 
 } // namespace via::lib

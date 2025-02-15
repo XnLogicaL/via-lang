@@ -126,9 +126,9 @@ VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Se
 
 VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const TValue &_Val) noexcept
 {
-    if (checknil(_Val)) {
+    if (check_nil(_Val)) {
         const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
-        if (!checknil(_Tbl_val))
+        if (!check_nil(_Tbl_val))
             _Tbl->data.erase(_Key);
     }
     else
@@ -137,10 +137,10 @@ VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const
 
 VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
 {
-    if (checktable(_Val)) {
+    if (check_table(_Val)) {
         TTable *_Tbl = _Val.val_table;
-        const TValue &ty = __get_table(_Tbl, hashstring("__type"), true);
-        if (checknil(ty))
+        const TValue &ty = __get_table(_Tbl, hash_string("__type"), true);
+        if (check_nil(ty))
             return __type(_V, _Val);
         return TValue(new TString(_V, ty.val_string->ptr));
     }
@@ -179,9 +179,9 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
 VIA_MAXOPTIMIZE void __method_call(State *VIA_RESTRICT _V, TTable *VIA_RESTRICT _Tbl, TableKey _Key, size_t _Argc) noexcept
 {
     const TValue &_Method = __get_table(_Tbl, _Key, true);
-    if (checkfunction(_Method))
+    if (check_function(_Method))
         __native_call(_V, _Method.val_function, _Argc);
-    else if (checkcfunction(_Method))
+    else if (check_cfunction(_Method))
         __extern_call(_V, _Method.val_cfunction, _Argc);
 }
 
@@ -189,25 +189,25 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
 {
     _V->calltype = CallType::CALL;
 
-    if (checkfunction(_Callee))
+    if (check_function(_Callee))
         __native_call(_V, _Callee.val_function, _Argc);
-    else if (checkcfunction(_Callee))
+    else if (check_cfunction(_Callee))
         __extern_call(_V, _Callee.val_cfunction, _Argc);
-    else if (checktable(_Callee))
-        __method_call(_V, _Callee.val_table, hashstring("__call"), _Argc);
+    else if (check_table(_Callee))
+        __method_call(_V, _Callee.val_table, hash_string("__call"), _Argc);
     else
         __set_error_state(_V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee)));
 }
 
 VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    if (checkstring(_Val))
+    if (check_string(_Val))
         return TValue(static_cast<TNumber>(strlen(_Val.val_string->ptr)));
-    else if (checktable(_Val)) {
-        TableKey _Metamethod_key = hashstring("__len");
+    else if (check_table(_Val)) {
+        TableKey _Metamethod_key = hash_string("__len");
         const TValue &_Metamethod = __get_table(_Val.val_table, _Metamethod_key, true);
 
-        if (checknil(_Metamethod))
+        if (check_nil(_Metamethod))
             return TValue(static_cast<TNumber>(_Val.val_table->data.size()));
 
         __call(_V, _Metamethod, 1);
@@ -247,7 +247,7 @@ VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcep
 
 VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    if (checkstring(_Val))
+    if (check_string(_Val))
         return _Val.clone();
 
     switch (_Val.type) {
@@ -306,7 +306,7 @@ VIA_FORCEINLINE std::string __to_cxx_string(State *VIA_RESTRICT _V, const TValue
 
 VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
 {
-    if (checkbool(_Val))
+    if (check_bool(_Val))
         return _Val.clone();
 
     switch (_Val.type) {
@@ -329,7 +329,7 @@ VIA_FORCEINLINE bool __to_cxx_bool(const TValue &_Val) noexcept
 
 VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 {
-    if (checknumber(_Val))
+    if (check_number(_Val))
         return _Val.clone();
 
     switch (_Val.type) {
@@ -350,7 +350,7 @@ VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
 {
     TValue _Double = __to_number(_Val);
 
-    if (checknil(_Double))
+    if (check_nil(_Double))
         return std::numeric_limits<T>::quiet_NaN();
 
     return static_cast<T>(_Double.val_number);
@@ -408,10 +408,10 @@ VIA_MAXOPTIMIZE bool __compare_registers(State *VIA_RESTRICT _V, RegId _Reg_0, R
 
 VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 {
-    if (!checktable(_Val))
+    if (!check_table(_Val))
         return _Nil.clone();
 
-#define GET_METHOD(id) (__get_table(_Val.val_table, hashstring(id), true))
+#define GET_METHOD(id) (__get_table(_Val.val_table, hash_string(id), true))
     switch (_Op) {
     case OpCode::ADD:
         return GET_METHOD("__add");

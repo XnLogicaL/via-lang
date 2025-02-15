@@ -40,8 +40,7 @@
 
 // Asserts a condition along with a message.
 #define VIA_ASSERT(cond, message) \
-    if (!(cond)) \
-    { \
+    if (!(cond)) { \
         std::cerr << "VIA_ASSERT(): assertion '" << #cond << "' failed.\n" \
                   << " message: " << message << "\n" \
                   << " callstack:\n" \
@@ -62,9 +61,9 @@
     #define VIA_INLINE inline
     #define VIA_FORCEINLINE inline __attribute__((always_inline))
     #define VIA_MAXOPTIMIZE inline __attribute__((always_inline, hot))
-    #define VIA_UNREACHABLE() __builtin_unreachable()
-    #define VIA_LIKELY(expr) __builtin_expect(!!(expr), 1)
-    #define VIA_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
+    #define VIA_UNREACHABLE() __builtin_unreachable();
+    #define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
+    #define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
 #elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT use it)
     #define VIA_RESTRICT __restrict
     #define VIA_NORETURN __declspec(__noreturn__)
@@ -81,8 +80,7 @@
 // clang-format on
 #endif
 
-namespace via
-{
+namespace via {
 
 #ifdef VIA_LONGJUMP
 using JmpOffset = std::int64_t;
@@ -124,12 +122,10 @@ template<typename T, typename F>
     requires std::invocable<F> && std::is_same_v<std::invoke_result_t<F>, T>
 VIA_FORCEINLINE T safe_call(F func, T default_value)
 {
-    try
-    {
+    try {
         return func();
     }
-    catch (std::exception &)
-    {
+    catch (std::exception &) {
         return default_value;
     }
 }
@@ -139,14 +135,12 @@ VIA_FORCEINLINE void print_memory(void *ptr, size_t size)
     unsigned char *byte_ptr = static_cast<unsigned char *>(ptr);
 
     // Print each byte in the memory block
-    for (size_t i = 0; i < size; ++i)
-    {
+    for (size_t i = 0; i < size; ++i) {
         // Print the byte in hexadecimal
         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte_ptr[i]) << " ";
 
         // Print a newline every 16 bytes for readability
-        if ((i + 1) % 16 == 0)
-        {
+        if ((i + 1) % 16 == 0) {
             std::cout << std::endl;
         }
     }
@@ -155,8 +149,7 @@ VIA_FORCEINLINE void print_memory(void *ptr, size_t size)
     std::cout << std::dec << std::endl; // Reset to decimal
 }
 
-struct ProgramData
-{
+struct ProgramData {
     std::string file_name;
     std::string source;
     TokenHolder *tokens;

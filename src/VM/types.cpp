@@ -192,7 +192,7 @@ TValue TValue::clone() const
 
 TString::TString(State *V, const char *str)
 {
-    Hash hash = hashstring(str);
+    Hash hash = hash_string(str);
     // For compiler compatability
     if (V != nullptr) {
         StrTable stable = V->G->stable;

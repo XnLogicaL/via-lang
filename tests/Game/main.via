@@ -51,7 +51,7 @@ struct Game {
             table.remove(self.players, i)
         }
         else {
-            error(string.format("Could not find player %s in game instance %s", name, tostring(self)))
+            error(string.format("Could not find player %s in game instance %s", name, to_string(self)))
         }
     }
 }

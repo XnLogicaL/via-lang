@@ -22,7 +22,7 @@ State::State(GState *G, ProgramData &program)
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional function
     TFunction *main = new TFunction(this, VIA_MAIN_ID, this->ip, this->frame, {}, false, false);
-    nativecall(this, main, 0);
+    native_call(this, main, 0);
 }
 
 void State::load(BytecodeHolder &bytecode)

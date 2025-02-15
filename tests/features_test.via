@@ -127,7 +127,7 @@ setmetatable(table1, {
         return 69
     },
     meta_print = func(self, msg) {
-        printf!("%s says: %s", tostring(self), msg)
+        printf!("%s says: %s", to_string(self), msg)
     }
 })
 

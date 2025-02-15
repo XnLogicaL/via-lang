@@ -148,7 +148,7 @@ struct TTable {
 };
 
 // Random hashing algo, may need to be replaced later
-VIA_FORCEINLINE Hash hashstring(const char *str)
+VIA_FORCEINLINE Hash hash_string(const char *str)
 {
     Hash hash = 0;
     while (*str)
@@ -157,59 +157,59 @@ VIA_FORCEINLINE Hash hashstring(const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool checkmonostate(const TValue &val)
+VIA_FORCEINLINE bool check_monostate(const TValue &val)
 {
     return val.type == ValueType::monostate;
 }
 
-VIA_FORCEINLINE bool checknumber(const TValue &val)
+VIA_FORCEINLINE bool check_number(const TValue &val)
 {
     return val.type == ValueType::number;
 }
 
-VIA_FORCEINLINE bool checkbool(const TValue &val)
+VIA_FORCEINLINE bool check_bool(const TValue &val)
 {
     return val.type == ValueType::boolean;
 }
 
-VIA_FORCEINLINE bool checknil(const TValue &val)
+VIA_FORCEINLINE bool check_nil(const TValue &val)
 {
     return val.type == ValueType::nil;
 }
 
-VIA_FORCEINLINE bool checkstring(const TValue &val)
+VIA_FORCEINLINE bool check_string(const TValue &val)
 {
     return val.type == ValueType::string;
 }
 
-VIA_FORCEINLINE bool checktable(const TValue &val)
+VIA_FORCEINLINE bool check_table(const TValue &val)
 {
     return val.type == ValueType::table;
 }
 
-VIA_FORCEINLINE bool checkcfunction(const TValue &val)
+VIA_FORCEINLINE bool check_cfunction(const TValue &val)
 {
     return val.type == ValueType::cfunction;
 }
 
-VIA_FORCEINLINE bool checkfunction(const TValue &val)
+VIA_FORCEINLINE bool check_function(const TValue &val)
 {
     return val.type == ValueType::function;
 }
 
-VIA_FORCEINLINE bool checkempty(const TValue &val)
+VIA_FORCEINLINE bool check_empty(const TValue &val)
 {
-    return checknil(val) || checkmonostate(val);
+    return check_nil(val) || check_monostate(val);
 }
 
-VIA_FORCEINLINE bool checkcallable(const TValue &val)
+VIA_FORCEINLINE bool check_callable(const TValue &val)
 {
-    return checkfunction(val) || checkcfunction(val);
+    return check_function(val) || check_cfunction(val);
 }
 
-VIA_FORCEINLINE bool checksubscriptable(const TValue &val)
+VIA_FORCEINLINE bool check_subscriptable(const TValue &val)
 {
-    return checktable(val) || checkstring(val);
+    return check_table(val) || check_string(val);
 }
 
 } // namespace via

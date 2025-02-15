@@ -20,8 +20,7 @@ const char REPL_HEAD[] = ">> ";
 
 void handle_compile(const std::vector<std::string> &args)
 {
-    if (args.empty())
-    {
+    if (args.empty()) {
         std::cerr << "Invalid command\nNo input file provided.\n";
         std::exit(1);
     }
@@ -53,8 +52,7 @@ void handle_compile(const std::vector<std::string> &args)
 
 void handle_run(const std::vector<std::string> &args)
 {
-    if (args.empty())
-    {
+    if (args.empty()) {
         std::cerr << "Invalid command\nNo input file provided.\n";
         std::exit(1);
     }
@@ -72,23 +70,20 @@ void handle_repl(const std::vector<std::string> &)
 {
     std::cout << REPL_WELCOME;
 
-    while (true)
-    {
+    while (true) {
         std::string code;
         bool quit = linenoise::Readline(REPL_HEAD, code);
 
         if (quit)
             break;
 
-        if (code.starts_with(';'))
-        {
+        if (code.starts_with(';')) {
             std::string command = code.substr(1);
             if (command == "quit" || command == "q")
                 break;
             if (command == "help" || command == "h")
                 std::cout << REPL_HELP;
-            else if (command == "exitinfo" || command == "ei")
-            {
+            else if (command == "exitinfo" || command == "ei") {
                 if (false)
                     std::cout << "<none>\n";
                 else
@@ -107,8 +102,7 @@ int main(int argc, char **argv)
 {
     CmdParser parser(argc, argv);
 
-    if (!parser.is_valid())
-    {
+    if (!parser.is_valid()) {
         std::cerr << USAGE;
         return 1;
     }
@@ -117,8 +111,7 @@ int main(int argc, char **argv)
     const auto &subcom = parser.get_subcommand();
 
     linenoise::SetCompletionCallback([](const char *editBuffer, std::vector<std::string> &completions) {
-        if (editBuffer[0] == ';')
-        {
+        if (editBuffer[0] == ';') {
             completions.push_back(";quit");
             completions.push_back(";help");
             completions.push_back(";exitinfo");
@@ -131,8 +124,7 @@ int main(int argc, char **argv)
         handle_run(args);
     else if (subcom == "repl")
         handle_repl(args);
-    else
-    {
+    else {
         std::cerr << "Invalid subcommand\n";
         return 1;
     }

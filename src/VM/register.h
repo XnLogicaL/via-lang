@@ -32,16 +32,16 @@ struct RAState {
     }
 };
 
-VIA_MAXOPTIMIZE TValue *getregister(State *V, RegId reg)
+VIA_MAXOPTIMIZE TValue *get_register(State *V, RegId reg)
 {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
     return V->ralloc->head + reg;
 }
 
-VIA_MAXOPTIMIZE void setregister(State *V, RegId reg, const TValue &val)
+VIA_MAXOPTIMIZE void set_register(State *V, RegId reg, const TValue &val)
 {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
-    VIA_ASSERT(!checkmonostate(val), "invalid value");
+    VIA_ASSERT(!check_monostate(val), "invalid value");
 
     TValue *addr = V->ralloc->head + reg;
     *addr = val.clone();
