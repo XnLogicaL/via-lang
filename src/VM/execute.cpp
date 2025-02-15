@@ -931,7 +931,6 @@ dispatch: {
         TValue *obj = __get_register(V, robj.val_register);
 
         __push(V, *obj); // Push self
-        // Call function, with [argc + 1] to account for the self argument
         __native_call(V, func->val_function, argc + 1);
         VM_NEXT();
     }
@@ -940,7 +939,7 @@ dispatch: {
         Operand retcv = V->ip->operand1;
         size_t retc = static_cast<size_t>(retcv.val_number);
 
-        __native_ret(V, retc);
+        __native_return(V, retc);
         VM_NEXT();
     }
 

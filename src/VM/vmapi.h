@@ -216,7 +216,7 @@ VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __native_ret(State *VIA_RESTRICT _V, size_t _Retc) noexcept
+VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, size_t _Retc) noexcept
 {
     std::vector<TValue> _Ret_values;
     _V->ip = _V->frame->ret_addr;
@@ -229,15 +229,19 @@ VIA_FORCEINLINE void __native_ret(State *VIA_RESTRICT _V, size_t _Retc) noexcept
 
     _V->sp = _V->ssp;
 
-    for (size_t i = 0; i < _V->argc; i++)
+    for (size_t i = 0; i < _V->argc; i++) {
         __pop(_V);
+    }
 
-    for (int i = _Retc - 1; i >= 0; i--)
+    for (int i = _Retc - 1; i >= 0; i--) {
         __push(_V, _Ret_values.at(i));
+    }
 }
 
 VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcept
 {
+    std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
+
     auto _It = _V->G->gtable.find(_Id);
     if (_It != _V->G->gtable.end())
         return _It->second.clone();
