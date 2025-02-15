@@ -10,7 +10,7 @@ namespace via::lib {
 
 LIB_DECL_FUNCTION(base_print)
 {
-    uint16_t i = 0;
+    U16 i = 0;
     std::ostringstream oss;
 
     while (i++ < V->argc) {
@@ -25,7 +25,7 @@ LIB_DECL_FUNCTION(base_print)
 
 LIB_DECL_FUNCTION(base_println)
 {
-    uint8_t i = 0;
+    U8 i = 0;
     std::ostringstream oss;
 
     while (i++ < V->argc) {

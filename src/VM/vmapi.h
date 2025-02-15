@@ -47,12 +47,12 @@ VIA_FORCEINLINE int __handle_error(State *_V)
     }
 
     if (!_Current_frame) {
-        std::cerr << std::format("<frame@{:x}>: {}\n", reinterpret_cast<uintptr_t>(_Error_frame), _V->err->message) << '\n';
+        std::cerr << std::format("<frame@{:x}>: {}\n", reinterpret_cast<UPtr>(_Error_frame), _V->err->message) << '\n';
         _Error_frame = _Error_frame->caller;
 
         size_t _Idx = 0;
         while (_Error_frame) {
-            std::cerr << std::format("#{} <frame@{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame));
+            std::cerr << std::format("#{} <frame@{:x}>\n", _Idx++, reinterpret_cast<UPtr>(_Error_frame));
             _Error_frame = _Error_frame->caller;
         }
     }
@@ -159,9 +159,9 @@ VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, size_t _Argc)
 
 VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
 {
-    char _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
+    char _Buf[2 + std::numeric_limits<UPtr>::digits / 4 + 1];
     const void *_Addr = _Callee;
-    uintptr_t _Address = reinterpret_cast<uintptr_t>(_Addr);
+    UPtr _Address = reinterpret_cast<UPtr>(_Addr);
     _Buf[0] = '0';
     _Buf[1] = 'x';
 

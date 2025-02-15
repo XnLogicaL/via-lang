@@ -17,7 +17,7 @@ struct Chunk {
     Instruction *begin = nullptr;
     // Pointer to the last instruction contained in the chunk
     Instruction *end = nullptr;
-    uint32_t pc;
+    U32 pc;
 };
 
 } // namespace via

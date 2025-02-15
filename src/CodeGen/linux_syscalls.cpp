@@ -2,8 +2,7 @@
 
 #include "linux_syscalls.h"
 
-namespace via
-{
+namespace via {
 
 using namespace asmjit;
 
@@ -18,13 +17,12 @@ void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Ope
     };
 
     // Instantiate syscall id immediate
-    Imm syscall_imm = static_cast<uint8_t>(syscall);
+    Imm syscall_imm = static_cast<U8>(syscall);
     // Move syscall id immediate into rax
     a.mov(x86::rax, syscall_imm);
 
     size_t i = 0;
-    for (const asmjit::Operand &oper : ops)
-    {
+    for (const asmjit::Operand &oper : ops) {
         // Bound check, linux syscalls have a maximum argc of 5
         if (i > 5)
             break;

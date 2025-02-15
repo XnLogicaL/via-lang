@@ -104,6 +104,8 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
+
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
@@ -165,6 +167,8 @@ dispatch: {
     case OpCode::SUBK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
+
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
@@ -228,6 +232,8 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
+
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
@@ -289,6 +295,8 @@ dispatch: {
     case OpCode::DIVK: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
+
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
 
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
@@ -352,6 +360,8 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
+
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
@@ -414,6 +424,8 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
+
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
         const TValue &rhs_val = V->G->ktable.at(const_idx);
@@ -464,7 +476,9 @@ dispatch: {
     case OpCode::LOADK: {
         Operand dst = V->ip->operand1;
         Operand idx = V->ip->operand2;
-        kTable::size_type kid = idx.val_number;
+        U64 kid = idx.val_number;
+
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
 
         // Check if the kId is valid
         if (kid > V->G->ktable.size()) {
@@ -548,8 +562,10 @@ dispatch: {
 
     case OpCode::PUSHK: {
         Operand const_idx = V->ip->operand1;
-        size_t const_id = const_idx.val_number;
 
+        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
+
+        size_t const_id = const_idx.val_number;
         const TValue &constant = V->G->ktable.at(const_id);
 
         __push(V, constant);
@@ -1086,7 +1102,7 @@ exit:
 }
 
 // Permanently kills the thread. Does not clean up the state object.
-void killthread(State *VIA_RESTRICT V)
+void kill_thread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;
@@ -1096,7 +1112,7 @@ void killthread(State *VIA_RESTRICT V)
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
     // Decrement the thread_id to make room for more threads (I know you can techni__cally make 2^32 threads ok?)
-    V->G->threads--;
+    V->G->threads.fetch_add(-1);
 }
 
 // Temporarily pauses the thread.

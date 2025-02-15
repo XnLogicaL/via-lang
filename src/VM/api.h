@@ -303,6 +303,8 @@ VIA_FORCEINLINE const TValue &get_local(State *VIA_RESTRICT V, LocalId offset) n
 // Reassigns the stack value at offset <offset> to <val>.
 VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, LocalId offset, const TValue &val)
 {
+    std::lock_guard<std::mutex> lock(V->G->symtable_mutex);
+
     // Check if LocalId is out of bounds,
     // this is CRUCIAL, and prevents UB upon stack operations.
     if (offset > V->sp) {
@@ -318,9 +320,12 @@ VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, LocalId offset, const TVal
 // Returns the global with id <ident>, nil if it has not been declared.
 VIA_FORCEINLINE const TValue &get_global(State *VIA_RESTRICT V, kGlobId ident) noexcept
 {
+    std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
+
     auto it = V->G->gtable.find(ident);
-    if (it != V->G->gtable.end())
+    if (it != V->G->gtable.end()) {
         return it->second;
+    }
 
     return nil;
 }
@@ -328,8 +333,11 @@ VIA_FORCEINLINE const TValue &get_global(State *VIA_RESTRICT V, kGlobId ident) n
 // Attempts to declare a new global constant.
 VIA_FORCEINLINE void set_global(State *VIA_RESTRICT V, kGlobId ident, const TValue &val)
 {
+    std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
+
     auto it = V->G->gtable.find(ident);
     VIA_ASSERT(it == V->G->gtable.end(), "cannot reassign global");
+
     V->G->gtable.emplace(ident, val.clone());
 }
 

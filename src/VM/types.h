@@ -86,7 +86,7 @@ struct TValue {
 
 struct TString {
     const char *ptr = nullptr;
-    uint32_t len = 0;
+    U32 len = 0;
     Hash hash = 0;
 
     explicit TString(State *, const char *);

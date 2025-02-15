@@ -40,10 +40,10 @@ void Generator::generate_unary_expression(UnaryExprNode unary_expr, RegId target
 // Generates and emits a binary expression
 void Generator::generate_binary_expression(BinaryExprNode bin_expr, RegId target_register)
 {
-    uint8_t operator_begin = static_cast<uint8_t>(TokenType::OP_ADD);
-    uint8_t opcode_begin = static_cast<uint8_t>(OpCode::ADD);
-    uint8_t operator_index = static_cast<uint8_t>(bin_expr.op.type) - operator_begin;
-    uint8_t opcode_index = opcode_begin + operator_index * 3;
+    U8 operator_begin = static_cast<U8>(TokenType::OP_ADD);
+    U8 opcode_begin = static_cast<U8>(OpCode::ADD);
+    U8 operator_index = static_cast<U8>(bin_expr.op.type) - operator_begin;
+    U8 opcode_index = opcode_begin + operator_index * 3;
 
     RegId dst = LOAD_TO_REGISTER ? target_register : allocate_register();
 

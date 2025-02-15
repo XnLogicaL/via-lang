@@ -49,14 +49,16 @@ struct ErrorState {
 
 // Global state, should only be instantiated once, and shared across all State's. (threads)
 struct GState {
-    StrTable stable;   // Global string lookup table, derrived from Lua's string interning
-    GlbTable gtable;   // Global environment
-    kTable ktable;     // Constant table. Provided by the compiler.
-    SymTable symtable; // Symbol table, maps the stack offsets of variables to their identifiers. Provided by the compiler.
-    ThreadId threads;  // Number of threads
+    StrTable stable;                  // String interning table
+    GlbTable gtable;                  // Global environment
+    kTable ktable;                    // Constant table
+    SymTable symtable;                // Symbol table
+    std::atomic<ThreadId> threads{0}; // Thread count
 
-    GState();
-    ~GState() = default;
+    std::shared_mutex stable_mutex;
+    std::shared_mutex ktable_mutex;
+    std::mutex gtable_mutex;
+    std::mutex symtable_mutex;
 };
 
 // More likely to be cached (hopefully...)

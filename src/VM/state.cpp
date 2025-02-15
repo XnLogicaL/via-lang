@@ -40,11 +40,6 @@ void State::load(BytecodeHolder &bytecode)
     std::memcpy(ihp, pipeline.data(), pipeline.size());
 }
 
-GState::GState()
-    : threads(0)
-{
-}
-
 State::~State()
 {
     // Clean up saved state, if there is one

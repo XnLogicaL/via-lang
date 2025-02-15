@@ -28,24 +28,24 @@
 */
 namespace via {
 
-VIA_FORCEINLINE uint8_t *hash_file(const std::string &src)
+VIA_FORCEINLINE U8 *hash_file(const std::string &src)
 {
     SHA256 sha;
     sha.update(src);
 
-    std::array<uint8_t, 32> digest = sha.digest();
+    std::array<U8, 32> digest = sha.digest();
     std::string hash = sha.toString(digest);
 
     // Assuming the hash is a 64-character hex string for SHA-256
-    uint8_t *hash_final = new uint8_t[32]; // Allocate memory for 32 bytes (SHA-256)
+    U8 *hash_final = new U8[32]; // Allocate memory for 32 bytes (SHA-256)
 
-    // Copy the hash into the uint8_t array (hex string to bytes)
+    // Copy the hash into the U8 array (hex string to bytes)
     for (size_t i = 0; i < 32; ++i) {
         std::stringstream ss;
         ss << std::hex << hash.substr(i * 2, 2); // Each byte is 2 hex digits
         int byte_value;
         ss >> byte_value;
-        hash_final[i] = static_cast<uint8_t>(byte_value);
+        hash_final[i] = static_cast<U8>(byte_value);
     }
 
     return hash_final; // You should manage memory properly to avoid leaks
@@ -55,16 +55,16 @@ enum class CacheResult { SUCCESS, FAIL };
 
 struct CacheFile {
     std::string file_name;
-    uint64_t magic_value;      // 8 bytes
-    uint32_t version;          // 4 bytes
-    uint64_t compilation_date; // 8 bytes
-    uint8_t file_hash[32];     // 32 bytes (SHA-256)
-    char platform_info[16];    // 16 bytes (e.g., "x86_64-linux")
-    char runtime_flags[16];    // 16 bytes (e.g., "-O3")
-    uint64_t code_offset;      // 8 bytes
-    uint64_t code_size;        // 8 bytes
-    uint64_t checksum_a;       // 8 bytes
-    uint64_t checksum_b;       // 8 bytes
+    U64 magic_value;        // 8 bytes
+    U32 version;            // 4 bytes
+    U64 compilation_date;   // 8 bytes
+    U8 file_hash[32];       // 32 bytes (SHA-256)
+    char platform_info[16]; // 16 bytes (e.g., "x86_64-linux")
+    char runtime_flags[16]; // 16 bytes (e.g., "-O3")
+    U64 code_offset;        // 8 bytes
+    U64 code_size;          // 8 bytes
+    U64 checksum_a;         // 8 bytes
+    U64 checksum_b;         // 8 bytes
     std::vector<char> bytecode;
 
     explicit CacheFile(ProgramData &program)
@@ -81,7 +81,7 @@ struct CacheFile {
         , bytecode({})
     {
         // Assuming the hash is 32 bytes
-        uint8_t *hash_data = hash_file(program.source);
+        U8 *hash_data = hash_file(program.source);
         std::memcpy(file_hash, hash_data, 32);
         delete[] hash_data; // Remember to free the dynamically allocated memory
     }

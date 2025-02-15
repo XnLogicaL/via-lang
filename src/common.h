@@ -29,6 +29,7 @@
 #include <variant>
 #include <vector>
 #include <stacktrace>
+#include <shared_mutex>
 // External imports
 #include "magic_enum.hpp"
 #include "arena.hpp"
@@ -82,12 +83,6 @@
 
 namespace via {
 
-#ifdef VIA_LONGJUMP
-using JmpOffset = std::int64_t;
-#else
-using JmpOffset = std::int32_t;
-#endif
-
 // Forward declarations
 struct TValue;
 struct TTable;
@@ -98,16 +93,34 @@ struct TokenHolder;
 struct AbstractSyntaxTree;
 struct BytecodeHolder;
 
-using Hash = std::uint32_t;       // Hash type.
+// Thanks Terry A. Davis (R.I.P. king) for the idea
+using U8 = std::uint8_t;
+using U16 = std::uint16_t;
+using U32 = std::uint32_t;
+using U64 = std::uint64_t;
+using UPtr = std::uintptr_t;
+using I8 = std::int8_t;
+using I16 = std::int16_t;
+using I32 = std::int32_t;
+using I64 = std::int64_t;
+using IPtr = std::intptr_t;
+
+using Hash = U32;                 // Hash type.
 using LabelId = std::string_view; // Label identifier.
-using ThreadId = std::uint32_t;   // Thread identifier.
-using LocalId = std::uint32_t;    // Local variable identifier (stack offset).
+using ThreadId = U32;             // Thread identifier.
+using LocalId = U32;              // Local variable identifier (stack offset).
 using kGlobId = std::string_view; // Global constant identifier.
-using RegId = std::uint32_t;      // Register Id
+using RegId = U32;                // Register Id
 using StkPos = std::size_t;       // Stack position.
 using TNumber = double;
 using TBool = bool;
 using TableKey = Hash;
+
+#ifdef VIA_LONGJUMP
+using JmpOffset = U64;
+#else
+using JmpOffset = U32;
+#endif
 
 VIA_FORCEINLINE char *dup_string(const char *str)
 {
