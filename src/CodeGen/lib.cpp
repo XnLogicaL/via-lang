@@ -2,13 +2,11 @@
 
 #include "lib.h"
 
-#define TOX86GP(reg) x86::Gp::fromTypeAndId(RegType::kX86_KReg, reg)
-
-namespace via {
+namespace via::jit {
 
 using namespace asmjit;
 
-Imm jittranslateoperand(Operand &oper)
+Imm translate_operand(Operand &oper)
 {
     switch (oper.type) {
     case OperandType::Bool:
@@ -22,7 +20,7 @@ Imm jittranslateoperand(Operand &oper)
     }
 }
 
-Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
+Error compile_instruction(x86::Assembler &a, Instruction &instruction)
 {
     switch (instruction.op) {
     case OpCode::NOP:
@@ -53,4 +51,4 @@ Error jitcompileinstruction(x86::Assembler &a, Instruction &instruction)
     return a.nop(); // nop
 }
 
-} // namespace via
+} // namespace via::jit

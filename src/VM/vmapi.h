@@ -94,10 +94,13 @@ VIA_MAXOPTIMIZE TValue __pop(State *_V)
 
 VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, LocalId _Offset) noexcept
 {
-    if (_Offset >= _V->argc)
+    if (_Offset >= _V->argc) {
         return _Nil.clone();
+    }
+
     const StkPos _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
     const TValue &_Val = _V->sbp[_Stk_offset];
+
     return _Val.clone();
 }
 
@@ -116,10 +119,13 @@ VIA_FORCEINLINE std::string __type_cxx_string(State *VIA_RESTRICT _V, const TVal
 VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Search_meta) noexcept
 {
     auto _It = _Tbl->data.find(_Key);
-    if (_It != _Tbl->data.end())
+    if (_It != _Tbl->data.end()) {
         return _It->second.clone();
-    else if (_Search_meta && _Tbl->meta)
+    }
+    else if (_Search_meta && _Tbl->meta) {
         return __get_table(_Tbl->meta, _Key, false);
+    }
+
     return _Nil.clone();
 }
 
@@ -166,8 +172,9 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
     _Buf[1] = 'x';
 
     auto _Result = std::to_chars(_Buf + 2, _Buf + sizeof(_Buf), _Address, 16);
-    if (_Result.ec != std::errc{})
+    if (_Result.ec != std::errc{}) {
         std::memset(_Buf + 2, '0', sizeof(_Buf) - 2);
+    }
 
     TFunction _Func(0, std::string(_Buf, _Result.ptr), _V->ip, _V->frame, {}, _Callee->error_handler, false);
 
@@ -178,36 +185,44 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
 VIA_MAXOPTIMIZE void __method_call(State *VIA_RESTRICT _V, TTable *VIA_RESTRICT _Tbl, TableKey _Key, size_t _Argc) noexcept
 {
     const TValue &_Method = __get_table(_Tbl, _Key, true);
-    if (check_function(_Method))
+    if (check_function(_Method)) {
         __native_call(_V, _Method.val_function, _Argc);
-    else if (check_cfunction(_Method))
+    }
+    else if (check_cfunction(_Method)) {
         __extern_call(_V, _Method.val_cfunction, _Argc);
+    }
 }
 
 VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
 {
     _V->calltype = CallType::CALL;
 
-    if (check_function(_Callee))
+    if (check_function(_Callee)) {
         __native_call(_V, _Callee.val_function, _Argc);
-    else if (check_cfunction(_Callee))
+    }
+    else if (check_cfunction(_Callee)) {
         __extern_call(_V, _Callee.val_cfunction, _Argc);
-    else if (check_table(_Callee))
+    }
+    else if (check_table(_Callee)) {
         __method_call(_V, _Callee.val_table, hash_string("__call"), _Argc);
-    else
+    }
+    else {
         __set_error_state(_V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee)));
+    }
 }
 
 VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    if (check_string(_Val))
+    if (check_string(_Val)) {
         return TValue(static_cast<TNumber>(strlen(_Val.val_string->ptr)));
+    }
     else if (check_table(_Val)) {
         TableKey _Metamethod_key = hash_string("__len");
         const TValue &_Metamethod = __get_table(_Val.val_table, _Metamethod_key, true);
 
-        if (check_nil(_Metamethod))
+        if (check_nil(_Metamethod)) {
             return TValue(static_cast<TNumber>(_Val.val_table->data.size()));
+        }
 
         __call(_V, _Metamethod, 1);
         return __pop(_V);
@@ -243,8 +258,10 @@ VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcep
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
     auto _It = _V->G->gtable.find(_Id);
-    if (_It != _V->G->gtable.end())
+    if (_It != _V->G->gtable.end()) {
         return _It->second.clone();
+    }
+
     return _Nil.clone();
 }
 
@@ -271,8 +288,9 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
             _Str += ", ";
         }
 
-        if (_Str.back() == ' ')
+        if (_Str.back() == ' ') {
             _Str += "\b\b";
+        }
 
         _Str += "}";
 
@@ -309,8 +327,9 @@ VIA_FORCEINLINE std::string __to_cxx_string(State *VIA_RESTRICT _V, const TValue
 
 VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
 {
-    if (check_bool(_Val))
+    if (check_bool(_Val)) {
         return _Val.clone();
+    }
 
     switch (_Val.type) {
     // Nil and Monostate is the only falsy type
@@ -332,8 +351,9 @@ VIA_FORCEINLINE bool __to_cxx_bool(const TValue &_Val) noexcept
 
 VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 {
-    if (check_number(_Val))
+    if (check_number(_Val)) {
         return _Val.clone();
+    }
 
     switch (_Val.type) {
     case ValueType::string:
@@ -352,9 +372,9 @@ template<typename T = double>
 VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
 {
     TValue _Double = __to_number(_Val);
-
-    if (check_nil(_Double))
+    if (check_nil(_Double)) {
         return std::numeric_limits<T>::quiet_NaN();
+    }
 
     return static_cast<T>(_Double.val_number);
 }
@@ -399,20 +419,25 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
 
 VIA_MAXOPTIMIZE bool __compare_registers(State *VIA_RESTRICT _V, RegId _Reg_0, RegId _Reg_1) noexcept
 {
-    if (_Reg_0 == _Reg_1)
+    if (_Reg_0 == _Reg_1) {
         return true;
+    }
 
     TValue &_Val_0 = *__get_register(_V, _Reg_0);
     TValue &_Val_1 = *__get_register(_V, _Reg_1);
-    if (_Val_0.type != _Val_1.type)
+
+    if (_Val_0.type != _Val_1.type) {
         return false;
+    }
+
     return __compare(_Val_0, _Val_1);
 }
 
 VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 {
-    if (!check_table(_Val))
+    if (!check_table(_Val)) {
         return _Nil.clone();
+    }
 
 #define GET_METHOD(id) (__get_table(_Val.val_table, hash_string(id), true))
     switch (_Op) {

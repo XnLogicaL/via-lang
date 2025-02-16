@@ -2,13 +2,13 @@
 
 #include "linux_syscalls.h"
 
-namespace via {
+namespace via::jit {
 
 using namespace asmjit;
 
-void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Operand> ops)
+void syscall(x86::Assembler &a, LxSyscallId syscall, std::vector<asmjit::Operand> ops)
 {
-    static std::unordered_map<size_t, x86::Gp> arg_map = {
+    static const std::unordered_map<size_t, x86::Gp> arg_map = {
         {0, x86::rdi},
         {1, x86::rsi},
         {2, x86::rdx},
@@ -24,19 +24,23 @@ void jitsyscall(x86::Assembler &a, LinuxSyscall syscall, std::vector<asmjit::Ope
     size_t i = 0;
     for (const asmjit::Operand &oper : ops) {
         // Bound check, linux syscalls have a maximum argc of 5
-        if (i > 5)
+        if (i > 5) {
             break;
+        }
 
-        x86::Gp reg = arg_map[i++];
-        if (oper.isReg())
+        x86::Gp reg = arg_map.at(i++);
+        if (oper.isReg()) {
             a.mov(reg, oper.as<asmjit::x86::Gp>());
-        else if (oper.isMem())
+        }
+        else if (oper.isMem()) {
             a.mov(reg, oper.as<asmjit::x86::Mem>());
-        else if (oper.isImm())
+        }
+        else if (oper.isImm()) {
             a.mov(reg, oper.as<asmjit::Imm>());
+        }
     }
 
     a.syscall();
 }
 
-} // namespace via
+} // namespace via::jit

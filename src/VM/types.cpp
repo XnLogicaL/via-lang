@@ -247,7 +247,7 @@ TFunction::TFunction(
 {
 }
 
-TCFunction::TCFunction(TCFunction::Ptr_t ptr, bool error_handler)
+TCFunction::TCFunction(TCFunction::CFunctionPtr ptr, bool error_handler)
     : ptr(ptr)
     , error_handler(error_handler)
 {

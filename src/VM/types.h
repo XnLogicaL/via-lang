@@ -25,20 +25,18 @@ struct TValue {
     union {
         TNumber val_number;
         TBool val_boolean;
-        // These are pointers because their size is larger than 4 bytes,
-        // which is what registers are supposed to hold
         TString *val_string;
         TFunction *val_function;
         TCFunction *val_cfunction;
         TTable *val_table;
     };
 
-    TValue(const TValue &) = delete;            // Delete copy constructor
-    TValue(TValue &&other) noexcept;            // Declare move constructor
-    TValue &operator=(const TValue &) = delete; // Delete copy assignment operator
-    TValue &operator=(TValue &&) noexcept;      // Declare move operator
-    TValue(const Operand &);                    // Declare from-operand constructor
-    ~TValue();                                  // Declare destructor
+    TValue(const TValue &) = delete;            // Copy constructor
+    TValue(TValue &&other) noexcept;            // Move constructor
+    TValue &operator=(const TValue &) = delete; // Assignment operator
+    TValue &operator=(TValue &&) noexcept;      // Move operator
+    TValue(const Operand &);
+    ~TValue();
 
     explicit TValue()
         : type(ValueType::nil)
@@ -107,22 +105,20 @@ struct TFunction {
     Instruction *ret_addr = nullptr;
     std::vector<Instruction> bytecode = {};
 
-    explicit TFunction(State *, std::string, Instruction *, TFunction *caller, std::vector<Instruction>, bool, bool);
-    ~TFunction() = default;
+    explicit TFunction(State *, std::string, Instruction *, TFunction *, std::vector<Instruction>, bool, bool);
 };
 
 struct TCFunction {
-    using Ptr_t = void (*)(State *);
+    using CFunctionPtr = void (*)(State *);
 
     // Function pointer
-    Ptr_t ptr = nullptr;
-    // Tells the VM if the function can handle errors or not
-    // This gets passed down to the replica function that represents this C functions stack frame
-    // Pretty much only used for pcall
+    CFunctionPtr ptr = nullptr;
+    // Tells the VM if the function can handle errors or not.
+    // This gets passed down to the replica function that represents this C functions stack frame.
+    // Pretty much only used for protected call.
     bool error_handler = false;
 
-    explicit TCFunction(Ptr_t ptr = nullptr, bool error_handler = false);
-    ~TCFunction() = default;
+    explicit TCFunction(CFunctionPtr ptr = nullptr, bool error_handler = false);
 };
 
 struct TTable {
@@ -132,18 +128,13 @@ struct TTable {
     utils::ModifiableOnce<bool> frozen = false;
     std::unordered_map<TableKey, TValue> data;
 
-    TTable()
-        : meta(nullptr)
-        , frozen(false)
-    {
-    }
-
     TTable(const TTable &other)
         : meta(other.meta)
         , frozen(other.frozen)
     {
-        for (const auto &pair : other.data)
+        for (const auto &pair : other.data) {
             data.emplace(pair.first, pair.second.clone());
+        }
     }
 };
 
@@ -151,8 +142,9 @@ struct TTable {
 VIA_FORCEINLINE Hash hash_string(const char *str)
 {
     Hash hash = 0;
-    while (*str)
+    while (*str) {
         hash = (hash * 31) + *str++;
+    }
 
     return hash;
 }

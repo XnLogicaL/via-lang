@@ -4,13 +4,12 @@
 #include "chunk.h"
 #include "linux_syscalls.h"
 
-namespace via {
+namespace via::jit {
 
 using namespace asmjit;
 
-JITFunc jitgenerate(Chunk *)
+JitExecutable generate(Chunk *)
 {
-    Error g_err;
     JitRuntime rt;
     CodeHolder code;
     code.init(rt.environment(), rt.cpuFeatures());
@@ -19,13 +18,11 @@ JITFunc jitgenerate(Chunk *)
     Section *text = code.textSection();
     Section *data = nullptr;
 
-    g_err = code.newSection(&data, ".data");
-    if (g_err)
+    if (code.newSection(&data, ".data")) {
         return nullptr;
+    }
 
-    // Instantiate assembler
     x86::Assembler a(&code);
-    // Initialize .data section
     Label L_data = a.newLabel();
     a.section(data);
     a.bind(L_data);
@@ -35,14 +32,14 @@ JITFunc jitgenerate(Chunk *)
     // Perform compilation
 
     // Load default exiting behavior
-    jitsyscall(a, LinuxSyscall::exit, {Imm(0)});
+    syscall(a, LxSyscallId::exit, {Imm(0)});
 
-    JITFunc fn;
-    g_err = rt.add(&fn, &code);
-    if (g_err)
+    JitExecutable fn;
+    if (rt.add(&fn, &code)) {
         return nullptr;
+    }
 
     return fn;
 };
 
-} // namespace via
+} // namespace via::jit

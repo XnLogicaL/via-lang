@@ -6,10 +6,10 @@
 #include "state.h"
 #include <asmjit/asmjit.h>
 
-namespace via {
+namespace via::jit {
 
 struct Chunk;
-using JITFunc = int (*)();
-JITFunc jitgenerate(Chunk *);
+using JitExecutable = int (*)();
+JitExecutable generate(Chunk *);
 
-} // namespace via
+} // namespace via::jit

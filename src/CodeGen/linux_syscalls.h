@@ -5,9 +5,9 @@
 #include "common.h"
 #include <asmjit/asmjit.h>
 
-namespace via {
+namespace via::jit {
 
-enum class LinuxSyscall {
+enum class LxSyscallId {
     read = 0,
     write = 1,
     open = 2,
@@ -71,6 +71,6 @@ enum class LinuxSyscall {
     exit = 60,
 };
 
-void jitsyscall(asmjit::x86::Assembler &, LinuxSyscall, std::vector<asmjit::Operand>);
+void syscall(asmjit::x86::Assembler &, LxSyscallId, std::vector<asmjit::Operand>);
 
-} // namespace via
+} // namespace via::jit

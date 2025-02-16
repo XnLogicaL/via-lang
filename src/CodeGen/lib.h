@@ -7,10 +7,11 @@
 #include "instruction.h"
 #include <asmjit/asmjit.h>
 
-namespace via {
+#define TOX86GP(reg) x86::Gp::fromTypeAndId(RegType::kX86_KReg, reg)
 
-asmjit::Error jitcompileinstruction(asmjit::x86::Assembler &, Instruction &);
-asmjit::Imm jittranslateoperand(Operand &);
-asmjit::x86::Gp jitgetregister(RegId);
+namespace via::jit {
 
-} // namespace via
+asmjit::Error compile_instruction(asmjit::x86::Assembler &, Instruction &);
+asmjit::Imm translate_operand(Operand &);
+
+} // namespace via::jit
