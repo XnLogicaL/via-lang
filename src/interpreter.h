@@ -14,7 +14,7 @@ public:
         , gstate(new GState())
         , state(new State(gstate, program))
     {
-        lib::loadbaselib(state);
+        lib::open_baselib(state);
     }
 
     ~Interpreter()

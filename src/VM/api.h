@@ -155,7 +155,7 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
     return nil.clone();
 }
 
-VIA_FORCEINLINE std::string to_cxxstring(State *VIA_RESTRICT V, const TValue &val) noexcept
+VIA_FORCEINLINE std::string to_cxx_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     TValue str = to_string(V, val);
     return std::string(str.val_string->ptr);
@@ -184,7 +184,7 @@ VIA_FORCEINLINE TValue to_bool(const TValue &val) noexcept
     return nil.clone();
 }
 
-VIA_FORCEINLINE bool to_cxxbool(const TValue &val) noexcept
+VIA_FORCEINLINE bool to_cxx_bool(const TValue &val) noexcept
 {
     TValue bl = to_bool(val);
     return bl.val_boolean;
@@ -211,7 +211,7 @@ VIA_FORCEINLINE TValue to_number(const TValue &val) noexcept
 
 template<typename T = double>
     requires std::is_arithmetic_v<T>
-VIA_FORCEINLINE T to_cxxnumber(const TValue &val) noexcept
+VIA_FORCEINLINE T to_cxx_number(const TValue &val) noexcept
 {
     TValue dbl = to_number(val);
 
@@ -602,6 +602,61 @@ VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rh
     }
 
     VIA_ASSERT(false, "non-arithmetic lhs value");
+}
+
+VIA_INLINE TValue weak_primitive_cast(State *VIA_RESTRICT V, const TValue &val, ValueType type)
+{
+    switch (type) {
+    case ValueType::number:
+        return to_number(val);
+    case ValueType::boolean:
+        return to_bool(val);
+    case ValueType::string:
+        return to_string(V, val);
+    default:
+        break;
+    }
+
+    return nil.clone();
+}
+
+VIA_INLINE void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueType type)
+{
+    switch (type) {
+    case ValueType::number: {
+        double num = to_cxx_number(val);
+
+        // Check for NaN
+        if (num != num) {
+            goto error;
+        }
+
+        val.val_number = num;
+        break;
+    }
+    case ValueType::boolean:
+        val.val_boolean = to_cxx_bool(val);
+        break;
+    case ValueType::string: {
+        TValue non_owned_val = to_string(V, val);
+        TString *owned = val.val_string;
+
+        val.val_string = new TString(V, non_owned_val.val_string->ptr);
+
+        if (owned) {
+            delete owned;
+        }
+
+        break;
+    }
+    default:
+        goto error;
+    }
+
+    val.type = type;
+    return;
+error:
+    VIA_ASSERT(false, std::format("type '{}' is not primitive castable into type '{}'", ENUM_NAME(val.type), ENUM_NAME(type)));
 }
 
 } // namespace via

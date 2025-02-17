@@ -161,7 +161,7 @@ TValue::~TValue()
     }
 }
 
-TValue TValue::clone() const
+TValue TValue::clone() const noexcept
 {
     TValue copy;
     switch (type) {

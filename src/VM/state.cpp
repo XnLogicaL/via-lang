@@ -43,32 +43,38 @@ void State::load(BytecodeHolder &bytecode)
 State::~State()
 {
     // Clean up saved state, if there is one
-    if (sstate) {
+    if (this->sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
         sstate->ralloc = nullptr;
 
-        if (sstate->ihp == ihp)
+        if (sstate->ihp == ihp) {
             sstate->ihp = nullptr;
+        }
 
-        if (sstate->sbp == sbp)
+        if (sstate->sbp == sbp) {
             sstate->sbp = nullptr;
+        }
 
         delete this->sstate;
     }
 
 
-    if (gc)
+    if (this->gc) {
         delete this->gc;
+    }
 
-    if (ralloc)
+    if (this->ralloc) {
         delete this->ralloc;
+    }
 
-    if (ihp)
+    if (this->ihp) {
         delete[] this->ihp;
+    }
 
-    if (sbp)
+    if (this->sbp) {
         delete[] this->sbp;
+    }
 }
 
 } // namespace via

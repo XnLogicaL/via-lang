@@ -79,7 +79,7 @@ struct TValue {
     {
     }
 
-    TValue clone() const;
+    TValue clone() const noexcept;
 };
 
 struct TString {

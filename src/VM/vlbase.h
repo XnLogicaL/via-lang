@@ -12,9 +12,9 @@ namespace via::lib {
 LIB_DECL_FUNCTION(base_print);
 LIB_DECL_FUNCTION(base_println);
 LIB_DECL_FUNCTION(base_error);
-LIB_DECL_FUNCTION(base_type);
-LIB_DECL_FUNCTION(base_typeof);
 LIB_DECL_FUNCTION(base_assert);
-LIB_DECL_FUNCTION(loadbaselib);
+LIB_DECL_FUNCTION(base_weak_prim_cast);
+LIB_DECL_FUNCTION(base_strong_prim_cast);
+LIB_DECL_FUNCTION(open_baselib);
 
 } // namespace via::lib

@@ -37,6 +37,7 @@ VIA_FORCEINLINE int __handle_error(State *_V)
 {
     TFunction *_Current_frame = _V->frame;
     TFunction *_Error_frame = _V->frame;
+
     while (_Current_frame) {
         if (_Current_frame->error_handler) {
             _V->err->frame = _Current_frame;
@@ -133,21 +134,27 @@ VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const
 {
     if (check_nil(_Val)) {
         const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
-        if (!check_nil(_Tbl_val))
+
+        if (!check_nil(_Tbl_val)) {
             _Tbl->data.erase(_Key);
+        }
     }
-    else
+    else {
         _Tbl->data.emplace(_Key, _Val.clone());
+    }
 }
 
 VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
 {
     if (check_table(_Val)) {
         TTable *_Tbl = _Val.val_table;
-        const TValue &ty = __get_table(_Tbl, hash_string("__type"), true);
-        if (check_nil(ty))
+        const TValue &_Type = __get_table(_Tbl, hash_string("__type"), true);
+
+        if (check_nil(_Type)) {
             return __type(_V, _Val);
-        return TValue(new TString(_V, ty.val_string->ptr));
+        }
+
+        return TValue(new TString(_V, _Type.val_string->ptr));
     }
 
     return __type(_V, _Val);
@@ -265,10 +272,23 @@ VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcep
     return _Nil.clone();
 }
 
+VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, kGlobId _Id, const TValue &_Val)
+{
+    std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
+
+    auto _It = _V->G->gtable.find(_Id);
+    if (_It != _V->G->gtable.end()) {
+        __set_error_state(_V, std::format("attempt to reassign global '{}'", _Id));
+    }
+
+    _V->G->gtable.emplace(_Id, _Val.clone());
+}
+
 VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    if (check_string(_Val))
+    if (check_string(_Val)) {
         return _Val.clone();
+    }
 
     switch (_Val.type) {
     case ValueType::number: {
@@ -467,6 +487,59 @@ VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 
     return _Nil.clone();
 #undef GET_METHOD
+}
+
+VIA_INLINE TValue __weak_primitive_cast(State *VIA_RESTRICT _V, const TValue &_Val, ValueType _Type)
+{
+    switch (_Type) {
+    case ValueType::number:
+        return __to_number(_Val);
+    case ValueType::boolean:
+        return __to_bool(_Val);
+    case ValueType::string:
+        return __to_string(_V, _Val);
+    default:
+        break;
+    }
+
+    return _Nil.clone();
+}
+
+VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, ValueType _Type)
+{
+    switch (_Type) {
+    case ValueType::number: {
+        double _Num = __to_cxx_number(_Val);
+        if (/* NaN */ _Num != _Num) {
+            goto error;
+        }
+
+        _Val.val_number = _Num;
+        break;
+    }
+    case ValueType::boolean:
+        _Val.val_boolean = __to_cxx_bool(_Val);
+        break;
+    case ValueType::string: {
+        TValue _Non_owned_val = __to_string(_V, _Val);
+        TString *_Owned_val = _Val.val_string;
+
+        _Val.val_string = new TString(_V, _Non_owned_val.val_string->ptr);
+
+        if (_Owned_val) {
+            delete _Owned_val;
+        }
+
+        break;
+    }
+    default:
+        goto error;
+    }
+
+    _Val.type = _Type;
+    return;
+error:
+    __set_error_state(_V, std::format("type '{}' is not primitive castable into type '{}'", ENUM_NAME(_Val.type), ENUM_NAME(_Type)));
 }
 
 } // namespace via::impl

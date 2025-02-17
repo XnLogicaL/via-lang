@@ -10,25 +10,25 @@
 
 namespace via::lib {
 
-void math_exp(State *V);
-void math_log(State *V);
-void math_log10(State *V);
-void math_pow(State *V);
-void math_cos(State *V);
-void math_tan(State *V);
-void math_asin(State *V);
-void math_acos(State *V);
-void math_atan(State *V);
-void math_atan2(State *V);
-void math_sinh(State *V);
-void math_cosh(State *V);
-void math_tanh(State *V);
-void math_abs(State *V);
-void math_min(State *V);
-void math_max(State *V);
-void math_round(State *V);
-void math_floor(State *V);
-void math_ceil(State *V);
-void loadmathlib(State *V);
+LIB_DECL_FUNCTION(math_exp);
+LIB_DECL_FUNCTION(math_log);
+LIB_DECL_FUNCTION(math_log10);
+LIB_DECL_FUNCTION(math_pow);
+LIB_DECL_FUNCTION(math_cos);
+LIB_DECL_FUNCTION(math_tan);
+LIB_DECL_FUNCTION(math_asin);
+LIB_DECL_FUNCTION(math_acos);
+LIB_DECL_FUNCTION(math_atan);
+LIB_DECL_FUNCTION(math_atan2);
+LIB_DECL_FUNCTION(math_sinh);
+LIB_DECL_FUNCTION(math_cosh);
+LIB_DECL_FUNCTION(math_tanh);
+LIB_DECL_FUNCTION(math_abs);
+LIB_DECL_FUNCTION(math_min);
+LIB_DECL_FUNCTION(math_max);
+LIB_DECL_FUNCTION(math_round);
+LIB_DECL_FUNCTION(math_floor);
+LIB_DECL_FUNCTION(math_ceil);
+LIB_DECL_FUNCTION(open_mathlib);
 
 } // namespace via::lib

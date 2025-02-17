@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "common.h"
+#include "vmapi.h"
+
 #define LIB_ASSERT(cond, message) \
     if (!(cond)) { \
         impl::__set_error_state(V, message); \
