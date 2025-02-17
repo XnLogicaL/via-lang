@@ -5,12 +5,6 @@
 namespace via::utils {
 
 template<typename T>
-ModifiableOnce<T>::ModifiableOnce(T value)
-    : value(value)
-{
-}
-
-template<typename T>
 void ModifiableOnce<T>::set(T new_value)
 {
     if (has_modified) {

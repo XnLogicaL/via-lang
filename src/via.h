@@ -3,10 +3,10 @@
 #pragma once
 
 #include "common.h"
+#include "cache.h"
 
 #include "Lexer/lexer.h"
 #include "Lexer/preproc.h"
-#include "Lexer/cache.h"
 #include "Lexer/encoder.h"
 
 #include "Parser/parser.h"

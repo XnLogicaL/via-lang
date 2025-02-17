@@ -29,23 +29,33 @@ CacheResult CacheManager::make_cache(fs::path dir)
 
 CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
 {
-    if (!dir_has_cache(path))
+    if (!dir_has_cache(path)) {
         make_cache(path);
+    }
+
+    std::string file_name_hash = hash(file.file_name);
+    auto bin_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_BIN_EXT);
+    auto asm_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_ASM_EXT);
 
     bool failed = false;
-    // Open the file for binary writing
-    std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-    if (!ofs.is_open())
+    std::ofstream ofs_bin(bin_path, std::ios::binary | std::ios::trunc);
+    if (!ofs_bin.is_open()) {
         return CacheResult::FAIL;
+    }
+
+    std::ofstream ofs_asm(asm_path);
+    if (!ofs_asm.is_open()) {
+        return CacheResult::FAIL;
+    }
 
     // Helper lambda to write data
-    auto write_data = [&failed, &ofs](const void *data, size_t size) {
-        ofs.write(static_cast<const char *>(data), size);
-        if (!ofs)
+    auto write_data = [&failed, &ofs_bin](const void *data, size_t size) {
+        ofs_bin.write(static_cast<const char *>(data), size);
+        if (!ofs_bin) {
             failed = true;
+        }
     };
 
-    // Write each field of CacheFile
     write_data(&file.magic_value, sizeof(file.magic_value));
     write_data(&file.version, sizeof(file.version));
     write_data(&file.compilation_date, sizeof(file.compilation_date));
@@ -55,15 +65,20 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     write_data(&file.code_offset, sizeof(file.code_offset));
     write_data(&file.code_size, sizeof(file.code_size));
     write_data(&file.checksum_a, sizeof(file.checksum_a));
-    // Write the encoded machine code into the cache file
     write_data(file.bytecode.data(), file.bytecode.size());
-    // Write checksum B
     write_data(&file.checksum_b, sizeof(file.checksum_b));
 
-    // Close the file
-    ofs.close();
-    if (!ofs || failed)
+    for (const Instruction &instr : file.program.bytecode->get()) {
+        std::string instr_str = via::to_string(file.program, instr) + "\n";
+        ofs_asm.write(instr_str.data(), instr_str.size());
+    }
+
+    ofs_bin.close();
+    ofs_asm.close();
+
+    if (!ofs_bin || !ofs_asm || failed) {
         return CacheResult::FAIL;
+    }
 
     return CacheResult::SUCCESS;
 }

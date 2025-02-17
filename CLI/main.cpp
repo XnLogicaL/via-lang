@@ -20,10 +20,26 @@ const char REPL_HEAD[] = ">> ";
 
 void handle_compile(const std::vector<std::string> &args)
 {
+#define HAS_FLAG(flag) \
+    ({ \
+        auto it = std::ranges::find(args, flag); \
+        it != args.end(); \
+    })
+
+#define CHECK_SUBPROC_FAIL \
+    if (failed) { \
+        return; \
+    }
+
     if (args.empty()) {
         std::cerr << "Invalid command\nNo input file provided.\n";
         std::exit(1);
     }
+
+    bool failed;
+
+    bool flag_cache = HAS_FLAG("--cache") || HAS_FLAG("-c");
+    bool flag_print_bytecode = HAS_FLAG("--bytecode") || HAS_FLAG("-bc");
 
     std::string input = args.at(0);
     std::string input_code = via::utils::read_from_file(input);
@@ -34,20 +50,35 @@ void handle_compile(const std::vector<std::string> &args)
     lexer.tokenize();
 
     Preprocessor preprocessor(program);
-    bool failed = preprocessor.preprocess();
+    failed = preprocessor.preprocess();
 
-    if (failed)
-        return;
+    CHECK_SUBPROC_FAIL;
 
     Parser parser(program);
-    parser.parse_program();
+    failed = parser.parse_program();
+
+    CHECK_SUBPROC_FAIL;
 
     Compiler compiler(program);
     compiler.add_default_passes();
-    compiler.generate();
+    failed = compiler.generate();
 
-    for (Instruction instr : program.bytecode->get())
-        std::cout << via::to_string(program, instr) << "\n";
+    CHECK_SUBPROC_FAIL;
+
+    if (flag_print_bytecode) {
+        for (Instruction instr : program.bytecode->get()) {
+            std::cout << via::to_string(program, instr) << "\n";
+        }
+    }
+
+    if (flag_cache) {
+        CacheFile file(program);
+        CacheManager manager;
+        manager.write_cache("./", file);
+    }
+
+#undef HAS_FLAG
+#undef CHECK_SUBPROC_FAIL
 }
 
 void handle_run(const std::vector<std::string> &args)

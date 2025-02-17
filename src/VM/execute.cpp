@@ -1115,7 +1115,7 @@ void kill_thread(State *VIA_RESTRICT V)
 }
 
 // Temporarily pauses the thread.
-void pausethread(State *VIA_RESTRICT V)
+void pause_thread(State *VIA_RESTRICT V)
 {
     if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;

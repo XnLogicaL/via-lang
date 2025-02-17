@@ -10,6 +10,6 @@ namespace via {
 // Main VM function that starts execution
 void execute(State *VIA_RESTRICT V);
 void kill_thread(State *VIA_RESTRICT V);
-void pausethread(State *VIA_RESTRICT V);
+void pause_thread(State *VIA_RESTRICT V);
 
 } // namespace via

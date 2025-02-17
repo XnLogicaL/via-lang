@@ -9,7 +9,10 @@ namespace via::utils {
 template<typename T>
 class ModifiableOnce {
 public:
-    ModifiableOnce(T);
+    ModifiableOnce(T val)
+        : value(val)
+    {
+    }
 
     void set(T new_value);
     const T &get() const;

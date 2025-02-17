@@ -54,7 +54,7 @@ void Interpreter::interpret()
 {
     state->load(*program.bytecode);
     via::execute(state);
-    via::pausethread(state);
+    via::pause_thread(state);
 }
 
 int Interpreter::execute(ProgramData &program_data)

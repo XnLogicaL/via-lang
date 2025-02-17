@@ -510,7 +510,7 @@ VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, Val
     switch (_Type) {
     case ValueType::number: {
         double _Num = __to_cxx_number(_Val);
-        if (/* NaN */ _Num != _Num) {
+        if (_Num != _Num) {
             goto error;
         }
 

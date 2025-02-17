@@ -128,6 +128,7 @@ struct TTable {
     utils::ModifiableOnce<bool> frozen = false;
     std::unordered_map<TableKey, TValue> data;
 
+    TTable() = default;
     TTable(const TTable &other)
         : meta(other.meta)
         , frozen(other.frozen)

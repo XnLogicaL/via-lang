@@ -7,11 +7,11 @@
 #include "bytecode.h"
 #include "fileio.h"
 
-#define VIA_CACHE_DIR_NAME ("_viac")
-#define VIA_BIN_EXT ("viac")
-#define VIA_ASM_EXT ("viac.s")
+#define VIA_CACHE_DIR_NAME "__viacache__"
+#define VIA_BIN_EXT ".viac"
+#define VIA_ASM_EXT ".viac.s"
 
-/* Binary file format (VBFF):
+/* Binary file format:
     |===========|
     |8 bytes    | Magic value. (0xDEADBEEFULL)
     |4 bytes    | Version information for compatibility.
@@ -28,7 +28,7 @@
 */
 namespace via {
 
-VIA_FORCEINLINE U8 *hash_file(const std::string &src)
+VIA_INLINE std::string hash(const std::string &src)
 {
     SHA256 sha;
     sha.update(src);
@@ -36,54 +36,57 @@ VIA_FORCEINLINE U8 *hash_file(const std::string &src)
     std::array<U8, 32> digest = sha.digest();
     std::string hash = sha.toString(digest);
 
-    // Assuming the hash is a 64-character hex string for SHA-256
-    U8 *hash_final = new U8[32]; // Allocate memory for 32 bytes (SHA-256)
+    return hash;
+}
 
-    // Copy the hash into the U8 array (hex string to bytes)
+VIA_INLINE U8 *hash_file(const std::string &src)
+{
+    SHA256 sha;
+    sha.update(src);
+
+    std::array<U8, 32> digest = sha.digest();
+    std::string hash = sha.toString(digest);
+    U8 *hash_final = new U8[32];
+
     for (size_t i = 0; i < 32; ++i) {
         std::stringstream ss;
-        ss << std::hex << hash.substr(i * 2, 2); // Each byte is 2 hex digits
+        ss << std::hex << hash.substr(i * 2, 2);
         int byte_value;
         ss >> byte_value;
         hash_final[i] = static_cast<U8>(byte_value);
     }
 
-    return hash_final; // You should manage memory properly to avoid leaks
+    return hash_final;
 }
 
 enum class CacheResult { SUCCESS, FAIL };
 
 struct CacheFile {
     std::string file_name;
-    U64 magic_value;        // 8 bytes
-    U32 version;            // 4 bytes
-    U64 compilation_date;   // 8 bytes
-    U8 file_hash[32];       // 32 bytes (SHA-256)
-    char platform_info[16]; // 16 bytes (e.g., "x86_64-linux")
-    char runtime_flags[16]; // 16 bytes (e.g., "-O3")
-    U64 code_offset;        // 8 bytes
-    U64 code_size;          // 8 bytes
-    U64 checksum_a;         // 8 bytes
-    U64 checksum_b;         // 8 bytes
+    U64 magic_value = 0xDEADBEEFULL; // 8 bytes
+    U32 version;                     // 4 bytes
+    U64 compilation_date;            // 8 bytes
+    U8 file_hash[32];                // 32 bytes (SHA-256)
+    char platform_info[16];          // 16 bytes (e.g., "x86_64-linux")
+    char runtime_flags[16];          // 16 bytes (e.g., "-O3")
+    U64 code_offset = 0;             // 8 bytes
+    U64 code_size = 0;               // 8 bytes
+    U64 checksum_a = 0;              // 8 bytes
+    U64 checksum_b = 0;              // 8 bytes
     std::vector<char> bytecode;
+    ProgramData &program;
 
     explicit CacheFile(ProgramData &program)
         : file_name(program.file_name)
-        , magic_value(0xDEADBEEFULL)
         , version(std::stoi(VIA_VERSION))
         , compilation_date(std::chrono::steady_clock::now().time_since_epoch().count())
         , platform_info("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         , runtime_flags("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
-        , code_offset(0)
-        , code_size(0)
-        , checksum_a(0)
-        , checksum_b(0)
-        , bytecode({})
+        , program(program)
     {
-        // Assuming the hash is 32 bytes
         U8 *hash_data = hash_file(program.source);
         std::memcpy(file_hash, hash_data, 32);
-        delete[] hash_data; // Remember to free the dynamically allocated memory
+        delete[] hash_data;
     }
 };
 
