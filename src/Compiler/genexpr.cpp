@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #include "builtins.h"
 #include "gen.h"
@@ -15,20 +17,23 @@ void Generator::generate_literal_expression(LiteralExprNode lit_expr, RegId targ
         push_instruction(OpCode::LOADK, {Operand(target_register), Operand(const_idx_num)});
     }
     else
-        // If no target register is specified, push the value onto the stack
+        // If no target register is specified, push the value onto the
+        // stack
         push_instruction(OpCode::PUSH, {Operand(operand)});
 }
 
 // Generates and emits a unary expression
 void Generator::generate_unary_expression(UnaryExprNode unary_expr, RegId target_register)
 {
-    if (LOAD_TO_REGISTER) { // If a target register is specified, load the unary
-                            // expression into the register and perform inline negation
+    if (LOAD_TO_REGISTER) { // If a target register is specified, load the
+                            // unary expression into the register and
+                            // perform inline negation
         generate_expression(*unary_expr.expr, target_register);
         push_instruction(OpCode::NEG, {Operand(target_register)});
     }
     else { // If no target register is specified, allocate a register
-           // and load the expression into that register, inline negate it and push it onto the stack
+           // and load the expression into that register, inline negate it
+           // and push it onto the stack
         RegId reg = allocate_register();
         generate_expression(*unary_expr.expr, reg);
         push_instruction(OpCode::NEG, {Operand(target_register)});
@@ -47,7 +52,8 @@ void Generator::generate_binary_expression(BinaryExprNode bin_expr, RegId target
 
     RegId dst = LOAD_TO_REGISTER ? target_register : allocate_register();
 
-    // TODO: Handle case where lhs is also a constexpr, which in that case the expression should be folded instead
+    // TODO: Handle case where lhs is also a constexpr, which in that case
+    // the expression should be folded instead
     if (is_constexpr(*bin_expr.rhs)) {
         opcode_index += 1; // OPK
 
@@ -119,8 +125,9 @@ void Generator::generate_call_expression(CallExprNode call_expr, RegId target_re
 {
     // Load arguments
     for (ExprNode *arg : call_expr.args)
-        // Pass in invalid register value so the compiler emits push instructions for the arguments
-        // and automatically pushes them to the stack, setting it up automatically
+        // Pass in invalid register value so the compiler emits push
+        // instructions for the arguments and automatically pushes them to
+        // the stack, setting it up automatically
         generate_expression(*arg, VIA_REGISTER_INVALID);
 
     RegId target;
@@ -144,7 +151,8 @@ void Generator::generate_call_expression(CallExprNode call_expr, RegId target_re
         }
     );
 
-    // Check if the result (return value 0) needs to be loaded to a register
+    // Check if the result (return value 0) needs to be loaded to a
+    // register
     if (LOAD_TO_REGISTER)
         push_instruction(OpCode::POP, {Operand(target)});
     else // Free allocated register
@@ -194,7 +202,6 @@ void Generator::generate_variable_expression(VarExprNode var_expr, RegId target_
             target = allocate_register();
 
         char *ident_string = dup_string(var_expr.ident.value);
-        cleaner.add_malloc(ident_string);
 
         // Emit global retriaval instruction
         push_instruction(

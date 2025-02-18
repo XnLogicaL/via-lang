@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -64,12 +65,12 @@ public:
 
 public:
     ProgramData &program;
+    kTable constants;
     bool failed;
 
 private:
     ArenaAllocator alloc; // Custom allocator
     Cleaner cleaner;      // Resource cleaner
-    kTable constants;
     std::unordered_map<kGlobId, TValue> globals;
     TestStack stack;
     std::map<RegId, bool> register_pool;

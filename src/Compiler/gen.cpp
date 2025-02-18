@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "gen.h"
 #include "api.h"
@@ -22,7 +23,8 @@ bool is_number_literal(LiteralExprNode lit_expr)
 // Utility function for checking if an operator type is an arithmetic operator
 bool is_arithmetic_operator(TokenType op)
 {
-    return op == TokenType::OP_ADD || op == TokenType::OP_SUB || op == TokenType::OP_MUL || op == TokenType::OP_MOD || op == TokenType::OP_EXP;
+    return op == TokenType::OP_ADD || op == TokenType::OP_SUB || op == TokenType::OP_MUL ||
+           op == TokenType::OP_MOD || op == TokenType::OP_EXP;
 }
 
 // Utility function for checking if an operator type is a comparison operator
@@ -35,14 +37,16 @@ bool is_comparison_operator(TokenType op)
 // operator
 bool is_numeric_comparison_operator(TokenType op)
 {
-    return op == TokenType::OP_LEQ || op == TokenType::OP_GEQ || op == TokenType::OP_LT || op == TokenType::OP_GT;
+    return op == TokenType::OP_LEQ || op == TokenType::OP_GEQ || op == TokenType::OP_LT ||
+           op == TokenType::OP_GT;
 }
 
 // Utility function to check if two token types are compatible for comparison
 bool are_compatible_types(TokenType lhs_type, TokenType rhs_type)
 {
     return (lhs_type == TokenType::LIT_INT && rhs_type == TokenType::LIT_FLOAT) ||
-           (lhs_type == TokenType::LIT_FLOAT && rhs_type == TokenType::LIT_INT) || lhs_type == rhs_type; // Same types are always compatible
+           (lhs_type == TokenType::LIT_FLOAT && rhs_type == TokenType::LIT_INT) ||
+           lhs_type == rhs_type; // Same types are always compatible
 }
 
 // Generates bytecode and returns it
@@ -94,7 +98,8 @@ ExprNode Generator::evaluate_constexpr(ExprNode expr)
             double x = std::stod(expr_token.value);
             return {LiteralExprNode{
                 Token(
-                    expr_token.type == TokenType::LIT_INT ? TokenType::LIT_INT : TokenType::LIT_FLOAT,
+                    expr_token.type == TokenType::LIT_INT ? TokenType::LIT_INT
+                                                          : TokenType::LIT_FLOAT,
                     std::to_string(-x),
                     expr_token.line,
                     expr_token.offset,
@@ -149,7 +154,11 @@ Operand Generator::generate_operand(LiteralExprNode lit_expr)
         operand.type = OperandType::Nil;
         break;
     default:
-        VIA_ASSERT(false, "unsupported literal type (you're seeing this because for whatever reason the developer forgot to handle this error)");
+        VIA_ASSERT(
+            false,
+            "unsupported literal type (you're seeing this because for whatever reason the "
+            "developer forgot to handle this error)"
+        );
     }
 
     return operand;
@@ -194,8 +203,9 @@ size_t Generator::load_constant(LiteralExprNode expr)
     size_t idx = 0;
 
     for (const TValue &const_val : constants) {
-        if (compare(val, const_val))
+        if (compare(val, const_val)) {
             return idx;
+        }
 
         idx++;
     }

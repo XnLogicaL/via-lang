@@ -16,6 +16,7 @@ State::State(GState *G, ProgramData &program)
     , gc(new GarbageCollector())
     , sbp(new TValue[VIA_VM_STACK_SIZE])
     , err(new ErrorState())
+    , program(program)
 {
     load(*program.bytecode);
 
@@ -29,15 +30,21 @@ void State::load(BytecodeHolder &bytecode)
 {
     if (this->ihp) { // Clean up previous instruction pipeline
         delete[] this->ihp;
+        this->ihp = nullptr;
     }
 
-    std::vector<Instruction> pipeline = bytecode.get();
+    const std::vector<Instruction> &pipeline = bytecode.instructions;
+
+    if (pipeline.empty()) {
+        this->ihp = this->ibp = this->ip = nullptr;
+        return;
+    }
 
     this->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
     this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
     this->ip = this->ihp;                         // Initialize ip (Instruction pointer)
 
-    std::memcpy(ihp, pipeline.data(), pipeline.size());
+    std::memcpy(ihp, pipeline.data(), pipeline.size() * sizeof(Instruction));
 }
 
 State::~State()
@@ -75,6 +82,54 @@ State::~State()
     if (this->sbp) {
         delete[] this->sbp;
     }
+}
+
+std::string to_string(State *state)
+{
+#define TO_VOID_STAR(ptr) reinterpret_cast<void *>(ptr)
+
+    std::ostringstream oss;
+
+    oss << std::format("<State@{}>\n", TO_VOID_STAR(state));
+    oss << "|===========================\n";
+
+    oss << std::format(" id: {}\n", state->id);
+    oss << std::format(" G:  <GState@{}>\n", TO_VOID_STAR(state->G));
+
+    oss << "|===========================\n";
+
+    oss << std::format(" ip:  {}\n", TO_VOID_STAR(state->ip));
+    oss << std::format(" ihp: {}\n", TO_VOID_STAR(state->ihp));
+    oss << std::format(" ibp: {}\n", TO_VOID_STAR(state->ibp));
+
+    oss << "|===========================\n";
+
+    oss << std::format(" ralloc: {}\n", TO_VOID_STAR(state->ralloc));
+    oss << std::format(" gc:     {}\n", TO_VOID_STAR(state->gc));
+
+    oss << "|===========================\n";
+
+    oss << std::format(" sbp: {}\n", TO_VOID_STAR(state->sbp));
+    oss << std::format(" sp:  {}\n", state->sp);
+    oss << std::format(" ssp: {}\n", state->ssp);
+
+    oss << "|===========================\n";
+
+    oss << std::format(" frame: {}\n", TO_VOID_STAR(state->frame));
+    oss << std::format(" argc:  {}\n", state->argc);
+
+    oss << "|===========================\n";
+
+    oss << std::format(" abort: {}\n", state->abort);
+    oss << std::format(" err:   <ErrorState@{}>\n", TO_VOID_STAR(state->err));
+
+    oss << "|===========================\n";
+
+    oss << std::format(" tstate: {}\n", ENUM_NAME(state->tstate));
+    oss << std::format(" sstate: <State@{}>\n", TO_VOID_STAR(state->sstate));
+
+    return oss.str();
+#undef TO_VOID_STAR
 }
 
 } // namespace via

@@ -1,9 +1,6 @@
-func y(x) {
-    local z = x + 1
-    local w = z * 6 + 4
-    local t = w * w + w
-    local u = t * w * t + z + w
-    return u
-}
+local z = x + 1
+local w = z * 6 + 4
+local t = w * w + w
+local u = t * w * t + z + w
 
-print(y(31))
+println(u)

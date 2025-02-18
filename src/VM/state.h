@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #pragma once
 
@@ -26,12 +28,6 @@ struct GarbageCollector;
 struct RAState;
 struct TString;
 
-// Type aliases for convenience, not much else
-using StrTable = std::unordered_map<Hash, TString *>;
-using GlbTable = std::unordered_map<kGlobId, TValue>;
-using kTable = std::vector<TValue>;
-using SymTable = std::vector<std::string>;
-
 // Calling convention
 enum class CallType {
     NOCALL,
@@ -40,23 +36,26 @@ enum class CallType {
 };
 
 // State of an State (thread) execution
-enum class ThreadState { RUNNING, PAUSED, DEAD };
+enum class ThreadState {
+    RUNNING,
+    PAUSED,
+    DEAD,
+};
 
 struct ErrorState {
     TFunction *frame = nullptr;
     std::string message = "";
 };
 
-// Global state, should only be instantiated once, and shared across all State's. (threads)
+// Global state, should only be instantiated once, and shared across all
+// State's. (threads)
 struct GState {
     StrTable stable;                  // String interning table
     GlbTable gtable;                  // Global environment
-    kTable ktable;                    // Constant table
     SymTable symtable;                // Symbol table
     std::atomic<ThreadId> threads{0}; // Thread count
 
     std::shared_mutex stable_mutex;
-    std::shared_mutex ktable_mutex;
     std::mutex gtable_mutex;
     std::mutex symtable_mutex;
 };
@@ -100,10 +99,14 @@ struct alignas(64) State {
     utils::Signal<> sig_error;
     utils::Signal<> sig_fatal;
 
+    ProgramData &program;
+
     State(GState *, ProgramData &);
     ~State();
 
     void load(BytecodeHolder &);
 };
+
+std::string to_string(State *);
 
 } // namespace via

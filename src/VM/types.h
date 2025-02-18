@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #pragma once
 
@@ -10,7 +12,7 @@ namespace via {
 
 enum class ValueType {
     monostate, // Represents uninitialized values
-    nil,       // Empty values, like null, does not contain a union counterpart
+    nil, // Empty values, like null, does not contain a union counterpart
     number,    // Unified number type, f64
     boolean,   // Bool type, wrapper for `bool`
     string,    // String type, pointer to owning string object
@@ -88,6 +90,7 @@ struct TString {
     Hash hash = 0;
 
     explicit TString(State *, const char *);
+    TString() = default;
     ~TString();
 };
 
@@ -105,7 +108,17 @@ struct TFunction {
     Instruction *ret_addr = nullptr;
     std::vector<Instruction> bytecode = {};
 
-    explicit TFunction(State *, std::string, Instruction *, TFunction *, std::vector<Instruction>, bool, bool);
+    explicit TFunction(
+        State *,
+        std::string,
+        Instruction *,
+        TFunction *,
+        std::vector<Instruction>,
+        bool,
+        bool
+    );
+
+    TFunction() = default;
 };
 
 struct TCFunction {
@@ -114,11 +127,16 @@ struct TCFunction {
     // Function pointer
     CFunctionPtr ptr = nullptr;
     // Tells the VM if the function can handle errors or not.
-    // This gets passed down to the replica function that represents this C functions stack frame.
-    // Pretty much only used for protected call.
+    // This gets passed down to the replica function that represents this C
+    // functions stack frame. Pretty much only used for protected call.
     bool error_handler = false;
 
-    explicit TCFunction(CFunctionPtr ptr = nullptr, bool error_handler = false);
+    explicit TCFunction(
+        CFunctionPtr ptr = nullptr,
+        bool error_handler = false
+    );
+
+    TCFunction() = default;
 };
 
 struct TTable {

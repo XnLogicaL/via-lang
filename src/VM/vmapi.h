@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #pragma once
 
@@ -9,8 +11,6 @@
 #include "register.h"
 #include "state.h"
 #include "types.h"
-
-#define CHECK_JUMP_ADDRESS(addr) ((addr >= V->ihp) && (addr <= V->ibp))
 
 namespace via::impl {
 
@@ -30,10 +30,10 @@ VIA_MAXOPTIMIZE void __clear_error_state(State *_V)
 
 VIA_MAXOPTIMIZE bool __has_error(State *_V)
 {
-    return _V->err->frame == _V->frame;
+    return _V->err->frame != nullptr;
 }
 
-VIA_FORCEINLINE int __handle_error(State *_V)
+VIA_FORCEINLINE bool __handle_error(State *_V)
 {
     TFunction *_Current_frame = _V->frame;
     TFunction *_Error_frame = _V->frame;
@@ -43,17 +43,27 @@ VIA_FORCEINLINE int __handle_error(State *_V)
             _V->err->frame = _Current_frame;
             break;
         }
-
         _Current_frame = _Current_frame->caller;
     }
 
     if (!_Current_frame) {
-        std::cerr << std::format("<frame@{:x}>: {}\n", reinterpret_cast<UPtr>(_Error_frame), _V->err->message) << '\n';
-        _Error_frame = _Error_frame->caller;
+        if (_Error_frame) {
+            std::cerr << std::format(
+                             "<frame@0x{:x}>: {}\n",
+                             reinterpret_cast<UPtr>(_Error_frame),
+                             _V->err->message
+                         )
+                      << '\n';
+        }
 
+        std::unordered_set<TFunction *> visited;
         size_t _Idx = 0;
-        while (_Error_frame) {
-            std::cerr << std::format("#{} <frame@{:x}>\n", _Idx++, reinterpret_cast<UPtr>(_Error_frame));
+
+        while (_Error_frame && !visited.count(_Error_frame)) {
+            visited.insert(_Error_frame);
+            std::cerr << std::format(
+                "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<UPtr>(_Error_frame)
+            );
             _Error_frame = _Error_frame->caller;
         }
     }
@@ -69,7 +79,18 @@ VIA_MAXOPTIMIZE void __set_register(State *_V, RegId _Reg, const TValue &_Val)
 
 VIA_MAXOPTIMIZE TValue *__get_register(State *_V, RegId _Reg)
 {
-    return _V->ralloc->head + _Reg;
+    TValue *addr = _V->ralloc->head + _Reg;
+    return addr;
+}
+
+VIA_INLINE const TValue &__get_constant(State *_V, size_t _Idx)
+{
+    if (_Idx >= _V->program.constants->size()) {
+        std::cout << _Idx << " is not a valid constant\n";
+        return _Nil;
+    }
+
+    return _V->program.constants->at(_Idx);
 }
 
 VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
@@ -130,7 +151,11 @@ VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Se
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, const TValue &_Val) noexcept
+VIA_FORCEINLINE void __set_table(
+    TTable *VIA_RESTRICT _Tbl,
+    TableKey _Key,
+    const TValue &_Val
+) noexcept
 {
     if (check_nil(_Val)) {
         const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
@@ -183,13 +208,20 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
         std::memset(_Buf + 2, '0', sizeof(_Buf) - 2);
     }
 
-    TFunction _Func(0, std::string(_Buf, _Result.ptr), _V->ip, _V->frame, {}, _Callee->error_handler, false);
+    TFunction _Func(
+        0, std::string(_Buf, _Result.ptr), _V->ip, _V->frame, {}, _Callee->error_handler, false
+    );
 
     __native_call(_V, &_Func, _Argc);
     _Callee->ptr(_V);
 }
 
-VIA_MAXOPTIMIZE void __method_call(State *VIA_RESTRICT _V, TTable *VIA_RESTRICT _Tbl, TableKey _Key, size_t _Argc) noexcept
+VIA_MAXOPTIMIZE void __method_call(
+    State *VIA_RESTRICT _V,
+    TTable *VIA_RESTRICT _Tbl,
+    TableKey _Key,
+    size_t _Argc
+) noexcept
 {
     const TValue &_Method = __get_table(_Tbl, _Key, true);
     if (check_function(_Method)) {
@@ -214,7 +246,9 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
         __method_call(_V, _Callee.val_table, hash_string("__call"), _Argc);
     }
     else {
-        __set_error_state(_V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee)));
+        __set_error_state(
+            _V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee))
+        );
     }
 }
 
@@ -324,14 +358,15 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         return TValue(_Tstr);
     }
     case ValueType::cfunction: {
-        // This has to be explicitly casted because function pointers be weird
+        // This has to be explicitly casted because function pointers be
+        // weird
         const void *_Cfaddr = _Val.val_cfunction;
         std::string _Str = std::format("<cfunction@{}>", _Cfaddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
     default:
-        TString *_Tstr = new TString(_V, "_Nil");
+        TString *_Tstr = new TString(_V, "nil");
         return TValue(_Tstr);
     }
 
@@ -437,7 +472,11 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
     return false;
 };
 
-VIA_MAXOPTIMIZE bool __compare_registers(State *VIA_RESTRICT _V, RegId _Reg_0, RegId _Reg_1) noexcept
+VIA_MAXOPTIMIZE bool __compare_registers(
+    State *VIA_RESTRICT _V,
+    RegId _Reg_0,
+    RegId _Reg_1
+) noexcept
 {
     if (_Reg_0 == _Reg_1) {
         return true;
@@ -539,7 +578,14 @@ VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, Val
     _Val.type = _Type;
     return;
 error:
-    __set_error_state(_V, std::format("type '{}' is not primitive castable into type '{}'", ENUM_NAME(_Val.type), ENUM_NAME(_Type)));
+    __set_error_state(
+        _V,
+        std::format(
+            "type '{}' is not primitive castable into type '{}'",
+            ENUM_NAME(_Val.type),
+            ENUM_NAME(_Type)
+        )
+    );
 }
 
 } // namespace via::impl

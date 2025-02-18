@@ -68,7 +68,7 @@ LIB_DECL_FUNCTION(base_assert)
     LIB_RETURN(0);
 }
 
-LIB_DECL_FUNCTION(base_weak_prim_cast)
+LIB_DECL_FUNCTION(base_weakPrimCast)
 {
     LIB_DECL_PARAMETER(val, 0);
     LIB_DECL_PARAMETER(type, 1);
@@ -88,7 +88,7 @@ LIB_DECL_FUNCTION(base_weak_prim_cast)
     LIB_RETURN(1);
 }
 
-LIB_DECL_FUNCTION(base_strong_prim_cast)
+LIB_DECL_FUNCTION(base_strongPrimCast)
 {
     LIB_DECL_PARAMETER(val, 0);
     LIB_DECL_PARAMETER(type, 1);
@@ -102,7 +102,6 @@ LIB_DECL_FUNCTION(base_strong_prim_cast)
 
     LIB_ASSERT(val_type.has_value(), std::format("'{}' is not a valid primitive typename", type_str));
 
-    // Sorry about this...
     __strong_primtive_cast(V, const_cast<TValue &>(val), val_type.value());
     LIB_RETURN(0);
 }
@@ -115,8 +114,8 @@ LIB_DECL_FUNCTION(open_baselib)
     base_properties.emplace("println", LIB_WRAP_CFPTR(base_println));
     base_properties.emplace("error", LIB_WRAP_CFPTR(base_error));
     base_properties.emplace("assert", LIB_WRAP_CFPTR(base_assert));
-    base_properties.emplace("weakPrimitiveCast", LIB_WRAP_CFPTR(base_weak_prim_cast));
-    base_properties.emplace("strongPrimitiveCast", LIB_WRAP_CFPTR(base_strong_prim_cast));
+    base_properties.emplace("weakPrimitiveCast", LIB_WRAP_CFPTR(base_weakPrimCast));
+    base_properties.emplace("strongPrimitiveCast", LIB_WRAP_CFPTR(base_strongPrimCast));
 
     for (const auto &[ident, val] : base_properties) {
         __set_global(V, ident, val);

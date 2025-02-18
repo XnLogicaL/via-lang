@@ -1,6 +1,9 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #include "execute.h"
+#include "fileio.h"
 #include "vmapi.h"
 #include "chunk.h"
 #include "common.h"
@@ -8,48 +11,56 @@
 #include "types.h"
 
 // Define the hot path threshold for the instruction dispatch loop
-// How many times a chunk needs to be executed before being flagged as "hot"
+// How many times a chunk needs to be executed before being flagged as
+// "hot"
 #ifndef VIA_HOTPATH_THRESHOLD
     #define VIA_HOTPATH_THRESHOLD 64
 #endif
 
+// Index of the current instruction
+#define VM_POS V->ip - V->ihp
+#define VM_CHECK_JMP(addr) ((addr >= V->ihp) && (addr <= V->ibp))
+
 #define VM_ERROR(message) \
-    { \
+    do { \
         __set_error_state(V, message); \
         V->sig_error.fire(); \
-        goto exit; \
-    }
+        goto dispatch; \
+    } while (0)
 
 #define VM_FATAL(message) \
-    { \
+    do { \
         std::cerr << "VM terminated with message: " << message << '\n'; \
         V->sig_fatal.fire(); \
         std::abort(); \
-    }
+    } while (0)
 
 #define VM_ASSERT(cond, message) \
-    if (cond) \
-        VM_ERROR(message);
+    if (!cond) { \
+        VM_ERROR(message); \
+    }
 
 // Macro for loading the next instruction
 // Has bound checks
 #define VM_LOAD() \
-    { \
-        if (!CHECK_JUMP_ADDRESS(V->ip + 1)) \
-            VM_FATAL("illegal instruction access"); \
+    do { \
+        if (!VM_CHECK_JMP(V->ip + 1)) { \
+            goto exit; \
+        } \
         V->ip++; \
-    }
+    } while (0)
 
 // Macro that "signals" the VM has completed an execution cycle
 #define VM_NEXT() \
-    { \
+    do { \
         VM_LOAD(); \
         goto dispatch; \
-    }
+    } while (0)
 
 namespace via {
 
-// Starts VM execution cycle by altering it's state and "iterating" over the instruction pipeline.
+// Starts VM execution cycle by altering it's state and "iterating" over
+// the instruction pipeline.
 void execute(State *VIA_RESTRICT V)
 {
     using namespace impl;
@@ -61,11 +72,12 @@ void execute(State *VIA_RESTRICT V)
 
 dispatch: {
     // Check for errors and attempt handling them.
-    // The __handle_error function works by unwinding the stack until either
-    // hitting a stack frame flagged as error handler, or,
-    // the root stack frame, and the root stack frame cannot be an error handler under any circumstances.
-    // Therefore the error will act as a fatal error, being automatically thrown by __handle_error,
-    // along with a callstack and debug information.
+    // The __handle_error function works by unwinding the stack until
+    // either hitting a stack frame flagged as error handler, or, the root
+    // stack frame, and the root stack frame cannot be an error handler
+    // under any circumstances. Therefore the error will act as a fatal
+    // error, being automatically thrown by __handle_error, along with a
+    // callstack and debug information.
     if (__has_error(V) && !__handle_error(V)) {
         goto exit;
     }
@@ -77,8 +89,9 @@ dispatch: {
     }
 
     switch (V->ip->op) {
-    case OpCode::NOP:
+    case OpCode::NOP: {
         VM_NEXT();
+    }
 
     case OpCode::ADD: {
         Operand lhs = V->ip->operand1;
@@ -97,6 +110,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -104,11 +125,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -161,6 +180,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -168,11 +195,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -225,6 +250,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -232,11 +265,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -289,6 +320,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -296,11 +335,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -353,6 +390,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -360,11 +405,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -417,6 +460,14 @@ dispatch: {
             __push(V, *rhs_val); // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and {}",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type),
+                ENUM_NAME(rhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -424,11 +475,9 @@ dispatch: {
         Operand lhs = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_idx = idx.val_number;
         TValue *lhs_val = __get_register(V, lhs.val_register);
-        const TValue &rhs_val = V->G->ktable.at(const_idx);
+        const TValue &rhs_val = __get_constant(V, const_idx);
 
         // Fast-path: lhs value is a number
         if (VIA_LIKELY(check_number(*lhs_val))) {
@@ -478,14 +527,12 @@ dispatch: {
         Operand idx = V->ip->operand2;
         U64 kid = idx.val_number;
 
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         // Check if the kId is valid
-        if (kid > V->G->ktable.size()) {
+        if (kid > V->program.constants->size()) {
             VM_FATAL("invalid constant index");
         }
 
-        const TValue &kval = V->G->ktable.at(kid);
+        const TValue &kval = __get_constant(V, kid);
 
         __set_register(V, dst.val_register, kval);
         VM_NEXT();
@@ -562,11 +609,8 @@ dispatch: {
 
     case OpCode::PUSHK: {
         Operand const_idx = V->ip->operand1;
-
-        std::lock_guard<std::shared_mutex> lock(V->G->ktable_mutex);
-
         size_t const_id = const_idx.val_number;
-        const TValue &constant = V->G->ktable.at(const_id);
+        const TValue &constant = __get_constant(V, const_id);
 
         __push(V, constant);
         VM_NEXT();
@@ -594,6 +638,8 @@ dispatch: {
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
         const TValue &val = *(V->sbp + stack_offset);
+
+        std::cout << "GETSTACK " << __to_cxx_string(V, val) << "\n";
 
         __set_register(V, dst.val_register, val);
         VM_NEXT();
@@ -792,8 +838,9 @@ dispatch: {
         VM_NEXT();
     }
 
-    case OpCode::EXIT:
+    case OpCode::EXIT: {
         goto exit;
+    }
 
     case OpCode::JUMP: {
         Operand offset = V->ip->operand1;
@@ -1091,13 +1138,15 @@ dispatch: {
         VM_NEXT();
     }
 
-    default:
-        VM_FATAL(std::format("unknown opcode {:x}", static_cast<int>(V->ip->op)));
+    default: {
+        VM_FATAL(std::format("unknown opcode 0x{:x}", static_cast<int>(V->ip->op)));
+    }
     }
 }
 
 exit:
     V->sig_exit.fire();
+    V->tstate = ThreadState::PAUSED;
 }
 
 // Permanently kills the thread. Does not clean up the state object.
@@ -1110,7 +1159,8 @@ void kill_thread(State *VIA_RESTRICT V)
 
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
-    // Decrement the thread_id to make room for more threads (I know you can techni__cally make 2^32 threads ok?)
+    // Decrement the thread_id to make room for more threads (I know you
+    // can techni__cally make 2^32 threads ok?)
     V->G->threads.fetch_add(-1);
 }
 

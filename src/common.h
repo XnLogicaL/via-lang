@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at
+ * https://github.com/XnLogicaL/via-lang, see LICENSE for license
+ * information */
 
 #pragma once
 
@@ -25,6 +27,7 @@
 #include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -65,7 +68,8 @@
     #define VIA_UNREACHABLE() __builtin_unreachable();
     #define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
     #define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
-#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT use it)
+#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT
+                  // use it)
     #define VIA_RESTRICT __restrict
     #define VIA_NORETURN __declspec(__noreturn__)
     #define VIA_NOINLINE __declspec(noinline)
@@ -116,6 +120,11 @@ using TNumber = double;
 using TBool = bool;
 using TableKey = Hash;
 
+using StrTable = std::unordered_map<Hash, TString *>;
+using GlbTable = std::unordered_map<kGlobId, TValue>;
+using kTable = std::vector<TValue>;
+using SymTable = std::vector<std::string>;
+
 #ifdef VIA_LONGJUMP
 using JmpOffset = U64;
 #else
@@ -154,6 +163,7 @@ struct ProgramData {
     TokenHolder *tokens;
     AbstractSyntaxTree *ast;
     BytecodeHolder *bytecode;
+    kTable *constants;
     std::map<size_t, std::string> bytecode_info;
 
     ProgramData(std::string, std::string);

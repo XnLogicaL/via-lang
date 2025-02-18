@@ -1,11 +1,11 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "compiler.h"
 #include "constfold.h"
+#include "types.h"
 
 namespace via {
-
-using namespace via;
 
 // Compiles the AST into instructions
 bool Compiler::generate()
@@ -14,6 +14,10 @@ bool Compiler::generate()
     pass_manager.apply_astree(generator);
     generator.generate();
     pass_manager.apply_bytecode(generator);
+
+    for (const TValue &constant : generator.constants) {
+        program.constants->push_back(constant.clone());
+    }
 
     return generator.failed;
 }
