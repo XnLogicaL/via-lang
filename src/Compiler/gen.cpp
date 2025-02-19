@@ -52,7 +52,7 @@ bool are_compatible_types(TokenType lhs_type, TokenType rhs_type)
 // Generates bytecode and returns it
 bool Generator::generate()
 {
-    for (StmtNode stmt : program.ast->statements)
+    for (StmtNode stmt : program->ast->statements)
         generate_statement(stmt);
 
     push_instruction(OpCode::EXIT, {Operand(0.0f)});
@@ -121,14 +121,14 @@ ExprNode Generator::evaluate_constexpr(ExprNode expr)
 // Pushes a bytecode instruction
 void Generator::push_instruction(OpCode op = OpCode::NOP, std::vector<Operand> operands = {})
 {
-    Instruction instruction(op, operands, nullptr, program.bytecode->get().size());
+    Instruction instruction(op, operands, nullptr, program->bytecode->get().size());
 
     if (initialize_with_chunk) {
         initialize_with_chunk = false;
         instruction.chunk = current_chunk;
     }
 
-    program.bytecode->add_instruction(instruction);
+    program->bytecode->add_instruction(instruction);
 }
 
 Operand Generator::generate_operand(LiteralExprNode lit_expr)
@@ -235,8 +235,8 @@ void Generator::load_operand(Operand dst, Operand operand)
 
 void Generator::add_bc_info(std::string info)
 {
-    size_t pos = program.bytecode->get().size() - 1;
-    program.bytecode_info[pos] = info;
+    size_t pos = program->bytecode->get().size() - 1;
+    program->bytecode_info[pos] = info;
 }
 
 } // namespace via

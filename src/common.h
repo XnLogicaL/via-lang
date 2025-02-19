@@ -56,7 +56,7 @@
 #define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION ("0.14")
+#define VIA_VERSION ("0.15")
 
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__
@@ -133,7 +133,7 @@ using JmpOffset = U32;
 
 VIA_FORCEINLINE char *dup_string(const char *str)
 {
-    char *chars = new char[std::strlen(str)];
+    char *chars = new char[std::strlen(str) + 1];
     std::strcpy(chars, str);
     return chars;
 }

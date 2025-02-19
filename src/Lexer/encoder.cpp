@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "encoder.h"
 
@@ -23,14 +24,16 @@ std::vector<char> Encoder::encode_operand(Operand oper)
     case OperandType::Bool:
     case OperandType::Register:
         // For Bool, we store the boolean value. For Register, we store the register number
-        encoding.push_back(static_cast<char>(oper.type == OperandType::Bool ? oper.val_boolean : oper.val_register));
+        encoding.push_back(
+            static_cast<char>(oper.type == OperandType::Bool ? oper.val_boolean : oper.val_register)
+        );
         break;
 
     case OperandType::String: {
         // For strings and identifiers, encode them as a sequence of characters (null-terminated)
-        const char *ptr = oper.val_string;
-        while (*ptr)
-            encoding.push_back(*ptr++);
+        const char *data = oper.val_string;
+        while (*data)
+            encoding.push_back(*data++);
         // Optionally add a null-terminator to the end of the string/identifier
         encoding.push_back('\0');
         break;
@@ -43,8 +46,8 @@ std::vector<char> Encoder::encode_operand(Operand oper)
     case OperandType::Number:
         // For a 64-bit float (e.g., `double`), we need to encode it as bytes
         {
-            const char *ptr = reinterpret_cast<const char *>(&oper.val_number);
-            encoding.insert(encoding.end(), ptr, ptr + sizeof(oper.val_number));
+            const char *data = reinterpret_cast<const char *>(&oper.val_number);
+            encoding.insert(encoding.end(), data, data + sizeof(oper.val_number));
         }
         break;
     }

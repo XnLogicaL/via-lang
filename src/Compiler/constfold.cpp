@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "constfold.h"
 
@@ -18,7 +19,7 @@ void ConstFoldOptimizationPass::fold_constexpr(Generator &gen, ExprNode *expr)
 void ConstFoldOptimizationPass::apply(Generator &gen)
 {
 #define CHECK(ident, type) type *ident = std::get_if<type>(&stmt.stmt)
-    for (StmtNode stmt : gen.program.ast->statements) {
+    for (StmtNode stmt : gen.program->ast->statements) {
         if (CHECK(decl_stmt, VariableDeclStmtNode))
             fold_constexpr(gen, &decl_stmt->value.value());
         else if (CHECK(call_stmt, CallStmtNode)) {
@@ -33,7 +34,7 @@ void ConstFoldOptimizationPass::apply(Generator &gen)
 bool ConstFoldOptimizationPass::is_applicable(Generator &gen) const
 {
     // Check if the AST has already been optimized
-    return gen.program.ast != nullptr;
+    return gen.program->ast != nullptr;
 }
 
 } // namespace via

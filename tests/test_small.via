@@ -1,3 +1,4 @@
+local x = 69
 local z = x + 1
 local w = z * 6 + 4
 local t = w * w + w

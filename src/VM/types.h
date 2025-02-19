@@ -12,7 +12,7 @@ namespace via {
 
 enum class ValueType {
     monostate, // Represents uninitialized values
-    nil, // Empty values, like null, does not contain a union counterpart
+    nil,       // Empty values, like null, does not contain a union counterpart
     number,    // Unified number type, f64
     boolean,   // Bool type, wrapper for `bool`
     string,    // String type, pointer to owning string object
@@ -85,7 +85,7 @@ struct TValue {
 };
 
 struct TString {
-    const char *ptr = nullptr;
+    const char *data = dup_string("");
     U32 len = 0;
     Hash hash = 0;
 
@@ -125,16 +125,13 @@ struct TCFunction {
     using CFunctionPtr = void (*)(State *);
 
     // Function pointer
-    CFunctionPtr ptr = nullptr;
+    CFunctionPtr data = nullptr;
     // Tells the VM if the function can handle errors or not.
     // This gets passed down to the replica function that represents this C
     // functions stack frame. Pretty much only used for protected call.
     bool error_handler = false;
 
-    explicit TCFunction(
-        CFunctionPtr ptr = nullptr,
-        bool error_handler = false
-    );
+    explicit TCFunction(CFunctionPtr data = nullptr, bool error_handler = false);
 
     TCFunction() = default;
 };

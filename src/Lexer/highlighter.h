@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -17,7 +18,7 @@ enum class OutputSeverity {
 class Emitter {
 public:
     ~Emitter() = default;
-    Emitter(ProgramData &program)
+    Emitter(ProgramData *program)
         : program(program)
     {
     }
@@ -26,7 +27,7 @@ public:
     void out(size_t, std::string, OutputSeverity);
 
 private:
-    ProgramData &program;
+    ProgramData *program;
     // I forgot what this does
     std::vector<std::string> split_lines();
     // Returns a header based on the given severity

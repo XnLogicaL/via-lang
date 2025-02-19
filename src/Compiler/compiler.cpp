@@ -16,7 +16,7 @@ bool Compiler::generate()
     pass_manager.apply_bytecode(generator);
 
     for (const TValue &constant : generator.constants) {
-        program.constants->push_back(constant.clone());
+        program->constants->push_back(constant.clone());
     }
 
     return generator.failed;

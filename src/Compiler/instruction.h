@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -51,6 +52,6 @@ struct Instruction {
 };
 
 std::string to_string(Operand);
-std::string to_string(ProgramData &, Instruction);
+std::string to_string(ProgramData *, Instruction);
 
 } // namespace via

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "lexer.h"
 #include "token.h"
@@ -6,14 +7,9 @@
 #define BINARY_LITERAL_SENTINEL ('b')
 #define HEX_LITERAL_SENTINEL ('x')
 
-// Macro for quickly construction tokens
-// Uses arena allocator for emplacing the newly created token
-#define CREATE_TOKEN(type, val, line, off) *alloc->emplace<Token>(type, val, line, off)
-
-// We use this rather than `using namespace via`
 namespace via {
 
-// Simple function that returns whether if a character is allowed within a hexadecimal literal
+// Function that returns whether if a character is allowed within a hexadecimal literal
 bool Tokenizer::is_hex_char(char chr)
 {
     return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
@@ -21,17 +17,17 @@ bool Tokenizer::is_hex_char(char chr)
 
 size_t Tokenizer::source_size()
 {
-    return program.source.size();
+    return program->source.size();
 }
 
 char Tokenizer::peek(size_t ahead)
 {
-    return program.source.at(pos + ahead);
+    return program->source.at(pos + ahead);
 }
 
 char Tokenizer::consume(size_t ahead)
 {
-    return program.source.at(pos += ahead);
+    return program->source.at(pos += ahead);
 }
 
 Token Tokenizer::read_number()
@@ -55,7 +51,8 @@ Token Tokenizer::read_number()
     }
 
     // Read the number until the current character isn't numeric
-    while (pos < source_size() && (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek())))) {
+    while (pos < source_size() &&
+           (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek())))) {
         value.push_back(peek());
         pos++;
         offset++;
@@ -78,7 +75,7 @@ Token Tokenizer::read_number()
     }
 
     // Use start_offset here to denote where the token begins
-    return CREATE_TOKEN(type, value, line, start_offset);
+    return Token(type, value, line, start_offset);
 }
 
 Token Tokenizer::read_ident()
@@ -102,7 +99,8 @@ Token Tokenizer::read_ident()
         return is_alnum || is_allowed;
     };
 
-    // Read identifier while position is inside bounds and the current character is allowed within an identifier
+    // Read identifier while position is inside bounds and the current character is allowed within
+    // an identifier
     while (pos < source_size() && is_allowed(peek())) {
         identifier.push_back(peek());
         pos++;
@@ -158,7 +156,7 @@ Token Tokenizer::read_ident()
     if (identifier == "nil")
         type = TokenType::LIT_NIL;
 
-    return CREATE_TOKEN(type, identifier, line, start_offset); // Use start_offset here
+    return Token(type, identifier, line, start_offset); // Use start_offset here
 }
 
 Token Tokenizer::read_string()
@@ -191,8 +189,9 @@ Token Tokenizer::read_string()
                 }
             }
         }
-        else
+        else {
             value.push_back(peek());
+        }
 
         pos++;
         offset++;
@@ -201,7 +200,7 @@ Token Tokenizer::read_string()
     pos++; // Skip closing quote
     offset++;
 
-    return CREATE_TOKEN(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
+    return Token(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
 }
 
 Token Tokenizer::get_token()
@@ -217,6 +216,7 @@ Token Tokenizer::get_token()
             else {
                 offset++;
             }
+
             pos++;
             continue;
         }
@@ -225,10 +225,12 @@ Token Tokenizer::get_token()
         if (peek() == '#' && pos + 1 < source_size() && peek(1) == '#') {
             pos += 2;
             offset += 2;
+
             while (pos < source_size() && peek() != '\n') {
                 pos++;
                 offset++;
             }
+
             continue;
         }
 
@@ -236,18 +238,22 @@ Token Tokenizer::get_token()
         if (peek() == '#' && pos + 1 < source_size() && peek(1) == '[') {
             pos += 2;
             offset += 2;
+
             while (pos + 1 < source_size() && !(peek() == ']' && peek(1) == '#')) {
                 if (peek() == '\n') {
                     line++;
                     offset = 0;
                 }
+
                 pos++;
                 offset++;
             }
+
             if (pos + 1 < source_size()) {
                 pos += 2; // Skip ']#'
                 offset += 2;
             }
+
             continue;
         }
 
@@ -255,24 +261,28 @@ Token Tokenizer::get_token()
         break;
     }
 
-    // Check if the position is at the end of the program.source string
+    // Check if the position is at the end of the program->source string
     // If so, return an EOF token meant as a sentinel
-    if (pos >= source_size())
+    if (pos >= source_size()) {
         return {TokenType::EOF_, "", line, offset};
+    }
 
     size_t start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
-    if (std::isdigit(peek()))
+    if (std::isdigit(peek())) {
         return read_number();
+    }
 
     // Handle string literals
-    if (peek() == '"')
+    if (peek() == '"') {
         return read_string();
+    }
 
     // Handle identifiers and keywords
-    if (std::isalpha(peek()) || peek() == '_')
+    if (std::isalpha(peek()) || peek() == '_') {
         return read_ident();
+    }
 
     // Handle special characters (operators, delimiters, etc.)
     char chr = peek();
@@ -282,84 +292,82 @@ Token Tokenizer::get_token()
 
     switch (chr) {
     case '+':
-        return CREATE_TOKEN(TokenType::OP_ADD, "+", line, start_offset);
+        return Token(TokenType::OP_ADD, "+", line, start_offset);
     case '-':
-        return CREATE_TOKEN(TokenType::OP_SUB, "-", line, start_offset);
+        return Token(TokenType::OP_SUB, "-", line, start_offset);
     case '*':
-        return CREATE_TOKEN(TokenType::OP_MUL, "*", line, start_offset);
+        return Token(TokenType::OP_MUL, "*", line, start_offset);
     case '/':
-        return CREATE_TOKEN(TokenType::OP_DIV, "/", line, start_offset);
+        return Token(TokenType::OP_DIV, "/", line, start_offset);
     case '%':
-        return CREATE_TOKEN(TokenType::OP_MOD, "%", line, start_offset);
+        return Token(TokenType::OP_MOD, "%", line, start_offset);
     case '^':
-        return CREATE_TOKEN(TokenType::OP_EXP, "^", line, start_offset);
+        return Token(TokenType::OP_EXP, "^", line, start_offset);
     case '=':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return CREATE_TOKEN(TokenType::OP_EQ, "==", line, start_offset);
+            return Token(TokenType::OP_EQ, "==", line, start_offset);
         }
-        return CREATE_TOKEN(TokenType::OP_ASGN, "=", line, start_offset);
+        return Token(TokenType::OP_ASGN, "=", line, start_offset);
     case '!':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return CREATE_TOKEN(TokenType::OP_NEQ, "!=", line, start_offset);
+            return Token(TokenType::OP_NEQ, "!=", line, start_offset);
         }
-        return CREATE_TOKEN(TokenType::EXCLAMATION, "!", line, start_offset);
+        return Token(TokenType::EXCLAMATION, "!", line, start_offset);
     case '<':
-        return CREATE_TOKEN(TokenType::OP_LT, "<", line, start_offset);
+        return Token(TokenType::OP_LT, "<", line, start_offset);
     case '>':
-        return CREATE_TOKEN(TokenType::OP_GT, ">", line, start_offset);
+        return Token(TokenType::OP_GT, ">", line, start_offset);
     case '&':
-        return CREATE_TOKEN(TokenType::AMPERSAND, "&", line, start_offset);
+        return Token(TokenType::AMPERSAND, "&", line, start_offset);
     case '|':
-        return CREATE_TOKEN(TokenType::PIPE, "|", line, start_offset);
+        return Token(TokenType::PIPE, "|", line, start_offset);
     case ';':
-        return CREATE_TOKEN(TokenType::SEMICOLON, ";", line, start_offset);
+        return Token(TokenType::SEMICOLON, ";", line, start_offset);
     case ',':
-        return CREATE_TOKEN(TokenType::COMMA, ",", line, start_offset);
+        return Token(TokenType::COMMA, ",", line, start_offset);
     case '(':
-        return CREATE_TOKEN(TokenType::PAREN_OPEN, "(", line, start_offset);
+        return Token(TokenType::PAREN_OPEN, "(", line, start_offset);
     case ')':
-        return CREATE_TOKEN(TokenType::PAREN_CLOSE, ")", line, start_offset);
+        return Token(TokenType::PAREN_CLOSE, ")", line, start_offset);
     case '{':
-        return CREATE_TOKEN(TokenType::BRACE_OPEN, "{", line, start_offset);
+        return Token(TokenType::BRACE_OPEN, "{", line, start_offset);
     case '}':
-        return CREATE_TOKEN(TokenType::BRACE_CLOSE, "}", line, start_offset);
+        return Token(TokenType::BRACE_CLOSE, "}", line, start_offset);
     case '[':
-        return CREATE_TOKEN(TokenType::BRACKET_OPEN, "[", line, start_offset);
+        return Token(TokenType::BRACKET_OPEN, "[", line, start_offset);
     case ']':
-        return CREATE_TOKEN(TokenType::BRACKET_CLOSE, "]", line, start_offset);
+        return Token(TokenType::BRACKET_CLOSE, "]", line, start_offset);
     case '.':
-        return CREATE_TOKEN(TokenType::DOT, ".", line, start_offset);
+        return Token(TokenType::DOT, ".", line, start_offset);
     case ':':
-        return CREATE_TOKEN(TokenType::COLON, ":", line, start_offset);
+        return Token(TokenType::COLON, ":", line, start_offset);
     case '@':
-        return CREATE_TOKEN(TokenType::AT, "@", line, start_offset);
+        return Token(TokenType::AT, "@", line, start_offset);
     case '?':
-        return CREATE_TOKEN(TokenType::QUESTION, "?", line, start_offset);
+        return Token(TokenType::QUESTION, "?", line, start_offset);
     default:
-        return CREATE_TOKEN(TokenType::UNKNOWN, std::string(1, chr), line, start_offset);
+        return Token(TokenType::UNKNOWN, std::string(1, chr), line, start_offset);
     }
 
-    return CREATE_TOKEN(TokenType::UNKNOWN, "", line, start_offset);
+    return Token(TokenType::UNKNOWN, "", line, start_offset);
 }
 
 void Tokenizer::tokenize()
 {
-    TokenHolder *tokens = new TokenHolder(VIA_LEXER_ALLOC_SIZE);
-    this->alloc = &tokens->alloc;
+    TokenHolder *tokens = program->tokens;
 
     while (true) {
         Token token = get_token();
         tokens->tokens.push_back(token);
 
-        if (token.type == TokenType::EOF_)
+        if (token.type == TokenType::EOF_) {
             break;
+        }
     }
-
-    program.tokens = tokens;
 }
 
 } // namespace via

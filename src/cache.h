@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -74,17 +75,17 @@ struct CacheFile {
     U64 checksum_a = 0;              // 8 bytes
     U64 checksum_b = 0;              // 8 bytes
     std::vector<char> bytecode;
-    ProgramData &program;
+    ProgramData *program;
 
-    explicit CacheFile(ProgramData &program)
-        : file_name(program.file_name)
+    explicit CacheFile(ProgramData *program)
+        : file_name(program->file_name)
         , version(std::stoi(VIA_VERSION))
         , compilation_date(std::chrono::steady_clock::now().time_since_epoch().count())
         , platform_info("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         , runtime_flags("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
         , program(program)
     {
-        U8 *hash_data = hash_file(program.source);
+        U8 *hash_data = hash_file(program->source);
         std::memcpy(file_hash, hash_data, 32);
         delete[] hash_data;
     }
@@ -93,7 +94,7 @@ struct CacheFile {
 class CacheManager {
 public:
     CacheResult write_cache(std::filesystem::path, const CacheFile &);
-    CacheFile read_cache(ProgramData);
+    CacheFile read_cache(ProgramData *);
 
 private:
     CacheResult make_cache(std::filesystem::path);

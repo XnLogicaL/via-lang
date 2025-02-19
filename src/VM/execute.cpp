@@ -59,6 +59,38 @@
 
 namespace via {
 
+void vm_save_snapshot(State *VIA_RESTRICT V)
+{
+    U64 pos = V->ip - V->ihp;
+    std::string file_name = std::format("vm_snapshot.{}.log", pos);
+
+    std::string headers = std::format("opcode: {}\n", ENUM_NAME(V->ip->op));
+
+    std::string registers = "==== registers ====\n";
+    std::string stack = "==== stack ====\n";
+
+    // Generate stack map
+    for (TValue *p = V->sbp; p < V->sbp + V->sp; p++) {
+        StkPos pos = p - V->sbp;
+        stack += std::format("|{:02}| {}\n", pos, impl::__to_cxx_string(V, *p));
+    }
+
+    stack += "==== stack ====\n";
+
+    // Generate register map
+    for (RegId reg = 0; reg < VIA_REGISTER_COUNT; reg++) {
+        TValue *val = impl::__get_register(V, reg);
+        registers += std::format("|R{:02}| {}\n", reg, impl::__to_cxx_string(V, *val));
+    }
+
+    registers += "==== registers ====\n";
+
+    utils::write_to_file(
+        std::format("./__viacache__/{}", file_name),
+        headers + "\n" + to_string(V) + "\n" + stack + "\n" + registers
+    );
+}
+
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
 void execute(State *VIA_RESTRICT V)
@@ -71,6 +103,9 @@ void execute(State *VIA_RESTRICT V)
     goto dispatch;
 
 dispatch: {
+
+    vm_save_snapshot(V);
+
     // Check for errors and attempt handling them.
     // The __handle_error function works by unwinding the stack until
     // either hitting a stack frame flagged as error handler, or, the root
@@ -138,6 +173,13 @@ dispatch: {
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
+        }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
         }
 
         VM_NEXT();
@@ -209,6 +251,13 @@ dispatch: {
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -278,6 +327,13 @@ dispatch: {
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
+        }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
         }
 
         VM_NEXT();
@@ -349,6 +405,13 @@ dispatch: {
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -418,6 +481,13 @@ dispatch: {
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
+        }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
         }
 
         VM_NEXT();
@@ -489,6 +559,13 @@ dispatch: {
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
         }
+        else {
+            VM_ERROR(std::format(
+                "attempt to perform arithmetic ({}) on {} and constant",
+                ENUM_NAME(V->ip->op),
+                ENUM_NAME(lhs_val->type)
+            ));
+        }
 
         VM_NEXT();
     }
@@ -528,7 +605,7 @@ dispatch: {
         U64 kid = idx.val_number;
 
         // Check if the kId is valid
-        if (kid > V->program.constants->size()) {
+        if (kid > V->program->constants->size()) {
             VM_FATAL("invalid constant index");
         }
 
@@ -637,9 +714,7 @@ dispatch: {
         Operand off = V->ip->operand2;
 
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
-        const TValue &val = *(V->sbp + stack_offset);
-
-        std::cout << "GETSTACK " << __to_cxx_string(V, val) << "\n";
+        const TValue &val = V->sbp[stack_offset];
 
         __set_register(V, dst.val_register, val);
         VM_NEXT();
@@ -652,7 +727,7 @@ dispatch: {
         StkPos stack_offset = static_cast<StkPos>(off.val_number);
         TValue *val = __get_register(V, src.val_register);
 
-        *(V->sbp + stack_offset) = std::move(*val);
+        V->sbp[stack_offset] = std::move(*val);
         VM_NEXT();
     }
 

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "gen.h"
 
@@ -40,7 +41,7 @@ void Generator::generate_function_declaration_statement(FunctionDeclStmtNode fun
 
     generate_scope_statement(*func_stmt.body, true);
 
-    if (program.bytecode->instructions.back().op != OpCode::RETURN)
+    if (program->bytecode->instructions.back().op != OpCode::RETURN)
         push_instruction(OpCode::RETURN, {});
 
     if (func_stmt.decl_type == DeclarationType::Local) {
@@ -91,15 +92,15 @@ void Generator::generate_assign_statement(AssignStmtNode)
 void Generator::generate_while_statement(WhileStmtNode while_stmt)
 {
     RegId cond = allocate_register();
-    size_t loop_start = program.bytecode->instructions.size();
+    size_t loop_start = program->bytecode->instructions.size();
 
     generate_expression(*while_stmt.condition, cond);
     push_instruction(OpCode::JUMPIFNOT, {Operand(cond), Operand(0.0f)});
     generate_scope_statement(*while_stmt.body, false);
 
-    size_t loop_end = program.bytecode->instructions.size();
+    size_t loop_end = program->bytecode->instructions.size();
 
-    Instruction &jump_if_not_instr = program.bytecode->instructions.at(loop_start);
+    Instruction &jump_if_not_instr = program->bytecode->instructions.at(loop_start);
     jump_if_not_instr.operand2 = Operand(TNumber(loop_end - loop_start - 1));
 
     push_instruction(OpCode::JUMP, {Operand(TNumber(loop_start - loop_end))});

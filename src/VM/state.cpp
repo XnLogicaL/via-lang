@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "state.h"
 #include "api.h"
@@ -9,7 +10,7 @@
 namespace via {
 
 // Initializes and returns a new State object
-State::State(GState *G, ProgramData &program)
+State::State(GState *G, ProgramData *program)
     : id(G->threads++)
     , G(G)
     , ralloc(new RAState())
@@ -18,10 +19,11 @@ State::State(GState *G, ProgramData &program)
     , err(new ErrorState())
     , program(program)
 {
-    load(*program.bytecode);
+    load(*program->bytecode);
 
     // Mimic a "main" function
-    // This is necessary for setting up a global scope, and isn't meant to be a conventional function
+    // This is necessary for setting up a global scope, and isn't meant to be a conventional
+    // function
     TFunction *main = new TFunction(this, VIA_MAIN_ID, this->ip, this->frame, {}, false, false);
     native_call(this, main, 0);
 }
@@ -90,43 +92,25 @@ std::string to_string(State *state)
 
     std::ostringstream oss;
 
-    oss << std::format("<State@{}>\n", TO_VOID_STAR(state));
-    oss << "|===========================\n";
+    oss << std::format("==== state@{} ====\n", TO_VOID_STAR(state));
+    oss << std::format("|id    | {}\n", state->id);
+    oss << std::format("|G     | <GState@{}>\n", TO_VOID_STAR(state->G));
+    oss << std::format("|ip    | {}\n", TO_VOID_STAR(state->ip));
+    oss << std::format("|ihp   | {}\n", TO_VOID_STAR(state->ihp));
+    oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
+    oss << std::format("|ralloc| {}\n", TO_VOID_STAR(state->ralloc));
+    oss << std::format("|gc    | {}\n", TO_VOID_STAR(state->gc));
+    oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));
+    oss << std::format("|sp    | {}\n", state->sp);
+    oss << std::format("|ssp   | {}\n", state->ssp);
+    oss << std::format("|frame | {}\n", TO_VOID_STAR(state->frame));
+    oss << std::format("|argc  | {}\n", state->argc);
+    oss << std::format("|abort | {}\n", state->abort);
+    oss << std::format("|err   | <ErrorState@{}>\n", TO_VOID_STAR(state->err));
+    oss << std::format("|tstate| {}\n", ENUM_NAME(state->tstate));
+    oss << std::format("|sstate| <State@{}>\n", TO_VOID_STAR(state->sstate));
 
-    oss << std::format(" id: {}\n", state->id);
-    oss << std::format(" G:  <GState@{}>\n", TO_VOID_STAR(state->G));
-
-    oss << "|===========================\n";
-
-    oss << std::format(" ip:  {}\n", TO_VOID_STAR(state->ip));
-    oss << std::format(" ihp: {}\n", TO_VOID_STAR(state->ihp));
-    oss << std::format(" ibp: {}\n", TO_VOID_STAR(state->ibp));
-
-    oss << "|===========================\n";
-
-    oss << std::format(" ralloc: {}\n", TO_VOID_STAR(state->ralloc));
-    oss << std::format(" gc:     {}\n", TO_VOID_STAR(state->gc));
-
-    oss << "|===========================\n";
-
-    oss << std::format(" sbp: {}\n", TO_VOID_STAR(state->sbp));
-    oss << std::format(" sp:  {}\n", state->sp);
-    oss << std::format(" ssp: {}\n", state->ssp);
-
-    oss << "|===========================\n";
-
-    oss << std::format(" frame: {}\n", TO_VOID_STAR(state->frame));
-    oss << std::format(" argc:  {}\n", state->argc);
-
-    oss << "|===========================\n";
-
-    oss << std::format(" abort: {}\n", state->abort);
-    oss << std::format(" err:   <ErrorState@{}>\n", TO_VOID_STAR(state->err));
-
-    oss << "|===========================\n";
-
-    oss << std::format(" tstate: {}\n", ENUM_NAME(state->tstate));
-    oss << std::format(" sstate: <State@{}>\n", TO_VOID_STAR(state->sstate));
+    oss << "==== state ====\n";
 
     return oss.str();
 #undef TO_VOID_STAR

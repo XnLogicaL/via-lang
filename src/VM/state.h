@@ -99,9 +99,9 @@ struct alignas(64) State {
     utils::Signal<> sig_error;
     utils::Signal<> sig_fatal;
 
-    ProgramData &program;
+    ProgramData *program;
 
-    State(GState *, ProgramData &);
+    State(GState *, ProgramData *);
     ~State();
 
     void load(BytecodeHolder &);

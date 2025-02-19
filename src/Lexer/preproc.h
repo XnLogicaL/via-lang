@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -22,7 +23,7 @@ namespace via {
 class Preprocessor {
 public:
     ~Preprocessor() = default;
-    Preprocessor(ProgramData &program)
+    Preprocessor(ProgramData *program)
         : program(program)
         , pos(0)
         , failed(false)
@@ -36,7 +37,7 @@ public:
     void declare_definition(Definition);
 
 private:
-    ProgramData &program;
+    ProgramData *program;
     size_t pos;
     bool failed;
     std::unordered_map<std::string, Macro> macro_table;

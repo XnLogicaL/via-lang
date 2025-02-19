@@ -9,12 +9,13 @@ project(via)
 
 # Automatically include all .cpp files in src and CLI folders
 file(GLOB_RECURSE MAIN_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB_RECURSE CLI_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/CLI/*.cpp")
 # Recursively get all directories in the src folder
 file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/*)
 
 # Create the executable
-add_executable(via "${CMAKE_SOURCE_DIR}/CLI/main.cpp" ${MAIN_SOURCES} ${CLI_SOURCES})
+if(DEFINED MAIN_FILE_PATH)
+    add_executable(via ${MAIN_FILE_PATH} ${MAIN_SOURCES})
+endif()
 
 # Set compiler flags
 target_compile_options(via
@@ -24,7 +25,12 @@ target_compile_options(via
     -Werror
     -g                      # Enable debugging symbols
     -O3                     # Optimization level 3
-    -fno-common
+    -fsanitize=address,fuzzer,undefined
+)
+
+target_link_options(via
+    PRIVATE
+    -fsanitize=address,fuzzer,undefined
 )
 
 # Add subdirectories for different components

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "common.h"
 #include "gen.h"
@@ -14,7 +15,7 @@ class Compiler {
 public:
     using Instructions_t = std::vector<Instruction>;
 
-    Compiler(ProgramData &program)
+    Compiler(ProgramData *program)
         : program(program)
         , generator(program)
     {
@@ -32,7 +33,7 @@ public:
     void add_pass(std::unique_ptr<OptimizationPass>);
 
 private:
-    ProgramData &program;
+    ProgramData *program;
     Cleaner cleaner;
     Generator generator;
     PassManager pass_manager;

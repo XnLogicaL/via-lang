@@ -1,10 +1,10 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "instruction.h"
 #include "bytecode.h"
 
-namespace via
-{
+namespace via {
 
 Operand::Operand()
     : type(OperandType::Nil)
@@ -59,8 +59,7 @@ Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk,
 
 std::string to_string(Operand operand)
 {
-    switch (operand.type)
-    {
+    switch (operand.type) {
     case OperandType::Bool:
         return std::string(operand.val_boolean ? "true" : "false");
     case OperandType::String:
@@ -74,11 +73,11 @@ std::string to_string(Operand operand)
     }
 }
 
-std::string to_string(ProgramData &prog, Instruction instruction)
+std::string to_string(ProgramData *prog, Instruction instruction)
 {
     std::string comment("");
-    auto it = prog.bytecode_info.find(instruction.pos);
-    if (it != prog.bytecode_info.end())
+    auto it = prog->bytecode_info.find(instruction.pos);
+    if (it != prog->bytecode_info.end())
         comment = std::format("; {}", it->second);
 
     return std::format(

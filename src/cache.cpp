@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "cache.h"
 #include "encoder.h"
@@ -68,7 +69,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     write_data(file.bytecode.data(), file.bytecode.size());
     write_data(&file.checksum_b, sizeof(file.checksum_b));
 
-    for (const Instruction &instr : file.program.bytecode->get()) {
+    for (const Instruction &instr : file.program->bytecode->get()) {
         std::string instr_str = via::to_string(file.program, instr) + "\n";
         ofs_asm.write(instr_str.data(), instr_str.size());
     }
@@ -83,13 +84,15 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     return CacheResult::SUCCESS;
 }
 
-CacheFile CacheManager::read_cache(ProgramData file)
+CacheFile CacheManager::read_cache(ProgramData *file)
 {
     size_t offset = 0;
     CacheFile cache_file{file};
-    const char *raw_source = dup_string(file.source);
+    const char *raw_source = dup_string(file->source);
     // Ensure the file is large enough to contain the metadata.
-    if (file.source.size() < sizeof(CacheFile)) { // Check if goto statements are supported in this compiler. (FUCK MSVC!)
+    if (file->source.size() <
+        sizeof(CacheFile
+        )) { // Check if goto statements are supported in this compiler. (FUCK MSVC!)
 #if defined(__GNUC__) || defined(__clang__)
         goto exit;
 #else
@@ -98,7 +101,7 @@ CacheFile CacheManager::read_cache(ProgramData file)
 #endif
     }
 
-    cache_file.file_name = file.file_name;
+    cache_file.file_name = file->file_name;
 
     // Read magic value
     std::memcpy(&cache_file.magic_value, raw_source + offset, sizeof(cache_file.magic_value));
@@ -109,7 +112,9 @@ CacheFile CacheManager::read_cache(ProgramData file)
     offset += sizeof(cache_file.version);
 
     // Read compilation date
-    std::memcpy(&cache_file.compilation_date, raw_source + offset, sizeof(cache_file.compilation_date));
+    std::memcpy(
+        &cache_file.compilation_date, raw_source + offset, sizeof(cache_file.compilation_date)
+    );
     offset += sizeof(cache_file.compilation_date);
 
     // Read file hash
@@ -117,11 +122,15 @@ CacheFile CacheManager::read_cache(ProgramData file)
     offset += ARRAY_SIZE(cache_file.file_hash);
 
     // Read platform info
-    std::memcpy(cache_file.platform_info, raw_source + offset, ARRAY_SIZE(cache_file.platform_info));
+    std::memcpy(
+        cache_file.platform_info, raw_source + offset, ARRAY_SIZE(cache_file.platform_info)
+    );
     offset += ARRAY_SIZE(cache_file.platform_info);
 
     // Read runtime flags
-    std::memcpy(cache_file.runtime_flags, raw_source + offset, ARRAY_SIZE(cache_file.runtime_flags));
+    std::memcpy(
+        cache_file.runtime_flags, raw_source + offset, ARRAY_SIZE(cache_file.runtime_flags)
+    );
     offset += ARRAY_SIZE(cache_file.runtime_flags);
 
     // Read code offset

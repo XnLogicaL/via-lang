@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -9,7 +10,7 @@ namespace via {
 // Minimal interpreter implementation for quick usage without touching the API
 class Interpreter {
 public:
-    Interpreter(ProgramData &program)
+    Interpreter(ProgramData *program)
         : program(program)
         , gstate(new GState())
         , state(new State(gstate, program))
@@ -23,10 +24,10 @@ public:
         delete state;
     }
 
-    int execute(ProgramData &);
+    int execute(ProgramData *);
 
 public:
-    ProgramData &program;
+    ProgramData *program;
     GState *gstate;
     State *state;
 

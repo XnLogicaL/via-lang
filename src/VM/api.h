@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -48,7 +49,7 @@ VIA_MAXOPTIMIZE bool compare(const TValue &v0, const TValue &v1) noexcept
         // Nil values are always equal
         return true;
     case ValueType::string:
-        return !std::strcmp(v0.val_string->ptr, v1.val_string->ptr);
+        return !std::strcmp(v0.val_string->data, v1.val_string->data);
     default:
         return to_pointer(v0) == to_pointer(v1);
     }
@@ -121,7 +122,7 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
         std::string str = "{";
 
         for (auto &elem : val.val_table->data) {
-            str += to_string(V, elem.second).val_string->ptr;
+            str += to_string(V, elem.second).val_string->data;
             str += ", ";
         }
 
@@ -158,7 +159,7 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 VIA_FORCEINLINE std::string to_cxx_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     TValue str = to_string(V, val);
-    return std::string(str.val_string->ptr);
+    return std::string(str.val_string->data);
 }
 
 // Returns the truthiness of value <val>.
@@ -199,7 +200,7 @@ VIA_FORCEINLINE TValue to_number(const TValue &val) noexcept
 
     switch (val.type) {
     case ValueType::string:
-        return TValue(std::stod(val.val_string->ptr));
+        return TValue(std::stod(val.val_string->data));
     case ValueType::boolean:
         return TValue(val.val_boolean ? 1.0f : 0.0f);
     default:
@@ -384,7 +385,11 @@ VIA_FORCEINLINE void native_return(State *VIA_RESTRICT V, size_t retc) noexcept
 }
 
 // Calls a native function.
-VIA_FORCEINLINE void native_call(State *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, size_t argc) noexcept
+VIA_FORCEINLINE void native_call(
+    State *VIA_RESTRICT V,
+    TFunction *VIA_RESTRICT callee,
+    size_t argc
+) noexcept
 {
     // Save state
     callee->caller = V->frame;
@@ -399,7 +404,11 @@ VIA_FORCEINLINE void native_call(State *VIA_RESTRICT V, TFunction *VIA_RESTRICT 
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-VIA_FORCEINLINE void extern_call(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, size_t argc) noexcept
+VIA_FORCEINLINE void extern_call(
+    State *VIA_RESTRICT V,
+    TCFunction *VIA_RESTRICT cf,
+    size_t argc
+) noexcept
 {
     /* Stack allocate id string
         15 additional characters:
@@ -418,11 +427,16 @@ VIA_FORCEINLINE void extern_call(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT
 
     native_call(V, &func, argc);
     // Call function pointer
-    cf->ptr(V);
+    cf->data(V);
 }
 
 // Calls a table method.
-VIA_INLINE void method_call(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, TableKey key, size_t argc) noexcept
+VIA_INLINE void method_call(
+    State *VIA_RESTRICT V,
+    TTable *VIA_RESTRICT tbl,
+    TableKey key,
+    size_t argc
+) noexcept
 {
     const TValue &method = get_table(tbl, key, true);
 
@@ -461,7 +475,7 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
 VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     if (check_string(val))
-        return TValue(static_cast<TNumber>(strlen(val.val_string->ptr)));
+        return TValue(static_cast<TNumber>(strlen(val.val_string->data)));
     else if (check_table(val)) {
         TableKey metamethod_key = hash_string("__len");
         const TValue &metamethod = get_table(val.val_table, metamethod_key, true);
@@ -489,7 +503,7 @@ VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcep
         if (check_nil(ty))
             return type(V, val);
 
-        TString *tystr = new TString(V, ty.val_string->ptr);
+        TString *tystr = new TString(V, ty.val_string->data);
         return TValue(tystr);
     }
 
@@ -641,7 +655,7 @@ VIA_INLINE void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueTy
         TValue non_owned_val = to_string(V, val);
         TString *owned = val.val_string;
 
-        val.val_string = new TString(V, non_owned_val.val_string->ptr);
+        val.val_string = new TString(V, non_owned_val.val_string->data);
 
         if (owned) {
             delete owned;
@@ -656,7 +670,14 @@ VIA_INLINE void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueTy
     val.type = type;
     return;
 error:
-    VIA_ASSERT(false, std::format("type '{}' is not primitive castable into type '{}'", ENUM_NAME(val.type), ENUM_NAME(type)));
+    VIA_ASSERT(
+        false,
+        std::format(
+            "type '{}' is not primitive castable into type '{}'",
+            ENUM_NAME(val.type),
+            ENUM_NAME(type)
+        )
+    );
 }
 
 } // namespace via

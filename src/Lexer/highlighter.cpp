@@ -1,10 +1,12 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "highlighter.h"
 #include "token.h"
 
 #define ILLFORMED_ERROR \
-    "\n  (This is an illformed error, likely caused by an internal compiler bug.\n   If this error persists, please " \
+    "\n  (This is an illformed error, likely caused by an internal compiler bug.\n   If this " \
+    "error persists, please " \
     "create an issue at https://github.com/XnLogicaL/via-lang)"
 
 namespace via {
@@ -13,7 +15,7 @@ namespace via {
 std::vector<std::string> Emitter::split_lines()
 {
     std::vector<std::string> lines;
-    std::istringstream stream(program.source);
+    std::istringstream stream(program->source);
     std::string line;
 
     // Loop through lines and split them
@@ -40,19 +42,37 @@ std::string Emitter::get_severity_header(OutputSeverity sev)
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string Emitter::underline_line(int line_number, int offset, int length, const std::string &message, OutputSeverity sev)
+std::string Emitter::underline_line(
+    int line_number,
+    int offset,
+    int length,
+    const std::string &message,
+    OutputSeverity sev
+)
 {
     std::vector<std::string> lines = split_lines();
 
     if (line_number < 1 || line_number > static_cast<int>(lines.size()))
-        return std::format("{}<at-invalid-line {}:{}> {}" ILLFORMED_ERROR, get_severity_header(sev), line_number, offset, message);
+        return std::format(
+            "{}<at-invalid-line {}:{}> {}" ILLFORMED_ERROR,
+            get_severity_header(sev),
+            line_number,
+            offset,
+            message
+        );
 
     // Lines are 1-based, vector is 0-based
     const std::string &line = lines[line_number - 1];
     std::string underline;
 
     if (offset < 0 || offset >= static_cast<int>(line.size()))
-        return std::format("{}<at-invalid-offset {}:{}> {}" ILLFORMED_ERROR, get_severity_header(sev), line_number, offset, message);
+        return std::format(
+            "{}<at-invalid-offset {}:{}> {}" ILLFORMED_ERROR,
+            get_severity_header(sev),
+            line_number,
+            offset,
+            message
+        );
 
     underline = std::string(offset, ' ') + std::string(length, '~');
 
@@ -67,24 +87,25 @@ std::string Emitter::underline_line(int line_number, int offset, int length, con
     std::string line_number_str = std::to_string(line_number);
     int line_number_width = line_number_str.length();
 
-    return get_severity_header(sev) + message + "\n" + line_number_str + " | " + line + "\n" + std::string(line_number_width, ' ') + " | " +
-           underline;
+    return get_severity_header(sev) + message + "\n" + line_number_str + " | " + line + "\n" +
+           std::string(line_number_width, ' ') + " | " + underline;
 }
 
 // Emits an output message
 void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
 {
-    // This is an internal "flag" that determines if the file name has been displayed before any errors
+    // This is an internal "flag" that determines if the file name has been displayed before any
+    // errors
     static bool has_printed_file_name = false;
 
     // Check if file information has been printed
-    if (!has_printed_file_name && program.file_name != "<repl>") {
+    if (!has_printed_file_name && program->file_name != "<repl>") {
         has_printed_file_name = true;
-        std::cout << std::format("In file {}:\n", program.file_name);
+        std::cout << std::format("In file {}:\n", program->file_name);
     }
 
     // Find token
-    Token tok = program.tokens->tokens.at(idx);
+    Token tok = program->tokens->tokens.at(idx);
     size_t line = tok.line;
     size_t offset = tok.offset;
     size_t length = tok.value.length();

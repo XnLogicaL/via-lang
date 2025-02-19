@@ -85,12 +85,12 @@ VIA_MAXOPTIMIZE TValue *__get_register(State *_V, RegId _Reg)
 
 VIA_INLINE const TValue &__get_constant(State *_V, size_t _Idx)
 {
-    if (_Idx >= _V->program.constants->size()) {
+    if (_Idx >= _V->program->constants->size()) {
         std::cout << _Idx << " is not a valid constant\n";
         return _Nil;
     }
 
-    return _V->program.constants->at(_Idx);
+    return _V->program->constants->at(_Idx);
 }
 
 VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
@@ -102,6 +102,8 @@ VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
     }
 
     _V->sbp[_V->sp++] = _Val.clone();
+
+    std::cout << ENUM_NAME(_V->sbp[_V->sp].type);
 }
 
 VIA_MAXOPTIMIZE TValue __pop(State *_V)
@@ -135,7 +137,7 @@ VIA_FORCEINLINE TValue __type(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 VIA_FORCEINLINE std::string __type_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val)
 {
     TValue _Type = __type(_V, _Val);
-    return std::string(_Type.val_string->ptr);
+    return std::string(_Type.val_string->data);
 }
 
 VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Search_meta) noexcept
@@ -179,7 +181,7 @@ VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
             return __type(_V, _Val);
         }
 
-        return TValue(new TString(_V, _Type.val_string->ptr));
+        return TValue(new TString(_V, _Type.val_string->data));
     }
 
     return __type(_V, _Val);
@@ -213,7 +215,7 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
     );
 
     __native_call(_V, &_Func, _Argc);
-    _Callee->ptr(_V);
+    _Callee->data(_V);
 }
 
 VIA_MAXOPTIMIZE void __method_call(
@@ -255,7 +257,7 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
 VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
     if (check_string(_Val)) {
-        return TValue(static_cast<TNumber>(strlen(_Val.val_string->ptr)));
+        return TValue(static_cast<TNumber>(strlen(_Val.val_string->data)));
     }
     else if (check_table(_Val)) {
         TableKey _Metamethod_key = hash_string("__len");
@@ -326,7 +328,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 
     switch (_Val.type) {
     case ValueType::number: {
-        std::string _Str = std::to_string(_Val.val_number);
+        std::string _Str = std::format("{:.2f}", _Val.val_number);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
@@ -338,7 +340,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         std::string _Str = "{";
 
         for (auto &_Elem : _Val.val_table->data) {
-            _Str += __to_string(_V, _Elem.second).val_string->ptr;
+            _Str += __to_string(_V, _Elem.second).val_string->data;
             _Str += ", ";
         }
 
@@ -377,7 +379,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 VIA_FORCEINLINE std::string __to_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
     TValue _Str = __to_string(_V, _Val);
-    return std::string(_Str.val_string->ptr);
+    return std::string(_Str.val_string->data);
 }
 
 VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
@@ -412,7 +414,7 @@ VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 
     switch (_Val.type) {
     case ValueType::string:
-        return TValue(std::stod(_Val.val_string->ptr));
+        return TValue(std::stod(_Val.val_string->data));
     case ValueType::boolean:
         return TValue(_Val.val_boolean ? 1.0f : 0.0f);
     default:
@@ -463,7 +465,7 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
     case ValueType::nil:
         return true;
     case ValueType::string:
-        return !std::strcmp(_Val_0.val_string->ptr, _Val_1.val_string->ptr);
+        return !std::strcmp(_Val_0.val_string->data, _Val_1.val_string->data);
     default:
         return __to_pointer(_Val_0) == __to_pointer(_Val_1);
     }
@@ -563,7 +565,7 @@ VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, Val
         TValue _Non_owned_val = __to_string(_V, _Val);
         TString *_Owned_val = _Val.val_string;
 
-        _Val.val_string = new TString(_V, _Non_owned_val.val_string->ptr);
+        _Val.val_string = new TString(_V, _Non_owned_val.val_string->data);
 
         if (_Owned_val) {
             delete _Owned_val;

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "interpreter.h"
 
@@ -52,12 +53,12 @@ bool Interpreter::compile()
 
 void Interpreter::interpret()
 {
-    state->load(*program.bytecode);
+    state->load(*program->bytecode);
     via::execute(state);
     via::pause_thread(state);
 }
 
-int Interpreter::execute(ProgramData &program_data)
+int Interpreter::execute(ProgramData *program_data)
 {
     program = program_data;
 

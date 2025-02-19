@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -19,11 +20,8 @@ namespace via {
 // Can be used universally, has no dependencies, as seen in both viac and viaVM bytecode parser
 class Tokenizer {
 public:
-    Tokenizer(ProgramData &program)
+    Tokenizer(ProgramData *program)
         : program(program)
-        , pos(0)
-        , line(1)
-        , offset(0)
     {
     }
 
@@ -50,21 +48,21 @@ private:
     Token get_token();
 
 private:
-    ProgramData &program;
-    size_t pos;
-    size_t line;
-    size_t offset;
-    ArenaAllocator *alloc;
+    ProgramData *program;
+    size_t pos = 0;
+    size_t line = 1;
+    size_t offset = 0;
 };
 
 VIA_INLINE std::vector<Token> fast_tokenize(std::string source)
 {
     ProgramData program("<unknown>", source);
-    Tokenizer tokenizer(program);
+    Tokenizer tokenizer(&program);
     tokenizer.tokenize();
 
-    if (!program.tokens)
+    if (!program.tokens) {
         return {};
+    }
 
     return std::move(program.tokens->tokens);
 }

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "macro.h"
 #include "preproc.h"
@@ -10,14 +11,14 @@ namespace via {
 // - Restricted access to keywords, specifically the preprocessor keywords
 void Preprocessor::expand_macro(const Macro &macro)
 {
-    std::vector<Token> toks = program.tokens->tokens;
+    std::vector<Token> toks = program->tokens->tokens;
 
     while (pos < toks.size()) {
         const Token &tok = peek();
 
         // Match macro_name!( pattern
-        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name && pos + 1 < toks.size() &&
-            peek(1).type == TokenType::PAREN_OPEN) {
+        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name &&
+            pos + 1 < toks.size() && peek(1).type == TokenType::PAREN_OPEN) {
             size_t start_pos = pos;
             consume(2); // Consume macro_name! and the opening parenthesis
 
@@ -70,9 +71,12 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Check for argument count mismatch
             if (macro_args.size() != macro.params.size())
-                PREPROCESSOR_ERROR(
-                    std::format("Macro '{}' expected {} arguments, but {} were provided", macro.name, macro.params.size(), macro_args.size())
-                );
+                PREPROCESSOR_ERROR(std::format(
+                    "Macro '{}' expected {} arguments, but {} were provided",
+                    macro.name,
+                    macro.params.size(),
+                    macro_args.size()
+                ));
 
             // Map parameter names to their arguments
             std::unordered_map<std::string, std::vector<Token>> arg_map;
@@ -84,7 +88,9 @@ void Preprocessor::expand_macro(const Macro &macro)
             for (const Token &body_tok : macro.body) {
                 if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value)) {
                     const std::vector<Token> &replacement = arg_map[body_tok.value];
-                    expanded_body.insert(expanded_body.end(), replacement.begin(), replacement.end());
+                    expanded_body.insert(
+                        expanded_body.end(), replacement.begin(), replacement.end()
+                    );
                 }
                 else
                     expanded_body.push_back(body_tok);
@@ -105,7 +111,7 @@ void Preprocessor::expand_macro(const Macro &macro)
 
 Macro Preprocessor::parse_macro()
 {
-    std::vector<Token> toks = program.tokens->tokens;
+    std::vector<Token> toks = program->tokens->tokens;
     // Consume 'macro' keyword
     pos++;
 
@@ -114,7 +120,11 @@ Macro Preprocessor::parse_macro()
 
     auto it = macro_table.find(peek().value);
     if (it != macro_table.end())
-        PREPROCESSOR_ERROR(std::format("Redefinition of macro '{}', previously defined on line {}", peek().value, it->second.line));
+        PREPROCESSOR_ERROR(std::format(
+            "Redefinition of macro '{}', previously defined on line {}",
+            peek().value,
+            it->second.line
+        ));
 
     Macro mac;
     mac.line = peek().line;

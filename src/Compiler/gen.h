@@ -29,7 +29,7 @@ namespace via {
 
 class Generator {
 public:
-    Generator(ProgramData &program)
+    Generator(ProgramData *program)
         : program(program)
         , failed(false)
         , alloc(VIA_GENERATOR_ALLOC_SIZE) // Custom size for the allocator
@@ -64,7 +64,7 @@ public:
     void add_bc_info(std::string);
 
 public:
-    ProgramData &program;
+    ProgramData *program;
     kTable constants;
     bool failed;
 

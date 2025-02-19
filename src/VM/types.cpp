@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "types.h"
 
@@ -210,7 +211,7 @@ TString::TString(State *V, const char *str)
     std::strcpy(sptr, str);
 
     this->len = slen;
-    this->ptr = sptr;
+    this->data = sptr;
     this->hash = hash;
 
     if (V != nullptr) {
@@ -222,9 +223,9 @@ TString::TString(State *V, const char *str)
 
 TString::~TString()
 {
-    if (this->ptr) {
-        delete[] this->ptr;
-        this->ptr = nullptr;
+    if (this->data) {
+        delete[] this->data;
+        this->data = nullptr;
     }
 }
 
@@ -247,8 +248,8 @@ TFunction::TFunction(
 {
 }
 
-TCFunction::TCFunction(TCFunction::CFunctionPtr ptr, bool error_handler)
-    : ptr(ptr)
+TCFunction::TCFunction(TCFunction::CFunctionPtr data, bool error_handler)
+    : data(data)
     , error_handler(error_handler)
 {
 }

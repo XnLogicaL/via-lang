@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -16,7 +17,7 @@ namespace via {
 
 class Parser {
 public:
-    Parser(ProgramData &program)
+    Parser(ProgramData *program)
         : program(program)
         , emitter(program)
         , current_position(0)
@@ -27,7 +28,7 @@ public:
     bool parse_program();
 
 private:
-    ProgramData &program;
+    ProgramData *program;
     ArenaAllocator *alloc;   // Memory allocator
     Emitter emitter;         // Error emitter
     Pragma pragma;           // Current pragma

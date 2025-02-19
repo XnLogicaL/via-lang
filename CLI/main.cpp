@@ -1,4 +1,5 @@
-/* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "cmdparser.h"
 #include "interpreter.h"
@@ -9,9 +10,10 @@
 using namespace via;
 
 const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
-const char REPL_WELCOME[] = "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
-                            "Use ';help' to see a list of commands.\n"
-                            "WARNING: repl has not been fully implemented.\n";
+const char REPL_WELCOME[] =
+    "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
+    "Use ';help' to see a list of commands.\n"
+    "WARNING: repl has not been fully implemented.\n";
 const char REPL_HELP[] = "repl commands:\n"
                          "  ;quit - Quits repl\n"
                          "  ;help - Prints this \"menu\"\n"
@@ -46,20 +48,20 @@ void handle_compile(const std::vector<std::string> &args)
 
     ProgramData program(input, input_code);
 
-    Tokenizer lexer(program);
+    Tokenizer lexer(&program);
     lexer.tokenize();
 
-    Preprocessor preprocessor(program);
+    Preprocessor preprocessor(&program);
     failed = preprocessor.preprocess();
 
     CHECK_SUBPROC_FAIL;
 
-    Parser parser(program);
+    Parser parser(&program);
     failed = parser.parse_program();
 
     CHECK_SUBPROC_FAIL;
 
-    Compiler compiler(program);
+    Compiler compiler(&program);
     compiler.add_default_passes();
     failed = compiler.generate();
 
@@ -67,12 +69,12 @@ void handle_compile(const std::vector<std::string> &args)
 
     if (flag_print_bytecode) {
         for (Instruction instr : program.bytecode->get()) {
-            std::cout << via::to_string(program, instr) << "\n";
+            std::cout << via::to_string(&program, instr) << "\n";
         }
     }
 
     if (flag_cache) {
-        CacheFile file(program);
+        CacheFile file(&program);
         CacheManager manager;
         manager.write_cache("./", file);
     }
@@ -93,8 +95,8 @@ void handle_run(const std::vector<std::string> &args)
 
     ProgramData program(file_path, source_code);
 
-    Interpreter interpreter(program);
-    interpreter.execute(program);
+    Interpreter interpreter(&program);
+    interpreter.execute(&program);
 }
 
 void handle_repl(const std::vector<std::string> &)
@@ -141,7 +143,8 @@ int main(int argc, char **argv)
     const auto &args = parser.get_arguments();
     const auto &subcom = parser.get_subcommand();
 
-    linenoise::SetCompletionCallback([](const char *editBuffer, std::vector<std::string> &completions) {
+    linenoise::SetCompletionCallback([](const char *editBuffer,
+                                        std::vector<std::string> &completions) {
         if (editBuffer[0] == ';') {
             completions.push_back(";quit");
             completions.push_back(";help");

@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "parser.h"
 #include "ast.h"
@@ -23,7 +24,7 @@ namespace via {
 
 Token Parser::consume()
 {
-    std::vector<Token> tokens = program.tokens->tokens;
+    std::vector<Token> tokens = program->tokens->tokens;
 
     if (current_position >= tokens.size())
         return tokens.at(tokens.size() - 1);
@@ -32,7 +33,7 @@ Token Parser::consume()
 
 Token Parser::peek(int offset) const
 {
-    std::vector<Token> tokens = program.tokens->tokens;
+    std::vector<Token> tokens = program->tokens->tokens;
 
     if (current_position >= tokens.size())
         return tokens.at(tokens.size() - 1);
@@ -53,17 +54,19 @@ bool Parser::is_keyword()
 {
 #define is(ty) (is_type(TokenType::ty))
     return (
-        is(KW_DEFINE) || is(KW_DEFINED) || is(KW_RETURN) || is(KW_TYPE) || is(KW_TYPEOF) || is(KW_AND) || is(KW_AS) || is(KW_BREAK) || is(KW_CASE) ||
-        is(KW_CONST) || is(KW_CONTINUE) || is(KW_DEFAULT) || is(KW_DO) || is(KW_ELIF) || is(KW_ELSE) || is(KW_EXPORT) || is(KW_RETURN) ||
-        is(KW_FUNC) || is(KW_FOR) || is(KW_IMPORT) || is(KW_IN) || is(KW_IF) || is(KW_GLOBAL) || is(KW_LOCAL) || is(KW_NAMESPACE) || is(KW_MACRO) ||
-        is(KW_NOT) || is(KW_WHILE) || is(KW_STRUCT) || is(KW_PROPERTY) || is(KW_OR) || is(KW_NEW) || is(KW_STRICT)
+        is(KW_DEFINE) || is(KW_DEFINED) || is(KW_RETURN) || is(KW_TYPE) || is(KW_TYPEOF) ||
+        is(KW_AND) || is(KW_AS) || is(KW_BREAK) || is(KW_CASE) || is(KW_CONST) || is(KW_CONTINUE) ||
+        is(KW_DEFAULT) || is(KW_DO) || is(KW_ELIF) || is(KW_ELSE) || is(KW_EXPORT) ||
+        is(KW_RETURN) || is(KW_FUNC) || is(KW_FOR) || is(KW_IMPORT) || is(KW_IN) || is(KW_IF) ||
+        is(KW_GLOBAL) || is(KW_LOCAL) || is(KW_NAMESPACE) || is(KW_MACRO) || is(KW_NOT) ||
+        is(KW_WHILE) || is(KW_STRUCT) || is(KW_PROPERTY) || is(KW_OR) || is(KW_NEW) || is(KW_STRICT)
     );
 #undef is
 }
 
 void Parser::panic_and_recover()
 {
-    while (current_position < program.tokens->tokens.size() && !is_keyword())
+    while (current_position < program->tokens->tokens.size() && !is_keyword())
         consume();
 }
 
@@ -150,7 +153,9 @@ StatementModifiers Parser::parse_modifiers(std::function<bool(void)> predecate)
             consume();
         }
         else {
-            PARSER_ERROR(std::format("Unexpected token '{}' while parsing statement modifiers", peek().value));
+            PARSER_ERROR(
+                std::format("Unexpected token '{}' while parsing statement modifiers", peek().value)
+            );
             failed_inner = true;
             consume();
         }
@@ -206,7 +211,8 @@ ExprNode *Parser::parse_table_expr()
         ExprNode *key = alloc->emplace<ExprNode>(key_expr);
         ExprNode *expr = parse_expr();
 
-        // TODO: Check for binary expression (with operator OP_ASGN) to check for non-wrapped key value specifiers
+        // TODO: Check for binary expression (with operator OP_ASGN) to check for non-wrapped key
+        // value specifiers
         return {key, expr};
     };
 
@@ -254,7 +260,7 @@ ExprNode *Parser::parse_bin_expr(int precedence)
     ExprNode *lhs = parse_prim_expr();
 
     while (true) {
-        if (current_position >= program.tokens->tokens.size())
+        if (current_position >= program->tokens->tokens.size())
             break;
 
         // Check if there are more tokens to process
@@ -394,14 +400,17 @@ ExprNode *Parser::parse_prim_expr()
     }
 
     default:
-        PARSER_ERROR_AT(std::format("Unexpected token '{}' while parsing primary expression", token.value), current_position - 1);
+        PARSER_ERROR_AT(
+            std::format("Unexpected token '{}' while parsing primary expression", token.value),
+            current_position - 1
+        );
         failed_inner = true;
         break;
     }
 
     // Parse the chain of operations
     while (true) {
-        if (current_position >= program.tokens->tokens.size()) {
+        if (current_position >= program->tokens->tokens.size()) {
             PARSER_ERROR("Unexpected end to expression");
             failed_inner = true;
             break;
@@ -707,7 +716,8 @@ TypeNode *Parser::parse_type()
 
 TypedParamNode *Parser::parse_parameter()
 {
-    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
+    StatementModifiers modifiers =
+        parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
 
     if (!is_type(TokenType::IDENTIFIER))
         PARSER_ERROR("Expected identifier for parameter identifier");
@@ -733,7 +743,8 @@ TypedParamNode *Parser::parse_parameter()
 VariableDeclStmtNode *Parser::parse_var_declaration()
 {
     Token declaration_type_token = consume();
-    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
+    StatementModifiers modifiers =
+        parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER); });
 
     if (modifiers.is_strict)
         PARSER_ERROR("Using 'strict' modifier on variable declaration")
@@ -936,7 +947,9 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
     // No need to check this
     consume(); // Consume 'func'
 
-    StatementModifiers modifiers = parse_modifiers([this]() { return !is_type(TokenType::IDENTIFIER) && !is_type(TokenType::EOF_); });
+    StatementModifiers modifiers = parse_modifiers([this]() {
+        return !is_type(TokenType::IDENTIFIER) && !is_type(TokenType::EOF_);
+    });
 
     if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for function/method declaration");
@@ -1036,13 +1049,18 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 
         bool is_property = is_type(TokenType::KW_PROPERTY);
         if (!is_property /* TODO: Add 'meta' keyword support */) {
-            PARSER_ERROR(std::format("Unexpected token '{}' while parsing struct properties", peek().value));
+            PARSER_ERROR(
+                std::format("Unexpected token '{}' while parsing struct properties", peek().value)
+            );
             failed_inner = true;
         }
 
-        // We do not consume 'property' because it's an essential sentinel keyword for both subparser functions
+        // We do not consume 'property' because it's an essential sentinel keyword for both
+        // subparser functions
         if (is_type(TokenType::KW_FUNC, 1)) {
-            FunctionDeclStmtNode *func_decl = parse_function_declaration(is_property ? DeclarationType::Property : DeclarationType::Meta);
+            FunctionDeclStmtNode *func_decl = parse_function_declaration(
+                is_property ? DeclarationType::Property : DeclarationType::Meta
+            );
             StmtNode *func_decl_stmt = alloc->emplace<StmtNode>(*func_decl);
             struct_decl->declarations.push_back(*func_decl_stmt);
         }
@@ -1163,9 +1181,9 @@ parse:
         }
         else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr->expr)) {
             // Only binary expression allowed is an "assignment operation"
-            // Which isn't a actually a real thing, it's just a quirk caused by how operators are classified
-            // I guess it's beneficial in this case, although it will be HELL to debug in other cases
-            // as it technically cannot evaluate to any value
+            // Which isn't a actually a real thing, it's just a quirk caused by how operators are
+            // classified I guess it's beneficial in this case, although it will be HELL to debug in
+            // other cases as it technically cannot evaluate to any value
             if (bin_expr->op.type != TokenType::OP_ASGN)
                 goto invalid_statement;
 
@@ -1190,7 +1208,7 @@ bool Parser::parse_program()
     AbstractSyntaxTree *ast = new AbstractSyntaxTree(VIA_PARSER_ALLOC_SIZE);
     this->alloc = &ast->allocator;
 
-    for (Token tok : program.tokens->tokens) {
+    for (Token tok : program->tokens->tokens) {
         if (is_type(TokenType::EOF_))
             break;
 
@@ -1203,7 +1221,7 @@ bool Parser::parse_program()
         ast->statements.push_back(*stmt);
     }
 
-    program.ast = ast;
+    program->ast = ast;
     return failed;
 }
 

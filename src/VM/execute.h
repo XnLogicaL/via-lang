@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #pragma once
 
@@ -7,6 +8,7 @@
 
 namespace via {
 
+void vm_save_snapshot(State *VIA_RESTRICT V);
 // Main VM function that starts execution
 void execute(State *VIA_RESTRICT V);
 void kill_thread(State *VIA_RESTRICT V);

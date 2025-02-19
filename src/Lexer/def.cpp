@@ -1,4 +1,5 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
+ * LICENSE for license information */
 
 #include "def.h"
 #include "preproc.h"
@@ -9,7 +10,7 @@ Definition Preprocessor::parse_definition()
 {
     Definition def;
     def.begin = pos;
-    std::vector<Token> toks = program.tokens->tokens;
+    std::vector<Token> toks = program->tokens->tokens;
 
     // Ensure there are enough tokens to parse
     if (pos >= toks.size())
@@ -17,7 +18,11 @@ Definition Preprocessor::parse_definition()
 
     auto it = def_table.find(peek().value);
     if (it != def_table.end())
-        PREPROCESSOR_ERROR(std::format("Redefinition of definition '{}', previously defined on line {}", it->second.identifier, it->second.line));
+        PREPROCESSOR_ERROR(std::format(
+            "Redefinition of definition '{}', previously defined on line {}",
+            it->second.identifier,
+            it->second.line
+        ));
 
     // Consume 'define' keyword and extract identifier
     consume();
@@ -46,7 +51,7 @@ Definition Preprocessor::parse_definition()
 
 void Preprocessor::expand_definition(const Definition &def)
 {
-    std::vector<Token> toks = program.tokens->tokens;
+    std::vector<Token> toks = program->tokens->tokens;
 
     // Iterate through all tokens in the program
     for (size_t i = 0; i < toks.size(); ++i) {
