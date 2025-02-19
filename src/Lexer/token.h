@@ -4,7 +4,7 @@
 #pragma once
 
 #include "common.h"
-#include "arena.hpp"
+#include "arena.h"
 
 namespace via {
 

@@ -35,8 +35,8 @@
 #include <shared_mutex>
 // External imports
 #include "magic_enum.hpp"
-#include "arena.hpp"
 #include "linenoise.hpp"
+#include "arena.h"
 // Internal imports
 #include "token.h"
 
@@ -160,9 +160,9 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
 struct ProgramData {
     std::string file_name;
     std::string source;
-    TokenHolder *tokens;
-    AbstractSyntaxTree *ast;
-    BytecodeHolder *bytecode;
+    TokenHolder *tokens = nullptr;
+    AbstractSyntaxTree *ast = nullptr;
+    BytecodeHolder *bytecode = nullptr;
     kTable *constants;
     std::map<size_t, std::string> bytecode_info;
 

@@ -52,35 +52,27 @@ std::string Emitter::underline_line(
 {
     std::vector<std::string> lines = split_lines();
 
-    if (line_number < 1 || line_number > static_cast<int>(lines.size()))
-        return std::format(
-            "{}<at-invalid-line {}:{}> {}" ILLFORMED_ERROR,
-            get_severity_header(sev),
-            line_number,
-            offset,
-            message
-        );
+    if (line_number < 1 || line_number > static_cast<int>(lines.size())) {
+        return std::format("{} {}", get_severity_header(sev), message);
+    }
 
     // Lines are 1-based, vector is 0-based
     const std::string &line = lines[line_number - 1];
     std::string underline;
 
-    if (offset < 0 || offset >= static_cast<int>(line.size()))
-        return std::format(
-            "{}<at-invalid-offset {}:{}> {}" ILLFORMED_ERROR,
-            get_severity_header(sev),
-            line_number,
-            offset,
-            message
-        );
+    if (offset < 0 || offset >= static_cast<int>(line.size())) {
+        return std::format("{} {}", get_severity_header(sev), message);
+    }
 
     underline = std::string(offset, ' ') + std::string(length, '~');
 
-    if (offset + length > static_cast<int>(line.size()))
+    if (offset + length > static_cast<int>(line.size())) {
         underline = underline.substr(0, line.size() - offset);
+    }
 
-    if (offset < static_cast<int>(underline.size()))
+    if (offset < static_cast<int>(underline.size())) {
         underline[offset] = '^';
+    }
 
     // Leetcode mfers will absolutely HATE this
     // "oH iTs NoT O(1) bro" (shut the fuck up, go make your own language buddy)

@@ -22,11 +22,19 @@ size_t Tokenizer::source_size()
 
 char Tokenizer::peek(size_t ahead)
 {
+    if (pos + ahead >= source_size()) {
+        return '\0';
+    }
+
     return program->source.at(pos + ahead);
 }
 
 char Tokenizer::consume(size_t ahead)
 {
+    if (pos + ahead >= source_size()) {
+        return '\0';
+    }
+
     return program->source.at(pos += ahead);
 }
 
@@ -144,17 +152,20 @@ Token Tokenizer::read_ident()
 
     // Checks if the identifier is a keyword or not
     auto it = keyword_map.find(identifier);
-    if (it != keyword_map.end())
+    if (it != keyword_map.end()) {
         // If so, overwrite the identifier type with the respective keyword type
         type = it->second;
+    }
 
     // Checks if the identifier is a boolean literal
-    if (identifier == "true" || identifier == "false")
+    if (identifier == "true" || identifier == "false") {
         // Pretty self-explanatory.
         type = TokenType::LIT_BOOL;
+    }
 
-    if (identifier == "nil")
+    if (identifier == "nil") {
         type = TokenType::LIT_NIL;
+    }
 
     return Token(type, identifier, line, start_offset); // Use start_offset here
 }
@@ -264,7 +275,7 @@ Token Tokenizer::get_token()
     // Check if the position is at the end of the program->source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source_size()) {
-        return {TokenType::EOF_, "", line, offset};
+        return {TokenType::EOF_, "\0", line, offset};
     }
 
     size_t start_offset = offset; // Record starting offset of each token
@@ -353,7 +364,7 @@ Token Tokenizer::get_token()
         return Token(TokenType::UNKNOWN, std::string(1, chr), line, start_offset);
     }
 
-    return Token(TokenType::UNKNOWN, "", line, start_offset);
+    return Token(TokenType::UNKNOWN, "\0", line, start_offset);
 }
 
 void Tokenizer::tokenize()

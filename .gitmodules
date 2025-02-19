@@ -4,3 +4,6 @@
 [submodule "SHA256"]
 	path = SHA256
 	url = https://github.com/System-Glitch/SHA256.git
+[submodule "ArenaAllocator"]
+	path = ArenaAllocator
+	url = https://github.com/XnLogicaL/ArenaAllocator

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Parser/ast.h"
-#include "arena.hpp"
+#include "arena.h"
 #include "bytecode.h"
 #include "chunk.h"
 #include "cleaner.h"

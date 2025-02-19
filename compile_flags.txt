@@ -18,3 +18,5 @@
 -I./CLI/Commands
 -I./asmjit/src
 -I./SHA256/include
+-I./ArenaAllocator/include
+-fsanitize=address

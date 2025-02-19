@@ -15,6 +15,8 @@ file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/*)
 # Create the executable
 if(DEFINED MAIN_FILE_PATH)
     add_executable(via ${MAIN_FILE_PATH} ${MAIN_SOURCES})
+else()
+    message(FATAL_ERROR "MAIN_FILE_PATH is not defined; cannot link main file\n  tip: use -DMAIN_FILE_PATH=...")
 endif()
 
 # Set compiler flags
@@ -36,9 +38,9 @@ target_link_options(via
 # Add subdirectories for different components
 add_subdirectory(asmjit)
 add_subdirectory(SHA256)
+add_subdirectory(ArenaAllocator)
 
 # Include directories
-target_include_directories(via PUBLIC "${CMAKE_SOURCE_DIR}/SHA256/include")
 target_include_directories(via PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_include_directories(via PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
@@ -52,4 +54,5 @@ endforeach()
 # Link libraries
 target_link_libraries(via PUBLIC asmjit)
 target_link_libraries(via PUBLIC sha256)
+target_link_libraries(via PUBLIC ArenaAllocator)
 target_link_libraries(via PUBLIC stdc++_libbacktrace) # For std::backtrace

@@ -5,13 +5,9 @@
 
 #include "common.h"
 #include "ast.h"
-#include "arena.hpp"
+#include "arena.h"
 #include "highlighter.h"
 #include "token.h"
-
-#ifndef VIA_PARSER_ALLOC_SIZE
-    #define VIA_PARSER_ALLOC_SIZE (8 * 1024 * 1024) // 8MB
-#endif
 
 namespace via {
 
@@ -44,10 +40,6 @@ private:
     // Token checking utilities
     bool is_value(const std::string &value = "", int offset = 0) const;
     bool is_type(TokenType type = TokenType::UNKNOWN, int offset = 0) const;
-
-    // Panic related
-    bool is_keyword();
-    void panic_and_recover();
 
     // Parsing helper functions
     std::vector<ExprNode *> parse_call_arguments();

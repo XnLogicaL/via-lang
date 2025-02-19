@@ -20,23 +20,30 @@
         failed = true; \
     }
 
+#define DECL_TOKENS_REF() std::vector<Token> &tokens = program->tokens->tokens;
+#define DECL_TOKENS_CONST_REF() const DECL_TOKENS_REF();
+
 namespace via {
 
 Token Parser::consume()
 {
-    std::vector<Token> tokens = program->tokens->tokens;
+    DECL_TOKENS_CONST_REF();
 
-    if (current_position >= tokens.size())
+    if (current_position + 1 >= tokens.size()) {
         return tokens.at(tokens.size() - 1);
+    }
+
     return tokens.at(current_position++);
 }
 
 Token Parser::peek(int offset) const
 {
-    std::vector<Token> tokens = program->tokens->tokens;
+    DECL_TOKENS_CONST_REF();
 
-    if (current_position >= tokens.size())
+    if (current_position + offset >= tokens.size()) {
         return tokens.at(tokens.size() - 1);
+    }
+
     return tokens.at(current_position + offset);
 }
 
@@ -50,54 +57,36 @@ bool Parser::is_type(TokenType type, int offset) const
     return peek(offset).type == type;
 }
 
-bool Parser::is_keyword()
-{
-#define is(ty) (is_type(TokenType::ty))
-    return (
-        is(KW_DEFINE) || is(KW_DEFINED) || is(KW_RETURN) || is(KW_TYPE) || is(KW_TYPEOF) ||
-        is(KW_AND) || is(KW_AS) || is(KW_BREAK) || is(KW_CASE) || is(KW_CONST) || is(KW_CONTINUE) ||
-        is(KW_DEFAULT) || is(KW_DO) || is(KW_ELIF) || is(KW_ELSE) || is(KW_EXPORT) ||
-        is(KW_RETURN) || is(KW_FUNC) || is(KW_FOR) || is(KW_IMPORT) || is(KW_IN) || is(KW_IF) ||
-        is(KW_GLOBAL) || is(KW_LOCAL) || is(KW_NAMESPACE) || is(KW_MACRO) || is(KW_NOT) ||
-        is(KW_WHILE) || is(KW_STRUCT) || is(KW_PROPERTY) || is(KW_OR) || is(KW_NEW) || is(KW_STRICT)
-    );
-#undef is
-}
-
-void Parser::panic_and_recover()
-{
-    while (current_position < program->tokens->tokens.size() && !is_keyword())
-        consume();
-}
-
 DeclarationType Parser::get_decl_type(TokenType type)
 {
     static const std::unordered_map<TokenType, DeclarationType> decl_type_table = {
         {TokenType::KW_LOCAL, DeclarationType::Local},
         {TokenType::KW_GLOBAL, DeclarationType::Global},
         {TokenType::KW_PROPERTY, DeclarationType::Property},
-        // TODO: Add 'meta' keyword support
+        {TokenType::KW_META, DeclarationType::Meta},
     };
 
     auto it = decl_type_table.find(type);
-    if (it != decl_type_table.end())
+    if (it != decl_type_table.end()) {
         return it->second;
+    }
 
     return DeclarationType::Local;
 }
 
 Pragma Parser::parse_pragma()
 {
-    bool failed_inner = false;
+    Pragma pragma;
 
     consume(); // Consume '@'
 
     if (!is_type(TokenType::IDENTIFIER)) {
-        PARSER_ERROR(std::format("Unexpected token '{}' while parsing pragma", peek().value));
-        failed_inner = true;
+        PARSER_ERROR(std::format(
+            "Unexpected token '{}' ({}) while parsing pragma", peek().value, ENUM_NAME(peek().type)
+        ));
+        return pragma;
     }
 
-    Pragma pragma;
     pragma.body = consume();
 
     if (is_type(TokenType::PAREN_OPEN)) {
@@ -110,12 +99,13 @@ Pragma Parser::parse_pragma()
             Token argument = consume();
             pragma.arguments.push_back(argument);
 
-            if (is_type(TokenType::PAREN_CLOSE))
+            if (is_type(TokenType::PAREN_CLOSE)) {
                 break;
+            }
 
             if (is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate pragma arguments");
-                failed_inner = true;
+                return pragma;
             }
 
             consume();
@@ -123,25 +113,22 @@ Pragma Parser::parse_pragma()
 
         if (!is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Expected ')' to close pragma arguments");
-            failed_inner = true;
+            return pragma;
         }
 
         consume();
     }
-
-    if (failed_inner)
-        panic_and_recover();
 
     return pragma;
 }
 
 StatementModifiers Parser::parse_modifiers(std::function<bool(void)> predecate)
 {
-    bool failed_inner = false;
     StatementModifiers modifiers{false, false};
 
-    if (!predecate())
+    if (!predecate()) {
         return modifiers;
+    }
 
     while (predecate()) {
         if (is_type(TokenType::KW_STRICT)) {
@@ -153,49 +140,50 @@ StatementModifiers Parser::parse_modifiers(std::function<bool(void)> predecate)
             consume();
         }
         else {
-            PARSER_ERROR(
-                std::format("Unexpected token '{}' while parsing statement modifiers", peek().value)
-            );
-            failed_inner = true;
-            consume();
+            PARSER_ERROR(std::format(
+                "Unexpected token '{}' ({}) while parsing statement modifiers",
+                peek().value,
+                ENUM_NAME(peek().type)
+            ));
+            return modifiers;
         }
     }
-
-    if (failed_inner)
-        panic_and_recover();
 
     return modifiers;
 }
 
 ExprNode *Parser::parse_table_expr()
 {
-    bool failed_inner = false;
     size_t index = 0;
 
-    auto parse_kv_pair = [this, &failed_inner, &index]() -> TableExprNode::KVPair {
+    [[maybe_unused]]
+    auto parse_kv_pair = [this, &index]() -> TableExprNode::KVPair {
         if (is_type(TokenType::BRACKET_OPEN)) {
             consume(); // Consume '['
 
+            TableExprNode::KVPair pair;
             ExprNode *key = parse_expr();
+            pair.key = key;
 
             if (!is_type(TokenType::BRACKET_CLOSE)) {
                 // TODO: Find a better error message for this, the current one is dogshit
                 PARSER_ERROR("Expected ']' to close table key expression container");
-                failed_inner = true;
+                return pair;
             }
 
             consume(); // Consume ']'
 
             if (!is_type(TokenType::OP_ASGN)) {
                 PARSER_ERROR("Expected '=' to assign table key value pair");
-                failed_inner = true;
+                return pair;
             }
 
             consume(); // Consume '='
 
             ExprNode *val = parse_expr();
+            pair.val = val;
 
-            return {key, val};
+            return pair;
         }
 
         LiteralExprNode key_expr{
@@ -211,6 +199,11 @@ ExprNode *Parser::parse_table_expr()
         ExprNode *key = alloc->emplace<ExprNode>(key_expr);
         ExprNode *expr = parse_expr();
 
+        if (!expr) {
+            PARSER_ERROR("Invalid value pair")
+            return {0, 0};
+        }
+
         // TODO: Check for binary expression (with operator OP_ASGN) to check for non-wrapped key
         // value specifiers
         return {key, expr};
@@ -219,18 +212,22 @@ ExprNode *Parser::parse_table_expr()
     TableExprNode *table_expr = alloc->emplace<TableExprNode>();
 
     while (!is_type(TokenType::EOF_)) {
-        if (is_type(TokenType::BRACE_CLOSE))
+        if (is_type(TokenType::BRACE_CLOSE)) {
             break;
+        }
 
+        [[maybe_unused]]
         TableExprNode::KVPair pair = parse_kv_pair();
-        table_expr->values.push_back(pair);
+        // TODO: This somehow causes a fucking memory leak
+        // table_expr->values.push_back(pair);
 
-        if (is_type(TokenType::BRACE_CLOSE))
+        if (is_type(TokenType::BRACE_CLOSE)) {
             break;
+        }
 
         if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate table key-value pairs");
-            failed_inner = true;
+            return nullptr;
         }
 
         consume();
@@ -238,13 +235,10 @@ ExprNode *Parser::parse_table_expr()
 
     if (!is_type(TokenType::BRACE_CLOSE)) {
         PARSER_ERROR("Expected '}' to close table key-value pairs");
-        failed_inner = true;
+        return nullptr;
     }
 
     consume();
-
-    if (failed_inner)
-        panic_and_recover();
 
     return alloc->emplace<ExprNode>(*table_expr);
 }
@@ -256,32 +250,46 @@ ExprNode *Parser::parse_expr()
 
 ExprNode *Parser::parse_bin_expr(int precedence)
 {
+    DECL_TOKENS_CONST_REF();
+
     // Parse the left-hand side of the expression
     ExprNode *lhs = parse_prim_expr();
+    if (!lhs) {
+        return nullptr;
+    }
 
     while (true) {
-        if (current_position >= program->tokens->tokens.size())
+        if (current_position >= tokens.size()) {
             break;
+        }
 
         // Check if there are more tokens to process
-        if (is_type(TokenType::EOF_))
+        if (is_type(TokenType::EOF_)) {
             break;
+        }
 
         // This is not an error because not every expression is binary
-        if (!peek().is_operator())
+        if (!peek().is_operator()) {
             break;
+        }
 
         Token token = peek();
         int token_precedence = token.bin_prec();
 
         // Stop if the current token's precedence is lower than the given precedence
-        if (token_precedence < precedence)
+        if (token_precedence < precedence) {
             break;
+        }
 
         consume(); // Consume the operator
 
         // Parse the right-hand side of the expression
         ExprNode *rhs = parse_bin_expr(token_precedence + 1);
+        if (!rhs) {
+            PARSER_ERROR("Invalid rhs expression");
+            return nullptr;
+        }
+
         BinaryExprNode bin = {
             .op = token,
             .lhs = lhs,
@@ -327,9 +335,14 @@ ExprNode *Parser::parse_prim_expr()
     case TokenType::PAREN_OPEN: {
         base_expr = parse_expr();
 
+        if (!base_expr) {
+            PARSER_ERROR("Invalid grouping expression");
+            return nullptr;
+        }
+
         if (!is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Expected ')' to close group expression");
-            failed_inner = true;
+            return nullptr;
         }
 
         consume(); // Consume ')'
@@ -339,7 +352,7 @@ ExprNode *Parser::parse_prim_expr()
     case TokenType::KW_FUNC: {
         if (!is_type(TokenType::PAREN_OPEN)) {
             PARSER_ERROR("Expected '(' to open anonymous function (lambda) arguments");
-            failed_inner = true;
+            return nullptr;
         }
 
         consume(); // Consume '('
@@ -347,18 +360,20 @@ ExprNode *Parser::parse_prim_expr()
         LambdaExprNode *lambda = alloc->emplace<LambdaExprNode>();
 
         while (!is_type(TokenType::EOF_)) {
-            if (is_type(TokenType::PAREN_CLOSE))
+            if (is_type(TokenType::PAREN_CLOSE)) {
                 break;
+            }
 
             TypedParamNode *param = parse_parameter();
             lambda->params.push_back(*param);
 
-            if (is_type(TokenType::PAREN_CLOSE))
+            if (is_type(TokenType::PAREN_CLOSE)) {
                 break;
+            }
 
             if (!is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate anonymous function (lambda) arguments");
-                failed_inner = true;
+                return nullptr;
             }
 
             consume();
@@ -368,7 +383,7 @@ ExprNode *Parser::parse_prim_expr()
 
         if (!is_type(TokenType::BRACE_OPEN)) {
             PARSER_ERROR("Expected '{' to open anonymous function (lambda) body")
-            failed_inner = true;
+            return nullptr;
         }
 
         lambda->body = parse_scope_statement();
@@ -381,6 +396,12 @@ ExprNode *Parser::parse_prim_expr()
 
         TypeExprNode *type_expr = alloc->emplace<TypeExprNode>();
         type_expr->expr = parse_expr();
+
+        if (!type_expr->expr) {
+            PARSER_ERROR("Invalid expression input to `type`")
+            return nullptr;
+        }
+
         base_expr = alloc->emplace<ExprNode>(*type_expr);
         break;
     }
@@ -390,6 +411,12 @@ ExprNode *Parser::parse_prim_expr()
 
         TypeofExprNode *typeof_expr = alloc->emplace<TypeofExprNode>();
         typeof_expr->expr = parse_expr();
+
+        if (!typeof_expr->expr) {
+            PARSER_ERROR("Invalid expression input to `typeof`")
+            return nullptr;
+        }
+
         base_expr = alloc->emplace<ExprNode>(*typeof_expr);
         break;
     }
@@ -401,19 +428,21 @@ ExprNode *Parser::parse_prim_expr()
 
     default:
         PARSER_ERROR_AT(
-            std::format("Unexpected token '{}' while parsing primary expression", token.value),
+            std::format(
+                "Unexpected token '{}' ({}) while parsing primary expression",
+                token.value,
+                ENUM_NAME(token.type)
+            ),
             current_position - 1
         );
-        failed_inner = true;
-        break;
+        return nullptr;
     }
 
     // Parse the chain of operations
-    while (true) {
+    while (!failed_inner) {
         if (current_position >= program->tokens->tokens.size()) {
             PARSER_ERROR("Unexpected end to expression");
-            failed_inner = true;
-            break;
+            return nullptr;
         }
 
         if (is_type(TokenType::DOT)) // Member access: obj.prop
@@ -422,7 +451,7 @@ ExprNode *Parser::parse_prim_expr()
 
             if (!is_type(TokenType::IDENTIFIER)) {
                 PARSER_ERROR("Expected identifier for table member access key");
-                failed_inner = true;
+                return nullptr;
             }
 
             Token member = consume();
@@ -449,7 +478,7 @@ ExprNode *Parser::parse_prim_expr()
 
             if (!cast_expr->type) {
                 PARSER_ERROR("Expected type after 'as' while parsing typecast");
-                panic_and_recover();
+                return nullptr;
             }
 
             base_expr = alloc->emplace<ExprNode>(*cast_expr);
@@ -475,9 +504,14 @@ ExprNode *Parser::parse_prim_expr()
             index_expr->object = base_expr;
             index_expr->index = parse_expr();
 
+            if (!index_expr->index) {
+                PARSER_ERROR("Invalid index expression")
+                return nullptr;
+            }
+
             if (!is_type(TokenType::BRACKET_CLOSE)) {
                 PARSER_ERROR("Expected ']' to close member access statement");
-                failed_inner = true;
+                return nullptr;
             }
 
             consume(); // Consume ']'
@@ -497,26 +531,25 @@ ExprNode *Parser::parse_prim_expr()
 
             base_expr = alloc->emplace<ExprNode>(*dec_expr);
         }
-        else
+        else {
             break;
+        }
     }
 
-    if (failed_inner)
-        panic_and_recover();
+
 
     return base_expr;
 }
 
 std::vector<ExprNode *> Parser::parse_call_arguments()
 {
-    bool failed_inner = false;
     std::vector<ExprNode *> arguments;
 
     while (!is_type(TokenType::PAREN_CLOSE)) {
         ExprNode *expr = parse_expr();
         if (!expr) {
-            consume();
-            continue;
+            PARSER_ERROR("Invalid argument expression");
+            return {};
         }
 
         arguments.push_back(expr);
@@ -526,66 +559,59 @@ std::vector<ExprNode *> Parser::parse_call_arguments()
 
         if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate call arguments");
-            failed_inner = true;
+            return {};
         }
 
         consume(); // Consume ','
 
         if (is_type(TokenType::PAREN_CLOSE)) {
             PARSER_ERROR("Function call arguments cannot be closed with ','");
-            failed_inner = true;
+            return {};
         }
     }
 
     if (!is_type(TokenType::PAREN_CLOSE)) {
         PARSER_ERROR("Expected ')' to close call arguments");
-        failed_inner = true;
+        return arguments;
     }
 
     consume();
-
-    if (failed_inner)
-        panic_and_recover();
 
     return arguments;
 }
 
 std::vector<TypeNode *> Parser::parse_call_type_arguments()
 {
-    bool failed_inner = false;
     std::vector<TypeNode *> arguments;
 
     while (!is_type(TokenType::OP_GT)) {
         TypeNode *type = parse_type();
         if (!type) {
-            consume();
-            continue;
+            PARSER_ERROR("Invalid type generic");
+            return {};
         }
 
         arguments.push_back(type);
 
         if (!is_type(TokenType::COMMA)) {
             PARSER_ERROR("Expected ',' to seperate call type generics");
-            failed_inner = true;
+            return {};
         }
 
         consume(); // Consume ','
     }
 
-    if (failed_inner)
-        panic_and_recover();
 
     return arguments;
 }
 
 TypeNode *Parser::parse_type_generic()
 {
-    bool failed_inner = false;
     Token token = consume();
 
     if (token.type != TokenType::IDENTIFIER) {
         PARSER_ERROR("Expected identifier for type generic body");
-        failed_inner = true;
+        return nullptr;
     }
 
     GenericTypeNode type;
@@ -598,15 +624,14 @@ TypeNode *Parser::parse_type_generic()
         while (!is_type(TokenType::OP_GT)) {
             TypeNode *type_ = parse_type();
             if (!type_) {
-                consume();
-                continue;
+                return nullptr;
             }
 
             type.generics.push_back(*type_);
 
             if (!is_type(TokenType::COMMA)) {
                 PARSER_ERROR("Expected ',' to seperate type generics");
-                failed_inner = true;
+                return nullptr;
             }
 
             consume(); // Consume ','
@@ -615,8 +640,7 @@ TypeNode *Parser::parse_type_generic()
         consume(); // Consume '>'
     }
 
-    if (failed_inner)
-        panic_and_recover();
+
 
     return alloc->emplace<TypeNode>(type);
 }
@@ -625,48 +649,52 @@ TypeNode *Parser::parse_type()
 {
     if (is_type(TokenType::IDENTIFIER)) {
         TypeNode *gen = parse_type_generic();
-
-        switch (peek().type) {
-        case TokenType::AMPERSAND: {
-            consume();
-
-            TypeNode *rtype = parse_type_generic();
-            UnionTypeNode utype;
-            utype.lhs = gen;
-            utype.rhs = rtype;
-
-            return alloc->emplace<TypeNode>(utype);
+        if (!gen) {
+            return nullptr;
         }
-        case TokenType::PIPE: {
-            std::vector<TypeNode> types{*gen};
-
-            while (is_type(TokenType::PIPE)) {
+        else {
+            switch (peek().type) {
+            case TokenType::AMPERSAND: {
                 consume();
 
-                TypeNode *type = parse_type();
-                if (!type) {
+                TypeNode *rtype = parse_type_generic();
+                UnionTypeNode utype;
+                utype.lhs = gen;
+                utype.rhs = rtype;
+
+                return alloc->emplace<TypeNode>(utype);
+            }
+            case TokenType::PIPE: {
+                std::vector<TypeNode> types{*gen};
+
+                while (is_type(TokenType::PIPE)) {
                     consume();
-                    continue;
+
+                    TypeNode *type = parse_type();
+                    if (!type) {
+                        PARSER_ERROR("Invalid follow-up type expression to variant type");
+                        break;
+                    }
+
+                    types.push_back(*type);
                 }
 
-                types.push_back(*type);
+                VariantTypeNode var;
+                var.types = types;
+
+                return alloc->emplace<TypeNode>(var);
             }
+            case TokenType::QUESTION: {
+                consume();
 
-            VariantTypeNode var;
-            var.types = types;
+                OptionalTypeNode opt;
+                opt.type = gen;
 
-            return alloc->emplace<TypeNode>(var);
-        }
-        case TokenType::QUESTION: {
-            consume();
-
-            OptionalTypeNode opt;
-            opt.type = gen;
-
-            return alloc->emplace<TypeNode>(opt);
-        }
-        default:
-            break;
+                return alloc->emplace<TypeNode>(opt);
+            }
+            default:
+                break;
+            }
         }
 
         return gen;
@@ -689,13 +717,22 @@ TypeNode *Parser::parse_type()
             consume(); // Consume '['
             ktype = parse_type();
 
-            if (!is_type(TokenType::BRACKET_OPEN))
+            if (!ktype) {
+                PARSER_ERROR("Invalid key-type expression");
+                return nullptr;
+            }
+
+            if (!is_type(TokenType::BRACKET_OPEN)) {
                 PARSER_ERROR("Expected ']' to close table key type designator");
+                return nullptr;
+            }
 
             consume(); // Consume ']'
 
-            if (!is_type(TokenType::COLON))
+            if (!is_type(TokenType::COLON)) {
                 PARSER_ERROR("Expected ':' to before table value type designator");
+                return nullptr;
+            }
 
             consume(); // Consume ':'
         }
@@ -704,13 +741,19 @@ TypeNode *Parser::parse_type()
         table.ktype = ktype;
         table.vtype = parse_type();
 
+        if (!table.vtype) {
+            PARSER_ERROR("Invalid value-type expression");
+            return nullptr;
+        }
+
         return alloc->emplace<TypeNode>(table);
     }
     else if (is_type(TokenType::PAREN_OPEN)) {
     }
 
-    PARSER_ERROR(std::format("Unexpected token '{}' while parsing type", peek().value));
-    panic_and_recover();
+    PARSER_ERROR(std::format(
+        "Unexpected token '{}' ({}) while parsing type", peek().value, ENUM_NAME(peek().type)
+    ));
     return nullptr;
 }
 
@@ -731,10 +774,13 @@ TypedParamNode *Parser::parse_parameter()
         consume();
 
         TypeNode *type = parse_type();
-        if (!type)
-            consume();
-        else
+        if (!type) {
+            PARSER_ERROR("Invalid parameter type");
+            return nullptr;
+        }
+        else {
             param->type = *type;
+        }
     }
 
     return param;
@@ -761,20 +807,25 @@ VariableDeclStmtNode *Parser::parse_var_declaration()
         consume();
 
         TypeNode *type = parse_type();
-        if (!type)
-            consume();
-        else
+        if (!type) {
+            PARSER_ERROR("Invalid variable type annotation");
+            return nullptr;
+        }
+        else {
             decl->type = *type;
+        }
     }
 
     if (is_type(TokenType::OP_ASGN)) {
         consume();
 
         ExprNode *expr = parse_expr();
-        if (!expr)
+        if (!expr) {
             consume();
-        else
+        }
+        else {
             decl->value = *expr;
+        }
     }
 
     return decl;
@@ -790,16 +841,14 @@ CallStmtNode *Parser::parse_call_statement(ExprNode *expr)
         call->generics = parse_call_type_arguments();
     }
 
-    if (!is_type(TokenType::PAREN_OPEN))
+    if (!is_type(TokenType::PAREN_OPEN)) {
         PARSER_ERROR("Expected '(' to open call arguments");
+        return nullptr;
+    }
 
     consume();
 
     call->args = parse_call_arguments();
-
-    if (failed)
-        panic_and_recover();
-
     return call;
 }
 
@@ -811,6 +860,11 @@ AssignStmtNode *Parser::parse_assignment_statement(ExprNode *expr)
     asgn->target = expr;
     asgn->value = parse_expr();
 
+    if (!asgn->value) {
+        PARSER_ERROR("Invalid expression assignment");
+        return nullptr;
+    }
+
     return asgn;
 }
 
@@ -821,7 +875,6 @@ ReturnStmtNode *Parser::parse_return_statement()
     ReturnStmtNode *ret = alloc->emplace<ReturnStmtNode>();
     ExprNode *expr = parse_expr();
     if (!expr) {
-        consume();
         return ret;
     }
 
@@ -832,8 +885,8 @@ ReturnStmtNode *Parser::parse_return_statement()
 
         ExprNode *expr = parse_expr();
         if (!expr) {
-            consume();
-            continue;
+            PARSER_ERROR("Invalid return expression");
+            return nullptr;
         }
 
         ret->values.push_back(*expr);
@@ -848,6 +901,12 @@ WhileStmtNode *Parser::parse_while_statement()
 
     WhileStmtNode *loop = alloc->emplace<WhileStmtNode>();
     loop->condition = parse_expr();
+
+    if (!loop->condition) {
+        PARSER_ERROR("Invalid conditional expression");
+        return nullptr;
+    }
+
     loop->body = parse_scope_statement();
 
     return loop;
@@ -857,35 +916,44 @@ ForStmtNode *Parser::parse_for_statement()
 {
     consume();
 
-    if (!is_type(TokenType::IDENTIFIER))
-        PARSER_ERROR("Expected identifier for for-loop keys variable")
+    if (!is_type(TokenType::IDENTIFIER)) {
+        PARSER_ERROR("Expected identifier for for-loop keys variable");
+        return nullptr;
+    }
 
     ForStmtNode *loop = alloc->emplace<ForStmtNode>();
     loop->keys = consume();
 
-    if (!is_type(TokenType::COMMA))
+    if (!is_type(TokenType::COMMA)) {
         PARSER_ERROR("Expected ',' to seperate for-loop variable");
+        return nullptr;
+    }
 
     // Consume ','
     consume();
 
-    if (!is_type(TokenType::IDENTIFIER))
+    if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for for-loop values variable")
+        return nullptr;
+    }
 
     loop->values = consume();
 
-    if (!is_type(TokenType::KW_IN))
+    if (!is_type(TokenType::KW_IN)) {
         PARSER_ERROR("Expected 'in' before iterator");
+        return nullptr;
+    };
 
     // Consume 'in'
     consume();
 
     loop->iterator = parse_expr();
+    if (!loop->iterator) {
+        PARSER_ERROR("Invalid iterator expression");
+        return nullptr;
+    }
+
     loop->body = parse_scope_statement();
-
-    if (failed)
-        panic_and_recover();
-
     return loop;
 }
 
@@ -895,6 +963,11 @@ IfStmtNode *Parser::parse_if_statement()
 
     IfStmtNode *ifs = alloc->emplace<IfStmtNode>();
     ifs->condition = parse_expr();
+    if (!ifs->condition) {
+        PARSER_ERROR("Invalid conditional expression");
+        return nullptr;
+    }
+
     ifs->then_body = parse_scope_statement();
 
     while (is_type(TokenType::KW_ELIF)) {
@@ -902,8 +975,12 @@ IfStmtNode *Parser::parse_if_statement()
 
         ElifStmtNode *elif = alloc->emplace<ElifStmtNode>();
         elif->condition = parse_expr();
-        elif->body = parse_scope_statement();
+        if (!elif->condition) {
+            PARSER_ERROR("Invalid conditional expression");
+            return nullptr;
+        }
 
+        elif->body = parse_scope_statement();
         ifs->elif_branches.push_back(*elif);
     }
 
@@ -921,14 +998,22 @@ SwitchStmtNode *Parser::parse_switch_statement()
 
     SwitchStmtNode *switchs = alloc->emplace<SwitchStmtNode>();
     switchs->condition = parse_expr();
+    if (!switchs->condition) {
+        PARSER_ERROR("Invalid conditional expression");
+        return nullptr;
+    }
 
     while (is_type(TokenType::KW_CASE)) {
         consume();
 
         CaseStmtNode *cases = alloc->emplace<CaseStmtNode>();
         cases->value = parse_expr();
-        cases->body = parse_scope_statement();
+        if (!cases->value) {
+            PARSER_ERROR("Invalid conditional expression");
+            return nullptr;
+        }
 
+        cases->body = parse_scope_statement();
         switchs->cases.push_back(*cases);
     }
 
@@ -943,8 +1028,6 @@ SwitchStmtNode *Parser::parse_switch_statement()
 // Parses a statement that follows the function-grammar
 FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_type)
 {
-    bool failed_inner = false;
-    // No need to check this
     consume(); // Consume 'func'
 
     StatementModifiers modifiers = parse_modifiers([this]() {
@@ -953,7 +1036,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
 
     if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for function/method declaration");
-        failed_inner = true;
+        return nullptr;
     }
 
     FunctionDeclStmtNode *decl = alloc->emplace<FunctionDeclStmtNode>();
@@ -977,7 +1060,7 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
 
     if (!is_type(TokenType::PAREN_OPEN)) {
         PARSER_ERROR("Expected '(' to open function parameters");
-        failed_inner = true;
+        return nullptr;
     }
 
     consume(); // Consume '('
@@ -998,38 +1081,32 @@ FunctionDeclStmtNode *Parser::parse_function_declaration(DeclarationType decl_ty
 
         if (!is_type(TokenType::OP_GT)) {
             PARSER_ERROR("Expected '->' for return type specifier");
-            failed_inner = true;
+            return nullptr;
         }
 
         consume(); // Consume '>'
 
         TypeNode *ret_type = parse_type();
-        if (!ret_type)
-            // Recover to '{'
-            while (!is_type(TokenType::BRACE_OPEN) && !is_type(TokenType::EOF_))
-                consume();
-        else
+        if (!ret_type) {
+            return nullptr;
+        }
+        else {
             decl->return_type = std::optional<TypeNode>(*ret_type);
+        }
     }
 
     decl->body = parse_scope_statement();
-
-    if (failed_inner)
-        panic_and_recover();
-
     return decl;
 }
 
 // Parses a statement that follows the struct-grammar
 StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 {
-    bool failed_inner = false;
-
     consume(); // Consume 'struct'
 
     if (!is_type(TokenType::IDENTIFIER)) {
         PARSER_ERROR("Expected identifier for struct declaration");
-        failed_inner = true;
+        return nullptr;
     }
 
     StructDeclStmtNode *struct_decl = alloc->emplace<StructDeclStmtNode>();
@@ -1038,7 +1115,7 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 
     if (!is_type(TokenType::BRACE_OPEN)) {
         PARSER_ERROR("Expected '{' to open struct body");
-        failed_inner = true;
+        return nullptr;
     }
 
     consume(); // Consume '{'
@@ -1052,7 +1129,7 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
             PARSER_ERROR(
                 std::format("Unexpected token '{}' while parsing struct properties", peek().value)
             );
-            failed_inner = true;
+            return nullptr;
         }
 
         // We do not consume 'property' because it's an essential sentinel keyword for both
@@ -1074,13 +1151,11 @@ StructDeclStmtNode *Parser::parse_struct_declaration(DeclarationType decl_type)
 
     if (!is_type(TokenType::BRACE_CLOSE)) {
         PARSER_ERROR("Expected '}' to close struct body");
-        failed_inner = true;
+        return nullptr;
     }
 
     consume(); // Consume '}'
 
-    if (failed_inner)
-        panic_and_recover();
 
     return struct_decl;
 }
@@ -1096,6 +1171,7 @@ ScopeStmtNode *Parser::parse_scope_statement()
         StmtNode *stmt = parse_statement();
         // Check if statement is invalid
         if (!stmt) {
+            failed = true;
             consume();
             continue;
         }
@@ -1112,7 +1188,10 @@ StmtNode *Parser::parse_statement()
 {
 #define EMPLACE_AND_RETURN(expr) \
     { \
-        StmtNode *stmt = alloc->emplace<StmtNode>(expr); \
+        if (!expr) { \
+            goto invalid_statement; \
+        } \
+        StmtNode *stmt = alloc->emplace<StmtNode>(*expr); \
         if (has_pragma) { \
             this->has_pragma = false; \
             stmt->pragma = pragma; \
@@ -1122,8 +1201,6 @@ StmtNode *Parser::parse_statement()
 
 parse:
     switch (peek().type) {
-    case TokenType::EOF_:
-        return nullptr;
     case TokenType::AT: {
         this->pragma = parse_pragma();
         this->has_pragma = true;
@@ -1134,38 +1211,45 @@ parse:
         DeclarationType decl_type = get_decl_type(peek().type);
 
         if (is_type(TokenType::KW_FUNC, 1))
-            EMPLACE_AND_RETURN(*parse_function_declaration(decl_type))
+            EMPLACE_AND_RETURN(parse_function_declaration(decl_type))
         else if (is_type(TokenType::KW_STRUCT, 1))
-            EMPLACE_AND_RETURN(*parse_struct_declaration(decl_type));
+            EMPLACE_AND_RETURN(parse_struct_declaration(decl_type));
 
-        EMPLACE_AND_RETURN(*parse_var_declaration());
+        EMPLACE_AND_RETURN(parse_var_declaration());
     }
     case TokenType::KW_RETURN:
-        EMPLACE_AND_RETURN(*parse_return_statement());
+        EMPLACE_AND_RETURN(parse_return_statement());
     case TokenType::KW_WHILE:
-        EMPLACE_AND_RETURN(*parse_while_statement());
+        EMPLACE_AND_RETURN(parse_while_statement());
     case TokenType::KW_FOR:
-        EMPLACE_AND_RETURN(*parse_for_statement());
+        EMPLACE_AND_RETURN(parse_for_statement());
     case TokenType::KW_IF:
-        EMPLACE_AND_RETURN(*parse_if_statement());
+        EMPLACE_AND_RETURN(parse_if_statement());
     case TokenType::KW_MATCH:
-        EMPLACE_AND_RETURN(*parse_switch_statement());
+        EMPLACE_AND_RETURN(parse_switch_statement());
     case TokenType::KW_FUNC:
-        EMPLACE_AND_RETURN(*parse_function_declaration(DeclarationType::Local));
+        EMPLACE_AND_RETURN(parse_function_declaration(DeclarationType::Local));
     case TokenType::KW_STRUCT:
-        EMPLACE_AND_RETURN(*parse_struct_declaration(DeclarationType::Local));
+        EMPLACE_AND_RETURN(parse_struct_declaration(DeclarationType::Local));
     case TokenType::KW_NAMESPACE:
         // TODO: Self explanatory...
         break;
     case TokenType::KW_BREAK:
-        EMPLACE_AND_RETURN(*alloc->emplace<BreakStmtNode>());
+        EMPLACE_AND_RETURN(alloc->emplace<BreakStmtNode>());
     case TokenType::KW_CONTINUE:
-        EMPLACE_AND_RETURN(*alloc->emplace<ContinueStmtNode>());
+        EMPLACE_AND_RETURN(alloc->emplace<ContinueStmtNode>());
     case TokenType::KW_DO:
         consume();
-        EMPLACE_AND_RETURN(*parse_scope_statement());
+        EMPLACE_AND_RETURN(parse_scope_statement());
     default: {
+        if (failed) {
+            return nullptr;
+        }
+
         ExprNode *expr = parse_expr();
+        if (!expr) {
+            goto invalid_statement;
+        }
 
         if (CallExprNode *call = std::get_if<CallExprNode>(&expr->expr)) {
             // TODO: Construct a new statement based on the call expression
@@ -1177,51 +1261,66 @@ parse:
             call_stmt->args = call->args;
             call_stmt->generics = call->type_args;
 
-            EMPLACE_AND_RETURN(*call_stmt);
+            EMPLACE_AND_RETURN(call_stmt);
         }
         else if (BinaryExprNode *bin_expr = std::get_if<BinaryExprNode>(&expr->expr)) {
             // Only binary expression allowed is an "assignment operation"
             // Which isn't a actually a real thing, it's just a quirk caused by how operators are
             // classified I guess it's beneficial in this case, although it will be HELL to debug in
             // other cases as it technically cannot evaluate to any value
-            if (bin_expr->op.type != TokenType::OP_ASGN)
+            if (bin_expr->op.type != TokenType::OP_ASGN) {
                 goto invalid_statement;
+            }
 
             AssignStmtNode *asgn = alloc->emplace<AssignStmtNode>();
             asgn->target = bin_expr->lhs;
             asgn->value = bin_expr->rhs;
 
-            EMPLACE_AND_RETURN(*asgn);
+            EMPLACE_AND_RETURN(asgn);
         }
 
         goto invalid_statement;
     }
     }
 invalid_statement:
-    PARSER_ERROR(std::format("Unexpected token '{}' while parsing statement", peek().value));
-    panic_and_recover();
+    PARSER_ERROR(std::format(
+        "Unexpected token '{}' ({}) while parsing statement", peek().value, ENUM_NAME(peek().type)
+    ));
     return nullptr;
 } // namespace via
 
 bool Parser::parse_program()
 {
-    AbstractSyntaxTree *ast = new AbstractSyntaxTree(VIA_PARSER_ALLOC_SIZE);
+    TokenHolder *tokens = program->tokens;
+    AbstractSyntaxTree *ast = program->ast;
     this->alloc = &ast->allocator;
 
+    if (tokens->tokens.size() < 2) {
+        PARSER_ERROR("Empty file is not allowed");
+        return failed;
+    }
+
     for (Token tok : program->tokens->tokens) {
-        if (is_type(TokenType::EOF_))
+        if (current_position >= program->tokens->tokens.size()) {
             break;
+        }
+
+        if (is_type(TokenType::EOF_)) {
+            break;
+        }
 
         StmtNode *stmt = parse_statement();
         if (!stmt) {
-            consume();
-            continue;
+            return failed;
+        }
+
+        if (failed) {
+            return failed;
         }
 
         ast->statements.push_back(*stmt);
     }
 
-    program->ast = ast;
     return failed;
 }
 

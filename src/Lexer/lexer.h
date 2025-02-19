@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "arena.hpp"
+#include "arena.h"
 #include "common.h"
 #include "token.h"
 
