@@ -49,47 +49,8 @@ VIA_FORCEINLINE bool is_heap(const TValue &val) noexcept
 // Optimized for maximum performance.
 VIA_MAXOPTIMIZE bool compare(const TValue &v0, const TValue &v1) noexcept
 {
-    // Early return; if types aren't the same they cannot be equivalent
-    if (v0.type != v1.type)
-        return false;
-
-    // Optimized for most efficient branching by sorting the cases from most common to least
-    switch (v0.type) {
-    case ValueType::number:
-        return v0.val_number == v1.val_number;
-    case ValueType::boolean:
-        return v0.val_boolean == v1.val_boolean;
-    case ValueType::nil:
-        // Nil values are always equal
-        return true;
-    case ValueType::string:
-        return !std::strcmp(v0.val_string->data, v1.val_string->data);
-    default:
-        return to_pointer(v0) == to_pointer(v1);
-    }
-
-    VIA_UNREACHABLE();
-    return false;
+    return impl::__compare(v0, v1);
 };
-
-// Compares the values of two registers and returns whether if they are
-// equivalent. Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare_registers(State *VIA_RESTRICT V, U32 reg0, U32 reg1) noexcept
-{
-    // Early return if registers are equivalent
-    if (reg0 == reg1)
-        return true;
-
-    TValue &v0 = *get_register(V, reg0);
-    TValue &v1 = *get_register(V, reg1);
-    // No need to assert &v0 == &v1 because
-    // the first equality check is basically the same thing, just at a higher
-    // level of abstraction.
-    if (v0.type != v1.type)
-        return false;
-
-    return compare(v0, v1);
-}
 
 // Pushes a copy of the given value onto the stack.
 VIA_MAXOPTIMIZE void push(State *VIA_RESTRICT V, const TValue &val)
@@ -116,6 +77,8 @@ VIA_MAXOPTIMIZE TValue top(State *VIA_RESTRICT V)
 // version of <val>. The return value is guaranteed to be a String type.
 VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
+    using enum ValueType;
+
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
     // by the end user. It is guaranteed to NEVER occur under compiled bytecode
@@ -123,20 +86,25 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
         return val.clone();
 
     switch (val.type) {
-    case ValueType::number: {
-        std::string str = std::to_string(val.val_number);
+    case integer: {
+        std::string str = std::to_string(val.val_integer);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::boolean: {
+    case floating_point: {
+        std::string str = std::to_string(val.val_integer);
+        TString *tstr = new TString(V, str.c_str());
+        return TValue(tstr);
+    }
+    case boolean: {
         TString *str = new TString(V, val.val_boolean ? "true" : "false");
         return TValue(str);
     }
-    case ValueType::table: {
+    case table: {
         std::string str = "{";
 
-        for (auto &elem : val.val_table->data) {
-            str += to_string(V, elem.second).val_string->data;
+        for (auto &elem : val.cast_ptr<TTable>()->data) {
+            str += to_string(V, elem.second).cast_ptr<TString>()->data;
             str += ", ";
         }
 
@@ -148,15 +116,15 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::function: {
-        const void *faddr = val.val_function;
+    case function: {
+        const void *faddr = val.cast_ptr<TFunction>();
         std::string str = std::format("<function@{}>", faddr);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
-    case ValueType::cfunction: {
+    case cfunction: {
         // This has to be explicitly casted because function pointers be weird
-        const void *cfaddr = val.val_cfunction;
+        const void *cfaddr = val.cast_ptr<TCFunction>();
         std::string str = std::format("<cfunction@{}>", cfaddr);
         TString *tstr = new TString(V, str.c_str());
         return TValue(tstr);
@@ -167,73 +135,39 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
     }
 
     VIA_UNREACHABLE();
-    return nil.clone();
+    return via::nil.clone();
 }
 
 VIA_FORCEINLINE std::string to_cxx_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     TValue str = to_string(V, val);
-    return std::string(str.val_string->data);
+    return std::string(str.cast_ptr<TString>()->data);
 }
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
 VIA_FORCEINLINE TValue to_bool(const TValue &val) noexcept
 {
-    // If the TValue union is tagged as Bool type but it
-    // doesn't actually contain a boolean value, that is undefined behavior
-    // and is the responsibility of the end-user.
-    if (check_bool(val))
-        return val.clone();
-
-    switch (val.type) {
-    // Nil and Monostate is the only falsy type
-    case ValueType::nil:
-    case ValueType::monostate:
-        return TValue(false);
-    default:
-        return TValue(true);
-    }
-
-    VIA_UNREACHABLE();
-    return nil.clone();
+    return impl::__to_bool(val);
 }
 
 VIA_FORCEINLINE bool to_cxx_bool(const TValue &val) noexcept
 {
-    TValue bl = to_bool(val);
-    return bl.val_boolean;
+    return impl::__to_cxx_bool(val);
 }
 
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
 VIA_FORCEINLINE TValue to_number(const TValue &val) noexcept
 {
-    if (check_number(val))
-        return val.clone();
-
-    switch (val.type) {
-    case ValueType::string:
-        return TValue(std::stod(val.val_string->data));
-    case ValueType::boolean:
-        return TValue(val.val_boolean ? 1.0f : 0.0f);
-    default:
-        break;
-    }
-
-    return nil.clone();
+    return impl::__to_number(val);
 }
 
-template<typename T = double>
+template<typename T>
     requires std::is_arithmetic_v<T>
 VIA_FORCEINLINE T to_cxx_number(const TValue &val) noexcept
 {
-    TValue dbl = to_number(val);
-
-    if (check_nil(dbl))
-        return std::numeric_limits<T>::quiet_NaN();
-
-    return static_cast<T>(dbl.val_number);
+    return impl::__to_cxx_number<T>(val);
 }
 
 // Utility function for quick table indexing.
@@ -241,12 +175,14 @@ VIA_FORCEINLINE T to_cxx_number(const TValue &val) noexcept
 VIA_FORCEINLINE TValue get_table(TTable *VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
-    if (it != tbl->data.end())
+    if (it != tbl->data.end()) {
         return it->second.clone();
-    else if (search_meta && tbl->meta)
+    }
+    else if (search_meta && tbl->meta) {
         // Disable metatable search to prevent chain searching
         // Which can cause infinite loops, crashes, and other bugs
         return get_table(tbl->meta, key, false);
+    }
 
     // This has to be a pointer because we don't know if the value is a
     // non-pointer primitive type
@@ -259,20 +195,23 @@ VIA_FORCEINLINE void set_table(TTable *VIA_RESTRICT tbl, U32 key, const TValue &
     if (check_nil(val)) {
         const TValue &tbl_val = get_table(tbl, key, false);
 
-        if (!check_nil(tbl_val))
+        if (!check_nil(tbl_val)) {
             tbl->data.erase(key);
+        }
     }
-    else
+    else {
         tbl->data.emplace(key, val.clone());
+    }
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
 VIA_FORCEINLINE TValue get_metamethod(const TValue &val, OpCode op)
 {
-    if (!check_table(val))
+    if (!check_table(val)) {
         return nil.clone();
+    }
 
-#define GET_METHOD(id) (get_table(val.val_table, hash_string(id), true))
+#define GET_METHOD(id) (get_table(val.cast_ptr<TTable>(), hash_string(id), true))
     switch (op) {
     case OpCode::ADD:
         return GET_METHOD("__add");
@@ -454,12 +393,15 @@ VIA_INLINE void method_call(
 {
     const TValue &method = get_table(tbl, key, true);
 
-    if (check_function(method))
-        native_call(V, method.val_function, argc);
-    else if (check_cfunction(method))
-        extern_call(V, method.val_cfunction, argc);
-    else
+    if (check_function(method)) {
+        native_call(V, method.cast_ptr<TFunction>(), argc);
+    }
+    else if (check_cfunction(method)) {
+        extern_call(V, method.cast_ptr<TCFunction>(), argc);
+    }
+    else {
         VIA_ASSERT(false, "value is not callable");
+    }
 }
 
 // Returns the primitive type of value <val>.
@@ -475,27 +417,33 @@ VIA_FORCEINLINE void call(State *VIA_RESTRICT V, const TValue &val, size_t argc)
 {
     V->calltype = CallType::CALL;
 
-    if (check_function(val))
-        native_call(V, val.val_function, argc);
-    else if (check_cfunction(val))
-        extern_call(V, val.val_cfunction, argc);
-    else if (check_table(val))
-        method_call(V, val.val_table, hash_string("__call"), argc);
-    else
+    if (check_function(val)) {
+        native_call(V, val.cast_ptr<TFunction>(), argc);
+    }
+    else if (check_cfunction(val)) {
+        extern_call(V, val.cast_ptr<TCFunction>(), argc);
+    }
+    else if (check_table(val)) {
+        method_call(V, val.cast_ptr<TTable>(), hash_string("__call"), argc);
+    }
+    else {
         VIA_ASSERT(false, "value is not callable");
+    }
 }
 
 // Returns the length of value <val>, nil if impossible.
 VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    if (check_string(val))
-        return TValue(static_cast<TNumber>(strlen(val.val_string->data)));
+    if (check_string(val)) {
+        return TValue(static_cast<int>(strlen(val.cast_ptr<TString>()->data)));
+    }
     else if (check_table(val)) {
         U32 metamethod_key = hash_string("__len");
-        const TValue &metamethod = get_table(val.val_table, metamethod_key, true);
+        const TValue &metamethod = get_table(val.cast_ptr<TTable>(), metamethod_key, true);
 
-        if (check_nil(metamethod))
-            return TValue(static_cast<TNumber>(val.val_table->data.size()));
+        if (check_nil(metamethod)) {
+            return TValue(static_cast<int>(val.cast_ptr<TTable>()->data.size()));
+        }
 
         call(V, metamethod, 1);
         return pop(V);
@@ -510,14 +458,15 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 VIA_FORCEINLINE TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     if (check_table(val)) {
-        TTable *tbl = val.val_table;
+        TTable *tbl = val.cast_ptr<TTable>();
         const TValue &ty = get_table(tbl, hash_string("__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
-        if (check_nil(ty))
+        if (check_nil(ty)) {
             return type(V, val);
+        }
 
-        TString *tystr = new TString(V, ty.val_string->data);
+        TString *tystr = new TString(V, ty.cast_ptr<TString>()->data);
         return TValue(tystr);
     }
 
@@ -546,130 +495,60 @@ VIA_FORCEINLINE void setmetatable(TTable *VIA_RESTRICT tbl, TTable *VIA_RESTRICT
 // Returns the metatable of <tbl>, nil if impossible.
 VIA_FORCEINLINE TValue getmetatable(State *VIA_RESTRICT, TTable *VIA_RESTRICT tbl)
 {
-    if (tbl->meta)
+    if (tbl->meta) {
         return TValue(tbl->meta);
+    }
 
     return nil.clone();
-}
-
-// Performs an arithmetic operation determined by <op> between <lhs> and <rhs>.
-VIA_FORCEINLINE TValue arith(State *VIA_RESTRICT V, const TValue &lhs, const TValue &rhs, OpCode op)
-{
-    VIA_ASSERT(check_number(rhs), "rhs is not a number");
-
-    if (check_number(lhs)) {
-        switch (op) {
-        case OpCode::ADD:
-            return TValue(lhs.val_number + rhs.val_number);
-        case OpCode::SUB:
-            return TValue(lhs.val_number - rhs.val_number);
-        case OpCode::MUL:
-            return TValue(lhs.val_number * rhs.val_number);
-        case OpCode::DIV:
-            VIA_ASSERT(rhs.val_number != 0.0f, "division by zero");
-            return TValue(lhs.val_number / rhs.val_number);
-        case OpCode::POW:
-            return TValue(std::pow(lhs.val_number, rhs.val_number));
-        case OpCode::MOD:
-            return TValue(std::fmod(lhs.val_number, rhs.val_number));
-        default:
-            VIA_ASSERT(false, "non-arithmetic opcode");
-            break;
-        }
-
-        return nil.clone();
-    }
-    else if (check_table(lhs)) {
-        const TValue &metamethod = get_metamethod(lhs, op);
-        push(V, lhs); // self
-        push(V, rhs); // other
-        call(V, metamethod, 2);
-        return pop(V);
-    }
-
-    VIA_ASSERT(false, "non-arithmetic lhs value");
-    return nil.clone();
-}
-
-// Performs inline artihmetic between <lhs*> and <rhs>, operation determined by <op>.
-VIA_FORCEINLINE void iarith(State *VIA_RESTRICT V, TValue *lhs, const TValue &rhs, OpCode op)
-{
-    if (check_number(*lhs)) {
-        switch (op) {
-        case OpCode::ADD:
-            lhs->val_number += rhs.val_number;
-            break;
-        case OpCode::SUB:
-            lhs->val_number -= rhs.val_number;
-            break;
-        case OpCode::MUL:
-            lhs->val_number *= rhs.val_number;
-            break;
-        case OpCode::DIV:
-            VIA_ASSERT(rhs.val_number != 0.0f, "division by zero");
-
-            lhs->val_number /= rhs.val_number;
-            break;
-        case OpCode::POW:
-            lhs->val_number = std::pow(lhs->val_number, rhs.val_number);
-            break;
-        case OpCode::MOD:
-            lhs->val_number = std::fmod(lhs->val_number, rhs.val_number);
-            break;
-        default:
-            VIA_ASSERT(false, "non-artihmetic opcode");
-            break;
-        }
-    }
-    else if (check_table(*lhs)) {
-        const TValue &metamethod = get_metamethod(*lhs, op);
-        push(V, *lhs); // self
-        push(V, rhs);  // other
-        call(V, metamethod, 2);
-        *lhs = pop(V);
-    }
-
-    VIA_ASSERT(false, "non-arithmetic lhs value");
 }
 
 VIA_INLINE TValue weak_primitive_cast(State *VIA_RESTRICT V, const TValue &val, ValueType type)
 {
+    using enum ValueType;
+
     switch (type) {
-    case ValueType::number:
+    case integer:
+    case floating_point:
         return to_number(val);
-    case ValueType::boolean:
+    case boolean:
         return to_bool(val);
-    case ValueType::string:
+    case string:
         return to_string(V, val);
     default:
         break;
     }
 
-    return nil.clone();
+    return via::nil.clone();
 }
 
 VIA_INLINE void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueType type)
 {
-    switch (type) {
-    case ValueType::number: {
-        double num = to_cxx_number(val);
+    using enum ValueType;
 
+    switch (type) {
+    case floating_point: {
+        float num = to_cxx_number<float>(val);
         // Check for NaN
         if (num != num) {
             goto error;
         }
 
-        val.val_number = num;
+        val.val_floating_point = num;
         break;
     }
-    case ValueType::boolean:
+    case integer: {
+        int num = to_cxx_number<int>(val);
+        val.val_integer = num;
+        break;
+    }
+    case boolean:
         val.val_boolean = to_cxx_bool(val);
         break;
-    case ValueType::string: {
+    case string: {
         TValue non_owned_val = to_string(V, val);
-        TString *owned = val.val_string;
+        TString *owned = val.cast_ptr<TString>();
 
-        val.val_string = new TString(V, non_owned_val.val_string->data);
+        val.val_pointer = new TString(V, non_owned_val.cast_ptr<TString>()->data);
 
         if (owned) {
             delete owned;
