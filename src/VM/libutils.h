@@ -22,3 +22,5 @@
 
 #define LIB_ERR_ARG_TYPE_MISMATCH(type0, type1, parameter) \
     LIB_ASSERT(false, std::format("Expected {}, got {} (parameter #{})", type0, type1, parameter));
+
+#define LIB_MAP_EMPLACE(map, key, val) map.emplace(hash_string(key), val);

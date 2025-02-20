@@ -13,9 +13,7 @@
 // Define the hot path threshold for the instruction dispatch loop
 // How many times a chunk needs to be executed before being flagged as
 // "hot"
-#ifndef VIA_HOTPATH_THRESHOLD
-    #define VIA_HOTPATH_THRESHOLD 64
-#endif
+#define VIA_HOTPATH_THRESHOLD 64
 
 // Index of the current instruction
 #define VM_POS V->ip - V->ihp
@@ -70,9 +68,9 @@ void vm_save_snapshot(State *VIA_RESTRICT V)
     std::string stack = "==== stack ====\n";
 
     // Generate stack map
-    for (TValue *p = V->sbp; p < V->sbp + V->sp; p++) {
-        U32 pos = p - V->sbp;
-        stack += std::format("|{:02}| {}\n", pos, impl::__to_cxx_string(V, *p));
+    for (TValue *ptr = V->sbp; ptr < V->sbp + V->sp; ptr++) {
+        U32 pos = ptr - V->sbp;
+        stack += std::format("|{:02}| {}\n", pos, impl::__to_cxx_string(V, *ptr));
     }
 
     stack += "==== stack ====\n";
@@ -753,14 +751,6 @@ dispatch: {
         const TValue &constant = __get_constant(V, const_idx);
 
         __push(V, constant);
-        VM_NEXT();
-    }
-
-    case PUSHI: {
-        U32 immx = V->ip->operand0;
-        TValue val(immx);
-
-        __push(V, val);
         VM_NEXT();
     }
 

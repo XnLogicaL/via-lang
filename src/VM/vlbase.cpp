@@ -115,12 +115,12 @@ LIB_DECL_FUNCTION(open_baselib)
 {
     std::unordered_map<U32, TValue> base_properties;
 
-    base_properties.emplace("print", LIB_WRAP_CFPTR(base_print));
-    base_properties.emplace("println", LIB_WRAP_CFPTR(base_println));
-    base_properties.emplace("error", LIB_WRAP_CFPTR(base_error));
-    base_properties.emplace("assert", LIB_WRAP_CFPTR(base_assert));
-    base_properties.emplace("weakPrimitiveCast", LIB_WRAP_CFPTR(base_weakPrimCast));
-    base_properties.emplace("strongPrimitiveCast", LIB_WRAP_CFPTR(base_strongPrimCast));
+    LIB_MAP_EMPLACE(base_properties, "print", LIB_WRAP_CFPTR(base_print));
+    LIB_MAP_EMPLACE(base_properties, "println", LIB_WRAP_CFPTR(base_println));
+    LIB_MAP_EMPLACE(base_properties, "error", LIB_WRAP_CFPTR(base_error));
+    LIB_MAP_EMPLACE(base_properties, "assert", LIB_WRAP_CFPTR(base_assert));
+    LIB_MAP_EMPLACE(base_properties, "weakPrimitiveCast", LIB_WRAP_CFPTR(base_weakPrimCast));
+    LIB_MAP_EMPLACE(base_properties, "strongPrimitiveCast", LIB_WRAP_CFPTR(base_strongPrimCast));
 
     for (const auto &[ident, val] : base_properties) {
         __set_global(V, ident, val);

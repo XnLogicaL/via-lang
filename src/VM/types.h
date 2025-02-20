@@ -147,12 +147,14 @@ struct TTable {
     }
 };
 
-// Random hashing algo, may need to be replaced later
 VIA_FORCEINLINE U32 hash_string(const char *str)
 {
+    static const constexpr U32 BASE = 31;
+    static const constexpr U32 MOD = 0xFFFFFFFF;
+
     U32 hash = 0;
-    while (*str) {
-        hash = (hash * 31) + *str++;
+    while (char chr = *str++) {
+        hash = (hash * BASE + static_cast<U32>(chr)) % MOD;
     }
 
     return hash;

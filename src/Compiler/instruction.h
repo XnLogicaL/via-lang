@@ -25,18 +25,16 @@ enum class OperandType {
 };
 
 struct Instruction {
-    OpCode op;
-    U32 operand0;
-    U32 operand1;
-    U32 operand2;
-    Chunk *chunk;
-    size_t pos;
+    OpCode op = OpCode::NOP;
+    U32 operand0 = 0;
+    U32 operand1 = 0;
+    U32 operand2 = 0;
+    Chunk *chunk = nullptr;
+    size_t pos = 0;
 
-    Instruction();
     Instruction(OpCode, std::vector<U32>, Chunk *, size_t);
 };
 
-std::string to_string(U32);
 std::string to_string(ProgramData *, Instruction);
 
 } // namespace via

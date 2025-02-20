@@ -197,14 +197,6 @@ enum class OpCode {
      */
     PUSHK,
     /*
-     * opcode: PUSHI
-     * Pushes an immediate value onto the stack.
-     * operand0: <imm :: Any>
-     * operand0: <>
-     * operand1: <>
-     */
-    PUSHI,
-    /*
      * opcode: POP
      * Pops and loads the top-most element of the stack onto a register.
      * operand0: <dst :: Register>
