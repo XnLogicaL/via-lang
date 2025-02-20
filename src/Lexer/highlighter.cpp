@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "highlighter.h"
 #include "token.h"
@@ -29,11 +30,11 @@ std::vector<std::string> Emitter::split_lines()
 std::string Emitter::get_severity_header(OutputSeverity sev)
 {
     switch (sev) {
-    case OutputSeverity::INFO:
+    case OutputSeverity::Info:
         return "\033[1;34minfo:\033[0m "; // Blue color for info
-    case OutputSeverity::WARNING:
+    case OutputSeverity::Warning:
         return "\033[1;33mwarning:\033[0m "; // Yellow color for warning
-    case OutputSeverity::ERROR_:
+    case OutputSeverity::Error:
         return "\033[1;31merror:\033[0m "; // Red color for error
     default:
         VIA_UNREACHABLE();
@@ -91,16 +92,16 @@ void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
     static bool has_printed_file_name = false;
 
     // Check if file information has been printed
-    if (!has_printed_file_name && program->file_name != "<repl>") {
+    if (!has_printed_file_name && program->file != "<repl>") {
         has_printed_file_name = true;
-        std::cout << std::format("In file {}:\n", program->file_name);
+        std::cout << std::format("In file {}:\n", program->file);
     }
 
     // Find token
     Token tok = program->tokens->tokens.at(idx);
     size_t line = tok.line;
     size_t offset = tok.offset;
-    size_t length = tok.value.length();
+    size_t length = tok.lexeme.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 

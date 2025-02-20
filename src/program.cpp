@@ -18,13 +18,13 @@
 
 namespace via {
 
-ProgramData::ProgramData(std::string file_name, std::string file_source)
-    : file_name(file_name)
+ProgramData::ProgramData(std::string file, std::string file_source)
+    : file(file)
     , source(file_source)
     , tokens(new TokenHolder())
-    , ast(new AbstractSyntaxTree(VIA_PARSER_ALLOC_SIZE))
+    , ast(new AbstractSyntaxTree())
     , bytecode(new BytecodeHolder())
-    , constants(new kTable())
+    , constants(new std::vector<TValue>())
 {
 }
 

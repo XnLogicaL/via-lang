@@ -63,7 +63,7 @@ VIA_INLINE U8 *hash_file(const std::string &src)
 enum class CacheResult { SUCCESS, FAIL };
 
 struct CacheFile {
-    std::string file_name;
+    std::string file;
     U64 magic_value = 0xDEADBEEFULL; // 8 bytes
     U32 version;                     // 4 bytes
     U64 compilation_date;            // 8 bytes
@@ -78,7 +78,7 @@ struct CacheFile {
     ProgramData *program;
 
     explicit CacheFile(ProgramData *program)
-        : file_name(program->file_name)
+        : file(program->file)
         , version(std::stoi(VIA_VERSION))
         , compilation_date(std::chrono::steady_clock::now().time_since_epoch().count())
         , platform_info("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")

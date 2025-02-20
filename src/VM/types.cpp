@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "types.h"
 
@@ -193,10 +194,10 @@ TValue TValue::clone() const noexcept
 
 TString::TString(State *V, const char *str)
 {
-    Hash hash = hash_string(str);
+    U32 hash = hash_string(str);
     // For compiler compatability
     if (V != nullptr) {
-        StrTable stable = V->G->stable;
+        std::unordered_map<U32, TString *> stable = V->G->stable;
         auto it = stable.find(hash);
         if (it != stable.end()) { // String already exists, return the existing entry
             // *this = *it->second;
@@ -215,7 +216,7 @@ TString::TString(State *V, const char *str)
     this->hash = hash;
 
     if (V != nullptr) {
-        StrTable &stable = V->G->stable;
+        std::unordered_map<U32, TString *> &stable = V->G->stable;
         // Insert the new string into the stable
         stable.emplace(hash, this);
     }

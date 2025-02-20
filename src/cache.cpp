@@ -17,9 +17,9 @@ bool CacheManager::dir_has_cache(fs::path dir)
     return fs::is_directory(VIA_CACHE_DIR_FS_PATH);
 }
 
-bool CacheManager::dir_has_cache_file(fs::path dir, std::string file_name)
+bool CacheManager::dir_has_cache_file(fs::path dir, std::string file)
 {
-    return fs::is_directory(VIA_CACHE_DIR_FS_FILE_PATH(file_name));
+    return fs::is_directory(VIA_CACHE_DIR_FS_FILE_PATH(file));
 }
 
 CacheResult CacheManager::make_cache(fs::path dir)
@@ -34,7 +34,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
         make_cache(path);
     }
 
-    std::string file_name_hash = hash(file.file_name);
+    std::string file_name_hash = hash(file.file);
     auto bin_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_BIN_EXT);
     auto asm_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_ASM_EXT);
 
@@ -69,7 +69,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     write_data(file.bytecode.data(), file.bytecode.size());
     write_data(&file.checksum_b, sizeof(file.checksum_b));
 
-    for (const Instruction &instr : file.program->bytecode->get()) {
+    for (const Instruction &instr : file.program->bytecode->instructions) {
         std::string instr_str = via::to_string(file.program, instr) + "\n";
         ofs_asm.write(instr_str.data(), instr_str.size());
     }
@@ -101,7 +101,7 @@ CacheFile CacheManager::read_cache(ProgramData *file)
 #endif
     }
 
-    cache_file.file_name = file->file_name;
+    cache_file.file = file->file;
 
     // Read magic value
     std::memcpy(&cache_file.magic_value, raw_source + offset, sizeof(cache_file.magic_value));

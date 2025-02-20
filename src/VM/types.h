@@ -1,6 +1,6 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license
- * information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -11,33 +11,32 @@
 namespace via {
 
 enum class ValueType {
-    monostate, // Represents uninitialized values
-    nil,       // Empty values, like null, does not contain a union counterpart
-    number,    // Unified number type, f64
-    boolean,   // Bool type, wrapper for `bool`
-    string,    // String type, pointer to owning string object
-    function,  // Function type (custom object)
-    cfunction, // CFunction type, C function pointer wrapper
-    table,     // Table type (custom object)
+    nil,            // Empty values, like null, does not contain a union counterpart
+    integer,        // Integer type (i32)
+    floating_point, // Float type (f32)
+    boolean,        // Bool type, wrapper for `bool`
+    string,         // String type, pointer to owning string object
+    function,       // Function type (custom object)
+    cfunction,      // CFunction type, C function pointer wrapper
+    table,          // Table type
+    object,
 };
 
 // Tagged union that holds a primitive via value
 struct TValue {
-    ValueType type = ValueType::monostate;
+    ValueType type = ValueType::nil;
     union {
-        TNumber val_number;
-        TBool val_boolean;
-        TString *val_string;
-        TFunction *val_function;
-        TCFunction *val_cfunction;
-        TTable *val_table;
+        int val_integer;
+        float val_floating_point;
+        bool val_boolean;
+        void *val_pointer;
     };
 
     TValue(const TValue &) = delete;            // Copy constructor
     TValue(TValue &&other) noexcept;            // Move constructor
     TValue &operator=(const TValue &) = delete; // Assignment operator
     TValue &operator=(TValue &&) noexcept;      // Move operator
-    TValue(const Operand &);
+    TValue(const U32 &);
     ~TValue();
 
     explicit TValue()
@@ -45,49 +44,43 @@ struct TValue {
     {
     }
 
-    explicit TValue(TNumber x)
-        : type(ValueType::number)
-        , val_number(x)
+    explicit TValue(int x)
+        : type(ValueType::integer)
+        , val_integer(x)
     {
     }
 
-    explicit TValue(TBool b)
+    explicit TValue(float x)
+        : type(ValueType::floating_point)
+        , val_floating_point(x)
+    {
+    }
+
+    explicit TValue(bool boolean)
         : type(ValueType::boolean)
-        , val_boolean(b)
+        , val_boolean(boolean)
     {
     }
 
-    explicit TValue(TString *str)
-        : type(ValueType::string)
-        , val_string(str)
-    {
-    }
-
-    explicit TValue(TFunction *fun)
-        : type(ValueType::function)
-        , val_function(fun)
-    {
-    }
-
-    explicit TValue(TCFunction *cfun)
-        : type(ValueType::cfunction)
-        , val_cfunction(cfun)
-    {
-    }
-
-    explicit TValue(TTable *tbl)
-        : type(ValueType::table)
-        , val_table(tbl)
+    explicit TValue(ValueType type, void *ptr)
+        : type(type)
+        , val_pointer(ptr)
     {
     }
 
     TValue clone() const noexcept;
+
+    template<typename T>
+    [[nodiscard]] VIA_MAXOPTIMIZE T *cast_ptr() const noexcept
+    {
+        return reinterpret_cast<T *>(val_pointer);
+    }
 };
 
 struct TString {
     const char *data = dup_string("");
     U32 len = 0;
-    Hash hash = 0;
+    U32 hash = 0;
 
     explicit TString(State *, const char *);
     TString() = default;
@@ -141,7 +134,7 @@ struct TTable {
     TTable *meta = nullptr;
     // Tells the VM if the table is modifiable
     utils::ModifiableOnce<bool> frozen = false;
-    std::unordered_map<TableKey, TValue> data;
+    std::unordered_map<U32, TValue> data;
 
     TTable() = default;
     TTable(const TTable &other)
@@ -155,9 +148,9 @@ struct TTable {
 };
 
 // Random hashing algo, may need to be replaced later
-VIA_FORCEINLINE Hash hash_string(const char *str)
+VIA_FORCEINLINE U32 hash_string(const char *str)
 {
-    Hash hash = 0;
+    U32 hash = 0;
     while (*str) {
         hash = (hash * 31) + *str++;
     }
@@ -165,14 +158,19 @@ VIA_FORCEINLINE Hash hash_string(const char *str)
     return hash;
 }
 
-VIA_FORCEINLINE bool check_monostate(const TValue &val)
+VIA_FORCEINLINE bool check_integer(const TValue &val)
 {
-    return val.type == ValueType::monostate;
+    return val.type == ValueType::integer;
+}
+
+VIA_FORCEINLINE bool check_floating_point(const TValue &val)
+{
+    return val.type == ValueType::floating_point;
 }
 
 VIA_FORCEINLINE bool check_number(const TValue &val)
 {
-    return val.type == ValueType::number;
+    return check_integer(val) || check_floating_point(val);
 }
 
 VIA_FORCEINLINE bool check_bool(const TValue &val)
@@ -203,11 +201,6 @@ VIA_FORCEINLINE bool check_cfunction(const TValue &val)
 VIA_FORCEINLINE bool check_function(const TValue &val)
 {
     return val.type == ValueType::function;
-}
-
-VIA_FORCEINLINE bool check_empty(const TValue &val)
-{
-    return check_nil(val) || check_monostate(val);
 }
 
 VIA_FORCEINLINE bool check_callable(const TValue &val)

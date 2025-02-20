@@ -1,10 +1,10 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "state.h"
 #include "api.h"
 #include "bytecode.h"
-#include "register.h"
 #include "gc.h"
 
 namespace via {
@@ -13,9 +13,9 @@ namespace via {
 State::State(GState *G, ProgramData *program)
     : id(G->threads++)
     , G(G)
-    , ralloc(new RAState())
     , gc(new GarbageCollector())
     , sbp(new TValue[VIA_VM_STACK_SIZE])
+    , registers(new TValue[VIA_REGISTER_COUNT])
     , err(new ErrorState())
     , program(program)
 {
@@ -24,7 +24,7 @@ State::State(GState *G, ProgramData *program)
     // Mimic a "main" function
     // This is necessary for setting up a global scope, and isn't meant to be a conventional
     // function
-    TFunction *main = new TFunction(this, VIA_MAIN_ID, this->ip, this->frame, {}, false, false);
+    TFunction *main = new TFunction(this, "__main", this->ip, this->frame, {}, false, false);
     native_call(this, main, 0);
 }
 
@@ -55,7 +55,6 @@ State::~State()
     if (this->sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
-        sstate->ralloc = nullptr;
 
         if (sstate->ihp == ihp) {
             sstate->ihp = nullptr;
@@ -73,8 +72,8 @@ State::~State()
         delete this->gc;
     }
 
-    if (this->ralloc) {
-        delete this->ralloc;
+    if (this->registers) {
+        delete[] this->registers;
     }
 
     if (this->ihp) {
@@ -98,7 +97,7 @@ std::string to_string(State *state)
     oss << std::format("|ip    | {}\n", TO_VOID_STAR(state->ip));
     oss << std::format("|ihp   | {}\n", TO_VOID_STAR(state->ihp));
     oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
-    oss << std::format("|ralloc| {}\n", TO_VOID_STAR(state->ralloc));
+    oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));
     oss << std::format("|gc    | {}\n", TO_VOID_STAR(state->gc));
     oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));
     oss << std::format("|sp    | {}\n", state->sp);
@@ -107,7 +106,7 @@ std::string to_string(State *state)
     oss << std::format("|argc  | {}\n", state->argc);
     oss << std::format("|abort | {}\n", state->abort);
     oss << std::format("|err   | <ErrorState@{}>\n", TO_VOID_STAR(state->err));
-    oss << std::format("|tstate| {}\n", ENUM_NAME(state->tstate));
+    oss << std::format("|tstate| {}\n", magic_enum::enum_name(state->tstate));
     oss << std::format("|sstate| <State@{}>\n", TO_VOID_STAR(state->sstate));
 
     oss << "==== state ====\n";

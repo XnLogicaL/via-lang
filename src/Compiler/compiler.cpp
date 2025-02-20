@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "compiler.h"
 #include "constfold.h"
@@ -19,18 +20,11 @@ bool Compiler::generate()
         program->constants->push_back(constant.clone());
     }
 
-    return generator.failed;
+    return false;
 }
 
-void Compiler::add_default_passes()
-{
-    // Bitshift optimization
-    add_pass(std::make_unique<ConstFoldOptimizationPass>());
-}
+void Compiler::add_default_passes() {}
 
-void Compiler::add_pass(std::unique_ptr<OptimizationPass>)
-{
-    // pass_manager.add_pass(std::move(pass));
-}
+void Compiler::add_pass(std::unique_ptr<OptimizationPass>) {}
 
 } // namespace via

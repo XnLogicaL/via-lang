@@ -19,7 +19,10 @@ file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true src/*) # Recursively get al
 if(NOT DEFINED DEBUG_MODE)
     message(WARNING "DEBUG_MODE is not defined, using default: '${DEFAULT_DEBUG_MODE}'")
     set(DEBUG_MODE DEFAULT_DEBUG_MODE CACHE STRING "Debug level (e.g., 'PROD' or 'DEBUG')")
-    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+if(DEBUG_MODE STREQUAL "DEBUG")
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 endif()
 
 # Check for main file path

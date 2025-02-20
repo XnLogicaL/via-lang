@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -7,7 +8,6 @@
 #include "gc.h"
 #include "instruction.h"
 #include "opcode.h"
-#include "register.h"
 #include "state.h"
 #include "types.h"
 #include "vmapi.h"
@@ -18,6 +18,20 @@
 namespace via {
 
 static const TValue nil = TValue();
+
+VIA_MAXOPTIMIZE TValue *get_register(State *V, U32 reg)
+{
+    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+    return V->registers + reg;
+}
+
+VIA_MAXOPTIMIZE void set_register(State *V, U32 reg, const TValue &val)
+{
+    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+
+    TValue *addr = V->registers + reg;
+    *addr = val.clone();
+}
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
 VIA_FORCEINLINE void *to_pointer(const TValue &val) noexcept
@@ -60,7 +74,7 @@ VIA_MAXOPTIMIZE bool compare(const TValue &v0, const TValue &v1) noexcept
 
 // Compares the values of two registers and returns whether if they are
 // equivalent. Optimized for maximum performance.
-VIA_MAXOPTIMIZE bool compare_registers(State *VIA_RESTRICT V, RegId reg0, RegId reg1) noexcept
+VIA_MAXOPTIMIZE bool compare_registers(State *VIA_RESTRICT V, U32 reg0, U32 reg1) noexcept
 {
     // Early return if registers are equivalent
     if (reg0 == reg1)
@@ -224,7 +238,7 @@ VIA_FORCEINLINE T to_cxx_number(const TValue &val) noexcept
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-VIA_FORCEINLINE TValue get_table(TTable *VIA_RESTRICT tbl, TableKey key, bool search_meta) noexcept
+VIA_FORCEINLINE TValue get_table(TTable *VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept
 {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end())
@@ -240,7 +254,7 @@ VIA_FORCEINLINE TValue get_table(TTable *VIA_RESTRICT tbl, TableKey key, bool se
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-VIA_FORCEINLINE void set_table(TTable *VIA_RESTRICT tbl, TableKey key, const TValue &val) noexcept
+VIA_FORCEINLINE void set_table(TTable *VIA_RESTRICT tbl, U32 key, const TValue &val) noexcept
 {
     if (check_nil(val)) {
         const TValue &tbl_val = get_table(tbl, key, false);
@@ -290,9 +304,9 @@ VIA_FORCEINLINE TValue get_metamethod(const TValue &val, OpCode op)
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
-VIA_FORCEINLINE const TValue &get_local(State *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE const TValue &get_local(State *VIA_RESTRICT V, U32 offset) noexcept
 {
-    // Check if LocalId is out of bounds
+    // Check if U32 is out of bounds
     if (offset > V->sp)
         return nil;
 
@@ -302,11 +316,11 @@ VIA_FORCEINLINE const TValue &get_local(State *VIA_RESTRICT V, LocalId offset) n
 }
 
 // Reassigns the stack value at offset <offset> to <val>.
-VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, LocalId offset, const TValue &val)
+VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, U32 offset, const TValue &val)
 {
     std::lock_guard<std::mutex> lock(V->G->symtable_mutex);
 
-    // Check if LocalId is out of bounds,
+    // Check if U32 is out of bounds,
     // this is CRUCIAL, and prevents UB upon stack operations.
     if (offset > V->sp) {
         std::string identifier("<unknown-symbol>");
@@ -319,7 +333,7 @@ VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, LocalId offset, const TVal
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
-VIA_FORCEINLINE const TValue &get_global(State *VIA_RESTRICT V, kGlobId ident) noexcept
+VIA_FORCEINLINE const TValue &get_global(State *VIA_RESTRICT V, U32 ident) noexcept
 {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
@@ -332,7 +346,7 @@ VIA_FORCEINLINE const TValue &get_global(State *VIA_RESTRICT V, kGlobId ident) n
 }
 
 // Attempts to declare a new global constant.
-VIA_FORCEINLINE void set_global(State *VIA_RESTRICT V, kGlobId ident, const TValue &val)
+VIA_FORCEINLINE void set_global(State *VIA_RESTRICT V, U32 ident, const TValue &val)
 {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
@@ -344,14 +358,14 @@ VIA_FORCEINLINE void set_global(State *VIA_RESTRICT V, kGlobId ident, const TVal
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-VIA_FORCEINLINE const TValue &get_argument(State *VIA_RESTRICT V, LocalId offset) noexcept
+VIA_FORCEINLINE const TValue &get_argument(State *VIA_RESTRICT V, U32 offset) noexcept
 {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
         return nil;
 
     // Calculate the stack position of the argument
-    StkPos stack_offset = V->ssp + V->argc - 1 - offset;
+    U32 stack_offset = V->ssp + V->argc - 1 - offset;
     // Retrieve stack value
     TValue &val = V->sbp[stack_offset];
     return val;
@@ -434,7 +448,7 @@ VIA_FORCEINLINE void extern_call(
 VIA_INLINE void method_call(
     State *VIA_RESTRICT V,
     TTable *VIA_RESTRICT tbl,
-    TableKey key,
+    U32 key,
     size_t argc
 ) noexcept
 {
@@ -451,7 +465,7 @@ VIA_INLINE void method_call(
 // Returns the primitive type of value <val>.
 VIA_FORCEINLINE TValue type(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
-    char *str = dup_string(std::string(ENUM_NAME(val.type)));
+    char *str = dup_string(std::string(magic_enum::enum_name(val.type)));
     return TValue(new TString(V, str));
 }
 
@@ -477,7 +491,7 @@ VIA_FORCEINLINE TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
     if (check_string(val))
         return TValue(static_cast<TNumber>(strlen(val.val_string->data)));
     else if (check_table(val)) {
-        TableKey metamethod_key = hash_string("__len");
+        U32 metamethod_key = hash_string("__len");
         const TValue &metamethod = get_table(val.val_table, metamethod_key, true);
 
         if (check_nil(metamethod))
@@ -674,8 +688,8 @@ error:
         false,
         std::format(
             "type '{}' is not primitive castable into type '{}'",
-            ENUM_NAME(val.type),
-            ENUM_NAME(type)
+            magic_enum::enum_name(val.type),
+            magic_enum::enum_name(type)
         )
     );
 }

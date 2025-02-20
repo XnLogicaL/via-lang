@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "preproc.h"
 #include "lexer.h"
@@ -28,7 +29,7 @@ void Preprocessor::declare_default()
 
     declare_definition({
         "__file__",
-        fast_tokenize(program->file_name),
+        fast_tokenize(program->file),
         0,
         0,
         0,
@@ -59,10 +60,12 @@ Token Preprocessor::peek(int ahead)
 bool Preprocessor::preprocess()
 {
     for (const Token &tok : program->tokens->tokens) {
-        if (tok.type == TokenType::KW_MACRO)
+        if (tok.type == TokenType::KW_MACRO) {
             parse_macro();
-        else if (tok.type == TokenType::KW_DEFINE)
+        }
+        else if (tok.type == TokenType::KW_DEFINE) {
             parse_definition();
+        }
         else {
             pos++;
             continue;

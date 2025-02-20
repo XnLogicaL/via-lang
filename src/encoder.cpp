@@ -1,6 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
-
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 #include "encoder.h"
 
 #define INSTR_SEP 0xff
@@ -60,9 +60,9 @@ std::vector<char> Encoder::encode(std::vector<Instruction> instrs)
     std::vector<char> encoding;
 
     for (Instruction instr : instrs) {
-        std::vector<char> encoded_operand1 = encode_operand(instr.operand1);
-        std::vector<char> encoded_operand2 = encode_operand(instr.operand2);
-        std::vector<char> encoded_operand3 = encode_operand(instr.operand3);
+        std::vector<char> encoded_operand1 = encode_operand(instr.operand0);
+        std::vector<char> encoded_operand2 = encode_operand(instr.operand1);
+        std::vector<char> encoded_operand3 = encode_operand(instr.operand2);
 
         encoding.push_back(INSTR_SEP);
         encoding.push_back(encode_opcode(instr.op));
@@ -95,7 +95,7 @@ Operand Encoder::decode_operand(std::vector<char>::const_iterator it)
         operand.val_boolean = static_cast<bool>(*it++);
         break;
     case OperandType::Register:
-        operand.val_register = static_cast<RegId>(*it++);
+        operand.val_register = static_cast<U32>(*it++);
         break;
     case OperandType::String: {
         std::string temp;
@@ -132,15 +132,15 @@ std::vector<Instruction> Encoder::decode(std::vector<char> encoding)
             if (static_cast<unsigned char>(*it) == OPERAND_SEP)
                 ++it; // Skip operand separator
 
+            instr.operand0 = decode_operand(it);
+            if (static_cast<unsigned char>(*it) == OPERAND_SEP)
+                ++it; // Skip operand separator
+
             instr.operand1 = decode_operand(it);
             if (static_cast<unsigned char>(*it) == OPERAND_SEP)
                 ++it; // Skip operand separator
 
             instr.operand2 = decode_operand(it);
-            if (static_cast<unsigned char>(*it) == OPERAND_SEP)
-                ++it; // Skip operand separator
-
-            instr.operand3 = decode_operand(it);
             if (static_cast<unsigned char>(*it) == OPERAND_SEP)
                 ++it; // Skip operand separator
 

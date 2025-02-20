@@ -1,6 +1,6 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license
- * information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -8,7 +8,6 @@
 #include "gc.h"
 #include "instruction.h"
 #include "opcode.h"
-#include "register.h"
 #include "state.h"
 #include "types.h"
 
@@ -50,7 +49,7 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
         if (_Error_frame) {
             std::cerr << std::format(
                              "<frame@0x{:x}>: {}\n",
-                             reinterpret_cast<UPtr>(_Error_frame),
+                             reinterpret_cast<uintptr_t>(_Error_frame),
                              _V->err->message
                          )
                       << '\n';
@@ -62,7 +61,7 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
             std::cerr << std::format(
-                "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<UPtr>(_Error_frame)
+                "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
             );
             _Error_frame = _Error_frame->caller;
         }
@@ -71,15 +70,15 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
     return static_cast<bool>(_Current_frame);
 }
 
-VIA_MAXOPTIMIZE void __set_register(State *_V, RegId _Reg, const TValue &_Val)
+VIA_MAXOPTIMIZE void __set_register(State *_V, U32 _Reg, const TValue &_Val)
 {
-    TValue *addr = _V->ralloc->head + _Reg;
+    TValue *addr = _V->registers + _Reg;
     *addr = _Val.clone();
 }
 
-VIA_MAXOPTIMIZE TValue *__get_register(State *_V, RegId _Reg)
+VIA_MAXOPTIMIZE TValue *__get_register(State *_V, U32 _Reg)
 {
-    TValue *addr = _V->ralloc->head + _Reg;
+    TValue *addr = _V->registers + _Reg;
     return addr;
 }
 
@@ -103,7 +102,7 @@ VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
 
     _V->sbp[_V->sp++] = _Val.clone();
 
-    std::cout << ENUM_NAME(_V->sbp[_V->sp].type);
+    std::cout << magic_enum::enum_name(_V->sbp[_V->sp].type);
 }
 
 VIA_MAXOPTIMIZE TValue __pop(State *_V)
@@ -116,13 +115,13 @@ VIA_MAXOPTIMIZE TValue __pop(State *_V)
     return _V->sbp[_V->sp--].clone();
 }
 
-VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, LocalId _Offset) noexcept
+VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, U32 _Offset) noexcept
 {
     if (_Offset >= _V->argc) {
         return _Nil.clone();
     }
 
-    const StkPos _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
+    const U32 _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
     const TValue &_Val = _V->sbp[_Stk_offset];
 
     return _Val.clone();
@@ -130,17 +129,17 @@ VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, LocalId _Offset) n
 
 VIA_FORCEINLINE TValue __type(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
-    char *_Str = dup_string(std::string(ENUM_NAME(_Val.type)));
+    char *_Str = dup_string(std::string(magic_enum::enum_name(_Val.type)));
     return TValue(new TString(_V, _Str));
 }
 
 VIA_FORCEINLINE std::string __type_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val)
 {
     TValue _Type = __type(_V, _Val);
-    return std::string(_Type.val_string->data);
+    return std::string(_Type.cast_ptr<TString>()->data);
 }
 
-VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Search_meta) noexcept
+VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, bool _Search_meta) noexcept
 {
     auto _It = _Tbl->data.find(_Key);
     if (_It != _Tbl->data.end()) {
@@ -153,11 +152,7 @@ VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, TableKey _Key, bool _Se
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_table(
-    TTable *VIA_RESTRICT _Tbl,
-    TableKey _Key,
-    const TValue &_Val
-) noexcept
+VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, const TValue &_Val) noexcept
 {
     if (check_nil(_Val)) {
         const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
@@ -174,14 +169,14 @@ VIA_FORCEINLINE void __set_table(
 VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
 {
     if (check_table(_Val)) {
-        TTable *_Tbl = _Val.val_table;
+        TTable *_Tbl = _Val.cast_ptr<TTable>();
         const TValue &_Type = __get_table(_Tbl, hash_string("__type"), true);
 
         if (check_nil(_Type)) {
             return __type(_V, _Val);
         }
 
-        return TValue(new TString(_V, _Type.val_string->data));
+        return TValue(new TString(_V, _Type.cast_ptr<TString>()->data));
     }
 
     return __type(_V, _Val);
@@ -199,9 +194,9 @@ VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, size_t _Argc)
 
 VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
 {
-    char _Buf[2 + std::numeric_limits<UPtr>::digits / 4 + 1];
+    char _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
     const void *_Addr = _Callee;
-    UPtr _Address = reinterpret_cast<UPtr>(_Addr);
+    uintptr_t _Address = reinterpret_cast<uintptr_t>(_Addr);
     _Buf[0] = '0';
     _Buf[1] = 'x';
 
@@ -221,16 +216,16 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
 VIA_MAXOPTIMIZE void __method_call(
     State *VIA_RESTRICT _V,
     TTable *VIA_RESTRICT _Tbl,
-    TableKey _Key,
+    U32 _Key,
     size_t _Argc
 ) noexcept
 {
     const TValue &_Method = __get_table(_Tbl, _Key, true);
     if (check_function(_Method)) {
-        __native_call(_V, _Method.val_function, _Argc);
+        __native_call(_V, _Method.cast_ptr<TFunction>(), _Argc);
     }
     else if (check_cfunction(_Method)) {
-        __extern_call(_V, _Method.val_cfunction, _Argc);
+        __extern_call(_V, _Method.cast_ptr<TCFunction>(), _Argc);
     }
 }
 
@@ -239,13 +234,13 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
     _V->calltype = CallType::CALL;
 
     if (check_function(_Callee)) {
-        __native_call(_V, _Callee.val_function, _Argc);
+        __native_call(_V, _Callee.cast_ptr<TFunction>(), _Argc);
     }
     else if (check_cfunction(_Callee)) {
-        __extern_call(_V, _Callee.val_cfunction, _Argc);
+        __extern_call(_V, _Callee.cast_ptr<TCFunction>(), _Argc);
     }
     else if (check_table(_Callee)) {
-        __method_call(_V, _Callee.val_table, hash_string("__call"), _Argc);
+        __method_call(_V, _Callee.cast_ptr<TTable>(), hash_string("__call"), _Argc);
     }
     else {
         __set_error_state(
@@ -257,14 +252,14 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
 VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
     if (check_string(_Val)) {
-        return TValue(static_cast<TNumber>(strlen(_Val.val_string->data)));
+        return TValue(static_cast<int>(strlen(_Val.cast_ptr<TString>()->data)));
     }
     else if (check_table(_Val)) {
-        TableKey _Metamethod_key = hash_string("__len");
-        const TValue &_Metamethod = __get_table(_Val.val_table, _Metamethod_key, true);
+        U32 _Metamethod_key = hash_string("__len");
+        const TValue &_Metamethod = __get_table(_Val.cast_ptr<TTable>(), _Metamethod_key, true);
 
         if (check_nil(_Metamethod)) {
-            return TValue(static_cast<TNumber>(_Val.val_table->data.size()));
+            return TValue(static_cast<int>(_Val.cast_ptr<TTable>()->data.size()));
         }
 
         __call(_V, _Metamethod, 1);
@@ -296,7 +291,7 @@ VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, size_t _Retc) noexc
     }
 }
 
-VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcept
+VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, U32 _Id) noexcept
 {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
@@ -308,7 +303,7 @@ VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, kGlobId _Id) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, kGlobId _Id, const TValue &_Val)
+VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, U32 _Id, const TValue &_Val)
 {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
@@ -322,25 +317,32 @@ VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, kGlobId _Id, const TVa
 
 VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
+    using enum ValueType;
+
     if (check_string(_Val)) {
         return _Val.clone();
     }
 
     switch (_Val.type) {
-    case ValueType::number: {
-        std::string _Str = std::format("{:.2f}", _Val.val_number);
+    case integer: {
+        std::string _Str = std::format("{}", _Val.val_integer);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::boolean: {
+    case floating_point: {
+        std::string _Str = std::format("{:.2f}", _Val.val_floating_point);
+        TString *_Tstr = new TString(_V, _Str.c_str());
+        return TValue(_Tstr);
+    }
+    case boolean: {
         TString *_Str = new TString(_V, _Val.val_boolean ? "true" : "false");
         return TValue(_Str);
     }
-    case ValueType::table: {
+    case table: {
         std::string _Str = "{";
 
-        for (auto &_Elem : _Val.val_table->data) {
-            _Str += __to_string(_V, _Elem.second).val_string->data;
+        for (auto &_Elem : _Val.cast_ptr<TTable>()->data) {
+            _Str += __to_string(_V, _Elem.second).cast_ptr<TString>()->data;
             _Str += ", ";
         }
 
@@ -353,16 +355,16 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::function: {
-        const void *_Faddr = _Val.val_function;
+    case function: {
+        const void *_Faddr = _Val.cast_ptr<TFunction>();
         std::string _Str = std::format("<function@{}>", _Faddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
     }
-    case ValueType::cfunction: {
+    case cfunction: {
         // This has to be explicitly casted because function pointers be
         // weird
-        const void *_Cfaddr = _Val.val_cfunction;
+        const void *_Cfaddr = _Val.cast_ptr<TCFunction>();
         std::string _Str = std::format("<cfunction@{}>", _Cfaddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
         return TValue(_Tstr);
@@ -379,7 +381,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 VIA_FORCEINLINE std::string __to_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
 {
     TValue _Str = __to_string(_V, _Val);
-    return std::string(_Str.val_string->data);
+    return std::string(_Str.cast_ptr<TString>()->data);
 }
 
 VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
@@ -388,14 +390,7 @@ VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
         return _Val.clone();
     }
 
-    switch (_Val.type) {
-    // Nil and Monostate is the only falsy type
-    case ValueType::nil:
-    case ValueType::monostate:
-        return TValue(false);
-    default:
-        return TValue(true);
-    }
+    return TValue(_Val.type != ValueType::nil);
 
     VIA_UNREACHABLE();
     return _Nil.clone();
@@ -406,17 +401,41 @@ VIA_FORCEINLINE bool __to_cxx_bool(const TValue &_Val) noexcept
     return __to_bool(_Val).val_boolean;
 }
 
+#include <charconv>
+#include <string>
+#include <iostream>
+
 VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 {
+    using enum ValueType;
+
     if (check_number(_Val)) {
         return _Val.clone();
     }
 
     switch (_Val.type) {
-    case ValueType::string:
-        return TValue(std::stod(_Val.val_string->data));
-    case ValueType::boolean:
-        return TValue(_Val.val_boolean ? 1.0f : 0.0f);
+    case string: {
+        const std::string &str = _Val.cast_ptr<TString>()->data;
+        if (str.empty()) {
+            return _Nil.clone();
+        }
+
+        int int_result;
+        auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), int_result);
+        if (ec == std::errc() && ptr == str.data() + str.size()) {
+            return TValue(static_cast<float>(int_result)); // Convert to float for consistency
+        }
+
+        float float_result;
+        auto [ptr_f, ec_f] = std::from_chars(str.data(), str.data() + str.size(), float_result);
+        if (ec_f == std::errc() && ptr_f == str.data() + str.size()) {
+            return TValue(float_result);
+        }
+
+        return _Nil.clone();
+    }
+    case boolean:
+        return TValue(static_cast<int>(_Val.val_boolean));
     default:
         break;
     }
@@ -424,29 +443,44 @@ VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
     return _Nil.clone();
 }
 
-template<typename T = double>
+template<typename T>
     requires std::is_arithmetic_v<T>
 VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
 {
-    TValue _Double = __to_number(_Val);
-    if (check_nil(_Double)) {
-        return std::numeric_limits<T>::quiet_NaN();
+    TValue _Number = __to_number(_Val);
+
+    if (check_nil(_Number)) {
+        if constexpr (std::is_floating_point_v<T>) {
+            return std::numeric_limits<T>::quiet_NaN();
+        }
+        else {
+            return 0;
+        }
     }
 
-    return static_cast<T>(_Double.val_number);
+    if (check_integer(_Number)) {
+        return static_cast<T>(_Number.val_integer);
+    }
+    if (check_floating_point(_Number)) {
+        return static_cast<T>(_Number.val_floating_point);
+    }
+
+    if constexpr (std::is_floating_point_v<T>) {
+        return std::numeric_limits<T>::quiet_NaN();
+    }
+    else {
+        return 0;
+    }
 }
 
 VIA_FORCEINLINE void *__to_pointer(const TValue &_Val) noexcept
 {
     switch (_Val.type) {
     case ValueType::cfunction:
-        return _Val.val_cfunction;
     case ValueType::function:
-        return _Val.val_function;
     case ValueType::table:
-        return _Val.val_table;
     case ValueType::string:
-        return _Val.val_string;
+        return _Val.val_pointer;
     default:
         return nullptr;
     }
@@ -454,18 +488,23 @@ VIA_FORCEINLINE void *__to_pointer(const TValue &_Val) noexcept
 
 VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexcept
 {
-    if (_Val_0.type != _Val_1.type)
+    using enum ValueType;
+
+    if (_Val_0.type != _Val_1.type) {
         return false;
+    }
 
     switch (_Val_0.type) {
-    case ValueType::number:
-        return _Val_0.val_number == _Val_1.val_number;
-    case ValueType::boolean:
+    case integer:
+        return _Val_0.val_integer == _Val_1.val_integer;
+    case floating_point:
+        return _Val_0.val_floating_point == _Val_1.val_floating_point;
+    case boolean:
         return _Val_0.val_boolean == _Val_1.val_boolean;
-    case ValueType::nil:
+    case nil:
         return true;
-    case ValueType::string:
-        return !std::strcmp(_Val_0.val_string->data, _Val_1.val_string->data);
+    case string:
+        return !std::strcmp(_Val_0.cast_ptr<TString>()->data, _Val_1.cast_ptr<TString>()->data);
     default:
         return __to_pointer(_Val_0) == __to_pointer(_Val_1);
     }
@@ -474,33 +513,13 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
     return false;
 };
 
-VIA_MAXOPTIMIZE bool __compare_registers(
-    State *VIA_RESTRICT _V,
-    RegId _Reg_0,
-    RegId _Reg_1
-) noexcept
-{
-    if (_Reg_0 == _Reg_1) {
-        return true;
-    }
-
-    TValue &_Val_0 = *__get_register(_V, _Reg_0);
-    TValue &_Val_1 = *__get_register(_V, _Reg_1);
-
-    if (_Val_0.type != _Val_1.type) {
-        return false;
-    }
-
-    return __compare(_Val_0, _Val_1);
-}
-
 VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 {
     if (!check_table(_Val)) {
         return _Nil.clone();
     }
 
-#define GET_METHOD(id) (__get_table(_Val.val_table, hash_string(id), true))
+#define GET_METHOD(id) (__get_table(_Val.cast_ptr<TTable>(), hash_string(id), true))
     switch (_Op) {
     case OpCode::ADD:
         return GET_METHOD("__add");
@@ -532,12 +551,15 @@ VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 
 VIA_INLINE TValue __weak_primitive_cast(State *VIA_RESTRICT _V, const TValue &_Val, ValueType _Type)
 {
+    using enum ValueType;
+
     switch (_Type) {
-    case ValueType::number:
+    case integer:
+    case floating_point:
         return __to_number(_Val);
-    case ValueType::boolean:
+    case boolean:
         return __to_bool(_Val);
-    case ValueType::string:
+    case string:
         return __to_string(_V, _Val);
     default:
         break;
@@ -548,24 +570,31 @@ VIA_INLINE TValue __weak_primitive_cast(State *VIA_RESTRICT _V, const TValue &_V
 
 VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, ValueType _Type)
 {
+    using enum ValueType;
+
     switch (_Type) {
-    case ValueType::number: {
-        double _Num = __to_cxx_number(_Val);
+    case integer: {
+        int _Num = __to_cxx_number<int>(_Val);
+        _Val.val_integer = _Num;
+        break;
+    }
+    case floating_point: {
+        float _Num = __to_cxx_number<float>(_Val);
         if (_Num != _Num) {
             goto error;
         }
 
-        _Val.val_number = _Num;
+        _Val.val_floating_point = _Num;
         break;
     }
-    case ValueType::boolean:
+    case boolean:
         _Val.val_boolean = __to_cxx_bool(_Val);
         break;
-    case ValueType::string: {
+    case string: {
         TValue _Non_owned_val = __to_string(_V, _Val);
-        TString *_Owned_val = _Val.val_string;
+        TString *_Owned_val = _Val.cast_ptr<TString>();
 
-        _Val.val_string = new TString(_V, _Non_owned_val.val_string->data);
+        _Val.val_pointer = new TString(_V, _Non_owned_val.cast_ptr<TString>()->data);
 
         if (_Owned_val) {
             delete _Owned_val;
@@ -584,8 +613,8 @@ error:
         _V,
         std::format(
             "type '{}' is not primitive castable into type '{}'",
-            ENUM_NAME(_Val.type),
-            ENUM_NAME(_Type)
+            magic_enum::enum_name(_Val.type),
+            magic_enum::enum_name(_Type)
         )
     );
 }

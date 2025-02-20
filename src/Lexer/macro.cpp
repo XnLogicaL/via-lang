@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "macro.h"
 #include "preproc.h"
@@ -17,8 +18,9 @@ void Preprocessor::expand_macro(const Macro &macro)
         const Token &tok = peek();
 
         // Match macro_name!( pattern
-        if (tok.value.ends_with('!') && tok.value.substr(0, tok.value.length() - 1) == macro.name &&
-            pos + 1 < toks.size() && peek(1).type == TokenType::PAREN_OPEN) {
+        if (tok.lexeme.ends_with('!') &&
+            tok.lexeme.substr(0, tok.lexeme.length() - 1) == macro.name && pos + 1 < toks.size() &&
+            peek(1).type == TokenType::PAREN_OPEN) {
             size_t start_pos = pos;
             consume(2); // Consume macro_name! and the opening parenthesis
 
@@ -86,8 +88,8 @@ void Preprocessor::expand_macro(const Macro &macro)
             // Replace parameters in the macro body
             std::vector<Token> expanded_body;
             for (const Token &body_tok : macro.body) {
-                if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.value)) {
-                    const std::vector<Token> &replacement = arg_map[body_tok.value];
+                if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.lexeme)) {
+                    const std::vector<Token> &replacement = arg_map[body_tok.lexeme];
                     expanded_body.insert(
                         expanded_body.end(), replacement.begin(), replacement.end()
                     );
@@ -118,18 +120,18 @@ Macro Preprocessor::parse_macro()
     if (pos >= toks.size() || peek().type != TokenType::IDENTIFIER)
         PREPROCESSOR_ERROR("Expected macro identifier after 'macro' keyword");
 
-    auto it = macro_table.find(peek().value);
+    auto it = macro_table.find(peek().lexeme);
     if (it != macro_table.end())
         PREPROCESSOR_ERROR(std::format(
             "Redefinition of macro '{}', previously defined on line {}",
-            peek().value,
+            peek().lexeme,
             it->second.line
         ));
 
     Macro mac;
     mac.line = peek().line;
     mac.begin = pos - 1;
-    mac.name = consume().value;
+    mac.name = consume().lexeme;
 
     // Expect opening parenthesis
     if (pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
@@ -147,7 +149,7 @@ Macro Preprocessor::parse_macro()
         if (peek().type != TokenType::IDENTIFIER)
             PREPROCESSOR_ERROR("Invalid macro parameter name");
 
-        mac.params.push_back(consume().value);
+        mac.params.push_back(consume().lexeme);
     }
 
     // Expect closing parenthesis

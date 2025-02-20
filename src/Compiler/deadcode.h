@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -10,14 +12,6 @@
 
 namespace via {
 
-class DeadCodeEliminationOptimizationPass : public OptimizationPass {
-public:
-    void apply(Generator &) override;
 
-private:
-    bool always_true(Generator &, IfStmtNode);
-    bool always_false(Generator &, IfStmtNode);
-    void remove_unreachable_code_in_scope(Generator &, ScopeStmtNode *);
-};
 
 } // namespace via

@@ -1,6 +1,6 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license
- * information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -8,25 +8,16 @@
 #include "instruction.h"
 #include "signal.h"
 
-// Identifier of the defacto "main" function
-// Kinda useless but it can stay
-#ifndef VIA_MAIN_ID
-    #define VIA_MAIN_ID ("__main")
-#endif
-
-#ifndef VIA_VM_STACK_SIZE
-    #define VIA_VM_STACK_SIZE (8 * 1024 * 1024) // 8 MBs
-#endif
+#define VIA_VM_STACK_SIZE 8 * 1024 * 1024 // 8 MBs
+#define VIA_REGISTER_COUNT 128
 
 namespace via {
 
 // Forward declarations
 struct TFunction;
 struct TValue;
-struct TStack;
-struct GarbageCollector;
-struct RAState;
 struct TString;
+struct GarbageCollector;
 
 // Calling convention
 enum class CallType {
@@ -50,10 +41,10 @@ struct ErrorState {
 // Global state, should only be instantiated once, and shared across all
 // State's. (threads)
 struct GState {
-    StrTable stable;                  // String interning table
-    GlbTable gtable;                  // Global environment
-    SymTable symtable;                // Symbol table
-    std::atomic<ThreadId> threads{0}; // Thread count
+    std::unordered_map<U32, TString *> stable; // String interning table
+    std::unordered_map<U32, TValue> gtable;    // Global environment
+    std::vector<std::string> symtable;         // Symbol table
+    std::atomic<U32> threads{0};               // Thread count
 
     std::shared_mutex stable_mutex;
     std::mutex gtable_mutex;
@@ -63,8 +54,8 @@ struct GState {
 // More likely to be cached (hopefully...)
 struct alignas(64) State {
     // Thread and global state
-    ThreadId id; // Thread ID
-    GState *G;   // Global state
+    U32 id;    // Thread ID
+    GState *G; // Global state
 
     // Instruction pointers
     Instruction *ip = nullptr;  // Current instruction pointer
@@ -72,13 +63,15 @@ struct alignas(64) State {
     Instruction *ibp = nullptr; // Instruction list base pointer
 
     // VM execution state
-    RAState *ralloc;      // Pointer to VM register allocator state
     GarbageCollector *gc; // Pointer to VM garbage collector state
 
     // Stack state
     TValue *sbp;    // Stack base pointer
     size_t sp = 0;  // Stack pointer
     size_t ssp = 0; // Saved stack pointer
+
+    // Registers
+    TValue *registers;
 
     // Call and frame management
     TFunction *frame = nullptr;         // Call stack pointer

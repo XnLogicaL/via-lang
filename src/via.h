@@ -1,13 +1,19 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
 #include "common.h"
 #include "cache.h"
+#include "encoder.h"
+#include "signal.h"
+#include "fileio.h"
+#include "modifiable_once.h"
+#include "callable_once.h"
 
 #include "Lexer/lexer.h"
 #include "Lexer/preproc.h"
-#include "Lexer/encoder.h"
 
 #include "Parser/parser.h"
 #include "Parser/ast.h"
@@ -23,10 +29,7 @@
 #include "VM/vltable.h"
 #include "VM/vlmath.h"
 #include "VM/vlrand.h"
-#include "VM/vlbit.h"
-#include "VM/vlbuffer.h"
 #include "VM/vlthread.h"
 #include "VM/vlfunction.h"
 #include "VM/vlstring.h"
-#include "VM/vlbit.h"
 #include "VM/execute.h"

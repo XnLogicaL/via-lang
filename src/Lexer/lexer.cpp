@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "lexer.h"
 #include "token.h"
@@ -8,6 +9,8 @@
 #define HEX_LITERAL_SENTINEL ('x')
 
 namespace via {
+
+using enum TokenType;
 
 // Function that returns whether if a character is allowed within a hexadecimal literal
 bool Tokenizer::is_hex_char(char chr)
@@ -40,27 +43,27 @@ char Tokenizer::consume(size_t ahead)
 
 Token Tokenizer::read_number()
 {
-    TokenType type = TokenType::LIT_INT; // Specify default type as integer literal
-    size_t start_offset = offset;        // Record starting offset of the number
-    std::string value;                   // Value of the number, as a string for convenience
+    TokenType type = LIT_INT;     // Specify default type as integer literal
+    size_t start_offset = offset; // Record starting offset of the number
+    std::string value;            // Value of the number, as a string for convenience
 
     // Check for binary or hex literals
     if (peek() == '0' && !std::isdigit(peek(1))) {
         consume(); // Consume '0'
 
         if (peek() == BINARY_LITERAL_SENTINEL)
-            type = TokenType::LIT_BINARY;
+            type = LIT_BINARY;
         else if (peek() == HEX_LITERAL_SENTINEL)
-            type = TokenType::LIT_HEX;
+            type = LIT_HEX;
         else // Unknown number literal
-            type = TokenType::UNKNOWN;
+            type = UNKNOWN;
 
         consume(); // Consume 'b' or 'x'
     }
 
     // Read the number until the current character isn't numeric
-    while (pos < source_size() &&
-           (std::isdigit(peek()) || (type == TokenType::LIT_HEX && is_hex_char(peek())))) {
+    while (pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))
+    ) {
         value.push_back(peek());
         pos++;
         offset++;
@@ -71,7 +74,7 @@ Token Tokenizer::read_number()
         value.push_back(peek());
         // Since it's proven that there is a floating point in the number literal
         // We can safely categorize it as a float literal
-        type = TokenType::LIT_FLOAT;
+        type = LIT_FLOAT;
         pos++;
         offset++;
 
@@ -95,7 +98,7 @@ Token Tokenizer::read_ident()
 
     // Default type, this is because this might be an identifier, keyword or boolean literal
     // We can't know in advance which.
-    TokenType type = TokenType::IDENTIFIER;
+    TokenType type = IDENTIFIER;
     size_t start_offset = offset; // Record starting offset of the identifier
     std::string identifier;
 
@@ -116,38 +119,38 @@ Token Tokenizer::read_ident()
     }
 
     static const std::unordered_map<std::string, TokenType> keyword_map = {
-        {"do", TokenType::KW_DO},
-        {"in", TokenType::KW_IN},
-        {"local", TokenType::KW_LOCAL},
-        {"global", TokenType::KW_GLOBAL},
-        {"as", TokenType::KW_AS},
-        {"const", TokenType::KW_CONST},
-        {"if", TokenType::KW_IF},
-        {"else", TokenType::KW_ELSE},
-        {"elif", TokenType::KW_ELIF},
-        {"while", TokenType::KW_WHILE},
-        {"for", TokenType::KW_FOR},
-        {"return", TokenType::KW_RETURN},
-        {"func", TokenType::KW_FUNC},
-        {"break", TokenType::KW_BREAK},
-        {"continue", TokenType::KW_CONTINUE},
-        {"switch", TokenType::KW_MATCH},
-        {"case", TokenType::KW_CASE},
-        {"default", TokenType::KW_DEFAULT},
-        {"new", TokenType::KW_NEW},
-        {"and", TokenType::KW_AND},
-        {"not", TokenType::KW_NOT},
-        {"or", TokenType::KW_OR},
-        {"struct", TokenType::KW_STRUCT},
-        {"namespace", TokenType::KW_NAMESPACE},
-        {"property", TokenType::KW_PROPERTY},
-        {"import", TokenType::KW_IMPORT},
-        {"export", TokenType::KW_EXPORT},
-        {"macro", TokenType::KW_MACRO},
-        {"define", TokenType::KW_DEFINE},
-        {"strict", TokenType::KW_STRICT},
-        {"meta", TokenType::KW_META},
-        {"defined", TokenType::KW_DEFINED},
+        {"do", KW_DO},
+        {"in", KW_IN},
+        {"local", KW_LOCAL},
+        {"global", KW_GLOBAL},
+        {"as", KW_AS},
+        {"const", KW_CONST},
+        {"if", KW_IF},
+        {"else", KW_ELSE},
+        {"elif", KW_ELIF},
+        {"while", KW_WHILE},
+        {"for", KW_FOR},
+        {"return", KW_RETURN},
+        {"func", KW_FUNC},
+        {"break", KW_BREAK},
+        {"continue", KW_CONTINUE},
+        {"switch", KW_MATCH},
+        {"case", KW_CASE},
+        {"default", KW_DEFAULT},
+        {"new", KW_NEW},
+        {"and", KW_AND},
+        {"not", KW_NOT},
+        {"or", KW_OR},
+        {"struct", KW_STRUCT},
+        {"namespace", KW_NAMESPACE},
+        {"property", KW_PROPERTY},
+        {"import", KW_IMPORT},
+        {"export", KW_EXPORT},
+        {"macro", KW_MACRO},
+        {"define", KW_DEFINE},
+        {"strict", KW_STRICT},
+        {"meta", KW_META},
+        {"defined", KW_DEFINED},
     };
 
     // Checks if the identifier is a keyword or not
@@ -160,11 +163,11 @@ Token Tokenizer::read_ident()
     // Checks if the identifier is a boolean literal
     if (identifier == "true" || identifier == "false") {
         // Pretty self-explanatory.
-        type = TokenType::LIT_BOOL;
+        type = LIT_BOOL;
     }
 
     if (identifier == "nil") {
-        type = TokenType::LIT_NIL;
+        type = LIT_NIL;
     }
 
     return Token(type, identifier, line, start_offset); // Use start_offset here
@@ -172,7 +175,7 @@ Token Tokenizer::read_ident()
 
 Token Tokenizer::read_string()
 {
-    std::string value;
+    std::string lexeme;
     size_t start_offset = offset; // Record starting offset of the string
     pos++;                        // Skip opening quote
     offset++;
@@ -186,22 +189,23 @@ Token Tokenizer::read_string()
                 char escape_char = peek();
                 switch (escape_char) {
                 case 'n':
-                    value.push_back('\n');
+                    lexeme.push_back('\n');
                     break;
                 case 't':
-                    value.push_back('\t');
+                    lexeme.push_back('\t');
                     break;
                 case 'r':
-                    value.push_back('\r');
+                    lexeme.push_back('\r');
                     break;
                 default:
-                    value.push_back(escape_char);
+                    lexeme.push_back(escape_char);
                     break;
                 }
             }
         }
         else {
-            value.push_back(peek());
+            char chr = peek();
+            lexeme.push_back(chr);
         }
 
         pos++;
@@ -211,7 +215,7 @@ Token Tokenizer::read_string()
     pos++; // Skip closing quote
     offset++;
 
-    return Token(TokenType::LIT_STRING, value, line, start_offset); // Use start_offset here
+    return Token(LIT_STRING, lexeme, line, start_offset); // Use start_offset here
 }
 
 Token Tokenizer::get_token()
@@ -275,7 +279,7 @@ Token Tokenizer::get_token()
     // Check if the position is at the end of the program->source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source_size()) {
-        return {TokenType::EOF_, "\0", line, offset};
+        return {EOF_, "\0", line, offset};
     }
 
     size_t start_offset = offset; // Record starting offset of each token
@@ -303,68 +307,68 @@ Token Tokenizer::get_token()
 
     switch (chr) {
     case '+':
-        return Token(TokenType::OP_ADD, "+", line, start_offset);
+        return Token(OP_ADD, "+", line, start_offset);
     case '-':
-        return Token(TokenType::OP_SUB, "-", line, start_offset);
+        return Token(OP_SUB, "-", line, start_offset);
     case '*':
-        return Token(TokenType::OP_MUL, "*", line, start_offset);
+        return Token(OP_MUL, "*", line, start_offset);
     case '/':
-        return Token(TokenType::OP_DIV, "/", line, start_offset);
+        return Token(OP_DIV, "/", line, start_offset);
     case '%':
-        return Token(TokenType::OP_MOD, "%", line, start_offset);
+        return Token(OP_MOD, "%", line, start_offset);
     case '^':
-        return Token(TokenType::OP_EXP, "^", line, start_offset);
+        return Token(OP_EXP, "^", line, start_offset);
     case '=':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return Token(TokenType::OP_EQ, "==", line, start_offset);
+            return Token(OP_EQ, "==", line, start_offset);
         }
-        return Token(TokenType::OP_ASGN, "=", line, start_offset);
+        return Token(OP_ASGN, "=", line, start_offset);
     case '!':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return Token(TokenType::OP_NEQ, "!=", line, start_offset);
+            return Token(OP_NEQ, "!=", line, start_offset);
         }
-        return Token(TokenType::EXCLAMATION, "!", line, start_offset);
+        return Token(EXCLAMATION, "!", line, start_offset);
     case '<':
-        return Token(TokenType::OP_LT, "<", line, start_offset);
+        return Token(OP_LT, "<", line, start_offset);
     case '>':
-        return Token(TokenType::OP_GT, ">", line, start_offset);
+        return Token(OP_GT, ">", line, start_offset);
     case '&':
-        return Token(TokenType::AMPERSAND, "&", line, start_offset);
+        return Token(AMPERSAND, "&", line, start_offset);
     case '|':
-        return Token(TokenType::PIPE, "|", line, start_offset);
+        return Token(PIPE, "|", line, start_offset);
     case ';':
-        return Token(TokenType::SEMICOLON, ";", line, start_offset);
+        return Token(SEMICOLON, ";", line, start_offset);
     case ',':
-        return Token(TokenType::COMMA, ",", line, start_offset);
+        return Token(COMMA, ",", line, start_offset);
     case '(':
-        return Token(TokenType::PAREN_OPEN, "(", line, start_offset);
+        return Token(PAREN_OPEN, "(", line, start_offset);
     case ')':
-        return Token(TokenType::PAREN_CLOSE, ")", line, start_offset);
+        return Token(PAREN_CLOSE, ")", line, start_offset);
     case '{':
-        return Token(TokenType::BRACE_OPEN, "{", line, start_offset);
+        return Token(BRACE_OPEN, "{", line, start_offset);
     case '}':
-        return Token(TokenType::BRACE_CLOSE, "}", line, start_offset);
+        return Token(BRACE_CLOSE, "}", line, start_offset);
     case '[':
-        return Token(TokenType::BRACKET_OPEN, "[", line, start_offset);
+        return Token(BRACKET_OPEN, "[", line, start_offset);
     case ']':
-        return Token(TokenType::BRACKET_CLOSE, "]", line, start_offset);
+        return Token(BRACKET_CLOSE, "]", line, start_offset);
     case '.':
-        return Token(TokenType::DOT, ".", line, start_offset);
+        return Token(DOT, ".", line, start_offset);
     case ':':
-        return Token(TokenType::COLON, ":", line, start_offset);
+        return Token(COLON, ":", line, start_offset);
     case '@':
-        return Token(TokenType::AT, "@", line, start_offset);
+        return Token(AT, "@", line, start_offset);
     case '?':
-        return Token(TokenType::QUESTION, "?", line, start_offset);
+        return Token(QUESTION, "?", line, start_offset);
     default:
-        return Token(TokenType::UNKNOWN, std::string(1, chr), line, start_offset);
+        return Token(UNKNOWN, std::string(1, chr), line, start_offset);
     }
 
-    return Token(TokenType::UNKNOWN, "\0", line, start_offset);
+    return Token(UNKNOWN, "\0", line, start_offset);
 }
 
 void Tokenizer::tokenize()
@@ -375,7 +379,7 @@ void Tokenizer::tokenize()
         Token token = get_token();
         tokens->tokens.push_back(token);
 
-        if (token.type == TokenType::EOF_) {
+        if (token.type == EOF_) {
             break;
         }
     }

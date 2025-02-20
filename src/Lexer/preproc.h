@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -14,7 +15,7 @@
 
 #define PREPROCESSOR_ERROR(message) \
     { \
-        emitter.out(pos, (message), OutputSeverity::ERROR_); \
+        emitter.out(pos, (message), OutputSeverity::Error); \
         failed = true; \
     }
 
@@ -25,8 +26,6 @@ public:
     ~Preprocessor() = default;
     Preprocessor(ProgramData *program)
         : program(program)
-        , pos(0)
-        , failed(false)
         , emitter(program)
     {
     }
@@ -38,11 +37,11 @@ public:
 
 private:
     ProgramData *program;
-    size_t pos;
-    bool failed;
+    Emitter emitter;
     std::unordered_map<std::string, Macro> macro_table;
     std::unordered_map<std::string, Definition> def_table;
-    Emitter emitter;
+    size_t pos = 0;
+    bool failed = false;
 
 private:
     Token consume(size_t ahead = 1);

@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -42,7 +43,6 @@ private:
     // Cannot start with a numeric character
     Token read_ident();
     // Reads a string literal that can be denoted with quotes
-    // ! Does not support string interpolation
     Token read_string();
     // Reads and returns the current token
     Token get_token();
@@ -64,7 +64,7 @@ VIA_INLINE std::vector<Token> fast_tokenize(std::string source)
         return {};
     }
 
-    return std::move(program.tokens->tokens);
+    return program.tokens->tokens;
 }
 
 } // namespace via

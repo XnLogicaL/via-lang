@@ -1,14 +1,14 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
 #include "common.h"
 
-namespace via
-{
+namespace via {
 
-class CmdParser
-{
+class CmdParser {
 public:
     CmdParser(int argc, char **argv)
         : argc(argc)

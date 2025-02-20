@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -23,35 +24,19 @@ enum class OperandType {
     Register,
 };
 
-struct Operand {
-    OperandType type;
-    union {
-        TNumber val_number;
-        TBool val_boolean;
-        const char *val_string;
-        RegId val_register;
-    };
-
-    Operand();
-    Operand(TNumber);
-    Operand(TBool);
-    Operand(const char *);
-    Operand(RegId);
-};
-
 struct Instruction {
     OpCode op;
-    Operand operand1;
-    Operand operand2;
-    Operand operand3;
+    U32 operand0;
+    U32 operand1;
+    U32 operand2;
     Chunk *chunk;
     size_t pos;
 
     Instruction();
-    Instruction(OpCode, std::vector<Operand>, Chunk *, size_t);
+    Instruction(OpCode, std::vector<U32>, Chunk *, size_t);
 };
 
-std::string to_string(Operand);
+std::string to_string(U32);
 std::string to_string(ProgramData *, Instruction);
 
 } // namespace via

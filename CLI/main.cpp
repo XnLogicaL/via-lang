@@ -68,7 +68,7 @@ void handle_compile(const std::vector<std::string> &args)
     CHECK_SUBPROC_FAIL;
 
     if (flag_print_bytecode) {
-        for (Instruction instr : program.bytecode->get()) {
+        for (Instruction instr : program.bytecode->instructions) {
             std::cout << via::to_string(&program, instr) << "\n";
         }
     }

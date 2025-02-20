@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "bytecode.h"
 #include "instruction.h"
@@ -16,18 +18,6 @@ void BytecodeHolder::add_instruction(const Instruction &instruction)
 void BytecodeHolder::remove_instruction(size_t index)
 {
     instructions.erase(instructions.begin() + index);
-}
-
-// Return the instruction program
-BytecodeHolder::Instructions &BytecodeHolder::get()
-{
-    return instructions;
-}
-
-// Return the constant instruction program if applicable
-const BytecodeHolder::Instructions &BytecodeHolder::get() const
-{
-    return instructions;
 }
 
 } // namespace via

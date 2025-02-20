@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -15,592 +16,520 @@ enum class OpCode {
      * opcode: NOP
      * No operation. Can invoke empty instruction jump optimizations.
      * operand0: <>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     NOP,
     /*
      * opcode: ADD
-     * Adds the value in operand1 to operand0.
+     * Adds the value in operand0 to operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     ADD,
     /*
      * opcode: ADDK
-     * Adds the constant value from the table at operand1 to operand0.
+     * Adds the constant value from the table at operand0 to operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     ADDK,
     /*
-     * opcode: ADDI
-     * Adds the immediate value in operand1 to operand0.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    ADDI,
-    /*
      * opcode: SUB
-     * Subtracts the value in operand1 from operand0.
+     * Subtracts the value in operand0 from operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     SUB,
     /*
      * opcode: SUBK
-     * Subtracts the constant value from the table at operand1 from operand0.
+     * Subtracts the constant value from the table at operand0 from operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     SUBK,
     /*
-     * opcode: SUBI
-     * Subtracts the immediate value in operand1 from operand0.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    SUBI,
-    /*
      * opcode: MUL
-     * Multiplies operand0 by the value in operand1.
+     * Multiplies operand0 by the value in operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     MUL,
     /*
      * opcode: MULK
-     * Multiplies operand0 by the constant value from the table at operand1.
+     * Multiplies operand0 by the constant value from the table at operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     MULK,
     /*
-     * opcode: MULI
-     * Multiplies operand0 by the immediate value in operand1.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    MULI,
-    /*
      * opcode: DIV
-     * Divides operand0 by the value in operand1.
+     * Divides operand0 by the value in operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     DIV,
     /*
      * opcode: DIVK
-     * Divides operand0 by the constant value from the table at operand1.
+     * Divides operand0 by the constant value from the table at operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     DIVK,
     /*
-     * opcode: DIVI
-     * Divides operand0 by the immediate value in operand1.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    DIVI,
-    /*
      * opcode: MOD
-     * Computes the remainder of operand0 divided by the value in operand1.
+     * Computes the remainder of operand0 divided by the value in operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     MOD,
     /*
      * opcode: MODK
-     * Computes the remainder of operand0 divided by the constant value from the table at operand1.
+     * Computes the remainder of operand0 divided by the constant value from the table at operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     MODK,
     /*
-     * opcode: MODI
-     * Computes the remainder of operand0 divided by the immediate value in operand1.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    MODI,
-    /*
      * opcode: POW
-     * Raises operand0 to the power of the value in operand1.
+     * Raises operand0 to the power of the value in operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     POW,
     /*
      * opcode: POWK
-     * Raises operand0 to the power of the constant value from the table at operand1.
+     * Raises operand0 to the power of the constant value from the table at operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     POWK,
-    /*
-     * opcode: POWI
-     * Raises operand0 to the power of the immediate value in operand1.
-     * operand0: <dst :: Register>
-     * operand1: <imm :: Number>
-     * operand2: <>
-     */
-    POWI,
     /*
      * opcode: NEG
      * Negates the value in operand0.
      * operand0: <val :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     NEG,
     /*
      * opcode: NEGK
-     * Negates the constant at idx operand1 and loads the result into operand0.
+     * Negates the constant at idx operand0 and loads the result into operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     NEGK,
     /*
      * opcode: MOVE
-     * Moves the value in operand0 to operand1.
+     * Moves the value in operand0 to operand0.
      * operand0: <dst :: Register>
-     * operand1: <src :: Register>
-     * operand2: <>
+     * operand0: <src :: Register>
+     * operand1: <>
      */
     MOVE,
     /*
      * opcode: SWAP
-     * Swaps the values of operand0 and operand1.
+     * Swaps the values of operand0 and operand0.
      * operand0: <r0 :: Register>
-     * operand1: <r1 :: Register>
-     * operand2: <>
+     * operand0: <r1 :: Register>
+     * operand1: <>
      */
     SWAP,
     /*
      * opcode: LOADK
-     * Loads constant from the constant table at idx operand1 into operand0.
+     * Loads constant from the constant table at idx operand0 into operand0.
      * operand0: <dst :: Register>
-     * operand1: <idx :: Number>
-     * operand2: <>
+     * operand0: <idx :: Number>
+     * operand1: <>
      */
     LOADK,
     /*
      * opcode: LOADNIL
      * Loads immediate nil into dst.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     LOADNIL,
-    /*
-     * opcode: LOADNUMBER
-     * Loads immediate number operand1 into dst.
-     * operand0: <dst :: Register>
-     * operand1: <num :: Number>
-     * operand2: <>
-     */
-    LOADNUMBER,
-    /*
-     * opcode: LOADBOOL
-     * Loads immediate bool operand1 into dst.
-     * operand0: <dst :: Register>
-     * operand1: <num :: Boolean>
-     * operand2: <>
-     */
-    LOADBOOL,
-    /*
-     * opcode: LOADSTRING
-     * Loads immediate string operand1 into dst.
-     * operand0: <dst :: Register>
-     * operand1: <str :: String>
-     * operand2: <>
-     */
-    LOADSTRING,
     /*
      * opcode: LOADTABLE
      * Loads empty immediate table into dst.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     LOADTABLE,
     /*
      * opcode: LOADFUNCTION
      * Loads immediate function into dst, captures all bytecode from itself to the next RETURN instruction.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     LOADFUNCTION,
     /*
      * opcode: PUSH
      * Pushes a value onto the stack.
      * operand0: <src :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     PUSH,
     /*
      * opcode: PUSHK
      * Pushes a constant value onto the stack.
      * operand0: <const_idx :: Number>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     PUSHK,
     /*
      * opcode: PUSHI
      * Pushes an immediate value onto the stack.
      * operand0: <imm :: Any>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     PUSHI,
     /*
      * opcode: POP
      * Pops and loads the top-most element of the stack onto a register.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     POP,
     /*
      * opcode: GETSTACK
      * Loads a local variable relative to the sbp (stack base pointer) into register <dst> with offset <off>.
      * operand0: <dst :: Register>
-     * operand1: <off :: Number>
-     * operand2: <>
+     * operand0: <off :: Number>
+     * operand1: <>
      */
     GETSTACK,
     /*
      * opcode: SETSTACK
      * Sets a local variable relative to the sbp (stack base pointer) to the value in <src> with offset <off>.
      * operand0: <src :: Register>
-     * operand1: <off :: Number>
-     * operand2: <>
+     * operand0: <off :: Number>
+     * operand1: <>
      */
     SETSTACK,
     /*
      * opcode: GETARGUMENT
      * Loads the argument at stack offset [ssp + argc - 1 - off] into register <dst>.
      * operand0: <dst :: Register>
-     * operand1: <off :: Number>
-     * operand2: <>
+     * operand0: <off :: Number>
+     * operand1: <>
      */
     GETARGUMENT,
     /*
      * opcode: GETGLOBAL
      * Loads the global with id <id> into <dst>, nil if impossible.
      * operand0: <dst :: Register>
-     * operand1: <id :: Identifier>
-     * operand2: <>
+     * operand0: <id :: Identifier>
+     * operand1: <>
      */
     GETGLOBAL,
     /*
      * opcode: SETGLOBAL
      * Attempts to declare a new global constant.
      * operand0: <val :: Register>
-     * operand1: <id :: Identifier>
-     * operand2: <>
+     * operand0: <id :: Identifier>
+     * operand1: <>
      */
     SETGLOBAL,
     /*
      * opcode: INCREMENT
      * Increments the value in operand0.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     INCREMENT,
     /*
      * opcode: DECREMENT
      * Decrements the value in operand0.
      * operand0: <dst :: Register>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     DECREMENT,
     /*
      * opcode: EQUAL
-     * Performs a comparison operation between operand1 and operand2. Stores the
+     * Performs a comparison operation between operand0 and operand1. Stores the
      * result in operand0.
      * operand0: <src :: Register>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     EQUAL,
     /*
      * opcode: NOTEQUAL
-     * Performs a reversed comparison operation between operand1 and operand2.
-     * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
-     * :: Register> operand2: <rhs :: Register>
+     * Performs a reversed comparison operation between operand0 and operand1.
+     * Stores the result in operand0. operand0: <src :: Register> operand0: <lhs
+     * :: Register> operand1: <rhs :: Register>
      */
     NOTEQUAL,
     /*
      * opcode: LESS
-     * Performs a less-than comparison operation between operand1 and operand2.
-     * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
-     * :: Register> operand2: <rhs :: Register>
+     * Performs a less-than comparison operation between operand0 and operand1.
+     * Stores the result in operand0. operand0: <src :: Register> operand0: <lhs
+     * :: Register> operand1: <rhs :: Register>
      */
     LESS,
     /*
      * opcode: GREATER
-     * Performs a greater-than comparison operation between operand1 and operand2.
-     * Stores the result in operand0. operand0: <src :: Register> operand1: <lhs
-     * :: Register> operand2: <rhs :: Register>
+     * Performs a greater-than comparison operation between operand0 and operand1.
+     * Stores the result in operand0. operand0: <src :: Register> operand0: <lhs
+     * :: Register> operand1: <rhs :: Register>
      */
     GREATER,
     /*
      * opcode: LESSOREQUAL
-     * Performs a less-than-or-equal-to comparison operation between operand1 and
-     * operand2. Stores the result in operand0. operand0: <src :: Register>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Performs a less-than-or-equal-to comparison operation between operand0 and
+     * operand1. Stores the result in operand0. operand0: <src :: Register>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     LESSOREQUAL,
     /*
      * opcode: GREATEROREQUAL
-     * Performs a greater-than-or-equal-to comparison operation between operand1
-     * and operand2. Stores the result in operand0. operand0: <src :: Register>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Performs a greater-than-or-equal-to comparison operation between operand0
+     * and operand1. Stores the result in operand0. operand0: <src :: Register>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     GREATEROREQUAL,
     /*
      * opcode: JUMP
      * Unconditinally jumps given offset in operand0. Does not save the state.
      * operand0: <off :: Number>
+     * operand0: <>
      * operand1: <>
-     * operand2: <>
      */
     JUMP,
     /*
      * opcode: JUMPIFNOT
-     * Jumps given offset in operand0 if the value in operand1 is not equal to 0.
-     * Does not save the state. operand0: <off :: Number> operand1: <cnd ::
-     * Register> operand2: <>
+     * Jumps given offset in operand0 if the value in operand0 is not equal to 0.
+     * Does not save the state. operand0: <off :: Number> operand0: <cnd ::
+     * Register> operand1: <>
      */
     JUMPIFNOT,
     /*
      * opcode: JUMPIF
-     * Jumps given offset in operand0 if the value in operand1 is equal to 0. Does
-     * not save the state. operand0: <off :: Number> operand1: <cnd :: Register>
-     * operand2: <>
+     * Jumps given offset in operand0 if the value in operand0 is equal to 0. Does
+     * not save the state. operand0: <off :: Number> operand0: <cnd :: Register>
+     * operand1: <>
      */
     JUMPIF,
     /*
      * opcode: JUMPIFEQUAL
-     * Jumps given offset in operand0 if the value in operand1 is equal to the
-     * value in operand2. Does not save the state. operand0: <off :: Number>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 is equal to the
+     * value in operand1. Does not save the state. operand0: <off :: Number>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     JUMPIFEQUAL,
     /*
      * opcode: JUMPIFNOTEQUAL
-     * Jumps given offset in operand0 if the value in operand1 is not equal to the
-     * value in operand2. Does not save the state. operand0: <off :: Number>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 is not equal to the
+     * value in operand1. Does not save the state. operand0: <off :: Number>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     JUMPIFNOTEQUAL,
     /*
      * opcode: JUMPIFLESS
-     * Jumps given offset in operand0 if the value in operand1 is less than the
-     * value in operand2. Does not save the state. operand0: <off :: Number>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 is less than the
+     * value in operand1. Does not save the state. operand0: <off :: Number>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     JUMPIFLESS,
     /*
      * opcode: JUMPIFGREATER
-     * Jumps given offset in operand0 if the value in operand1 greater than the
-     * value in operand2. Does not save the state. operand0: <off :: Number>
-     * operand1: <lhs :: Register>
-     * operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 greater than the
+     * value in operand1. Does not save the state. operand0: <off :: Number>
+     * operand0: <lhs :: Register>
+     * operand1: <rhs :: Register>
      */
     JUMPIFGREATER,
     /*
      * opcode: JUMPIFLESSOREQUAL
-     * Jumps given offset in operand0 if the value in operand1 is less than or
-     * equal to the value in operand2. Does not save the state. operand0: <off ::
-     * Number> operand1: <lhs :: Register> operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 is less than or
+     * equal to the value in operand1. Does not save the state. operand0: <off ::
+     * Number> operand0: <lhs :: Register> operand1: <rhs :: Register>
      */
     JUMPIFLESSOREQUAL,
     /*
      * opcode: JUMPIFGREATEROREQUAL
-     * Jumps given offset in operand0 if the value in operand1 is greater than or
-     * equal to the value in operand2. Does not save the state. operand0: <off ::
-     * Number> operand1: <lhs :: Register> operand2: <rhs :: Register>
+     * Jumps given offset in operand0 if the value in operand0 is greater than or
+     * equal to the value in operand1. Does not save the state. operand0: <off ::
+     * Number> operand0: <lhs :: Register> operand1: <rhs :: Register>
      */
     JUMPIFGREATEROREQUAL,
     /*
      * opcode: CALL
-     * Calls the value in operand0 with arg count in operand1. Works for all callable types.
+     * Calls the value in operand0 with arg count in operand0. Works for all callable types.
      * operand0: <callee :: Register>
-     * operand1: <argc :: Number>
-     * operand2: <>
+     * operand0: <argc :: Number>
+     * operand1: <>
      */
     CALL,
     /*
      * opcode: EXTERNCALL
-     * Calls the value in operand0 with arg count in operand1. Only works for C functions.
+     * Calls the value in operand0 with arg count in operand0. Only works for C functions.
      * operand0: <callee :: Register>
-     * operand1: <argc :: Number>
-     * operand2: <>
+     * operand0: <argc :: Number>
+     * operand1: <>
      */
     EXTERNCALL,
     /*
      * opcode: NATIVECALL
-     * Calls the value in operand0 with arg count in operand1. Only works for native functions.
+     * Calls the value in operand0 with arg count in operand0. Only works for native functions.
      * operand0: <callee :: Register>
-     * operand1: <argc :: Number>
-     * operand2: <>
+     * operand0: <argc :: Number>
+     * operand1: <>
      */
     NATIVECALL,
     /*
      * opcode: METHODCALL
-     * Calls the value in operand0 with arg count in operand1, loads object as self (arg0). Only works for native functions.
+     * Calls the value in operand0 with arg count in operand0, loads object as self (arg0). Only works for native functions.
      * operand0: <object :: Register>
-     * operand1: <method :: Register>
-     * operand2: <argc :: Number>
+     * operand0: <method :: Register>
+     * operand1: <argc :: Number>
      */
     METHODCALL,
     /*
      * opcode: RETURN
      * Performs a return operation by jumping back to the return address of the
      * current stack, and popping it. Only works inside function scopes. operand0:
-     * <> operand1: <> operand2: <>
+     * <> operand0: <> operand1: <>
      */
     RETURN,
     /*
      * opcode: EXIT
      * Performs an exit with the exit code in operand0 and an automatically
-     * deduced exit message. operand0: <code :: Number> operand1: <> operand2: <>
+     * deduced exit message. operand0: <code :: Number> operand0: <> operand1: <>
      */
     EXIT,
     /*
      * opcode: GETTABLE
-     * Loads the index operand2 of table operand1 into operand0.
+     * Loads the index operand1 of table operand0 into operand0.
      * operand0: <dst :: Register>
-     * operand1: <tbl :: Register>
-     * operand2: <idx :: Register>
+     * operand0: <tbl :: Register>
+     * operand1: <idx :: Register>
      */
     GETTABLE,
     /*
      * opcode: SETTABLE
-     * Sets the index operand1 of table operand0 to value in operand2.
+     * Sets the index operand0 of table operand0 to value in operand1.
      * operand0: <tbl :: Register>
-     * operand1: <idx :: Register>
-     * operand2: <val :: Register>
+     * operand0: <idx :: Register>
+     * operand1: <val :: Register>
      */
     SETTABLE,
     /*
      * opcode: NEXTTABLE
-     * Puts the next value inside table operand1 relative to the last invocation.
+     * Puts the next value inside table operand0 relative to the last invocation.
      * Used for iteration.
      * operand0: <dst :: Register>
-     * operand1: <tbl :: Register>
-     * operand2: <>
+     * operand0: <tbl :: Register>
+     * operand1: <>
      */
     NEXTTABLE,
     /*
      * opcode: LENTABLE
-     * Stores the length of the table in operand1 in operand0.
+     * Stores the length of the table in operand0 in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     LENTABLE,
     /*
      * opcode: CONCAT
-     * Concatenates operand0 with operand1 and stores the result in operand0.
+     * Concatenates operand0 with operand0 and stores the result in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     CONCAT,
     /*
      * opcode: CONCATK
-     * Concatenates operand0 with constant at index operand1 and stores the result in operand0.
+     * Concatenates operand0 with constant at index operand0 and stores the result in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     CONCATK,
     /*
      * opcode: CONCATI
-     * Concatenates operand0 with immedate operand1 and stores the result in operand0.
+     * Concatenates operand0 with immedate operand0 and stores the result in operand0.
      * operand0: <dst :: Register>
-     * operand1: <imm :: String>
-     * operand2: <>
+     * operand0: <imm :: String>
+     * operand1: <>
      */
     CONCATI,
     /*
      * opcode: SETSTRING
-     * Numberes into string in operand1 with operand2 and loads the value into operand0.
+     * Numberes into string in operand0 with operand1 and loads the value into operand0.
      * operand0: <dst :: Register>
-     * operand1: <str :: Register>
-     * operand2: <idx :: Register>
+     * operand0: <str :: Register>
+     * operand1: <idx :: Register>
      */
     GETSTRING,
     /*
      * opcode: SETSTRING
-     * Sets the index in operand1 of string stored in operand0 to value in operand2.
+     * Sets the index in operand0 of string stored in operand0 to value in operand1.
      * operand0: <str :: Register>
-     * operand1: <idx :: Register>
-     * operand2: <val :: Register>
+     * operand0: <idx :: Register>
+     * operand1: <val :: Register>
      */
     SETSTRING,
     /*
      * opcode: LENSTRING
-     * Stores the length of the string in operand1 in operand0.
+     * Stores the length of the string in operand0 in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     LENSTRING,
     /*
      * opcode: LEN
-     * Stores the length of the object in operand1 in operand0.
+     * Stores the length of the object in operand0 in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     LEN,
     /*
      * opcode: TYPEOF
-     * Stores the non-primitive type of operand1 in operand0.
+     * Stores the non-primitive type of operand0 in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     TYPEOF,
     /*
      * opcode: TYPE
-     * Stores the primitive type of operand1 in operand0.
+     * Stores the primitive type of operand0 in operand0.
      * operand0: <dst :: Register>
-     * operand1: <val :: Register>
-     * operand2: <>
+     * operand0: <val :: Register>
+     * operand1: <>
      */
     TYPE,
 };

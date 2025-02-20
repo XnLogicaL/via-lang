@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "def.h"
 #include "preproc.h"
@@ -16,7 +17,7 @@ Definition Preprocessor::parse_definition()
     if (pos >= toks.size())
         PREPROCESSOR_ERROR("Unexpected end of input after 'define'");
 
-    auto it = def_table.find(peek().value);
+    auto it = def_table.find(peek().lexeme);
     if (it != def_table.end())
         PREPROCESSOR_ERROR(std::format(
             "Redefinition of definition '{}', previously defined on line {}",
@@ -27,7 +28,7 @@ Definition Preprocessor::parse_definition()
     // Consume 'define' keyword and extract identifier
     consume();
     def.line = peek().line;
-    def.identifier = consume().value;
+    def.identifier = consume().lexeme;
 
     // Check and consume opening parenthesis
     if (++pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
@@ -58,7 +59,7 @@ void Preprocessor::expand_definition(const Definition &def)
         const Token &tok = toks.at(i);
 
         // If we find the definition identifier, replace it
-        if (tok.value == def.identifier && tok.type == TokenType::IDENTIFIER) {
+        if (tok.lexeme == def.identifier && tok.type == TokenType::IDENTIFIER) {
             // Erase the identifier token
             toks.erase(toks.begin() + i);
             // Insert the replacement tokens at the same position

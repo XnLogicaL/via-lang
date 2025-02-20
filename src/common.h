@@ -1,6 +1,6 @@
-/* This file is a part of the via programming language at
- * https://github.com/XnLogicaL/via-lang, see LICENSE for license
- * information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -52,11 +52,8 @@
         std::abort(); \
     }
 
-#define ENUM_NAME(expr) magic_enum::enum_name(expr)
-#define ENUM_CAST(T, expr) magic_enum::enum_cast<T>(expr)
-
 // TODO: Make sure this is accurate
-#define VIA_VERSION ("0.15")
+#define VIA_VERSION "0.16"
 
 #if defined(__GNUC__) || defined(__clang__)
     #define VIA_RESTRICT __restrict__
@@ -68,7 +65,7 @@
     #define VIA_UNREACHABLE() __builtin_unreachable();
     #define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
     #define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
-#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT
+#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT \
                   // use it)
     #define VIA_RESTRICT __restrict
     #define VIA_NORETURN __declspec(__noreturn__)
@@ -102,28 +99,11 @@ using U8 = std::uint8_t;
 using U16 = std::uint16_t;
 using U32 = std::uint32_t;
 using U64 = std::uint64_t;
-using UPtr = std::uintptr_t;
+
 using I8 = std::int8_t;
 using I16 = std::int16_t;
 using I32 = std::int32_t;
 using I64 = std::int64_t;
-using IPtr = std::intptr_t;
-
-using Hash = U32;                 // Hash type.
-using LabelId = std::string_view; // Label identifier.
-using ThreadId = U32;             // Thread identifier.
-using LocalId = U32;              // Local variable identifier (stack offset).
-using kGlobId = std::string_view; // Global constant identifier.
-using RegId = U32;                // Register Id
-using StkPos = std::size_t;       // Stack position.
-using TNumber = double;
-using TBool = bool;
-using TableKey = Hash;
-
-using StrTable = std::unordered_map<Hash, TString *>;
-using GlbTable = std::unordered_map<kGlobId, TValue>;
-using kTable = std::vector<TValue>;
-using SymTable = std::vector<std::string>;
 
 #ifdef VIA_LONGJUMP
 using JmpOffset = U64;
@@ -158,12 +138,12 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
 }
 
 struct ProgramData {
-    std::string file_name;
+    std::string file;
     std::string source;
     TokenHolder *tokens = nullptr;
     AbstractSyntaxTree *ast = nullptr;
     BytecodeHolder *bytecode = nullptr;
-    kTable *constants;
+    std::vector<TValue> *constants;
     std::map<size_t, std::string> bytecode_info;
 
     ProgramData(std::string, std::string);

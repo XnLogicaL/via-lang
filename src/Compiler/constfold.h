@@ -1,4 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -7,14 +9,5 @@
 #include "Parser/ast.h"
 
 namespace via {
-
-class ConstFoldOptimizationPass : public OptimizationPass {
-public:
-    void apply(Generator &) override;
-    bool is_applicable(Generator &) const override;
-
-private:
-    void fold_constexpr(Generator &, ExprNode *);
-};
 
 } // namespace via

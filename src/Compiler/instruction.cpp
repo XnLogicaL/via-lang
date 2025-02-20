@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #include "instruction.h"
 #include "bytecode.h"
@@ -29,7 +30,7 @@ Operand::Operand(const char *str)
 {
 }
 
-Operand::Operand(RegId reg)
+Operand::Operand(U32 reg)
     : type(OperandType::Register)
     , val_register(reg)
 {
@@ -37,9 +38,9 @@ Operand::Operand(RegId reg)
 
 Instruction::Instruction()
     : op(OpCode::NOP)
+    , operand0()
     , operand1()
     , operand2()
-    , operand3()
     , chunk(nullptr)
     , pos(0)
 {
@@ -48,9 +49,9 @@ Instruction::Instruction()
 Instruction::Instruction(OpCode op, std::vector<Operand> operands, Chunk *chunk, size_t pos)
     : op(op)
     // clang-format off
-    , operand1(safe_call([&operands](){return operands.at(0);}, Operand()))
-    , operand2(safe_call([&operands](){return operands.at(1);}, Operand()))
-    , operand3(safe_call([&operands](){return operands.at(2);}, Operand()))
+    , operand0(safe_call([&operands](){return operands.at(0);}, Operand()))
+    , operand1(safe_call([&operands](){return operands.at(1);}, Operand()))
+    , operand2(safe_call([&operands](){return operands.at(2);}, Operand()))
     // clang-format on
     , chunk(chunk)
     , pos(pos)
@@ -83,10 +84,10 @@ std::string to_string(ProgramData *prog, Instruction instruction)
     return std::format(
         "{:04} {:<12} {:<3} {:<3} {:<3} {:<15} {}",
         instruction.pos,
-        ENUM_NAME(instruction.op),
+        magic_enum::enum_name(instruction.op),
+        to_string(instruction.operand0),
         to_string(instruction.operand1),
         to_string(instruction.operand2),
-        to_string(instruction.operand3),
         " ",
         comment
     );

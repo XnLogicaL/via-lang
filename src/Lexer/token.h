@@ -1,5 +1,6 @@
-/* This file is a part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// =========================================================================================== |
 
 #pragma once
 
@@ -104,22 +105,13 @@ enum class TokenType {
 
 struct Token {
     TokenType type;
-    std::string value;
+    std::string lexeme;
     size_t line;
     size_t offset;
-    // This is an internal value used by the syntax analyzer
-    // To determine wether or not there was an error thrown on this token
-    // This makes it so that the console doesn't get flooded by errors
-    bool has_thrown_error = false;
 
-    // Returns a stringified version of the token
     std::string to_string() const noexcept;
-    // Returns if the token is a literal
     bool is_literal() const noexcept;
-    // Returns if the token is an operator
     bool is_operator() const noexcept;
-    // Returns the tokens binary precedence
-    // Returns -1 if invalid, eg. if not an operator
     int bin_prec() const noexcept;
 };
 
