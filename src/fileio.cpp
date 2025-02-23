@@ -1,5 +1,5 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 
 #include "fileio.h"

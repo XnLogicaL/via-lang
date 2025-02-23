@@ -1,5 +1,5 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 
 #pragma once
@@ -72,7 +72,5 @@ enum class LxSyscallId {
     execve = 59,
     exit = 60,
 };
-
-void syscall(asmjit::x86::Assembler &, LxSyscallId, std::vector<asmjit::Operand>);
 
 } // namespace via::jit

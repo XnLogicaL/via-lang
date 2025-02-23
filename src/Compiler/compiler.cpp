@@ -1,10 +1,15 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 
 #include "compiler.h"
 #include "types.h"
 
+// ================================================================ |
+// File compiler.cpp: Compiler class definitions.                   |
+// ================================================================ |
+// This file implements the Compiler class.
+// ================================================================ |
 namespace via {
 
 bool Compiler::generate()

@@ -1,11 +1,16 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 
 #include "bytecode.h"
 #include "instruction.h"
 #include "common.h"
 
+// ================================================================ |
+// File bytecode.cpp: BytecodeHolder definitions.                   |
+// ================================================================ |
+// This file defines BytecodeHolder.
+// ================================================================ |
 namespace via {
 
 // Add an instruction to the program

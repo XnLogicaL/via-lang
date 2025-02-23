@@ -1,5 +1,5 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 
 #pragma once
@@ -7,6 +7,12 @@
 #include "token.h"
 #include "ast_base.h"
 
+// ================================================================ |
+// File ast.h: Abstract syntax tree declarations.                   |
+// ================================================================ |
+// This file declares the derived abstract syntax tree node classes,
+// see `ast_base.h` for base class definitions.
+// ================================================================ |
 namespace via {
 
 struct Modifiers {
@@ -16,6 +22,7 @@ struct Modifiers {
 // ============================ |
 //       Expression Nodes       |
 // ============================ |
+
 struct LiteralNode : public ExprNode {
     using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
@@ -116,6 +123,7 @@ struct BinaryNode : public ExprNode {
 // ============================ |
 //       Statement Nodes        |
 // ============================ |
+
 struct DeclarationNode : public StmtNode {
     bool is_global;
 

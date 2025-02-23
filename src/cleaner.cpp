@@ -1,8 +1,13 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
 #include "cleaner.h"
 
+// ================================================================ |
+// File cleaner.cpp: Cleaner class definitions.                     |
+// ================================================================ |
+// This file defines the Cleaner class.
+// ================================================================ |
 namespace via {
 
 void Cleaner::clean()

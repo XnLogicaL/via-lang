@@ -1,7 +1,6 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language; see LICENSE for licensing information. |
+// This file is a part of The via Programming Language and is licensed under GPL v3.           |
 // =========================================================================================== |
-
 #pragma once
 
 #include "common.h"
@@ -11,6 +10,20 @@
 #include "ast.h"
 #include "visitor.h"
 
+// ================================================================ |
+// File compiler.h: Compiler class declaration.                     |
+// ================================================================ |
+// This file declares the Compiler class.
+//
+// The Compiler class serves as an abstract compilation interface,
+//  taking away the complexity of node visitation, optimization,
+//  global tracking, stack tracking, etc.
+//
+// The `generate` method is the main entry point for performing compilation,
+//  it returns a boolean indicating if the program failed or not, of which
+//  a value of `true` represents failure. The method could theoretically be called
+//  multiple times, but it is not recommended to do so.
+// ================================================================ |
 namespace via {
 
 class Compiler {
@@ -20,16 +33,10 @@ public:
     {
     }
 
-    ~Compiler()
-    {
-        cleaner.clean();
-    }
-
     bool generate();
 
 private:
     ProgramData *program;
-    Cleaner cleaner;
 };
 
 } // namespace via
