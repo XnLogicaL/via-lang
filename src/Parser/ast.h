@@ -240,6 +240,20 @@ struct IfNode : public StmtNode {
     }
 };
 
+struct WhileNode : public StmtNode {
+    pExprNode condition;
+    pStmtNode body;
+
+    std::string to_string() override;
+    void accept(NodeVisitor &) override;
+
+    WhileNode(pExprNode condition, pStmtNode body)
+        : condition(std::move(condition))
+        , body(std::move(body))
+    {
+    }
+};
+
 struct ExprStmtNode : public StmtNode {
     pExprNode expression;
 

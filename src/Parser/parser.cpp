@@ -68,7 +68,7 @@ Modifiers Parser::parse_modifiers()
     return modifiers;
 }
 
-pExprNode Parser::parse_prim_expr()
+pExprNode Parser::parse_primary()
 {
     Token token = consume();
 
@@ -92,7 +92,7 @@ pExprNode Parser::parse_prim_expr()
         return std::make_unique<LiteralNode>(token, token.lexeme);
     case OP_SUB: {
         Token op = token;
-        pExprNode expr = parse_prim_expr();
+        pExprNode expr = parse_primary();
         return std::make_unique<UnaryNode>(std::move(expr));
     }
     case PAREN_OPEN: {
@@ -111,7 +111,7 @@ pExprNode Parser::parse_prim_expr()
     return nullptr;
 }
 
-pExprNode Parser::parse_postfix_expr(pExprNode lhs)
+pExprNode Parser::parse_postfix(pExprNode lhs)
 {
     while (true) {
         switch (current().type) {
@@ -159,10 +159,10 @@ pExprNode Parser::parse_postfix_expr(pExprNode lhs)
     }
 }
 
-pExprNode Parser::parse_bin_expr(int precedence)
+pExprNode Parser::parse_binary(int precedence)
 {
     pExprNode lhs =
-        parse_postfix_expr(parse_prim_expr()); // Ensure postfix expressions are parsed immediately
+        parse_postfix(parse_primary()); // Ensure postfix expressions are parsed immediately
 
     while (position < program->tokens->tokens.size() && current().is_operator()) {
         Token op = current();
@@ -172,7 +172,7 @@ pExprNode Parser::parse_bin_expr(int precedence)
         }
 
         consume();
-        lhs = std::make_unique<BinaryNode>(op, std::move(lhs), parse_bin_expr(op_prec + 1));
+        lhs = std::make_unique<BinaryNode>(op, std::move(lhs), parse_binary(op_prec + 1));
     }
 
     return lhs;
@@ -180,7 +180,7 @@ pExprNode Parser::parse_bin_expr(int precedence)
 
 pExprNode Parser::parse_expr()
 {
-    return parse_bin_expr(0);
+    return parse_binary(0);
 }
 
 pStmtNode Parser::parse_declaration()
@@ -306,18 +306,32 @@ pStmtNode Parser::parse_if()
     );
 }
 
+pStmtNode Parser::parse_while()
+{
+    consume();
+
+    pExprNode condition = parse_expr();
+    pStmtNode body = parse_scope();
+
+    return std::make_unique<WhileNode>(std::move(condition), std::move(body));
+}
+
 pStmtNode Parser::parse_stmt()
 {
-    Token cur = current();
-    if (cur.type == KW_LOCAL || cur.type == KW_GLOBAL || cur.type == KW_FUNC ||
-        cur.type == KW_CONST) {
+    switch (current().type) {
+    case KW_LOCAL:
+    case KW_GLOBAL:
+    case KW_FUNC:
+    case KW_CONST:
         return parse_declaration();
-    }
-    else if (cur.type == KW_DO) {
+    case KW_DO:
         consume();
         return parse_scope();
-    }
-    else {
+    case KW_IF:
+        return parse_if();
+    case KW_WHILE:
+        return parse_while();
+    default:
         try {
             pExprNode expression = parse_expr();
             return std::make_unique<ExprStmtNode>(std::move(expression));
@@ -326,13 +340,15 @@ pStmtNode Parser::parse_stmt()
             // I thought that rethrowing exceptions was a fucking meme,
             // but here I am.
             throw ParserError(
-                std::format("Unexpected token '{}' while parsing statement", cur.lexeme)
+                std::format("Unexpected token '{}' while parsing statement", current().lexeme)
             );
         }
 
         VIA_ASSERT(false, "wait... how did you get this assertion to fail? you're a wizard!")
-        return nullptr; // Yes, this is redundant, shut up
     }
+
+    VIA_UNREACHABLE;
+    return nullptr; // Yes, this is redundant, shut up
 }
 
 bool Parser::parse_program() noexcept

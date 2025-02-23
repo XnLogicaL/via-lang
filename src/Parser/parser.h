@@ -52,15 +52,16 @@ private:
 
     Modifiers parse_modifiers();
 
-    pExprNode parse_prim_expr();
-    pExprNode parse_postfix_expr(pExprNode);
-    pExprNode parse_bin_expr(int prec);
+    pExprNode parse_primary();
+    pExprNode parse_postfix(pExprNode);
+    pExprNode parse_binary(int);
     pExprNode parse_expr();
 
     pStmtNode parse_declaration();
     pStmtNode parse_assign();
     pStmtNode parse_scope();
     pStmtNode parse_if();
+    pStmtNode parse_while();
     pStmtNode parse_stmt();
 };
 
