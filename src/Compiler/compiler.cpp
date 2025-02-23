@@ -9,12 +9,15 @@ namespace via {
 
 bool Compiler::generate()
 {
-    bool failed = false;
+    RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
+    Emitter emitter(program);
+    StmtVisitor visitor(program, emitter, allocator);
 
     for (pStmtNode &stmt : program->ast->statements) {
+        stmt->accept(visitor);
     }
 
-    return failed;
+    return visitor.failed();
 }
 
 } // namespace via

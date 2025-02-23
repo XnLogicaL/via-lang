@@ -21,6 +21,7 @@ struct LiteralNode : public ExprNode {
 
     Token value_token;
     variant value;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -33,6 +34,7 @@ struct LiteralNode : public ExprNode {
 
 struct VariableNode : public ExprNode {
     Token identifier;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -44,6 +46,7 @@ struct VariableNode : public ExprNode {
 
 struct UnaryNode : public ExprNode {
     pExprNode expression;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -55,6 +58,7 @@ struct UnaryNode : public ExprNode {
 
 struct GroupNode : public ExprNode {
     pExprNode expression;
+
     std::string to_string() override;
     int precedence() const noexcept override;
 
@@ -66,7 +70,9 @@ struct GroupNode : public ExprNode {
 
 struct CallNode : public ExprNode {
     pExprNode callee;
+
     std::vector<pExprNode> arguments;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -80,6 +86,7 @@ struct CallNode : public ExprNode {
 struct IndexNode : public ExprNode {
     pExprNode object;
     pExprNode index;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -94,6 +101,7 @@ struct BinaryNode : public ExprNode {
     Token op;
     pExprNode lhs_expression;
     pExprNode rhs_expression;
+
     std::string to_string() override;
     void accept(NodeVisitor &, U32) override;
 
@@ -110,9 +118,11 @@ struct BinaryNode : public ExprNode {
 // ============================ |
 struct DeclarationNode : public StmtNode {
     bool is_global;
+
     Modifiers modifiers;
     Token identifier;
     pExprNode value_expression;
+
     std::string to_string() override;
     void accept(NodeVisitor &) override;
 
@@ -130,8 +140,109 @@ struct DeclarationNode : public StmtNode {
     }
 };
 
+struct ScopeNode : public StmtNode {
+    std::vector<pStmtNode> statements;
+
+    std::string to_string() override;
+    void accept(NodeVisitor &) override;
+
+    ScopeNode(std::vector<pStmtNode> statements)
+        : statements(std::move(statements))
+    {
+    }
+};
+
+struct FunctionNode : public StmtNode {
+    struct ParameterNode {
+        Token identifier;
+
+        ParameterNode(Token identifier)
+            : identifier(identifier)
+        {
+        }
+    };
+
+    bool is_global;
+
+    Modifiers modifiers;
+    Token identifier;
+    pStmtNode body;
+
+    std::vector<ParameterNode> parameters;
+
+    std::string to_string() override;
+    void accept(NodeVisitor &) override;
+
+    FunctionNode(
+        bool is_global,
+        Modifiers modifiers,
+        Token identifier,
+        pStmtNode body,
+        std::vector<ParameterNode> parameters
+    )
+        : is_global(is_global)
+        , modifiers(modifiers)
+        , identifier(identifier)
+        , body(std::move(body))
+        , parameters(parameters)
+    {
+    }
+};
+
+struct AssignNode : public StmtNode {
+    Token identifier;
+    Token augmentation_operator;
+    pExprNode value;
+
+    std::string to_string() override;
+    void accept(NodeVisitor &) override;
+
+    AssignNode(Token identifier, Token augmentation_operator, pExprNode value)
+        : identifier(identifier)
+        , augmentation_operator(augmentation_operator)
+        , value(std::move(value))
+    {
+    }
+};
+
+struct IfNode : public StmtNode {
+    struct ElseIfNode {
+        pExprNode condition;
+        pStmtNode scope;
+
+        ElseIfNode(pExprNode condition, pStmtNode scope)
+            : condition(std::move(condition))
+            , scope(std::move(scope))
+        {
+        }
+    };
+
+    pExprNode condition;
+    pStmtNode scope;
+
+    std::string to_string() override;
+    void accept(NodeVisitor &) override;
+
+    std::optional<pStmtNode> else_node;
+    std::vector<ElseIfNode> elseif_nodes;
+
+    IfNode(
+        pExprNode condition,
+        pStmtNode scope,
+        std::optional<pStmtNode> else_node,
+        std::vector<ElseIfNode> elseif_nodes
+    )
+        : condition(std::move(condition))
+        , scope(std::move(scope))
+        , else_node(std::move(else_node))
+        , elseif_nodes(std::move(elseif_nodes))
+    {
+    }
+};
+
 struct ExprStmtNode : public StmtNode {
     pExprNode expression;
+
     std::string to_string() override;
     void accept(NodeVisitor &) override;
 

@@ -4,18 +4,15 @@
 
 #pragma once
 
-#include <string>
-#include <cstddef>
-#include <vector>
-#include <optional>
+#include "common_nodep.h"
 
 namespace via {
 
 struct Global {
     std::string symbol;
-    uint64_t declared_at;
+    U64 declared_at;
 
-    Global(const std::string &symbol, uint64_t declared_at)
+    Global(const std::string &symbol, U64 declared_at)
         : symbol(symbol)
         , declared_at(declared_at)
     {
@@ -23,7 +20,7 @@ struct Global {
 
     Global(const std::string &symbol)
         : symbol(symbol)
-        , declared_at(std::numeric_limits<uint64_t>::quiet_NaN())
+        , declared_at(std::numeric_limits<U64>::quiet_NaN())
     {
     }
 };

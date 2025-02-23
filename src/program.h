@@ -5,9 +5,7 @@
 #pragma once
 
 #include "globals.h"
-#include <string>
-#include <vector>
-#include <map>
+#include "common_nodep.h"
 
 namespace via {
 

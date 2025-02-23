@@ -30,7 +30,7 @@ struct Instruction {
     U32 operand1 = 0;
     U32 operand2 = 0;
     Chunk *chunk = nullptr;
-    size_t pos = 0;
+    U64 pos = 0;
 
     Instruction(OpCode op, std::vector<U32> operands, Chunk *chunk, size_t pos)
         : op(op)

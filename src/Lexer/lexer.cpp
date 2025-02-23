@@ -304,7 +304,7 @@ Token Tokenizer::get_token()
             offset++;
             return Token(OP_EQ, "==", line, start_offset, position);
         }
-        return Token(OP_ASGN, "=", line, start_offset, position);
+        return Token(EQUAL, "=", line, start_offset, position);
     case '!':
         if (pos < source_size() && peek() == '=') {
             pos++;

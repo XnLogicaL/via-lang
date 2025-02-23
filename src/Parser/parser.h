@@ -50,12 +50,17 @@ private:
     Token consume(int ahead = 1);
     Token expect_consume(TokenType type = TokenType::UNKNOWN, int ahead = 1);
 
+    Modifiers parse_modifiers();
+
     pExprNode parse_prim_expr();
     pExprNode parse_postfix_expr(pExprNode);
     pExprNode parse_bin_expr(int prec);
     pExprNode parse_expr();
 
     pStmtNode parse_declaration();
+    pStmtNode parse_assign();
+    pStmtNode parse_scope();
+    pStmtNode parse_if();
     pStmtNode parse_stmt();
 };
 

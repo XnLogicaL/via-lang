@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "common_nodep.h"
 #include "arena.h"
 
 namespace via {
@@ -58,7 +58,7 @@ enum class TokenType {
     OP_GEQ,       // >=
     OP_INCREMENT, // ++
     OP_DECREMENT, // --
-    OP_ASGN,      // =
+    EQUAL,        // =
 
     // Literals
     LIT_INT,    // Integer literals
@@ -101,7 +101,8 @@ enum class TokenType {
 };
 
 struct Token {
-    Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)
+    Token() {}
+    Token(TokenType type, std::string lexeme, U64 line, U64 offset, U64 position)
         : type(type)
         , lexeme(lexeme)
         , line(line)
@@ -110,15 +111,16 @@ struct Token {
     {
     }
 
-    TokenType type;
-    std::string lexeme;
-    size_t line;
-    size_t offset;
-    size_t position;
+    TokenType type = TokenType::UNKNOWN;
+    std::string lexeme = "";
+    U64 line = 0;
+    U64 offset = 0;
+    U64 position = 0;
 
     std::string to_string() const noexcept;
     bool is_literal() const noexcept;
     bool is_operator() const noexcept;
+    bool is_modifier() const noexcept;
     int bin_prec() const noexcept;
 };
 

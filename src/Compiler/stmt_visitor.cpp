@@ -15,7 +15,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
     bool is_global = declaration_node.is_global;
     bool is_const = declaration_node.modifiers.is_const;
 
-    ExprNode &val = *declaration_node.value_expression;
+    ExprNode &val = *std::move(declaration_node.value_expression);
     Token ident = declaration_node.identifier;
     std::string symbol = ident.lexeme;
 

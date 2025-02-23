@@ -7,6 +7,8 @@
 
 namespace via {
 
+using enum TokenType;
+
 std::string Token::to_string() const noexcept
 {
     std::basic_string_view<char> name = magic_enum::enum_name(type);
@@ -19,41 +21,41 @@ std::string Token::to_string() const noexcept
 
 bool Token::is_literal() const noexcept
 {
-    return type == TokenType::LIT_BOOL || type == TokenType::LIT_FLOAT ||
-           type == TokenType::LIT_INT || type == TokenType::LIT_STRING;
+    return type == LIT_BOOL || type == LIT_FLOAT || type == LIT_INT || type == LIT_STRING;
 }
 
 bool Token::is_operator() const noexcept
 {
-    return type == TokenType::OP_ADD || type == TokenType::OP_DECREMENT ||
-           type == TokenType::OP_DIV || type == TokenType::OP_EQ || type == TokenType::OP_EXP ||
-           type == TokenType::OP_GEQ || type == TokenType::OP_GT ||
-           type == TokenType::OP_INCREMENT || type == TokenType::OP_LEQ ||
-           type == TokenType::OP_LT || type == TokenType::OP_MOD || type == TokenType::OP_MUL ||
-           type == TokenType::OP_NEQ || type == TokenType::OP_SUB || type == TokenType::OP_ASGN;
+    return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ ||
+           type == OP_EXP || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT ||
+           type == OP_LEQ || type == OP_LT || type == OP_MOD || type == OP_MUL || type == OP_NEQ ||
+           type == OP_SUB;
+}
+
+bool Token::is_modifier() const noexcept
+{
+    return type == KW_CONST;
 }
 
 int Token::bin_prec() const noexcept
 {
     switch (type) {
-    case TokenType::OP_EXP:
+    case OP_EXP:
         return 4;
-    case TokenType::OP_MUL:
-    case TokenType::OP_DIV:
-    case TokenType::OP_MOD:
+    case OP_MUL:
+    case OP_DIV:
+    case OP_MOD:
         return 3;
-    case TokenType::OP_ADD:
-    case TokenType::OP_SUB:
+    case OP_ADD:
+    case OP_SUB:
         return 2;
-    case TokenType::OP_EQ:
-    case TokenType::OP_NEQ:
-    case TokenType::OP_LT:
-    case TokenType::OP_GT:
-    case TokenType::OP_LEQ:
-    case TokenType::OP_GEQ:
+    case OP_EQ:
+    case OP_NEQ:
+    case OP_LT:
+    case OP_GT:
+    case OP_LEQ:
+    case OP_GEQ:
         return 1;
-    case TokenType::OP_ASGN:
-        return 0;
     default:
         return -1;
     }

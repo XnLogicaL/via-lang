@@ -47,6 +47,27 @@ Token Parser::expect_consume(TokenType type, int ahead)
     return tok;
 }
 
+Modifiers Parser::parse_modifiers()
+{
+    Modifiers modifiers;
+
+    while (true) {
+        Token cur = current();
+        if (cur.type == KW_CONST) {
+            if (modifiers.is_const) {
+                emitter.out(cur.position, "Modifier 'const' encountered twice", Warning);
+            }
+
+            modifiers.is_const = true;
+        }
+        else {
+            break;
+        }
+    }
+
+    return modifiers;
+}
+
 pExprNode Parser::parse_prim_expr()
 {
     Token token = consume();
@@ -164,22 +185,154 @@ pExprNode Parser::parse_expr()
 
 pStmtNode Parser::parse_declaration()
 {
+    using ParameterNode = FunctionNode::ParameterNode;
+
     Token declaration_keyword = consume();
     TokenType declaration_type = declaration_keyword.type;
-
     bool is_global = declaration_type == KW_GLOBAL;
+
+    if (declaration_type == KW_FUNC || current().type == KW_FUNC) {
+        if (declaration_type != KW_FUNC) {
+            consume();
+        }
+
+        Token identifier = expect_consume(IDENTIFIER);
+        expect_consume(PAREN_OPEN);
+
+        std::vector<ParameterNode> parameters;
+        if (current().type != PAREN_CLOSE) {
+            while (true) {
+                parameters.emplace_back(expect_consume(IDENTIFIER));
+
+                if (current().type != COMMA) {
+                    break;
+                }
+
+                consume();
+            }
+        }
+
+        expect_consume(PAREN_CLOSE);
+
+        Modifiers modifiers = parse_modifiers();
+        pStmtNode body_scope = parse_scope();
+
+        return std::make_unique<FunctionNode>(
+            is_global, modifiers, identifier, std::move(body_scope), parameters
+        );
+    }
+
     Modifiers modifiers{declaration_type == KW_CONST};
 
-    if (current().type == KW_CONST) {
+    if (declaration_type == KW_CONST || current().type == KW_CONST) {
+        if (declaration_type != KW_CONST) {
+            consume();
+        }
+
         modifiers.is_const = true;
-        consume();
     }
 
     Token identifier = expect_consume(IDENTIFIER);
-    expect_consume(OP_ASGN);
+    expect_consume(EQUAL);
+    pExprNode value = parse_expr();
+
+    return std::make_unique<DeclarationNode>(is_global, modifiers, identifier, std::move(value));
+}
+
+pStmtNode Parser::parse_scope()
+{
+    expect_consume(BRACE_OPEN);
+
+    std::vector<pStmtNode> scope_statements;
+    while (current().type != BRACE_CLOSE) {
+        pStmtNode stmt = parse_stmt();
+        scope_statements.emplace_back(std::move(stmt));
+    }
+
+    expect_consume(BRACE_CLOSE);
+
+    return std::make_unique<ScopeNode>(std::move(scope_statements));
+}
+
+pStmtNode Parser::parse_assign()
+{
+    Token identifier = expect_consume(IDENTIFIER);
+    Token augmentation_operator;
+
+    if (current().type != EQUAL && current().is_operator()) {
+        augmentation_operator = consume();
+    }
+
+    expect_consume(EQUAL);
 
     pExprNode value = parse_expr();
-    return std::make_unique<DeclarationNode>(is_global, modifiers, identifier, std::move(value));
+    return std::make_unique<AssignNode>(identifier, augmentation_operator, std::move(value));
+}
+
+pStmtNode Parser::parse_if()
+{
+    using ElseIfNode = IfNode::ElseIfNode;
+
+    expect_consume(KW_IF);
+
+    pExprNode condition = parse_expr();
+    pStmtNode scope = parse_scope();
+
+    std::optional<pStmtNode> else_scope;
+    std::vector<ElseIfNode> elseif_nodes;
+
+    while (current().type == KW_ELIF) {
+        consume();
+
+        pExprNode elseif_condition = parse_expr();
+        pStmtNode elseif_scope = parse_scope();
+
+        ElseIfNode elseif(std::move(elseif_condition), std::move(elseif_scope));
+        elseif_nodes.emplace_back(std::move(elseif));
+    }
+
+    if (current().type == KW_ELSE) {
+        consume();
+
+        pStmtNode else_scope_inner = parse_scope();
+        else_scope.emplace(std::move(else_scope_inner));
+    }
+    else {
+        else_scope = std::nullopt;
+    }
+
+    return std::make_unique<IfNode>(
+        std::move(condition), std::move(scope), std::move(else_scope), std::move(elseif_nodes)
+    );
+}
+
+pStmtNode Parser::parse_stmt()
+{
+    Token cur = current();
+    if (cur.type == KW_LOCAL || cur.type == KW_GLOBAL || cur.type == KW_FUNC ||
+        cur.type == KW_CONST) {
+        return parse_declaration();
+    }
+    else if (cur.type == KW_DO) {
+        consume();
+        return parse_scope();
+    }
+    else {
+        try {
+            pExprNode expression = parse_expr();
+            return std::make_unique<ExprStmtNode>(std::move(expression));
+        }
+        catch (const ParserError &) {
+            // I thought that rethrowing exceptions was a fucking meme,
+            // but here I am.
+            throw ParserError(
+                std::format("Unexpected token '{}' while parsing statement", cur.lexeme)
+            );
+        }
+
+        VIA_ASSERT(false, "wait... how did you get this assertion to fail? you're a wizard!")
+        return nullptr; // Yes, this is redundant, shut up
+    }
 }
 
 bool Parser::parse_program() noexcept
