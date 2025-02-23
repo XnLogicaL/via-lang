@@ -374,7 +374,7 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         return TValue(_Tstr);
     }
 
-    VIA_UNREACHABLE();
+    VIA_UNREACHABLE;
     return _Nil.clone();
 }
 
@@ -392,7 +392,7 @@ VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
 
     return TValue(_Val.type != ValueType::nil);
 
-    VIA_UNREACHABLE();
+    VIA_UNREACHABLE;
     return _Nil.clone();
 }
 
@@ -509,7 +509,7 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
         return __to_pointer(_Val_0) == __to_pointer(_Val_1);
     }
 
-    VIA_UNREACHABLE();
+    VIA_UNREACHABLE;
     return false;
 };
 

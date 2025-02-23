@@ -524,6 +524,14 @@ enum class OpCode {
      * operand1: <>
      */
     TYPE,
+    /*
+     * opcode: GET
+     * Performs an index operation on <operand1> with key <operand2> and stores the result in <operand0>
+     * operand0: <dst :: Register>
+     * operand0: <val :: Register>
+     * operand1: <>
+     */
+    GET,
 };
 
 } // namespace via

@@ -8,13 +8,26 @@
 
 namespace via {
 
-struct BytecodeHolder {
-    using Instructions = std::vector<Instruction>;
-
-    Instructions instructions;
+class BytecodeHolder {
+public:
+    BytecodeHolder(ProgramData *program)
+        : program(program)
+    {
+    }
 
     void add_instruction(const Instruction &);
     void remove_instruction(size_t index);
+    void emit(
+        OpCode opcode = OpCode::NOP,
+        const std::vector<U32> &operands = {},
+        const std::string &comment = ""
+    );
+
+    std::vector<Instruction> &get();
+
+private:
+    ProgramData *program;
+    std::vector<Instruction> instructions;
 };
 
 } // namespace via

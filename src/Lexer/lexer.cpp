@@ -41,7 +41,7 @@ char Tokenizer::consume(size_t ahead)
     return program->source.at(pos += ahead);
 }
 
-Token Tokenizer::read_number()
+Token Tokenizer::read_number(size_t position)
 {
     TokenType type = LIT_INT;     // Specify default type as integer literal
     size_t start_offset = offset; // Record starting offset of the number
@@ -86,10 +86,10 @@ Token Tokenizer::read_number()
     }
 
     // Use start_offset here to denote where the token begins
-    return Token(type, value, line, start_offset);
+    return Token(type, value, line, start_offset, position);
 }
 
-Token Tokenizer::read_ident()
+Token Tokenizer::read_ident(size_t position)
 {
     // List of allowed special characters that can be included in an identifier
     static const std::vector<char> allowed_identifier_spec_chars = {
@@ -119,38 +119,16 @@ Token Tokenizer::read_ident()
     }
 
     static const std::unordered_map<std::string, TokenType> keyword_map = {
-        {"do", KW_DO},
-        {"in", KW_IN},
-        {"local", KW_LOCAL},
-        {"global", KW_GLOBAL},
-        {"as", KW_AS},
-        {"const", KW_CONST},
-        {"if", KW_IF},
-        {"else", KW_ELSE},
-        {"elif", KW_ELIF},
-        {"while", KW_WHILE},
-        {"for", KW_FOR},
-        {"return", KW_RETURN},
-        {"func", KW_FUNC},
-        {"break", KW_BREAK},
-        {"continue", KW_CONTINUE},
-        {"switch", KW_MATCH},
-        {"case", KW_CASE},
-        {"default", KW_DEFAULT},
-        {"new", KW_NEW},
-        {"and", KW_AND},
-        {"not", KW_NOT},
-        {"or", KW_OR},
-        {"struct", KW_STRUCT},
-        {"namespace", KW_NAMESPACE},
-        {"property", KW_PROPERTY},
-        {"import", KW_IMPORT},
-        {"export", KW_EXPORT},
-        {"macro", KW_MACRO},
-        {"define", KW_DEFINE},
-        {"strict", KW_STRICT},
-        {"meta", KW_META},
-        {"defined", KW_DEFINED},
+        {"do", KW_DO},         {"in", KW_IN},           {"local", KW_LOCAL},
+        {"global", KW_GLOBAL}, {"as", KW_AS},           {"const", KW_CONST},
+        {"if", KW_IF},         {"else", KW_ELSE},       {"elif", KW_ELIF},
+        {"while", KW_WHILE},   {"for", KW_FOR},         {"return", KW_RETURN},
+        {"func", KW_FUNC},     {"break", KW_BREAK},     {"continue", KW_CONTINUE},
+        {"switch", KW_MATCH},  {"case", KW_CASE},       {"default", KW_DEFAULT},
+        {"new", KW_NEW},       {"and", KW_AND},         {"not", KW_NOT},
+        {"or", KW_OR},         {"struct", KW_STRUCT},   {"namespace", KW_NAMESPACE},
+        {"import", KW_IMPORT}, {"export", KW_EXPORT},   {"macro", KW_MACRO},
+        {"define", KW_DEFINE}, {"defined", KW_DEFINED},
     };
 
     // Checks if the identifier is a keyword or not
@@ -170,10 +148,10 @@ Token Tokenizer::read_ident()
         type = LIT_NIL;
     }
 
-    return Token(type, identifier, line, start_offset); // Use start_offset here
+    return Token(type, identifier, line, start_offset, position); // Use start_offset here
 }
 
-Token Tokenizer::read_string()
+Token Tokenizer::read_string(size_t position)
 {
     std::string lexeme;
     size_t start_offset = offset; // Record starting offset of the string
@@ -215,7 +193,7 @@ Token Tokenizer::read_string()
     pos++; // Skip closing quote
     offset++;
 
-    return Token(LIT_STRING, lexeme, line, start_offset); // Use start_offset here
+    return Token(LIT_STRING, lexeme, line, start_offset, position); // Use start_offset here
 }
 
 Token Tokenizer::get_token()
@@ -276,27 +254,29 @@ Token Tokenizer::get_token()
         break;
     }
 
+    size_t position = program->tokens->tokens.size();
+
     // Check if the position is at the end of the program->source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source_size()) {
-        return {EOF_, "\0", line, offset};
+        return {EOF_, "\0", line, offset, position};
     }
 
     size_t start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
     if (std::isdigit(peek())) {
-        return read_number();
+        return read_number(position);
     }
 
     // Handle string literals
     if (peek() == '"') {
-        return read_string();
+        return read_string(position);
     }
 
     // Handle identifiers and keywords
     if (std::isalpha(peek()) || peek() == '_') {
-        return read_ident();
+        return read_ident(position);
     }
 
     // Handle special characters (operators, delimiters, etc.)
@@ -307,68 +287,68 @@ Token Tokenizer::get_token()
 
     switch (chr) {
     case '+':
-        return Token(OP_ADD, "+", line, start_offset);
+        return Token(OP_ADD, "+", line, start_offset, position);
     case '-':
-        return Token(OP_SUB, "-", line, start_offset);
+        return Token(OP_SUB, "-", line, start_offset, position);
     case '*':
-        return Token(OP_MUL, "*", line, start_offset);
+        return Token(OP_MUL, "*", line, start_offset, position);
     case '/':
-        return Token(OP_DIV, "/", line, start_offset);
+        return Token(OP_DIV, "/", line, start_offset, position);
     case '%':
-        return Token(OP_MOD, "%", line, start_offset);
+        return Token(OP_MOD, "%", line, start_offset, position);
     case '^':
-        return Token(OP_EXP, "^", line, start_offset);
+        return Token(OP_EXP, "^", line, start_offset, position);
     case '=':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return Token(OP_EQ, "==", line, start_offset);
+            return Token(OP_EQ, "==", line, start_offset, position);
         }
-        return Token(OP_ASGN, "=", line, start_offset);
+        return Token(OP_ASGN, "=", line, start_offset, position);
     case '!':
         if (pos < source_size() && peek() == '=') {
             pos++;
             offset++;
-            return Token(OP_NEQ, "!=", line, start_offset);
+            return Token(OP_NEQ, "!=", line, start_offset, position);
         }
-        return Token(EXCLAMATION, "!", line, start_offset);
+        return Token(EXCLAMATION, "!", line, start_offset, position);
     case '<':
-        return Token(OP_LT, "<", line, start_offset);
+        return Token(OP_LT, "<", line, start_offset, position);
     case '>':
-        return Token(OP_GT, ">", line, start_offset);
+        return Token(OP_GT, ">", line, start_offset, position);
     case '&':
-        return Token(AMPERSAND, "&", line, start_offset);
+        return Token(AMPERSAND, "&", line, start_offset, position);
     case '|':
-        return Token(PIPE, "|", line, start_offset);
+        return Token(PIPE, "|", line, start_offset, position);
     case ';':
-        return Token(SEMICOLON, ";", line, start_offset);
+        return Token(SEMICOLON, ";", line, start_offset, position);
     case ',':
-        return Token(COMMA, ",", line, start_offset);
+        return Token(COMMA, ",", line, start_offset, position);
     case '(':
-        return Token(PAREN_OPEN, "(", line, start_offset);
+        return Token(PAREN_OPEN, "(", line, start_offset, position);
     case ')':
-        return Token(PAREN_CLOSE, ")", line, start_offset);
+        return Token(PAREN_CLOSE, ")", line, start_offset, position);
     case '{':
-        return Token(BRACE_OPEN, "{", line, start_offset);
+        return Token(BRACE_OPEN, "{", line, start_offset, position);
     case '}':
-        return Token(BRACE_CLOSE, "}", line, start_offset);
+        return Token(BRACE_CLOSE, "}", line, start_offset, position);
     case '[':
-        return Token(BRACKET_OPEN, "[", line, start_offset);
+        return Token(BRACKET_OPEN, "[", line, start_offset, position);
     case ']':
-        return Token(BRACKET_CLOSE, "]", line, start_offset);
+        return Token(BRACKET_CLOSE, "]", line, start_offset, position);
     case '.':
-        return Token(DOT, ".", line, start_offset);
+        return Token(DOT, ".", line, start_offset, position);
     case ':':
-        return Token(COLON, ":", line, start_offset);
+        return Token(COLON, ":", line, start_offset, position);
     case '@':
-        return Token(AT, "@", line, start_offset);
+        return Token(AT, "@", line, start_offset, position);
     case '?':
-        return Token(QUESTION, "?", line, start_offset);
+        return Token(QUESTION, "?", line, start_offset, position);
     default:
-        return Token(UNKNOWN, std::string(1, chr), line, start_offset);
+        return Token(UNKNOWN, std::string(1, chr), line, start_offset, position);
     }
 
-    return Token(UNKNOWN, "\0", line, start_offset);
+    return Token(UNKNOWN, "\0", line, start_offset, position);
 }
 
 void Tokenizer::tokenize()

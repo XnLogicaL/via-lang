@@ -7,16 +7,6 @@
 
 namespace via {
 
-Instruction::Instruction(OpCode op, std::vector<U32> operands, Chunk *chunk, size_t pos)
-    : op(op)
-    , operand0(safe_call<U32>([&operands]() { return operands.at(0); }, 0))
-    , operand1(safe_call<U32>([&operands]() { return operands.at(1); }, 0))
-    , operand2(safe_call<U32>([&operands]() { return operands.at(2); }, 0))
-    , chunk(chunk)
-    , pos(pos)
-{
-}
-
 std::string to_string(ProgramData *prog, Instruction instruction)
 {
     std::string comment("");

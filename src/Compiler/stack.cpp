@@ -6,18 +6,18 @@
 
 namespace via {
 
-void TestStack::push(std::string val)
+void TestStack::push(TestStackMember val)
 {
     sbp[sp++] = val;
 }
 
-std::string TestStack::pop()
+TestStackMember TestStack::pop()
 {
-    std::string val = sbp[sp--];
+    TestStackMember val = sbp[sp--];
     return val;
 }
 
-std::string TestStack::top()
+TestStackMember TestStack::top()
 {
     return sbp[sp--];
 }
@@ -27,23 +27,24 @@ size_t TestStack::size()
     return sp;
 }
 
-std::optional<std::string> TestStack::at(size_t pos)
+std::optional<TestStackMember> TestStack::at(size_t pos)
 {
-    if (pos > size())
+    if (pos > size()) {
         return std::nullopt;
+    }
 
     return sbp[pos];
 }
 
-size_t TestStack::find(const std::string &val)
+std::optional<U32> TestStack::find_symbol(const TestStackMember &member)
 {
-    for (size_t i = 0; i < size(); i++) {
-        std::optional<std::string> val_at = at(i);
-        if (val_at.has_value() && val_at->compare(val) == 0)
-            return i;
+    for (TestStackMember *stk_id = sbp; stk_id < sbp + sp; stk_id++) {
+        if (stk_id->symbol == member.symbol) {
+            return stk_id - sbp;
+        }
     }
 
-    return SIZE_MAX;
+    return std::nullopt;
 }
 
 } // namespace via

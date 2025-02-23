@@ -2,6 +2,10 @@
 // This file is a part of The via Programming Language; see LICENSE for licensing information. |
 // =========================================================================================== |
 
+#if not defined(__GNUC__) && not defined(__clang__)
+    #pragma error(Unsupported compiler.Please use g++ or clang++.)
+#endif
+
 #pragma once
 
 // C++ std imports
@@ -33,12 +37,15 @@
 #include <vector>
 #include <stacktrace>
 #include <shared_mutex>
+#include <limits>
+#include <typeindex>
 // External imports
 #include "magic_enum.hpp"
 #include "linenoise.hpp"
 #include "arena.h"
 // Internal imports
 #include "token.h"
+#include "program.h"
 
 #define ASMJIT_STATIC
 
@@ -53,34 +60,17 @@
     }
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION "0.16"
+#define VIA_VERSION "0.17"
 
-#if defined(__GNUC__) || defined(__clang__)
-    #define VIA_RESTRICT __restrict__
-    #define VIA_NORETURN __attribute__((__noreturn__))
-    #define VIA_NOINLINE __attribute__((noinline))
-    #define VIA_INLINE inline
-    #define VIA_FORCEINLINE inline __attribute__((always_inline))
-    #define VIA_MAXOPTIMIZE inline __attribute__((always_inline, hot))
-    #define VIA_UNREACHABLE() __builtin_unreachable();
-    #define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
-    #define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
-#elifdef _MSC_VER // In case of MSVC (MSVC is fucking weird, please do NOT \
-                  // use it)
-    #define VIA_RESTRICT __restrict
-    #define VIA_NORETURN __declspec(__noreturn__)
-    #define VIA_NOINLINE __declspec(noinline)
-    #define VIA_INLINE
-    #define VIA_FORCEINLINE __forceinline
-    #define VIA_MAXOPTIMIZE __forceinline
-    #define VIA_UNREACHABLE() __assume(false)
-    #define VIA_LIKELY(expr) expr
-    #define VIA_UNLIKELY(expr) expr
-#else
-// clang-format off
-    #pragma error(Unsupported compiler detected, supported compilers include: GNU g++, clang, MSVC (partial))
-// clang-format on
-#endif
+#define VIA_RESTRICT __restrict__
+#define VIA_NORETURN __attribute__((__noreturn__))
+#define VIA_NOINLINE __attribute__((noinline))
+#define VIA_INLINE inline
+#define VIA_FORCEINLINE inline __attribute__((always_inline))
+#define VIA_MAXOPTIMIZE inline __attribute__((always_inline, hot))
+#define VIA_UNREACHABLE __builtin_unreachable();
+#define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
+#define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
 
 namespace via {
 
@@ -90,9 +80,6 @@ struct TTable;
 struct TString;
 struct TFunction;
 struct TCFunction;
-struct TokenHolder;
-struct AbstractSyntaxTree;
-struct BytecodeHolder;
 
 // Thanks Terry A. Davis (R.I.P. king) for the idea
 using U8 = std::uint8_t;
@@ -136,18 +123,5 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
         return default_value;
     }
 }
-
-struct ProgramData {
-    std::string file;
-    std::string source;
-    TokenHolder *tokens = nullptr;
-    AbstractSyntaxTree *ast = nullptr;
-    BytecodeHolder *bytecode = nullptr;
-    std::vector<TValue> *constants;
-    std::map<size_t, std::string> bytecode_info;
-
-    ProgramData(std::string, std::string);
-    ~ProgramData();
-};
 
 } // namespace via

@@ -7,30 +7,38 @@
 #include "types.h"
 #include "common.h"
 
-#ifndef VIA_TEST_STACK_SIZE
-    #define VIA_TEST_STACK_SIZE 1024 * 1024 // 1 MB
-#endif
+#define VIA_TEST_STACK_SIZE 1024 * 1024 // 1 MB
 
 namespace via {
+
+struct TestStackMember {
+    std::string symbol = "<anonymous-symbol>";
+    bool is_const = false;
+    bool is_constexpr = false;
+};
 
 class TestStack {
 public:
     TestStack()
-        : sbp(reinterpret_cast<std::string *>(std::malloc(VIA_TEST_STACK_SIZE)))
-        , sp(0)
+        : sbp(new TestStackMember[VIA_TEST_STACK_SIZE])
     {
     }
 
-    void push(std::string);
-    std::string top();
-    std::string pop();
+    ~TestStack()
+    {
+        delete[] sbp;
+    }
+
+    void push(TestStackMember);
+    TestStackMember top();
+    TestStackMember pop();
     size_t size();
-    std::optional<std::string> at(size_t);
-    size_t find(const std::string &);
+    std::optional<TestStackMember> at(size_t);
+    std::optional<U32> find_symbol(const TestStackMember &);
 
 private:
-    std::string *sbp;
-    size_t sp;
+    TestStackMember *sbp = nullptr;
+    size_t sp = 0;
 };
 
 } // namespace via

@@ -82,8 +82,9 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
     // If the value union is tagged as a String type but an invalid string value,
     // that is classified as undefined behavior and should be explicitly handled
     // by the end user. It is guaranteed to NEVER occur under compiled bytecode
-    if (check_string(val))
+    if (check_string(val)) {
         return val.clone();
+    }
 
     switch (val.type) {
     case integer: {
@@ -134,7 +135,7 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
         return TValue(tstr);
     }
 
-    VIA_UNREACHABLE();
+    VIA_UNREACHABLE;
     return via::nil.clone();
 }
 

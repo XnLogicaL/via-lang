@@ -37,7 +37,7 @@ std::string Emitter::get_severity_header(OutputSeverity sev)
     case OutputSeverity::Error:
         return "\033[1;31merror:\033[0m "; // Red color for error
     default:
-        VIA_UNREACHABLE();
+        VIA_UNREACHABLE;
         return "";
     }
 }

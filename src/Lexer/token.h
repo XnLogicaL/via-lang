@@ -35,16 +35,13 @@ enum class TokenType {
     KW_OR,        // or
     KW_STRUCT,    // struct
     KW_NAMESPACE, // namespace
-    KW_PROPERTY,  // property
     KW_IMPORT,    // import
     KW_EXPORT,    // export
     KW_MACRO,     // macro
     KW_DEFINE,    // define
-    KW_STRICT,    // strict
     KW_TYPE,      // type
     KW_TYPEOF,    // typeof
     KW_DEFINED,   // defined
-    KW_META,      // meta
 
     // Operators
     OP_ADD,       // +
@@ -104,10 +101,20 @@ enum class TokenType {
 };
 
 struct Token {
+    Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)
+        : type(type)
+        , lexeme(lexeme)
+        , line(line)
+        , offset(offset)
+        , position(position)
+    {
+    }
+
     TokenType type;
     std::string lexeme;
     size_t line;
     size_t offset;
+    size_t position;
 
     std::string to_string() const noexcept;
     bool is_literal() const noexcept;

@@ -38,12 +38,12 @@ private:
 
     // Starts reading a "number" literal
     // Which can be a negative/positive floating point or integer
-    Token read_number();
+    Token read_number(size_t);
     // Reads an alpha-numeric identifier
     // Cannot start with a numeric character
-    Token read_ident();
+    Token read_ident(size_t);
     // Reads a string literal that can be denoted with quotes
-    Token read_string();
+    Token read_string(size_t);
     // Reads and returns the current token
     Token get_token();
 

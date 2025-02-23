@@ -9,6 +9,7 @@
 #include "common.h"
 #include "state.h"
 #include "types.h"
+#include "constant.h"
 
 // Define the hot path threshold for the instruction dispatch loop
 // How many times a chunk needs to be executed before being flagged as
@@ -812,9 +813,6 @@ dispatch: {
             VM_NEXT();
         }
 
-        __builtin_prefetch(&V->registers[lhs], 0, 3);
-        __builtin_prefetch(&V->registers[rhs], 0, 3);
-
         TValue *lhs_val = __get_register(V, lhs);
         TValue *rhs_val = __get_register(V, rhs);
 
@@ -838,9 +836,6 @@ dispatch: {
             __set_register(V, dst, TValue(true));
             VM_NEXT();
         }
-
-        __builtin_prefetch(&V->registers[lhs], 0, 3);
-        __builtin_prefetch(&V->registers[rhs], 0, 3);
 
         TValue *lhs_val = __get_register(V, lhs);
         TValue *rhs_val = __get_register(V, rhs);
@@ -1618,6 +1613,22 @@ dispatch: {
 
         __set_register(V, rdst, type);
         VM_NEXT();
+    }
+
+    case GET: {
+        U32 dst = V->ip->operand0;
+        U32 obj = V->ip->operand1;
+        U32 key = V->ip->operand2;
+
+        TValue *obj_val = __get_register(V, obj);
+
+        if VIA_LIKELY (check_table(*obj_val)) {
+            const TValue &val = __get_table(obj_val->cast_ptr<TTable>(), key, true);
+            __set_register(V, dst, val);
+            VM_NEXT();
+        }
+        else if (check_string(*obj_val)) {
+        }
     }
 
     default: {

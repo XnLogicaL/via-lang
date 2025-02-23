@@ -35,7 +35,7 @@ void State::load(BytecodeHolder &bytecode)
         this->ihp = nullptr;
     }
 
-    const std::vector<Instruction> &pipeline = bytecode.instructions;
+    const std::vector<Instruction> &pipeline = bytecode.get();
 
     if (pipeline.empty()) {
         this->ihp = this->ibp = this->ip = nullptr;
