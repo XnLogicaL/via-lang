@@ -1,16 +1,19 @@
 do {
     local x = 69
-    while x.something {
+    local k = 40054
+    while x {
         const z = x + 5
         if z {
             print(x * z * 2)
         } elif x {
+            do {
+                local scope = 123591355
+                local j = 0x0010100
+            }
             print(x + x)
         } else {
-            do {
-                *
-                print(y)
-            }
+            local n = "hi"
+            print(y)
         }
     }
 }

@@ -85,8 +85,10 @@ std::string Emitter::underline_line(
 }
 
 // Emits an output message
-void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
+void Emitter::out(U64 idx, std::string message, OutputSeverity sev)
 {
+    VIA_ASSERT(program != nullptr, "Emitter::out called with invalid program pointer");
+
     // This is an internal "flag" that determines if the file name has been displayed before any
     // errors
     static bool has_printed_file_name = false;
@@ -103,6 +105,11 @@ void Emitter::out(size_t idx, std::string message, OutputSeverity sev)
     size_t offset = tok.offset;
     size_t length = tok.lexeme.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
+}
+
+void Emitter::out_flat(std::string message, OutputSeverity sev)
+{
+    std::cout << get_severity_header(sev) << message << "\n";
 }
 
 } // namespace via

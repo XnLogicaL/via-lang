@@ -10,16 +10,19 @@
 
 using namespace via;
 
-const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
-const char REPL_WELCOME[] =
+static constexpr const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
+static constexpr const char REPL_WELCOME[] =
     "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
     "Use ';help' to see a list of commands.\n"
     "WARNING: repl has not been fully implemented.\n";
-const char REPL_HELP[] = "repl commands:\n"
-                         "  ;quit - Quits repl\n"
-                         "  ;help - Prints this \"menu\"\n"
-                         "  ;exitinfo - Displays the last exit info returned by the VM\n";
-const char REPL_HEAD[] = ">> ";
+static constexpr const char REPL_HELP[] =
+    "repl commands:\n"
+    "  ;quit - Quits repl\n"
+    "  ;help - Prints this \"menu\"\n"
+    "  ;exitinfo - Displays the last exit info returned by the VM\n";
+static constexpr const char REPL_HEAD[] = ">> ";
+
+static Emitter cli_emitter(nullptr);
 
 void handle_compile(const std::vector<std::string> &args)
 {
@@ -31,16 +34,20 @@ void handle_compile(const std::vector<std::string> &args)
 
 #define CHECK_SUBPROC_FAIL \
     if (failed) { \
+        if (flag_verbose) { \
+            cli_emitter.out_flat("Compilation failed", OutputSeverity::Error); \
+        } \
         return; \
     }
 
     if (args.empty()) {
-        std::cerr << "Invalid command\nNo input file provided.\n";
+        cli_emitter.out_flat("no input found", OutputSeverity::Error);
         std::exit(1);
     }
 
     bool failed;
 
+    bool flag_verbose = HAS_FLAG("--verbose") || HAS_FLAG("-v");
     bool flag_cache = HAS_FLAG("--cache") || HAS_FLAG("-c");
     bool flag_dump_tokens = HAS_FLAG("--dump-tokens");
     bool flag_dump_ast = HAS_FLAG("--dump-ast");
@@ -69,6 +76,8 @@ void handle_compile(const std::vector<std::string> &args)
     Parser parser(&program);
     failed = parser.parse_program();
 
+    CHECK_SUBPROC_FAIL;
+
     if (flag_dump_ast) {
         U32 depth = 0;
 
@@ -78,10 +87,10 @@ void handle_compile(const std::vector<std::string> &args)
         }
     }
 
-    CHECK_SUBPROC_FAIL;
-
     Compiler compiler(&program);
     failed = compiler.generate();
+
+    CHECK_SUBPROC_FAIL;
 
     if (flag_dump_bytecode) {
         std::cout << "\nflag [--dump-bytecode]:\n";
@@ -90,12 +99,14 @@ void handle_compile(const std::vector<std::string> &args)
         }
     }
 
-    CHECK_SUBPROC_FAIL;
-
     if (flag_cache) {
         CacheFile file(&program);
         CacheManager manager;
         manager.write_cache("./", file);
+    }
+
+    if (flag_verbose) {
+        cli_emitter.out_flat("Compilation completed", OutputSeverity::Info);
     }
 
 #undef HAS_FLAG
@@ -171,12 +182,15 @@ int main(int argc, char **argv)
         }
     });
 
-    if (subcom == "compile")
+    if (subcom == "compile") {
         handle_compile(args);
-    else if (subcom == "run")
+    }
+    else if (subcom == "run") {
         handle_run(args);
-    else if (subcom == "repl")
+    }
+    else if (subcom == "repl") {
         handle_repl(args);
+    }
     else {
         std::cerr << "Invalid subcommand\n";
         return 1;

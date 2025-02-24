@@ -23,7 +23,8 @@ public:
     {
     }
 
-    void out(size_t, std::string, OutputSeverity);
+    void out(U64, std::string, OutputSeverity);
+    void out_flat(std::string, OutputSeverity);
 
 private:
     ProgramData *program;

@@ -57,7 +57,7 @@ public:
     virtual ~NodeVisitor() = default;
 
     virtual void visit(LiteralNode &, U32) INVALID_VISIT;
-    virtual void visit(VariableNode &, U32) INVALID_VISIT;
+    virtual void visit(SymbolNode &, U32) INVALID_VISIT;
     virtual void visit(UnaryNode &, U32) INVALID_VISIT;
     virtual void visit(GroupNode &, U32) INVALID_VISIT;
     virtual void visit(CallNode &, U32) INVALID_VISIT;
@@ -91,7 +91,7 @@ public:
     }
 
     void visit(LiteralNode &, U32) override;
-    void visit(VariableNode &, U32) override;
+    void visit(SymbolNode &, U32) override;
     void visit(UnaryNode &, U32) override;
     void visit(GroupNode &, U32) override;
     void visit(CallNode &, U32) override;
@@ -132,7 +132,7 @@ private:
 class PrintVisitor : public NodeVisitor {
 public:
     void visit(LiteralNode &, U32) override;
-    void visit(VariableNode &, U32) override;
+    void visit(SymbolNode &, U32) override;
     void visit(UnaryNode &, U32) override;
     void visit(GroupNode &, U32) override;
     void visit(BinaryNode &, U32) override;

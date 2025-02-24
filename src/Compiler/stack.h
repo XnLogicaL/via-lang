@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "ast_base.h"
 #include "types.h"
 #include "common.h"
 

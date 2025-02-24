@@ -68,40 +68,52 @@ pExprNode Parser::parse_primary()
 {
     Token token = consume();
 
-    switch (token.type) {
-    case LIT_INT:
-    case LIT_HEX:
-        return std::make_unique<LiteralNode>(token, std::stoi(token.lexeme));
-    case LIT_FLOAT:
-        return std::make_unique<LiteralNode>(token, std::stof(token.lexeme));
-    case LIT_BINARY:
-        return std::make_unique<LiteralNode>(
-            token, static_cast<int>(std::bitset<32>(token.lexeme.substr(2)).to_ulong())
-        );
-    case LIT_NIL:
-        return std::make_unique<LiteralNode>(token, std::monostate());
-    case LIT_BOOL:
-        return std::make_unique<LiteralNode>(token, token.lexeme == "true");
-    case IDENTIFIER:
-        return std::make_unique<VariableNode>(token);
-    case LIT_STRING:
-        return std::make_unique<LiteralNode>(token, token.lexeme);
-    case OP_SUB: {
-        Token op = token;
-        pExprNode expr = parse_primary();
-        return std::make_unique<UnaryNode>(std::move(expr));
+    try {
+        switch (token.type) {
+        case LIT_INT:
+        case LIT_HEX: {
+            int value = std::stoi(token.lexeme);
+            return std::make_unique<LiteralNode>(token, value);
+        }
+        case LIT_FLOAT: {
+            float value = std::stof(token.lexeme);
+            return std::make_unique<LiteralNode>(token, value);
+        }
+        case LIT_BINARY:
+            return std::make_unique<LiteralNode>(
+                token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong())
+            );
+        case LIT_NIL:
+            return std::make_unique<LiteralNode>(token, std::monostate());
+        case LIT_BOOL:
+            return std::make_unique<LiteralNode>(token, token.lexeme == "true");
+        case IDENTIFIER:
+            return std::make_unique<SymbolNode>(token);
+        case LIT_STRING:
+            return std::make_unique<LiteralNode>(token, token.lexeme);
+        case OP_SUB: {
+            Token op = token;
+            pExprNode expr = parse_primary();
+            return std::make_unique<UnaryNode>(std::move(expr));
+        }
+        case PAREN_OPEN: {
+            consume();
+            pExprNode expression = parse_expr();
+            EXPECT(PAREN_CLOSE, "Expected ')' to close grouping expression, got '{}'");
+            return expression;
+        }
+        default:
+            throw ParserError(
+                std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
+                token.position
+            );
+        }
     }
-    case PAREN_OPEN: {
-        consume();
-        pExprNode expression = parse_expr();
-        EXPECT(PAREN_CLOSE, "Expected ')' to close grouping expression, got '{}'");
-        return expression;
+    catch (const std::invalid_argument &) {
+        throw ParserError(std::format("Malformed numeric format"), token.position);
     }
-    default:
-        throw ParserError(
-            std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
-            token.position
-        );
+    catch (const std::out_of_range &) {
+        throw ParserError(std::format("Numeric value out of range"), token.position);
     }
 
     VIA_UNREACHABLE;
@@ -118,7 +130,7 @@ pExprNode Parser::parse_postfix(pExprNode lhs)
             Token index_token = consume();
 
             lhs = std::make_unique<IndexNode>(
-                std::move(lhs), std::make_unique<VariableNode>(index_token)
+                std::move(lhs), std::make_unique<SymbolNode>(index_token)
             );
 
             break;
@@ -377,7 +389,12 @@ bool Parser::parse_program() noexcept
         }
         catch (const ParserError &e) {
             failed = true;
-            emitter.out(position, e.what(), Error);
+            emitter.out(e.where(), e.what(), Error);
+            break;
+        }
+        catch (const std::exception &e) {
+            failed = true;
+            emitter.out_flat(e.what(), Error);
             break;
         }
     }

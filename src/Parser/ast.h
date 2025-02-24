@@ -41,13 +41,13 @@ struct LiteralNode : public ExprNode {
     }
 };
 
-struct VariableNode : public ExprNode {
+struct SymbolNode : public ExprNode {
     Token identifier;
 
     std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
-    VariableNode(Token identifier)
+    SymbolNode(Token identifier)
         : identifier(identifier)
     {
     }

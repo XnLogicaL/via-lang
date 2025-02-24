@@ -1092,7 +1092,7 @@ dispatch: {
 
     case JUMP: {
         U32 offset = V->ip->operand0;
-        V->ip += offset;
+        V->ip += static_cast<I32>(offset);
         VM_NEXT();
     }
 
@@ -1106,7 +1106,7 @@ dispatch: {
 
         TValue *cond_val = __get_register(V, cond);
         if (__to_cxx_bool(*cond_val)) {
-            V->ip += offset;
+            V->ip += static_cast<I32>(offset);
         }
 
         VM_NEXT();
@@ -1122,7 +1122,7 @@ dispatch: {
 
         TValue *cond_val = __get_register(V, cond);
         if (!__to_cxx_bool(*cond_val)) {
-            V->ip += offset;
+            V->ip += static_cast<I32>(offset);
         }
 
         VM_NEXT();
@@ -1138,14 +1138,14 @@ dispatch: {
         }
 
         if VIA_UNLIKELY (cond_lhs == cond_rhs) {
-            V->ip += offset;
+            V->ip += static_cast<I32>(offset);
         }
         else {
             TValue *lhs_val = __get_register(V, cond_lhs);
             TValue *rhs_val = __get_register(V, cond_rhs);
 
             if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
         }
 
@@ -1162,14 +1162,14 @@ dispatch: {
         }
 
         if VIA_LIKELY (cond_lhs != cond_rhs) {
-            V->ip += offset;
+            V->ip += static_cast<I32>(offset);
         }
         else {
             TValue *lhs_val = __get_register(V, cond_lhs);
             TValue *rhs_val = __get_register(V, cond_rhs);
 
             if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
         }
 
@@ -1191,24 +1191,24 @@ dispatch: {
         if VIA_LIKELY (check_integer(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_integer < rhs_val->val_integer) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
         else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
@@ -1221,7 +1221,7 @@ dispatch: {
 
             TValue val = __pop(V);
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
             else {
                 VM_ERROR(
@@ -1258,24 +1258,24 @@ dispatch: {
         if VIA_LIKELY (check_integer(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_integer > rhs_val->val_integer) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
         else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
@@ -1288,7 +1288,7 @@ dispatch: {
 
             TValue val = __pop(V);
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
             else {
                 VM_ERROR(
@@ -1325,24 +1325,24 @@ dispatch: {
         if VIA_LIKELY (check_integer(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_integer <= rhs_val->val_integer) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
         else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
@@ -1355,7 +1355,7 @@ dispatch: {
 
             TValue val = __pop(V);
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
             else {
                 VM_ERROR(
@@ -1392,24 +1392,24 @@ dispatch: {
         if VIA_LIKELY (check_integer(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_integer >= rhs_val->val_integer) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
         else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
             if VIA_LIKELY (check_integer(*rhs_val)) {
                 if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
             else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
                 if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
-                    V->ip += offset;
+                    V->ip += static_cast<I32>(offset);
                 }
             }
         }
@@ -1422,7 +1422,7 @@ dispatch: {
 
             TValue val = __pop(V);
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
+                V->ip += static_cast<I32>(offset);
             }
             else {
                 VM_ERROR(

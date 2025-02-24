@@ -21,7 +21,7 @@ void ExprVisitor::visit(LiteralNode &literal_node, U32 dst)
     program->bytecode->emit(LOADK, {dst, constant_id}, value_string);
 }
 
-void ExprVisitor::visit(VariableNode &variable_node, U32 dst)
+void ExprVisitor::visit(SymbolNode &variable_node, U32 dst)
 {
     Token var_id = variable_node.identifier;
 
@@ -32,7 +32,6 @@ void ExprVisitor::visit(VariableNode &variable_node, U32 dst)
         program->bytecode->emit(GETSTACK, {dst, stk_id.value()}, comment);
     }
     else {
-        program->bytecode->emit(LOADNIL, {dst}, comment);
         visitor_failed = true;
         emitter.out(
             var_id.position, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error

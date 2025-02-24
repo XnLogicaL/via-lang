@@ -13,7 +13,12 @@
 namespace via::utils {
 
 template<typename T>
-std::string format_vector(const std::vector<T> &vec, std::function<std::string(const T &)> to_str)
+std::string format_vector(
+    const std::vector<T> &vec = {},
+    std::function<std::string(const T &)> to_str = {},
+    char delimiter_begin = '{',
+    char delimiter_end = '}'
+)
 {
     std::string str;
 
@@ -25,7 +30,7 @@ std::string format_vector(const std::vector<T> &vec, std::function<std::string(c
         str += "\b\b";
     }
 
-    return std::format("{}{}{}", '{', str, '}');
+    return std::format("{}{}{}", delimiter_begin, str, delimiter_end);
 }
 
 } // namespace via::utils

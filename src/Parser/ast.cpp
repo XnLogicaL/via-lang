@@ -45,15 +45,15 @@ void LiteralNode::accept(NodeVisitor &visitor, U32 dst)
 }
 
 // =============================== |
-//          VariableNode           |
+//            SymbolNode           |
 // =============================== |
 
-std::string VariableNode::to_string(U32 &)
+std::string SymbolNode::to_string(U32 &)
 {
-    return std::format("Variable<{}>", identifier.lexeme);
+    return std::format("Symbol<{}>", identifier.lexeme);
 }
 
-void VariableNode::accept(NodeVisitor &visitor, U32 dst)
+void SymbolNode::accept(NodeVisitor &visitor, U32 dst)
 {
     visitor.visit(*this, dst);
 }

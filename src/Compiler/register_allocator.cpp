@@ -8,9 +8,9 @@ namespace via {
 
 U32 RegisterAllocator::allocate_register()
 {
-    for (const auto &[reg, is_free] : registers) {
-        if (is_free) {
-            registers.try_emplace(reg, false);
+    for (U32 reg = 0; reg < 128; reg++) {
+        if (registers[reg]) {
+            registers[reg] = false;
             return reg;
         }
     }

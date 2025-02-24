@@ -46,6 +46,7 @@ Token Tokenizer::read_number(size_t position)
     TokenType type = LIT_INT;     // Specify default type as integer literal
     size_t start_offset = offset; // Record starting offset of the number
     std::string value;            // Value of the number, as a string for convenience
+    char delimiter;
 
     // Check for binary or hex literals
     if (peek() == '0' && !std::isdigit(peek(1))) {
@@ -58,7 +59,7 @@ Token Tokenizer::read_number(size_t position)
         else // Unknown number literal
             type = UNKNOWN;
 
-        consume(); // Consume 'b' or 'x'
+        delimiter = consume(); // Consume 'b' or 'x'
     }
 
     // Read the number until the current character isn't numeric
@@ -83,6 +84,10 @@ Token Tokenizer::read_number(size_t position)
             pos++;
             offset++;
         }
+    }
+
+    if (type == LIT_HEX || type == LIT_BINARY) {
+        value = std::string("0") + delimiter + value;
     }
 
     // Use start_offset here to denote where the token begins

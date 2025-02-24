@@ -89,10 +89,55 @@ void StmtVisitor::visit(ScopeNode &scope_node)
     }
 }
 
-void StmtVisitor::visit(FunctionNode &) {}
-void StmtVisitor::visit(AssignNode &) {}
+void StmtVisitor::visit(FunctionNode &function_node)
+{
+    U32 function_reg = allocator.allocate_register();
+    program->bytecode->emit(LOADFUNCTION, {function_reg});
+
+    ScopeNode &scope = dynamic_cast<ScopeNode &>(*function_node.body);
+    for (const pStmtNode &pstmt : scope.statements) {
+        pstmt->accept(*this);
+    }
+
+    program->bytecode->emit(PUSH, {function_reg});
+    allocator.free_register(function_reg);
+}
+
+void StmtVisitor::visit(AssignNode &assign_node)
+{
+    Token symbol_token = assign_node.identifier;
+    std::string symbol = symbol_token.lexeme;
+    std::optional<U32> stk_id = program->test_stack->find_symbol({
+        .symbol = symbol,
+    });
+
+    if (stk_id.has_value()) {
+        U32 value_reg = allocator.allocate_register();
+        assign_node.value->accept(expression_visitor, value_reg);
+        program->bytecode->emit(SETSTACK, {value_reg, stk_id.value()});
+    }
+    else {
+        visitor_failed = true;
+        emitter.out(symbol_token.position, "Attempt to assign to undeclared symbol", Error);
+    }
+}
+
 void StmtVisitor::visit(IfNode &) {}
-void StmtVisitor::visit(WhileNode &) {}
-void StmtVisitor::visit(ExprStmtNode &) {}
+
+void StmtVisitor::visit(WhileNode &while_node)
+{
+    ScopeNode &body = dynamic_cast<ScopeNode &>(*while_node.body);
+    U32 cond_reg = allocator.allocate_register();
+    while_node.condition->accept(expression_visitor, cond_reg);
+
+    U32 jump_distance = body.statements.size();
+    program->bytecode->emit(JUMPIF, {jump_distance});
+    body.accept(*this);
+}
+
+void StmtVisitor::visit(ExprStmtNode &expr_stmt)
+{
+    expr_stmt.accept(expression_visitor);
+}
 
 } // namespace via
