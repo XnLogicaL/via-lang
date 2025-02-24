@@ -1,12 +1,16 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GPL v3.           |
+// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
-
 #pragma once
 
 #include "common.h"
 #include "types.h"
 
+// ================================================================ |
+// File constant.h: This file declares the ConstantHolder class.    |
+// ================================================================ |
+//
+// ================================================================ |
 namespace via {
 
 class ConstantHolder {

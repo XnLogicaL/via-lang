@@ -1,10 +1,14 @@
 // =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GPL v3.           |
+// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
-
 #include "constant.h"
 #include "api.h" // For `via::compare()`
 
+// ================================================================ |
+// File constant.cpp: ConstantHolder definitions.                   |
+// ================================================================ |
+// This file defines ConstantHolder.
+// ================================================================ |
 namespace via {
 
 U32 ConstantHolder::push_constant(const TValue &constant)
