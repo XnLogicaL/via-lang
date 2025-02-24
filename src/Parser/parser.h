@@ -14,8 +14,9 @@ namespace via {
 
 class ParserError : public std::exception {
 public:
-    ParserError(const std::string &error)
+    ParserError(const std::string &error, U64 position)
         : message(error)
+        , position(position)
     {
     }
 
@@ -24,8 +25,14 @@ public:
         return message.c_str();
     }
 
+    U64 where() const noexcept
+    {
+        return position;
+    }
+
 private:
     std::string message;
+    U64 position;
 };
 
 class Parser {

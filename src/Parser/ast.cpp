@@ -20,22 +20,22 @@ std::string Modifiers::to_string() const noexcept
 //          LiteralNode            |
 // =============================== |
 
-std::string LiteralNode::to_string(U32 &depth)
+std::string LiteralNode::to_string(U32 &)
 {
     if (int *integer_value = std::get_if<int>(&value)) {
-        return std::format("{}Literal<{}>", DEPTH_TAB_SPACE, *integer_value);
+        return std::format("Literal<{}>", *integer_value);
     }
     else if (float *floating_point_value = std::get_if<float>(&value)) {
-        return std::format("{}Literal<{}>", DEPTH_TAB_SPACE, *floating_point_value);
+        return std::format("Literal<{}>", *floating_point_value);
     }
     else if (bool *boolean_value = std::get_if<bool>(&value)) {
-        return std::format("{}Literal<{}>", DEPTH_TAB_SPACE, *boolean_value ? "true" : "false");
+        return std::format("Literal<{}>", *boolean_value ? "true" : "false");
     }
     else if (std::string *string_value = std::get_if<std::string>(&value)) {
-        return std::format("{}Literal<'{}'>", DEPTH_TAB_SPACE, *string_value);
+        return std::format("Literal<'{}'>", *string_value);
     }
     else {
-        return std::format("{}Literal<nil>", DEPTH_TAB_SPACE);
+        return "Literal<nil>";
     }
 }
 
@@ -48,9 +48,9 @@ void LiteralNode::accept(NodeVisitor &visitor, U32 dst)
 //          VariableNode           |
 // =============================== |
 
-std::string VariableNode::to_string(U32 &depth)
+std::string VariableNode::to_string(U32 &)
 {
-    return std::format("{}Variable<'{}'>", DEPTH_TAB_SPACE, identifier.lexeme);
+    return std::format("Variable<{}>", identifier.lexeme);
 }
 
 void VariableNode::accept(NodeVisitor &visitor, U32 dst)
@@ -64,7 +64,7 @@ void VariableNode::accept(NodeVisitor &visitor, U32 dst)
 
 std::string UnaryNode::to_string(U32 &depth)
 {
-    return std::format("{}Unary<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
+    return std::format("Unary<{}>", expression->to_string(depth));
 }
 
 void UnaryNode::accept(NodeVisitor &visitor, U32 dst)
@@ -78,7 +78,7 @@ void UnaryNode::accept(NodeVisitor &visitor, U32 dst)
 
 std::string GroupNode::to_string(U32 &depth)
 {
-    return std::format("{}Group<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
+    return std::format("Group<{}>", expression->to_string(depth));
 };
 
 int GroupNode::precedence() const noexcept
@@ -93,8 +93,7 @@ int GroupNode::precedence() const noexcept
 std::string CallNode::to_string(U32 &depth)
 {
     return std::format(
-        "{}CallNode<({})({})>",
-        DEPTH_TAB_SPACE,
+        "CallNode<callee {}, args {}>",
         callee->to_string(depth),
         utils::format_vector<pExprNode>(
             arguments, [&depth](const pExprNode &expr) { return expr->to_string(depth); }
@@ -114,7 +113,7 @@ void CallNode::accept(NodeVisitor &visitor, U32 dst)
 std::string IndexNode::to_string(U32 &depth)
 {
     return std::format(
-        "{}IndexNode<{}, {}>", DEPTH_TAB_SPACE, object->to_string(depth), index->to_string(depth)
+        "IndexNode<object {}, index {}>", object->to_string(depth), index->to_string(depth)
     );
 }
 
@@ -130,8 +129,7 @@ void IndexNode::accept(NodeVisitor &visitor, U32 dst)
 std::string BinaryNode::to_string(U32 &depth)
 {
     return std::format(
-        "{}Binary<{} '{}' {}>",
-        DEPTH_TAB_SPACE,
+        "Binary<{} {} {}>",
         lhs_expression->to_string(depth),
         op.lexeme,
         rhs_expression->to_string(depth)

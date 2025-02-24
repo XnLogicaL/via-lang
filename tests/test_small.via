@@ -1,3 +1,16 @@
 do {
     local x = 69
+    while x.something {
+        const z = x + 5
+        if z {
+            print(x * z * 2)
+        } elif x {
+            print(x + x)
+        } else {
+            do {
+                *
+                print(y)
+            }
+        }
+    }
 }

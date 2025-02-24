@@ -7,7 +7,7 @@
 #define EXPECT(expected, message) \
     do { \
         if (current().type != expected) { \
-            throw ParserError(std::format(message, current().lexeme)); \
+            throw ParserError(std::format(message, current().lexeme), position); \
         } \
     } while (0)
 
@@ -35,7 +35,7 @@ Token Parser::consume(U32 ahead)
     U64 new_pos = position + static_cast<U64>(ahead);
     if (new_pos >= program->tokens->tokens.size()) {
         throw ParserError(
-            std::format("Unexpected end of file (attempted read of: token #{})", new_pos)
+            std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
         );
     }
 
@@ -99,7 +99,8 @@ pExprNode Parser::parse_primary()
     }
     default:
         throw ParserError(
-            std::format("Unexpected token '{}' while parsing primary expression", token.lexeme)
+            std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
+            token.position
         );
     }
 
@@ -327,7 +328,8 @@ pStmtNode Parser::parse_while()
 
 pStmtNode Parser::parse_stmt()
 {
-    switch (current().type) {
+    Token initial_token = current();
+    switch (initial_token.type) {
     case KW_LOCAL:
     case KW_GLOBAL:
     case KW_FUNC:
@@ -349,7 +351,8 @@ pStmtNode Parser::parse_stmt()
             // I thought that rethrowing exceptions was a fucking meme,
             // but here I am.
             throw ParserError(
-                std::format("Unexpected token '{}' while parsing statement", current().lexeme)
+                std::format("Unexpected token '{}' while parsing statement", initial_token.lexeme),
+                initial_token.position
             );
         }
 
