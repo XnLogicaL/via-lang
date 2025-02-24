@@ -75,4 +75,24 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
     }
 }
 
+void StmtVisitor::visit(ScopeNode &scope_node)
+{
+    U32 stack_pointer = program->test_stack->sp;
+
+    for (const pStmtNode &pstmt : scope_node.statements) {
+        pstmt->accept(*this);
+    }
+
+    U32 stack_allocations = program->test_stack->sp - stack_pointer;
+    for (; stack_allocations > 0; stack_allocations--) {
+        program->bytecode->emit(POP);
+    }
+}
+
+void StmtVisitor::visit(FunctionNode &) {}
+void StmtVisitor::visit(AssignNode &) {}
+void StmtVisitor::visit(IfNode &) {}
+void StmtVisitor::visit(WhileNode &) {}
+void StmtVisitor::visit(ExprStmtNode &) {}
+
 } // namespace via

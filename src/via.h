@@ -19,12 +19,10 @@
 #include "Parser/ast.h"
 
 #include "Compiler/compiler.h"
-#include "Compiler/optimizer.h"
 
 #include "VM/api.h"
 #include "VM/state.h"
 #include "VM/types.h"
-#include "VM/register.h"
 #include "VM/vlbase.h"
 #include "VM/vltable.h"
 #include "VM/vlmath.h"

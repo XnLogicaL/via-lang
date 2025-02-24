@@ -28,7 +28,7 @@ endif()
 # Check for main file path
 if(NOT DEFINED MAIN_FILE_PATH)
     message(WARNING "MAIN_FILE_PATH is not defined, using default: '${DEFAULT_MAIN_FILE_PATH}'")
-    set(MAIN_FILE_PATH DEFAULT_MAIN_FILE_PATH)
+    set(MAIN_FILE_PATH "${DEFAULT_MAIN_FILE_PATH}")
 else()
     if(NOT MAIN_FILE_PATH STREQUAL DEFAULT_MAIN_FILE_PATH AND DEBUG_MODE STREQUAL "PROD")
         message(FATAL_ERROR "MAIN_FILE_PATH must be '${DEFAULT_MAIN_FILE_PATH}' in production mode; otherwise symbol `main` may not be defined")

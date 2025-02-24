@@ -36,7 +36,6 @@ struct TValue {
     TValue(TValue &&other) noexcept;            // Move constructor
     TValue &operator=(const TValue &) = delete; // Assignment operator
     TValue &operator=(TValue &&) noexcept;      // Move operator
-    TValue(const U32 &);
     ~TValue();
 
     explicit TValue()

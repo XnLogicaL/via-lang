@@ -13,9 +13,8 @@ public:
     RegisterAllocator(U32 size, bool default_value)
     {
         registers.reserve(size);
-        for (I64 reg = size; size >= 0; size--) {
-            U32 normal_reg = static_cast<U32>(reg);
-            registers.emplace(normal_reg, default_value);
+        for (U32 reg = 0; reg < size; reg++) {
+            registers.emplace(reg, default_value);
         }
     }
 

@@ -23,10 +23,12 @@ U64 pcg32_rand()
 }
 
 // Function to generate a random double in the range [a, b]
-TNumber pcg32_range(TNumber a, TNumber b)
+template<typename T>
+    requires std::is_arithmetic_v<T>
+T pcg32_range(T a, T b)
 {
     U64 rand_val = pcg32_rand();
-    TNumber scaled = static_cast<TNumber>(rand_val) / static_cast<TNumber>(UINT64_MAX);
+    T scaled = static_cast<T>(rand_val) / static_cast<T>(UINT64_MAX);
     return lerp(a, b, scaled);
 }
 

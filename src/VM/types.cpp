@@ -6,68 +6,56 @@
 
 namespace via {
 
+using enum ValueType;
+
 TValue &TValue::operator=(TValue &&other) noexcept
 {
     if (this != &other) {
+        if (!val_pointer) {
+            return *this;
+        }
+
         switch (type) {
-        case ValueType::string:
-            if (!val_string)
-                break;
-
-            delete val_string;
-            this->val_string = nullptr;
+        case string:
+            delete cast_ptr<TString>();
             break;
-        case ValueType::table:
-            if (!val_table)
-                break;
-
-            delete val_table;
+        case table:
+            delete cast_ptr<TTable>();
             break;
-        case ValueType::function:
-            if (!val_table)
-                break;
-
-            delete val_function;
+        case function:
+            delete cast_ptr<TFunction>();
             break;
-        case ValueType::cfunction:
-            if (!val_cfunction)
-                break;
-
-            delete val_cfunction;
+        case cfunction:
+            delete cast_ptr<TCFunction>();
             break;
         default:
             break;
         }
 
-        // Move the new state
-        type = other.type;
+        this->val_pointer = nullptr;
+        this->type = other.type;
+
         switch (type) {
-        case ValueType::number:
-            val_number = other.val_number;
+        case integer:
+            this->val_integer = other.val_integer;
             break;
-        case ValueType::boolean:
-            val_boolean = other.val_boolean;
+        case floating_point:
+            this->val_floating_point = other.val_floating_point;
             break;
-        case ValueType::string:
-            val_string = other.val_string;
-            other.val_string = nullptr;
+        case boolean:
+            this->val_boolean = other.val_boolean;
             break;
-        case ValueType::table:
-            val_table = other.val_table;
-            other.val_table = nullptr;
-            break;
-        case ValueType::function:
-            val_function = other.val_function;
-            other.val_function = nullptr;
-            break;
-        case ValueType::cfunction:
-            val_cfunction = other.val_cfunction;
-            other.val_cfunction = nullptr;
+        case string:
+        case table:
+        case function:
+        case cfunction:
+            this->val_pointer = other.val_pointer;
             break;
         default:
             break;
         }
-        other.type = ValueType::monostate;
+
+        other.type = nil;
     }
     return *this;
 }
@@ -76,118 +64,85 @@ TValue::TValue(TValue &&other) noexcept
     : type(other.type)
 {
     switch (type) {
-    case ValueType::number:
-        this->val_number = other.val_number;
+    case integer:
+        this->val_integer = other.val_integer;
         break;
-    case ValueType::boolean:
+    case floating_point:
+        this->val_floating_point = other.val_floating_point;
+        break;
+    case boolean:
         this->val_boolean = other.val_boolean;
         break;
-    case ValueType::string:
-        this->val_string = other.val_string;
-        other.val_string = nullptr;
-        break;
-    case ValueType::table:
-        this->val_table = other.val_table;
-        other.val_table = nullptr;
-        break;
-    case ValueType::function:
-        this->val_function = other.val_function;
-        other.val_function = nullptr;
-        break;
-    case ValueType::cfunction:
-        this->val_cfunction = other.val_cfunction;
-        other.val_cfunction = nullptr;
+    case string:
+    case table:
+    case function:
+    case cfunction:
+        this->val_pointer = other.val_pointer;
         break;
     default:
         break;
     }
 
-    other.type = ValueType::monostate;
-}
-
-TValue::TValue(const Operand &operand)
-{
-    switch (operand.type) {
-    case OperandType::Number:
-        this->val_number = operand.val_number;
-        this->type = ValueType::number;
-        break;
-    case OperandType::Bool:
-        this->val_boolean = operand.val_boolean;
-        this->type = ValueType::boolean;
-        break;
-    case OperandType::String:
-        this->val_string = new TString(nullptr, operand.val_string);
-        this->type = ValueType::string;
-        break;
-    case via::OperandType::Nil:
-        this->type = ValueType::nil;
-        break;
-    default:
-        VIA_ASSERT(false, "Failed to construct TValue from Operand: invalid data type")
-        break;
-    }
+    other.type = nil;
 }
 
 TValue::~TValue()
 {
     // Cleanup underlying type, if present
+    if (!val_pointer) {
+        return;
+    }
+
     switch (type) {
-    case ValueType::string:
-        if (!val_string)
-            break;
-
-        delete val_string;
-        this->val_string = nullptr;
+    case string:
+        delete cast_ptr<TString>();
         break;
-    case ValueType::table:
-        if (!val_table)
-            break;
-
-        delete val_table;
+    case table:
+        delete cast_ptr<TTable>();
         break;
-    case ValueType::function:
-        if (!val_table)
-            break;
-
-        delete val_function;
+    case function:
+        delete cast_ptr<TFunction>();
         break;
-    case ValueType::cfunction:
-        if (!val_cfunction)
-            break;
-
-        delete val_cfunction;
+    case cfunction:
+        delete cast_ptr<TCFunction>();
         break;
     default:
         break;
     }
+
+    this->val_pointer = nullptr;
+    this->type = nil;
 }
 
 TValue TValue::clone() const noexcept
 {
     TValue copy;
     switch (type) {
-    case ValueType::number:
-        copy.val_number = this->val_number;
+    case integer:
+        copy.val_integer = this->val_integer;
         break;
-    case ValueType::boolean:
+    case floating_point:
+        copy.val_floating_point = this->val_floating_point;
+        break;
+    case boolean:
         copy.val_boolean = this->val_boolean;
         break;
-    case ValueType::string:
-        copy.val_string = new TString(*this->val_string);
+    case string:
+        copy.val_pointer = new TString(*this->cast_ptr<TString>());
         break;
-    case ValueType::table:
-        copy.val_table = new TTable(*this->val_table);
+    case table:
+        copy.val_pointer = new TTable(*this->cast_ptr<TTable>());
         break;
-    case ValueType::function:
-        copy.val_function = new TFunction(*this->val_function);
+    case function:
+        copy.val_pointer = new TFunction(*this->cast_ptr<TFunction>());
         break;
-    case ValueType::cfunction:
-        copy.val_cfunction = new TCFunction(*this->val_cfunction);
+    case cfunction:
+        copy.val_pointer = new TCFunction(*this->cast_ptr<TCFunction>());
         break;
     default:
         break;
     }
+
     copy.type = this->type;
     return copy;
 }

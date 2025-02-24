@@ -20,7 +20,7 @@ using pTypeNode = std::unique_ptr<TypeNode>;
 
 struct ExprNode {
     virtual ~ExprNode() = default;
-    virtual std::string to_string() = 0;
+    virtual std::string to_string(U32 &) = 0;
     virtual void accept(NodeVisitor &, U32) = 0;
     virtual int precedence() const noexcept
     {
@@ -30,13 +30,13 @@ struct ExprNode {
 
 struct StmtNode {
     virtual ~StmtNode() = default;
-    virtual std::string to_string() = 0;
+    virtual std::string to_string(U32 &) = 0;
     virtual void accept(NodeVisitor &) = 0;
 };
 
 struct TypeNode {
     virtual ~TypeNode() = default;
-    virtual std::string to_string() = 0;
+    virtual std::string to_string(U32 &) = 0;
     virtual void accept(NodeVisitor &) = 0;
 };
 

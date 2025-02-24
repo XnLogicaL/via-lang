@@ -22,7 +22,7 @@ TestStackMember TestStack::top()
     return sbp[sp--];
 }
 
-size_t TestStack::size()
+U64 TestStack::size()
 {
     return sp;
 }

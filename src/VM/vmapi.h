@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "gc.h"
+#include "constant.h"
 #include "instruction.h"
 #include "opcode.h"
 #include "state.h"

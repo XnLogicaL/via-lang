@@ -5,8 +5,7 @@
 #pragma once
 
 #include "common.h"
-#include "optimizer.h"
-#include "Parser/ast.h"
+#include "ast.h"
 
 namespace via {
 

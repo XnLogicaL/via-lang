@@ -65,6 +65,12 @@ public:
     virtual void visit(BinaryNode &, U32) INVALID_VISIT;
 
     virtual void visit(DeclarationNode &) INVALID_VISIT;
+    virtual void visit(ScopeNode &) INVALID_VISIT;
+    virtual void visit(FunctionNode &) INVALID_VISIT;
+    virtual void visit(AssignNode &) INVALID_VISIT;
+    virtual void visit(IfNode &) INVALID_VISIT;
+    virtual void visit(WhileNode &) INVALID_VISIT;
+    virtual void visit(ExprStmtNode &) INVALID_VISIT;
 
     inline bool failed()
     {
@@ -109,6 +115,12 @@ public:
     }
 
     void visit(DeclarationNode &) override;
+    void visit(ScopeNode &) override;
+    void visit(FunctionNode &) override;
+    void visit(AssignNode &) override;
+    void visit(IfNode &) override;
+    void visit(WhileNode &) override;
+    void visit(ExprStmtNode &) override;
 
 private:
     ProgramData *program;

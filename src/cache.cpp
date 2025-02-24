@@ -69,7 +69,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     write_data(file.bytecode.data(), file.bytecode.size());
     write_data(&file.checksum_b, sizeof(file.checksum_b));
 
-    for (const Instruction &instr : file.program->bytecode->instructions) {
+    for (const Instruction &instr : file.program->bytecode->get()) {
         std::string instr_str = via::to_string(file.program, instr) + "\n";
         ofs_asm.write(instr_str.data(), instr_str.size());
     }

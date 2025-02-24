@@ -1,5 +1,6 @@
-/* This file is part of the via programming language at https://github.com/XnLogicaL/via-lang, see
- * LICENSE for license information */
+// =========================================================================================== |
+// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
+// =========================================================================================== |
 
 #include "cmdparser.h"
 #include "interpreter.h"
@@ -41,7 +42,9 @@ void handle_compile(const std::vector<std::string> &args)
     bool failed;
 
     bool flag_cache = HAS_FLAG("--cache") || HAS_FLAG("-c");
-    bool flag_print_bytecode = HAS_FLAG("--bytecode") || HAS_FLAG("-bc");
+    bool flag_dump_tokens = HAS_FLAG("--dump-tokens");
+    bool flag_dump_ast = HAS_FLAG("--dump-ast");
+    bool flag_dump_bytecode = HAS_FLAG("--dump-bytecode");
 
     std::string input = args.at(0);
     std::string input_code = via::utils::read_from_file(input);
@@ -51,6 +54,13 @@ void handle_compile(const std::vector<std::string> &args)
     Tokenizer lexer(&program);
     lexer.tokenize();
 
+    if (flag_dump_tokens) {
+        std::cout << "\nflag [--dump-tokens]:\n";
+        for (const Token &tok : program.tokens->tokens) {
+            std::cout << tok.to_string() << "\n";
+        }
+    }
+
     Preprocessor preprocessor(&program);
     failed = preprocessor.preprocess();
 
@@ -59,19 +69,28 @@ void handle_compile(const std::vector<std::string> &args)
     Parser parser(&program);
     failed = parser.parse_program();
 
+    if (flag_dump_ast) {
+        U32 depth = 0;
+
+        std::cout << "\nflag [--dump-ast]:\n";
+        for (const pStmtNode &pstmt : program.ast->statements) {
+            std::cout << pstmt->to_string(depth) << "\n";
+        }
+    }
+
     CHECK_SUBPROC_FAIL;
 
     Compiler compiler(&program);
-    compiler.add_default_passes();
     failed = compiler.generate();
 
-    CHECK_SUBPROC_FAIL;
-
-    if (flag_print_bytecode) {
-        for (Instruction instr : program.bytecode->instructions) {
+    if (flag_dump_bytecode) {
+        std::cout << "\nflag [--dump-bytecode]:\n";
+        for (Instruction instr : program.bytecode->get()) {
             std::cout << via::to_string(&program, instr) << "\n";
         }
     }
+
+    CHECK_SUBPROC_FAIL;
 
     if (flag_cache) {
         CacheFile file(&program);

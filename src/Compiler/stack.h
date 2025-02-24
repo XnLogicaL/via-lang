@@ -32,13 +32,15 @@ public:
     void push(TestStackMember);
     TestStackMember top();
     TestStackMember pop();
-    size_t size();
+    U64 size();
     std::optional<TestStackMember> at(size_t);
     std::optional<U32> find_symbol(const TestStackMember &);
 
+public:
+    U64 sp = 0;
+
 private:
     TestStackMember *sbp = nullptr;
-    size_t sp = 0;
 };
 
 } // namespace via

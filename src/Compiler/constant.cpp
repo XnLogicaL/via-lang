@@ -29,4 +29,9 @@ U32 ConstantHolder::size() const noexcept
     return constants.size();
 }
 
+const TValue &ConstantHolder::at(U64 index) const
+{
+    return constants.at(index);
+}
+
 } // namespace via

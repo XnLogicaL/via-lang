@@ -1,7 +1,3 @@
-local x = 69
-local z = x + 1
-local w = z * 6 + 4
-local t = w * w + w
-local u = t * w * t + z + w
-
-println(u)
+do {
+    local x = 69
+}

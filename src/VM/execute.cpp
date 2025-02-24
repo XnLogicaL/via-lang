@@ -10,6 +10,8 @@
 #include "state.h"
 #include "types.h"
 #include "constant.h"
+// Fucking linker is cooked.
+#include <cmath>
 
 // Define the hot path threshold for the instruction dispatch loop
 // How many times a chunk needs to be executed before being flagged as
@@ -504,21 +506,19 @@ dispatch: {
                 lhs_val->val_integer = std::pow(lhs_val->val_integer, rhs_val->val_integer);
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
-                lhs_val->val_floating_point = std::powf(
-                    static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point
-                );
+                lhs_val->val_floating_point =
+                    std::pow(static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point);
                 lhs_val->type = floating_point;
             }
         }
         else if (lhs_type == floating_point) {
             if VIA_LIKELY (rhs_type == integer) {
-                lhs_val->val_floating_point = std::powf(
-                    lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer)
-                );
+                lhs_val->val_floating_point =
+                    std::pow(lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer));
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point =
-                    std::powf(lhs_val->val_floating_point, rhs_val->val_floating_point);
+                    std::pow(lhs_val->val_floating_point, rhs_val->val_floating_point);
             }
         }
         else if (lhs_type == table) {
@@ -554,18 +554,18 @@ dispatch: {
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point =
-                    std::powf(static_cast<float>(lhs_val->val_integer), rhs_val.val_floating_point);
+                    std::pow(static_cast<float>(lhs_val->val_integer), rhs_val.val_floating_point);
                 lhs_val->type = floating_point;
             }
         }
         else if (lhs_type == floating_point) {
             if VIA_LIKELY (rhs_type == integer) {
                 lhs_val->val_floating_point =
-                    std::powf(lhs_val->val_floating_point, static_cast<float>(rhs_val.val_integer));
+                    std::pow(lhs_val->val_floating_point, static_cast<float>(rhs_val.val_integer));
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point =
-                    std::powf(lhs_val->val_floating_point, rhs_val.val_floating_point);
+                    std::pow(lhs_val->val_floating_point, rhs_val.val_floating_point);
             }
         }
         else if (check_table(*lhs_val)) {
@@ -756,10 +756,13 @@ dispatch: {
     }
 
     case POP: {
-        U32 dst = V->ip->operand0;
         TValue val = __pop(V);
 
-        __set_register(V, dst, val);
+        U32 dst = V->ip->operand0;
+        if (dst != 0) {
+            __set_register(V, dst, val);
+        }
+
         VM_NEXT();
     }
 
@@ -822,7 +825,7 @@ dispatch: {
         }
 
         bool result = __compare(*lhs_val, *rhs_val);
-        __set_register(V, dst, result);
+        __set_register(V, dst, TValue(result));
 
         VM_NEXT();
     }
@@ -846,7 +849,7 @@ dispatch: {
         }
 
         bool result = __compare(*lhs_val, *rhs_val);
-        __set_register(V, dst, result);
+        __set_register(V, dst, TValue(result));
 
         VM_NEXT();
     }
@@ -1492,7 +1495,7 @@ dispatch: {
         TValue *tbl_val = __get_register(V, tbl);
         TValue *idx_val = __get_register(V, idx);
 
-        U32 key = check_string(idx) ? idx_val->cast_ptr<TString>()->hash : idx;
+        U32 key = check_string(*idx_val) ? idx_val->cast_ptr<TString>()->hash : idx;
         const TValue &index = __get_table(tbl_val->cast_ptr<TTable>(), key, true);
 
         __set_register(V, dst, index);
@@ -1629,6 +1632,8 @@ dispatch: {
         }
         else if (check_string(*obj_val)) {
         }
+
+        VM_NEXT();
     }
 
     default: {

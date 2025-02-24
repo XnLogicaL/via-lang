@@ -5,9 +5,7 @@
 #pragma once
 
 #include "common.h"
-#include "gen.h"
 #include "bytecode.h"
-#include "optimizer.h"
 #include "Parser/ast.h"
 
 namespace via {

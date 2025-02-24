@@ -19,7 +19,7 @@ public:
     {
     }
 
-    const char *what() const override
+    const char *what() const throw()
     {
         return message.c_str();
     }
@@ -47,8 +47,7 @@ private:
 private:
     Token current();
     Token peek(int ahead = 1);
-    Token consume(int ahead = 1);
-    Token expect_consume(TokenType type = TokenType::UNKNOWN, int ahead = 1);
+    Token consume(U32 ahead = 1);
 
     Modifiers parse_modifiers();
 

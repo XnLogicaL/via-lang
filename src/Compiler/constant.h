@@ -17,6 +17,7 @@ class ConstantHolder {
 public:
     U32 push_constant(const TValue &);
     U32 size() const noexcept;
+    const TValue &at(U64) const;
 
 private:
     std::vector<TValue> constants;

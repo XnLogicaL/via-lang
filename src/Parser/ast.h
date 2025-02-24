@@ -17,6 +17,8 @@ namespace via {
 
 struct Modifiers {
     bool is_const;
+
+    std::string to_string() const noexcept;
 };
 
 // ============================ |
@@ -29,7 +31,7 @@ struct LiteralNode : public ExprNode {
     Token value_token;
     variant value;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     LiteralNode(Token val_token, const variant &val)
@@ -42,7 +44,7 @@ struct LiteralNode : public ExprNode {
 struct VariableNode : public ExprNode {
     Token identifier;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     VariableNode(Token identifier)
@@ -54,7 +56,7 @@ struct VariableNode : public ExprNode {
 struct UnaryNode : public ExprNode {
     pExprNode expression;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     UnaryNode(pExprNode expression)
@@ -66,7 +68,7 @@ struct UnaryNode : public ExprNode {
 struct GroupNode : public ExprNode {
     pExprNode expression;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     int precedence() const noexcept override;
 
     GroupNode(pExprNode expression)
@@ -80,7 +82,7 @@ struct CallNode : public ExprNode {
 
     std::vector<pExprNode> arguments;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     CallNode(pExprNode callee, std::vector<pExprNode> arguments)
@@ -94,7 +96,7 @@ struct IndexNode : public ExprNode {
     pExprNode object;
     pExprNode index;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     IndexNode(pExprNode object, pExprNode index)
@@ -109,7 +111,7 @@ struct BinaryNode : public ExprNode {
     pExprNode lhs_expression;
     pExprNode rhs_expression;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &, U32) override;
 
     BinaryNode(Token op, pExprNode lhs, pExprNode rhs)
@@ -131,7 +133,7 @@ struct DeclarationNode : public StmtNode {
     Token identifier;
     pExprNode value_expression;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     DeclarationNode(
@@ -151,7 +153,7 @@ struct DeclarationNode : public StmtNode {
 struct ScopeNode : public StmtNode {
     std::vector<pStmtNode> statements;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     ScopeNode(std::vector<pStmtNode> statements)
@@ -178,7 +180,7 @@ struct FunctionNode : public StmtNode {
 
     std::vector<ParameterNode> parameters;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     FunctionNode(
@@ -202,7 +204,7 @@ struct AssignNode : public StmtNode {
     Token augmentation_operator;
     pExprNode value;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     AssignNode(Token identifier, Token augmentation_operator, pExprNode value)
@@ -228,7 +230,7 @@ struct IfNode : public StmtNode {
     pExprNode condition;
     pStmtNode scope;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     std::optional<pStmtNode> else_node;
@@ -252,7 +254,7 @@ struct WhileNode : public StmtNode {
     pExprNode condition;
     pStmtNode body;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     WhileNode(pExprNode condition, pStmtNode body)
@@ -265,7 +267,7 @@ struct WhileNode : public StmtNode {
 struct ExprStmtNode : public StmtNode {
     pExprNode expression;
 
-    std::string to_string() override;
+    std::string to_string(U32 &) override;
     void accept(NodeVisitor &) override;
 
     ExprStmtNode(pExprNode expression)

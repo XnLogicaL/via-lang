@@ -32,6 +32,7 @@ struct Instruction {
     Chunk *chunk = nullptr;
     U64 pos = 0;
 
+    Instruction() = default;
     Instruction(OpCode op, std::vector<U32> operands, Chunk *chunk, size_t pos)
         : op(op)
         , operand0(safe_call<U32>([&operands]() { return operands.at(0); }, 0))

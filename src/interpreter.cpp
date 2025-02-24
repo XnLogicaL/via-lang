@@ -44,7 +44,6 @@ bool Interpreter::parse()
 bool Interpreter::compile()
 {
     Compiler compiler(program);
-    compiler.add_default_passes();
     bool failed = compiler.generate();
 
     INTP_CHECK_FAILED_INTERNAL(Compiler);

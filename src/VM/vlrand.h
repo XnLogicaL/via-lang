@@ -14,8 +14,6 @@
 
 namespace via::lib {
 
-// Function to generate a random double in the range [a, b].
-TNumber pcg32_range(TNumber a, TNumber b);
 void rand_range(State *V);
 void rand_int(State *V);
 void loadrandlib(State *V);
