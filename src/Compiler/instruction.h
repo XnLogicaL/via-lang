@@ -11,6 +11,8 @@
     #define VIA_OPERAND_COUNT 4
 #endif
 
+#define VIA_OPERAND_INVALID std::numeric_limits<U32>::max()
+
 namespace via {
 
 struct Chunk;
@@ -35,15 +37,16 @@ struct Instruction {
     Instruction() = default;
     Instruction(OpCode op, std::vector<U32> operands, Chunk *chunk, size_t pos)
         : op(op)
-        , operand0(safe_call<U32>([&operands]() { return operands.at(0); }, 0))
-        , operand1(safe_call<U32>([&operands]() { return operands.at(1); }, 0))
-        , operand2(safe_call<U32>([&operands]() { return operands.at(2); }, 0))
+        , operand0(safe_call<U32>([&operands]() { return operands.at(0); }, VIA_OPERAND_INVALID))
+        , operand1(safe_call<U32>([&operands]() { return operands.at(1); }, VIA_OPERAND_INVALID))
+        , operand2(safe_call<U32>([&operands]() { return operands.at(2); }, VIA_OPERAND_INVALID))
         , chunk(chunk)
         , pos(pos)
     {
     }
 };
 
+std::string to_string(U32);
 std::string to_string(ProgramData *, Instruction);
 
 } // namespace via
