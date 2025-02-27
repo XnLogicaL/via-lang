@@ -13,14 +13,14 @@
 // Fucking linker is cooked.
 #include <cmath>
 
-// Define the hot path threshold for the instruction dispatch loop
 // How many times a chunk needs to be executed before being flagged as
 // "hot"
 #define VIA_HOTPATH_THRESHOLD 64
 
 // Index of the current instruction
-#define VM_POS V->ip - V->ihp
+#define VM_POS (V->ip - V->ihp)
 #define VM_CHECK_JMP(addr) ((addr >= V->ihp) && (addr <= V->ibp))
+#define VM_CHECK_OPERAND(oper) (oper != VIA_OPERAND_INVALID)
 
 #define VM_ERROR(message) \
     do { \
@@ -57,8 +57,6 @@
         VM_LOAD(); \
         goto dispatch; \
     } while (0)
-
-#define VM_CHECK_OPERAND(oper) (oper != VIA_OPERAND_INVALID)
 
 namespace via {
 
@@ -1711,8 +1709,6 @@ void kill_thread(State *VIA_RESTRICT V)
 
     // Mark as dead thread
     V->tstate = ThreadState::DEAD;
-    // Decrement the thread_id to make room for more threads (I know you
-    // can techni__cally make 2^32 threads ok?)
     V->G->threads.fetch_add(-1);
 }
 

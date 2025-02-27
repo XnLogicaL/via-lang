@@ -1,6 +1,7 @@
-do {
-    local i = 0
-    while i < 10 and i < 5 {
-        i = i + 1
-    }
+const const_var = 31
+local mut_var = 158
+
+local func x(a, b) {
+    local fn_var = 0x01358815
+    local fn_var_2 = fn_var + const_var + mut_var
 }

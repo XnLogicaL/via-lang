@@ -61,6 +61,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
                 .symbol = symbol,
                 .is_const = is_const,
                 .is_constexpr = true,
+                .primitive_type = constant.type,
             });
         }
         else {
@@ -72,6 +73,8 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
             program->test_stack->push({
                 .symbol = symbol,
                 .is_const = is_const,
+                .is_constexpr = false,
+                .primitive_type = ValueType::nil,
             });
 
             allocator.free_register(dst);
@@ -116,6 +119,18 @@ void StmtVisitor::visit(AssignNode &assign_node)
     });
 
     if (stk_id.has_value()) {
+        const auto &test_stack_member = program->test_stack->at(stk_id.value());
+        if (test_stack_member.has_value() && test_stack_member->is_const) {
+            visitor_failed = true;
+            emitter.out(
+                symbol_token.position,
+                std::format("Attempt to modify constant variable '{}'", symbol),
+                Error
+            );
+
+            return;
+        }
+
         VIA_OPERAND value_reg = allocator.allocate_register();
         assign_node.value->accept(expression_visitor, value_reg);
         program->bytecode->emit(SETSTACK, {value_reg, stk_id.value()});

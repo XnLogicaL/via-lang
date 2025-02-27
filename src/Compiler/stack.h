@@ -16,6 +16,7 @@ struct TestStackMember {
     std::string symbol = "<anonymous-symbol>";
     bool is_const = false;
     bool is_constexpr = false;
+    ValueType primitive_type = ValueType::nil;
 };
 
 class TestStack {
