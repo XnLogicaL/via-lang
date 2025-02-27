@@ -33,4 +33,14 @@ std::optional<Global> GlobalTracker::get_global(const std::string &symbol)
     return std::nullopt;
 }
 
+std::optional<Global> GlobalTracker::get_global(U32 index)
+{
+    try {
+        return globals.at(index);
+    }
+    catch (const std::exception &) {
+        return std::nullopt;
+    }
+}
+
 } // namespace via

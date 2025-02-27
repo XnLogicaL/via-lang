@@ -30,6 +30,7 @@ public:
     void declare_global(Global);
     bool was_declared(const std::string &);
     std::optional<Global> get_global(const std::string &);
+    std::optional<Global> get_global(U32);
 
     inline void declare_builtins()
     {

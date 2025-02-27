@@ -14,7 +14,7 @@ State::State(GState *G, ProgramData *program)
     : id(G->threads++)
     , G(G)
     , gc(new GarbageCollector())
-    , sbp(new TValue[VIA_VM_STACK_SIZE])
+    , sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)])
     , registers(new TValue[VIA_REGISTER_COUNT])
     , err(new ErrorState())
     , program(program)
@@ -35,7 +35,7 @@ void State::load(BytecodeHolder &bytecode)
         this->ihp = nullptr;
     }
 
-    const std::vector<Instruction> &pipeline = bytecode.get();
+    const std::vector<Bytecode> &pipeline = bytecode.get();
 
     if (pipeline.empty()) {
         this->ihp = this->ibp = this->ip = nullptr;
@@ -46,7 +46,11 @@ void State::load(BytecodeHolder &bytecode)
     this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
     this->ip = this->ihp;                         // Initialize ip (Instruction pointer)
 
-    std::memcpy(ihp, pipeline.data(), pipeline.size() * sizeof(Instruction));
+    U64 position = 0;
+    for (const Bytecode &pair : pipeline) {
+        const Instruction &instruction = pair.instruction;
+        this->ihp[position++] = instruction;
+    }
 }
 
 State::~State()

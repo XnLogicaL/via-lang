@@ -62,7 +62,7 @@ LIB_DECL_FUNCTION(base_assert)
         TValue err_val(new TString(V, err_cxx_str.c_str()));
         TValue err_fn = LIB_WRAP_CFPTR(base_error);
 
-        __push(V, err_val);
+        __push(V, err_val.clone());
         __call(V, err_fn, 1);
     }
 
@@ -87,7 +87,7 @@ LIB_DECL_FUNCTION(base_weakPrimCast)
 
     TValue casted_val = __weak_primitive_cast(V, val, val_type.value());
 
-    __push(V, casted_val);
+    __push(V, casted_val.clone());
     LIB_RETURN(1);
 }
 

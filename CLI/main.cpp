@@ -52,6 +52,7 @@ void handle_compile(const std::vector<std::string> &args)
     bool flag_dump_tokens = HAS_FLAG("--dump-tokens");
     bool flag_dump_ast = HAS_FLAG("--dump-ast");
     bool flag_dump_bytecode = HAS_FLAG("--dump-bytecode");
+    bool flag_dump_ktable = HAS_FLAG("--dump-ktable");
 
     std::string input = args.at(0);
     std::string input_code = via::utils::read_from_file(input);
@@ -94,8 +95,17 @@ void handle_compile(const std::vector<std::string> &args)
 
     if (flag_dump_bytecode) {
         std::cout << "\nflag [--dump-bytecode]:\n";
-        for (Instruction instr : program.bytecode->get()) {
-            std::cout << via::to_string(&program, instr) << "\n";
+        for (const Bytecode &pair : program.bytecode->get()) {
+            std::cout << via::to_string(pair) << "\n";
+        }
+    }
+
+    if (flag_dump_ktable) {
+        U32 idx = 0;
+
+        std::cout << "\nflag [--dump-ktable]:\n";
+        for (const TValue &constant : program.constants->get()) {
+            std::cout << "#" << idx++ << " " << magic_enum::enum_name(constant.type) << "\n";
         }
     }
 

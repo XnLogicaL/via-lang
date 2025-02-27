@@ -18,6 +18,7 @@ public:
     U32 push_constant(const TValue &);
     U32 size() const noexcept;
     const TValue &at(U64) const;
+    const std::vector<TValue> &get() const noexcept;
 
 private:
     std::vector<TValue> constants;

@@ -34,4 +34,9 @@ const TValue &ConstantHolder::at(U64 index) const
     return constants.at(index);
 }
 
+const std::vector<TValue> &ConstantHolder::get() const noexcept
+{
+    return constants;
+}
+
 } // namespace via

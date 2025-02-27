@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "common.h"
+
 namespace via {
 
 /*
@@ -11,7 +13,7 @@ namespace via {
  * <opcode> <registers> <identifiers> <everything-else>
  * Ordered from most likely to be executed to the least. (Except NOP)
  */
-enum class OpCode {
+enum class OpCode : U16 {
     /*
      * opcode: NOP
      * No operation. Can invoke empty instruction jump optimizations.
@@ -276,6 +278,9 @@ enum class OpCode {
      * :: Register> operand1: <rhs :: Register>
      */
     NOTEQUAL,
+    AND,
+    OR,
+    NOT,
     /*
      * opcode: LESS
      * Performs a less-than comparison operation between operand0 and operand1.

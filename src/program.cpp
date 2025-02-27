@@ -40,7 +40,7 @@ ProgramData::~ProgramData()
     DELETE_IF(bytecode);
     DELETE_IF(constants);
     DELETE_IF(test_stack);
-    DELETE_IF(globals)
+    DELETE_IF(globals);
 }
 
 } // namespace via

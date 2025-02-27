@@ -22,7 +22,7 @@ enum class ValueType {
     object,
 };
 
-// Tagged union that holds a primitive via value
+// Tagged union that holds a primitive value
 struct TValue {
     ValueType type = ValueType::nil;
     union {

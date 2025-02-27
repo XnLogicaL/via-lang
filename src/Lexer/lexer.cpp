@@ -49,15 +49,15 @@ Token Tokenizer::read_number(size_t position)
     char delimiter;
 
     // Check for binary or hex literals
-    if (peek() == '0' && !std::isdigit(peek(1))) {
+    if (peek() == '0' && (peek(1) == 'x' || peek(1) == 'b')) {
         consume(); // Consume '0'
 
-        if (peek() == BINARY_LITERAL_SENTINEL)
+        if (peek() == 'b') {
             type = LIT_BINARY;
-        else if (peek() == HEX_LITERAL_SENTINEL)
+        }
+        else if (peek() == 'x') {
             type = LIT_HEX;
-        else // Unknown number literal
-            type = UNKNOWN;
+        }
 
         delimiter = consume(); // Consume 'b' or 'x'
     }

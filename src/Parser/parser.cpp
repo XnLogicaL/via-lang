@@ -354,6 +354,12 @@ pStmtNode Parser::parse_stmt()
         return parse_if();
     case KW_WHILE:
         return parse_while();
+    case IDENTIFIER:
+        if (peek().lexeme == "=" || (peek().is_operator() && peek(2).lexeme == "=")) {
+            return parse_assign();
+        }
+        // Not assignment, probably expression statement.
+        [[fallthrough]]; // <-- Also what the fuck is this ISO-C++??
     default:
         try {
             pExprNode expression = parse_expr();

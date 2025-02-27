@@ -14,32 +14,67 @@
 namespace via {
 
 // Add an instruction to the program
-void BytecodeHolder::add_instruction(const Instruction &instruction)
+void BytecodeHolder::add(const Bytecode &bytecode)
 {
-    instructions.push_back(instruction);
+    instructions.push_back(bytecode);
 }
 
 // Remove instruction at <index> from the program
-void BytecodeHolder::remove_instruction(size_t index)
+void BytecodeHolder::remove(U64 index)
 {
     instructions.erase(instructions.begin() + index);
 }
 
-void BytecodeHolder::emit(
+void BytecodeHolder::insert(
+    U64 index,
     OpCode opcode,
-    const std::vector<U32> &operands,
+    const std::array<VIA_OPERAND, 3> &operands,
     const std::string &comment
 )
 {
-    const std::vector<Instruction> &instructions = program->bytecode->get();
-    const size_t instructions_size = instructions.size();
-    program->bytecode->add_instruction({opcode, operands, nullptr, instructions_size});
-    if (comment != "") {
-        program->bytecode_info[instructions_size] = comment;
-    }
+    // Insert the instruction at the specified index
+    instructions.insert(
+        instructions.begin() + index,
+        {
+            .instruction =
+                {
+                    .op = opcode,
+                    .operand0 = operands.at(0),
+                    .operand1 = operands.at(1),
+                    .operand2 = operands.at(2),
+                },
+            .meta_data =
+                {
+                    .chunk = nullptr,
+                    .comment = comment,
+                },
+        }
+    );
 }
 
-std::vector<Instruction> &BytecodeHolder::get()
+void BytecodeHolder::emit(
+    OpCode opcode,
+    const std::array<VIA_OPERAND, 3> &operands,
+    const std::string &comment
+)
+{
+    add({
+        .instruction =
+            {
+                .op = opcode,
+                .operand0 = operands.at(0),
+                .operand1 = operands.at(1),
+                .operand2 = operands.at(2),
+            },
+        .meta_data =
+            {
+                .chunk = nullptr,
+                .comment = comment,
+            },
+    });
+}
+
+std::vector<Bytecode> &BytecodeHolder::get()
 {
     return instructions;
 }

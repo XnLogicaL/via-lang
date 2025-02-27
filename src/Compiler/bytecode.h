@@ -12,8 +12,8 @@
 // This file declares the BytecodeHolder class.
 //
 // The BytecodeHolder class serves as an abstraction over a container
-//  (such as std::vector), providing methods like `add_instruction`,
-//  `remove_instruction` and `emit`. The main reason behind it's
+//  (such as std::vector), providing methods like `add`,
+//  `remove` and `emit`. The main reason behind it's
 //  existence is to provide a more "fit-for-duty" interface for
 //  interfacing with a bytecode array, specifically in the context of compilation.
 //
@@ -34,19 +34,26 @@ public:
     {
     }
 
-    void add_instruction(const Instruction &);
-    void remove_instruction(size_t index);
-    void emit(
+    void add(const Bytecode &);
+    void remove(U64 index);
+    void insert(
+        U64 index = 0,
         OpCode opcode = OpCode::NOP,
-        const std::vector<U32> &operands = {},
+        const std::array<VIA_OPERAND, 3> &operands = {},
         const std::string &comment = ""
     );
 
-    std::vector<Instruction> &get();
+    void emit(
+        OpCode opcode = OpCode::NOP,
+        const std::array<VIA_OPERAND, 3> &operands = {},
+        const std::string &comment = ""
+    );
+
+    std::vector<Bytecode> &get();
 
 private:
     ProgramData *program;
-    std::vector<Instruction> instructions;
+    std::vector<Bytecode> instructions;
 };
 
 } // namespace via

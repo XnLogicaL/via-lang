@@ -109,8 +109,9 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
             str += ", ";
         }
 
-        if (str.back() == ' ')
+        if (str.back() == ' ') {
             str += "\b\b";
+        }
 
         str += "}";
 

@@ -36,7 +36,7 @@ std::optional<TestStackMember> TestStack::at(size_t pos)
     return sbp[pos];
 }
 
-std::optional<U32> TestStack::find_symbol(const TestStackMember &member)
+std::optional<VIA_OPERAND> TestStack::find_symbol(const TestStackMember &member)
 {
     for (TestStackMember *stk_id = sbp; stk_id < sbp + sp; stk_id++) {
         if (stk_id->symbol == member.symbol) {

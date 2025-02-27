@@ -11,42 +11,31 @@
     #define VIA_OPERAND_COUNT 4
 #endif
 
-#define VIA_OPERAND_INVALID std::numeric_limits<U32>::max()
+#define VIA_OPERAND U16
+#define VIA_OPERAND_S I16
+#define VIA_OPERAND_INVALID std::numeric_limits<VIA_OPERAND>::max()
 
 namespace via {
 
 struct Chunk;
-
-// Operand declarations
-enum class OperandType {
-    Nil,
-    Number,
-    Bool,
-    String,
-    Register,
-};
-
-struct Instruction {
-    OpCode op = OpCode::NOP;
-    U32 operand0 = 0;
-    U32 operand1 = 0;
-    U32 operand2 = 0;
+struct InstructionData {
     Chunk *chunk = nullptr;
-    U64 pos = 0;
-
-    Instruction() = default;
-    Instruction(OpCode op, std::vector<U32> operands, Chunk *chunk, size_t pos)
-        : op(op)
-        , operand0(safe_call<U32>([&operands]() { return operands.at(0); }, VIA_OPERAND_INVALID))
-        , operand1(safe_call<U32>([&operands]() { return operands.at(1); }, VIA_OPERAND_INVALID))
-        , operand2(safe_call<U32>([&operands]() { return operands.at(2); }, VIA_OPERAND_INVALID))
-        , chunk(chunk)
-        , pos(pos)
-    {
-    }
+    std::string comment = "";
 };
 
-std::string to_string(U32);
-std::string to_string(ProgramData *, Instruction);
+struct alignas(8) Instruction {
+    OpCode op = OpCode::NOP;
+    U16 operand0 = 0;
+    U16 operand1 = 0;
+    U16 operand2 = 0;
+};
+
+struct alignas(64) Bytecode {
+    Instruction instruction;
+    InstructionData meta_data;
+};
+
+std::string to_string(VIA_OPERAND_S);
+std::string to_string(const Bytecode &);
 
 } // namespace via

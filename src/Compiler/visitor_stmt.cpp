@@ -5,6 +5,10 @@
 #include "visitor.h"
 #include "stack.h"
 
+#define VISITOR_INDEX program->bytecode->get().size()
+#define VISITOR_DEF_LABEL(lbl) VIA_OPERAND lbl = VISITOR_INDEX;
+#define VISITOR_GET_LABEL(lbl) static_cast<I32>(VISITOR_INDEX - lbl)
+
 namespace via {
 
 using enum OpCode;
@@ -33,8 +37,8 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
             emitter.out(previously_declared->declared_at, "Previously declared here", Info);
         }
         else {
-            U32 value_reg = allocator.allocate_register();
-            U32 symbol_hash = hash_string(symbol.c_str());
+            VIA_OPERAND value_reg = allocator.allocate_register();
+            VIA_OPERAND symbol_hash = hash_string(symbol.c_str());
 
             declaration_node.value_expression->accept(expression_visitor, value_reg);
 
@@ -50,7 +54,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
 
         if IS_CONSTEXPR (val) {
             const TValue &constant = construct_constant(dynamic_cast<LiteralNode &>(val));
-            const U32 const_id = PUSH_K(constant);
+            const VIA_OPERAND const_id = PUSH_K(constant);
 
             program->bytecode->emit(PUSHK, {const_id}, comment);
             program->test_stack->push({
@@ -60,7 +64,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
             });
         }
         else {
-            U32 dst = allocator.allocate_register();
+            VIA_OPERAND dst = allocator.allocate_register();
 
             declaration_node.value_expression->accept(expression_visitor, dst);
 
@@ -77,13 +81,13 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
 
 void StmtVisitor::visit(ScopeNode &scope_node)
 {
-    U32 stack_pointer = program->test_stack->sp;
+    VIA_OPERAND stack_pointer = program->test_stack->sp;
 
     for (const pStmtNode &pstmt : scope_node.statements) {
         pstmt->accept(*this);
     }
 
-    U32 stack_allocations = program->test_stack->sp - stack_pointer;
+    VIA_OPERAND stack_allocations = program->test_stack->sp - stack_pointer;
     for (; stack_allocations > 0; stack_allocations--) {
         program->bytecode->emit(POP);
     }
@@ -91,7 +95,7 @@ void StmtVisitor::visit(ScopeNode &scope_node)
 
 void StmtVisitor::visit(FunctionNode &function_node)
 {
-    U32 function_reg = allocator.allocate_register();
+    VIA_OPERAND function_reg = allocator.allocate_register();
     program->bytecode->emit(LOADFUNCTION, {function_reg});
 
     ScopeNode &scope = dynamic_cast<ScopeNode &>(*function_node.body);
@@ -107,12 +111,12 @@ void StmtVisitor::visit(AssignNode &assign_node)
 {
     Token symbol_token = assign_node.identifier;
     std::string symbol = symbol_token.lexeme;
-    std::optional<U32> stk_id = program->test_stack->find_symbol({
+    std::optional<VIA_OPERAND> stk_id = program->test_stack->find_symbol({
         .symbol = symbol,
     });
 
     if (stk_id.has_value()) {
-        U32 value_reg = allocator.allocate_register();
+        VIA_OPERAND value_reg = allocator.allocate_register();
         assign_node.value->accept(expression_visitor, value_reg);
         program->bytecode->emit(SETSTACK, {value_reg, stk_id.value()});
     }
@@ -127,12 +131,29 @@ void StmtVisitor::visit(IfNode &) {}
 void StmtVisitor::visit(WhileNode &while_node)
 {
     ScopeNode &body = dynamic_cast<ScopeNode &>(*while_node.body);
-    U32 cond_reg = allocator.allocate_register();
+    VIA_OPERAND cond_reg = allocator.allocate_register();
+
+    VISITOR_DEF_LABEL(cond_label);
+
     while_node.condition->accept(expression_visitor, cond_reg);
 
-    U32 jump_distance = body.statements.size();
-    program->bytecode->emit(JUMPIF, {jump_distance});
+    VISITOR_DEF_LABEL(body_label);
+
     body.accept(*this);
+
+    // Account for conditional jump and jump-back instructions (+2)
+    I32 body_delta = VISITOR_GET_LABEL(body_label) + 2;
+    I32 cond_delta = VISITOR_GET_LABEL(cond_label) + 2;
+
+    program->bytecode->emit(JUMP, {static_cast<VIA_OPERAND>(-cond_delta)});
+    program->bytecode->insert(
+        body_label,
+        JUMPIFNOT,
+        {cond_reg, static_cast<VIA_OPERAND>(body_delta)},
+        std::format("while R{}", cond_reg)
+    );
+
+    allocator.free_register(cond_reg);
 }
 
 void StmtVisitor::visit(ExprStmtNode &expr_stmt)

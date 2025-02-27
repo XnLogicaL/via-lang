@@ -11,22 +11,24 @@ namespace via {
 using enum OpCode;
 using enum OutputSeverity;
 
-void ExprVisitor::visit(LiteralNode &literal_node, U32 dst)
+void ExprVisitor::visit(LiteralNode &literal_node, VIA_OPERAND dst)
 {
     using enum ValueType;
 
     TValue constant = construct_constant(literal_node);
-    U32 constant_id = PUSH_K(constant);
+    VIA_OPERAND constant_id = PUSH_K(constant);
     std::string value_string = to_cxx_string(nullptr, constant);
     program->bytecode->emit(LOADK, {dst, constant_id}, value_string);
 }
 
-void ExprVisitor::visit(SymbolNode &variable_node, U32 dst)
+void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 {
     Token var_id = variable_node.identifier;
 
     std::string comment = std::format("local {}", var_id.lexeme);
-    std::optional<U32> stk_id = program->test_stack->find_symbol({var_id.lexeme});
+    std::optional<VIA_OPERAND> stk_id = program->test_stack->find_symbol({
+        var_id.lexeme,
+    });
 
     if (stk_id.has_value()) {
         program->bytecode->emit(GETSTACK, {dst, stk_id.value()}, comment);
@@ -39,25 +41,25 @@ void ExprVisitor::visit(SymbolNode &variable_node, U32 dst)
     }
 }
 
-void ExprVisitor::visit(UnaryNode &unary_node, U32 dst)
+void ExprVisitor::visit(UnaryNode &unary_node, VIA_OPERAND dst)
 {
     unary_node.accept(*this, dst);
     program->bytecode->emit(NEG, {dst});
 }
 
-void ExprVisitor::visit(GroupNode &group_node, U32 dst)
+void ExprVisitor::visit(GroupNode &group_node, VIA_OPERAND dst)
 {
     group_node.accept(*this, dst);
 }
 
-void ExprVisitor::visit(CallNode &call_node, U32 dst)
+void ExprVisitor::visit(CallNode &call_node, VIA_OPERAND dst)
 {
-    U32 argc = call_node.arguments.size();
-    U32 callee_reg = allocator.allocate_register();
+    VIA_OPERAND argc = call_node.arguments.size();
+    VIA_OPERAND callee_reg = allocator.allocate_register();
     call_node.callee->accept(*this, callee_reg);
 
     for (const pExprNode &argument : call_node.arguments) {
-        U32 argument_reg = allocator.allocate_register();
+        VIA_OPERAND argument_reg = allocator.allocate_register();
         argument->accept(*this, argument_reg);
 
         program->bytecode->emit(PUSH, {argument_reg});
@@ -69,12 +71,12 @@ void ExprVisitor::visit(CallNode &call_node, U32 dst)
     allocator.free_register(callee_reg);
 }
 
-void ExprVisitor::visit(IndexNode &index_node, U32 dst)
+void ExprVisitor::visit(IndexNode &index_node, VIA_OPERAND dst)
 {
-    U32 obj_reg = allocator.allocate_register();
+    VIA_OPERAND obj_reg = allocator.allocate_register();
     index_node.object->accept(*this, obj_reg);
 
-    U32 index_reg = allocator.allocate_register();
+    VIA_OPERAND index_reg = allocator.allocate_register();
     index_node.index->accept(*this, index_reg);
 
     program->bytecode->emit(GET, {dst, obj_reg, index_reg});
@@ -82,38 +84,64 @@ void ExprVisitor::visit(IndexNode &index_node, U32 dst)
     allocator.free_register(index_reg);
 }
 
-void ExprVisitor::visit(BinaryNode &binary_node, U32 dst)
+void ExprVisitor::visit(BinaryNode &binary_node, VIA_OPERAND dst)
 {
     using enum TokenType;
 
-    static const constexpr U8 k_operator_offset = static_cast<U8>(OP_ADD) - static_cast<U8>(ADD);
+    static const std::unordered_map<TokenType, OpCode> operator_map = {
+        {TokenType::OP_ADD, OpCode::ADD},
+        {TokenType::OP_SUB, OpCode::SUB},
+        {TokenType::OP_MUL, OpCode::MUL},
+        {TokenType::OP_DIV, OpCode::DIV},
+        {TokenType::OP_EXP, OpCode::POW},
+        {TokenType::OP_MOD, OpCode::MOD},
+        {TokenType::OP_EQ, OpCode::EQUAL},
+        {TokenType::OP_NEQ, OpCode::NOTEQUAL},
+        {TokenType::OP_LT, OpCode::LESS},
+        {TokenType::OP_GT, OpCode::GREATER},
+        {TokenType::OP_LEQ, OpCode::LESSOREQUAL},
+        {TokenType::OP_GEQ, OpCode::GREATEROREQUAL},
+        {TokenType::KW_AND, OpCode::AND},
+        {TokenType::KW_OR, OpCode::OR}
+    };
 
-    std::unique_ptr<ExprNode> &p_lhs = binary_node.lhs_expression;
-    std::unique_ptr<ExprNode> &p_rhs = binary_node.rhs_expression;
+    pExprNode &p_lhs = binary_node.lhs_expression;
+    pExprNode &p_rhs = binary_node.rhs_expression;
 
     ExprNode &lhs = *p_lhs;
     ExprNode &rhs = *p_rhs;
 
-    U32 reg = allocator.allocate_register();
-    U8 opcode_id = static_cast<U8>(binary_node.op.type) + k_operator_offset;
+    auto it = operator_map.find(binary_node.op.type);
+    if (it == operator_map.end()) {
+        visitor_failed = true;
+        emitter.out(
+            binary_node.op.position,
+            std::format("Unknown binary operator '{}'", binary_node.op.lexeme),
+            Error
+        );
+
+        return;
+    }
+
+    U8 opcode_id = static_cast<U8>(it->second);
 
     if IS_INHERITOR (rhs, LiteralNode) {
         OpCode opcode = static_cast<OpCode>(opcode_id + 1); // OPK
 
-        lhs.accept(*this, reg);
+        lhs.accept(*this, dst);
 
         TValue right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
-        U32 right_const_id = PUSH_K(right_const_val);
+        VIA_OPERAND right_const_id = PUSH_K(right_const_val);
 
-        program->bytecode->emit(opcode, {reg, right_const_id});
-        allocator.free_register(reg);
+        program->bytecode->emit(opcode, {dst, right_const_id});
     }
     else {
         OpCode opcode = static_cast<OpCode>(opcode_id);
+        VIA_OPERAND reg = allocator.allocate_register();
 
         if (rhs.precedence() > lhs.precedence()) {
-            rhs.accept(*this, reg);
-            lhs.accept(*this, dst);
+            rhs.accept(*this, dst);
+            lhs.accept(*this, reg);
         }
         else {
             lhs.accept(*this, dst);

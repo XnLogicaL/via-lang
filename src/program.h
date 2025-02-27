@@ -25,7 +25,6 @@ struct ProgramData {
     ConstantHolder *constants;
     TestStack *test_stack;
     GlobalTracker *globals;
-    std::map<size_t, std::string> bytecode_info;
 
     ProgramData(std::string file, std::string source);
     ~ProgramData();

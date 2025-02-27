@@ -39,6 +39,7 @@
 #include <shared_mutex>
 #include <limits>
 #include <typeindex>
+#include <iterator>
 // External imports
 #include "magic_enum.hpp"
 #include "linenoise.hpp"
@@ -60,7 +61,7 @@
     }
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION "0.17"
+#define VIA_VERSION "0.18"
 
 #define VIA_RESTRICT __restrict__
 #define VIA_NORETURN __attribute__((__noreturn__))
@@ -122,6 +123,40 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
     catch (std::exception &) {
         return default_value;
     }
+}
+
+VIA_INLINE std::string memdump(const void *ptr, U64 size)
+{
+    std::ostringstream oss;
+    const uint8_t *bytePtr = reinterpret_cast<const uint8_t *>(ptr);
+
+    oss << "Memory dump at: " << ptr << " (size: " << size << " bytes)\n";
+
+    for (size_t i = 0; i < size; i += 16) {
+        oss << std::setw(6) << std::setfill('0') << std::hex << i << " | ";
+
+        for (size_t j = 0; j < 16 && i + j < size; ++j) {
+            oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(bytePtr[i + j])
+                << " ";
+        }
+
+        oss << " | ";
+
+        for (size_t j = 0; j < 16 && i + j < size; ++j) {
+            char c = bytePtr[i + j];
+            oss << (c >= 32 && c <= 126 ? c : '.');
+        }
+
+        oss << '\n';
+    }
+    oss << std::dec; // Reset formatting
+
+    return oss.str();
+}
+
+VIA_INLINE void dump_memory(const void *ptr, U64 size)
+{
+    std::cout << memdump(ptr, size);
 }
 
 } // namespace via

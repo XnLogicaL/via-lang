@@ -11,31 +11,7 @@ using enum ValueType;
 TValue &TValue::operator=(TValue &&other) noexcept
 {
     if (this != &other) {
-        if (!val_pointer) {
-            return *this;
-        }
-
-        switch (type) {
-        case string:
-            delete cast_ptr<TString>();
-            break;
-        case table:
-            delete cast_ptr<TTable>();
-            break;
-        case function:
-            delete cast_ptr<TFunction>();
-            break;
-        case cfunction:
-            delete cast_ptr<TCFunction>();
-            break;
-        default:
-            break;
-        }
-
-        this->val_pointer = nullptr;
-        this->type = other.type;
-
-        switch (type) {
+        switch (other.type) {
         case integer:
             this->val_integer = other.val_integer;
             break;
@@ -55,15 +31,17 @@ TValue &TValue::operator=(TValue &&other) noexcept
             break;
         }
 
+        this->type = other.type;
         other.type = nil;
     }
+
     return *this;
 }
 
 TValue::TValue(TValue &&other) noexcept
     : type(other.type)
 {
-    switch (type) {
+    switch (other.type) {
     case integer:
         this->val_integer = other.val_integer;
         break;
@@ -88,7 +66,6 @@ TValue::TValue(TValue &&other) noexcept
 
 TValue::~TValue()
 {
-    // Cleanup underlying type, if present
     if (!val_pointer) {
         return;
     }
@@ -116,35 +93,26 @@ TValue::~TValue()
 
 TValue TValue::clone() const noexcept
 {
-    TValue copy;
     switch (type) {
     case integer:
-        copy.val_integer = this->val_integer;
-        break;
+        return TValue(val_integer);
     case floating_point:
-        copy.val_floating_point = this->val_floating_point;
-        break;
+        return TValue(val_floating_point);
     case boolean:
-        copy.val_boolean = this->val_boolean;
-        break;
+        return TValue(val_boolean);
     case string:
-        copy.val_pointer = new TString(*this->cast_ptr<TString>());
-        break;
+        return TValue(string, new TString(*this->cast_ptr<TString>()));
     case table:
-        copy.val_pointer = new TTable(*this->cast_ptr<TTable>());
-        break;
+        return TValue(table, new TTable(*this->cast_ptr<TTable>()));
     case function:
-        copy.val_pointer = new TFunction(*this->cast_ptr<TFunction>());
-        break;
+        return TValue(function, new TFunction(*this->cast_ptr<TFunction>()));
     case cfunction:
-        copy.val_pointer = new TCFunction(*this->cast_ptr<TCFunction>());
-        break;
+        return TValue(cfunction, new TCFunction(*this->cast_ptr<TCFunction>()));
     default:
-        break;
+        return TValue();
     }
 
-    copy.type = this->type;
-    return copy;
+    VIA_UNREACHABLE;
 }
 
 TString::TString(State *V, const char *str)

@@ -29,7 +29,7 @@ bool Token::is_operator() const noexcept
     return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ ||
            type == OP_EXP || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT ||
            type == OP_LEQ || type == OP_LT || type == OP_MOD || type == OP_MUL || type == OP_NEQ ||
-           type == OP_SUB;
+           type == OP_SUB || type == KW_AND || type == KW_OR;
 }
 
 bool Token::is_modifier() const noexcept
@@ -55,6 +55,8 @@ int Token::bin_prec() const noexcept
     case OP_GT:
     case OP_LEQ:
     case OP_GEQ:
+    case KW_AND:
+    case KW_OR:
         return 1;
     default:
         return -1;

@@ -83,37 +83,28 @@ VIA_MAXOPTIMIZE TValue *__get_register(State *_V, U32 _Reg)
     return addr;
 }
 
-VIA_INLINE const TValue &__get_constant(State *_V, size_t _Idx)
+VIA_INLINE TValue __get_constant(State *_V, size_t _Idx)
 {
     if (_Idx >= _V->program->constants->size()) {
-        std::cout << _Idx << " is not a valid constant\n";
-        return _Nil;
+        return _Nil.clone();
     }
 
-    return _V->program->constants->at(_Idx);
+    return _V->program->constants->at(_Idx).clone();
 }
 
 VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
 {
-    constexpr static const size_t _Stack_size = VIA_VM_STACK_SIZE / sizeof(TValue);
-    if (VIA_UNLIKELY(_V->sp > _Stack_size)) {
-        __set_error_state(_V, "stack overflow");
-        return;
-    }
-
     _V->sbp[_V->sp++] = _Val.clone();
-
-    std::cout << magic_enum::enum_name(_V->sbp[_V->sp].type);
 }
 
 VIA_MAXOPTIMIZE TValue __pop(State *_V)
 {
-    if (VIA_UNLIKELY(_V->sp == 0)) {
-        __set_error_state(_V, "stack underflow");
-        return _Nil.clone();
-    }
-
     return _V->sbp[_V->sp--].clone();
+}
+
+VIA_MAXOPTIMIZE TValue __get_stack(State *_V, U32 offset) noexcept
+{
+    return _V->sbp[offset].clone();
 }
 
 VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, U32 _Offset) noexcept
@@ -288,7 +279,7 @@ VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, size_t _Retc) noexc
     }
 
     for (int i = _Retc - 1; i >= 0; i--) {
-        __push(_V, _Ret_values.at(i));
+        __push(_V, _Ret_values.at(i).clone());
     }
 }
 
@@ -326,18 +317,18 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 
     switch (_Val.type) {
     case integer: {
-        std::string _Str = std::format("{}", _Val.val_integer);
+        std::string _Str = std::to_string(_Val.val_integer);
         TString *_Tstr = new TString(_V, _Str.c_str());
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
     case floating_point: {
-        std::string _Str = std::format("{:.2f}", _Val.val_floating_point);
+        std::string _Str = std::to_string(_Val.val_floating_point);
         TString *_Tstr = new TString(_V, _Str.c_str());
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
     case boolean: {
         TString *_Str = new TString(_V, _Val.val_boolean ? "true" : "false");
-        return TValue(_Str);
+        return TValue(string, _Str);
     }
     case table: {
         std::string _Str = "{";
@@ -354,13 +345,13 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         _Str += "}";
 
         TString *_Tstr = new TString(_V, _Str.c_str());
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
     case function: {
         const void *_Faddr = _Val.cast_ptr<TFunction>();
         std::string _Str = std::format("<function@{}>", _Faddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
     case cfunction: {
         // This has to be explicitly casted because function pointers be
@@ -368,11 +359,11 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
         const void *_Cfaddr = _Val.cast_ptr<TCFunction>();
         std::string _Str = std::format("<cfunction@{}>", _Cfaddr);
         TString *_Tstr = new TString(_V, _Str.c_str());
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
     default:
         TString *_Tstr = new TString(_V, "nil");
-        return TValue(_Tstr);
+        return TValue(string, _Tstr);
     }
 
     VIA_UNREACHABLE;
