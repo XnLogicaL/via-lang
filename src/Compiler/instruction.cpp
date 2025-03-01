@@ -3,33 +3,55 @@
 // =========================================================================================== |
 
 #include "instruction.h"
+#include "bitutils.h"
 #include "bytecode.h"
 
 namespace via {
 
-std::string to_string(VIA_OPERAND_S operand)
-{
-    bool is_invalid = static_cast<VIA_OPERAND>(operand) == VIA_OPERAND_INVALID;
-    std::string base = is_invalid ? "" : std::format("{:01}", operand);
-    return base;
-}
+using enum OpCode;
 
 std::string to_string(const Bytecode &bytecode)
 {
-    std::string comment("");
-    if (!bytecode.meta_data.comment.empty()) {
-        comment = std::format("; {}", bytecode.meta_data.comment);
-    }
+    static constexpr const char *format_string =
+        "\033[0;35m{:<12}\033[0;37m {:<1} {:<1} {:<1}\033[0m\033[2m          {}\033[0m";
 
-    return std::format(
-        "\033[0;35m{:<12}\033[0;37m {:<1} {:<1} {:<1}\033[0m\033[2m {:<15} {}\033[0m",
-        magic_enum::enum_name(bytecode.instruction.op),
-        to_string(static_cast<I32>(bytecode.instruction.operand0)),
-        to_string(static_cast<I32>(bytecode.instruction.operand1)),
-        to_string(static_cast<I32>(bytecode.instruction.operand2)),
-        " ",
-        comment
-    );
+    const Instruction &instruction = bytecode.instruction;
+    const InstructionData &data = bytecode.meta_data;
+
+    OpCode opcode = instruction.op;
+    U32 opcode_id = static_cast<U32>(opcode);
+
+    if (opcode_id >= static_cast<U32>(JUMP) &&
+        opcode_id <= static_cast<U32>(JUMPIFGREATEROREQUAL)) {
+        return std::format(
+            format_string,
+            magic_enum::enum_name(opcode),
+            static_cast<VIA_OPERAND_S>(instruction.operand0),
+            static_cast<VIA_OPERAND_S>(instruction.operand1),
+            static_cast<VIA_OPERAND_S>(instruction.operand2),
+            data.comment.empty() ? "" : std::format("; {}", data.comment)
+        );
+    }
+    else if (opcode == GETGLOBAL || opcode == SETGLOBAL) {
+        return std::format(
+            format_string,
+            magic_enum::enum_name(opcode),
+            instruction.operand0,
+            U16_TO_U32(instruction.operand1, instruction.operand2),
+            "",
+            data.comment.empty() ? "" : std::format("; {}", data.comment)
+        );
+    }
+    else {
+        return std::format(
+            format_string,
+            magic_enum::enum_name(opcode),
+            instruction.operand0,
+            instruction.operand1,
+            instruction.operand2,
+            data.comment.empty() ? "" : std::format("; {}", data.comment)
+        );
+    }
 }
 
 } // namespace via

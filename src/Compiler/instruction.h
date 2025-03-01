@@ -35,7 +35,6 @@ struct alignas(64) Bytecode {
     InstructionData meta_data;
 };
 
-std::string to_string(VIA_OPERAND_S);
 std::string to_string(const Bytecode &);
 
 } // namespace via

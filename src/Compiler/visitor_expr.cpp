@@ -17,7 +17,7 @@ void ExprVisitor::visit(LiteralNode &literal_node, VIA_OPERAND dst)
 
     TValue constant = construct_constant(literal_node);
     VIA_OPERAND constant_id = PUSH_K(constant);
-    std::string value_string = to_cxx_string(nullptr, constant);
+    std::string value_string = ""; //to_cxx_string(nullptr, constant);
     program->bytecode->emit(LOADK, {dst, constant_id}, value_string);
 }
 
@@ -25,20 +25,56 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 {
     Token var_id = variable_node.identifier;
 
-    std::string comment = std::format("local {}", var_id.lexeme);
+    std::string symbol = var_id.lexeme;
     std::optional<VIA_OPERAND> stk_id = program->test_stack->find_symbol({
         var_id.lexeme,
     });
 
     if (stk_id.has_value()) {
-        program->bytecode->emit(GETSTACK, {dst, stk_id.value()}, comment);
-    }
-    else {
-        visitor_failed = true;
-        emitter.out(
-            var_id.position, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error
+        program->bytecode->emit(
+            GETSTACK,
+            {
+                dst,
+                stk_id.value(),
+            },
+            std::format("local {}", symbol)
         );
+
+        return;
     }
+    else if (program->globals->was_declared(symbol)) {
+        U32 symbol_hash = hash_string(symbol.c_str());
+        program->bytecode->emit(
+            GETGLOBAL,
+            {
+                dst,
+                static_cast<VIA_OPERAND>(symbol_hash & 0xFFFF),
+                static_cast<VIA_OPERAND>(symbol_hash >> 16),
+            },
+            std::format("global {}", symbol)
+        );
+
+        return;
+    }
+    else if (!program->test_stack->function_stack.empty()) {
+        const auto &top = program->test_stack->function_stack.top();
+        for (const auto &parameter : top.parameters) {
+            if (parameter.identifier.lexeme == symbol) {
+                // TODO: Implement retrieval mechanism
+                goto is_parameter;
+            }
+        }
+
+        goto undeclared_variable;
+    is_parameter:
+        return;
+    }
+
+undeclared_variable:
+    visitor_failed = true;
+    emitter.out(
+        var_id.position, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error
+    );
 }
 
 void ExprVisitor::visit(UnaryNode &unary_node, VIA_OPERAND dst)

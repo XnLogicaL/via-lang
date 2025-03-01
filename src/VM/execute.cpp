@@ -5,6 +5,7 @@
 #include "execute.h"
 #include "fileio.h"
 #include "vmapi.h"
+#include "bitutils.h"
 #include "chunk.h"
 #include "common.h"
 #include "state.h"
@@ -808,11 +809,21 @@ dispatch: {
 
     case GETGLOBAL: {
         VIA_OPERAND dst = V->ip->operand0;
-        VIA_OPERAND glb_idx = V->ip->operand1;
 
-        const TValue &global = __get_global(V, glb_idx);
+        U32 hash = U16_TO_U32(V->ip->operand1, V->ip->operand2);
+        const TValue &global = __get_global(V, hash);
 
         __set_register(V, dst, global);
+        VM_NEXT();
+    }
+
+    case SETGLOBAL: {
+        VIA_OPERAND src = V->ip->operand0;
+
+        U32 hash = U16_TO_U32(V->ip->operand1, V->ip->operand2);
+        TValue *global = __get_register(V, src);
+
+        __set_global(V, hash, *global);
         VM_NEXT();
     }
 

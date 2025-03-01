@@ -79,9 +79,6 @@ VIA_INLINE TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     using enum ValueType;
 
-    // If the value union is tagged as a String type but an invalid string value,
-    // that is classified as undefined behavior and should be explicitly handled
-    // by the end user. It is guaranteed to NEVER occur under compiled bytecode
     if (check_string(val)) {
         return val.clone();
     }
@@ -262,11 +259,8 @@ VIA_FORCEINLINE void set_local(State *VIA_RESTRICT V, U32 offset, const TValue &
     std::lock_guard<std::mutex> lock(V->G->symtable_mutex);
 
     // Check if U32 is out of bounds,
-    // this is CRUCIAL, and prevents UB upon stack operations.
     if (offset > V->sp) {
         std::string identifier("<unknown-symbol>");
-        if (V->G->symtable.size() >= offset)
-            identifier = V->G->symtable.at(offset);
     }
 
     TValue *stack_address = V->sbp + offset;

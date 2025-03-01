@@ -6,9 +6,14 @@
 
 namespace via {
 
-void GlobalTracker::declare_global(Global global)
+void GlobalTracker::declare_global(const Global &global)
 {
     globals.emplace_back(global);
+}
+
+bool GlobalTracker::was_declared(const Global &global)
+{
+    return was_declared(global.symbol);
 }
 
 bool GlobalTracker::was_declared(const std::string &symbol)
@@ -20,6 +25,25 @@ bool GlobalTracker::was_declared(const std::string &symbol)
     }
 
     return false;
+}
+
+std::optional<U64> GlobalTracker::get_index(const Global &global)
+{
+    return get_index(global.symbol);
+}
+
+std::optional<U64> GlobalTracker::get_index(const std::string &symbol)
+{
+    U64 index = 0;
+    for (const Global &global : globals) {
+        if (global.symbol == symbol) {
+            return index;
+        }
+
+        ++index;
+    }
+
+    return std::nullopt;
 }
 
 std::optional<Global> GlobalTracker::get_global(const std::string &symbol)
@@ -41,6 +65,11 @@ std::optional<Global> GlobalTracker::get_global(U32 index)
     catch (const std::exception &) {
         return std::nullopt;
     }
+}
+
+const std::vector<Global> &GlobalTracker::get()
+{
+    return globals;
 }
 
 } // namespace via

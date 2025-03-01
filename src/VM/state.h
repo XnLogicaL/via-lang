@@ -43,7 +43,6 @@ struct ErrorState {
 struct GState {
     std::unordered_map<U32, TString *> stable; // String interning table
     std::unordered_map<U32, TValue> gtable;    // Global environment
-    std::vector<std::string> symtable;         // Symbol table
     std::atomic<U32> threads{0};               // Thread count
 
     std::shared_mutex stable_mutex;

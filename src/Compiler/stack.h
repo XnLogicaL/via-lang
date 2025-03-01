@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "ast.h"
 #include "ast_base.h"
 #include "types.h"
 #include "common.h"
@@ -40,6 +41,7 @@ public:
 
 public:
     U64 sp = 0;
+    std::stack<FunctionNode::StackNode> function_stack;
 
 private:
     TestStackMember *sbp = nullptr;

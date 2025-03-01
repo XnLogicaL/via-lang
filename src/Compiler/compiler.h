@@ -36,6 +36,9 @@ public:
     bool generate();
 
 private:
+    bool check_global_collisions();
+
+private:
     ProgramData *program;
 };
 

@@ -5,43 +5,43 @@
 #pragma once
 
 #include "common_nodep.h"
+#include "token.h"
 
 namespace via {
 
 struct Global {
+    Token token;
     std::string symbol;
-    U64 declared_at;
-
-    Global(const std::string &symbol, U64 declared_at)
-        : symbol(symbol)
-        , declared_at(declared_at)
-    {
-    }
-
-    Global(const std::string &symbol)
-        : symbol(symbol)
-        , declared_at(std::numeric_limits<U64>::quiet_NaN())
-    {
-    }
 };
 
 class GlobalTracker {
 public:
-    void declare_global(Global);
+    void declare_global(const Global &);
+
+    bool was_declared(const Global &);
     bool was_declared(const std::string &);
+
+    std::optional<U64> get_index(const std::string &);
+    std::optional<U64> get_index(const Global &);
+
     std::optional<Global> get_global(const std::string &);
     std::optional<Global> get_global(U32);
+
+    const std::vector<Global> &get();
 
     inline void declare_builtins()
     {
         static const std::vector<std::string> builtins = {
-            "print",   "println", "error", "exit",   "type", "typeof", "to_string", "to_number",
-            "to_bool", "assert",  "pcall", "xpcall", "math", "table",  "string",    "random",
-            "http",    "buffer",  "bit32", "utf8",   "fs",   "os",     "debug",     "function",
+            "print",     "println", "error",  "exit",  "type",     "typeof", "to_string",
+            "to_number", "to_bool", "assert", "pcall", "xpcall",   "math",   "table",
+            "string",    "random",  "os",     "debug", "function",
         };
 
         for (const std::string &built_in : builtins) {
-            globals.emplace_back(Global(built_in));
+            globals.push_back(Global{
+                .token = Token(TokenType::IDENTIFIER, built_in, 0, 0, 0),
+                .symbol = built_in,
+            });
         }
     }
 

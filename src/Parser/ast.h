@@ -172,6 +172,15 @@ struct FunctionNode : public StmtNode {
         }
     };
 
+    struct StackNode {
+        bool is_global;
+
+        Modifiers modifiers;
+        Token identifier;
+
+        std::vector<ParameterNode> parameters;
+    };
+
     bool is_global;
 
     Modifiers modifiers;

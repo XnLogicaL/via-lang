@@ -1,7 +1,10 @@
-const const_var = 31
-local mut_var = 158
-
-local func x(a, b) {
-    local fn_var = 0x01358815
-    local fn_var_2 = fn_var + const_var + mut_var
+const x = 0
+global func add(a, b) {
+    local inner_param = a + b * a * b / b % b ^ b
+    global func inner() {
+        local y = true
+        while y and x {
+            local z = z + y + x
+        }
+    }
 }

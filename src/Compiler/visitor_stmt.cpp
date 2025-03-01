@@ -29,12 +29,11 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
 
         if (previously_declared.has_value()) {
             std::string previously_declared_error =
-                std::format("Attempt to reassign global '{}'", symbol);
+                std::format("Attempt to re-declare global '{}'", symbol);
 
             visitor_failed = true;
-
             emitter.out(ident.position, previously_declared_error, Error);
-            emitter.out(previously_declared->declared_at, "Previously declared here", Info);
+            emitter.out(previously_declared->token.position, "Previously declared here", Info);
         }
         else {
             VIA_OPERAND value_reg = allocator.allocate_register();
@@ -42,7 +41,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
 
             declaration_node.value_expression->accept(expression_visitor, value_reg);
 
-            Global global(symbol, ident.position);
+            Global global{.token = ident, .symbol = symbol};
             program->globals->declare_global(global);
             program->bytecode->emit(SETGLOBAL, {value_reg, symbol_hash}, comment);
 
@@ -99,15 +98,95 @@ void StmtVisitor::visit(ScopeNode &scope_node)
 void StmtVisitor::visit(FunctionNode &function_node)
 {
     VIA_OPERAND function_reg = allocator.allocate_register();
-    program->bytecode->emit(LOADFUNCTION, {function_reg});
+
+    // Push function to the function stack
+    program->test_stack->function_stack.push({
+        .is_global = function_node.is_global,
+        .modifiers = function_node.modifiers,
+        .identifier = function_node.identifier,
+        .parameters = function_node.parameters,
+    });
+
+    program->bytecode->emit(
+        LOADFUNCTION,
+        {function_reg},
+        std::format(
+            "{} func {}",
+            function_node.is_global ? "global" : "local",
+            function_node.identifier.lexeme
+        )
+    );
 
     ScopeNode &scope = dynamic_cast<ScopeNode &>(*function_node.body);
     for (const pStmtNode &pstmt : scope.statements) {
+        const StmtNode &stmt = *pstmt;
+        if (IS_INHERITOR(stmt, DeclarationNode) || IS_INHERITOR(stmt, FunctionNode)) {
+            bool is_global;
+            U32 identifier_position;
+
+            if (IS_INHERITOR(stmt, DeclarationNode)) {
+                const DeclarationNode &node = dynamic_cast<const DeclarationNode &>(stmt);
+                is_global = node.is_global;
+                identifier_position = node.identifier.position;
+            }
+            else {
+                const FunctionNode &node = dynamic_cast<const FunctionNode &>(stmt);
+                is_global = node.is_global;
+                identifier_position = node.identifier.position;
+            }
+
+            if (is_global) {
+                visitor_failed = true;
+                emitter.out(identifier_position, "Functions scopes cannot declare globals", Error);
+                emitter.out_flat(
+                    "Function scopes containing global declarations may cause global "
+                    "redeclarations, therefore are not allowed.",
+                    Info
+                );
+                break;
+            }
+        }
+
         pstmt->accept(*this);
     }
 
-    program->bytecode->emit(PUSH, {function_reg});
+    Token symbol_token = function_node.identifier;
+    std::string symbol = symbol_token.lexeme;
+    U32 symbol_hash = hash_string(symbol.c_str());
+
+    if (function_node.is_global) {
+        if (program->globals->was_declared(symbol)) {
+            visitor_failed = true;
+            emitter.out(
+                symbol_token.position,
+                std::format("Attempt to re-declare global '{}'", symbol),
+                Error
+            );
+            return;
+        }
+
+        program->bytecode->emit(
+            SETGLOBAL,
+            {
+                function_reg,
+                static_cast<VIA_OPERAND>(symbol_hash & 0xFFFF),
+                static_cast<VIA_OPERAND>(symbol_hash >> 16),
+            }
+        );
+    }
+    else {
+        program->bytecode->emit(PUSH, {function_reg});
+    }
+
     allocator.free_register(function_reg);
+
+    program->test_stack->function_stack.pop();
+    program->test_stack->push({
+        .symbol = symbol,
+        .is_const = function_node.modifiers.is_const,
+        .is_constexpr = false,
+        .primitive_type = ValueType::function,
+    });
 }
 
 void StmtVisitor::visit(AssignNode &assign_node)
