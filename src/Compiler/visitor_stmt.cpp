@@ -124,7 +124,7 @@ void StmtVisitor::visit(FunctionNode &function_node)
             bool is_global;
             U32 identifier_position;
 
-            if (IS_INHERITOR(stmt, DeclarationNode)) {
+            if IS_INHERITOR (stmt, DeclarationNode) {
                 const DeclarationNode &node = dynamic_cast<const DeclarationNode &>(stmt);
                 is_global = node.is_global;
                 identifier_position = node.identifier.position;
@@ -137,10 +137,10 @@ void StmtVisitor::visit(FunctionNode &function_node)
 
             if (is_global) {
                 visitor_failed = true;
-                emitter.out(identifier_position, "Functions scopes cannot declare globals", Error);
+                emitter.out(identifier_position, "Function scopes cannot declare globals", Error);
                 emitter.out_flat(
-                    "Function scopes containing global declarations may cause global "
-                    "redeclarations, therefore are not allowed.",
+                    "Function scopes containing global declarations may cause previously declared "
+                    "globals to be re-declared, therefore are not allowed.",
                     Info
                 );
                 break;
@@ -252,7 +252,9 @@ void StmtVisitor::visit(WhileNode &while_node)
 
 void StmtVisitor::visit(ExprStmtNode &expr_stmt)
 {
-    expr_stmt.accept(expression_visitor);
+    VIA_OPERAND trash_register = allocator.allocate_register();
+    expr_stmt.expression->accept(expression_visitor, trash_register);
+    allocator.free_register(trash_register);
 }
 
 } // namespace via

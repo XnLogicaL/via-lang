@@ -6,26 +6,26 @@
 
 namespace via {
 
-U32 RegisterAllocator::allocate_register()
+VIA_OPERAND RegisterAllocator::allocate_register()
 {
-    for (U32 reg = 0; reg < 128; reg++) {
+    for (VIA_OPERAND reg = 0; reg < 128; reg++) {
         if (registers[reg]) {
             registers[reg] = false;
             return reg;
         }
     }
 
-    return 0xDEADBEEF; // REGISTER_INVALID
+    return VIA_OPERAND_INVALID;
 }
 
-U32 RegisterAllocator::allocate_temp()
+VIA_OPERAND RegisterAllocator::allocate_temp()
 {
-    U32 reg = allocate_register();
+    VIA_OPERAND reg = allocate_register();
     free_register(reg);
     return reg;
 }
 
-void RegisterAllocator::free_register(U32 reg)
+void RegisterAllocator::free_register(VIA_OPERAND reg)
 {
     registers.emplace(reg, true);
 }

@@ -6,8 +6,11 @@
 #include "api.h"
 #include "bytecode.h"
 #include "gc.h"
+#include "vmapi_aux.h"
 
 namespace via {
+
+using namespace impl;
 
 // Initializes and returns a new State object
 State::State(GState *G, ProgramData *program)
@@ -21,11 +24,8 @@ State::State(GState *G, ProgramData *program)
 {
     load(*program->bytecode);
 
-    // Mimic a "main" function
-    // This is necessary for setting up a global scope, and isn't meant to be a conventional
-    // function
-    TFunction *main = new TFunction(this, "__main", this->ip, this->frame, {}, false, false);
-    native_call(this, main, 0);
+    TFunction *main = __create_main_function(this);
+    __native_call(this, main, 0);
 }
 
 void State::load(BytecodeHolder &bytecode)
@@ -44,18 +44,17 @@ void State::load(BytecodeHolder &bytecode)
 
     this->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
     this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
-    this->ip = this->ihp;                         // Initialize ip (Instruction pointer)
+    this->ip  = this->ihp;                        // Initialize ip (Instruction pointer)
 
     U64 position = 0;
     for (const Bytecode &pair : pipeline) {
         const Instruction &instruction = pair.instruction;
-        this->ihp[position++] = instruction;
+        this->ihp[position++]          = instruction;
     }
 }
 
 State::~State()
 {
-    // Clean up saved state, if there is one
     if (this->sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;

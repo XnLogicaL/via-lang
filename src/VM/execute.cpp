@@ -11,6 +11,7 @@
 #include "state.h"
 #include "types.h"
 #include "constant.h"
+#include "vmapi_aux.h"
 // Fucking linker is cooked.
 #include <cmath>
 
@@ -63,7 +64,7 @@ namespace via {
 
 void vm_save_snapshot(State *VIA_RESTRICT V)
 {
-    U64 pos = V->ip - V->ihp;
+    U64         pos  = V->ip - V->ihp;
     std::string file = std::format("vm_snapshot.{}.log", pos);
 
     std::ostringstream headers;
@@ -191,7 +192,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -281,7 +282,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -371,7 +372,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -461,7 +462,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -553,7 +554,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -649,7 +650,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        TValue *lhs_val = __get_register(V, lhs);
+        TValue       *lhs_val = __get_register(V, lhs);
         const TValue &rhs_val = __get_constant(V, idx);
 
         ValueType lhs_type = lhs_val->type;
@@ -693,9 +694,9 @@ dispatch: {
     }
 
     case MOVE: {
-        VIA_OPERAND rdst = V->ip->operand0;
-        VIA_OPERAND rsrc = V->ip->operand1;
-        TValue *src_val = __get_register(V, rsrc);
+        VIA_OPERAND rdst    = V->ip->operand0;
+        VIA_OPERAND rsrc    = V->ip->operand1;
+        TValue     *src_val = __get_register(V, rsrc);
 
         __set_register(V, rdst, *src_val);
         VM_NEXT();
@@ -705,7 +706,6 @@ dispatch: {
         VIA_OPERAND dst = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        // Check if the kId is valid
         if (idx > V->program->constants->size()) {
             VM_FATAL("invalid constant index");
         }
@@ -725,16 +725,16 @@ dispatch: {
 
     case LOADTABLE: {
         VIA_OPERAND dst = V->ip->operand0;
-        TValue ttable(new TTable());
+        TValue      ttable(new TTable());
 
         __set_register(V, dst, ttable);
         VM_NEXT();
     }
 
     case LOADFUNCTION: {
-        VIA_OPERAND dst = V->ip->operand0;
-        TFunction *func = new TFunction(V, "<anonymous>", V->ip, V->frame, {}, false, false);
-        TValue val(func);
+        VIA_OPERAND dst  = V->ip->operand0;
+        TFunction  *func = new TFunction;
+        TValue      val(func);
 
         while (V->ip < V->ibp) {
             if (V->ip->op == RETURN) {
@@ -750,9 +750,25 @@ dispatch: {
         goto dispatch;
     }
 
+    case CAPTURE: {
+        VIA_OPERAND stk_id = V->ip->operand0;
+        VIA_OPERAND upv_id = V->ip->operand1;
+
+        TFunction *closure = V->frame;
+        TValue     stk_val = __get_stack(V, stk_id);
+
+        if (__closure_upvs_range_check(closure, upv_id)) {
+            __closure_upvs_resize(closure);
+        }
+
+
+
+        VM_NEXT();
+    }
+
     case PUSH: {
         VIA_OPERAND src = V->ip->operand0;
-        TValue *val = __get_register(V, src);
+        TValue     *val = __get_register(V, src);
 
         __push(V, *val);
         VM_NEXT();
@@ -760,7 +776,7 @@ dispatch: {
 
     case PUSHK: {
         VIA_OPERAND const_idx = V->ip->operand0;
-        TValue constant = __get_constant(V, const_idx);
+        TValue      constant  = __get_constant(V, const_idx);
 
         __push(V, constant);
         VM_NEXT();
@@ -768,7 +784,7 @@ dispatch: {
 
     case POP: {
         VIA_OPERAND dst = V->ip->operand0;
-        TValue val = __pop(V);
+        TValue      val = __pop(V);
 
         if VM_CHECK_OPERAND (dst) {
             __set_register(V, dst, val);
@@ -810,7 +826,7 @@ dispatch: {
     case GETGLOBAL: {
         VIA_OPERAND dst = V->ip->operand0;
 
-        U32 hash = U16_TO_U32(V->ip->operand1, V->ip->operand2);
+        U32           hash   = U16_TO_U32(V->ip->operand1, V->ip->operand2);
         const TValue &global = __get_global(V, hash);
 
         __set_register(V, dst, global);
@@ -820,7 +836,7 @@ dispatch: {
     case SETGLOBAL: {
         VIA_OPERAND src = V->ip->operand0;
 
-        U32 hash = U16_TO_U32(V->ip->operand1, V->ip->operand2);
+        U32     hash   = U16_TO_U32(V->ip->operand1, V->ip->operand2);
         TValue *global = __get_register(V, src);
 
         __set_global(V, hash, *global);
@@ -882,7 +898,7 @@ dispatch: {
 
         TValue *lhs_val = __get_register(V, lhs);
         TValue *rhs_val = __get_register(V, rhs);
-        bool cond = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
+        bool    cond    = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
 
         __set_register(V, dst, TValue(cond));
         VM_NEXT();
@@ -895,7 +911,7 @@ dispatch: {
 
         TValue *lhs_val = __get_register(V, lhs);
         TValue *rhs_val = __get_register(V, rhs);
-        bool cond = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
+        bool    cond    = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
 
         __set_register(V, dst, TValue(cond));
         VM_NEXT();
@@ -906,7 +922,7 @@ dispatch: {
         VIA_OPERAND lhs = V->ip->operand1;
 
         TValue *lhs_val = __get_register(V, lhs);
-        bool cond = !__to_cxx_bool(*lhs_val);
+        bool    cond    = !__to_cxx_bool(*lhs_val);
 
         __set_register(V, dst, TValue(cond));
         VM_NEXT();
@@ -1158,7 +1174,7 @@ dispatch: {
     }
 
     case JUMPIF: {
-        VIA_OPERAND cond = V->ip->operand0;
+        VIA_OPERAND   cond   = V->ip->operand0;
         VIA_OPERAND_S offset = V->ip->operand1;
 
         std::cout << "JUMPIF " << offset << "\n";
@@ -1176,7 +1192,7 @@ dispatch: {
     }
 
     case JUMPIFNOT: {
-        VIA_OPERAND cond = V->ip->operand0;
+        VIA_OPERAND   cond   = V->ip->operand0;
         VIA_OPERAND_S offset = V->ip->operand1;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
@@ -1192,9 +1208,9 @@ dispatch: {
     }
 
     case JUMPIFEQUAL: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1216,9 +1232,9 @@ dispatch: {
     }
 
     case JUMPIFNOTEQUAL: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1240,9 +1256,9 @@ dispatch: {
     }
 
     case JUMPIFLESS: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1307,9 +1323,9 @@ dispatch: {
     }
 
     case JUMPIFGREATER: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1374,9 +1390,9 @@ dispatch: {
     }
 
     case JUMPIFLESSOREQUAL: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1441,9 +1457,9 @@ dispatch: {
     }
 
     case JUMPIFGREATEROREQUAL: {
-        VIA_OPERAND cond_lhs = V->ip->operand0;
-        VIA_OPERAND cond_rhs = V->ip->operand1;
-        VIA_OPERAND_S offset = V->ip->operand2;
+        VIA_OPERAND   cond_lhs = V->ip->operand0;
+        VIA_OPERAND   cond_rhs = V->ip->operand1;
+        VIA_OPERAND_S offset   = V->ip->operand2;
 
         if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
             VM_FATAL("invalid jump address");
@@ -1508,35 +1524,35 @@ dispatch: {
     }
 
     case CALL: {
-        VIA_OPERAND fn = V->ip->operand0;
-        VIA_OPERAND argc = V->ip->operand1;
-        TValue *fn_val = __get_register(V, fn);
+        VIA_OPERAND fn     = V->ip->operand0;
+        VIA_OPERAND argc   = V->ip->operand1;
+        TValue     *fn_val = __get_register(V, fn);
 
         __call(V, *fn_val, argc);
         VM_NEXT();
     }
     case EXTERNCALL: {
-        VIA_OPERAND fn = V->ip->operand0;
-        VIA_OPERAND argc = V->ip->operand1;
-        TValue *cfunc = __get_register(V, fn);
+        VIA_OPERAND fn    = V->ip->operand0;
+        VIA_OPERAND argc  = V->ip->operand1;
+        TValue     *cfunc = __get_register(V, fn);
 
         __extern_call(V, cfunc->cast_ptr<TCFunction>(), argc);
         VM_NEXT();
     }
     case NATIVECALL: {
-        VIA_OPERAND fn = V->ip->operand0;
+        VIA_OPERAND fn   = V->ip->operand0;
         VIA_OPERAND argc = V->ip->operand1;
-        TValue *func = __get_register(V, fn);
+        TValue     *func = __get_register(V, fn);
 
         __native_call(V, func->cast_ptr<TFunction>(), argc);
         VM_NEXT();
     }
     case METHODCALL: {
-        VIA_OPERAND obj = V->ip->operand0;
-        VIA_OPERAND fn = V->ip->operand1;
+        VIA_OPERAND obj  = V->ip->operand0;
+        VIA_OPERAND fn   = V->ip->operand1;
         VIA_OPERAND argc = V->ip->operand2;
 
-        TValue *func = __get_register(V, fn);
+        TValue *func   = __get_register(V, fn);
         TValue *object = __get_register(V, obj);
 
         __push(V, object->clone());
@@ -1558,7 +1574,7 @@ dispatch: {
         TValue *tbl_val = __get_register(V, tbl);
         TValue *idx_val = __get_register(V, idx);
 
-        VIA_OPERAND key = check_string(*idx_val) ? idx_val->cast_ptr<TString>()->hash : idx;
+        VIA_OPERAND   key   = check_string(*idx_val) ? idx_val->cast_ptr<TString>()->hash : idx;
         const TValue &index = __get_table(tbl_val->cast_ptr<TTable>(), key, true);
 
         __set_register(V, dst, index);
@@ -1580,11 +1596,11 @@ dispatch: {
     case NEXTTABLE: {
         static std::unordered_map<void *, VIA_OPERAND> next_table;
 
-        VIA_OPERAND dst = V->ip->operand0;
+        VIA_OPERAND dst  = V->ip->operand0;
         VIA_OPERAND valr = V->ip->operand1;
 
-        TValue *val = __get_register(V, valr);
-        void *ptr = __to_pointer(*val);
+        TValue     *val = __get_register(V, valr);
+        void       *ptr = __to_pointer(*val);
         VIA_OPERAND key = 0;
 
         auto it = next_table.find(ptr);
@@ -1596,7 +1612,7 @@ dispatch: {
         }
 
         const auto &table_map = val->cast_ptr<TTable>()->data;
-        auto field_it = table_map.find(key);
+        auto        field_it  = table_map.find(key);
 
         if (field_it != table_map.end()) {
             __set_register(V, dst, field_it->second);
@@ -1612,9 +1628,9 @@ dispatch: {
         VIA_OPERAND dst = V->ip->operand0;
         VIA_OPERAND tbl = V->ip->operand1;
 
-        TValue *val = __get_register(V, tbl);
-        int size = val->cast_ptr<TTable>()->data.size();
-        TValue val_size(size);
+        TValue *val  = __get_register(V, tbl);
+        int     size = val->cast_ptr<TTable>()->data.size();
+        TValue  val_size(size);
 
         __set_register(V, dst, val_size);
         VM_NEXT();
@@ -1625,8 +1641,8 @@ dispatch: {
         VIA_OPERAND objr = V->ip->operand1;
 
         TValue *val = __get_register(V, objr);
-        int len = val->cast_ptr<TString>()->len;
-        TValue val_len(len);
+        int     len = val->cast_ptr<TString>()->len;
+        TValue  val_len(len);
 
         __set_register(V, rdst, val_len);
         VM_NEXT();
@@ -1653,7 +1669,7 @@ dispatch: {
         VIA_OPERAND objr = V->ip->operand1;
 
         TValue *val = __get_register(V, objr);
-        TValue len = __len(V, *val);
+        TValue  len = __len(V, *val);
 
         __set_register(V, rdst, len);
         VM_NEXT();
@@ -1664,7 +1680,7 @@ dispatch: {
         VIA_OPERAND objr = V->ip->operand1;
 
         TValue *val = __get_register(V, objr);
-        TValue ty = __type(V, *val);
+        TValue  ty  = __type(V, *val);
 
         __set_register(V, rdst, ty);
         VM_NEXT();
@@ -1674,8 +1690,8 @@ dispatch: {
         VIA_OPERAND rdst = V->ip->operand0;
         VIA_OPERAND objr = V->ip->operand1;
 
-        TValue *val = __get_register(V, objr);
-        TValue type = __typeofv(V, *val);
+        TValue *val  = __get_register(V, objr);
+        TValue  type = __typeofv(V, *val);
 
         __set_register(V, rdst, type);
         VM_NEXT();

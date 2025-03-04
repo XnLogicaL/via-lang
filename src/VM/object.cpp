@@ -3,6 +3,8 @@
 // =========================================================================================== |
 
 #include "types.h"
+#include "object.h"
+#include "function.h"
 
 namespace via {
 
@@ -151,31 +153,6 @@ TString::~TString()
         delete[] this->data;
         this->data = nullptr;
     }
-}
-
-TFunction::TFunction(
-    State *,
-    std::string id,
-    Instruction *ret_addr,
-    TFunction *caller,
-    std::vector<Instruction> bytecode,
-    bool is_error_handler,
-    bool is_var_arg
-)
-    : line(std::numeric_limits<size_t>::max())
-    , error_handler(is_error_handler)
-    , is_vararg(is_var_arg)
-    , id(id)
-    , caller(caller)
-    , ret_addr(ret_addr)
-    , bytecode(bytecode)
-{
-}
-
-TCFunction::TCFunction(TCFunction::CFunctionPtr data, bool error_handler)
-    : data(data)
-    , error_handler(error_handler)
-{
 }
 
 } // namespace via

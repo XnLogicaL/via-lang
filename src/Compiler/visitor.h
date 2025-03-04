@@ -72,7 +72,7 @@ public:
     virtual void visit(WhileNode &) INVALID_VISIT;
     virtual void visit(ExprStmtNode &) INVALID_VISIT;
 
-    inline bool failed()
+    virtual inline bool failed()
     {
         return visitor_failed;
     }
@@ -121,6 +121,11 @@ public:
     void visit(IfNode &) override;
     void visit(WhileNode &) override;
     void visit(ExprStmtNode &) override;
+
+    inline bool failed() override
+    {
+        return visitor_failed || expression_visitor.failed();
+    }
 
 private:
     ProgramData *program;

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common.h"
+#include "instruction.h"
 
 namespace via {
 
@@ -18,12 +19,12 @@ public:
         }
     }
 
-    U32 allocate_register();
-    U32 allocate_temp();
-    void free_register(U32);
+    VIA_OPERAND allocate_register();
+    VIA_OPERAND allocate_temp();
+    void free_register(VIA_OPERAND);
 
 private:
-    std::unordered_map<U32, bool> registers;
+    std::unordered_map<VIA_OPERAND, bool> registers;
 };
 
 } // namespace via

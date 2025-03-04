@@ -40,3 +40,5 @@ PenaltyReturnTypeOnItsOwnLine: 10000
 ReflowComments: false
 IndentPPDirectives: BeforeHash
 MacroBlockBegin: ''
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true

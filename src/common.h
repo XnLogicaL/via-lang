@@ -54,14 +54,15 @@
 #define VIA_ASSERT(cond, message) \
     if (!(cond)) { \
         std::cerr << "VIA_ASSERT(): assertion '" << #cond << "' failed.\n" \
-                  << " message: " << message << "\n" \
+                  << " file " << __FILE__ << " line " << __LINE__ << "\n message: " << message \
+                  << "\n" \
                   << " callstack:\n" \
                   << std::stacktrace::current() << '\n'; \
         std::abort(); \
     }
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION "0.18"
+#define VIA_VERSION "0.19"
 
 #define VIA_RESTRICT __restrict__
 #define VIA_NORETURN __attribute__((__noreturn__))
@@ -83,12 +84,12 @@ struct TFunction;
 struct TCFunction;
 
 // Thanks Terry A. Davis (R.I.P. king) for the idea
-using U8 = std::uint8_t;
+using U8  = std::uint8_t;
 using U16 = std::uint16_t;
 using U32 = std::uint32_t;
 using U64 = std::uint64_t;
 
-using I8 = std::int8_t;
+using I8  = std::int8_t;
 using I16 = std::int16_t;
 using I32 = std::int32_t;
 using I64 = std::int64_t;
@@ -128,7 +129,7 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
 VIA_INLINE std::string memdump(const void *ptr, U64 size)
 {
     std::ostringstream oss;
-    const uint8_t *bytePtr = reinterpret_cast<const uint8_t *>(ptr);
+    const uint8_t     *bytePtr = reinterpret_cast<const uint8_t *>(ptr);
 
     oss << "Memory dump at: " << ptr << " (size: " << size << " bytes)\n";
 

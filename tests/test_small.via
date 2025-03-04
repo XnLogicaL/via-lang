@@ -1,10 +1,16 @@
 const x = 0
+global Aaaa = 0
+global BB = 0
+
 global func add(a, b) {
-    local inner_param = a + b * a * b / b % b ^ b
-    global func inner() {
+    local var = a + b * a * b / b % b ^ b
+    global glb = a % b
+    local func inner() {
         local y = true
         while y and x {
-            local z = z + y + x
+            local z = y + x % y  % x
         }
     }
+
+    inner(inner_param, x)
 }

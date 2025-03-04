@@ -57,20 +57,18 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
         return;
     }
     else if (!program->test_stack->function_stack.empty()) {
+        U16 index = 0;
         const auto &top = program->test_stack->function_stack.top();
         for (const auto &parameter : top.parameters) {
             if (parameter.identifier.lexeme == symbol) {
-                // TODO: Implement retrieval mechanism
-                goto is_parameter;
+                program->bytecode->emit(GETARGUMENT, {dst, index});
+                return;
             }
-        }
 
-        goto undeclared_variable;
-    is_parameter:
-        return;
+            ++index;
+        }
     }
 
-undeclared_variable:
     visitor_failed = true;
     emitter.out(
         var_id.position, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error
