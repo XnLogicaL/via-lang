@@ -14,10 +14,10 @@
 namespace via {
 
 struct TestStackMember {
-    std::string symbol = "<anonymous-symbol>";
-    bool is_const = false;
-    bool is_constexpr = false;
-    ValueType primitive_type = ValueType::nil;
+    std::string symbol         = "<anonymous-symbol>";
+    bool        is_const       = false;
+    bool        is_constexpr   = false;
+    ValueType   primitive_type = ValueType::nil;
 };
 
 class TestStack {
@@ -32,15 +32,15 @@ public:
         delete[] sbp;
     }
 
-    void push(TestStackMember);
-    TestStackMember top();
-    TestStackMember pop();
-    U64 size();
-    std::optional<TestStackMember> at(size_t);
-    std::optional<VIA_OPERAND> find_symbol(const TestStackMember &);
+    void                           push(TestStackMember);
+    TestStackMember                top();
+    TestStackMember                pop();
+    U64                            size();
+    std::optional<TestStackMember> at(SIZE);
+    std::optional<VIA_OPERAND>     find_symbol(const TestStackMember &);
 
 public:
-    U64 sp = 0;
+    U64                                 sp = 0;
     std::stack<FunctionNode::StackNode> function_stack;
 
 private:

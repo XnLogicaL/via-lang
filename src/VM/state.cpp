@@ -13,7 +13,7 @@ namespace via {
 using namespace impl;
 
 // Initializes and returns a new State object
-State::State(GState *G, ProgramData *program)
+State::State(GState *G, ProgramData &program)
     : id(G->threads++)
     , G(G)
     , gc(new GarbageCollector())
@@ -22,7 +22,7 @@ State::State(GState *G, ProgramData *program)
     , err(new ErrorState())
     , program(program)
 {
-    load(*program->bytecode);
+    load(*program.bytecode);
 
     TFunction *main = __create_main_function(this);
     __native_call(this, main, 0);

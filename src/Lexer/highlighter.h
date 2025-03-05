@@ -18,7 +18,7 @@ enum class OutputSeverity {
 
 class Emitter {
 public:
-    Emitter(ProgramData *program)
+    Emitter(ProgramData &program)
         : program(program)
     {
     }
@@ -27,12 +27,12 @@ public:
     void out_flat(std::string, OutputSeverity);
 
 private:
-    ProgramData *program;
+    ProgramData &program;
 
 private:
     std::vector<std::string> split_lines();
-    std::string get_severity_header(OutputSeverity);
-    std::string underline_line(int, int, int, const std::string &, OutputSeverity);
+    std::string              get_severity_header(OutputSeverity);
+    std::string              underline_line(int, int, int, const std::string &, OutputSeverity);
 };
 
 } // namespace via

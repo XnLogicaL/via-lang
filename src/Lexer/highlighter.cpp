@@ -16,8 +16,8 @@ namespace via {
 std::vector<std::string> Emitter::split_lines()
 {
     std::vector<std::string> lines;
-    std::istringstream stream(program->source);
-    std::string line;
+    std::istringstream       stream(program.source);
+    std::string              line;
 
     // Loop through lines and split them
     while (std::getline(stream, line))
@@ -44,11 +44,11 @@ std::string Emitter::get_severity_header(OutputSeverity sev)
 
 // Function to underline a portion of a line with a cursor (^) at the offset
 std::string Emitter::underline_line(
-    int line_number,
-    int offset,
-    int length,
+    int                line_number,
+    int                offset,
+    int                length,
     const std::string &message,
-    OutputSeverity sev
+    OutputSeverity     sev
 )
 {
     std::vector<std::string> lines = split_lines();
@@ -59,7 +59,7 @@ std::string Emitter::underline_line(
 
     // Lines are 1-based, vector is 0-based
     const std::string &line = lines[line_number - 1];
-    std::string underline;
+    std::string        underline;
 
     if (offset < 0 || offset >= static_cast<int>(line.size())) {
         return std::format("{} {}", get_severity_header(sev), message);
@@ -77,8 +77,8 @@ std::string Emitter::underline_line(
 
     // Leetcode mfers will absolutely HATE this
     // "oH iTs NoT O(1) bro" (shut the fuck up, go make your own language buddy)
-    std::string line_number_str = std::to_string(line_number);
-    int line_number_width = line_number_str.length();
+    std::string line_number_str   = std::to_string(line_number);
+    int         line_number_width = line_number_str.length();
 
     return get_severity_header(sev) + message + "\n" + line_number_str + " | " + line + "\n" +
            std::string(line_number_width, ' ') + " | " + underline;
@@ -94,16 +94,16 @@ void Emitter::out(U64 idx, std::string message, OutputSeverity sev)
     static bool has_printed_file_name = false;
 
     // Check if file information has been printed
-    if (!has_printed_file_name && program->file != "<repl>") {
+    if (!has_printed_file_name && program.file != "<repl>") {
         has_printed_file_name = true;
-        std::cout << std::format("In file {}:\n", program->file);
+        std::cout << std::format("In file {}:\n", program.file);
     }
 
     // Find token
-    Token tok = program->tokens->tokens.at(idx);
-    size_t line = tok.line;
-    size_t offset = tok.offset;
-    size_t length = tok.lexeme.length();
+    Token tok    = program.tokens->tokens.at(idx);
+    SIZE  line   = tok.line;
+    SIZE  offset = tok.offset;
+    SIZE  length = tok.lexeme.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 

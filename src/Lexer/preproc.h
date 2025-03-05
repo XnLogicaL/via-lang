@@ -14,17 +14,17 @@
 #include "macro.h"
 
 #define PREPROCESSOR_ERROR(message) \
-    { \
+    do { \
         emitter.out(pos, (message), OutputSeverity::Error); \
         failed = true; \
-    }
+    } while (0)
 
 namespace via {
 
 class Preprocessor {
 public:
     ~Preprocessor() = default;
-    Preprocessor(ProgramData *program)
+    Preprocessor(ProgramData &program)
         : program(program)
         , emitter(program)
     {
@@ -36,22 +36,22 @@ public:
     void declare_definition(Definition);
 
 private:
-    ProgramData *program;
-    Emitter emitter;
-    std::unordered_map<std::string, Macro> macro_table;
+    ProgramData                                &program;
+    Emitter                                     emitter;
+    std::unordered_map<std::string, Macro>      macro_table;
     std::unordered_map<std::string, Definition> def_table;
-    size_t pos = 0;
-    bool failed = false;
+    SIZE                                        pos    = 0;
+    bool                                        failed = false;
 
 private:
-    Token consume(size_t ahead = 1);
+    Token consume(SIZE ahead = 1);
     Token peek(int ahead = 0);
 
-    Macro parse_macro();
+    Macro      parse_macro();
     Definition parse_definition();
-    void expand_macro(const Macro &);
-    void expand_definition(const Definition &);
-    void erase_from_stream(size_t, size_t);
+    void       expand_macro(const Macro &);
+    void       expand_definition(const Definition &);
+    void       erase_from_stream(SIZE, SIZE);
 };
 
 } // namespace via

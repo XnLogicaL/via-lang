@@ -28,7 +28,7 @@ namespace via {
 
 class Compiler {
 public:
-    Compiler(ProgramData *program)
+    Compiler(ProgramData &program)
         : program(program)
     {
     }
@@ -39,7 +39,7 @@ private:
     bool check_global_collisions();
 
 private:
-    ProgramData *program;
+    ProgramData &program;
 };
 
 } // namespace via

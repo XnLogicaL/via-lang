@@ -15,10 +15,10 @@ namespace via {
 bool Compiler::generate()
 {
     RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
-    Emitter emitter(program);
-    StmtVisitor visitor(program, emitter, allocator);
+    Emitter           emitter(program);
+    StmtVisitor       visitor(program, emitter, allocator);
 
-    for (pStmtNode &stmt : program->ast->statements) {
+    for (pStmtNode &stmt : program.ast->statements) {
         stmt->accept(visitor);
     }
 
@@ -33,12 +33,12 @@ bool Compiler::check_global_collisions()
 {
     Emitter emitter(program);
 
-    bool failed = false;
+    bool                            failed = false;
     std::unordered_map<U32, Global> global_map;
 
-    for (const Global &global : program->globals->get()) {
-        U32 hash = hash_string(global.symbol.c_str());
-        auto it = global_map.find(hash);
+    for (const Global &global : program.globals->get()) {
+        U32  hash = hash_string(global.symbol.c_str());
+        auto it   = global_map.find(hash);
 
         if (it != global_map.end()) {
             failed = true;

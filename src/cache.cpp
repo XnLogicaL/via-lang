@@ -35,10 +35,10 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     }
 
     std::string file_name_hash = hash(file.file);
-    auto bin_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_BIN_EXT);
-    auto asm_path = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_ASM_EXT);
+    auto        bin_path       = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_BIN_EXT);
+    auto        asm_path       = path / VIA_CACHE_DIR_NAME / (file_name_hash + VIA_ASM_EXT);
 
-    bool failed = false;
+    bool          failed = false;
     std::ofstream ofs_bin(bin_path, std::ios::binary | std::ios::trunc);
     if (!ofs_bin.is_open()) {
         return CacheResult::FAIL;
@@ -50,7 +50,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     }
 
     // Helper lambda to write data
-    auto write_data = [&failed, &ofs_bin](const void *data, size_t size) {
+    auto write_data = [&failed, &ofs_bin](const void *data, SIZE size) {
         ofs_bin.write(static_cast<const char *>(data), size);
         if (!ofs_bin) {
             failed = true;
@@ -69,7 +69,7 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     write_data(file.bytecode.data(), file.bytecode.size());
     write_data(&file.checksum_b, sizeof(file.checksum_b));
 
-    for (const Bytecode &pair : file.program->bytecode->get()) {
+    for (const Bytecode &pair : file.program.bytecode->get()) {
         std::string instr_str = via::to_string(pair) + "\n";
         ofs_asm.write(instr_str.data(), instr_str.size());
     }
@@ -84,10 +84,10 @@ CacheResult CacheManager::write_cache(fs::path path, const CacheFile &file)
     return CacheResult::SUCCESS;
 }
 
-CacheFile CacheManager::read_cache(ProgramData *file)
+CacheFile CacheManager::read_cache(ProgramData &file)
 {
-    size_t offset = 0;
-    CacheFile cache_file{file};
+    SIZE        offset = 0;
+    CacheFile   cache_file{file};
     const char *raw_source = dup_string(file->source);
     // Ensure the file is large enough to contain the metadata.
     if (file->source.size() <

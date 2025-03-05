@@ -11,7 +11,7 @@ namespace via {
 // Minimal interpreter implementation for quick usage without touching the API
 class Interpreter {
 public:
-    Interpreter(ProgramData *program)
+    Interpreter(ProgramData &program)
         : program(program)
         , gstate(new GState())
         , state(new State(gstate, program))
@@ -25,12 +25,12 @@ public:
         delete state;
     }
 
-    int execute(ProgramData *);
+    int execute(ProgramData);
 
 public:
-    ProgramData *program;
-    GState *gstate;
-    State *state;
+    ProgramData &program;
+    GState      *gstate;
+    State       *state;
 
 private:
     void tokenize();

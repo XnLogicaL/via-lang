@@ -21,8 +21,8 @@ struct GarbageCollector {
 
 private:
     bool terminating = false;
-    size_t collections = 0;
-    size_t size = 0;
+    SIZE collections = 0;
+    SIZE size        = 0;
 
     std::vector<GCCleanupFunction> periodic_callback_list;
     std::vector<GCCleanupFunction> defered_callback_list;

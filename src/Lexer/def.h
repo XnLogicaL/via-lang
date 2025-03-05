@@ -10,11 +10,11 @@
 namespace via {
 
 struct Definition {
-    std::string identifier;
+    std::string        identifier;
     std::vector<Token> replacement;
-    size_t begin;
-    size_t end;
-    size_t line;
+    SIZE               begin;
+    SIZE               end;
+    SIZE               line;
 };
 
 } // namespace via

@@ -27,7 +27,7 @@ U64 TestStack::size()
     return sp;
 }
 
-std::optional<TestStackMember> TestStack::at(size_t pos)
+std::optional<TestStackMember> TestStack::at(SIZE pos)
 {
     if (pos > size()) {
         return std::nullopt;

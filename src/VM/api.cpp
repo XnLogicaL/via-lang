@@ -30,7 +30,7 @@ void set_register(State *V, U32 reg, const TValue &val)
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
     TValue *addr = V->registers + reg;
-    *addr = val.clone();
+    *addr        = val.clone();
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
@@ -85,13 +85,13 @@ TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
 
     switch (val.type) {
     case integer: {
-        std::string str = std::to_string(val.val_integer);
-        TString *tstr = new TString(V, str.c_str());
+        std::string str  = std::to_string(val.val_integer);
+        TString    *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
     case floating_point: {
-        std::string str = std::to_string(val.val_integer);
-        TString *tstr = new TString(V, str.c_str());
+        std::string str  = std::to_string(val.val_integer);
+        TString    *tstr = new TString(V, str.c_str());
         return TValue(tstr);
     }
     case boolean: {
@@ -117,15 +117,15 @@ TValue to_string(State *VIA_RESTRICT V, const TValue &val) noexcept
     }
     case function: {
         const void *faddr = val.cast_ptr<TFunction>();
-        std::string str = std::format("<function@{}>", faddr);
-        TString *tstr = new TString(V, str.c_str());
+        std::string str   = std::format("<function@{}>", faddr);
+        TString    *tstr  = new TString(V, str.c_str());
         return TValue(tstr);
     }
     case cfunction: {
         // This has to be explicitly casted because function pointers be weird
         const void *cfaddr = val.cast_ptr<TCFunction>();
-        std::string str = std::format("<cfunction@{}>", cfaddr);
-        TString *tstr = new TString(V, str.c_str());
+        std::string str    = std::format("<cfunction@{}>", cfaddr);
+        TString    *tstr   = new TString(V, str.c_str());
         return TValue(tstr);
     }
     default:
@@ -249,7 +249,7 @@ const TValue &get_local(State *VIA_RESTRICT V, U32 offset) noexcept
         return nil;
 
     TValue *stack_address = V->sbp + offset;
-    TValue &val = *stack_address;
+    TValue &val           = *stack_address;
     return val;
 }
 
@@ -264,7 +264,7 @@ void set_local(State *VIA_RESTRICT V, U32 offset, const TValue &val)
     }
 
     TValue *stack_address = V->sbp + offset;
-    *stack_address = val.clone();
+    *stack_address        = val.clone();
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
@@ -308,15 +308,15 @@ const TValue &get_argument(State *VIA_RESTRICT V, U32 offset) noexcept
 
 // Performs a native return operation, restores the stack and some other state
 // information.
-void native_return(State *VIA_RESTRICT V, size_t retc) noexcept
+void native_return(State *VIA_RESTRICT V, SIZE retc) noexcept
 {
     std::vector<TValue> ret_values;
     // Restore state
-    V->ip = V->frame->ret_addr;
+    V->ip    = V->frame->ret_addr;
     V->frame = V->frame->caller;
 
     // Save return values
-    for (size_t i = 0; i < retc; i++) {
+    for (SIZE i = 0; i < retc; i++) {
         TValue ret_val = pop(V);
         ret_values.push_back(std::move(ret_val));
     }
@@ -325,7 +325,7 @@ void native_return(State *VIA_RESTRICT V, size_t retc) noexcept
     V->sp = V->ssp;
 
     // Clean up arguments
-    for (size_t i = 0; i < V->argc; i++)
+    for (SIZE i = 0; i < V->argc; i++)
         pop(V);
 
     // Restore return values
@@ -334,22 +334,22 @@ void native_return(State *VIA_RESTRICT V, size_t retc) noexcept
 }
 
 // Calls a native function.
-void native_call(State *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, size_t argc) noexcept
+void native_call(State *VIA_RESTRICT V, TFunction *VIA_RESTRICT callee, SIZE argc) noexcept
 {
     // Save state
-    callee->caller = V->frame;
+    callee->caller   = V->frame;
     callee->ret_addr = V->ip;
 
     // Setup call information
     V->frame = callee;
-    V->ip = callee->bytecode;
-    V->argc = argc;
-    V->ssp = V->sp;
+    V->ip    = callee->bytecode;
+    V->argc  = argc;
+    V->ssp   = V->sp;
 }
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-void extern_call(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, size_t argc) noexcept
+void extern_call(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, SIZE argc) noexcept
 {
     /* Stack allocate id string
         15 additional characters:
@@ -374,7 +374,7 @@ void extern_call(State *VIA_RESTRICT V, TCFunction *VIA_RESTRICT cf, size_t argc
 }
 
 // Calls a table method.
-void method_call(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, U32 key, size_t argc) noexcept
+void method_call(State *VIA_RESTRICT V, TTable *VIA_RESTRICT tbl, U32 key, SIZE argc) noexcept
 {
     const TValue &method = get_table(tbl, key, true);
 
@@ -398,7 +398,7 @@ TValue type(State *VIA_RESTRICT V, const TValue &val) noexcept
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-void call(State *VIA_RESTRICT V, const TValue &val, size_t argc) noexcept
+void call(State *VIA_RESTRICT V, const TValue &val, SIZE argc) noexcept
 {
     V->calltype = CallType::CALL;
 
@@ -423,8 +423,8 @@ TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
         return TValue(static_cast<int>(strlen(val.cast_ptr<TString>()->data)));
     }
     else if (check_table(val)) {
-        U32 metamethod_key = hash_string("__len");
-        const TValue &metamethod = get_table(val.cast_ptr<TTable>(), metamethod_key, true);
+        U32           metamethod_key = hash_string("__len");
+        const TValue &metamethod     = get_table(val.cast_ptr<TTable>(), metamethod_key, true);
 
         if (check_nil(metamethod)) {
             return TValue(static_cast<int>(val.cast_ptr<TTable>()->data.size()));
@@ -443,8 +443,8 @@ TValue len(State *VIA_RESTRICT V, const TValue &val) noexcept
 TValue typeofv(State *VIA_RESTRICT V, const TValue &val) noexcept
 {
     if (check_table(val)) {
-        TTable *tbl = val.cast_ptr<TTable>();
-        const TValue &ty = get_table(tbl, hash_string("__type"), true);
+        TTable       *tbl = val.cast_ptr<TTable>();
+        const TValue &ty  = get_table(tbl, hash_string("__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
         if (check_nil(ty)) {
@@ -510,7 +510,7 @@ void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueType type)
         break;
     }
     case integer: {
-        int num = to_cxx_number<int>(val);
+        int num         = to_cxx_number<int>(val);
         val.val_integer = num;
         break;
     }
@@ -518,8 +518,8 @@ void strong_primtive_cast(State *VIA_RESTRICT V, TValue &val, ValueType type)
         val.val_boolean = to_cxx_bool(val);
         break;
     case string: {
-        TValue non_owned_val = to_string(V, val);
-        TString *owned = val.cast_ptr<TString>();
+        TValue   non_owned_val = to_string(V, val);
+        TString *owned         = val.cast_ptr<TString>();
 
         val.val_pointer = new TString(V, non_owned_val.cast_ptr<TString>()->data);
 

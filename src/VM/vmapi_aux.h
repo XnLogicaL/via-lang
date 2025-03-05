@@ -24,7 +24,7 @@ VIA_INLINE void __closure_upvs_resize(TFunction *_Closure)
     _Closure->upv_count = _New_size;
 }
 
-VIA_INLINE bool __closure_upvs_range_check(TFunction *_Closure, size_t index)
+VIA_INLINE bool __closure_upvs_range_check(TFunction *_Closure, SIZE index)
 {
     return _Closure->upv_count >= index;
 }

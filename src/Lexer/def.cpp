@@ -10,8 +10,8 @@ namespace via {
 Definition Preprocessor::parse_definition()
 {
     Definition def;
-    def.begin = pos;
-    std::vector<Token> toks = program->tokens->tokens;
+    def.begin               = pos;
+    std::vector<Token> toks = program.tokens->tokens;
 
     // Ensure there are enough tokens to parse
     if (pos >= toks.size())
@@ -27,7 +27,7 @@ Definition Preprocessor::parse_definition()
 
     // Consume 'define' keyword and extract identifier
     consume();
-    def.line = peek().line;
+    def.line       = peek().line;
     def.identifier = consume().lexeme;
 
     // Check and consume opening parenthesis
@@ -44,7 +44,7 @@ Definition Preprocessor::parse_definition()
 
     // Consume closing parenthesis
     ++pos;
-    def.end = pos;
+    def.end                   = pos;
     def_table[def.identifier] = def;
 
     return def;
@@ -52,10 +52,10 @@ Definition Preprocessor::parse_definition()
 
 void Preprocessor::expand_definition(const Definition &def)
 {
-    std::vector<Token> toks = program->tokens->tokens;
+    std::vector<Token> toks = program.tokens->tokens;
 
     // Iterate through all tokens in the program
-    for (size_t i = 0; i < toks.size(); ++i) {
+    for (SIZE i = 0; i < toks.size(); ++i) {
         const Token &tok = toks.at(i);
 
         // If we find the definition identifier, replace it

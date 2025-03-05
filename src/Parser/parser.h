@@ -32,22 +32,22 @@ public:
 
 private:
     std::string message;
-    U64 position;
+    U64         position;
 };
 
 class Parser {
 public:
-    Parser(ProgramData *program)
+    Parser(ProgramData &program)
         : program(program)
         , emitter(program)
     {
     }
 
-    bool parse_program() noexcept;
+    bool parse() noexcept;
 
 private:
-    ProgramData *program;
-    Emitter emitter;
+    ProgramData &program;
+    Emitter      emitter;
 
     U64 position = 0;
 

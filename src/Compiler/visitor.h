@@ -18,7 +18,7 @@
         VIA_ASSERT(false, "invalid visit"); \
     }
 
-#define PUSH_K(constant) program->constants->push_constant(constant);
+#define PUSH_K(constant) program.constants->push_constant(constant);
 #define IS_INHERITOR(obj, inheritor) \
     (std::type_index(typeid(obj)) == std::type_index(typeid(inheritor)))
 #define IS_CONSTEXPR(obj) IS_INHERITOR(obj, LiteralNode)
@@ -83,7 +83,7 @@ protected:
 
 class ExprVisitor : public NodeVisitor {
 public:
-    ExprVisitor(ProgramData *program, Emitter &emitter, RegisterAllocator &allocator)
+    ExprVisitor(ProgramData &program, Emitter &emitter, RegisterAllocator &allocator)
         : program(program)
         , emitter(emitter)
         , allocator(allocator)
@@ -99,14 +99,14 @@ public:
     void visit(BinaryNode &, VIA_OPERAND) override;
 
 private:
-    ProgramData *program;
-    Emitter &emitter;
+    ProgramData       &program;
+    Emitter           &emitter;
     RegisterAllocator &allocator;
 };
 
 class StmtVisitor : public NodeVisitor {
 public:
-    StmtVisitor(ProgramData *program, Emitter &emitter, RegisterAllocator &allocator)
+    StmtVisitor(ProgramData &program, Emitter &emitter, RegisterAllocator &allocator)
         : program(program)
         , emitter(emitter)
         , allocator(allocator)
@@ -128,10 +128,10 @@ public:
     }
 
 private:
-    ProgramData *program;
-    Emitter &emitter;
+    ProgramData       &program;
+    Emitter           &emitter;
     RegisterAllocator &allocator;
-    ExprVisitor expression_visitor;
+    ExprVisitor        expression_visitor;
 };
 
 class PrintVisitor : public NodeVisitor {

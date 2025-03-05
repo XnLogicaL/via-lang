@@ -57,7 +57,7 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
         }
 
         std::unordered_set<TFunction *> visited;
-        size_t                          _Idx = 0;
+        SIZE                            _Idx = 0;
 
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
@@ -83,13 +83,13 @@ VIA_MAXOPTIMIZE TValue *__get_register(State *_V, U32 _Reg)
     return addr;
 }
 
-VIA_INLINE TValue __get_constant(State *_V, size_t _Idx)
+VIA_INLINE TValue __get_constant(State *_V, SIZE _Idx)
 {
-    if (_Idx >= _V->program->constants->size()) {
+    if (_Idx >= _V->program.constants->size()) {
         return _Nil.clone();
     }
 
-    return _V->program->constants->at(_Idx).clone();
+    return _V->program.constants->at(_Idx).clone();
 }
 
 VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
@@ -174,7 +174,7 @@ VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
     return __type(_V, _Val);
 }
 
-VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, size_t _Argc)
+VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, SIZE _Argc)
 {
     _Callee->caller   = _V->frame;
     _Callee->ret_addr = _V->ip;
@@ -184,7 +184,7 @@ VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, size_t _Argc)
     _V->ssp           = _V->sp;
 }
 
-VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, size_t _Argc)
+VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, SIZE _Argc)
 {
     char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
     const void *_Addr    = _Callee;
@@ -214,7 +214,7 @@ VIA_MAXOPTIMIZE void __method_call(
     State *VIA_RESTRICT  _V,
     TTable *VIA_RESTRICT _Tbl,
     U32                  _Key,
-    size_t               _Argc
+    SIZE                 _Argc
 ) noexcept
 {
     const TValue &_Method = __get_table(_Tbl, _Key, true);
@@ -226,7 +226,7 @@ VIA_MAXOPTIMIZE void __method_call(
     }
 }
 
-VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, size_t _Argc)
+VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, SIZE _Argc)
 {
     _V->calltype = CallType::CALL;
 
@@ -266,20 +266,20 @@ VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, size_t _Retc) noexcept
+VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, SIZE _Retc) noexcept
 {
     std::vector<TValue> _Ret_values;
     _V->ip    = _V->frame->ret_addr;
     _V->frame = _V->frame->caller;
 
-    for (size_t i = 0; i < _Retc; i++) {
+    for (SIZE i = 0; i < _Retc; i++) {
         TValue _Ret_val = __pop(_V);
         _Ret_values.push_back(std::move(_Ret_val));
     }
 
     _V->sp = _V->ssp;
 
-    for (size_t i = 0; i < _V->argc; i++) {
+    for (SIZE i = 0; i < _V->argc; i++) {
         __pop(_V);
     }
 

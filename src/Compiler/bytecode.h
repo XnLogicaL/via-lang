@@ -29,7 +29,7 @@ namespace via {
 
 class BytecodeHolder {
 public:
-    BytecodeHolder(ProgramData *program)
+    BytecodeHolder(ProgramData &program)
         : program(program)
     {
     }
@@ -37,22 +37,22 @@ public:
     void add(const Bytecode &);
     void remove(U64 index);
     void insert(
-        U64 index = 0,
-        OpCode opcode = OpCode::NOP,
+        U64                               index    = 0,
+        OpCode                            opcode   = OpCode::NOP,
         const std::array<VIA_OPERAND, 3> &operands = {},
-        const std::string &comment = ""
+        const std::string                &comment  = ""
     );
 
     void emit(
-        OpCode opcode = OpCode::NOP,
+        OpCode                            opcode   = OpCode::NOP,
         const std::array<VIA_OPERAND, 3> &operands = {},
-        const std::string &comment = ""
+        const std::string                &comment  = ""
     );
 
     std::vector<Bytecode> &get();
 
 private:
-    ProgramData *program;
+    ProgramData          &program;
     std::vector<Bytecode> instructions;
 };
 

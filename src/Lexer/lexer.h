@@ -21,7 +21,7 @@ namespace via {
 // Can be used universally, has no dependencies, as seen in both viac and viaVM bytecode parser
 class Tokenizer {
 public:
-    Tokenizer(ProgramData *program)
+    Tokenizer(ProgramData &program)
         : program(program)
     {
     }
@@ -32,32 +32,32 @@ public:
 
 private:
     bool is_hex_char(char);
-    size_t source_size();
-    char peek(size_t ahead = 0);
-    char consume(size_t ahead = 1);
+    SIZE source_size();
+    char peek(SIZE ahead = 0);
+    char consume(SIZE ahead = 1);
 
     // Starts reading a "number" literal
     // Which can be a negative/positive floating point or integer
-    Token read_number(size_t);
+    Token read_number(SIZE);
     // Reads an alpha-numeric identifier
     // Cannot start with a numeric character
-    Token read_ident(size_t);
+    Token read_ident(SIZE);
     // Reads a string literal that can be denoted with quotes
-    Token read_string(size_t);
+    Token read_string(SIZE);
     // Reads and returns the current token
     Token get_token();
 
 private:
-    ProgramData *program;
-    size_t pos = 0;
-    size_t line = 1;
-    size_t offset = 0;
+    ProgramData &program;
+    SIZE         pos    = 0;
+    SIZE         line   = 1;
+    SIZE         offset = 0;
 };
 
 VIA_INLINE std::vector<Token> fast_tokenize(std::string source)
 {
-    ProgramData program("<unknown>", source);
-    Tokenizer tokenizer(&program);
+    ProgramData &program("<unknown>", source);
+    Tokenizer    tokenizer(&program);
     tokenizer.tokenize();
 
     if (!program.tokens) {

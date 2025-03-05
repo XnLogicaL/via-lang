@@ -34,7 +34,7 @@ bool Interpreter::preprocess()
 bool Interpreter::parse()
 {
     Parser parser(program);
-    bool failed = parser.parse_program();
+    bool   failed = parser.parse();
 
     INTP_CHECK_FAILED_INTERNAL(Parser);
 
@@ -44,7 +44,7 @@ bool Interpreter::parse()
 bool Interpreter::compile()
 {
     Compiler compiler(program);
-    bool failed = compiler.generate();
+    bool     failed = compiler.generate();
 
     INTP_CHECK_FAILED_INTERNAL(Compiler);
 
@@ -53,12 +53,12 @@ bool Interpreter::compile()
 
 void Interpreter::interpret()
 {
-    state->load(*program->bytecode);
+    state->load(*program.bytecode);
     via::execute(state);
     via::pause_thread(state);
 }
 
-int Interpreter::execute(ProgramData *program_data)
+int Interpreter::execute(ProgramData &program_data)
 {
     program = program_data;
 

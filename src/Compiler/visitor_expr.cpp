@@ -15,23 +15,23 @@ void ExprVisitor::visit(LiteralNode &literal_node, VIA_OPERAND dst)
 {
     using enum ValueType;
 
-    TValue constant = construct_constant(literal_node);
-    VIA_OPERAND constant_id = PUSH_K(constant);
+    TValue      constant     = construct_constant(literal_node);
+    VIA_OPERAND constant_id  = PUSH_K(constant);
     std::string value_string = ""; //to_cxx_string(nullptr, constant);
-    program->bytecode->emit(LOADK, {dst, constant_id}, value_string);
+    program.bytecode->emit(LOADK, {dst, constant_id}, value_string);
 }
 
 void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 {
     Token var_id = variable_node.identifier;
 
-    std::string symbol = var_id.lexeme;
-    std::optional<VIA_OPERAND> stk_id = program->test_stack->find_symbol({
+    std::string                symbol = var_id.lexeme;
+    std::optional<VIA_OPERAND> stk_id = program.test_stack->find_symbol({
         var_id.lexeme,
     });
 
     if (stk_id.has_value()) {
-        program->bytecode->emit(
+        program.bytecode->emit(
             GETSTACK,
             {
                 dst,
@@ -42,9 +42,9 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 
         return;
     }
-    else if (program->globals->was_declared(symbol)) {
+    else if (program.globals->was_declared(symbol)) {
         U32 symbol_hash = hash_string(symbol.c_str());
-        program->bytecode->emit(
+        program.bytecode->emit(
             GETGLOBAL,
             {
                 dst,
@@ -56,12 +56,12 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 
         return;
     }
-    else if (!program->test_stack->function_stack.empty()) {
-        U16 index = 0;
-        const auto &top = program->test_stack->function_stack.top();
+    else if (!program.test_stack->function_stack.empty()) {
+        U16         index = 0;
+        const auto &top   = program.test_stack->function_stack.top();
         for (const auto &parameter : top.parameters) {
             if (parameter.identifier.lexeme == symbol) {
-                program->bytecode->emit(GETARGUMENT, {dst, index});
+                program.bytecode->emit(GETARGUMENT, {dst, index});
                 return;
             }
 
@@ -78,7 +78,7 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
 void ExprVisitor::visit(UnaryNode &unary_node, VIA_OPERAND dst)
 {
     unary_node.accept(*this, dst);
-    program->bytecode->emit(NEG, {dst});
+    program.bytecode->emit(NEG, {dst});
 }
 
 void ExprVisitor::visit(GroupNode &group_node, VIA_OPERAND dst)
@@ -88,7 +88,7 @@ void ExprVisitor::visit(GroupNode &group_node, VIA_OPERAND dst)
 
 void ExprVisitor::visit(CallNode &call_node, VIA_OPERAND dst)
 {
-    VIA_OPERAND argc = call_node.arguments.size();
+    VIA_OPERAND argc       = call_node.arguments.size();
     VIA_OPERAND callee_reg = allocator.allocate_register();
     call_node.callee->accept(*this, callee_reg);
 
@@ -96,12 +96,12 @@ void ExprVisitor::visit(CallNode &call_node, VIA_OPERAND dst)
         VIA_OPERAND argument_reg = allocator.allocate_register();
         argument->accept(*this, argument_reg);
 
-        program->bytecode->emit(PUSH, {argument_reg});
+        program.bytecode->emit(PUSH, {argument_reg});
         allocator.free_register(argument_reg);
     }
 
-    program->bytecode->emit(CALL, {callee_reg, argc});
-    program->bytecode->emit(POP, {dst});
+    program.bytecode->emit(CALL, {callee_reg, argc});
+    program.bytecode->emit(POP, {dst});
     allocator.free_register(callee_reg);
 }
 
@@ -113,7 +113,7 @@ void ExprVisitor::visit(IndexNode &index_node, VIA_OPERAND dst)
     VIA_OPERAND index_reg = allocator.allocate_register();
     index_node.index->accept(*this, index_reg);
 
-    program->bytecode->emit(GET, {dst, obj_reg, index_reg});
+    program.bytecode->emit(GET, {dst, obj_reg, index_reg});
     allocator.free_register(obj_reg);
     allocator.free_register(index_reg);
 }
@@ -164,14 +164,14 @@ void ExprVisitor::visit(BinaryNode &binary_node, VIA_OPERAND dst)
 
         lhs.accept(*this, dst);
 
-        TValue right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
-        VIA_OPERAND right_const_id = PUSH_K(right_const_val);
+        TValue      right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
+        VIA_OPERAND right_const_id  = PUSH_K(right_const_val);
 
-        program->bytecode->emit(opcode, {dst, right_const_id});
+        program.bytecode->emit(opcode, {dst, right_const_id});
     }
     else {
-        OpCode opcode = static_cast<OpCode>(opcode_id);
-        VIA_OPERAND reg = allocator.allocate_register();
+        OpCode      opcode = static_cast<OpCode>(opcode_id);
+        VIA_OPERAND reg    = allocator.allocate_register();
 
         if (rhs.precedence() > lhs.precedence()) {
             rhs.accept(*this, dst);
@@ -182,7 +182,7 @@ void ExprVisitor::visit(BinaryNode &binary_node, VIA_OPERAND dst)
             rhs.accept(*this, reg);
         }
 
-        program->bytecode->emit(opcode, {dst, reg});
+        program.bytecode->emit(opcode, {dst, reg});
         allocator.free_register(reg);
     }
 }

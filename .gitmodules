@@ -7,3 +7,6 @@
 [submodule "ArenaAllocator"]
 	path = ArenaAllocator
 	url = https://github.com/XnLogicaL/ArenaAllocator
+[submodule "argparse"]
+	path = argparse
+	url = https://github.com/p-ranav/argparse.git

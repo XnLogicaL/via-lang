@@ -23,17 +23,17 @@ Token Parser::current()
 
 Token Parser::peek(int ahead)
 {
-    if (position + ahead >= program->tokens->tokens.size()) {
+    if (position + ahead >= program.tokens->tokens.size()) {
         return Token();
     }
 
-    return program->tokens->tokens[position + ahead];
+    return program.tokens->tokens[position + ahead];
 }
 
 Token Parser::consume(U32 ahead)
 {
     U64 new_pos = position + static_cast<U64>(ahead);
-    if (new_pos >= program->tokens->tokens.size()) {
+    if (new_pos >= program.tokens->tokens.size()) {
         throw ParserError(
             std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
         );
@@ -92,7 +92,7 @@ pExprNode Parser::parse_primary()
         case LIT_STRING:
             return std::make_unique<LiteralNode>(token, token.lexeme);
         case OP_SUB: {
-            Token op = token;
+            Token     op   = token;
             pExprNode expr = parse_primary();
             return std::make_unique<UnaryNode>(std::move(expr));
         }
@@ -176,9 +176,9 @@ pExprNode Parser::parse_binary(int precedence)
 {
     pExprNode lhs = parse_postfix(parse_primary());
 
-    while (position < program->tokens->tokens.size() && current().is_operator()) {
-        Token op = current();
-        int op_prec = op.bin_prec();
+    while (position < program.tokens->tokens.size() && current().is_operator()) {
+        Token op      = current();
+        int   op_prec = op.bin_prec();
         if (op_prec < precedence) {
             break;
         }
@@ -199,12 +199,12 @@ pStmtNode Parser::parse_declaration()
 {
     using ParameterNode = FunctionNode::ParameterNode;
 
-    Token declaration_keyword = consume();
-    TokenType declaration_type = declaration_keyword.type;
+    Token     declaration_keyword = consume();
+    TokenType declaration_type    = declaration_keyword.type;
 
-    bool is_local = declaration_type == KW_LOCAL;
+    bool is_local  = declaration_type == KW_LOCAL;
     bool is_global = declaration_type == KW_GLOBAL;
-    bool is_const = declaration_type == KW_CONST;
+    bool is_const  = declaration_type == KW_CONST;
 
     if (is_local && current().type == KW_CONST) {
         is_const = true;
@@ -298,16 +298,16 @@ pStmtNode Parser::parse_if()
     consume();
 
     pExprNode condition = parse_expr();
-    pStmtNode scope = parse_scope();
+    pStmtNode scope     = parse_scope();
 
     std::optional<pStmtNode> else_scope;
-    std::vector<ElseIfNode> elseif_nodes;
+    std::vector<ElseIfNode>  elseif_nodes;
 
     while (current().type == KW_ELIF) {
         consume();
 
         pExprNode elseif_condition = parse_expr();
-        pStmtNode elseif_scope = parse_scope();
+        pStmtNode elseif_scope     = parse_scope();
 
         ElseIfNode elseif(std::move(elseif_condition), std::move(elseif_scope));
         elseif_nodes.emplace_back(std::move(elseif));
@@ -333,7 +333,7 @@ pStmtNode Parser::parse_while()
     consume();
 
     pExprNode condition = parse_expr();
-    pStmtNode body = parse_scope();
+    pStmtNode body      = parse_scope();
 
     return std::make_unique<WhileNode>(std::move(condition), std::move(body));
 }
@@ -381,7 +381,7 @@ pStmtNode Parser::parse_stmt()
     return nullptr; // Yes, this is redundant, shut up
 }
 
-bool Parser::parse_program() noexcept
+bool Parser::parse() noexcept
 {
     bool failed = false;
     while (!failed) {
@@ -391,7 +391,7 @@ bool Parser::parse_program() noexcept
 
         try {
             pStmtNode stmt = parse_stmt();
-            program->ast->statements.emplace_back(std::move(stmt));
+            program.ast->statements.emplace_back(std::move(stmt));
         }
         catch (const ParserError &e) {
             failed = true;

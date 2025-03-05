@@ -12,7 +12,7 @@ namespace via {
 // - Restricted access to keywords, specifically the preprocessor keywords
 void Preprocessor::expand_macro(const Macro &macro)
 {
-    std::vector<Token> toks = program->tokens->tokens;
+    std::vector<Token> toks = program.tokens->tokens;
 
     while (pos < toks.size()) {
         const Token &tok = peek();
@@ -21,13 +21,13 @@ void Preprocessor::expand_macro(const Macro &macro)
         if (tok.lexeme.ends_with('!') &&
             tok.lexeme.substr(0, tok.lexeme.length() - 1) == macro.name && pos + 1 < toks.size() &&
             peek(1).type == TokenType::PAREN_OPEN) {
-            size_t start_pos = pos;
+            SIZE start_pos = pos;
             consume(2); // Consume macro_name! and the opening parenthesis
 
             // Parse macro arguments
             std::vector<std::vector<Token>> macro_args;
-            std::vector<Token> current_arg;
-            size_t depth = 1;
+            std::vector<Token>              current_arg;
+            SIZE                            depth = 1;
 
             // Loop to parse arguments within parentheses
             while (pos < toks.size()) {
@@ -82,7 +82,7 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Map parameter names to their arguments
             std::unordered_map<std::string, std::vector<Token>> arg_map;
-            for (size_t i = 0; i < macro.params.size(); ++i)
+            for (SIZE i = 0; i < macro.params.size(); ++i)
                 arg_map[macro.params[i]] = macro_args[i];
 
             // Replace parameters in the macro body
@@ -113,7 +113,7 @@ void Preprocessor::expand_macro(const Macro &macro)
 
 Macro Preprocessor::parse_macro()
 {
-    std::vector<Token> toks = program->tokens->tokens;
+    std::vector<Token> toks = program.tokens->tokens;
     // Consume 'macro' keyword
     pos++;
 
@@ -129,9 +129,9 @@ Macro Preprocessor::parse_macro()
         ));
 
     Macro mac;
-    mac.line = peek().line;
+    mac.line  = peek().line;
     mac.begin = pos - 1;
-    mac.name = consume().lexeme;
+    mac.name  = consume().lexeme;
 
     // Expect opening parenthesis
     if (pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
@@ -174,7 +174,7 @@ Macro Preprocessor::parse_macro()
 
     consume(); // Consume '}'
 
-    mac.end = pos;
+    mac.end               = pos;
     macro_table[mac.name] = mac;
 
     return mac;

@@ -6,7 +6,6 @@
 
 #include "common.h"
 #include "cache.h"
-#include "encoder.h"
 #include "signal.h"
 #include "fileio.h"
 #include "modifiable_once.h"

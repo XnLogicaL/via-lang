@@ -46,6 +46,7 @@
 #include "arena.h"
 // Internal imports
 #include "token.h"
+#include "common_nodep.h"
 #include "program.h"
 
 #define ASMJIT_STATIC
@@ -83,19 +84,6 @@ struct TString;
 struct TFunction;
 struct TCFunction;
 
-// Thanks Terry A. Davis (R.I.P. king) for the idea
-using U8  = std::uint8_t;
-using U16 = std::uint16_t;
-using U32 = std::uint32_t;
-using U64 = std::uint64_t;
-
-using I8  = std::int8_t;
-using I16 = std::int16_t;
-using I32 = std::int32_t;
-using I64 = std::uint64_t;
-
-using SIZE = std::size_t;
-
 VIA_FORCEINLINE char *dup_string(const char *str)
 {
     char *chars = new char[std::strlen(str) + 1];
@@ -129,17 +117,17 @@ VIA_INLINE std::string memdump(const void *ptr, U64 size)
 
     oss << "Memory dump at: " << ptr << " (size: " << size << " bytes)\n";
 
-    for (size_t i = 0; i < size; i += 16) {
+    for (SIZE i = 0; i < size; i += 16) {
         oss << std::setw(6) << std::setfill('0') << std::hex << i << " | ";
 
-        for (size_t j = 0; j < 16 && i + j < size; ++j) {
+        for (SIZE j = 0; j < 16 && i + j < size; ++j) {
             oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(bytePtr[i + j])
                 << " ";
         }
 
         oss << " | ";
 
-        for (size_t j = 0; j < 16 && i + j < size; ++j) {
+        for (SIZE j = 0; j < 16 && i + j < size; ++j) {
             char c = bytePtr[i + j];
             oss << (c >= 32 && c <= 126 ? c : '.');
         }

@@ -90,7 +90,7 @@ TValue::~TValue()
     }
 
     this->val_pointer = nullptr;
-    this->type = nil;
+    this->type        = nil;
 }
 
 TValue TValue::clone() const noexcept
@@ -123,20 +123,20 @@ TString::TString(State *V, const char *str)
     // For compiler compatability
     if (V != nullptr) {
         std::unordered_map<U32, TString *> stable = V->G->stable;
-        auto it = stable.find(hash);
+        auto                               it     = stable.find(hash);
         if (it != stable.end()) { // String already exists, return the existing entry
             // *this = *it->second;
             return;
         }
     }
 
-    size_t slen = std::strlen(str);
+    SIZE  slen = std::strlen(str);
     char *sptr = new char[slen + 1];
 
     // Copy the constant string into the owned string
     std::strcpy(sptr, str);
 
-    this->len = slen;
+    this->len  = slen;
     this->data = sptr;
     this->hash = hash;
 

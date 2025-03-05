@@ -2,19 +2,14 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#include "cmdparser.h"
-#include "interpreter.h"
 #include "linenoise.hpp"
+#include "argparse.hpp"
 #include "fileio.h"
 #include "via.h"
 
-using namespace via;
-
-static constexpr const char USAGE[] = "Invalid command\n Usage: via <subcommand> <arguments>\n";
 static constexpr const char REPL_WELCOME[] =
-    "via-lang Copyright (C) 2024 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
-    "Use ';help' to see a list of commands.\n"
-    "WARNING: repl has not been fully implemented.\n";
+    "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
+    "Use ';help' to see a list of commands.\n";
 static constexpr const char REPL_HELP[] =
     "repl commands:\n"
     "  ;quit - Quits repl\n"
@@ -22,189 +17,143 @@ static constexpr const char REPL_HELP[] =
     "  ;exitinfo - Displays the last exit info returned by the VM\n";
 static constexpr const char REPL_HEAD[] = ">> ";
 
-static Emitter cli_emitter(nullptr);
-
-void handle_compile(const std::vector<std::string> &args)
+via::ProgramData handle_compile(argparse::ArgumentParser &subcommand_parser)
 {
-#define HAS_FLAG(flag) \
-    ({ \
-        auto it = std::ranges::find(args, flag); \
-        it != args.end(); \
-    })
+    using namespace via;
 
-#define CHECK_SUBPROC_FAIL \
-    if (failed) { \
-        if (flag_verbose) { \
-            cli_emitter.out_flat("Compilation failed", OutputSeverity::Error); \
-        } \
-        return; \
+    using enum via::OutputSeverity;
+    using enum via::TokenType;
+
+    const auto get_flag = [&subcommand_parser](const std::string &flag) constexpr -> bool {
+        return subcommand_parser.get<bool>(flag);
+    };
+
+    const auto print_flag_label = [](const std::string &flag) constexpr -> void {
+        std::cout << std::format("flag [{}]:\n", flag);
+    };
+
+    const bool verbosity_flag = get_flag("--verbose");
+
+    std::string file              = subcommand_parser.get<std::string>("target");
+    std::string source            = utils::read_from_file(file);
+    const auto  compilation_start = std::chrono::steady_clock::now();
+
+    ProgramData  program(file, source);
+    Emitter      local_emitter(program);
+    Tokenizer    lexer(program);
+    Preprocessor preprocessor(program);
+    Parser       parser(program);
+    Compiler     compiler(program);
+
+    if (verbosity_flag) {
+        local_emitter.out_flat("Compilation started", Info);
     }
 
-    if (args.empty()) {
-        cli_emitter.out_flat("no input found", OutputSeverity::Error);
-        std::exit(1);
-    }
-
-    bool failed;
-
-    bool flag_verbose = HAS_FLAG("--verbose") || HAS_FLAG("-v");
-    bool flag_cache = HAS_FLAG("--cache") || HAS_FLAG("-c");
-    bool flag_dump_tokens = HAS_FLAG("--dump-tokens");
-    bool flag_dump_ast = HAS_FLAG("--dump-ast");
-    bool flag_dump_bytecode = HAS_FLAG("--dump-bytecode");
-    bool flag_dump_ktable = HAS_FLAG("--dump-ktable");
-
-    std::string input = args.at(0);
-    std::string input_code = via::utils::read_from_file(input);
-
-    ProgramData program(input, input_code);
-
-    Tokenizer lexer(&program);
     lexer.tokenize();
+    preprocessor.declare_default();
 
-    if (flag_dump_tokens) {
-        std::cout << "\nflag [--dump-tokens]:\n";
-        for (const Token &tok : program.tokens->tokens) {
-            std::cout << tok.to_string() << "\n";
+    bool failed = preprocessor.preprocess() || parser.parse() || compiler.generate();
+    if (verbosity_flag) {
+        if (failed) {
+            local_emitter.out_flat("Compilation failed", Error);
+            return program;
+        }
+
+        auto   compilation_end = std::chrono::steady_clock::now();
+        double compilation_time =
+            std::chrono::duration<double, std::milli>(compilation_end - compilation_start).count();
+
+        local_emitter.out_flat(std::format("Compilation finished in {}s", compilation_time), Info);
+    }
+
+    if (get_flag("--dump-tokens")) {
+        print_flag_label("--dump-tokens");
+
+        for (const Token &token : program.tokens->tokens) {
+            std::cout << token.to_string() << "\n";
         }
     }
 
-    Preprocessor preprocessor(&program);
-    failed = preprocessor.preprocess();
+    if (get_flag("--dump-ast")) {
+        print_flag_label("--dump-ast");
 
-    CHECK_SUBPROC_FAIL;
-
-    Parser parser(&program);
-    failed = parser.parse_program();
-
-    CHECK_SUBPROC_FAIL;
-
-    if (flag_dump_ast) {
         U32 depth = 0;
 
-        std::cout << "\nflag [--dump-ast]:\n";
         for (const pStmtNode &pstmt : program.ast->statements) {
             std::cout << pstmt->to_string(depth) << "\n";
         }
     }
 
-    Compiler compiler(&program);
-    failed = compiler.generate();
+    if (get_flag("--dump-bytecode")) {
+        print_flag_label("--dump-bytecode");
 
-    CHECK_SUBPROC_FAIL;
-
-    if (flag_dump_bytecode) {
-        std::cout << "\nflag [--dump-bytecode]:\n";
-        for (const Bytecode &pair : program.bytecode->get()) {
-            std::cout << via::to_string(pair) << "\n";
+        for (const Bytecode &bytecode : program.bytecode->get()) {
+            std::cout << via::to_string(bytecode) << "\n";
         }
     }
 
-    if (flag_dump_ktable) {
-        U32 idx = 0;
-
-        std::cout << "\nflag [--dump-ktable]:\n";
-        for (const TValue &constant : program.constants->get()) {
-            std::cout << "#" << idx++ << " " << magic_enum::enum_name(constant.type) << "\n";
-        }
-    }
-
-    if (flag_cache) {
-        CacheFile file(&program);
-        CacheManager manager;
-        manager.write_cache("./", file);
-    }
-
-    if (flag_verbose) {
-        cli_emitter.out_flat("Compilation completed", OutputSeverity::Info);
-    }
-
-#undef HAS_FLAG
-#undef CHECK_SUBPROC_FAIL
+    return program;
 }
 
-void handle_run(const std::vector<std::string> &args)
+via::ProgramData handle_repl(argparse::ArgumentParser &) {}
+
+int main(int argc, char *argv[])
 {
-    if (args.empty()) {
-        std::cerr << "Invalid command\nNo input file provided.\n";
-        std::exit(1);
+    using namespace via;
+    using namespace argparse;
+
+    // Argument parser entry point
+    ArgumentParser argument_parser("via", VIA_VERSION);
+
+    // Compile subcommand
+    ArgumentParser compile_command("compile");
+    compile_command.add_description("Compiles the given source file");
+    compile_command.add_argument("target");
+    compile_command.add_argument("--dump-ast", "-Da")
+        .help("Dumps the abstract syntax tree representation of the program")
+        .scan<'b', bool>()
+        .default_value(false)
+        .implicit_value(true);
+
+    compile_command.add_argument("--dump-bytecode", "-Db")
+        .help("Dumps human-readable bytecode to the console upon compilation of the give source "
+              "file is completed")
+        .scan<'b', bool>()
+        .default_value(false)
+        .implicit_value(true);
+
+    compile_command.add_argument("--dump-tokens", "-Dt")
+        .help("Dumps tokenized representation of the given source file upon tokenization of the "
+              "given source file "
+              "is completed")
+        .scan<'b', bool>()
+        .default_value(false)
+        .implicit_value(true);
+
+    compile_command.add_argument("--optimize", "-O")
+        .help("Sets optimization level to the given integer")
+        .scan<'u', U32>()
+        .default_value(1);
+
+    compile_command.add_argument("--verbose", "-v")
+        .help("Enables verbosity")
+        .scan<'b', bool>()
+        .default_value(false)
+        .implicit_value(true);
+
+    // Argument parser initialization
+    argument_parser.add_subparser(compile_command);
+
+    try {
+        argument_parser.parse_args(argc, argv);
     }
-
-    std::string file_path = args.at(0);
-    std::string source_code = via::utils::read_from_file(file_path);
-
-    ProgramData program(file_path, source_code);
-
-    Interpreter interpreter(&program);
-    interpreter.execute(&program);
-}
-
-void handle_repl(const std::vector<std::string> &)
-{
-    std::cout << REPL_WELCOME;
-
-    while (true) {
-        std::string code;
-        bool quit = linenoise::Readline(REPL_HEAD, code);
-
-        if (quit)
-            break;
-
-        if (code.starts_with(';')) {
-            std::string command = code.substr(1);
-            if (command == "quit" || command == "q")
-                break;
-            if (command == "help" || command == "h")
-                std::cout << REPL_HELP;
-            else if (command == "exitinfo" || command == "ei") {
-                if (false)
-                    std::cout << "<none>\n";
-                else
-                    std::cout << "Exit code: \n"
-                              << "At instruction: \n";
-            }
-            else
-                std::cerr << "Unknown command: " << command << "\n";
-
-            continue;
-        }
-    }
-}
-
-int main(int argc, char **argv)
-{
-    CmdParser parser(argc, argv);
-
-    if (!parser.is_valid()) {
-        std::cerr << USAGE;
+    catch (const std::exception &err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << argument_parser;
         return 1;
     }
 
-    const auto &args = parser.get_arguments();
-    const auto &subcom = parser.get_subcommand();
-
-    linenoise::SetCompletionCallback([](const char *editBuffer,
-                                        std::vector<std::string> &completions) {
-        if (editBuffer[0] == ';') {
-            completions.push_back(";quit");
-            completions.push_back(";help");
-            completions.push_back(";exitinfo");
-        }
-    });
-
-    if (subcom == "compile") {
-        handle_compile(args);
+    if (argument_parser.is_subcommand_used(compile_command)) {
+        handle_compile(compile_command);
     }
-    else if (subcom == "run") {
-        handle_run(args);
-    }
-    else if (subcom == "repl") {
-        handle_repl(args);
-    }
-    else {
-        std::cerr << "Invalid subcommand\n";
-        return 1;
-    }
-
-    return 0;
 }

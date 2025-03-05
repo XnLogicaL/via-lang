@@ -10,12 +10,12 @@
 namespace via {
 
 struct Macro {
-    std::string name;                // Name of the macro
+    std::string              name;   // Name of the macro
     std::vector<std::string> params; // Macro parameter names
-    std::vector<Token> body;         // Macro body as a list of tokens
-    size_t begin;
-    size_t end;
-    size_t line;
+    std::vector<Token>       body;   // Macro body as a list of tokens
+    SIZE                     begin;
+    SIZE                     end;
+    SIZE                     line;
 };
 
 } // namespace via

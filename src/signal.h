@@ -18,7 +18,7 @@ public:
 
     class Connection {
     public:
-        Connection(std::vector<Slot> &_Slots, std::mutex &_Mutex, size_t _Connection_id)
+        Connection(std::vector<Slot> &_Slots, std::mutex &_Mutex, SIZE _Connection_id)
             : slots(_Slots)
             , mutex(_Mutex)
             , connection_id(_Connection_id)
@@ -30,19 +30,19 @@ public:
 
     private:
         std::vector<Slot> &slots;
-        std::mutex &mutex;
+        std::mutex        &mutex;
 
-        size_t connection_id;
+        SIZE connection_id;
         bool active;
     };
 
     Connection connect(const Slot &);
-    void fire(Args...);
-    void wait();
+    void       fire(Args...);
+    void       wait();
 
 private:
-    std::vector<Slot> slots;
-    std::mutex mutex;
+    std::vector<Slot>       slots;
+    std::mutex              mutex;
     std::condition_variable condition;
 };
 

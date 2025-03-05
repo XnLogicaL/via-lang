@@ -706,7 +706,7 @@ dispatch: {
         VIA_OPERAND dst = V->ip->operand0;
         VIA_OPERAND idx = V->ip->operand1;
 
-        if (idx > V->program->constants->size()) {
+        if (idx > V->program.constants->size()) {
             VM_FATAL("invalid constant index");
         }
 
@@ -1656,7 +1656,7 @@ dispatch: {
         TValue *str_val = __get_register(V, str);
         TValue *idx_val = __get_register(V, idx);
 
-        size_t index = idx_val->val_integer;
+        SIZE index = idx_val->val_integer;
         if VIA_UNLIKELY (index > str_val->cast_ptr<TString>()->len) {
             __set_register(V, dst, _Nil);
         }

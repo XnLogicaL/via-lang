@@ -18,35 +18,35 @@ bool Tokenizer::is_hex_char(char chr)
     return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
 }
 
-size_t Tokenizer::source_size()
+SIZE Tokenizer::source_size()
 {
-    return program->source.size();
+    return program.source.size();
 }
 
-char Tokenizer::peek(size_t ahead)
+char Tokenizer::peek(SIZE ahead)
 {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
 
-    return program->source.at(pos + ahead);
+    return program.source.at(pos + ahead);
 }
 
-char Tokenizer::consume(size_t ahead)
+char Tokenizer::consume(SIZE ahead)
 {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
 
-    return program->source.at(pos += ahead);
+    return program.source.at(pos += ahead);
 }
 
-Token Tokenizer::read_number(size_t position)
+Token Tokenizer::read_number(SIZE position)
 {
-    TokenType type = LIT_INT;     // Specify default type as integer literal
-    size_t start_offset = offset; // Record starting offset of the number
-    std::string value;            // Value of the number, as a string for convenience
-    char delimiter;
+    TokenType   type         = LIT_INT; // Specify default type as integer literal
+    SIZE        start_offset = offset;  // Record starting offset of the number
+    std::string value;                  // Value of the number, as a string for convenience
+    char        delimiter;
 
     // Check for binary or hex literals
     if (peek() == '0' && (peek(1) == 'x' || peek(1) == 'b')) {
@@ -94,7 +94,7 @@ Token Tokenizer::read_number(size_t position)
     return Token(type, value, line, start_offset, position);
 }
 
-Token Tokenizer::read_ident(size_t position)
+Token Tokenizer::read_ident(SIZE position)
 {
     // List of allowed special characters that can be included in an identifier
     static const std::vector<char> allowed_identifier_spec_chars = {
@@ -103,14 +103,14 @@ Token Tokenizer::read_ident(size_t position)
 
     // Default type, this is because this might be an identifier, keyword or boolean literal
     // We can't know in advance which.
-    TokenType type = IDENTIFIER;
-    size_t start_offset = offset; // Record starting offset of the identifier
+    TokenType   type         = IDENTIFIER;
+    SIZE        start_offset = offset; // Record starting offset of the identifier
     std::string identifier;
 
     // Lambda for checking if a character is allowed within an identifier
     auto is_allowed = [this](char chr) -> bool {
         auto allow_list = allowed_identifier_spec_chars;
-        bool is_alnum = isalnum(chr);
+        bool is_alnum   = isalnum(chr);
         bool is_allowed = std::ranges::find(allow_list, peek()) != allow_list.end();
         return is_alnum || is_allowed;
     };
@@ -156,11 +156,11 @@ Token Tokenizer::read_ident(size_t position)
     return Token(type, identifier, line, start_offset, position); // Use start_offset here
 }
 
-Token Tokenizer::read_string(size_t position)
+Token Tokenizer::read_string(SIZE position)
 {
     std::string lexeme;
-    size_t start_offset = offset; // Record starting offset of the string
-    pos++;                        // Skip opening quote
+    SIZE        start_offset = offset; // Record starting offset of the string
+    pos++;                             // Skip opening quote
     offset++;
 
     while (pos < source_size() && peek() != '"') {
@@ -259,15 +259,15 @@ Token Tokenizer::get_token()
         break;
     }
 
-    size_t position = program->tokens->tokens.size();
+    SIZE position = program.tokens->tokens.size();
 
-    // Check if the position is at the end of the program->source string
+    // Check if the position is at the end of the program.source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source_size()) {
         return {EOF_, "\0", line, offset, position};
     }
 
-    size_t start_offset = offset; // Record starting offset of each token
+    SIZE start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
     if (std::isdigit(peek())) {
@@ -358,7 +358,7 @@ Token Tokenizer::get_token()
 
 void Tokenizer::tokenize()
 {
-    TokenHolder *tokens = program->tokens;
+    TokenHolder *tokens = program.tokens;
 
     while (true) {
         Token token = get_token();
