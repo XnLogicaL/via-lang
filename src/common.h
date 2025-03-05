@@ -94,6 +94,8 @@ using I16 = std::int16_t;
 using I32 = std::int32_t;
 using I64 = std::int64_t;
 
+using SIZE = std::size_t;
+
 #ifdef VIA_LONGJUMP
 using JmpOffset = U64;
 #else
