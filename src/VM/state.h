@@ -9,7 +9,7 @@
 #include "signal.h"
 
 #define VIA_VM_STACK_SIZE 8 * 1024 * 1024 // 8 MBs
-#define VIA_REGISTER_COUNT 2048 * 8
+#define VIA_REGISTER_COUNT std::numeric_limits<Operand>::max()
 
 namespace via {
 

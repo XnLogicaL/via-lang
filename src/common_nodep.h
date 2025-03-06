@@ -42,19 +42,19 @@
 
 namespace via {
 
-using U8  = std::uint8_t;
-using U16 = std::uint16_t;
-using U32 = std::uint32_t;
-using U64 = std::uint64_t;
+using U8  = unsigned char;
+using U16 = unsigned short;
+using U32 = unsigned int;
+using U64 = unsigned long long;
 
-using I8  = std::int8_t;
-using I16 = std::int16_t;
-using I32 = std::int32_t;
-using I64 = std::int64_t;
+using I8  = char;
+using I16 = short;
+using I32 = int;
+using I64 = long long;
 
-using F32 = std::float_t;
-using F64 = std::double_t;
+using F32 = float;
+using F64 = double;
 
-using SIZE = std::size_t;
+using SIZE = unsigned long long;
 
 } // namespace via

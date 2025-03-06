@@ -25,11 +25,11 @@
 
 namespace via {
 
-VIA_INLINE TValue construct_constant(LiteralNode &literal_node)
+VIA_INLINE TValue construct_constant(LiteralNode& literal_node)
 {
     using enum ValueType;
     return std::visit(
-        [](auto &&val) -> TValue {
+        [](auto&& val) -> TValue {
             using T = std::decay_t<decltype(val)>;
 
             if constexpr (std::is_same_v<T, int>) {
@@ -42,8 +42,8 @@ VIA_INLINE TValue construct_constant(LiteralNode &literal_node)
                 return TValue(val);
             }
             else if constexpr (std::is_same_v<T, std::string>) {
-                TString *tstring = new TString(nullptr, val.data());
-                return TValue(string, static_cast<void *>(tstring));
+                TString* tstring = new TString(nullptr, val.data());
+                return TValue(string, static_cast<void*>(tstring));
             }
 
             VIA_UNREACHABLE;
@@ -56,21 +56,21 @@ class NodeVisitor {
 public:
     virtual ~NodeVisitor() = default;
 
-    virtual void visit(LiteralNode &, Operand) INVALID_VISIT;
-    virtual void visit(SymbolNode &, Operand) INVALID_VISIT;
-    virtual void visit(UnaryNode &, Operand) INVALID_VISIT;
-    virtual void visit(GroupNode &, Operand) INVALID_VISIT;
-    virtual void visit(CallNode &, Operand) INVALID_VISIT;
-    virtual void visit(IndexNode &, Operand) INVALID_VISIT;
-    virtual void visit(BinaryNode &, Operand) INVALID_VISIT;
+    virtual void visit(LiteralNode&, Operand) INVALID_VISIT;
+    virtual void visit(SymbolNode&, Operand) INVALID_VISIT;
+    virtual void visit(UnaryNode&, Operand) INVALID_VISIT;
+    virtual void visit(GroupNode&, Operand) INVALID_VISIT;
+    virtual void visit(CallNode&, Operand) INVALID_VISIT;
+    virtual void visit(IndexNode&, Operand) INVALID_VISIT;
+    virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
 
-    virtual void visit(DeclarationNode &) INVALID_VISIT;
-    virtual void visit(ScopeNode &) INVALID_VISIT;
-    virtual void visit(FunctionNode &) INVALID_VISIT;
-    virtual void visit(AssignNode &) INVALID_VISIT;
-    virtual void visit(IfNode &) INVALID_VISIT;
-    virtual void visit(WhileNode &) INVALID_VISIT;
-    virtual void visit(ExprStmtNode &) INVALID_VISIT;
+    virtual void visit(DeclarationNode&) INVALID_VISIT;
+    virtual void visit(ScopeNode&) INVALID_VISIT;
+    virtual void visit(FunctionNode&) INVALID_VISIT;
+    virtual void visit(AssignNode&) INVALID_VISIT;
+    virtual void visit(IfNode&) INVALID_VISIT;
+    virtual void visit(WhileNode&) INVALID_VISIT;
+    virtual void visit(ExprStmtNode&) INVALID_VISIT;
 
     virtual inline bool failed()
     {
@@ -83,30 +83,30 @@ protected:
 
 class ExprVisitor : public NodeVisitor {
 public:
-    ExprVisitor(ProgramData &program, Emitter &emitter, RegisterAllocator &allocator)
+    ExprVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
         : program(program)
         , emitter(emitter)
         , allocator(allocator)
     {
     }
 
-    void visit(LiteralNode &, Operand) override;
-    void visit(SymbolNode &, Operand) override;
-    void visit(UnaryNode &, Operand) override;
-    void visit(GroupNode &, Operand) override;
-    void visit(CallNode &, Operand) override;
-    void visit(IndexNode &, Operand) override;
-    void visit(BinaryNode &, Operand) override;
+    void visit(LiteralNode&, Operand) override;
+    void visit(SymbolNode&, Operand) override;
+    void visit(UnaryNode&, Operand) override;
+    void visit(GroupNode&, Operand) override;
+    void visit(CallNode&, Operand) override;
+    void visit(IndexNode&, Operand) override;
+    void visit(BinaryNode&, Operand) override;
 
 private:
-    ProgramData       &program;
-    Emitter           &emitter;
-    RegisterAllocator &allocator;
+    ProgramData&       program;
+    Emitter&           emitter;
+    RegisterAllocator& allocator;
 };
 
 class StmtVisitor : public NodeVisitor {
 public:
-    StmtVisitor(ProgramData &program, Emitter &emitter, RegisterAllocator &allocator)
+    StmtVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
         : program(program)
         , emitter(emitter)
         , allocator(allocator)
@@ -114,13 +114,13 @@ public:
     {
     }
 
-    void visit(DeclarationNode &) override;
-    void visit(ScopeNode &) override;
-    void visit(FunctionNode &) override;
-    void visit(AssignNode &) override;
-    void visit(IfNode &) override;
-    void visit(WhileNode &) override;
-    void visit(ExprStmtNode &) override;
+    void visit(DeclarationNode&) override;
+    void visit(ScopeNode&) override;
+    void visit(FunctionNode&) override;
+    void visit(AssignNode&) override;
+    void visit(IfNode&) override;
+    void visit(WhileNode&) override;
+    void visit(ExprStmtNode&) override;
 
     inline bool failed() override
     {
@@ -128,19 +128,19 @@ public:
     }
 
 private:
-    ProgramData       &program;
-    Emitter           &emitter;
-    RegisterAllocator &allocator;
+    ProgramData&       program;
+    Emitter&           emitter;
+    RegisterAllocator& allocator;
     ExprVisitor        expression_visitor;
 };
 
 class PrintVisitor : public NodeVisitor {
 public:
-    void visit(LiteralNode &, Operand) override;
-    void visit(SymbolNode &, Operand) override;
-    void visit(UnaryNode &, Operand) override;
-    void visit(GroupNode &, Operand) override;
-    void visit(BinaryNode &, Operand) override;
+    void visit(LiteralNode&, Operand) override;
+    void visit(SymbolNode&, Operand) override;
+    void visit(UnaryNode&, Operand) override;
+    void visit(GroupNode&, Operand) override;
+    void visit(BinaryNode&, Operand) override;
 };
 
 } // namespace via

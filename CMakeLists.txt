@@ -1,67 +1,59 @@
-# Set minimum required CMake version to 3.20.0
-cmake_minimum_required(VERSION 3.20.0)
+# Set minimum required CMake version
+cmake_minimum_required(VERSION 3.20)
+
+# Define project name and language
+project(via LANGUAGES CXX)
 
 # Set C++ standard to C++23
 set(CMAKE_CXX_STANDARD 23)
 
-# Constants
-set(DEFAULT_DEBUG_MODE "PROD")
-set(DEFAULT_MAIN_FILE_PATH CLI/main.cpp)
+# Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
+option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "DEBUG")
+option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" "fuzz/lexer_test.cpp")
 
-# Define project
-project(via)
+# Print the current configuration
+message(STATUS "Building with DEBUG_MODE: ${DEBUG_MODE}")
+message(STATUS "Using MAIN_FILE_PATH: ${MAIN_FILE_PATH}")
 
-# Generate sources
-file(GLOB_RECURSE MAIN_SOURCES CONFIGURE_DEPENDS src/*.cpp) # Automatically include all .cpp files in src
-file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true src/*) # Recursively get all directories in the src folder
-
-# Check for debug level
-if(NOT DEFINED DEBUG_MODE)
-    message(WARNING "DEBUG_MODE is not defined, using default: '${DEFAULT_DEBUG_MODE}'")
-    set(DEBUG_MODE DEFAULT_DEBUG_MODE CACHE STRING "Debug level (e.g., 'PROD' or 'DEBUG')")
-endif()
-
-if(DEBUG_MODE STREQUAL "DEBUG")
-    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-endif()
-
-# Check for main file path
-if(NOT DEFINED MAIN_FILE_PATH)
-    message(WARNING "MAIN_FILE_PATH is not defined, using default: '${DEFAULT_MAIN_FILE_PATH}'")
-    set(MAIN_FILE_PATH "${DEFAULT_MAIN_FILE_PATH}")
-else()
-    if(NOT MAIN_FILE_PATH STREQUAL DEFAULT_MAIN_FILE_PATH AND DEBUG_MODE STREQUAL "PROD")
-        message(FATAL_ERROR "MAIN_FILE_PATH must be '${DEFAULT_MAIN_FILE_PATH}' in production mode; otherwise symbol `main` may not be defined")
-    endif()
-endif()
-
-# Create the executable
-add_executable(via "${MAIN_FILE_PATH}" ${MAIN_SOURCES})
-
-# Set compiler flags
-target_compile_options(via PUBLIC
-    -Wall                   # Enable all warnings
-    -Wextra                 # Enable extra warnings
-    -Werror                 # Treat warnings as errors
-    -g                      # Enable debugging symbols
-    -O3                     # Optimization level 3
-)
-
-# Set DEBUG flags if applicable
-if(DEBUG_MODE STREQUAL "DEBUG")
-    target_compile_definitions(via PRIVATE -DVIA_DEBUG)
-    target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-    target_link_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-endif()
-
-# Add subdirectories for different components
+# Add subdirectories for components
 add_subdirectory(asmjit)
 add_subdirectory(SHA256)
 add_subdirectory(ArenaAllocator)
 
+# Set the compiler
+if(DEBUG_MODE STREQUAL "DEBUG")
+    message(STATUS "Compiling with Clang in DEBUG mode.")
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+else()
+    message(STATUS "Compiling in PROD mode.")
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+endif()
+
+# Find sources
+file(GLOB_RECURSE MAIN_SOURCES CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true src/*)
+
+# Define the executable (with default main file for fuzzing)
+add_executable(via ${MAIN_FILE_PATH} ${MAIN_SOURCES})
+
 # Include directories
-target_include_directories(via PUBLIC include/)
-target_include_directories(via PUBLIC src/)
+target_include_directories(via PRIVATE include/ src/)
+
+# Set compiler flags
+target_compile_options(via PUBLIC
+    -Wall                  # Enable all warnings
+    -Wextra                # Enable extra warnings
+    -Werror                # Treat warnings as errors
+    -g                     # Enable debugging symbols
+    -O3                    # Optimization level 3
+)
+
+# Add fuzzing specific flags for DEBUG mode
+if(DEBUG_MODE STREQUAL "DEBUG")
+    target_compile_definitions(via PRIVATE -DVIA_DEBUG)
+    target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
+    target_link_libraries(via PRIVATE -lfuzzer)
+endif()
 
 # Apply include directories for each subdirectory in src
 foreach(dir ${SRC_INCLUDES})
@@ -70,8 +62,16 @@ foreach(dir ${SRC_INCLUDES})
     endif()
 endforeach()
 
-# Link libraries
-target_link_libraries(via PUBLIC asmjit)
-target_link_libraries(via PUBLIC sha256)
-target_link_libraries(via PUBLIC ArenaAllocator)
-target_link_libraries(via PUBLIC stdc++_libbacktrace)  # For std::backtrace
+# Link libraries for external dependencies
+target_link_libraries(via PUBLIC asmjit sha256 ArenaAllocator)
+
+# Optional: Link standard backtrace library if necessary
+target_link_libraries(via PUBLIC stdc++_libbacktrace)
+
+# Handle external definitions and linker settings for fuzzing
+if(DEBUG_MODE STREQUAL "DEBUG" AND MAIN_FILE_PATH MATCHES "fuzz/.*\.cpp")
+    message(STATUS "Fuzzing build enabled")
+    target_compile_definitions(via PRIVATE -DFUZZING_ENABLED)
+    target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
+    target_link_libraries(via PRIVATE -lfuzzer)
+endif()

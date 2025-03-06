@@ -5,7 +5,7 @@
 #pragma once
 
 #include "common.h"
-#include "opcode.h"
+#include "VM/opcode.h"
 
 #ifndef VIA_OPERAND_COUNT
     #define VIA_OPERAND_COUNT 4
@@ -20,7 +20,7 @@ using OperandS = I16;
 
 struct Chunk;
 struct InstructionData {
-    Chunk      *chunk   = nullptr;
+    Chunk*      chunk   = nullptr;
     std::string comment = "";
 };
 
@@ -36,6 +36,6 @@ struct alignas(64) Bytecode {
     InstructionData meta_data;
 };
 
-std::string to_string(const Bytecode &);
+std::string to_string(const Bytecode&);
 
 } // namespace via

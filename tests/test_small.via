@@ -3,14 +3,14 @@ global Aaaa = 0
 global BB = 0
 
 global func add(a, b) {
-    local var = a + b * a * b / b % b ^ b
-    global glb = a % b
+    local var = a * 56 *6 / 62929 * 5 % 10.1
     local func inner() {
         local y = true
         while y and x {
             local z = y + x % y  % x
+            local cond = true and false
         }
     }
 
-    inner(inner_param, x)
+    inner(var, x)
 }

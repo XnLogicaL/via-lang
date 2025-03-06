@@ -17,29 +17,40 @@ static constexpr const char REPL_HELP[] =
     "  ;exitinfo - Displays the last exit info returned by the VM\n";
 static constexpr const char REPL_HEAD[] = ">> ";
 
-via::ProgramData handle_compile(argparse::ArgumentParser &subcommand_parser)
+via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser)
 {
     using namespace via;
 
     using enum via::OutputSeverity;
     using enum via::TokenType;
 
-    const auto get_flag = [&subcommand_parser](const std::string &flag) constexpr -> bool {
+    const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
         return subcommand_parser.get<bool>(flag);
     };
 
-    const auto print_flag_label = [](const std::string &flag) constexpr -> void {
+    const auto print_flag_label = [](const std::string& flag) constexpr -> void {
         std::cout << std::format("flag [{}]:\n", flag);
     };
 
     const bool verbosity_flag = get_flag("--verbose");
 
-    std::string file              = subcommand_parser.get<std::string>("target");
-    std::string source            = utils::read_from_file(file);
+    std::string file = subcommand_parser.get<std::string>("target");
+    std::string source;
     const auto  compilation_start = std::chrono::steady_clock::now();
 
-    ProgramData  program(file, source);
-    Emitter      local_emitter(program);
+    ProgramData program(file, source);
+    Emitter     local_emitter(program);
+
+    try {
+        source = utils::read_from_file(file);
+    }
+    catch (const std::exception& e) {
+        local_emitter.out_flat(std::format("Failed to read file '{}': {}", file, e.what()), Error);
+        return program;
+    }
+
+    program.source = source;
+
     Tokenizer    lexer(program);
     Preprocessor preprocessor(program);
     Parser       parser(program);
@@ -59,45 +70,59 @@ via::ProgramData handle_compile(argparse::ArgumentParser &subcommand_parser)
             return program;
         }
 
+        if (get_flag("--dump-tokens")) {
+            print_flag_label("--dump-tokens");
+
+            for (const Token& token : program.tokens->tokens) {
+                std::cout << token.to_string() << "\n";
+            }
+        }
+
+        if (get_flag("--dump-ast")) {
+            print_flag_label("--dump-ast");
+
+            U32 depth = 0;
+
+            for (const pStmtNode& pstmt : program.ast->statements) {
+                std::cout << pstmt->to_string(depth) << "\n";
+            }
+        }
+
+        if (get_flag("--dump-bytecode")) {
+            print_flag_label("--dump-bytecode");
+
+            for (const Bytecode& bytecode : program.bytecode->get()) {
+                std::cout << via::to_string(bytecode) << "\n";
+            }
+        }
+
         auto   compilation_end = std::chrono::steady_clock::now();
         double compilation_time =
             std::chrono::duration<double, std::milli>(compilation_end - compilation_start).count();
 
-        local_emitter.out_flat(std::format("Compilation finished in {}s", compilation_time), Info);
-    }
-
-    if (get_flag("--dump-tokens")) {
-        print_flag_label("--dump-tokens");
-
-        for (const Token &token : program.tokens->tokens) {
-            std::cout << token.to_string() << "\n";
-        }
-    }
-
-    if (get_flag("--dump-ast")) {
-        print_flag_label("--dump-ast");
-
-        U32 depth = 0;
-
-        for (const pStmtNode &pstmt : program.ast->statements) {
-            std::cout << pstmt->to_string(depth) << "\n";
-        }
-    }
-
-    if (get_flag("--dump-bytecode")) {
-        print_flag_label("--dump-bytecode");
-
-        for (const Bytecode &bytecode : program.bytecode->get()) {
-            std::cout << via::to_string(bytecode) << "\n";
-        }
+        local_emitter.out_flat(
+            std::format("Compilation finished in {}s", compilation_time / 1000), Info
+        );
     }
 
     return program;
 }
 
-via::ProgramData handle_repl(argparse::ArgumentParser &) {}
+via::ProgramData handle_repl(argparse::ArgumentParser&)
+{
+    using namespace via;
 
-int main(int argc, char *argv[])
+    using enum via::OutputSeverity;
+    using enum via::TokenType;
+
+    std::string s;
+
+    ProgramData program(s, s);
+
+    return program;
+}
+
+int main(int argc, char* argv[])
 {
     using namespace via;
     using namespace argparse;
@@ -111,14 +136,12 @@ int main(int argc, char *argv[])
     compile_command.add_argument("target");
     compile_command.add_argument("--dump-ast", "-Da")
         .help("Dumps the abstract syntax tree representation of the program")
-        .scan<'b', bool>()
         .default_value(false)
         .implicit_value(true);
 
     compile_command.add_argument("--dump-bytecode", "-Db")
         .help("Dumps human-readable bytecode to the console upon compilation of the give source "
               "file is completed")
-        .scan<'b', bool>()
         .default_value(false)
         .implicit_value(true);
 
@@ -126,7 +149,6 @@ int main(int argc, char *argv[])
         .help("Dumps tokenized representation of the given source file upon tokenization of the "
               "given source file "
               "is completed")
-        .scan<'b', bool>()
         .default_value(false)
         .implicit_value(true);
 
@@ -137,7 +159,6 @@ int main(int argc, char *argv[])
 
     compile_command.add_argument("--verbose", "-v")
         .help("Enables verbosity")
-        .scan<'b', bool>()
         .default_value(false)
         .implicit_value(true);
 
@@ -147,7 +168,7 @@ int main(int argc, char *argv[])
     try {
         argument_parser.parse_args(argc, argv);
     }
-    catch (const std::exception &err) {
+    catch (const std::exception& err) {
         std::cerr << err.what() << std::endl;
         std::cerr << argument_parser;
         return 1;

@@ -33,7 +33,8 @@ std::string to_string(const Bytecode& bytecode)
             data.comment.empty() ? "" : std::format("; {}", data.comment)
         );
     }
-    else if (opcode == LOADINT) {
+    else if (opcode == LOADINT || opcode == ADDINT || opcode == SUBINT || opcode == MULINT ||
+             opcode == DIVINT || opcode == POWINT || opcode == MODINT) {
         return std::format(
             format_string,
             magic_enum::enum_name(opcode),
@@ -44,12 +45,23 @@ std::string to_string(const Bytecode& bytecode)
             data.comment.empty() ? "" : std::format("; {}", data.comment)
         );
     }
-    else if (opcode == LOADFLOAT) {
+    else if (opcode == LOADFLOAT || opcode == ADDFLOAT || opcode == SUBFLOAT ||
+             opcode == MULFLOAT || opcode == DIVFLOAT || opcode == POWFLOAT || opcode == MODFLOAT) {
         return std::format(
             format_string,
             magic_enum::enum_name(opcode),
             static_cast<Operand>(instruction.operand0),
             static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2)),
+            "",
+            data.comment.empty() ? "" : std::format("; {}", data.comment)
+        );
+    }
+    else if (opcode == LOADBOOL) {
+        return std::format(
+            format_string,
+            magic_enum::enum_name(opcode),
+            static_cast<Operand>(instruction.operand0),
+            static_cast<bool>(instruction.operand1) ? "true" : "false",
             "",
             data.comment.empty() ? "" : std::format("; {}", data.comment)
         );

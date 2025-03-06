@@ -11,17 +11,55 @@ namespace via {
 using enum OpCode;
 using enum OutputSeverity;
 
-void ExprVisitor::visit(LiteralNode &literal_node, Operand dst)
+void ExprVisitor::visit(LiteralNode& literal_node, Operand dst)
 {
     using enum ValueType;
 
-    TValue      constant     = construct_constant(literal_node);
-    Operand     constant_id  = PUSH_K(constant);
-    std::string value_string = ""; //to_cxx_string(nullptr, constant);
-    program.bytecode->emit(LOADK, {dst, constant_id}, value_string);
+    if (int* integer_value = std::get_if<int>(&literal_node.value)) {
+        U32 final_value = *integer_value;
+        program.bytecode->emit(
+            LOADINT,
+            {
+                dst,
+                static_cast<Operand>(final_value & 0xFFFF),
+                static_cast<Operand>(final_value >> 16),
+            }
+        );
+    }
+    else if (float* float_value = std::get_if<float>(&literal_node.value)) {
+        U32 final_value = std::bit_cast<U32>(*float_value);
+        program.bytecode->emit(
+            LOADFLOAT,
+            {
+                dst,
+                static_cast<Operand>(final_value & 0xFFFF),
+                static_cast<Operand>(final_value >> 16),
+            }
+        );
+    }
+    else if (bool* bool_value = std::get_if<bool>(&literal_node.value)) {
+        program.bytecode->emit(
+            LOADBOOL,
+            {
+                dst,
+                static_cast<Operand>(*bool_value),
+            }
+        );
+    }
+    else {
+        const TValue& constant    = construct_constant(literal_node);
+        const U16     constant_id = PUSH_K(constant);
+        program.bytecode->emit(
+            LOADK,
+            {
+                dst,
+                constant_id,
+            }
+        );
+    }
 }
 
-void ExprVisitor::visit(SymbolNode &variable_node, Operand dst)
+void ExprVisitor::visit(SymbolNode& variable_node, Operand dst)
 {
     Token var_id = variable_node.identifier;
 
@@ -58,8 +96,8 @@ void ExprVisitor::visit(SymbolNode &variable_node, Operand dst)
     }
     else if (!program.test_stack->function_stack.empty()) {
         U16         index = 0;
-        const auto &top   = program.test_stack->function_stack.top();
-        for (const auto &parameter : top.parameters) {
+        const auto& top   = program.test_stack->function_stack.top();
+        for (const auto& parameter : top.parameters) {
             if (parameter.identifier.lexeme == symbol) {
                 program.bytecode->emit(GETARGUMENT, {dst, index});
                 return;
@@ -75,24 +113,24 @@ void ExprVisitor::visit(SymbolNode &variable_node, Operand dst)
     );
 }
 
-void ExprVisitor::visit(UnaryNode &unary_node, Operand dst)
+void ExprVisitor::visit(UnaryNode& unary_node, Operand dst)
 {
     unary_node.accept(*this, dst);
     program.bytecode->emit(NEG, {dst});
 }
 
-void ExprVisitor::visit(GroupNode &group_node, Operand dst)
+void ExprVisitor::visit(GroupNode& group_node, Operand dst)
 {
     group_node.accept(*this, dst);
 }
 
-void ExprVisitor::visit(CallNode &call_node, Operand dst)
+void ExprVisitor::visit(CallNode& call_node, Operand dst)
 {
     Operand argc       = call_node.arguments.size();
     Operand callee_reg = allocator.allocate_register();
     call_node.callee->accept(*this, callee_reg);
 
-    for (const pExprNode &argument : call_node.arguments) {
+    for (const pExprNode& argument : call_node.arguments) {
         Operand argument_reg = allocator.allocate_register();
         argument->accept(*this, argument_reg);
 
@@ -105,7 +143,7 @@ void ExprVisitor::visit(CallNode &call_node, Operand dst)
     allocator.free_register(callee_reg);
 }
 
-void ExprVisitor::visit(IndexNode &index_node, Operand dst)
+void ExprVisitor::visit(IndexNode& index_node, Operand dst)
 {
     Operand obj_reg = allocator.allocate_register();
     index_node.object->accept(*this, obj_reg);
@@ -118,7 +156,7 @@ void ExprVisitor::visit(IndexNode &index_node, Operand dst)
     allocator.free_register(index_reg);
 }
 
-void ExprVisitor::visit(BinaryNode &binary_node, Operand dst)
+void ExprVisitor::visit(BinaryNode& binary_node, Operand dst)
 {
     using enum TokenType;
 
@@ -139,11 +177,11 @@ void ExprVisitor::visit(BinaryNode &binary_node, Operand dst)
         {TokenType::KW_OR, OpCode::OR}
     };
 
-    pExprNode &p_lhs = binary_node.lhs_expression;
-    pExprNode &p_rhs = binary_node.rhs_expression;
+    pExprNode& p_lhs = binary_node.lhs_expression;
+    pExprNode& p_rhs = binary_node.rhs_expression;
 
-    ExprNode &lhs = *p_lhs;
-    ExprNode &rhs = *p_rhs;
+    ExprNode& lhs = *p_lhs;
+    ExprNode& rhs = *p_rhs;
 
     auto it = operator_map.find(binary_node.op.type);
     if (it == operator_map.end()) {
@@ -159,15 +197,45 @@ void ExprVisitor::visit(BinaryNode &binary_node, Operand dst)
 
     U8 opcode_id = static_cast<U8>(it->second);
 
-    if IS_INHERITOR (rhs, LiteralNode) {
-        OpCode opcode = static_cast<OpCode>(opcode_id + 1); // OPK
+    if IS_CONSTEXPR (rhs) {
+        LiteralNode& literal = dynamic_cast<LiteralNode&>(rhs);
 
         lhs.accept(*this, dst);
 
-        TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
-        Operand right_const_id  = PUSH_K(right_const_val);
+        if (int* int_value = std::get_if<int>(&literal.value)) {
+            OpCode opcode      = static_cast<OpCode>(opcode_id + 2); // OPINT
+            U32    final_value = *int_value;
 
-        program.bytecode->emit(opcode, {dst, right_const_id});
+            program.bytecode->emit(
+                opcode,
+                {
+                    dst,
+                    static_cast<Operand>(final_value & 0xFFFF),
+                    static_cast<Operand>(final_value >> 16),
+                }
+            );
+        }
+        else if (float* float_value = std::get_if<float>(&literal.value)) {
+            OpCode opcode      = static_cast<OpCode>(opcode_id + 3); // OPFLOAT
+            U32    final_value = std::bit_cast<U32>(*float_value);
+
+            program.bytecode->emit(
+                opcode,
+                {
+                    dst,
+                    static_cast<Operand>(final_value & 0xFFFF),
+                    static_cast<Operand>(final_value >> 16),
+                }
+            );
+        }
+        else {
+            OpCode opcode = static_cast<OpCode>(opcode_id + 1); // OPK
+
+            TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode&>(rhs));
+            Operand right_const_id  = PUSH_K(right_const_val);
+
+            program.bytecode->emit(opcode, {dst, right_const_id});
+        }
     }
     else {
         OpCode  opcode = static_cast<OpCode>(opcode_id);

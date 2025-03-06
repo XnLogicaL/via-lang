@@ -21,7 +21,7 @@ namespace via {
 // Can be used universally, has no dependencies, as seen in both viac and viaVM bytecode parser
 class Tokenizer {
 public:
-    Tokenizer(ProgramData &program)
+    Tokenizer(ProgramData& program)
         : program(program)
     {
     }
@@ -48,7 +48,7 @@ private:
     Token get_token();
 
 private:
-    ProgramData &program;
+    ProgramData& program;
     SIZE         pos    = 0;
     SIZE         line   = 1;
     SIZE         offset = 0;
@@ -56,8 +56,9 @@ private:
 
 VIA_INLINE std::vector<Token> fast_tokenize(std::string source)
 {
-    ProgramData &program("<unknown>", source);
-    Tokenizer    tokenizer(&program);
+    std::string id = "<unknown>";
+    ProgramData program(id, source);
+    Tokenizer   tokenizer(program);
     tokenizer.tokenize();
 
     if (!program.tokens) {

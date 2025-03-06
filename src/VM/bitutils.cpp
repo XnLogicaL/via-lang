@@ -19,8 +19,8 @@ I32 reinterpret_u16_as_i32(U16 high, U16 low)
 
 F32 reinterpret_u16_as_f32(U16 high, U16 low)
 {
-    U32 combined = (static_cast<uint32_t>(high) << 16) | low;
-    return *reinterpret_cast<F32*>(&combined);
+    U32 combined = (static_cast<U32>(low) << 16) | high;
+    return std::bit_cast<F32>(combined);
 }
 
 } // namespace via

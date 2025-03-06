@@ -14,12 +14,12 @@ namespace via {
 using enum OpCode;
 using enum OutputSeverity;
 
-void StmtVisitor::visit(DeclarationNode &declaration_node)
+void StmtVisitor::visit(DeclarationNode& declaration_node)
 {
     bool is_global = declaration_node.is_global;
     bool is_const  = declaration_node.modifiers.is_const;
 
-    ExprNode   &val    = *std::move(declaration_node.value_expression);
+    ExprNode&   val    = *std::move(declaration_node.value_expression);
     Token       ident  = declaration_node.identifier;
     std::string symbol = ident.lexeme;
 
@@ -52,16 +52,78 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
         std::string comment = std::format("local {}", symbol);
 
         if IS_CONSTEXPR (val) {
-            const TValue &constant = construct_constant(dynamic_cast<LiteralNode &>(val));
-            const Operand const_id = PUSH_K(constant);
+            LiteralNode& literal = dynamic_cast<LiteralNode&>(val);
 
-            program.bytecode->emit(PUSHK, {const_id}, comment);
-            program.test_stack->push({
-                .symbol         = symbol,
-                .is_const       = is_const,
-                .is_constexpr   = true,
-                .primitive_type = constant.type,
-            });
+            if (std::get_if<std::monostate>(&literal.value)) {
+                program.bytecode->emit(PUSHNIL, {}, comment);
+                program.test_stack->push({
+                    .symbol         = symbol,
+                    .is_const       = is_const,
+                    .is_constexpr   = true,
+                    .primitive_type = ValueType::nil,
+                });
+            }
+            else if (int* int_value = std::get_if<int>(&literal.value)) {
+                U32 final_value = *int_value;
+
+                program.bytecode->emit(
+                    PUSHINT,
+                    {
+                        static_cast<Operand>(final_value & 0xFFFF),
+                        static_cast<Operand>(final_value >> 16),
+                    },
+                    comment
+                );
+
+                program.test_stack->push({
+                    .symbol         = symbol,
+                    .is_const       = is_const,
+                    .is_constexpr   = true,
+                    .primitive_type = ValueType::integer,
+                });
+            }
+            else if (float* float_value = std::get_if<float>(&literal.value)) {
+                U32 final_value = std::bit_cast<U32>(*float_value);
+
+                program.bytecode->emit(
+                    PUSHFLOAT,
+                    {
+                        static_cast<Operand>(final_value & 0xFFFF),
+                        static_cast<Operand>(final_value >> 16),
+                    },
+                    comment
+                );
+
+                program.test_stack->push({
+                    .symbol         = symbol,
+                    .is_const       = is_const,
+                    .is_constexpr   = true,
+                    .primitive_type = ValueType::floating_point,
+                });
+            }
+            else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
+                Operand final_value = static_cast<Operand>(*bool_value);
+
+                program.bytecode->emit(PUSHBOOL, {final_value}, comment);
+                program.test_stack->push({
+                    .symbol         = symbol,
+                    .is_const       = is_const,
+                    .is_constexpr   = true,
+                    .primitive_type = ValueType::boolean,
+                });
+            }
+            else {
+                const TValue& constant = construct_constant(dynamic_cast<LiteralNode&>(val));
+                const Operand const_id = PUSH_K(constant);
+
+                program.bytecode->emit(PUSHK, {const_id}, comment);
+                program.test_stack->push({
+                    .symbol         = symbol,
+                    .is_const       = is_const,
+                    .is_constexpr   = true,
+                    .primitive_type = constant.type,
+                });
+            }
         }
         else {
             Operand dst = allocator.allocate_register();
@@ -81,11 +143,11 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
     }
 }
 
-void StmtVisitor::visit(ScopeNode &scope_node)
+void StmtVisitor::visit(ScopeNode& scope_node)
 {
     Operand stack_pointer = program.test_stack->sp;
 
-    for (const pStmtNode &pstmt : scope_node.statements) {
+    for (const pStmtNode& pstmt : scope_node.statements) {
         pstmt->accept(*this);
     }
 
@@ -95,7 +157,7 @@ void StmtVisitor::visit(ScopeNode &scope_node)
     }
 }
 
-void StmtVisitor::visit(FunctionNode &function_node)
+void StmtVisitor::visit(FunctionNode& function_node)
 {
     Operand function_reg = allocator.allocate_register();
 
@@ -117,20 +179,20 @@ void StmtVisitor::visit(FunctionNode &function_node)
         )
     );
 
-    ScopeNode &scope = dynamic_cast<ScopeNode &>(*function_node.body);
-    for (const pStmtNode &pstmt : scope.statements) {
-        const StmtNode &stmt = *pstmt;
+    ScopeNode& scope = dynamic_cast<ScopeNode&>(*function_node.body);
+    for (const pStmtNode& pstmt : scope.statements) {
+        const StmtNode& stmt = *pstmt;
         if (IS_INHERITOR(stmt, DeclarationNode) || IS_INHERITOR(stmt, FunctionNode)) {
             bool is_global;
             U32  identifier_position;
 
             if IS_INHERITOR (stmt, DeclarationNode) {
-                const DeclarationNode &node = dynamic_cast<const DeclarationNode &>(stmt);
+                const DeclarationNode& node = dynamic_cast<const DeclarationNode&>(stmt);
                 is_global                   = node.is_global;
                 identifier_position         = node.identifier.position;
             }
             else {
-                const FunctionNode &node = dynamic_cast<const FunctionNode &>(stmt);
+                const FunctionNode& node = dynamic_cast<const FunctionNode&>(stmt);
                 is_global                = node.is_global;
                 identifier_position      = node.identifier.position;
             }
@@ -189,7 +251,7 @@ void StmtVisitor::visit(FunctionNode &function_node)
     });
 }
 
-void StmtVisitor::visit(AssignNode &assign_node)
+void StmtVisitor::visit(AssignNode& assign_node)
 {
     Token                  symbol_token = assign_node.identifier;
     std::string            symbol       = symbol_token.lexeme;
@@ -198,7 +260,7 @@ void StmtVisitor::visit(AssignNode &assign_node)
     });
 
     if (stk_id.has_value()) {
-        const auto &test_stack_member = program.test_stack->at(stk_id.value());
+        const auto& test_stack_member = program.test_stack->at(stk_id.value());
         if (test_stack_member.has_value() && test_stack_member->is_const) {
             visitor_failed = true;
             emitter.out(
@@ -220,11 +282,11 @@ void StmtVisitor::visit(AssignNode &assign_node)
     }
 }
 
-void StmtVisitor::visit(IfNode &) {}
+void StmtVisitor::visit(IfNode&) {}
 
-void StmtVisitor::visit(WhileNode &while_node)
+void StmtVisitor::visit(WhileNode& while_node)
 {
-    ScopeNode &body     = dynamic_cast<ScopeNode &>(*while_node.body);
+    ScopeNode& body     = dynamic_cast<ScopeNode&>(*while_node.body);
     Operand    cond_reg = allocator.allocate_register();
 
     VISITOR_DEF_LABEL(cond_label);
@@ -250,7 +312,7 @@ void StmtVisitor::visit(WhileNode &while_node)
     allocator.free_register(cond_reg);
 }
 
-void StmtVisitor::visit(ExprStmtNode &expr_stmt)
+void StmtVisitor::visit(ExprStmtNode& expr_stmt)
 {
     Operand trash_register = allocator.allocate_register();
     expr_stmt.expression->accept(expression_visitor, trash_register);

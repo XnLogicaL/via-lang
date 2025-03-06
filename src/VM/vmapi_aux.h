@@ -17,7 +17,10 @@ VIA_INLINE void __closure_upvs_resize(TFunction* _Closure)
     U32      _New_size     = _Current_size * VIA_UPV_RESIZE_FACTOR;
     UpValue* _New_location = new UpValue[_New_size];
 
-    std::memcpy(_New_location, _Closure->upvs, _Closure->upv_count * sizeof(UpValue));
+    for (UpValue* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
+        U32 offset            = ptr - _Closure->upvs;
+        _New_location[offset] = std::move(*ptr);
+    }
 
     delete[] _Closure->upvs;
     _Closure->upvs      = _New_location;
