@@ -10,7 +10,15 @@
 
 namespace via {
 
-enum class ValueType {
+#ifdef VIA_64BIT
+using TInteger = I64;
+using TFloat   = F64;
+#else
+using TInteger = I32;
+using TFloat   = F32;
+#endif
+
+enum class ValueType : U8 {
     nil,            // Empty values, like null, does not contain a union counterpart
     integer,        // Integer type (i32)
     floating_point, // Float type (f32)
@@ -22,25 +30,21 @@ enum class ValueType {
     object,
 };
 
-struct TValue {
+struct alignas(8) TValue {
     ValueType type = ValueType::nil;
     union {
-        int val_integer;
-        float val_floating_point;
-        bool val_boolean;
-        void *val_pointer;
+        TInteger val_integer;
+        TFloat   val_floating_point;
+        bool     val_boolean;
+        void*    val_pointer;
     };
 
-    TValue(const TValue &) = delete;            // Copy constructor
-    TValue(TValue &&other) noexcept;            // Move constructor
-    TValue &operator=(const TValue &) = delete; // Assignment operator
-    TValue &operator=(TValue &&) noexcept;      // Move operator
+    TValue()              = default;
+    TValue(const TValue&) = delete;            // Copy constructor
+    TValue(TValue&& other) noexcept;           // Move constructor
+    TValue& operator=(const TValue&) = delete; // Assignment operator
+    TValue& operator=(TValue&&) noexcept;      // Move operator
     ~TValue();
-
-    explicit TValue()
-        : type(ValueType::nil)
-    {
-    }
 
     explicit TValue(int x)
         : type(ValueType::integer)
@@ -60,7 +64,7 @@ struct TValue {
     {
     }
 
-    explicit TValue(ValueType type, void *ptr)
+    explicit TValue(ValueType type, void* ptr)
         : type(type)
         , val_pointer(ptr)
     {
@@ -69,18 +73,18 @@ struct TValue {
     TValue clone() const noexcept;
 
     template<typename T>
-    [[nodiscard]] VIA_MAXOPTIMIZE T *cast_ptr() const noexcept
+    [[nodiscard]] VIA_MAXOPTIMIZE T* cast_ptr() const noexcept
     {
-        return reinterpret_cast<T *>(val_pointer);
+        return reinterpret_cast<T*>(val_pointer);
     }
 };
 
 struct TString {
-    const char *data = dup_string("");
-    U32 len = 0;
-    U32 hash = 0;
+    const char* data = dup_string("");
+    U32         len  = 0;
+    U32         hash = 0;
 
-    explicit TString(State *, const char *);
+    explicit TString(State*, const char*);
     TString() = default;
     ~TString();
 };
@@ -88,15 +92,15 @@ struct TString {
 struct TTable {
     bool is_frozen = false;
 
-    TTable *meta = nullptr;
+    TTable*                         meta = nullptr;
     std::unordered_map<U32, TValue> data;
 
     TTable() = default;
-    TTable(const TTable &other)
+    TTable(const TTable& other)
         : is_frozen(other.is_frozen)
         , meta(other.meta)
     {
-        for (const auto &pair : other.data) {
+        for (const auto& pair : other.data) {
             data.emplace(pair.first, pair.second.clone());
         }
     }

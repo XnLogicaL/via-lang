@@ -37,7 +37,7 @@ public:
     TestStackMember                pop();
     U64                            size();
     std::optional<TestStackMember> at(SIZE);
-    std::optional<VIA_OPERAND>     find_symbol(const TestStackMember &);
+    std::optional<Operand>         find_symbol(const TestStackMember &);
 
 public:
     U64                                 sp = 0;

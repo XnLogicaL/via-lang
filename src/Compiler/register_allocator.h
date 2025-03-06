@@ -19,12 +19,12 @@ public:
         }
     }
 
-    VIA_OPERAND allocate_register();
-    VIA_OPERAND allocate_temp();
-    void free_register(VIA_OPERAND);
+    Operand allocate_register();
+    Operand allocate_temp();
+    void    free_register(Operand);
 
 private:
-    std::unordered_map<VIA_OPERAND, bool> registers;
+    std::unordered_map<Operand, bool> registers;
 };
 
 } // namespace via

@@ -13,7 +13,7 @@ namespace via {
 using namespace impl;
 
 // Initializes and returns a new State object
-State::State(GState *G, ProgramData &program)
+State::State(GState* G, ProgramData& program)
     : id(G->threads++)
     , G(G)
     , gc(new GarbageCollector())
@@ -24,32 +24,36 @@ State::State(GState *G, ProgramData &program)
 {
     load(*program.bytecode);
 
-    TFunction *main = __create_main_function(this);
+    TFunction* main = new TFunction{
+        .ret_addr     = ip,
+        .bytecode     = ip,
+        .bytecode_len = static_cast<U32>(iep - ibp),
+    };
     __native_call(this, main, 0);
 }
 
-void State::load(BytecodeHolder &bytecode)
+void State::load(BytecodeHolder& bytecode)
 {
-    if (this->ihp) { // Clean up previous instruction pipeline
-        delete[] this->ihp;
-        this->ihp = nullptr;
+    if (this->ibp) { // Clean up previous instruction pipeline
+        delete[] this->ibp;
+        this->ibp = nullptr;
     }
 
-    const std::vector<Bytecode> &pipeline = bytecode.get();
+    const std::vector<Bytecode>& pipeline = bytecode.get();
 
     if (pipeline.empty()) {
-        this->ihp = this->ibp = this->ip = nullptr;
+        this->ibp = this->iep = this->ip = nullptr;
         return;
     }
 
-    this->ihp = new Instruction[pipeline.size()]; // Allocate ihp (Instruction head pointer)
-    this->ibp = this->ihp + pipeline.size();      // Initialize ibp (Instruction base pointer)
-    this->ip  = this->ihp;                        // Initialize ip (Instruction pointer)
+    this->ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction head pointer)
+    this->iep = this->ibp + pipeline.size();      // Initialize iep (Instruction base pointer)
+    this->ip  = this->ibp;                        // Initialize ip (Instruction pointer)
 
     U64 position = 0;
-    for (const Bytecode &pair : pipeline) {
-        const Instruction &instruction = pair.instruction;
-        this->ihp[position++]          = instruction;
+    for (const Bytecode& pair : pipeline) {
+        const Instruction& instruction = pair.instruction;
+        this->ibp[position++]          = instruction;
     }
 }
 
@@ -59,8 +63,8 @@ State::~State()
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
 
-        if (sstate->ihp == ihp) {
-            sstate->ihp = nullptr;
+        if (sstate->ibp == ibp) {
+            sstate->ibp = nullptr;
         }
 
         if (sstate->sbp == sbp) {
@@ -79,8 +83,8 @@ State::~State()
         delete[] this->registers;
     }
 
-    if (this->ihp) {
-        delete[] this->ihp;
+    if (this->ibp) {
+        delete[] this->ibp;
     }
 
     if (this->sbp) {
@@ -88,9 +92,9 @@ State::~State()
     }
 }
 
-std::string to_string(State *state)
+std::string to_string(State* state)
 {
-#define TO_VOID_STAR(ptr) reinterpret_cast<void *>(ptr)
+#define TO_VOID_STAR(ptr) reinterpret_cast<void*>(ptr)
 
     std::ostringstream oss;
 
@@ -98,8 +102,8 @@ std::string to_string(State *state)
     oss << std::format("|id    | {}\n", state->id);
     oss << std::format("|G     | <GState@{}>\n", TO_VOID_STAR(state->G));
     oss << std::format("|ip    | {}\n", TO_VOID_STAR(state->ip));
-    oss << std::format("|ihp   | {}\n", TO_VOID_STAR(state->ihp));
     oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
+    oss << std::format("|iep   | {}\n", TO_VOID_STAR(state->iep));
     oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));
     oss << std::format("|gc    | {}\n", TO_VOID_STAR(state->gc));
     oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));

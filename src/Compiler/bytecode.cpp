@@ -26,10 +26,10 @@ void BytecodeHolder::remove(U64 index)
 }
 
 void BytecodeHolder::insert(
-    U64 index,
-    OpCode opcode,
-    const std::array<VIA_OPERAND, 3> &operands,
-    const std::string &comment
+    U64                           index,
+    OpCode                        opcode,
+    const std::array<Operand, 3> &operands,
+    const std::string            &comment
 )
 {
     // Insert the instruction at the specified index
@@ -38,14 +38,14 @@ void BytecodeHolder::insert(
         {
             .instruction =
                 {
-                    .op = opcode,
+                    .op       = opcode,
                     .operand0 = operands.at(0),
                     .operand1 = operands.at(1),
                     .operand2 = operands.at(2),
                 },
             .meta_data =
                 {
-                    .chunk = nullptr,
+                    .chunk   = nullptr,
                     .comment = comment,
                 },
         }
@@ -53,22 +53,22 @@ void BytecodeHolder::insert(
 }
 
 void BytecodeHolder::emit(
-    OpCode opcode,
-    const std::array<VIA_OPERAND, 3> &operands,
-    const std::string &comment
+    OpCode                        opcode,
+    const std::array<Operand, 3> &operands,
+    const std::string            &comment
 )
 {
     add({
         .instruction =
             {
-                .op = opcode,
+                .op       = opcode,
                 .operand0 = operands.at(0),
                 .operand1 = operands.at(1),
                 .operand2 = operands.at(2),
             },
         .meta_data =
             {
-                .chunk = nullptr,
+                .chunk   = nullptr,
                 .comment = comment,
             },
     });

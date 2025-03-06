@@ -11,32 +11,33 @@
 #include "opcode.h"
 #include "state.h"
 #include "types.h"
+#include "vmapi_aux.h"
 
 namespace via::impl {
 
 static const TValue _Nil = TValue();
 
-VIA_MAXOPTIMIZE void __set_error_state(State *_V, const std::string &_Msg)
+VIA_MAXOPTIMIZE void __set_error_state(State* _V, const std::string& _Msg)
 {
     _V->err->frame   = _V->frame;
     _V->err->message = _Msg;
 }
 
-VIA_MAXOPTIMIZE void __clear_error_state(State *_V)
+VIA_MAXOPTIMIZE void __clear_error_state(State* _V)
 {
     _V->err->frame   = nullptr;
     _V->err->message = "";
 }
 
-VIA_MAXOPTIMIZE bool __has_error(State *_V)
+VIA_MAXOPTIMIZE bool __has_error(State* _V)
 {
     return _V->err->frame != nullptr;
 }
 
-VIA_FORCEINLINE bool __handle_error(State *_V)
+VIA_FORCEINLINE bool __handle_error(State* _V)
 {
-    TFunction *_Current_frame = _V->frame;
-    TFunction *_Error_frame   = _V->frame;
+    TFunction* _Current_frame = _V->frame;
+    TFunction* _Error_frame   = _V->frame;
 
     while (_Current_frame) {
         if (_Current_frame->is_error_handler) {
@@ -48,21 +49,25 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
 
     if (!_Current_frame) {
         if (_Error_frame) {
-            std::cerr << std::format(
-                             "<frame@0x{:x}>: {}\n",
-                             reinterpret_cast<uintptr_t>(_Error_frame),
-                             _V->err->message
-                         )
-                      << '\n';
+            std::string _Error = std::format(
+                "{} <frame@0x{:x}>: {}\n\n",
+                _Error_frame->id,
+                reinterpret_cast<uintptr_t>(_Error_frame),
+                _V->err->message
+            );
+            std::cerr << _Error;
         }
 
-        std::unordered_set<TFunction *> visited;
-        SIZE                            _Idx = 0;
+        std::unordered_set<TFunction*> visited;
 
+        SIZE _Idx = 0;
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
             std::cerr << std::format(
-                "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
+                "#{} {} <frame@0x{:x}>\n",
+                _Error_frame->id,
+                _Idx++,
+                reinterpret_cast<uintptr_t>(_Error_frame)
             );
             _Error_frame = _Error_frame->caller;
         }
@@ -71,19 +76,19 @@ VIA_FORCEINLINE bool __handle_error(State *_V)
     return static_cast<bool>(_Current_frame);
 }
 
-VIA_MAXOPTIMIZE void __set_register(State *_V, U32 _Reg, const TValue &_Val)
+VIA_MAXOPTIMIZE void __set_register(State* _V, Operand _Reg, const TValue& _Val)
 {
-    TValue *addr = _V->registers + _Reg;
+    TValue* addr = _V->registers + _Reg;
     *addr        = _Val.clone();
 }
 
-VIA_MAXOPTIMIZE TValue *__get_register(State *_V, U32 _Reg)
+VIA_MAXOPTIMIZE TValue* __get_register(State* _V, Operand _Reg)
 {
-    TValue *addr = _V->registers + _Reg;
+    TValue* addr = _V->registers + _Reg;
     return addr;
 }
 
-VIA_INLINE TValue __get_constant(State *_V, SIZE _Idx)
+VIA_INLINE TValue __get_constant(State* _V, SIZE _Idx)
 {
     if (_Idx >= _V->program.constants->size()) {
         return _Nil.clone();
@@ -92,46 +97,51 @@ VIA_INLINE TValue __get_constant(State *_V, SIZE _Idx)
     return _V->program.constants->at(_Idx).clone();
 }
 
-VIA_MAXOPTIMIZE void __push(State *_V, const TValue &_Val)
+VIA_MAXOPTIMIZE void __push(State* _V, const TValue& _Val)
 {
     _V->sbp[_V->sp++] = _Val.clone();
 }
 
-VIA_MAXOPTIMIZE TValue __pop(State *_V)
+VIA_MAXOPTIMIZE TValue __pop(State* _V)
 {
     return _V->sbp[_V->sp--].clone();
 }
 
-VIA_MAXOPTIMIZE TValue __get_stack(State *_V, U32 offset) noexcept
+VIA_MAXOPTIMIZE TValue __get_stack(State* _V, Operand _Offset) noexcept
 {
-    return _V->sbp[offset].clone();
+    return _V->sbp[_Offset].clone();
 }
 
-VIA_FORCEINLINE TValue __get_argument(State *VIA_RESTRICT _V, U32 _Offset) noexcept
+VIA_MAXOPTIMIZE void __set_stack(State* _V, Operand _Offset, TValue& _Val) noexcept
+{
+    _V->sbp[_Offset] = _Val.clone();
+}
+
+VIA_FORCEINLINE TValue __get_argument(State* VIA_RESTRICT _V, Operand _Offset) noexcept
 {
     if (_Offset >= _V->argc) {
         return _Nil.clone();
     }
 
-    const U32     _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
-    const TValue &_Val        = _V->sbp[_Stk_offset];
+    const Operand _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
+    const TValue& _Val        = _V->sbp[_Stk_offset];
 
     return _Val.clone();
 }
 
-VIA_FORCEINLINE TValue __type(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
+VIA_FORCEINLINE TValue __type(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
 {
-    char *_Str = dup_string(std::string(magic_enum::enum_name(_Val.type)));
+    char* _Str = dup_string(std::string(magic_enum::enum_name(_Val.type)));
     return TValue(new TString(_V, _Str));
 }
 
-VIA_FORCEINLINE std::string __type_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val)
+VIA_FORCEINLINE std::string __type_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val)
 {
     TValue _Type = __type(_V, _Val);
     return std::string(_Type.cast_ptr<TString>()->data);
 }
 
-VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, bool _Search_meta) noexcept
+VIA_INLINE TValue __get_table(TTable* VIA_RESTRICT _Tbl, Operand _Key, bool _Search_meta) noexcept
 {
     auto _It = _Tbl->data.find(_Key);
     if (_It != _Tbl->data.end()) {
@@ -144,10 +154,14 @@ VIA_INLINE TValue __get_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, bool _Search_
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, const TValue &_Val) noexcept
+VIA_FORCEINLINE void __set_table(
+    TTable* VIA_RESTRICT _Tbl,
+    Operand              _Key,
+    const TValue&        _Val
+) noexcept
 {
     if (check_nil(_Val)) {
-        const TValue &_Tbl_val = __get_table(_Tbl, _Key, false);
+        const TValue& _Tbl_val = __get_table(_Tbl, _Key, false);
 
         if (!check_nil(_Tbl_val)) {
             _Tbl->data.erase(_Key);
@@ -158,11 +172,11 @@ VIA_FORCEINLINE void __set_table(TTable *VIA_RESTRICT _Tbl, U32 _Key, const TVal
     }
 }
 
-VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
+VIA_FORCEINLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val)
 {
     if (check_table(_Val)) {
-        TTable       *_Tbl  = _Val.cast_ptr<TTable>();
-        const TValue &_Type = __get_table(_Tbl, hash_string("__type"), true);
+        TTable*       _Tbl  = _Val.cast_ptr<TTable>();
+        const TValue& _Type = __get_table(_Tbl, hash_string("__type"), true);
 
         if (check_nil(_Type)) {
             return __type(_V, _Val);
@@ -174,20 +188,24 @@ VIA_FORCEINLINE TValue __typeofv(State *VIA_RESTRICT _V, const TValue &_Val)
     return __type(_V, _Val);
 }
 
-VIA_MAXOPTIMIZE void __native_call(State *_V, TFunction *_Callee, SIZE _Argc)
+VIA_MAXOPTIMIZE void __native_call(State* _V, TFunction* _Callee, SIZE _Argc)
 {
     _Callee->caller   = _V->frame;
     _Callee->ret_addr = _V->ip;
     _V->frame         = _Callee;
+    _V->sibp          = _V->ibp;
+    _V->siep          = _V->iep;
     _V->ip            = _Callee->bytecode;
+    _V->ibp           = _Callee->bytecode;
+    _V->iep           = _Callee->bytecode + _Callee->bytecode_len;
     _V->argc          = _Argc;
     _V->ssp           = _V->sp;
 }
 
-VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, SIZE _Argc)
+VIA_MAXOPTIMIZE void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc)
 {
     char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
-    const void *_Addr    = _Callee;
+    const void* _Addr    = _Callee;
     uintptr_t   _Address = reinterpret_cast<uintptr_t>(_Addr);
     _Buf[0]              = '0';
     _Buf[1]              = 'x';
@@ -211,13 +229,13 @@ VIA_MAXOPTIMIZE void __extern_call(State *_V, TCFunction *_Callee, SIZE _Argc)
 }
 
 VIA_MAXOPTIMIZE void __method_call(
-    State *VIA_RESTRICT  _V,
-    TTable *VIA_RESTRICT _Tbl,
-    U32                  _Key,
+    State* VIA_RESTRICT  _V,
+    TTable* VIA_RESTRICT _Tbl,
+    Operand              _Key,
     SIZE                 _Argc
 ) noexcept
 {
-    const TValue &_Method = __get_table(_Tbl, _Key, true);
+    const TValue& _Method = __get_table(_Tbl, _Key, true);
     if (check_function(_Method)) {
         __native_call(_V, _Method.cast_ptr<TFunction>(), _Argc);
     }
@@ -226,7 +244,7 @@ VIA_MAXOPTIMIZE void __method_call(
     }
 }
 
-VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, SIZE _Argc)
+VIA_MAXOPTIMIZE void __call(State* _V, const TValue& _Callee, SIZE _Argc)
 {
     _V->calltype = CallType::CALL;
 
@@ -246,14 +264,14 @@ VIA_MAXOPTIMIZE void __call(State *_V, const TValue &_Callee, SIZE _Argc)
     }
 }
 
-VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
+VIA_FORCEINLINE TValue __len(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
 {
     if (check_string(_Val)) {
         return TValue(static_cast<int>(strlen(_Val.cast_ptr<TString>()->data)));
     }
     else if (check_table(_Val)) {
-        U32           _Metamethod_key = hash_string("__len");
-        const TValue &_Metamethod     = __get_table(_Val.cast_ptr<TTable>(), _Metamethod_key, true);
+        Operand       _Metamethod_key = hash_string("__len");
+        const TValue& _Metamethod     = __get_table(_Val.cast_ptr<TTable>(), _Metamethod_key, true);
 
         if (check_nil(_Metamethod)) {
             return TValue(static_cast<int>(_Val.cast_ptr<TTable>()->data.size()));
@@ -266,29 +284,31 @@ VIA_FORCEINLINE TValue __len(State *VIA_RESTRICT _V, const TValue &_Val) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __native_return(State *VIA_RESTRICT _V, SIZE _Retc) noexcept
+VIA_FORCEINLINE void __native_return(State* VIA_RESTRICT _V, SIZE _Retc) noexcept
 {
-    std::vector<TValue> _Ret_values;
+    TValue* _Ret_values = new TValue[_Retc];
+    for (SIZE i = 0; i < _Retc; i++) {
+        _Ret_values[i] = __pop(_V);
+    }
+
+    __closure_close_upvalues(_V);
+
+    _V->ibp   = _V->sibp;
+    _V->iep   = _V->siep;
     _V->ip    = _V->frame->ret_addr;
     _V->frame = _V->frame->caller;
 
-    for (SIZE i = 0; i < _Retc; i++) {
-        TValue _Ret_val = __pop(_V);
-        _Ret_values.push_back(std::move(_Ret_val));
-    }
-
     _V->sp = _V->ssp;
-
-    for (SIZE i = 0; i < _V->argc; i++) {
-        __pop(_V);
-    }
+    _V->sp -= _V->argc;
 
     for (int i = _Retc - 1; i >= 0; i--) {
-        __push(_V, _Ret_values.at(i).clone());
+        __push(_V, std::move(_Ret_values[i]));
     }
+
+    delete[] _Ret_values;
 }
 
-VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, U32 _Id) noexcept
+VIA_MAXOPTIMIZE TValue __get_global(State* VIA_RESTRICT _V, Operand _Id) noexcept
 {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
@@ -300,7 +320,7 @@ VIA_MAXOPTIMIZE TValue __get_global(State *VIA_RESTRICT _V, U32 _Id) noexcept
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, U32 _Id, const TValue &_Val)
+VIA_FORCEINLINE void __set_global(State* VIA_RESTRICT _V, Operand _Id, const TValue& _Val)
 {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
@@ -312,7 +332,7 @@ VIA_FORCEINLINE void __set_global(State *VIA_RESTRICT _V, U32 _Id, const TValue 
     _V->G->gtable.emplace(_Id, _Val.clone());
 }
 
-VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
+VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
 {
     using enum ValueType;
 
@@ -323,22 +343,22 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
     switch (_Val.type) {
     case integer: {
         std::string _Str  = std::to_string(_Val.val_integer);
-        TString    *_Tstr = new TString(_V, _Str.c_str());
+        TString*    _Tstr = new TString(_V, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case floating_point: {
         std::string _Str  = std::to_string(_Val.val_floating_point);
-        TString    *_Tstr = new TString(_V, _Str.c_str());
+        TString*    _Tstr = new TString(_V, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case boolean: {
-        TString *_Str = new TString(_V, _Val.val_boolean ? "true" : "false");
+        TString* _Str = new TString(_V, _Val.val_boolean ? "true" : "false");
         return TValue(string, _Str);
     }
     case table: {
         std::string _Str = "{";
 
-        for (auto &_Elem : _Val.cast_ptr<TTable>()->data) {
+        for (auto& _Elem : _Val.cast_ptr<TTable>()->data) {
             _Str += __to_string(_V, _Elem.second).cast_ptr<TString>()->data;
             _Str += ", ";
         }
@@ -349,25 +369,25 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
 
         _Str += "}";
 
-        TString *_Tstr = new TString(_V, _Str.c_str());
+        TString* _Tstr = new TString(_V, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case function: {
-        const void *_Faddr = _Val.cast_ptr<TFunction>();
+        const void* _Faddr = _Val.cast_ptr<TFunction>();
         std::string _Str   = std::format("<function@{}>", _Faddr);
-        TString    *_Tstr  = new TString(_V, _Str.c_str());
+        TString*    _Tstr  = new TString(_V, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case cfunction: {
         // This has to be explicitly casted because function pointers be
         // weird
-        const void *_Cfaddr = _Val.cast_ptr<TCFunction>();
+        const void* _Cfaddr = _Val.cast_ptr<TCFunction>();
         std::string _Str    = std::format("<cfunction@{}>", _Cfaddr);
-        TString    *_Tstr   = new TString(_V, _Str.c_str());
+        TString*    _Tstr   = new TString(_V, _Str.c_str());
         return TValue(string, _Tstr);
     }
     default:
-        TString *_Tstr = new TString(_V, "nil");
+        TString* _Tstr = new TString(_V, "nil");
         return TValue(string, _Tstr);
     }
 
@@ -375,13 +395,13 @@ VIA_INLINE TValue __to_string(State *VIA_RESTRICT _V, const TValue &_Val) noexce
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE std::string __to_cxx_string(State *VIA_RESTRICT _V, const TValue &_Val) noexcept
+VIA_FORCEINLINE std::string __to_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
 {
     TValue _Str = __to_string(_V, _Val);
     return std::string(_Str.cast_ptr<TString>()->data);
 }
 
-VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
+VIA_FORCEINLINE TValue __to_bool(const TValue& _Val) noexcept
 {
     if (check_bool(_Val)) {
         return _Val.clone();
@@ -393,7 +413,7 @@ VIA_FORCEINLINE TValue __to_bool(const TValue &_Val) noexcept
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE bool __to_cxx_bool(const TValue &_Val) noexcept
+VIA_FORCEINLINE bool __to_cxx_bool(const TValue& _Val) noexcept
 {
     return __to_bool(_Val).val_boolean;
 }
@@ -402,7 +422,7 @@ VIA_FORCEINLINE bool __to_cxx_bool(const TValue &_Val) noexcept
 #include <string>
 #include <iostream>
 
-VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
+VIA_FORCEINLINE TValue __to_number(const TValue& _Val) noexcept
 {
     using enum ValueType;
 
@@ -412,7 +432,7 @@ VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 
     switch (_Val.type) {
     case string: {
-        const std::string &str = _Val.cast_ptr<TString>()->data;
+        const std::string& str = _Val.cast_ptr<TString>()->data;
         if (str.empty()) {
             return _Nil.clone();
         }
@@ -442,7 +462,7 @@ VIA_FORCEINLINE TValue __to_number(const TValue &_Val) noexcept
 
 template<typename T>
     requires std::is_arithmetic_v<T>
-VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
+VIA_FORCEINLINE T __to_cxx_number(const TValue& _Val) noexcept
 {
     TValue _Number = __to_number(_Val);
 
@@ -470,7 +490,7 @@ VIA_FORCEINLINE T __to_cxx_number(const TValue &_Val) noexcept
     }
 }
 
-VIA_FORCEINLINE void *__to_pointer(const TValue &_Val) noexcept
+VIA_FORCEINLINE void* __to_pointer(const TValue& _Val) noexcept
 {
     switch (_Val.type) {
     case ValueType::cfunction:
@@ -483,7 +503,7 @@ VIA_FORCEINLINE void *__to_pointer(const TValue &_Val) noexcept
     }
 }
 
-VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexcept
+VIA_MAXOPTIMIZE bool __compare(const TValue& _Val_0, const TValue& _Val_1) noexcept
 {
     using enum ValueType;
 
@@ -510,7 +530,7 @@ VIA_MAXOPTIMIZE bool __compare(const TValue &_Val_0, const TValue &_Val_1) noexc
     return false;
 };
 
-VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
+VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue& _Val, OpCode _Op)
 {
     if (!check_table(_Val)) {
         return _Nil.clone();
@@ -546,7 +566,7 @@ VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue &_Val, OpCode _Op)
 #undef GET_METHOD
 }
 
-VIA_INLINE TValue __weak_primitive_cast(State *VIA_RESTRICT _V, const TValue &_Val, ValueType _Type)
+VIA_INLINE TValue __weak_primitive_cast(State* VIA_RESTRICT _V, const TValue& _Val, ValueType _Type)
 {
     using enum ValueType;
 
@@ -565,7 +585,7 @@ VIA_INLINE TValue __weak_primitive_cast(State *VIA_RESTRICT _V, const TValue &_V
     return _Nil.clone();
 }
 
-VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, ValueType _Type)
+VIA_INLINE void __strong_primtive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type)
 {
     using enum ValueType;
 
@@ -589,7 +609,7 @@ VIA_INLINE void __strong_primtive_cast(State *VIA_RESTRICT _V, TValue &_Val, Val
         break;
     case string: {
         TValue   _Non_owned_val = __to_string(_V, _Val);
-        TString *_Owned_val     = _Val.cast_ptr<TString>();
+        TString* _Owned_val     = _Val.cast_ptr<TString>();
 
         _Val.val_pointer = new TString(_V, _Non_owned_val.cast_ptr<TString>()->data);
 

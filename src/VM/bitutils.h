@@ -6,4 +6,10 @@
 
 #include "common.h"
 
-#define U16_TO_U32(a, b) ((static_cast<U32>(b) << 16) | a)
+namespace via {
+
+U32 reinterpret_u16_as_u32(U16 high, U16 low);
+I32 reinterpret_u16_as_i32(U16 high, U16 low);
+F32 reinterpret_u16_as_f32(U16 high, U16 low);
+
+} // namespace via

@@ -52,6 +52,9 @@ using I16 = std::int16_t;
 using I32 = std::int32_t;
 using I64 = std::int64_t;
 
+using F32 = std::float_t;
+using F64 = std::double_t;
+
 using SIZE = std::size_t;
 
 } // namespace via

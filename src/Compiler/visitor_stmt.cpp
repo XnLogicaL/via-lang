@@ -6,7 +6,7 @@
 #include "stack.h"
 
 #define VISITOR_INDEX program.bytecode->get().size()
-#define VISITOR_DEF_LABEL(lbl) VIA_OPERAND lbl = VISITOR_INDEX;
+#define VISITOR_DEF_LABEL(lbl) Operand lbl = VISITOR_INDEX;
 #define VISITOR_GET_LABEL(lbl) static_cast<I32>(VISITOR_INDEX - lbl)
 
 namespace via {
@@ -36,8 +36,8 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
             emitter.out(previously_declared->token.position, "Previously declared here", Info);
         }
         else {
-            VIA_OPERAND value_reg   = allocator.allocate_register();
-            VIA_OPERAND symbol_hash = hash_string(symbol.c_str());
+            Operand value_reg   = allocator.allocate_register();
+            Operand symbol_hash = hash_string(symbol.c_str());
 
             declaration_node.value_expression->accept(expression_visitor, value_reg);
 
@@ -52,8 +52,8 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
         std::string comment = std::format("local {}", symbol);
 
         if IS_CONSTEXPR (val) {
-            const TValue     &constant = construct_constant(dynamic_cast<LiteralNode &>(val));
-            const VIA_OPERAND const_id = PUSH_K(constant);
+            const TValue &constant = construct_constant(dynamic_cast<LiteralNode &>(val));
+            const Operand const_id = PUSH_K(constant);
 
             program.bytecode->emit(PUSHK, {const_id}, comment);
             program.test_stack->push({
@@ -64,7 +64,7 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
             });
         }
         else {
-            VIA_OPERAND dst = allocator.allocate_register();
+            Operand dst = allocator.allocate_register();
 
             declaration_node.value_expression->accept(expression_visitor, dst);
 
@@ -83,13 +83,13 @@ void StmtVisitor::visit(DeclarationNode &declaration_node)
 
 void StmtVisitor::visit(ScopeNode &scope_node)
 {
-    VIA_OPERAND stack_pointer = program.test_stack->sp;
+    Operand stack_pointer = program.test_stack->sp;
 
     for (const pStmtNode &pstmt : scope_node.statements) {
         pstmt->accept(*this);
     }
 
-    VIA_OPERAND stack_allocations = program.test_stack->sp - stack_pointer;
+    Operand stack_allocations = program.test_stack->sp - stack_pointer;
     for (; stack_allocations > 0; stack_allocations--) {
         program.bytecode->emit(POP);
     }
@@ -97,7 +97,7 @@ void StmtVisitor::visit(ScopeNode &scope_node)
 
 void StmtVisitor::visit(FunctionNode &function_node)
 {
-    VIA_OPERAND function_reg = allocator.allocate_register();
+    Operand function_reg = allocator.allocate_register();
 
     // Push function to the function stack
     program.test_stack->function_stack.push({
@@ -169,8 +169,8 @@ void StmtVisitor::visit(FunctionNode &function_node)
             SETGLOBAL,
             {
                 function_reg,
-                static_cast<VIA_OPERAND>(symbol_hash & 0xFFFF),
-                static_cast<VIA_OPERAND>(symbol_hash >> 16),
+                static_cast<Operand>(symbol_hash & 0xFFFF),
+                static_cast<Operand>(symbol_hash >> 16),
             }
         );
     }
@@ -191,9 +191,9 @@ void StmtVisitor::visit(FunctionNode &function_node)
 
 void StmtVisitor::visit(AssignNode &assign_node)
 {
-    Token                      symbol_token = assign_node.identifier;
-    std::string                symbol       = symbol_token.lexeme;
-    std::optional<VIA_OPERAND> stk_id       = program.test_stack->find_symbol({
+    Token                  symbol_token = assign_node.identifier;
+    std::string            symbol       = symbol_token.lexeme;
+    std::optional<Operand> stk_id       = program.test_stack->find_symbol({
               .symbol = symbol,
     });
 
@@ -210,7 +210,7 @@ void StmtVisitor::visit(AssignNode &assign_node)
             return;
         }
 
-        VIA_OPERAND value_reg = allocator.allocate_register();
+        Operand value_reg = allocator.allocate_register();
         assign_node.value->accept(expression_visitor, value_reg);
         program.bytecode->emit(SETSTACK, {value_reg, stk_id.value()});
     }
@@ -224,8 +224,8 @@ void StmtVisitor::visit(IfNode &) {}
 
 void StmtVisitor::visit(WhileNode &while_node)
 {
-    ScopeNode  &body     = dynamic_cast<ScopeNode &>(*while_node.body);
-    VIA_OPERAND cond_reg = allocator.allocate_register();
+    ScopeNode &body     = dynamic_cast<ScopeNode &>(*while_node.body);
+    Operand    cond_reg = allocator.allocate_register();
 
     VISITOR_DEF_LABEL(cond_label);
 
@@ -239,11 +239,11 @@ void StmtVisitor::visit(WhileNode &while_node)
     I32 body_delta = VISITOR_GET_LABEL(body_label) + 2;
     I32 cond_delta = VISITOR_GET_LABEL(cond_label) + 2;
 
-    program.bytecode->emit(JUMP, {static_cast<VIA_OPERAND>(-cond_delta)});
+    program.bytecode->emit(JUMP, {static_cast<Operand>(-cond_delta)});
     program.bytecode->insert(
         body_label,
         JUMPIFNOT,
-        {cond_reg, static_cast<VIA_OPERAND>(body_delta)},
+        {cond_reg, static_cast<Operand>(body_delta)},
         std::format("while R{}", cond_reg)
     );
 
@@ -252,7 +252,7 @@ void StmtVisitor::visit(WhileNode &while_node)
 
 void StmtVisitor::visit(ExprStmtNode &expr_stmt)
 {
-    VIA_OPERAND trash_register = allocator.allocate_register();
+    Operand trash_register = allocator.allocate_register();
     expr_stmt.expression->accept(expression_visitor, trash_register);
     allocator.free_register(trash_register);
 }

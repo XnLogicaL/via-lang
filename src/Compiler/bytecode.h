@@ -37,16 +37,16 @@ public:
     void add(const Bytecode &);
     void remove(U64 index);
     void insert(
-        U64                               index    = 0,
-        OpCode                            opcode   = OpCode::NOP,
-        const std::array<VIA_OPERAND, 3> &operands = {},
-        const std::string                &comment  = ""
+        U64                           index    = 0,
+        OpCode                        opcode   = OpCode::NOP,
+        const std::array<Operand, 3> &operands = {},
+        const std::string            &comment  = ""
     );
 
     void emit(
-        OpCode                            opcode   = OpCode::NOP,
-        const std::array<VIA_OPERAND, 3> &operands = {},
-        const std::string                &comment  = ""
+        OpCode                        opcode   = OpCode::NOP,
+        const std::array<Operand, 3> &operands = {},
+        const std::string            &comment  = ""
     );
 
     std::vector<Bytecode> &get();

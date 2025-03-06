@@ -11,22 +11,22 @@ namespace via {
 using enum OpCode;
 using enum OutputSeverity;
 
-void ExprVisitor::visit(LiteralNode &literal_node, VIA_OPERAND dst)
+void ExprVisitor::visit(LiteralNode &literal_node, Operand dst)
 {
     using enum ValueType;
 
     TValue      constant     = construct_constant(literal_node);
-    VIA_OPERAND constant_id  = PUSH_K(constant);
+    Operand     constant_id  = PUSH_K(constant);
     std::string value_string = ""; //to_cxx_string(nullptr, constant);
     program.bytecode->emit(LOADK, {dst, constant_id}, value_string);
 }
 
-void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
+void ExprVisitor::visit(SymbolNode &variable_node, Operand dst)
 {
     Token var_id = variable_node.identifier;
 
-    std::string                symbol = var_id.lexeme;
-    std::optional<VIA_OPERAND> stk_id = program.test_stack->find_symbol({
+    std::string            symbol = var_id.lexeme;
+    std::optional<Operand> stk_id = program.test_stack->find_symbol({
         var_id.lexeme,
     });
 
@@ -48,8 +48,8 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
             GETGLOBAL,
             {
                 dst,
-                static_cast<VIA_OPERAND>(symbol_hash & 0xFFFF),
-                static_cast<VIA_OPERAND>(symbol_hash >> 16),
+                static_cast<Operand>(symbol_hash & 0xFFFF),
+                static_cast<Operand>(symbol_hash >> 16),
             },
             std::format("global {}", symbol)
         );
@@ -75,25 +75,25 @@ void ExprVisitor::visit(SymbolNode &variable_node, VIA_OPERAND dst)
     );
 }
 
-void ExprVisitor::visit(UnaryNode &unary_node, VIA_OPERAND dst)
+void ExprVisitor::visit(UnaryNode &unary_node, Operand dst)
 {
     unary_node.accept(*this, dst);
     program.bytecode->emit(NEG, {dst});
 }
 
-void ExprVisitor::visit(GroupNode &group_node, VIA_OPERAND dst)
+void ExprVisitor::visit(GroupNode &group_node, Operand dst)
 {
     group_node.accept(*this, dst);
 }
 
-void ExprVisitor::visit(CallNode &call_node, VIA_OPERAND dst)
+void ExprVisitor::visit(CallNode &call_node, Operand dst)
 {
-    VIA_OPERAND argc       = call_node.arguments.size();
-    VIA_OPERAND callee_reg = allocator.allocate_register();
+    Operand argc       = call_node.arguments.size();
+    Operand callee_reg = allocator.allocate_register();
     call_node.callee->accept(*this, callee_reg);
 
     for (const pExprNode &argument : call_node.arguments) {
-        VIA_OPERAND argument_reg = allocator.allocate_register();
+        Operand argument_reg = allocator.allocate_register();
         argument->accept(*this, argument_reg);
 
         program.bytecode->emit(PUSH, {argument_reg});
@@ -105,12 +105,12 @@ void ExprVisitor::visit(CallNode &call_node, VIA_OPERAND dst)
     allocator.free_register(callee_reg);
 }
 
-void ExprVisitor::visit(IndexNode &index_node, VIA_OPERAND dst)
+void ExprVisitor::visit(IndexNode &index_node, Operand dst)
 {
-    VIA_OPERAND obj_reg = allocator.allocate_register();
+    Operand obj_reg = allocator.allocate_register();
     index_node.object->accept(*this, obj_reg);
 
-    VIA_OPERAND index_reg = allocator.allocate_register();
+    Operand index_reg = allocator.allocate_register();
     index_node.index->accept(*this, index_reg);
 
     program.bytecode->emit(GET, {dst, obj_reg, index_reg});
@@ -118,7 +118,7 @@ void ExprVisitor::visit(IndexNode &index_node, VIA_OPERAND dst)
     allocator.free_register(index_reg);
 }
 
-void ExprVisitor::visit(BinaryNode &binary_node, VIA_OPERAND dst)
+void ExprVisitor::visit(BinaryNode &binary_node, Operand dst)
 {
     using enum TokenType;
 
@@ -164,14 +164,14 @@ void ExprVisitor::visit(BinaryNode &binary_node, VIA_OPERAND dst)
 
         lhs.accept(*this, dst);
 
-        TValue      right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
-        VIA_OPERAND right_const_id  = PUSH_K(right_const_val);
+        TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode &>(rhs));
+        Operand right_const_id  = PUSH_K(right_const_val);
 
         program.bytecode->emit(opcode, {dst, right_const_id});
     }
     else {
-        OpCode      opcode = static_cast<OpCode>(opcode_id);
-        VIA_OPERAND reg    = allocator.allocate_register();
+        OpCode  opcode = static_cast<OpCode>(opcode_id);
+        Operand reg    = allocator.allocate_register();
 
         if (rhs.precedence() > lhs.precedence()) {
             rhs.accept(*this, dst);

@@ -6,32 +6,36 @@
 
 #include "common.h"
 #include "state.h"
+#include "object.h"
 
 #define VIA_UPV_COUNT 64
 
 namespace via {
 
-struct TValue;
-using UpValue = TValue *;
+struct UpValue {
+    bool    is_open    = true;
+    TValue* value      = nullptr;
+    TValue  heap_value = TValue();
+};
 
 struct TFunction {
     U32         line = 0;
-    const char *id   = "<anonymous-function>";
+    const char* id   = "<anonymous-function>";
 
     bool is_error_handler = false;
     bool is_vararg        = false;
 
-    Instruction *ret_addr = nullptr;
-    Instruction *bytecode = nullptr;
-    TFunction   *caller   = nullptr;
-    UpValue     *upvs     = new UpValue[VIA_UPV_COUNT];
+    Instruction* ret_addr = nullptr;
+    Instruction* bytecode = nullptr;
+    TFunction*   caller   = nullptr;
+    UpValue*     upvs     = new UpValue[VIA_UPV_COUNT];
 
     U32 bytecode_len = 0;
     U32 upv_count    = VIA_UPV_COUNT;
 };
 
 struct TCFunction {
-    void (*data)(State *) = nullptr;
+    void (*data)(State*)  = nullptr;
     bool is_error_handler = false;
 };
 

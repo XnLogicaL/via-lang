@@ -56,13 +56,13 @@ class NodeVisitor {
 public:
     virtual ~NodeVisitor() = default;
 
-    virtual void visit(LiteralNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(SymbolNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(UnaryNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(GroupNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(CallNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(IndexNode &, VIA_OPERAND) INVALID_VISIT;
-    virtual void visit(BinaryNode &, VIA_OPERAND) INVALID_VISIT;
+    virtual void visit(LiteralNode &, Operand) INVALID_VISIT;
+    virtual void visit(SymbolNode &, Operand) INVALID_VISIT;
+    virtual void visit(UnaryNode &, Operand) INVALID_VISIT;
+    virtual void visit(GroupNode &, Operand) INVALID_VISIT;
+    virtual void visit(CallNode &, Operand) INVALID_VISIT;
+    virtual void visit(IndexNode &, Operand) INVALID_VISIT;
+    virtual void visit(BinaryNode &, Operand) INVALID_VISIT;
 
     virtual void visit(DeclarationNode &) INVALID_VISIT;
     virtual void visit(ScopeNode &) INVALID_VISIT;
@@ -90,13 +90,13 @@ public:
     {
     }
 
-    void visit(LiteralNode &, VIA_OPERAND) override;
-    void visit(SymbolNode &, VIA_OPERAND) override;
-    void visit(UnaryNode &, VIA_OPERAND) override;
-    void visit(GroupNode &, VIA_OPERAND) override;
-    void visit(CallNode &, VIA_OPERAND) override;
-    void visit(IndexNode &, VIA_OPERAND) override;
-    void visit(BinaryNode &, VIA_OPERAND) override;
+    void visit(LiteralNode &, Operand) override;
+    void visit(SymbolNode &, Operand) override;
+    void visit(UnaryNode &, Operand) override;
+    void visit(GroupNode &, Operand) override;
+    void visit(CallNode &, Operand) override;
+    void visit(IndexNode &, Operand) override;
+    void visit(BinaryNode &, Operand) override;
 
 private:
     ProgramData       &program;
@@ -136,11 +136,11 @@ private:
 
 class PrintVisitor : public NodeVisitor {
 public:
-    void visit(LiteralNode &, VIA_OPERAND) override;
-    void visit(SymbolNode &, VIA_OPERAND) override;
-    void visit(UnaryNode &, VIA_OPERAND) override;
-    void visit(GroupNode &, VIA_OPERAND) override;
-    void visit(BinaryNode &, VIA_OPERAND) override;
+    void visit(LiteralNode &, Operand) override;
+    void visit(SymbolNode &, Operand) override;
+    void visit(UnaryNode &, Operand) override;
+    void visit(GroupNode &, Operand) override;
+    void visit(BinaryNode &, Operand) override;
 };
 
 } // namespace via

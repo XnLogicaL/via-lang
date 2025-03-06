@@ -11,27 +11,28 @@
     #define VIA_OPERAND_COUNT 4
 #endif
 
-#define VIA_OPERAND U16
-#define VIA_OPERAND_S I16
-#define VIA_OPERAND_INVALID std::numeric_limits<VIA_OPERAND>::max()
+#define VIA_OPERAND_INVALID std::numeric_limits<Operand>::max()
 
 namespace via {
 
+using Operand  = U16;
+using OperandS = I16;
+
 struct Chunk;
 struct InstructionData {
-    Chunk *chunk = nullptr;
+    Chunk      *chunk   = nullptr;
     std::string comment = "";
 };
 
 struct alignas(8) Instruction {
-    OpCode op = OpCode::NOP;
-    U16 operand0 = 0;
-    U16 operand1 = 0;
-    U16 operand2 = 0;
+    OpCode  op       = OpCode::NOP;
+    Operand operand0 = 0;
+    Operand operand1 = 0;
+    Operand operand2 = 0;
 };
 
 struct alignas(64) Bytecode {
-    Instruction instruction;
+    Instruction     instruction;
     InstructionData meta_data;
 };
 

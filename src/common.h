@@ -63,7 +63,7 @@
     }
 
 // TODO: Make sure this is accurate
-#define VIA_VERSION "0.19"
+#define VIA_VERSION "0.20"
 
 #define VIA_RESTRICT __restrict__
 #define VIA_NORETURN __attribute__((__noreturn__))
@@ -84,16 +84,16 @@ struct TString;
 struct TFunction;
 struct TCFunction;
 
-VIA_FORCEINLINE char *dup_string(const char *str)
+VIA_FORCEINLINE char* dup_string(const char* str)
 {
-    char *chars = new char[std::strlen(str) + 1];
+    char* chars = new char[std::strlen(str) + 1];
     std::strcpy(chars, str);
     return chars;
 }
 
-VIA_FORCEINLINE char *dup_string(const std::string &str)
+VIA_FORCEINLINE char* dup_string(const std::string& str)
 {
-    char *chars = new char[str.size() + 1];
+    char* chars = new char[str.size() + 1];
     std::strcpy(chars, str.c_str());
     return chars;
 }
@@ -105,15 +105,15 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
     try {
         return func();
     }
-    catch (std::exception &) {
+    catch (std::exception&) {
         return default_value;
     }
 }
 
-VIA_INLINE std::string memdump(const void *ptr, U64 size)
+VIA_INLINE std::string memdump(const void* ptr, U64 size)
 {
     std::ostringstream oss;
-    const uint8_t     *bytePtr = reinterpret_cast<const uint8_t *>(ptr);
+    const uint8_t*     bytePtr = reinterpret_cast<const uint8_t*>(ptr);
 
     oss << "Memory dump at: " << ptr << " (size: " << size << " bytes)\n";
 
@@ -139,7 +139,7 @@ VIA_INLINE std::string memdump(const void *ptr, U64 size)
     return oss.str();
 }
 
-VIA_INLINE void dump_memory(const void *ptr, U64 size)
+VIA_INLINE void dump_memory(const void* ptr, U64 size)
 {
     std::cout << memdump(ptr, size);
 }
