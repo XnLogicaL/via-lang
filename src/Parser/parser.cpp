@@ -4,25 +4,23 @@
 
 #include "parser.h"
 
-#define EXPECT(expected, message) \
-    do { \
-        if (current().type != expected) { \
-            throw ParserError(std::format(message, current().lexeme), position); \
-        } \
+#define EXPECT(expected, message)                                                                  \
+    do {                                                                                           \
+        if (current().type != expected) {                                                          \
+            throw ParserError(std::format(message, current().lexeme), position);                   \
+        }                                                                                          \
     } while (0)
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using enum OutputSeverity;
 using enum TokenType;
 
-Token Parser::current()
-{
+Token Parser::current() {
     return peek(0);
 }
 
-Token Parser::peek(int ahead)
-{
+Token Parser::peek(int ahead) {
     if (position + ahead >= program.tokens->tokens.size()) {
         return Token();
     }
@@ -30,21 +28,19 @@ Token Parser::peek(int ahead)
     return program.tokens->tokens[position + ahead];
 }
 
-Token Parser::consume(U32 ahead)
-{
+Token Parser::consume(U32 ahead) {
     U64 new_pos = position + static_cast<U64>(ahead);
     if (new_pos >= program.tokens->tokens.size()) {
         throw ParserError(
-            std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
-        );
+            std::format("Unexpected end of file (attempted read of: token #{})", new_pos),
+            position);
     }
 
     position = new_pos;
     return peek(-static_cast<I32>(ahead));
 }
 
-Modifiers Parser::parse_modifiers()
-{
+Modifiers Parser::parse_modifiers() {
     Modifiers modifiers;
 
     while (true) {
@@ -64,8 +60,7 @@ Modifiers Parser::parse_modifiers()
     return modifiers;
 }
 
-pExprNode Parser::parse_primary()
-{
+pExprNode Parser::parse_primary() {
     Token token = consume();
 
     try {
@@ -81,8 +76,7 @@ pExprNode Parser::parse_primary()
         }
         case LIT_BINARY:
             return std::make_unique<LiteralNode>(
-                token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong())
-            );
+                token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong()));
         case LIT_NIL:
             return std::make_unique<LiteralNode>(token, std::monostate());
         case LIT_BOOL:
@@ -105,14 +99,13 @@ pExprNode Parser::parse_primary()
         default:
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
-                token.position
-            );
+                token.position);
         }
     }
-    catch (const std::invalid_argument &) {
+    catch (const std::invalid_argument&) {
         throw ParserError(std::format("Malformed numeric format"), token.position);
     }
-    catch (const std::out_of_range &) {
+    catch (const std::out_of_range&) {
         throw ParserError(std::format("Numeric value out of range"), token.position);
     }
 
@@ -120,8 +113,7 @@ pExprNode Parser::parse_primary()
     return nullptr;
 }
 
-pExprNode Parser::parse_postfix(pExprNode lhs)
-{
+pExprNode Parser::parse_postfix(pExprNode lhs) {
     while (true) {
         switch (current().type) {
         case DOT: { // Member access: obj.property
@@ -130,8 +122,7 @@ pExprNode Parser::parse_postfix(pExprNode lhs)
             Token index_token = consume();
 
             lhs = std::make_unique<IndexNode>(
-                std::move(lhs), std::make_unique<SymbolNode>(index_token)
-            );
+                std::move(lhs), std::make_unique<SymbolNode>(index_token));
 
             break;
         }
@@ -172,8 +163,7 @@ pExprNode Parser::parse_postfix(pExprNode lhs)
     }
 }
 
-pExprNode Parser::parse_binary(int precedence)
-{
+pExprNode Parser::parse_binary(int precedence) {
     pExprNode lhs = parse_postfix(parse_primary());
 
     while (position < program.tokens->tokens.size() && current().is_operator()) {
@@ -190,13 +180,11 @@ pExprNode Parser::parse_binary(int precedence)
     return lhs;
 }
 
-pExprNode Parser::parse_expr()
-{
+pExprNode Parser::parse_expr() {
     return parse_binary(0);
 }
 
-pStmtNode Parser::parse_declaration()
-{
+pStmtNode Parser::parse_declaration() {
     using ParameterNode = FunctionNode::ParameterNode;
 
     Token     declaration_keyword = consume();
@@ -241,8 +229,7 @@ pStmtNode Parser::parse_declaration()
         pStmtNode body_scope = parse_scope();
 
         return std::make_unique<FunctionNode>(
-            is_global, modifiers, identifier, std::move(body_scope), parameters
-        );
+            is_global, modifiers, identifier, std::move(body_scope), parameters);
     }
 
     EXPECT(IDENTIFIER, "Expected identifier for variable declaration, got '{}'");
@@ -253,12 +240,10 @@ pStmtNode Parser::parse_declaration()
     pExprNode value = parse_expr();
 
     return std::make_unique<DeclarationNode>(
-        is_global, Modifiers{is_const}, identifier, std::move(value)
-    );
+        is_global, Modifiers{is_const}, identifier, std::move(value));
 }
 
-pStmtNode Parser::parse_scope()
-{
+pStmtNode Parser::parse_scope() {
     EXPECT(BRACE_OPEN, "Expected '{{' to open scope, got '{}'");
     consume();
 
@@ -274,8 +259,7 @@ pStmtNode Parser::parse_scope()
     return std::make_unique<ScopeNode>(std::move(scope_statements));
 }
 
-pStmtNode Parser::parse_assign()
-{
+pStmtNode Parser::parse_assign() {
     EXPECT(IDENTIFIER, "Expected identifier for assignment, got '{}'");
     Token identifier = consume();
     Token augmentation_operator;
@@ -291,8 +275,7 @@ pStmtNode Parser::parse_assign()
     return std::make_unique<AssignNode>(identifier, augmentation_operator, std::move(value));
 }
 
-pStmtNode Parser::parse_if()
-{
+pStmtNode Parser::parse_if() {
     using ElseIfNode = IfNode::ElseIfNode;
 
     consume();
@@ -306,9 +289,8 @@ pStmtNode Parser::parse_if()
     while (current().type == KW_ELIF) {
         consume();
 
-        pExprNode elseif_condition = parse_expr();
-        pStmtNode elseif_scope     = parse_scope();
-
+        pExprNode  elseif_condition = parse_expr();
+        pStmtNode  elseif_scope     = parse_scope();
         ElseIfNode elseif(std::move(elseif_condition), std::move(elseif_scope));
         elseif_nodes.emplace_back(std::move(elseif));
     }
@@ -324,12 +306,10 @@ pStmtNode Parser::parse_if()
     }
 
     return std::make_unique<IfNode>(
-        std::move(condition), std::move(scope), std::move(else_scope), std::move(elseif_nodes)
-    );
+        std::move(condition), std::move(scope), std::move(else_scope), std::move(elseif_nodes));
 }
 
-pStmtNode Parser::parse_while()
-{
+pStmtNode Parser::parse_while() {
     consume();
 
     pExprNode condition = parse_expr();
@@ -338,8 +318,7 @@ pStmtNode Parser::parse_while()
     return std::make_unique<WhileNode>(std::move(condition), std::move(body));
 }
 
-pStmtNode Parser::parse_stmt()
-{
+pStmtNode Parser::parse_stmt() {
     Token initial_token = current();
     switch (initial_token.type) {
     case KW_LOCAL:
@@ -365,24 +344,22 @@ pStmtNode Parser::parse_stmt()
             pExprNode expression = parse_expr();
             return std::make_unique<ExprStmtNode>(std::move(expression));
         }
-        catch (const ParserError &) {
-            // I thought that rethrowing exceptions was a fucking meme,
+        catch (const ParserError&) {
+            // I thought that rethrowing exceptions was a meme,
             // but here I am.
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing statement", initial_token.lexeme),
-                initial_token.position
-            );
+                initial_token.position);
         }
 
         VIA_ASSERT(false, "wait... how did you get this assertion to fail? you're a wizard!")
     }
 
     VIA_UNREACHABLE;
-    return nullptr; // Yes, this is redundant, shut up
+    return nullptr;
 }
 
-bool Parser::parse() noexcept
-{
+bool Parser::parse() noexcept {
     bool failed = false;
     while (!failed) {
         if (current().type == EOF_) {
@@ -393,12 +370,12 @@ bool Parser::parse() noexcept
             pStmtNode stmt = parse_stmt();
             program.ast->statements.emplace_back(std::move(stmt));
         }
-        catch (const ParserError &e) {
+        catch (const ParserError& e) {
             failed = true;
             emitter.out(e.where(), e.what(), Error);
             break;
         }
-        catch (const std::exception &e) {
+        catch (const std::exception& e) {
             failed = true;
             emitter.out_flat(e.what(), Error);
             break;
@@ -408,4 +385,4 @@ bool Parser::parse() noexcept
     return failed;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

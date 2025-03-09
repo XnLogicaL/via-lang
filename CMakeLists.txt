@@ -8,8 +8,8 @@ project(via LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 
 # Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
-option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "DEBUG")
-option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" "fuzz/lexer_test.cpp")
+option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "PROD")
+option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" CLI/main.cpp)
 
 # Print the current configuration
 message(STATUS "Building with DEBUG_MODE: ${DEBUG_MODE}")
@@ -52,7 +52,7 @@ target_compile_options(via PUBLIC
 if(DEBUG_MODE STREQUAL "DEBUG")
     target_compile_definitions(via PRIVATE -DVIA_DEBUG)
     target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-    target_link_libraries(via PRIVATE -lfuzzer)
+    target_link_libraries(via PRIVATE -fsanitize=address,fuzzer,undefined)
 endif()
 
 # Apply include directories for each subdirectory in src
@@ -73,5 +73,5 @@ if(DEBUG_MODE STREQUAL "DEBUG" AND MAIN_FILE_PATH MATCHES "fuzz/.*\.cpp")
     message(STATUS "Fuzzing build enabled")
     target_compile_definitions(via PRIVATE -DFUZZING_ENABLED)
     target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-    target_link_libraries(via PRIVATE -lfuzzer)
+    target_link_libraries(via PRIVATE -fsanitize=address,fuzzer,undefined)
 endif()

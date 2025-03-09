@@ -2,62 +2,63 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#include "types.h"
+#include "strutils.h"
+#include "rttypes.h"
 #include "object.h"
 #include "function.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using enum ValueType;
 
-TValue &TValue::operator=(TValue &&other) noexcept
-{
+// Move-assignment operator, moves values from other object
+TValue& TValue::operator=(TValue&& other) noexcept {
     if (this != &other) {
+        // Move the value based on type
         switch (other.type) {
         case integer:
-            this->val_integer = other.val_integer;
+            val_integer = other.val_integer;
             break;
         case floating_point:
-            this->val_floating_point = other.val_floating_point;
+            val_floating_point = other.val_floating_point;
             break;
         case boolean:
-            this->val_boolean = other.val_boolean;
+            val_boolean = other.val_boolean;
             break;
         case string:
         case table:
         case function:
         case cfunction:
-            this->val_pointer = other.val_pointer;
+            val_pointer = other.val_pointer;
             break;
         default:
             break;
         }
 
-        this->type = other.type;
+        type       = other.type;
         other.type = nil;
     }
 
     return *this;
 }
 
-TValue::TValue(TValue &&other) noexcept
-    : type(other.type)
-{
+// Move constructor, transfer ownership based on type
+TValue::TValue(TValue&& other) noexcept : type(other.type) {
     switch (other.type) {
     case integer:
-        this->val_integer = other.val_integer;
+        val_integer = other.val_integer;
         break;
     case floating_point:
-        this->val_floating_point = other.val_floating_point;
+        val_floating_point = other.val_floating_point;
         break;
     case boolean:
-        this->val_boolean = other.val_boolean;
+        val_boolean = other.val_boolean;
         break;
     case string:
     case table:
     case function:
     case cfunction:
-        this->val_pointer = other.val_pointer;
+        val_pointer = other.val_pointer;
         break;
     default:
         break;
@@ -66,8 +67,8 @@ TValue::TValue(TValue &&other) noexcept
     other.type = nil;
 }
 
-TValue::~TValue()
-{
+// Frees the resources of the TValue depending on type
+TValue::~TValue() {
     if (!val_pointer) {
         return;
     }
@@ -89,12 +90,12 @@ TValue::~TValue()
         break;
     }
 
-    this->val_pointer = nullptr;
-    this->type        = nil;
+    val_pointer = nullptr;
+    type        = nil;
 }
 
-TValue TValue::clone() const noexcept
-{
+// Return a clone of the TValue based on its type
+VIA_NO_DISCARD TValue TValue::clone() const noexcept {
     switch (type) {
     case integer:
         return TValue(val_integer);
@@ -103,13 +104,13 @@ TValue TValue::clone() const noexcept
     case boolean:
         return TValue(val_boolean);
     case string:
-        return TValue(string, new TString(*this->cast_ptr<TString>()));
+        return TValue(string, new TString(*cast_ptr<TString>()));
     case table:
-        return TValue(table, new TTable(*this->cast_ptr<TTable>()));
+        return TValue(table, new TTable(*cast_ptr<TTable>()));
     case function:
-        return TValue(function, new TFunction(*this->cast_ptr<TFunction>()));
+        return TValue(function, new TFunction(*cast_ptr<TFunction>()));
     case cfunction:
-        return TValue(cfunction, new TCFunction(*this->cast_ptr<TCFunction>()));
+        return TValue(cfunction, new TCFunction(*cast_ptr<TCFunction>()));
     default:
         return TValue();
     }
@@ -117,42 +118,31 @@ TValue TValue::clone() const noexcept
     VIA_UNREACHABLE;
 }
 
-TString::TString(State *V, const char *str)
-{
-    U32 hash = hash_string(str);
-    // For compiler compatability
+// Constructs a new TString object
+TString::TString(State* V, const char* str) {
     if (V != nullptr) {
-        std::unordered_map<U32, TString *> stable = V->G->stable;
-        auto                               it     = stable.find(hash);
-        if (it != stable.end()) { // String already exists, return the existing entry
-            // *this = *it->second;
+        auto& stable = V->G->stable;
+        auto  it     = stable.find(hash);
+        if (it != stable.end()) {
             return;
         }
     }
 
-    SIZE  slen = std::strlen(str);
-    char *sptr = new char[slen + 1];
-
-    // Copy the constant string into the owned string
-    std::strcpy(sptr, str);
-
-    this->len  = slen;
-    this->data = sptr;
-    this->hash = hash;
+    len  = std::strlen(str);
+    data = duplicate_string(str);
+    hash = hash_string(str);
 
     if (V != nullptr) {
-        std::unordered_map<U32, TString *> &stable = V->G->stable;
-        // Insert the new string into the stable
-        stable.emplace(hash, this);
+        V->G->stable.emplace(hash, this);
     }
 }
 
-TString::~TString()
-{
-    if (this->data) {
-        delete[] this->data;
-        this->data = nullptr;
+// Frees TString resources if not already
+TString::~TString() {
+    if (data) {
+        delete[] data;  // Free the allocated string memory
+        data = nullptr; // Null data pointer
     }
 }
 
-} // namespace via
+VIA_NAMESPACE_END

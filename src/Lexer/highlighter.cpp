@@ -5,16 +5,10 @@
 #include "highlighter.h"
 #include "token.h"
 
-#define ILLFORMED_ERROR \
-    "\n  (This is an illformed error, likely caused by an internal compiler bug.\n   If this " \
-    "error persists, please " \
-    "create an issue at https://github.com/XnLogicaL/via-lang)"
-
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 // Splits a source string into lines
-std::vector<std::string> Emitter::split_lines()
-{
+std::vector<std::string> Emitter::split_lines() {
     std::vector<std::string> lines;
     std::istringstream       stream(program.source);
     std::string              line;
@@ -27,8 +21,7 @@ std::vector<std::string> Emitter::split_lines()
 }
 
 // Returns a "title" or "header" for output messages based on severity
-std::string Emitter::get_severity_header(OutputSeverity sev)
-{
+std::string Emitter::get_severity_header(OutputSeverity sev) {
     switch (sev) {
     case OutputSeverity::Info:
         return "\033[1;34minfo:\033[0m "; // Blue color for info
@@ -44,13 +37,7 @@ std::string Emitter::get_severity_header(OutputSeverity sev)
 
 // Function to underline a portion of a line with a cursor (^) at the offset
 std::string Emitter::underline_line(
-    int                line_number,
-    int                offset,
-    int                length,
-    const std::string &message,
-    OutputSeverity     sev
-)
-{
+    int line_number, int offset, int length, const std::string& message, OutputSeverity sev) {
     std::vector<std::string> lines = split_lines();
 
     if (line_number < 1 || line_number > static_cast<int>(lines.size())) {
@@ -58,7 +45,7 @@ std::string Emitter::underline_line(
     }
 
     // Lines are 1-based, vector is 0-based
-    const std::string &line = lines[line_number - 1];
+    const std::string& line = lines[line_number - 1];
     std::string        underline;
 
     if (offset < 0 || offset >= static_cast<int>(line.size())) {
@@ -85,8 +72,7 @@ std::string Emitter::underline_line(
 }
 
 // Emits an output message
-void Emitter::out(U64 idx, std::string message, OutputSeverity sev)
-{
+void Emitter::out(U64 idx, std::string message, OutputSeverity sev) {
     // This is an internal "flag" that determines if the file name has been displayed before any
     // errors
     static bool has_printed_file_name = false;
@@ -105,9 +91,8 @@ void Emitter::out(U64 idx, std::string message, OutputSeverity sev)
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 
-void Emitter::out_flat(std::string message, OutputSeverity sev)
-{
+void Emitter::out_flat(std::string message, OutputSeverity sev) {
     std::cout << get_severity_header(sev) << message << "\n";
 }
 
-} // namespace via
+VIA_NAMESPACE_END

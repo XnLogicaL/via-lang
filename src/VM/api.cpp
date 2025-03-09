@@ -7,24 +7,21 @@
 #include "instruction.h"
 #include "opcode.h"
 #include "state.h"
-#include "types.h"
+#include "strutils.h"
+#include "rttypes.h"
 #include "vmapi.h"
-
-// Fuck.
 #include <cmath>
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 static const TValue nil = TValue();
 
-TValue* get_register(State* V, U32 reg)
-{
+TValue* get_register(State* V, U32 reg) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
     return V->registers + reg;
 }
 
-void set_register(State* V, U32 reg, const TValue& val)
-{
+void set_register(State* V, U32 reg, const TValue& val) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
     TValue* addr = V->registers + reg;
@@ -32,49 +29,42 @@ void set_register(State* V, U32 reg, const TValue& val)
 }
 
 // Returns the underlying pointer of a data type if present, nullptr if not.
-void* to_pointer(const TValue& val) noexcept
-{
+void* to_pointer(const TValue& val) noexcept {
     return impl::__to_pointer(val);
 }
 
 // Returns whether if <val> has a heap component.
-bool is_heap(const TValue& val) noexcept
-{
+bool is_heap(const TValue& val) noexcept {
     return to_pointer(val) != nullptr;
 }
 
 // Compares 2 values and returns whether if they are equal.
 // Optimized for maximum performance.
-bool compare(const TValue& v0, const TValue& v1) noexcept
-{
+bool compare(const TValue& v0, const TValue& v1) noexcept {
     return impl::__compare(v0, v1);
 };
 
 // Pushes a copy of the given value onto the stack.
-void push(State* VIA_RESTRICT V, const TValue& val)
-{
+void push(State* VIA_RESTRICT V, const TValue& val) {
     VIA_ASSERT(V->sp < VIA_VM_STACK_SIZE / sizeof(TValue), "stack overflow");
     V->sbp[V->sp++] = val.clone();
 }
 
 // Pops a value from the stack and returns a copy of it.
-TValue pop(State* VIA_RESTRICT V)
-{
+TValue pop(State* VIA_RESTRICT V) {
     VIA_ASSERT(V->sp == 0, "stack underflow");
     return V->sbp[V->sp--].clone();
 }
 
 // Returns a copy of the top-most value on the stack.
-TValue top(State* VIA_RESTRICT V)
-{
+TValue top(State* VIA_RESTRICT V) {
     VIA_ASSERT(V->sp == 0, "stack underflow");
     return V->sbp[V->sp--].clone();
 }
 
 // Returns a value that contains a String that represents the string-ified
 // version of <val>. The return value is guaranteed to be a String type.
-TValue to_string(State* VIA_RESTRICT V, const TValue& val) noexcept
-{
+TValue to_string(State* VIA_RESTRICT V, const TValue& val) noexcept {
     using enum ValueType;
 
     if (check_string(val)) {
@@ -135,42 +125,36 @@ TValue to_string(State* VIA_RESTRICT V, const TValue& val) noexcept
     return via::nil.clone();
 }
 
-std::string to_cxx_string(State* VIA_RESTRICT V, const TValue& val) noexcept
-{
+std::string to_cxx_string(State* VIA_RESTRICT V, const TValue& val) noexcept {
     TValue str = to_string(V, val);
     return std::string(str.cast_ptr<TString>()->data);
 }
 
 // Returns the truthiness of value <val>.
 // Guaranteed to be a Bool type.
-TValue to_bool(const TValue& val) noexcept
-{
+TValue to_bool(const TValue& val) noexcept {
     return impl::__to_bool(val);
 }
 
-bool to_cxx_bool(const TValue& val) noexcept
-{
+bool to_cxx_bool(const TValue& val) noexcept {
     return impl::__to_cxx_bool(val);
 }
 
 // Returns the number representation of value <val>.
 // Returns Nil if impossible, unlike `vtostring` or `vtobool`.
-TValue to_number(const TValue& val) noexcept
-{
+TValue to_number(const TValue& val) noexcept {
     return impl::__to_number(val);
 }
 
 template<typename T>
     requires std::is_arithmetic_v<T>
-T to_cxx_number(const TValue& val) noexcept
-{
+T to_cxx_number(const TValue& val) noexcept {
     return impl::__to_cxx_number<T>(val);
 }
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-TValue get_table(TTable* VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept
-{
+TValue get_table(TTable* VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept {
     auto it = tbl->data.find(key);
     if (it != tbl->data.end()) {
         return it->second.clone();
@@ -187,8 +171,7 @@ TValue get_table(TTable* VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-void set_table(TTable* VIA_RESTRICT tbl, U32 key, const TValue& val) noexcept
-{
+void set_table(TTable* VIA_RESTRICT tbl, U32 key, const TValue& val) noexcept {
     if (check_nil(val)) {
         const TValue& tbl_val = get_table(tbl, key, false);
 
@@ -202,8 +185,7 @@ void set_table(TTable* VIA_RESTRICT tbl, U32 key, const TValue& val) noexcept
 }
 
 // Utility function for quickly geting a metamethod associated to <op>.
-TValue get_metamethod(const TValue& val, OpCode op)
-{
+TValue get_metamethod(const TValue& val, OpCode op) {
     if (!check_table(val)) {
         return nil.clone();
     }
@@ -240,8 +222,7 @@ TValue get_metamethod(const TValue& val, OpCode op)
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
-const TValue& get_local(State* VIA_RESTRICT V, U32 offset) noexcept
-{
+const TValue& get_local(State* VIA_RESTRICT V, U32 offset) noexcept {
     // Check if U32 is out of bounds
     if (offset > V->sp)
         return nil;
@@ -252,8 +233,7 @@ const TValue& get_local(State* VIA_RESTRICT V, U32 offset) noexcept
 }
 
 // Reassigns the stack value at offset <offset> to <val>.
-void set_local(State* VIA_RESTRICT V, U32 offset, const TValue& val)
-{
+void set_local(State* VIA_RESTRICT V, U32 offset, const TValue& val) {
     std::lock_guard<std::mutex> lock(V->G->symtable_mutex);
 
     // Check if U32 is out of bounds,
@@ -266,8 +246,7 @@ void set_local(State* VIA_RESTRICT V, U32 offset, const TValue& val)
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
-const TValue& get_global(State* VIA_RESTRICT V, U32 ident) noexcept
-{
+const TValue& get_global(State* VIA_RESTRICT V, U32 ident) noexcept {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
     auto it = V->G->gtable.find(ident);
@@ -279,8 +258,7 @@ const TValue& get_global(State* VIA_RESTRICT V, U32 ident) noexcept
 }
 
 // Attempts to declare a new global constant.
-void set_global(State* VIA_RESTRICT V, U32 ident, const TValue& val)
-{
+void set_global(State* VIA_RESTRICT V, U32 ident, const TValue& val) {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
     auto it = V->G->gtable.find(ident);
@@ -291,8 +269,7 @@ void set_global(State* VIA_RESTRICT V, U32 ident, const TValue& val)
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-const TValue& get_argument(State* VIA_RESTRICT V, U32 offset) noexcept
-{
+const TValue& get_argument(State* VIA_RESTRICT V, U32 offset) noexcept {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
         return nil;
@@ -306,8 +283,7 @@ const TValue& get_argument(State* VIA_RESTRICT V, U32 offset) noexcept
 
 // Performs a native return operation, restores the stack and some other state
 // information.
-void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept
-{
+void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept {
     std::vector<TValue> ret_values;
     // Restore state
     V->ip    = V->frame->ret_addr;
@@ -332,8 +308,7 @@ void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept
 }
 
 // Calls a native function.
-void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, SIZE argc) noexcept
-{
+void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, SIZE argc) noexcept {
     // Save state
     callee->caller   = V->frame;
     callee->ret_addr = V->ip;
@@ -347,8 +322,7 @@ void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, SIZE arg
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) noexcept
-{
+void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) noexcept {
     /* Stack allocate id string
         15 additional characters:
         +9 for 'cfunction'
@@ -372,8 +346,7 @@ void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) 
 }
 
 // Calls a table method.
-void method_call(State* VIA_RESTRICT V, TTable* VIA_RESTRICT tbl, U32 key, SIZE argc) noexcept
-{
+void method_call(State* VIA_RESTRICT V, TTable* VIA_RESTRICT tbl, U32 key, SIZE argc) noexcept {
     const TValue& method = get_table(tbl, key, true);
 
     if (check_function(method)) {
@@ -388,16 +361,14 @@ void method_call(State* VIA_RESTRICT V, TTable* VIA_RESTRICT tbl, U32 key, SIZE 
 }
 
 // Returns the primitive type of value <val>.
-TValue type(State* VIA_RESTRICT V, const TValue& val) noexcept
-{
-    char* str = dup_string(std::string(magic_enum::enum_name(val.type)));
+TValue type(State* VIA_RESTRICT V, const TValue& val) noexcept {
+    char* str = duplicate_string(std::string(magic_enum::enum_name(val.type)));
     return TValue(new TString(V, str));
 }
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept
-{
+void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept {
     V->calltype = CallType::CALL;
 
     if (check_function(val)) {
@@ -415,8 +386,7 @@ void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept
 }
 
 // Returns the length of value <val>, nil if impossible.
-TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept
-{
+TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept {
     if (check_string(val)) {
         return TValue(static_cast<int>(strlen(val.cast_ptr<TString>()->data)));
     }
@@ -438,8 +408,7 @@ TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept
 // Returns the complex type of value <val>.
 // Practically the same as `type()`, but returns
 // the `__type` key if the given table has it defined.
-TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept
-{
+TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept {
     if (check_table(val)) {
         TTable*       tbl = val.cast_ptr<TTable>();
         const TValue& ty  = get_table(tbl, hash_string("__type"), true);
@@ -456,25 +425,7 @@ TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept
     return type(V, val);
 }
 
-// Sets the metatable of <tbl> to <meta>.
-void setmetatable(TTable* VIA_RESTRICT tbl, TTable* VIA_RESTRICT meta)
-{
-    VIA_ASSERT(!tbl->is_frozen, "table is frozen");
-    tbl->meta = meta;
-}
-
-// Returns the metatable of <tbl>, nil if impossible.
-TValue getmetatable(State* VIA_RESTRICT, TTable* VIA_RESTRICT tbl)
-{
-    if (tbl->meta) {
-        return TValue(tbl->meta);
-    }
-
-    return nil.clone();
-}
-
-TValue weak_primitive_cast(State* VIA_RESTRICT V, const TValue& val, ValueType type)
-{
+TValue weak_primitive_cast(State* VIA_RESTRICT V, const TValue& val, ValueType type) {
     using enum ValueType;
 
     switch (type) {
@@ -492,8 +443,7 @@ TValue weak_primitive_cast(State* VIA_RESTRICT V, const TValue& val, ValueType t
     return via::nil.clone();
 }
 
-void strong_primtive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type)
-{
+void strong_primtive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type) {
     using enum ValueType;
 
     switch (type) {
@@ -534,14 +484,10 @@ void strong_primtive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type)
     val.type = type;
     return;
 error:
-    VIA_ASSERT(
-        false,
-        std::format(
-            "type '{}' is not primitive castable into type '{}'",
+    VIA_ASSERT(false,
+        std::format("type '{}' is not primitive castable into type '{}'",
             magic_enum::enum_name(val.type),
-            magic_enum::enum_name(type)
-        )
-    );
+            magic_enum::enum_name(type)));
 }
 
-} // namespace via
+VIA_NAMESPACE_END

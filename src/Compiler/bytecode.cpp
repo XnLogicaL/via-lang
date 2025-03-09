@@ -6,32 +6,26 @@
 #include "instruction.h"
 #include "common.h"
 
-// ================================================================ |
-// File bytecode.cpp: BytecodeHolder definitions.                   |
-// ================================================================ |
-// This file defines BytecodeHolder.
-// ================================================================ |
-namespace via {
+// ===========================================================================================
+// bytecode.cpp
+//
+VIA_NAMESPACE_BEGIN
 
-// Add an instruction to the program
-void BytecodeHolder::add(const Bytecode &bytecode)
-{
+void BytecodeHolder::add(const Bytecode& bytecode) {
     instructions.push_back(bytecode);
 }
 
-// Remove instruction at <index> from the program
-void BytecodeHolder::remove(U64 index)
-{
+SIZE BytecodeHolder::size() const noexcept {
+    return instructions.size();
+}
+
+void BytecodeHolder::remove(U64 index) {
     instructions.erase(instructions.begin() + index);
 }
 
 void BytecodeHolder::insert(
-    U64                           index,
-    OpCode                        opcode,
-    const std::array<Operand, 3> &operands,
-    const std::string            &comment
-)
-{
+    U64 index, OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
+) {
     // Insert the instruction at the specified index
     instructions.insert(
         instructions.begin() + index,
@@ -53,11 +47,8 @@ void BytecodeHolder::insert(
 }
 
 void BytecodeHolder::emit(
-    OpCode                        opcode,
-    const std::array<Operand, 3> &operands,
-    const std::string            &comment
-)
-{
+    OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
+) {
     add({
         .instruction =
             {
@@ -74,9 +65,8 @@ void BytecodeHolder::emit(
     });
 }
 
-std::vector<Bytecode> &BytecodeHolder::get()
-{
+const std::vector<Bytecode>& BytecodeHolder::get() const noexcept {
     return instructions;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

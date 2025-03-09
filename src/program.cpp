@@ -7,34 +7,22 @@
 #include "token.h"
 #include "bytecode.h"
 #include "constant.h"
-#include "types.h"
+#include "rttypes.h"
 #include "stack.h"
 
-#define DELETE_IF(target) \
-    if (target) { \
-        delete target; \
+#define DELETE_IF(target)                                                                          \
+    if (target) {                                                                                  \
+        delete target;                                                                             \
     }
 
-#ifndef VIA_PARSER_ALLOC_SIZE
-    #define VIA_PARSER_ALLOC_SIZE 8 * 1024 * 1024 // 8MB
-#endif
-
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 ProgramData::ProgramData(std::string file, std::string file_source)
-    : file(file)
-    , source(file_source)
-    , tokens(new TokenHolder())
-    , ast(new AbstractSyntaxTree())
-    , bytecode(new BytecodeHolder())
-    , constants(new ConstantHolder())
-    , test_stack(new TestStack())
-    , globals(new GlobalTracker())
-{
-}
+    : file(file), source(file_source), tokens(new TokenHolder()), ast(new AbstractSyntaxTree()),
+      bytecode(new BytecodeHolder()), constants(new ConstantHolder()), test_stack(new TestStack()),
+      globals(new GlobalTracker()) {}
 
-ProgramData::~ProgramData()
-{
+ProgramData::~ProgramData() {
     DELETE_IF(tokens);
     DELETE_IF(ast);
     DELETE_IF(bytecode);
@@ -43,4 +31,4 @@ ProgramData::~ProgramData()
     DELETE_IF(globals);
 }
 
-} // namespace via
+VIA_NAMESPACE_END

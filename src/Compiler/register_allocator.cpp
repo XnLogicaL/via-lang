@@ -4,10 +4,9 @@
 
 #include "register_allocator.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-Operand RegisterAllocator::allocate_register()
-{
+Operand RegisterAllocator::allocate_register() {
     for (Operand reg = 0; reg < 128; reg++) {
         if (registers[reg]) {
             registers[reg] = false;
@@ -18,16 +17,14 @@ Operand RegisterAllocator::allocate_register()
     return VIA_OPERAND_INVALID;
 }
 
-Operand RegisterAllocator::allocate_temp()
-{
+Operand RegisterAllocator::allocate_temp() {
     Operand reg = allocate_register();
     free_register(reg);
     return reg;
 }
 
-void RegisterAllocator::free_register(Operand reg)
-{
+void RegisterAllocator::free_register(Operand reg) {
     registers.emplace(reg, true);
 }
 
-} // namespace via
+VIA_NAMESPACE_END

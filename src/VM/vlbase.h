@@ -2,21 +2,24 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_VLBASE_H
+#define _VIA_VLBASE_H
 
 #include "api.h"
 #include "libutils.h"
-#include "types.h"
+#include "rttypes.h"
 #include "state.h"
 
-namespace via::lib {
+VIA_NAMESPACE_LIB_BEGIN
 
-LIB_DECL_FUNCTION(base_print);
-LIB_DECL_FUNCTION(base_println);
-LIB_DECL_FUNCTION(base_error);
-LIB_DECL_FUNCTION(base_assert);
-LIB_DECL_FUNCTION(base_weakPrimCast);
-LIB_DECL_FUNCTION(base_strongPrimCast);
-LIB_DECL_FUNCTION(open_baselib);
+VIA_LIB_DECL_FUNCTION(base_print);
+VIA_LIB_DECL_FUNCTION(base_println);
+VIA_LIB_DECL_FUNCTION(base_error);
+VIA_LIB_DECL_FUNCTION(base_assert);
+VIA_LIB_DECL_FUNCTION(base_weakPrimCast);
+VIA_LIB_DECL_FUNCTION(base_strongPrimCast);
+VIA_LIB_DECL_FUNCTION(open_baselib);
 
-} // namespace via::lib
+VIA_NAMESPACE_END
+
+#endif

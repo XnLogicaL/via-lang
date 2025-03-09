@@ -2,14 +2,13 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_SIGNAL_H
+#define _VIA_SIGNAL_H
 
 #include "common.h"
-
-#include <mutex>
 #include <condition_variable>
 
-namespace via::utils {
+VIA_NAMESPACE_UTIL_BEGIN
 
 template<typename... Args>
 class Signal {
@@ -18,25 +17,20 @@ public:
 
     class Connection {
     public:
-        Connection(std::vector<Slot> &_Slots, std::mutex &_Mutex, SIZE _Connection_id)
-            : slots(_Slots)
-            , mutex(_Mutex)
-            , connection_id(_Connection_id)
-            , active(true)
-        {
-        }
+        Connection(std::vector<Slot>& _Slots, std::mutex& _Mutex, SIZE _Connection_id)
+            : slots(_Slots), mutex(_Mutex), connection_id(_Connection_id), active(true) {}
 
         void disconnect();
 
     private:
-        std::vector<Slot> &slots;
-        std::mutex        &mutex;
+        std::vector<Slot>& slots;
+        std::mutex&        mutex;
 
         SIZE connection_id;
         bool active;
     };
 
-    Connection connect(const Slot &);
+    Connection connect(const Slot&);
     void       fire(Args...);
     void       wait();
 
@@ -46,4 +40,6 @@ private:
     std::condition_variable condition;
 };
 
-} // namespace via::utils
+VIA_NAMESPACE_END
+
+#endif

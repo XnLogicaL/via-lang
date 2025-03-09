@@ -5,17 +5,16 @@
 #include "macro.h"
 #include "preproc.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 // TODO: Add safety mechanisms such as;
 // - Expansion depth limit
 // - Restricted access to keywords, specifically the preprocessor keywords
-void Preprocessor::expand_macro(const Macro &macro)
-{
+void Preprocessor::expand_macro(const Macro& macro) {
     std::vector<Token> toks = program.tokens->tokens;
 
     while (pos < toks.size()) {
-        const Token &tok = peek();
+        const Token& tok = peek();
 
         // Match macro_name!( pattern
         if (tok.lexeme.ends_with('!') &&
@@ -31,7 +30,7 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Loop to parse arguments within parentheses
             while (pos < toks.size()) {
-                const Token &current = peek();
+                const Token& current = peek();
 
                 // Handle nested parentheses
                 if (current.type == TokenType::PAREN_OPEN)
@@ -73,12 +72,9 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Check for argument count mismatch
             if (macro_args.size() != macro.params.size())
-                PREPROCESSOR_ERROR(std::format(
-                    "Macro '{}' expected {} arguments, but {} were provided",
-                    macro.name,
-                    macro.params.size(),
-                    macro_args.size()
-                ));
+                PREPROCESSOR_ERROR(
+                    std::format("Macro '{}' expected {} arguments, but {} were provided",
+                        macro.name, macro.params.size(), macro_args.size()));
 
             // Map parameter names to their arguments
             std::unordered_map<std::string, std::vector<Token>> arg_map;
@@ -87,12 +83,11 @@ void Preprocessor::expand_macro(const Macro &macro)
 
             // Replace parameters in the macro body
             std::vector<Token> expanded_body;
-            for (const Token &body_tok : macro.body) {
+            for (const Token& body_tok : macro.body) {
                 if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.lexeme)) {
-                    const std::vector<Token> &replacement = arg_map[body_tok.lexeme];
+                    const std::vector<Token>& replacement = arg_map[body_tok.lexeme];
                     expanded_body.insert(
-                        expanded_body.end(), replacement.begin(), replacement.end()
-                    );
+                        expanded_body.end(), replacement.begin(), replacement.end());
                 }
                 else
                     expanded_body.push_back(body_tok);
@@ -111,8 +106,7 @@ void Preprocessor::expand_macro(const Macro &macro)
     }
 }
 
-Macro Preprocessor::parse_macro()
-{
+Macro Preprocessor::parse_macro() {
     std::vector<Token> toks = program.tokens->tokens;
     // Consume 'macro' keyword
     pos++;
@@ -122,11 +116,8 @@ Macro Preprocessor::parse_macro()
 
     auto it = macro_table.find(peek().lexeme);
     if (it != macro_table.end())
-        PREPROCESSOR_ERROR(std::format(
-            "Redefinition of macro '{}', previously defined on line {}",
-            peek().lexeme,
-            it->second.line
-        ));
+        PREPROCESSOR_ERROR(std::format("Redefinition of macro '{}', previously defined on line {}",
+            peek().lexeme, it->second.line));
 
     Macro mac;
     mac.line  = peek().line;
@@ -180,4 +171,4 @@ Macro Preprocessor::parse_macro()
     return mac;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

@@ -4,11 +4,10 @@
 
 #include "signal.h"
 
-namespace via::utils {
+VIA_NAMESPACE_UTIL_BEGIN
 
 template<typename... Args>
-void Signal<Args...>::Connection::disconnect()
-{
+void Signal<Args...>::Connection::disconnect() {
     if (!active) {
         return;
     }
@@ -18,8 +17,7 @@ void Signal<Args...>::Connection::disconnect()
 }
 
 template<>
-void Signal<>::Connection::disconnect()
-{
+void Signal<>::Connection::disconnect() {
     if (!active) {
         return;
     }
@@ -29,27 +27,24 @@ void Signal<>::Connection::disconnect()
 }
 
 template<typename... Args>
-Signal<Args...>::Connection Signal<Args...>::connect(const Slot &slot)
-{
+Signal<Args...>::Connection Signal<Args...>::connect(const Slot& slot) {
     std::lock_guard<std::mutex> lock(mutex);
     slots.push_back(slot);
     return Connection(slots, mutex, slots.size() - 1);
 };
 
 template<>
-Signal<>::Connection Signal<>::connect(const Slot &slot)
-{
+Signal<>::Connection Signal<>::connect(const Slot& slot) {
     std::lock_guard<std::mutex> lock(mutex);
     slots.push_back(slot);
     return Connection(slots, mutex, slots.size() - 1);
 };
 
 template<typename... Args>
-void Signal<Args...>::fire(Args... args)
-{
+void Signal<Args...>::fire(Args... args) {
     std::lock_guard<std::mutex> lock(mutex);
 
-    for (const Slot &slot : slots) {
+    for (const Slot& slot : slots) {
         slot(args...);
     }
 
@@ -57,11 +52,10 @@ void Signal<Args...>::fire(Args... args)
 }
 
 template<>
-void Signal<>::fire()
-{
+void Signal<>::fire() {
     std::lock_guard<std::mutex> lock(mutex);
 
-    for (const Slot &slot : slots) {
+    for (const Slot& slot : slots) {
         slot();
     }
 
@@ -69,17 +63,15 @@ void Signal<>::fire()
 }
 
 template<typename... Args>
-void Signal<Args...>::wait()
-{
+void Signal<Args...>::wait() {
     std::unique_lock<std::mutex> lock(mutex);
     condition.wait(lock);
 }
 
 template<>
-void Signal<>::wait()
-{
+void Signal<>::wait() {
     std::unique_lock<std::mutex> lock(mutex);
     condition.wait(lock);
 }
 
-} // namespace via::utils
+VIA_NAMESPACE_END

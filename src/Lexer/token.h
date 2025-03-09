@@ -2,12 +2,13 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_TOKEN_H
+#define _VIA_TOKEN_H
 
 #include "common_nodep.h"
 #include "arena.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 enum class TokenType {
     // Keywords
@@ -103,29 +104,29 @@ enum class TokenType {
 struct Token {
     Token() {}
     Token(TokenType type, std::string lexeme, U64 line, U64 offset, U64 position)
-        : type(type)
-        , lexeme(lexeme)
-        , line(line)
-        , offset(offset)
-        , position(position)
-    {
-    }
+        : type(type),
+          lexeme(lexeme),
+          line(line),
+          offset(offset),
+          position(position) {}
 
-    TokenType type = TokenType::UNKNOWN;
-    std::string lexeme = "";
-    U64 line = 0;
-    U64 offset = 0;
-    U64 position = 0;
+    TokenType   type     = TokenType::UNKNOWN;
+    std::string lexeme   = "";
+    U64         line     = 0;
+    U64         offset   = 0;
+    U64         position = 0;
 
     std::string to_string() const noexcept;
-    bool is_literal() const noexcept;
-    bool is_operator() const noexcept;
-    bool is_modifier() const noexcept;
-    int bin_prec() const noexcept;
+    bool        is_literal() const noexcept;
+    bool        is_operator() const noexcept;
+    bool        is_modifier() const noexcept;
+    int         bin_prec() const noexcept;
 };
 
 struct TokenHolder {
     std::vector<Token> tokens;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

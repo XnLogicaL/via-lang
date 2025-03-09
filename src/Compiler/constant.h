@@ -1,27 +1,36 @@
 // =========================================================================================== |
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
-#pragma once
+
+#ifndef _VIA_CONSTANT_H
+#define _VIA_CONSTANT_H
 
 #include "common.h"
-#include "types.h"
+#include "rttypes.h"
 
-// ================================================================ |
-// File constant.h: This file declares the ConstantHolder class.    |
-// ================================================================ |
+// ===========================================================================================
+// constant.h
 //
-// ================================================================ |
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-class ConstantHolder {
+class ConstantHolder final {
 public:
-    U32 push_constant(const TValue &);
-    U32 size() const noexcept;
-    const TValue &at(U64) const;
-    const std::vector<TValue> &get() const noexcept;
+    // Pushes a constant to the holder and returns the index of which the constant now lives.
+    Operand push_constant(const TValue&);
+    // Returns the size or next index of the constant table.
+    SIZE size() const noexcept;
+    // Returns the constant at a given index.
+    const TValue& at(SIZE) const;
+    // Returns the constant at a given index.
+    // If the index is invalid, returns nil.
+    const TValue& at_s(SIZE) const noexcept;
+    // Returns a reference to the constant table.
+    const std::vector<TValue>& get() const noexcept;
 
 private:
     std::vector<TValue> constants;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

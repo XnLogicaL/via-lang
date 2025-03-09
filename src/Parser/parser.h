@@ -2,7 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_PARSER_H
+#define _VIA_PARSER_H
 
 #include "common.h"
 #include "ast.h"
@@ -10,23 +11,19 @@
 #include "highlighter.h"
 #include "token.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 class ParserError : public std::exception {
 public:
-    ParserError(const std::string &error, U64 position)
-        : message(error)
-        , position(position)
-    {
-    }
+    ParserError(const std::string& error, U64 position)
+        : message(error),
+          position(position) {}
 
-    const char *what() const throw()
-    {
+    const char* what() const throw() {
         return message.c_str();
     }
 
-    U64 where() const noexcept
-    {
+    U64 where() const noexcept {
         return position;
     }
 
@@ -37,16 +34,14 @@ private:
 
 class Parser {
 public:
-    Parser(ProgramData &program)
-        : program(program)
-        , emitter(program)
-    {
-    }
+    Parser(ProgramData& program)
+        : program(program),
+          emitter(program) {}
 
     bool parse() noexcept;
 
 private:
-    ProgramData &program;
+    ProgramData& program;
     Emitter      emitter;
 
     U64 position = 0;
@@ -71,4 +66,6 @@ private:
     pStmtNode parse_stmt();
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

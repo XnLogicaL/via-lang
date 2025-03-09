@@ -2,16 +2,17 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_STATE_H
+#define _VIA_STATE_H
 
 #include "common.h"
 #include "instruction.h"
 #include "signal.h"
 
-#define VIA_VM_STACK_SIZE 8 * 1024 * 1024 // 8 MBs
-#define VIA_REGISTER_COUNT std::numeric_limits<Operand>::max()
+#define VIA_VM_STACK_SIZE  8 * 1024 * 1024 // 8 MBs
+#define VIA_REGISTER_COUNT 0xFFFF
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 // Forward declarations
 struct TFunction;
@@ -103,4 +104,6 @@ struct alignas(64) State {
 
 std::string to_string(State*);
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

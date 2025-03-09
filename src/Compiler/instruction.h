@@ -2,18 +2,15 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_INSTRUCTION_H
+#define _VIA_INSTRUCTION_H
 
 #include "common.h"
-#include "VM/opcode.h"
-
-#ifndef VIA_OPERAND_COUNT
-    #define VIA_OPERAND_COUNT 4
-#endif
+#include "opcode.h"
 
 #define VIA_OPERAND_INVALID std::numeric_limits<Operand>::max()
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using Operand  = U16;
 using OperandS = I16;
@@ -36,6 +33,8 @@ struct alignas(64) Bytecode {
     InstructionData meta_data;
 };
 
-std::string to_string(const Bytecode&);
+std::string to_string(const Bytecode&, bool);
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

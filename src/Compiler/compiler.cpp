@@ -3,22 +3,19 @@
 // =========================================================================================== |
 
 #include "compiler.h"
-#include "types.h"
+#include "strutils.h"
 
-// ================================================================ |
-// File compiler.cpp: Compiler class definitions.                   |
-// ================================================================ |
-// This file implements the Compiler class.
-// ================================================================ |
-namespace via {
+// ===========================================================================================
+// compiler.cpp
+//
+VIA_NAMESPACE_BEGIN
 
-bool Compiler::generate()
-{
+bool Compiler::generate() {
     RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
     Emitter           emitter(program);
     StmtVisitor       visitor(program, emitter, allocator);
 
-    for (pStmtNode &stmt : program.ast->statements) {
+    for (pStmtNode& stmt : program.ast->statements) {
         stmt->accept(visitor);
     }
 
@@ -29,14 +26,13 @@ bool Compiler::generate()
     return visitor.failed();
 }
 
-bool Compiler::check_global_collisions()
-{
+bool Compiler::check_global_collisions() {
     Emitter emitter(program);
 
     bool                            failed = false;
     std::unordered_map<U32, Global> global_map;
 
-    for (const Global &global : program.globals->get()) {
+    for (const Global& global : program.globals->get()) {
         U32  hash = hash_string(global.symbol.c_str());
         auto it   = global_map.find(hash);
 
@@ -73,4 +69,4 @@ bool Compiler::check_global_collisions()
     return failed;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

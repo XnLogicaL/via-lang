@@ -2,11 +2,12 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#if not defined(__GNUC__) && not defined(__clang__)
-    #pragma error(Unsupported compiler.Please use g++ or clang++.)
+#if !defined(__GNUC__) && !defined(__clang__)
+#error Unsupported compiler: as of via 0.20.x, only GNU g++ and clang++ are supported.
 #endif
 
-#pragma once
+#ifndef _VIA_COMMON_NODEP_H
+#define _VIA_COMMON_NODEP_H
 
 // C++ std imports
 #include <bitset>
@@ -22,25 +23,27 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
+#include <shared_mutex>
 #include <stack>
+#include <stacktrace>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <stacktrace>
-#include <shared_mutex>
-#include <limits>
-#include <typeindex>
 
-namespace via {
+#include "api_config.h"
+
+VIA_NAMESPACE_BEGIN
 
 using U8  = unsigned char;
 using U16 = unsigned short;
@@ -57,4 +60,6 @@ using F64 = double;
 
 using SIZE = unsigned long long;
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

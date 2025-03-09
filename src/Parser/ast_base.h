@@ -2,12 +2,13 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_AST_BASE_H
+#define _VIA_AST_BASE_H
 
 #include "token.h"
 #include "common.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 class NodeVisitor;
 struct ExprNode;
@@ -19,25 +20,26 @@ using pStmtNode = std::unique_ptr<StmtNode>;
 using pTypeNode = std::unique_ptr<TypeNode>;
 
 struct ExprNode {
-    virtual ~ExprNode() = default;
-    virtual std::string to_string(U32 &) = 0;
-    virtual void accept(NodeVisitor &, U32) = 0;
-    virtual int precedence() const noexcept
-    {
+    virtual VIA_DEFAULT_DESTRUCTOR(ExprNode);
+    virtual std::string to_string(U32&)           = 0;
+    virtual void        accept(NodeVisitor&, U32) = 0;
+    virtual int         precedence() const noexcept {
         return 0;
     };
 };
 
 struct StmtNode {
-    virtual ~StmtNode() = default;
-    virtual std::string to_string(U32 &) = 0;
-    virtual void accept(NodeVisitor &) = 0;
+    virtual VIA_DEFAULT_DESTRUCTOR(StmtNode);
+    virtual std::string to_string(U32&)      = 0;
+    virtual void        accept(NodeVisitor&) = 0;
 };
 
 struct TypeNode {
-    virtual ~TypeNode() = default;
-    virtual std::string to_string(U32 &) = 0;
-    virtual void accept(NodeVisitor &) = 0;
+    virtual VIA_DEFAULT_DESTRUCTOR(TypeNode);
+    virtual std::string to_string(U32&)      = 0;
+    virtual void        accept(NodeVisitor&) = 0;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

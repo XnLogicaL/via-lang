@@ -2,9 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
-
-#include <vector>
+#ifndef _VIA_PREPROC_H
+#define _VIA_PREPROC_H
 
 #include "common.h"
 #include "highlighter.h"
@@ -13,22 +12,20 @@
 #include "import.h"
 #include "macro.h"
 
-#define PREPROCESSOR_ERROR(message) \
-    do { \
-        emitter.out(pos, (message), OutputSeverity::Error); \
-        failed = true; \
+#define PREPROCESSOR_ERROR(message)                                                                \
+    do {                                                                                           \
+        emitter.out(pos, (message), OutputSeverity::Error);                                        \
+        failed = true;                                                                             \
     } while (0)
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 class Preprocessor {
 public:
     ~Preprocessor() = default;
-    Preprocessor(ProgramData &program)
-        : program(program)
-        , emitter(program)
-    {
-    }
+    Preprocessor(ProgramData& program)
+        : program(program),
+          emitter(program) {}
 
     bool preprocess();
     void declare_default();
@@ -36,7 +33,7 @@ public:
     void declare_definition(Definition);
 
 private:
-    ProgramData                                &program;
+    ProgramData&                                program;
     Emitter                                     emitter;
     std::unordered_map<std::string, Macro>      macro_table;
     std::unordered_map<std::string, Definition> def_table;
@@ -49,9 +46,11 @@ private:
 
     Macro      parse_macro();
     Definition parse_definition();
-    void       expand_macro(const Macro &);
-    void       expand_definition(const Definition &);
+    void       expand_macro(const Macro&);
+    void       expand_definition(const Definition&);
     void       erase_from_stream(SIZE, SIZE);
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

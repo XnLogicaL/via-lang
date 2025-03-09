@@ -5,16 +5,13 @@
 #include "api.h" // For `via::compare()`
 
 // ================================================================ |
-// File constant.cpp: ConstantHolder definitions.                   |
-// ================================================================ |
-// This file defines ConstantHolder.
-// ================================================================ |
-namespace via {
+// constant.cpp
+//
+VIA_NAMESPACE_BEGIN
 
-U32 ConstantHolder::push_constant(const TValue &constant)
-{
+Operand ConstantHolder::push_constant(const TValue& constant) {
     for (U32 index = 0; index < constants.size(); index++) {
-        const TValue &val = constants[index];
+        const TValue& val = constants[index];
         if VIA_UNLIKELY (compare(val, constant)) {
             return index;
         }
@@ -24,19 +21,25 @@ U32 ConstantHolder::push_constant(const TValue &constant)
     return constants.size() - 1;
 }
 
-U32 ConstantHolder::size() const noexcept
-{
+SIZE ConstantHolder::size() const noexcept {
     return constants.size();
 }
 
-const TValue &ConstantHolder::at(U64 index) const
-{
+const TValue& ConstantHolder::at(SIZE index) const {
     return constants.at(index);
 }
 
-const std::vector<TValue> &ConstantHolder::get() const noexcept
-{
+const TValue& ConstantHolder::at_s(SIZE index) const noexcept {
+    static const TValue nil;
+    if (index >= size()) {
+        return nil;
+    }
+
+    return at(index);
+}
+
+const std::vector<TValue>& ConstantHolder::get() const noexcept {
     return constants;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

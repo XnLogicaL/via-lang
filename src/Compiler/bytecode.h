@@ -2,13 +2,14 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_BYTECODE_H
+#define _VIA_BYTECODE_H
 
 #include "instruction.h"
 
-// ================================================================ |
-// File bytecode.h: BytecodeHolder declarations.                    |
-// ================================================================ |
+// ==========================================================================================
+// bytecode.h
+//
 // This file declares the BytecodeHolder class.
 //
 // The BytecodeHolder class serves as an abstraction over a container
@@ -24,30 +25,36 @@
 //
 // `emit` also provides the caller with an option to add a comment, which
 //  is in turn saved to ProgramData::bytecode_info.
-// ================================================================ |
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-class BytecodeHolder {
+class BytecodeHolder final {
 public:
+    // Inserts a given bytecode pair to the vector.
     void add(const Bytecode&);
-    void remove(U64 index);
+    // Removes the bytecode pair located in a given index.
+    void remove(SIZE);
+    // Returns the current size or next index of the bytecode pair vector.
+    SIZE size() const noexcept;
+    // Inserts a locally constructed instruction to a given index.
     void insert(
-        U64                           index    = 0,
+        SIZE                          index    = 0,
         OpCode                        opcode   = OpCode::NOP,
         const std::array<Operand, 3>& operands = {},
         const std::string&            comment  = ""
     );
-
+    // Emits an instruction at the end of the vector.
     void emit(
         OpCode                        opcode   = OpCode::NOP,
         const std::array<Operand, 3>& operands = {},
         const std::string&            comment  = ""
     );
-
-    std::vector<Bytecode>& get();
+    // Returns a reference to the bytecode vector.
+    const std::vector<Bytecode>& get() const noexcept;
 
 private:
     std::vector<Bytecode> instructions;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

@@ -2,44 +2,9 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#if not defined(__GNUC__) && not defined(__clang__)
-    #pragma error(Unsupported compiler.Please use g++ or clang++.)
-#endif
+#ifndef _VIA_COMMON_H
+#define _VIA_COMMON_H
 
-#pragma once
-
-// C++ std imports
-#include <bitset>
-#include <cassert>
-#include <cctype>
-#include <cstdbool>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <filesystem>
-#include <format>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <optional>
-#include <stack>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <variant>
-#include <vector>
-#include <stacktrace>
-#include <shared_mutex>
-#include <limits>
-#include <typeindex>
-#include <iterator>
 // External imports
 #include "magic_enum.hpp"
 #include "linenoise.hpp"
@@ -51,57 +16,11 @@
 
 #define ASMJIT_STATIC
 
-// Asserts a condition along with a message.
-#define VIA_ASSERT(cond, message) \
-    if (!(cond)) { \
-        std::cerr << "VIA_ASSERT(): assertion '" << #cond << "' failed.\n" \
-                  << " file " << __FILE__ << " line " << __LINE__ << "\n message: " << message \
-                  << "\n" \
-                  << " callstack:\n" \
-                  << std::stacktrace::current() << '\n'; \
-        std::abort(); \
-    }
-
-// TODO: Make sure this is accurate
-#define VIA_VERSION "0.20"
-
-#define VIA_RESTRICT __restrict__
-#define VIA_NORETURN __attribute__((__noreturn__))
-#define VIA_NOINLINE __attribute__((noinline))
-#define VIA_INLINE inline
-#define VIA_FORCEINLINE inline __attribute__((always_inline))
-#define VIA_MAXOPTIMIZE inline __attribute__((always_inline, hot))
-#define VIA_UNREACHABLE __builtin_unreachable();
-#define VIA_LIKELY(expr) (__builtin_expect(!!(expr), 1))
-#define VIA_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
-
-namespace via {
-
-// Forward declarations
-struct TValue;
-struct TTable;
-struct TString;
-struct TFunction;
-struct TCFunction;
-
-VIA_FORCEINLINE char* dup_string(const char* str)
-{
-    char* chars = new char[std::strlen(str) + 1];
-    std::strcpy(chars, str);
-    return chars;
-}
-
-VIA_FORCEINLINE char* dup_string(const std::string& str)
-{
-    char* chars = new char[str.size() + 1];
-    std::strcpy(chars, str.c_str());
-    return chars;
-}
+VIA_NAMESPACE_BEGIN
 
 template<typename T, typename F>
     requires(std::invocable<F> && std::is_same_v<std::invoke_result_t<F>, T>)
-VIA_FORCEINLINE T safe_call(F func, T default_value)
-{
+VIA_FORCE_INLINE T safe_call(F func, T default_value) {
     try {
         return func();
     }
@@ -110,8 +29,7 @@ VIA_FORCEINLINE T safe_call(F func, T default_value)
     }
 }
 
-VIA_INLINE std::string memdump(const void* ptr, U64 size)
-{
+VIA_INLINE std::string memdump(const void* ptr, U64 size) {
     std::ostringstream oss;
     const uint8_t*     bytePtr = reinterpret_cast<const uint8_t*>(ptr);
 
@@ -139,9 +57,6 @@ VIA_INLINE std::string memdump(const void* ptr, U64 size)
     return oss.str();
 }
 
-VIA_INLINE void dump_memory(const void* ptr, U64 size)
-{
-    std::cout << memdump(ptr, size);
-}
+VIA_NAMESPACE_END
 
-} // namespace via
+#endif

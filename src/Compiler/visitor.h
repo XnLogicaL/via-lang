@@ -2,59 +2,44 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_VISITOR_H
+#define _VIA_VISITOR_H
 
 #include "ast.h"
 #include "register_allocator.h"
 #include "token.h"
 #include "common.h"
-#include "types.h"
+#include "rttypes.h"
 #include "bytecode.h"
 #include "constant.h"
 #include "highlighter.h"
 
-#define INVALID_VISIT \
-    { \
-        VIA_ASSERT(false, "invalid visit"); \
+#define INVALID_VISIT                                                                              \
+    {                                                                                              \
+        VIA_ASSERT(false, "invalid visit");                                                        \
     }
 
-#define PUSH_K(constant) program.constants->push_constant(constant);
-#define IS_INHERITOR(obj, inheritor) \
-    (std::type_index(typeid(obj)) == std::type_index(typeid(inheritor)))
-#define IS_CONSTEXPR(obj) IS_INHERITOR(obj, LiteralNode)
+// =============================================================================================
+// visitor.h
+//
+VIA_NAMESPACE_BEGIN
 
-namespace via {
+TValue construct_constant(LiteralNode&);
 
-VIA_INLINE TValue construct_constant(LiteralNode& literal_node)
-{
-    using enum ValueType;
-    return std::visit(
-        [](auto&& val) -> TValue {
-            using T = std::decay_t<decltype(val)>;
+template<typename Base, typename Derived>
+bool is_derived_instance(Derived& derived) {
+    return dynamic_cast<Base*>(&derived) != nullptr;
+}
 
-            if constexpr (std::is_same_v<T, int>) {
-                return TValue(val);
-            }
-            else if constexpr (std::is_same_v<T, bool>) {
-                return TValue(val);
-            }
-            else if constexpr (std::is_same_v<T, float>) {
-                return TValue(val);
-            }
-            else if constexpr (std::is_same_v<T, std::string>) {
-                TString* tstring = new TString(nullptr, val.data());
-                return TValue(string, static_cast<void*>(tstring));
-            }
-
-            VIA_UNREACHABLE;
-        },
-        literal_node.value
-    );
+template<typename Expression>
+    requires std::is_base_of_v<ExprNode, Expression>
+bool is_constant_expression(Expression& expression) {
+    return is_derived_instance<LiteralNode>(expression);
 }
 
 class NodeVisitor {
 public:
-    virtual ~NodeVisitor() = default;
+    virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
 
     virtual void visit(LiteralNode&, Operand) INVALID_VISIT;
     virtual void visit(SymbolNode&, Operand) INVALID_VISIT;
@@ -72,8 +57,7 @@ public:
     virtual void visit(WhileNode&) INVALID_VISIT;
     virtual void visit(ExprStmtNode&) INVALID_VISIT;
 
-    virtual inline bool failed()
-    {
+    virtual inline bool failed() {
         return visitor_failed;
     }
 
@@ -81,14 +65,14 @@ protected:
     bool visitor_failed = false;
 };
 
+#undef INVALID_VISIT
+
 class ExprVisitor : public NodeVisitor {
 public:
     ExprVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
-        : program(program)
-        , emitter(emitter)
-        , allocator(allocator)
-    {
-    }
+        : program(program),
+          emitter(emitter),
+          allocator(allocator) {}
 
     void visit(LiteralNode&, Operand) override;
     void visit(SymbolNode&, Operand) override;
@@ -107,12 +91,10 @@ private:
 class StmtVisitor : public NodeVisitor {
 public:
     StmtVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
-        : program(program)
-        , emitter(emitter)
-        , allocator(allocator)
-        , expression_visitor(program, emitter, allocator)
-    {
-    }
+        : program(program),
+          emitter(emitter),
+          allocator(allocator),
+          expression_visitor(program, emitter, allocator) {}
 
     void visit(DeclarationNode&) override;
     void visit(ScopeNode&) override;
@@ -122,8 +104,7 @@ public:
     void visit(WhileNode&) override;
     void visit(ExprStmtNode&) override;
 
-    inline bool failed() override
-    {
+    inline bool failed() override {
         return visitor_failed || expression_visitor.failed();
     }
 
@@ -143,4 +124,6 @@ public:
     void visit(BinaryNode&, Operand) override;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

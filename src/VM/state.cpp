@@ -8,20 +8,15 @@
 #include "gc.h"
 #include "vmapi_aux.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using namespace impl;
 
 // Initializes and returns a new State object
 State::State(GState* G, ProgramData& program)
-    : id(G->threads++)
-    , G(G)
-    , gc(new GarbageCollector())
-    , sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)])
-    , registers(new TValue[VIA_REGISTER_COUNT])
-    , err(new ErrorState())
-    , program(program)
-{
+    : id(G->threads++), G(G), gc(new GarbageCollector()),
+      sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)]),
+      registers(new TValue[VIA_REGISTER_COUNT]), err(new ErrorState()), program(program) {
     load(*program.bytecode);
 
     TFunction* main = new TFunction{
@@ -32,8 +27,7 @@ State::State(GState* G, ProgramData& program)
     __native_call(this, main, 0);
 }
 
-void State::load(BytecodeHolder& bytecode)
-{
+void State::load(BytecodeHolder& bytecode) {
     if (this->ibp) { // Clean up previous instruction pipeline
         delete[] this->ibp;
         this->ibp = nullptr;
@@ -57,8 +51,7 @@ void State::load(BytecodeHolder& bytecode)
     }
 }
 
-State::~State()
-{
+State::~State() {
     if (this->sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
@@ -92,8 +85,7 @@ State::~State()
     }
 }
 
-std::string to_string(State* state)
-{
+std::string to_string(State* state) {
 #define TO_VOID_STAR(ptr) reinterpret_cast<void*>(ptr)
 
     std::ostringstream oss;
@@ -122,4 +114,4 @@ std::string to_string(State* state)
 #undef TO_VOID_STAR
 }
 
-} // namespace via
+VIA_NAMESPACE_END

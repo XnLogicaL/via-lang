@@ -3,17 +3,14 @@
 // =========================================================================================== |
 #include "cleaner.h"
 
-// ================================================================ |
-// File cleaner.cpp: Cleaner class definitions.                     |
-// ================================================================ |
-// This file defines the Cleaner class.
-// ================================================================ |
-namespace via {
+// ===========================================================================================
+// cleaner.cpp
+//
+VIA_NAMESPACE_BEGIN
 
-void Cleaner::clean()
-{
-    for (const void *ptr : free_list)
-        std::free(const_cast<void *>(ptr));
+void Cleaner::clean() {
+    for (const void* ptr : free_list)
+        std::free(const_cast<void*>(ptr));
 
     for (auto callback : callback_list)
         callback();
@@ -22,14 +19,12 @@ void Cleaner::clean()
     callback_list.clear();
 }
 
-void Cleaner::add_malloc(const void *ptr)
-{
+void Cleaner::add_malloc(const void* ptr) {
     free_list.push_back(ptr);
 }
 
-void Cleaner::add_callback(std::function<void(void)> callback)
-{
+void Cleaner::add_callback(std::function<void(void)> callback) {
     callback_list.push_back(callback);
 }
 
-} // namespace via
+VIA_NAMESPACE_END

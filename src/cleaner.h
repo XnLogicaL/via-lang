@@ -13,19 +13,17 @@
 //
 // The Cleaner class is used mainly to defer callbacks and de-allocate
 //  allocations (by also defering them).
-//
-// Currently only C++ lambdas (as functions) and std::malloc allocations.
 // ================================================================ |
 namespace via {
 
 class Cleaner {
 public:
     void add_callback(std::function<void(void)>);
-    void add_malloc(const void *);
+    void add_malloc(const void*);
     void clean();
 
 private:
-    std::vector<const void *> free_list;
+    std::vector<const void*>               free_list;
     std::vector<std::function<void(void)>> callback_list;
 };
 

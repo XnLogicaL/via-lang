@@ -5,20 +5,17 @@
 #include "preproc.h"
 #include "lexer.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-void Preprocessor::declare_macro(Macro mac)
-{
+void Preprocessor::declare_macro(Macro mac) {
     macro_table[mac.name] = mac;
 }
 
-void Preprocessor::declare_definition(Definition def)
-{
+void Preprocessor::declare_definition(Definition def) {
     def_table[def.identifier] = def;
 }
 
-void Preprocessor::declare_default()
-{
+void Preprocessor::declare_default() {
     declare_definition({
         "__version__",
         fast_tokenize(VIA_VERSION),
@@ -45,21 +42,18 @@ void Preprocessor::declare_default()
     });
 }
 
-Token Preprocessor::consume(SIZE ahead)
-{
+Token Preprocessor::consume(SIZE ahead) {
     SIZE old_pos = pos;
     pos += ahead;
     return program.tokens->tokens.at(old_pos);
 }
 
-Token Preprocessor::peek(int ahead)
-{
+Token Preprocessor::peek(int ahead) {
     return program.tokens->tokens.at(pos + ahead);
 }
 
-bool Preprocessor::preprocess()
-{
-    for (const Token &tok : program.tokens->tokens) {
+bool Preprocessor::preprocess() {
+    for (const Token& tok : program.tokens->tokens) {
         if (tok.type == TokenType::KW_MACRO) {
             parse_macro();
         }
@@ -85,10 +79,9 @@ bool Preprocessor::preprocess()
     return failed;
 }
 
-void Preprocessor::erase_from_stream(SIZE begin, SIZE end)
-{
+void Preprocessor::erase_from_stream(SIZE begin, SIZE end) {
     auto tokens_begin = program.tokens->tokens.begin();
     program.tokens->tokens.erase(tokens_begin + begin, tokens_begin + end);
 }
 
-} // namespace via
+VIA_NAMESPACE_END

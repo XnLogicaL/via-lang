@@ -2,19 +2,17 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_OPCODE_H
+#define _VIA_OPCODE_H
 
 #include "common.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-/*
- * OpCode operand convention
- * <opcode> <registers> <identifiers> <everything-else>
- * Ordered from most likely to be executed to the least. (Except NOP)
- */
 enum class OpCode : U16 {
     NOP,
+    LABEL,
+    EXIT,
 
     ADD,
     ADDK,
@@ -41,7 +39,6 @@ enum class OpCode : U16 {
     POWINT,
     POWFLOAT,
     NEG,
-    NEGK,
 
     MOVE,
     SWAP,
@@ -50,7 +47,8 @@ enum class OpCode : U16 {
     LOADNIL,
     LOADINT,
     LOADFLOAT,
-    LOADBOOL,
+    LOADTRUE,
+    LOADFALSE,
     LOADTABLE,
     LOADFUNCTION,
 
@@ -59,8 +57,10 @@ enum class OpCode : U16 {
     PUSHNIL,
     PUSHINT,
     PUSHFLOAT,
-    PUSHBOOL,
+    PUSHTRUE,
+    PUSHFALSE,
     POP,
+    DROP,
     GETSTACK,
     SETSTACK,
     GETARGUMENT,
@@ -93,13 +93,21 @@ enum class OpCode : U16 {
     JUMPIFLESSOREQUAL,
     JUMPIFGREATEROREQUAL,
 
+    JUMPLABEL,
+    JUMPLABELIF,
+    JUMPLABELIFNOT,
+    JUMPLABELIFEQUAL,
+    JUMPLABELIFNOTEQUAL,
+    JUMPLABELIFLESS,
+    JUMPLABELIFGREATER,
+    JUMPLABELIFLESSOREQUAL,
+    JUMPLABELIFGREATEROREQUAL,
+
     CALL,
     EXTERNCALL,
     NATIVECALL,
     METHODCALL,
     RETURN,
-
-    EXIT,
 
     GETTABLE,
     SETTABLE,
@@ -108,7 +116,6 @@ enum class OpCode : U16 {
 
     CONCAT,
     CONCATK,
-    CONCATI,
     GETSTRING,
     SETSTRING,
     LENSTRING,
@@ -119,4 +126,6 @@ enum class OpCode : U16 {
     GET,
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

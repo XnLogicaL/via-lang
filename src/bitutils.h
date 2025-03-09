@@ -2,14 +2,24 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_BITUTILS_H
+#define _VIA_BITUTILS_H
 
 #include "common.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
+
+struct U16Result {
+    U16 l;
+    U16 r;
+};
 
 U32 reinterpret_u16_as_u32(U16 high, U16 low);
 I32 reinterpret_u16_as_i32(U16 high, U16 low);
 F32 reinterpret_u16_as_f32(U16 high, U16 low);
 
-} // namespace via
+U16Result reinterpret_u32_as_2u16(U32 data);
+
+VIA_NAMESPACE_END
+
+#endif

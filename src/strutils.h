@@ -2,27 +2,17 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_STRUTILS_H
+#define _VIA_STRUTILS_H
 
 #include "common.h"
 
-namespace via::utils {
+VIA_NAMESPACE_BEGIN
 
-template<typename T>
-class ModifiableOnce {
-public:
-    ModifiableOnce(T val)
-        : value(val)
-    {
-    }
+char* duplicate_string(const std::string&);
+char* duplicate_string(const char*);
+U32   hash_string(const char*);
 
-    void set(T new_value);
-    const T &get() const;
-    T get();
+VIA_NAMESPACE_END
 
-private:
-    bool has_modified = false;
-    T value;
-};
-
-} // namespace via::utils
+#endif

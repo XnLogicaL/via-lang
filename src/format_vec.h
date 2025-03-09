@@ -2,35 +2,42 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_FORMAT_VEC_H
+#define _VIA_FORMAT_VEC_H
 
 #include "common.h"
-#include <format>
-#include <functional>
-#include <string>
-#include <vector>
 
-namespace via::utils {
+VIA_NAMESPACE_UTIL_BEGIN
+
+template<typename T>
+using FmtVector = const std::vector<T>&;
+
+template<typename T>
+using FmtFunction = const std::function<std::string(const T&)>&;
 
 template<typename T>
 std::string format_vector(
-    const std::vector<T> &vec = {},
-    std::function<std::string(const T &)> to_str = {},
-    char delimiter_begin = '{',
-    char delimiter_end = '}'
-)
-{
-    std::string str;
+    FmtVector<T>   vec             = {},
+    FmtFunction<T> to_str          = {},
+    char           delimiter_begin = '{',
+    char           delimiter_end   = '}'
+) {
+    std::ostringstream oss;
+    oss << delimiter_begin;
 
-    for (const T &val : vec) {
-        str += to_str(val) + ", ";
+    SIZE index = 0;
+    for (const T& elem : vec) {
+        oss << to_str(elem);
+
+        if (index++ < vec.size() - 1) {
+            oss << ", ";
+        }
     }
 
-    if (str.ends_with(' ')) {
-        str += "\b\b";
-    }
-
-    return std::format("{}{}{}", delimiter_begin, str, delimiter_end);
+    oss << delimiter_end;
+    return oss.str();
 }
 
-} // namespace via::utils
+VIA_NAMESPACE_END
+
+#endif

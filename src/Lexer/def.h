@@ -2,19 +2,23 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_DEF_H
+#define _VIA_DEF_H
 
 #include "common.h"
 #include "token.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 struct Definition {
+    SIZE begin;
+    SIZE end;
+    SIZE line;
+
     std::string        identifier;
     std::vector<Token> replacement;
-    SIZE               begin;
-    SIZE               end;
-    SIZE               line;
 };
 
-} // namespace via
+VIA_NAMESPACE_END
+
+#endif

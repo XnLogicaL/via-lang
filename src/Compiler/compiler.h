@@ -10,9 +10,8 @@
 #include "ast.h"
 #include "visitor.h"
 
-// ================================================================ |
-// File compiler.h: Compiler class declaration.                     |
-// ================================================================ |
+// ===========================================================================================
+// compiler.h
 // This file declares the Compiler class.
 //
 // The Compiler class serves as an abstract compilation interface,
@@ -23,15 +22,12 @@
 //  it returns a boolean indicating if the program failed or not, of which
 //  a value of `true` represents failure. The method could theoretically be called
 //  multiple times, but it is not recommended to do so.
-// ================================================================ |
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 class Compiler {
 public:
-    Compiler(ProgramData &program)
-        : program(program)
-    {
-    }
+    Compiler(ProgramData& program)
+        : program(program) {}
 
     bool generate();
 
@@ -39,7 +35,7 @@ private:
     bool check_global_collisions();
 
 private:
-    ProgramData &program;
+    ProgramData& program;
 };
 
-} // namespace via
+VIA_NAMESPACE_END

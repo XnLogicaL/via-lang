@@ -5,10 +5,9 @@
 #include "def.h"
 #include "preproc.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-Definition Preprocessor::parse_definition()
-{
+Definition Preprocessor::parse_definition() {
     Definition def;
     def.begin               = pos;
     std::vector<Token> toks = program.tokens->tokens;
@@ -19,11 +18,9 @@ Definition Preprocessor::parse_definition()
 
     auto it = def_table.find(peek().lexeme);
     if (it != def_table.end())
-        PREPROCESSOR_ERROR(std::format(
-            "Redefinition of definition '{}', previously defined on line {}",
-            it->second.identifier,
-            it->second.line
-        ));
+        PREPROCESSOR_ERROR(
+            std::format("Redefinition of definition '{}', previously defined on line {}",
+                it->second.identifier, it->second.line));
 
     // Consume 'define' keyword and extract identifier
     consume();
@@ -50,13 +47,12 @@ Definition Preprocessor::parse_definition()
     return def;
 }
 
-void Preprocessor::expand_definition(const Definition &def)
-{
+void Preprocessor::expand_definition(const Definition& def) {
     std::vector<Token> toks = program.tokens->tokens;
 
     // Iterate through all tokens in the program
     for (SIZE i = 0; i < toks.size(); ++i) {
-        const Token &tok = toks.at(i);
+        const Token& tok = toks.at(i);
 
         // If we find the definition identifier, replace it
         if (tok.lexeme == def.identifier && tok.type == TokenType::IDENTIFIER) {
@@ -71,4 +67,4 @@ void Preprocessor::expand_definition(const Definition &def)
     }
 }
 
-} // namespace via
+VIA_NAMESPACE_END

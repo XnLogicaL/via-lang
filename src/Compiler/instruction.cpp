@@ -7,85 +7,76 @@
 #include "bytecode.h"
 #include "object.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using enum OpCode;
 
-std::string to_string(const Bytecode& bytecode)
-{
-    static constexpr const char* format_string =
-        "\033[0;35m{:<12}\033[0;37m {:<1} {:<1} {:<1}\033[0m\033[2m          {}\033[0m";
+std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
+    // The main instruction is printed with fixed widths:
+    // - Opcode string: 12 characters, colored in magenta.
+    // - Three operands: each 3 characters wide.
+    static constexpr const char* main_format =
+        "\033[0;35m{:<12}\033[0;37m {:<3} {:<3} {:<3}\033[0m";
+    // The comment field is formatted as a left-aligned, fixed width of 15 characters in green.
+    static constexpr const char* comment_format = "\033[3;32m{:<15}\033[0m";
 
     const Instruction&     instruction = bytecode.instruction;
     const InstructionData& data        = bytecode.meta_data;
 
-    OpCode opcode    = instruction.op;
-    U32    opcode_id = static_cast<U32>(opcode);
+    auto get_opcode_string = [&]() -> std::string {
+        std::string str(magic_enum::enum_name(instruction.op));
+        std::transform(
+            str.begin(), str.end(), str.begin(), capitalize_opcodes ? ::toupper : ::tolower
+        );
+        return str;
+    };
+
+    std::string arg0, arg1, arg2;
+    OpCode      opcode    = instruction.op;
+    U32         opcode_id = static_cast<U32>(opcode);
 
     if (opcode_id >= static_cast<U32>(JUMP) &&
         opcode_id <= static_cast<U32>(JUMPIFGREATEROREQUAL)) {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            static_cast<OperandS>(instruction.operand0),
-            static_cast<OperandS>(instruction.operand1),
-            static_cast<OperandS>(instruction.operand2),
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
-        );
+        arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
+        arg1 = std::format("{}", static_cast<OperandS>(instruction.operand1));
+        arg2 = std::format("{}", static_cast<OperandS>(instruction.operand2));
     }
     else if (opcode == LOADINT || opcode == ADDINT || opcode == SUBINT || opcode == MULINT ||
              opcode == DIVINT || opcode == POWINT || opcode == MODINT) {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            static_cast<Operand>(instruction.operand0),
+        arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
+        arg1 = std::format(
+            "{}",
             static_cast<TInteger>(reinterpret_u16_as_i32(instruction.operand1, instruction.operand2)
-            ),
-            "",
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
+            )
         );
+        arg2 = "";
     }
     else if (opcode == LOADFLOAT || opcode == ADDFLOAT || opcode == SUBFLOAT ||
              opcode == MULFLOAT || opcode == DIVFLOAT || opcode == POWFLOAT || opcode == MODFLOAT) {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            static_cast<Operand>(instruction.operand0),
-            static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2)),
-            "",
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
+        arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
+        arg1 = std::format(
+            "{}",
+            static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2))
         );
-    }
-    else if (opcode == LOADBOOL) {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            static_cast<Operand>(instruction.operand0),
-            static_cast<bool>(instruction.operand1) ? "true" : "false",
-            "",
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
-        );
+        arg2 = "";
     }
     else if (opcode == GETGLOBAL || opcode == SETGLOBAL) {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            instruction.operand0,
-            reinterpret_u16_as_u32(instruction.operand1, instruction.operand2),
-            "",
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
-        );
+        arg0 = std::format("{}", instruction.operand0);
+        arg1 =
+            std::format("{}", reinterpret_u16_as_u32(instruction.operand1, instruction.operand2));
+        arg2 = "";
     }
     else {
-        return std::format(
-            format_string,
-            magic_enum::enum_name(opcode),
-            instruction.operand0,
-            instruction.operand1,
-            instruction.operand2,
-            data.comment.empty() ? "" : std::format("; {}", data.comment)
-        );
+        arg0 = std::format("{}", instruction.operand0);
+        arg1 = std::format("{}", instruction.operand1);
+        arg2 = std::format("{}", instruction.operand2);
     }
+
+    std::string main_line    = std::format(main_format, get_opcode_string(), arg0, arg1, arg2);
+    std::string comment_body = data.comment.empty() ? "" : std::format("; {}", data.comment);
+    std::string comment_str  = std::format(comment_format, comment_body);
+
+    return main_line + " " + comment_str;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

@@ -7,18 +7,22 @@
 #include "fileio.h"
 #include "via.h"
 
+[[maybe_unused]]
 static constexpr const char REPL_WELCOME[] =
     "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
     "Use ';help' to see a list of commands.\n";
+
+[[maybe_unused]]
 static constexpr const char REPL_HELP[] =
     "repl commands:\n"
     "  ;quit - Quits repl\n"
     "  ;help - Prints this \"menu\"\n"
     "  ;exitinfo - Displays the last exit info returned by the VM\n";
+
+[[maybe_unused]]
 static constexpr const char REPL_HEAD[] = ">> ";
 
-via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser)
-{
+via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
     using namespace via;
 
     using enum via::OutputSeverity;
@@ -64,12 +68,8 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser)
     preprocessor.declare_default();
 
     bool failed = preprocessor.preprocess() || parser.parse() || compiler.generate();
-    if (verbosity_flag) {
-        if (failed) {
-            local_emitter.out_flat("Compilation failed", Error);
-            return program;
-        }
 
+    if (!failed) {
         if (get_flag("--dump-tokens")) {
             print_flag_label("--dump-tokens");
 
@@ -91,9 +91,37 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser)
         if (get_flag("--dump-bytecode")) {
             print_flag_label("--dump-bytecode");
 
+            U32 counter = 0;
+
             for (const Bytecode& bytecode : program.bytecode->get()) {
-                std::cout << via::to_string(bytecode) << "\n";
+                std::cout << std::format("{:0>3} ", counter++)
+                          << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
             }
+        }
+
+        if (get_flag("--dump-machine-code")) {
+            print_flag_label("--dump-machine-code");
+
+            for (const Bytecode& bytecode : program.bytecode->get()) {
+                const Instruction& instruction = bytecode.instruction;
+
+                const size_t   size = sizeof(Instruction);
+                const uint8_t* data = reinterpret_cast<const U8*>(&instruction);
+
+                for (size_t i = 0; i < size; i++) {
+                    std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
+                              << static_cast<int>(data[i]) << std::dec << " ";
+                }
+
+                std::cout << std::endl;
+            }
+        }
+    }
+
+    if (verbosity_flag) {
+        if (failed) {
+            local_emitter.out_flat("Compilation failed", Error);
+            return program;
         }
 
         auto   compilation_end = std::chrono::steady_clock::now();
@@ -101,15 +129,13 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser)
             std::chrono::duration<double, std::milli>(compilation_end - compilation_start).count();
 
         local_emitter.out_flat(
-            std::format("Compilation finished in {}s", compilation_time / 1000), Info
-        );
+            std::format("Compilation finished in {}s", compilation_time / 1000), Info);
     }
 
     return program;
 }
 
-via::ProgramData handle_repl(argparse::ArgumentParser&)
-{
+via::ProgramData handle_repl(argparse::ArgumentParser&) {
     using namespace via;
 
     using enum via::OutputSeverity;
@@ -122,8 +148,7 @@ via::ProgramData handle_repl(argparse::ArgumentParser&)
     return program;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     using namespace via;
     using namespace argparse;
 
@@ -136,31 +161,34 @@ int main(int argc, char* argv[])
     compile_command.add_argument("target");
     compile_command.add_argument("--dump-ast", "-Da")
         .help("Dumps the abstract syntax tree representation of the program")
-        .default_value(false)
-        .implicit_value(true);
+        .flag();
 
     compile_command.add_argument("--dump-bytecode", "-Db")
-        .help("Dumps human-readable bytecode to the console upon compilation of the give source "
+        .help("Dumps human-readable bytecode to the console upon compilation of the given source "
               "file is completed")
-        .default_value(false)
-        .implicit_value(true);
+        .flag();
+
+    compile_command.add_argument("--dump-machine-code", "-Dmc")
+        .help("Dumps raw machine code to the console when compilation of the given source file is "
+              "completed")
+        .flag();
 
     compile_command.add_argument("--dump-tokens", "-Dt")
         .help("Dumps tokenized representation of the given source file upon tokenization of the "
               "given source file "
               "is completed")
-        .default_value(false)
-        .implicit_value(true);
+        .flag();
 
     compile_command.add_argument("--optimize", "-O")
         .help("Sets optimization level to the given integer")
         .scan<'u', U32>()
         .default_value(1);
 
-    compile_command.add_argument("--verbose", "-v")
-        .help("Enables verbosity")
-        .default_value(false)
-        .implicit_value(true);
+    compile_command.add_argument("--verbose", "-v").help("Enables verbosity").flag();
+
+    compile_command.add_argument("--Bcapitalize-opcodes")
+        .help("Whether to captialize opcodes inside bytecode dumps")
+        .flag();
 
     // Argument parser initialization
     argument_parser.add_subparser(compile_command);

@@ -5,26 +5,20 @@
 #include "lexer.h"
 #include "token.h"
 
-#define BINARY_LITERAL_SENTINEL ('b')
-#define HEX_LITERAL_SENTINEL ('x')
-
-namespace via {
+VIA_NAMESPACE_BEGIN
 
 using enum TokenType;
 
 // Function that returns whether if a character is allowed within a hexadecimal literal
-bool Tokenizer::is_hex_char(char chr)
-{
+bool Tokenizer::is_hex_char(char chr) {
     return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
 }
 
-SIZE Tokenizer::source_size()
-{
+SIZE Tokenizer::source_size() {
     return program.source.size();
 }
 
-char Tokenizer::peek(SIZE ahead)
-{
+char Tokenizer::peek(SIZE ahead) {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
@@ -32,8 +26,7 @@ char Tokenizer::peek(SIZE ahead)
     return program.source.at(pos + ahead);
 }
 
-char Tokenizer::consume(SIZE ahead)
-{
+char Tokenizer::consume(SIZE ahead) {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
@@ -41,8 +34,7 @@ char Tokenizer::consume(SIZE ahead)
     return program.source.at(pos += ahead);
 }
 
-Token Tokenizer::read_number(SIZE position)
-{
+Token Tokenizer::read_number(SIZE position) {
     TokenType   type         = LIT_INT; // Specify default type as integer literal
     SIZE        start_offset = offset;  // Record starting offset of the number
     std::string value;                  // Value of the number, as a string for convenience
@@ -63,8 +55,8 @@ Token Tokenizer::read_number(SIZE position)
     }
 
     // Read the number until the current character isn't numeric
-    while (pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))
-    ) {
+    while (
+        pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))) {
         value.push_back(peek());
         pos++;
         offset++;
@@ -94,8 +86,7 @@ Token Tokenizer::read_number(SIZE position)
     return Token(type, value, line, start_offset, position);
 }
 
-Token Tokenizer::read_ident(SIZE position)
-{
+Token Tokenizer::read_ident(SIZE position) {
     // List of allowed special characters that can be included in an identifier
     static const std::vector<char> allowed_identifier_spec_chars = {
         '_', '!' /* For macros */
@@ -124,16 +115,35 @@ Token Tokenizer::read_ident(SIZE position)
     }
 
     static const std::unordered_map<std::string, TokenType> keyword_map = {
-        {"do", KW_DO},         {"in", KW_IN},           {"local", KW_LOCAL},
-        {"global", KW_GLOBAL}, {"as", KW_AS},           {"const", KW_CONST},
-        {"if", KW_IF},         {"else", KW_ELSE},       {"elif", KW_ELIF},
-        {"while", KW_WHILE},   {"for", KW_FOR},         {"return", KW_RETURN},
-        {"func", KW_FUNC},     {"break", KW_BREAK},     {"continue", KW_CONTINUE},
-        {"switch", KW_MATCH},  {"case", KW_CASE},       {"default", KW_DEFAULT},
-        {"new", KW_NEW},       {"and", KW_AND},         {"not", KW_NOT},
-        {"or", KW_OR},         {"struct", KW_STRUCT},   {"namespace", KW_NAMESPACE},
-        {"import", KW_IMPORT}, {"export", KW_EXPORT},   {"macro", KW_MACRO},
-        {"define", KW_DEFINE}, {"defined", KW_DEFINED},
+        {"do", KW_DO},
+        {"in", KW_IN},
+        {"local", KW_LOCAL},
+        {"global", KW_GLOBAL},
+        {"as", KW_AS},
+        {"const", KW_CONST},
+        {"if", KW_IF},
+        {"else", KW_ELSE},
+        {"elif", KW_ELIF},
+        {"while", KW_WHILE},
+        {"for", KW_FOR},
+        {"return", KW_RETURN},
+        {"func", KW_FUNC},
+        {"break", KW_BREAK},
+        {"continue", KW_CONTINUE},
+        {"switch", KW_MATCH},
+        {"case", KW_CASE},
+        {"default", KW_DEFAULT},
+        {"new", KW_NEW},
+        {"and", KW_AND},
+        {"not", KW_NOT},
+        {"or", KW_OR},
+        {"struct", KW_STRUCT},
+        {"namespace", KW_NAMESPACE},
+        {"import", KW_IMPORT},
+        {"export", KW_EXPORT},
+        {"macro", KW_MACRO},
+        {"define", KW_DEFINE},
+        {"defined", KW_DEFINED},
     };
 
     // Checks if the identifier is a keyword or not
@@ -156,8 +166,7 @@ Token Tokenizer::read_ident(SIZE position)
     return Token(type, identifier, line, start_offset, position); // Use start_offset here
 }
 
-Token Tokenizer::read_string(SIZE position)
-{
+Token Tokenizer::read_string(SIZE position) {
     std::string lexeme;
     SIZE        start_offset = offset; // Record starting offset of the string
     pos++;                             // Skip opening quote
@@ -201,8 +210,7 @@ Token Tokenizer::read_string(SIZE position)
     return Token(LIT_STRING, lexeme, line, start_offset, position); // Use start_offset here
 }
 
-Token Tokenizer::get_token()
-{
+Token Tokenizer::get_token() {
     // Skip whitespace and single-line comments
     while (pos < source_size()) {
         // Skip whitespace
@@ -356,9 +364,8 @@ Token Tokenizer::get_token()
     return Token(UNKNOWN, "\0", line, start_offset, position);
 }
 
-void Tokenizer::tokenize()
-{
-    TokenHolder *tokens = program.tokens;
+void Tokenizer::tokenize() {
+    TokenHolder* tokens = program.tokens;
 
     while (true) {
         Token token = get_token();
@@ -370,4 +377,4 @@ void Tokenizer::tokenize()
     }
 }
 
-} // namespace via
+VIA_NAMESPACE_END

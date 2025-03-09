@@ -1,6 +1,6 @@
 const x = 0
 global Aaaa = 0
-global BB = 0
+global BB = 100
 
 global func add(a, b) {
     local var = a * 56 *6 / 62929 * 5 % 10.1

@@ -2,7 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#pragma once
+#ifndef _VIA_VMAPI_H
+#define _VIA_VMAPI_H
 
 #include "common.h"
 #include "gc.h"
@@ -10,32 +11,29 @@
 #include "instruction.h"
 #include "opcode.h"
 #include "state.h"
-#include "types.h"
+#include "strutils.h"
+#include "rttypes.h"
 #include "vmapi_aux.h"
 
-namespace via::impl {
+VIA_NAMESPACE_IMPL_BEGIN
 
 static const TValue _Nil = TValue();
 
-VIA_MAXOPTIMIZE void __set_error_state(State* _V, const std::string& _Msg)
-{
+VIA_INLINE_HOT void __set_error_state(State* _V, const std::string& _Msg) {
     _V->err->frame   = _V->frame;
     _V->err->message = _Msg;
 }
 
-VIA_MAXOPTIMIZE void __clear_error_state(State* _V)
-{
+VIA_INLINE_HOT void __clear_error_state(State* _V) {
     _V->err->frame   = nullptr;
     _V->err->message = "";
 }
 
-VIA_MAXOPTIMIZE bool __has_error(State* _V)
-{
+VIA_INLINE_HOT bool __has_error(State* _V) {
     return _V->err->frame != nullptr;
 }
 
-VIA_FORCEINLINE bool __handle_error(State* _V)
-{
+VIA_FORCE_INLINE bool __handle_error(State* _V) {
     TFunction* _Current_frame = _V->frame;
     TFunction* _Error_frame   = _V->frame;
 
@@ -49,12 +47,10 @@ VIA_FORCEINLINE bool __handle_error(State* _V)
 
     if (!_Current_frame) {
         if (_Error_frame) {
-            std::string _Error = std::format(
-                "{} <frame@0x{:x}>: {}\n\n",
+            std::string _Error = std::format("{} <frame@0x{:x}>: {}\n\n",
                 _Error_frame->id,
                 reinterpret_cast<uintptr_t>(_Error_frame),
-                _V->err->message
-            );
+                _V->err->message);
             std::cerr << _Error;
         }
 
@@ -63,12 +59,10 @@ VIA_FORCEINLINE bool __handle_error(State* _V)
         SIZE _Idx = 0;
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
-            std::cerr << std::format(
-                "#{} {} <frame@0x{:x}>\n",
+            std::cerr << std::format("#{} {} <frame@0x{:x}>\n",
                 _Error_frame->id,
                 _Idx++,
-                reinterpret_cast<uintptr_t>(_Error_frame)
-            );
+                reinterpret_cast<uintptr_t>(_Error_frame));
             _Error_frame = _Error_frame->caller;
         }
     }
@@ -76,20 +70,17 @@ VIA_FORCEINLINE bool __handle_error(State* _V)
     return static_cast<bool>(_Current_frame);
 }
 
-VIA_MAXOPTIMIZE void __set_register(State* _V, Operand _Reg, const TValue& _Val)
-{
+VIA_INLINE_HOT void __set_register(State* _V, Operand _Reg, const TValue& _Val) {
     TValue* addr = _V->registers + _Reg;
     *addr        = _Val.clone();
 }
 
-VIA_MAXOPTIMIZE TValue* __get_register(State* _V, Operand _Reg)
-{
+VIA_INLINE_HOT TValue* __get_register(State* _V, Operand _Reg) {
     TValue* addr = _V->registers + _Reg;
     return addr;
 }
 
-VIA_INLINE TValue __get_constant(State* _V, SIZE _Idx)
-{
+VIA_INLINE TValue __get_constant(State* _V, SIZE _Idx) {
     if (_Idx >= _V->program.constants->size()) {
         return _Nil.clone();
     }
@@ -97,28 +88,23 @@ VIA_INLINE TValue __get_constant(State* _V, SIZE _Idx)
     return _V->program.constants->at(_Idx).clone();
 }
 
-VIA_MAXOPTIMIZE void __push(State* _V, const TValue& _Val)
-{
+VIA_INLINE_HOT void __push(State* _V, const TValue& _Val) {
     _V->sbp[_V->sp++] = _Val.clone();
 }
 
-VIA_MAXOPTIMIZE TValue __pop(State* _V)
-{
+VIA_INLINE_HOT TValue __pop(State* _V) {
     return _V->sbp[_V->sp--].clone();
 }
 
-VIA_MAXOPTIMIZE TValue __get_stack(State* _V, Operand _Offset) noexcept
-{
+VIA_INLINE_HOT TValue __get_stack(State* _V, Operand _Offset) noexcept {
     return _V->sbp[_Offset].clone();
 }
 
-VIA_MAXOPTIMIZE void __set_stack(State* _V, Operand _Offset, TValue& _Val) noexcept
-{
+VIA_INLINE_HOT void __set_stack(State* _V, Operand _Offset, TValue& _Val) noexcept {
     _V->sbp[_Offset] = _Val.clone();
 }
 
-VIA_FORCEINLINE TValue __get_argument(State* VIA_RESTRICT _V, Operand _Offset) noexcept
-{
+VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _V, Operand _Offset) noexcept {
     if (_Offset >= _V->argc) {
         return _Nil.clone();
     }
@@ -129,20 +115,17 @@ VIA_FORCEINLINE TValue __get_argument(State* VIA_RESTRICT _V, Operand _Offset) n
     return _Val.clone();
 }
 
-VIA_FORCEINLINE TValue __type(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
-{
-    char* _Str = dup_string(std::string(magic_enum::enum_name(_Val.type)));
+VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
+    char* _Str = duplicate_string(std::string(magic_enum::enum_name(_Val.type)));
     return TValue(new TString(_V, _Str));
 }
 
-VIA_FORCEINLINE std::string __type_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val)
-{
+VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) {
     TValue _Type = __type(_V, _Val);
     return std::string(_Type.cast_ptr<TString>()->data);
 }
 
-VIA_INLINE TValue __get_table(TTable* VIA_RESTRICT _Tbl, Operand _Key, bool _Search_meta) noexcept
-{
+VIA_INLINE TValue __get_table(TTable* VIA_RESTRICT _Tbl, Operand _Key, bool _Search_meta) noexcept {
     auto _It = _Tbl->data.find(_Key);
     if (_It != _Tbl->data.end()) {
         return _It->second.clone();
@@ -154,12 +137,9 @@ VIA_INLINE TValue __get_table(TTable* VIA_RESTRICT _Tbl, Operand _Key, bool _Sea
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_table(
-    TTable* VIA_RESTRICT _Tbl,
-    Operand              _Key,
-    const TValue&        _Val
-) noexcept
-{
+VIA_FORCE_INLINE void __set_table(TTable* VIA_RESTRICT _Tbl,
+    Operand                                            _Key,
+    const TValue&                                      _Val) noexcept {
     if (check_nil(_Val)) {
         const TValue& _Tbl_val = __get_table(_Tbl, _Key, false);
 
@@ -172,8 +152,7 @@ VIA_FORCEINLINE void __set_table(
     }
 }
 
-VIA_FORCEINLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val)
-{
+VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val) {
     if (check_table(_Val)) {
         TTable*       _Tbl  = _Val.cast_ptr<TTable>();
         const TValue& _Type = __get_table(_Tbl, hash_string("__type"), true);
@@ -188,8 +167,7 @@ VIA_FORCEINLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val)
     return __type(_V, _Val);
 }
 
-VIA_MAXOPTIMIZE void __native_call(State* _V, TFunction* _Callee, SIZE _Argc)
-{
+VIA_INLINE_HOT void __native_call(State* _V, TFunction* _Callee, SIZE _Argc) {
     _Callee->caller   = _V->frame;
     _Callee->ret_addr = _V->ip;
     _V->frame         = _Callee;
@@ -202,8 +180,7 @@ VIA_MAXOPTIMIZE void __native_call(State* _V, TFunction* _Callee, SIZE _Argc)
     _V->ssp           = _V->sp;
 }
 
-VIA_MAXOPTIMIZE void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc)
-{
+VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc) {
     char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
     const void* _Addr    = _Callee;
     uintptr_t   _Address = reinterpret_cast<uintptr_t>(_Addr);
@@ -228,13 +205,10 @@ VIA_MAXOPTIMIZE void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc)
     _Callee->data(_V);
 }
 
-VIA_MAXOPTIMIZE void __method_call(
-    State* VIA_RESTRICT  _V,
-    TTable* VIA_RESTRICT _Tbl,
-    Operand              _Key,
-    SIZE                 _Argc
-) noexcept
-{
+VIA_INLINE_HOT void __method_call(State* VIA_RESTRICT _V,
+    TTable* VIA_RESTRICT                              _Tbl,
+    Operand                                           _Key,
+    SIZE                                              _Argc) noexcept {
     const TValue& _Method = __get_table(_Tbl, _Key, true);
     if (check_function(_Method)) {
         __native_call(_V, _Method.cast_ptr<TFunction>(), _Argc);
@@ -244,8 +218,7 @@ VIA_MAXOPTIMIZE void __method_call(
     }
 }
 
-VIA_MAXOPTIMIZE void __call(State* _V, const TValue& _Callee, SIZE _Argc)
-{
+VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, SIZE _Argc) {
     _V->calltype = CallType::CALL;
 
     if (check_function(_Callee)) {
@@ -259,13 +232,11 @@ VIA_MAXOPTIMIZE void __call(State* _V, const TValue& _Callee, SIZE _Argc)
     }
     else {
         __set_error_state(
-            _V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee))
-        );
+            _V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee)));
     }
 }
 
-VIA_FORCEINLINE TValue __len(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE TValue __len(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
     if (check_string(_Val)) {
         return TValue(static_cast<int>(strlen(_Val.cast_ptr<TString>()->data)));
     }
@@ -284,14 +255,13 @@ VIA_FORCEINLINE TValue __len(State* VIA_RESTRICT _V, const TValue& _Val) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __native_return(State* VIA_RESTRICT _V, SIZE _Retc) noexcept
-{
+VIA_FORCE_INLINE void __native_return(State* VIA_RESTRICT _V, SIZE _Retc) noexcept {
     TValue* _Ret_values = new TValue[_Retc];
     for (SIZE i = 0; i < _Retc; i++) {
         _Ret_values[i] = __pop(_V);
     }
 
-    __closure_close_upvalues(_V);
+    __closure_close_upvalues(_V->frame);
 
     _V->ibp   = _V->sibp;
     _V->iep   = _V->siep;
@@ -308,8 +278,7 @@ VIA_FORCEINLINE void __native_return(State* VIA_RESTRICT _V, SIZE _Retc) noexcep
     delete[] _Ret_values;
 }
 
-VIA_MAXOPTIMIZE TValue __get_global(State* VIA_RESTRICT _V, Operand _Id) noexcept
-{
+VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _V, Operand _Id) noexcept {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
     auto _It = _V->G->gtable.find(_Id);
@@ -320,8 +289,7 @@ VIA_MAXOPTIMIZE TValue __get_global(State* VIA_RESTRICT _V, Operand _Id) noexcep
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE void __set_global(State* VIA_RESTRICT _V, Operand _Id, const TValue& _Val)
-{
+VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _V, Operand _Id, const TValue& _Val) {
     std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
 
     auto _It = _V->G->gtable.find(_Id);
@@ -332,8 +300,7 @@ VIA_FORCEINLINE void __set_global(State* VIA_RESTRICT _V, Operand _Id, const TVa
     _V->G->gtable.emplace(_Id, _Val.clone());
 }
 
-VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
-{
+VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
     using enum ValueType;
 
     if (check_string(_Val)) {
@@ -395,14 +362,12 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexce
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE std::string __to_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE std::string __to_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
     TValue _Str = __to_string(_V, _Val);
     return std::string(_Str.cast_ptr<TString>()->data);
 }
 
-VIA_FORCEINLINE TValue __to_bool(const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE TValue __to_bool(const TValue& _Val) noexcept {
     if (check_bool(_Val)) {
         return _Val.clone();
     }
@@ -413,8 +378,7 @@ VIA_FORCEINLINE TValue __to_bool(const TValue& _Val) noexcept
     return _Nil.clone();
 }
 
-VIA_FORCEINLINE bool __to_cxx_bool(const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE bool __to_cxx_bool(const TValue& _Val) noexcept {
     return __to_bool(_Val).val_boolean;
 }
 
@@ -422,8 +386,7 @@ VIA_FORCEINLINE bool __to_cxx_bool(const TValue& _Val) noexcept
 #include <string>
 #include <iostream>
 
-VIA_FORCEINLINE TValue __to_number(const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE TValue __to_number(const TValue& _Val) noexcept {
     using enum ValueType;
 
     if (check_number(_Val)) {
@@ -462,8 +425,7 @@ VIA_FORCEINLINE TValue __to_number(const TValue& _Val) noexcept
 
 template<typename T>
     requires std::is_arithmetic_v<T>
-VIA_FORCEINLINE T __to_cxx_number(const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE T __to_cxx_number(const TValue& _Val) noexcept {
     TValue _Number = __to_number(_Val);
 
     if (check_nil(_Number)) {
@@ -490,8 +452,7 @@ VIA_FORCEINLINE T __to_cxx_number(const TValue& _Val) noexcept
     }
 }
 
-VIA_FORCEINLINE void* __to_pointer(const TValue& _Val) noexcept
-{
+VIA_FORCE_INLINE void* __to_pointer(const TValue& _Val) noexcept {
     switch (_Val.type) {
     case ValueType::cfunction:
     case ValueType::function:
@@ -503,8 +464,7 @@ VIA_FORCEINLINE void* __to_pointer(const TValue& _Val) noexcept
     }
 }
 
-VIA_MAXOPTIMIZE bool __compare(const TValue& _Val_0, const TValue& _Val_1) noexcept
-{
+VIA_INLINE_HOT bool __compare(const TValue& _Val_0, const TValue& _Val_1) noexcept {
     using enum ValueType;
 
     if (_Val_0.type != _Val_1.type) {
@@ -530,8 +490,7 @@ VIA_MAXOPTIMIZE bool __compare(const TValue& _Val_0, const TValue& _Val_1) noexc
     return false;
 };
 
-VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue& _Val, OpCode _Op)
-{
+VIA_INLINE_HOT TValue __get_metamethod(const TValue& _Val, OpCode _Op) {
     if (!check_table(_Val)) {
         return _Nil.clone();
     }
@@ -566,8 +525,9 @@ VIA_MAXOPTIMIZE TValue __get_metamethod(const TValue& _Val, OpCode _Op)
 #undef GET_METHOD
 }
 
-VIA_INLINE TValue __weak_primitive_cast(State* VIA_RESTRICT _V, const TValue& _Val, ValueType _Type)
-{
+VIA_INLINE TValue __weak_primitive_cast(State* VIA_RESTRICT _V,
+    const TValue&                                           _Val,
+    ValueType                                               _Type) {
     using enum ValueType;
 
     switch (_Type) {
@@ -585,8 +545,7 @@ VIA_INLINE TValue __weak_primitive_cast(State* VIA_RESTRICT _V, const TValue& _V
     return _Nil.clone();
 }
 
-VIA_INLINE void __strong_primtive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type)
-{
+VIA_INLINE void __strong_primtive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type) {
     using enum ValueType;
 
     switch (_Type) {
@@ -626,14 +585,12 @@ VIA_INLINE void __strong_primtive_cast(State* VIA_RESTRICT _V, TValue& _Val, Val
     _Val.type = _Type;
     return;
 error:
-    __set_error_state(
-        _V,
-        std::format(
-            "type '{}' is not primitive castable into type '{}'",
+    __set_error_state(_V,
+        std::format("type '{}' is not primitive castable into type '{}'",
             magic_enum::enum_name(_Val.type),
-            magic_enum::enum_name(_Type)
-        )
-    );
+            magic_enum::enum_name(_Type)));
 }
 
-} // namespace via::impl
+VIA_NAMESPACE_END
+
+#endif

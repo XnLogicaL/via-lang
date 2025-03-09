@@ -9,61 +9,53 @@
 #include "chunk.h"
 #include "common.h"
 #include "state.h"
-#include "types.h"
+#include "rttypes.h"
 #include "constant.h"
 #include "vmapi_aux.h"
-// Fucking linker is cooked.
 #include <cmath>
 
-// How many times a chunk needs to be executed before being flagged as
-// "hot"
+// How many times a chunk needs to be executed to be flagged as "hot"
 #define VIA_HOTPATH_THRESHOLD 64
 
 // Index of the current instruction
-#define VM_POS (V->ip - V->ibp)
-#define VM_CHECK_JMP(addr) ((addr >= V->ibp) && (addr <= V->iep))
+#define VM_POS                 (V->ip - V->ibp)
+#define VM_CHECK_JMP(addr)     ((addr >= V->ibp) && (addr <= V->iep))
 #define VM_CHECK_OPERAND(oper) (oper != VIA_OPERAND_INVALID)
 
-#define VM_ERROR(message) \
-    do { \
-        __set_error_state(V, message); \
-        V->sig_error.fire(); \
-        goto dispatch; \
+#define VM_ERROR(message)                                                                          \
+    do {                                                                                           \
+        __set_error_state(V, message);                                                             \
+        V->sig_error.fire();                                                                       \
+        goto dispatch;                                                                             \
     } while (0)
 
-#define VM_FATAL(message) \
-    do { \
-        std::cerr << "VM terminated with message: " << message << '\n'; \
-        V->sig_fatal.fire(); \
-        std::abort(); \
+#define VM_FATAL(message)                                                                          \
+    do {                                                                                           \
+        std::cerr << "VM terminated with message: " << message << '\n';                            \
+        V->sig_fatal.fire();                                                                       \
+        std::abort();                                                                              \
     } while (0)
-
-#define VM_ASSERT(cond, message) \
-    if (!cond) { \
-        VM_ERROR(message); \
-    }
 
 // Macro for loading the next instruction
 // Has bound checks
-#define VM_LOAD() \
-    do { \
-        if (!VM_CHECK_JMP(V->ip + 1)) { \
-            goto exit; \
-        } \
-        V->ip++; \
+#define VM_LOAD()                                                                                  \
+    do {                                                                                           \
+        if (!VM_CHECK_JMP(V->ip + 1)) {                                                            \
+            goto exit;                                                                             \
+        }                                                                                          \
+        V->ip++;                                                                                   \
     } while (0)
 
 // Macro that "signals" the VM has completed an execution cycle
-#define VM_NEXT() \
-    do { \
-        VM_LOAD(); \
-        goto dispatch; \
+#define VM_NEXT()                                                                                  \
+    do {                                                                                           \
+        VM_LOAD();                                                                                 \
+        goto dispatch;                                                                             \
     } while (0)
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-void vm_save_snapshot(State* VIA_RESTRICT V)
-{
+void vm_save_snapshot(State* VIA_RESTRICT V) {
     U64         pos  = V->ip - V->ibp;
     std::string file = std::format("vm_snapshot.{}.log", pos);
 
@@ -101,13 +93,16 @@ void vm_save_snapshot(State* VIA_RESTRICT V)
            << stack.str() << "\n"
            << registers.str();
 
-    utils::write_to_file(std::format("./__viacache__/{}", file), output.str());
+    try {
+        utils::write_to_file(std::format("./__viacache__/{}", file), output.str());
+    }
+    catch (const std::exception&) {
+    }
 }
 
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
-void execute(State* VIA_RESTRICT V)
-{
+void execute(State* VIA_RESTRICT V) {
     using enum ValueType;
     using enum OpCode;
     using namespace impl;
@@ -139,9 +134,11 @@ dispatch: {
     }
 
     switch (V->ip->op) {
-    case NOP: {
+    // Handle special/internal opcodes
+    case NOP:
+    case LABEL:
+    case CAPTURE:
         VM_NEXT();
-    }
 
     case ADD: {
         Operand lhs = V->ip->operand0;
@@ -439,13 +436,6 @@ dispatch: {
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform arithmetic ({}) on {} and constant",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -488,14 +478,6 @@ dispatch: {
             __push(V, *rhs_val);
             __call(V, metamethod, 2);
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform arithmetic ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_type),
-                magic_enum::enum_name(rhs_type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -534,13 +516,6 @@ dispatch: {
             __push(V, *lhs_val); // Push self
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform arithmetic ({}) on {} and constant",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type)
-            ));
         }
 
         VM_NEXT();
@@ -584,14 +559,6 @@ dispatch: {
             __push(V, *rhs_val);
             __call(V, metamethod, 2);
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform arithmetic ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_type),
-                magic_enum::enum_name(rhs_type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -633,13 +600,6 @@ dispatch: {
             __push(V, rhs_val);  // Push other
             __call(V, metamethod, 2);
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform arithmetic ({}) on {} and constant",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -671,8 +631,8 @@ dispatch: {
     }
 
     case LOADINT: {
-        Operand dst = V->ip->operand0;
-        I32     imm = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
+        Operand  dst = V->ip->operand0;
+        TInteger imm = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
 
         __set_register(V, dst, TValue(imm));
         VM_NEXT();
@@ -680,9 +640,21 @@ dispatch: {
 
     case LOADFLOAT: {
         Operand dst = V->ip->operand0;
-        F32     imm = reinterpret_u16_as_f32(V->ip->operand1, V->ip->operand2);
+        TFloat  imm = reinterpret_u16_as_f32(V->ip->operand1, V->ip->operand2);
 
         __set_register(V, dst, TValue(imm));
+        VM_NEXT();
+    }
+
+    case LOADTRUE: {
+        Operand dst = V->ip->operand0;
+        __set_register(V, dst, TValue(true));
+        VM_NEXT();
+    }
+
+    case LOADFALSE: {
+        Operand dst = V->ip->operand0;
+        __set_register(V, dst, TValue(false));
         VM_NEXT();
     }
 
@@ -737,14 +709,43 @@ dispatch: {
         VM_NEXT();
     }
 
+    case PUSHNIL: {
+        __push(V, TValue());
+        VM_NEXT();
+    }
+
+    case PUSHINT: {
+        TInteger imm = reinterpret_u16_as_u32(V->ip->operand0, V->ip->operand1);
+        __push(V, TValue(imm));
+        VM_NEXT();
+    }
+
+    case PUSHFLOAT: {
+        TFloat imm = reinterpret_u16_as_f32(V->ip->operand0, V->ip->operand1);
+        __push(V, TValue(imm));
+        VM_NEXT();
+    }
+
+    case PUSHTRUE: {
+        __push(V, TValue(true));
+        VM_NEXT();
+    }
+
+    case PUSHFALSE: {
+        __push(V, TValue(false));
+        VM_NEXT();
+    }
+
     case POP: {
         Operand dst = V->ip->operand0;
         TValue  val = __pop(V);
 
-        if VM_CHECK_OPERAND (dst) {
-            __set_register(V, dst, val);
-        }
+        __set_register(V, dst, val);
+        VM_NEXT();
+    }
 
+    case DROP: {
+        __pop(V);
         VM_NEXT();
     }
 
@@ -929,14 +930,6 @@ dispatch: {
             __set_register(V, dst, val);
             VM_NEXT();
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -986,14 +979,6 @@ dispatch: {
 
             __set_register(V, dst, val);
             VM_NEXT();
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
         }
 
         VM_NEXT();
@@ -1045,14 +1030,6 @@ dispatch: {
             __set_register(V, dst, val);
             VM_NEXT();
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -1103,14 +1080,6 @@ dispatch: {
             __set_register(V, dst, val);
             VM_NEXT();
         }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
-        }
 
         VM_NEXT();
     }
@@ -1121,9 +1090,6 @@ dispatch: {
 
     case JUMP: {
         OperandS offset = V->ip->operand0;
-
-        std::cout << "JUMP " << offset << "\n";
-
         V->ip += offset;
         goto dispatch;
     }
@@ -1131,12 +1097,6 @@ dispatch: {
     case JUMPIF: {
         Operand  cond   = V->ip->operand0;
         OperandS offset = V->ip->operand1;
-
-        std::cout << "JUMPIF " << offset << "\n";
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         TValue* cond_val = __get_register(V, cond);
         if (__to_cxx_bool(*cond_val)) {
@@ -1150,10 +1110,6 @@ dispatch: {
         Operand  cond   = V->ip->operand0;
         OperandS offset = V->ip->operand1;
 
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
-
         TValue* cond_val = __get_register(V, cond);
         if (!__to_cxx_bool(*cond_val)) {
             V->ip += offset;
@@ -1166,10 +1122,6 @@ dispatch: {
         Operand  cond_lhs = V->ip->operand0;
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         if VIA_UNLIKELY (cond_lhs == cond_rhs) {
             V->ip += offset;
@@ -1191,10 +1143,6 @@ dispatch: {
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
 
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
-
         if VIA_LIKELY (cond_lhs != cond_rhs) {
             V->ip += offset;
         }
@@ -1214,10 +1162,6 @@ dispatch: {
         Operand  cond_lhs = V->ip->operand0;
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         TValue* lhs_val = __get_register(V, cond_lhs);
         TValue* rhs_val = __get_register(V, cond_rhs);
@@ -1257,21 +1201,8 @@ dispatch: {
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
                 V->ip += offset;
             }
-            else {
-                VM_ERROR(
-                    std::format("comparison metamethod ({}) did not return a boolean", V->ip->op)
-                );
-            }
 
             VM_NEXT();
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
         }
 
         goto dispatch;
@@ -1281,10 +1212,6 @@ dispatch: {
         Operand  cond_lhs = V->ip->operand0;
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         TValue* lhs_val = __get_register(V, cond_lhs);
         TValue* rhs_val = __get_register(V, cond_rhs);
@@ -1324,21 +1251,8 @@ dispatch: {
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
                 V->ip += offset;
             }
-            else {
-                VM_ERROR(
-                    std::format("comparison metamethod ({}) did not return a boolean", V->ip->op)
-                );
-            }
 
             VM_NEXT();
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
         }
 
         goto dispatch;
@@ -1348,10 +1262,6 @@ dispatch: {
         Operand  cond_lhs = V->ip->operand0;
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         TValue* lhs_val = __get_register(V, cond_lhs);
         TValue* rhs_val = __get_register(V, cond_rhs);
@@ -1391,21 +1301,8 @@ dispatch: {
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
                 V->ip += offset;
             }
-            else {
-                VM_ERROR(
-                    std::format("comparison metamethod ({}) did not return a boolean", V->ip->op)
-                );
-            }
 
             VM_NEXT();
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
         }
 
         goto dispatch;
@@ -1415,10 +1312,6 @@ dispatch: {
         Operand  cond_lhs = V->ip->operand0;
         Operand  cond_rhs = V->ip->operand1;
         OperandS offset   = V->ip->operand2;
-
-        if VIA_UNLIKELY (!VM_CHECK_JMP(V->ip + offset)) {
-            VM_FATAL("invalid jump address");
-        }
 
         TValue* lhs_val = __get_register(V, cond_lhs);
         TValue* rhs_val = __get_register(V, cond_rhs);
@@ -1458,21 +1351,8 @@ dispatch: {
             if VIA_LIKELY (check_bool(val) && val.val_boolean) {
                 V->ip += offset;
             }
-            else {
-                VM_ERROR(
-                    std::format("comparison metamethod ({}) did not return a boolean", V->ip->op)
-                );
-            }
 
             VM_NEXT();
-        }
-        else {
-            VM_ERROR(std::format(
-                "attempt to perform comparison ({}) on {} and {}",
-                magic_enum::enum_name(V->ip->op),
-                magic_enum::enum_name(lhs_val->type),
-                magic_enum::enum_name(rhs_val->type)
-            ));
         }
 
         goto dispatch;
@@ -1518,7 +1398,7 @@ dispatch: {
     case RETURN: {
         Operand retc = V->ip->operand0;
 
-        __closure_close_upvalues(V);
+        __closure_close_upvalues(V->frame);
         __native_return(V, retc);
         VM_NEXT();
     }
@@ -1672,10 +1552,6 @@ dispatch: {
         VM_NEXT();
     }
 
-    // Unused/reserved opcodes
-    case CAPTURE:
-        VM_NEXT();
-
     default: {
         VM_FATAL(std::format("unknown opcode 0x{:x}", static_cast<int>(V->ip->op)));
     }
@@ -1688,8 +1564,7 @@ exit:
 }
 
 // Permanently kills the thread. Does not clean up the state object.
-void kill_thread(State* VIA_RESTRICT V)
-{
+void kill_thread(State* VIA_RESTRICT V) {
     if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
@@ -1701,8 +1576,7 @@ void kill_thread(State* VIA_RESTRICT V)
 }
 
 // Temporarily pauses the thread.
-void pause_thread(State* VIA_RESTRICT V)
-{
+void pause_thread(State* VIA_RESTRICT V) {
     if (V->tstate == ThreadState::RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
@@ -1711,4 +1585,4 @@ void pause_thread(State* VIA_RESTRICT V)
     V->tstate = ThreadState::PAUSED;
 }
 
-} // namespace via
+VIA_NAMESPACE_END

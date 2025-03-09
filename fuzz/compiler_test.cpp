@@ -14,5 +14,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     via::Parser parser(program);
     parser.parse();
 
+    via::Compiler compiler(program);
+    compiler.generate();
+
     return 0;
 }

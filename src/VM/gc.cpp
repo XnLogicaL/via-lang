@@ -3,24 +3,20 @@
 // =========================================================================================== |
 
 #include "gc.h"
-#include "types.h"
+#include "rttypes.h"
 
-namespace via {
+VIA_NAMESPACE_BEGIN
 
-GarbageCollector::~GarbageCollector()
-{
+GarbageCollector::~GarbageCollector() {
     terminating = true;
 
-    for (const GCCleanupFunction &fn : defered_callback_list) {
+    for (const CleanupFunction& fn : defered_callback_list) {
         fn();
     }
 }
 
-void GarbageCollector::collect()
-{
-    // TODO: Implement non-callback collection mechanism
-
-    for (const GCCleanupFunction &fn : periodic_callback_list) {
+void GarbageCollector::collect() {
+    for (const CleanupFunction& fn : periodic_callback_list) {
         fn();
     }
 
@@ -29,14 +25,12 @@ void GarbageCollector::collect()
     this->collections++;
 }
 
-void GarbageCollector::add_periodic_callback(const GCCleanupFunction &fn)
-{
+void GarbageCollector::add_periodic_callback(const CleanupFunction& fn) {
     periodic_callback_list.push_back(fn);
 }
 
-void GarbageCollector::add_defered_callback(const GCCleanupFunction &fn)
-{
+void GarbageCollector::add_defered_callback(const CleanupFunction& fn) {
     defered_callback_list.push_back(fn);
 }
 
-} // namespace via
+VIA_NAMESPACE_END
