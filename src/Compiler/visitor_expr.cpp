@@ -82,7 +82,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
         return;
     }
     else if (program.globals->was_declared(symbol)) {
-        U32  symbol_hash = hash_string(symbol.c_str());
+        U32  symbol_hash = hash_string_custom(symbol.c_str());
         auto operands    = reinterpret_u32_as_2u16(symbol_hash);
 
         program.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);

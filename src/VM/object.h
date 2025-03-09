@@ -76,19 +76,23 @@ struct TString {
     explicit TString(State*, const char*);
 };
 
+struct THashNode {
+    const char* key;
+    TValue      value;
+    THashNode*  next;
+};
+
 struct TTable {
-    bool    is_frozen = false;
-    TTable* meta      = nullptr;
+    TValue*     arr_array;
+    THashNode** ht_buckets;
 
-    std::unordered_map<U32, TValue> data{};
+    SIZE arr_capacity;
+    SIZE arr_size_cache;
+    bool arr_size_cache_valid;
 
-    VIA_DEFAULT_CONSTRUCTOR(TTable);
-
-    TTable(const TTable& other) : is_frozen(other.is_frozen), meta(other.meta) {
-        for (const auto& pair : other.data) {
-            data.emplace(pair.first, pair.second.clone());
-        }
-    }
+    SIZE ht_capacity;
+    SIZE ht_size_cache;
+    bool ht_size_cache_valid;
 };
 
 VIA_NAMESPACE_END

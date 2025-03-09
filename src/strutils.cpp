@@ -18,7 +18,7 @@ char* duplicate_string(const char* str) {
     return chars;
 }
 
-U32 hash_string(const char* str) {
+U32 hash_string_custom(const char* str) {
     static const constexpr U32 BASE = 31;
     static const constexpr U32 MOD  = 0xFFFFFFFF;
 

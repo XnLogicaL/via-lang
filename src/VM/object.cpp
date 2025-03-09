@@ -43,7 +43,8 @@ TValue& TValue::operator=(TValue&& other) noexcept {
 }
 
 // Move constructor, transfer ownership based on type
-TValue::TValue(TValue&& other) noexcept : type(other.type) {
+TValue::TValue(TValue&& other) noexcept
+    : type(other.type) {
     switch (other.type) {
     case integer:
         val_integer = other.val_integer;
@@ -130,7 +131,7 @@ TString::TString(State* V, const char* str) {
 
     len  = std::strlen(str);
     data = duplicate_string(str);
-    hash = hash_string(str);
+    hash = hash_string_custom(str);
 
     if (V != nullptr) {
         V->G->stable.emplace(hash, this);

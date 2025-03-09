@@ -6,7 +6,7 @@
 #include "api.h"
 #include "bytecode.h"
 #include "gc.h"
-#include "vmapi_aux.h"
+#include "vaux.h"
 
 VIA_NAMESPACE_BEGIN
 
@@ -14,9 +14,13 @@ using namespace impl;
 
 // Initializes and returns a new State object
 State::State(GState* G, ProgramData& program)
-    : id(G->threads++), G(G), gc(new GarbageCollector()),
+    : id(G->threads++),
+      G(G),
+      gc(new GarbageCollector()),
       sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)]),
-      registers(new TValue[VIA_REGISTER_COUNT]), err(new ErrorState()), program(program) {
+      registers(new TValue[VIA_REGISTER_COUNT]),
+      err(new ErrorState()),
+      program(program) {
     load(*program.bytecode);
 
     TFunction* main = new TFunction{

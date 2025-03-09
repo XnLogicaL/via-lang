@@ -34,7 +34,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         }
         else {
             Operand value_reg   = allocator.allocate_register();
-            Operand symbol_hash = hash_string(symbol.c_str());
+            Operand symbol_hash = hash_string_custom(symbol.c_str());
 
             declaration_node.value_expression->accept(expression_visitor, value_reg);
 
@@ -180,7 +180,7 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     Token       symbol_token = function_node.identifier;
     std::string symbol       = symbol_token.lexeme;
-    U32         symbol_hash  = hash_string(symbol.c_str());
+    U32         symbol_hash  = hash_string_custom(symbol.c_str());
 
     if (function_node.is_global) {
         if (program.globals->was_declared(symbol)) {

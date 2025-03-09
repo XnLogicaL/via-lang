@@ -190,7 +190,7 @@ TValue get_metamethod(const TValue& val, OpCode op) {
         return nil.clone();
     }
 
-#define GET_METHOD(id) (get_table(val.cast_ptr<TTable>(), hash_string(id), true))
+#define GET_METHOD(id) (get_table(val.cast_ptr<TTable>(), hash_string_custom(id), true))
     switch (op) {
     case OpCode::ADD:
         return GET_METHOD("__add");
@@ -378,7 +378,7 @@ void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept {
         extern_call(V, val.cast_ptr<TCFunction>(), argc);
     }
     else if (check_table(val)) {
-        method_call(V, val.cast_ptr<TTable>(), hash_string("__call"), argc);
+        method_call(V, val.cast_ptr<TTable>(), hash_string_custom("__call"), argc);
     }
     else {
         VIA_ASSERT(false, "value is not callable");
@@ -391,7 +391,7 @@ TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept {
         return TValue(static_cast<int>(strlen(val.cast_ptr<TString>()->data)));
     }
     else if (check_table(val)) {
-        U32           metamethod_key = hash_string("__len");
+        U32           metamethod_key = hash_string_custom("__len");
         const TValue& metamethod     = get_table(val.cast_ptr<TTable>(), metamethod_key, true);
 
         if (check_nil(metamethod)) {
@@ -411,7 +411,7 @@ TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept {
 TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept {
     if (check_table(val)) {
         TTable*       tbl = val.cast_ptr<TTable>();
-        const TValue& ty  = get_table(tbl, hash_string("__type"), true);
+        const TValue& ty  = get_table(tbl, hash_string_custom("__type"), true);
         // Check if the __type property is Nil
         // if so return the primitive type
         if (check_nil(ty)) {
@@ -484,10 +484,14 @@ void strong_primtive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type) {
     val.type = type;
     return;
 error:
-    VIA_ASSERT(false,
-        std::format("type '{}' is not primitive castable into type '{}'",
+    VIA_ASSERT(
+        false,
+        std::format(
+            "type '{}' is not primitive castable into type '{}'",
             magic_enum::enum_name(val.type),
-            magic_enum::enum_name(type)));
+            magic_enum::enum_name(type)
+        )
+    );
 }
 
 VIA_NAMESPACE_END

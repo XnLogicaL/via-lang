@@ -11,7 +11,7 @@
 #include "state.h"
 #include "rttypes.h"
 #include "constant.h"
-#include "vmapi_aux.h"
+#include "vaux.h"
 #include <cmath>
 
 // How many times a chunk needs to be executed to be flagged as "hot"
@@ -168,12 +168,6 @@ dispatch: {
                 lhs_val->val_floating_point += rhs_val->val_floating_point;
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, ADD);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -204,12 +198,6 @@ dispatch: {
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point += rhs_val.val_floating_point;
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, ADD);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -243,12 +231,6 @@ dispatch: {
                 lhs_val->val_floating_point -= rhs_val->val_floating_point;
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -279,12 +261,6 @@ dispatch: {
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point -= rhs_val.val_floating_point;
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -318,12 +294,6 @@ dispatch: {
                 lhs_val->val_floating_point *= rhs_val->val_floating_point;
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -354,12 +324,6 @@ dispatch: {
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point *= rhs_val.val_floating_point;
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -393,12 +357,6 @@ dispatch: {
                 lhs_val->val_floating_point /= rhs_val->val_floating_point;
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -429,12 +387,6 @@ dispatch: {
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point /= rhs_val.val_floating_point;
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -472,12 +424,6 @@ dispatch: {
                     std::pow(lhs_val->val_floating_point, rhs_val->val_floating_point);
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -510,12 +456,6 @@ dispatch: {
                 lhs_val->val_floating_point =
                     std::pow(lhs_val->val_floating_point, rhs_val.val_floating_point);
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -553,12 +493,6 @@ dispatch: {
                     std::fmod(lhs_val->val_floating_point, rhs_val->val_floating_point);
             }
         }
-        else if (lhs_type == table) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-        }
 
         VM_NEXT();
     }
@@ -593,12 +527,6 @@ dispatch: {
                 lhs_val->val_floating_point =
                     std::fmod(lhs_val->val_floating_point, rhs_val.val_floating_point);
             }
-        }
-        else if (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-            __push(V, *lhs_val); // Push self
-            __push(V, rhs_val);  // Push other
-            __call(V, metamethod, 2);
         }
 
         VM_NEXT();
@@ -918,18 +846,6 @@ dispatch: {
                 );
             }
         }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-
-            __set_register(V, dst, val);
-            VM_NEXT();
-        }
 
         VM_NEXT();
     }
@@ -967,18 +883,6 @@ dispatch: {
                     V, dst, TValue(lhs_val->val_floating_point > rhs_val->val_floating_point)
                 );
             }
-        }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-
-            __set_register(V, dst, val);
-            VM_NEXT();
         }
 
         VM_NEXT();
@@ -1018,18 +922,6 @@ dispatch: {
                 );
             }
         }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-
-            __set_register(V, dst, val);
-            VM_NEXT();
-        }
 
         VM_NEXT();
     }
@@ -1067,18 +959,6 @@ dispatch: {
                     V, dst, TValue(lhs_val->val_floating_point >= rhs_val->val_floating_point)
                 );
             }
-        }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-
-            __set_register(V, dst, val);
-            VM_NEXT();
         }
 
         VM_NEXT();
@@ -1190,20 +1070,6 @@ dispatch: {
                 }
             }
         }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-            if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
-            }
-
-            VM_NEXT();
-        }
 
         goto dispatch;
     }
@@ -1239,20 +1105,6 @@ dispatch: {
                     V->ip += offset;
                 }
             }
-        }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-            if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
-            }
-
-            VM_NEXT();
         }
 
         goto dispatch;
@@ -1290,20 +1142,6 @@ dispatch: {
                 }
             }
         }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-            if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
-            }
-
-            VM_NEXT();
-        }
 
         goto dispatch;
     }
@@ -1339,20 +1177,6 @@ dispatch: {
                     V->ip += offset;
                 }
             }
-        }
-        else if VIA_UNLIKELY (check_table(*lhs_val)) {
-            const TValue& metamethod = __get_metamethod(*lhs_val, V->ip->op);
-
-            __push(V, *lhs_val);
-            __push(V, *rhs_val);
-            __call(V, metamethod, 2);
-
-            TValue val = __pop(V);
-            if VIA_LIKELY (check_bool(val) && val.val_boolean) {
-                V->ip += offset;
-            }
-
-            VM_NEXT();
         }
 
         goto dispatch;
@@ -1396,10 +1220,11 @@ dispatch: {
     }
 
     case RETURN: {
-        Operand retc = V->ip->operand0;
+        Operand src = V->ip->operand0;
+        TValue* val = __get_register(V, src);
 
         __closure_close_upvalues(V->frame);
-        __native_return(V, retc);
+        __native_return(V, *val);
         VM_NEXT();
     }
 
@@ -1412,7 +1237,7 @@ dispatch: {
         TValue* idx_val = __get_register(V, idx);
 
         Operand       key   = check_string(*idx_val) ? idx_val->cast_ptr<TString>()->hash : idx;
-        const TValue& index = __get_table(tbl_val->cast_ptr<TTable>(), key, true);
+        const TValue& index = __get_table(tbl_val->cast_ptr<TTable>(), key);
 
         __set_register(V, dst, index);
         VM_NEXT();
@@ -1542,7 +1367,7 @@ dispatch: {
         TValue* obj_val = __get_register(V, obj);
 
         if VIA_LIKELY (check_table(*obj_val)) {
-            const TValue& val = __get_table(obj_val->cast_ptr<TTable>(), key, true);
+            const TValue& val = __get_table(obj_val->cast_ptr<TTable>(), key);
             __set_register(V, dst, val);
             VM_NEXT();
         }

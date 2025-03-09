@@ -6,8 +6,6 @@
 #define _VIA_RTTYPES_H
 
 #include "common.h"
-#include "state.h"
-#include "function.h"
 #include "object.h"
 
 VIA_NAMESPACE_BEGIN

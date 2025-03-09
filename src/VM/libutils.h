@@ -20,6 +20,6 @@
 
 #define VIA_LIB_WRAP_CFPTR(ptr)            (TValue(new TCFunction(ptr)))
 #define VIA_LIB_WRAP_PRIM(val)             (TValue(val))
-#define VIA_LIB_MAP_EMPLACE(map, key, val) map.emplace(hash_string(key), val);
+#define VIA_LIB_MAP_EMPLACE(map, key, val) map.emplace(hash_string_custom(key), val);
 
 #endif

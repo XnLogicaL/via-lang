@@ -33,7 +33,7 @@ bool Compiler::check_global_collisions() {
     std::unordered_map<U32, Global> global_map;
 
     for (const Global& global : program.globals->get()) {
-        U32  hash = hash_string(global.symbol.c_str());
+        U32  hash = hash_string_custom(global.symbol.c_str());
         auto it   = global_map.find(hash);
 
         if (it != global_map.end()) {
