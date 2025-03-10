@@ -32,7 +32,8 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
             declaration_node.value_expression->begin,
             declaration_node.value_expression->end,
             std::format(
-                "Expression type '{}' is not related to or castable into annotated type '{}'",
+                "Expression type '{}' is not related to or implicitly castable into annotated type "
+                "'{}'",
                 infered_type->to_string_x(),
                 annotated_type->to_string_x()
             ),
