@@ -238,14 +238,26 @@ pExprNode BinaryNode::clone() {
 
 pTypeNode BinaryNode::infer_type(ProgramData& program) {
     pTypeNode lhs = lhs_expression->infer_type(program);
-    pTypeNode rhs = lhs_expression->infer_type(program);
+    pTypeNode rhs = rhs_expression->infer_type(program);
 
     if (!lhs || !rhs || !is_integral(*lhs) || !is_integral(*rhs)) {
         return nullptr;
     }
 
     if (PrimitiveNode* lhs_primitive = get_derived_instance<TypeNode, PrimitiveNode>(*lhs)) {
+        if (PrimitiveNode* rhs_primitive = get_derived_instance<TypeNode, PrimitiveNode>(*rhs)) {
+            // If either operand is a floating point, result is floating point
+            if (lhs_primitive->type == floating_point || rhs_primitive->type == floating_point) {
+                return std::make_unique<PrimitiveNode>(lhs_primitive->identifier, floating_point);
+            }
+            // If both operands are integers, result is integer
+            else if (lhs_primitive->type == integer && rhs_primitive->type == integer) {
+                return std::make_unique<PrimitiveNode>(lhs_primitive->identifier, integer);
+            }
+        }
     }
+
+    return nullptr;
 }
 
 // ===============================
@@ -254,8 +266,8 @@ std::string AutoNode::to_string(U32&) {
     return "AutoNode<>";
 }
 
-void AutoNode::decay(NodeVisitor& visitor, pTypeNode& self, const pExprNode& self_expr) {
-    self = visitor.visit(*this, self_expr);
+void AutoNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+    self = visitor.visit(*this);
 }
 
 pTypeNode AutoNode::clone() {
@@ -284,8 +296,8 @@ std::string GenericNode::to_string(U32& depth) {
     );
 }
 
-void GenericNode::decay(NodeVisitor& visitor, pTypeNode& self, const pExprNode& self_expr) {
-    self = visitor.visit(*this, self_expr);
+void GenericNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+    self = visitor.visit(*this);
 }
 
 pTypeNode GenericNode::clone() {
@@ -303,8 +315,8 @@ std::string UnionNode::to_string(U32& depth) {
     return std::format("UnionNode<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
 }
 
-void UnionNode::decay(NodeVisitor& visitor, pTypeNode& self, const pExprNode& self_expr) {
-    self = visitor.visit(*this, self_expr);
+void UnionNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+    self = visitor.visit(*this);
 }
 
 pTypeNode UnionNode::clone() {
@@ -323,8 +335,8 @@ std::string FunctionTypeNode::to_string(U32& depth) {
     );
 }
 
-void FunctionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self, const pExprNode& self_expr) {
-    self = visitor.visit(*this, self_expr);
+void FunctionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+    self = visitor.visit(*this);
 }
 
 pTypeNode FunctionTypeNode::clone() {
@@ -342,8 +354,8 @@ std::string AggregateNode::to_string(U32&) {
     return "AggregateNode<>";
 }
 
-void AggregateNode::decay(NodeVisitor& visitor, pTypeNode& self, const pExprNode& self_expr) {
-    self = visitor.visit(*this, self_expr);
+void AggregateNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+    self = visitor.visit(*this);
 }
 
 pTypeNode AggregateNode::clone() {

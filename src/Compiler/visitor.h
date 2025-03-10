@@ -38,11 +38,11 @@ public:
     virtual void visit(IndexNode&, Operand) INVALID_VISIT;
     virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
 
-    virtual pTypeNode visit(AutoNode&, const pExprNode&) INVALID_VISIT;
-    virtual pTypeNode visit(GenericNode&, const pExprNode&) INVALID_VISIT;
-    virtual pTypeNode visit(UnionNode&, const pExprNode&) INVALID_VISIT;
-    virtual pTypeNode visit(FunctionTypeNode&, const pExprNode&) INVALID_VISIT;
-    virtual pTypeNode visit(AggregateNode&, const pExprNode&) INVALID_VISIT;
+    virtual pTypeNode visit(AutoNode&) INVALID_VISIT;
+    virtual pTypeNode visit(GenericNode&) INVALID_VISIT;
+    virtual pTypeNode visit(UnionNode&) INVALID_VISIT;
+    virtual pTypeNode visit(FunctionTypeNode&) INVALID_VISIT;
+    virtual pTypeNode visit(AggregateNode&) INVALID_VISIT;
 
     virtual void visit(DeclarationNode&) INVALID_VISIT;
     virtual void visit(ScopeNode&) INVALID_VISIT;
@@ -89,11 +89,11 @@ public:
         : program(program),
           emitter(emitter) {}
 
-    pTypeNode visit(AutoNode&, const pExprNode&) override;
-    pTypeNode visit(GenericNode&, const pExprNode&) override;
-    pTypeNode visit(UnionNode&, const pExprNode&) override;
-    pTypeNode visit(FunctionTypeNode&, const pExprNode&) override;
-    pTypeNode visit(AggregateNode&, const pExprNode&) override;
+    pTypeNode visit(AutoNode&) override;
+    pTypeNode visit(GenericNode&) override;
+    pTypeNode visit(UnionNode&) override;
+    pTypeNode visit(FunctionTypeNode&) override;
+    pTypeNode visit(AggregateNode&) override;
 
 private:
     ProgramData& program;

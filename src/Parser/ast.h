@@ -18,8 +18,7 @@
 
 #define VIA_STMT_NODE_OVERRIDE_ACCEPT void accept(NodeVisitor&) override;
 
-#define VIA_TYPE_NODE_OVERRIDE_DECAY                                                               \
-    void decay(NodeVisitor&, pTypeNode&, const pExprNode&) override;
+#define VIA_TYPE_NODE_OVERRIDE_DECAY void decay(NodeVisitor&, pTypeNode&) override;
 
 // ===========================================================================================
 // ast.h
@@ -52,7 +51,10 @@ struct LiteralNode : public ExprNode {
 
     LiteralNode(Token value_token, variant value)
         : value_token(value_token),
-          value(value) {}
+          value(value) {
+        this->begin = value_token.position;
+        this->end   = value_token.position + value_token.lexeme.length();
+    }
 };
 
 struct SymbolNode : public ExprNode {
@@ -65,7 +67,10 @@ struct SymbolNode : public ExprNode {
     VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     SymbolNode(Token identifier)
-        : identifier(identifier) {}
+        : identifier(identifier) {
+        this->begin = identifier.position;
+        this->end   = identifier.position + identifier.lexeme.length();
+    }
 };
 
 struct UnaryNode : public ExprNode {
@@ -78,7 +83,10 @@ struct UnaryNode : public ExprNode {
     VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     UnaryNode(pExprNode expression)
-        : expression(std::move(expression)) {}
+        : expression(std::move(expression)) {
+        this->begin = expression->begin - 1; // Account for '-'
+        this->end   = expression->end;
+    }
 };
 
 struct GroupNode : public ExprNode {
@@ -92,7 +100,10 @@ struct GroupNode : public ExprNode {
     VIA_EXPR_NODE_OVERRIDE_PRECEDENCE;
 
     GroupNode(pExprNode expression)
-        : expression(std::move(expression)) {}
+        : expression(std::move(expression)) {
+        this->begin = expression->begin - 1; // Account for '('
+        this->end   = expression->end + 1;   // Account for ')'
+    }
 };
 
 struct CallNode : public ExprNode {
@@ -109,7 +120,10 @@ struct CallNode : public ExprNode {
 
     CallNode(pExprNode callee, Arguments arguments)
         : callee(std::move(callee)),
-          arguments(std::move(arguments)) {}
+          arguments(std::move(arguments)) {
+        this->begin = callee->begin;
+        this->end   = callee->end;
+    }
 };
 
 struct IndexNode : public ExprNode {
@@ -124,7 +138,10 @@ struct IndexNode : public ExprNode {
 
     IndexNode(pExprNode object, pExprNode index)
         : object(std::move(object)),
-          index(std::move(index)) {}
+          index(std::move(index)) {
+        this->begin = object->begin;
+        this->end   = index->end;
+    }
 };
 
 struct BinaryNode : public ExprNode {
