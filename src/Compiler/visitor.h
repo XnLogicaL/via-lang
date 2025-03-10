@@ -26,17 +26,6 @@ VIA_NAMESPACE_BEGIN
 
 TValue construct_constant(LiteralNode&);
 
-template<typename Base, typename Derived>
-bool is_derived_instance(Derived& derived) {
-    return dynamic_cast<Base*>(&derived) != nullptr;
-}
-
-template<typename Expression>
-    requires std::is_base_of_v<ExprNode, Expression>
-bool is_constant_expression(Expression& expression) {
-    return is_derived_instance<LiteralNode>(expression);
-}
-
 class NodeVisitor {
 public:
     virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
@@ -48,6 +37,12 @@ public:
     virtual void visit(CallNode&, Operand) INVALID_VISIT;
     virtual void visit(IndexNode&, Operand) INVALID_VISIT;
     virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
+
+    virtual pTypeNode visit(AutoNode&, const pExprNode&) INVALID_VISIT;
+    virtual pTypeNode visit(GenericNode&, const pExprNode&) INVALID_VISIT;
+    virtual pTypeNode visit(UnionNode&, const pExprNode&) INVALID_VISIT;
+    virtual pTypeNode visit(FunctionTypeNode&, const pExprNode&) INVALID_VISIT;
+    virtual pTypeNode visit(AggregateNode&, const pExprNode&) INVALID_VISIT;
 
     virtual void visit(DeclarationNode&) INVALID_VISIT;
     virtual void visit(ScopeNode&) INVALID_VISIT;
@@ -88,13 +83,31 @@ private:
     RegisterAllocator& allocator;
 };
 
+class DecayVisitor : public NodeVisitor {
+public:
+    DecayVisitor(ProgramData& program, Emitter& emitter)
+        : program(program),
+          emitter(emitter) {}
+
+    pTypeNode visit(AutoNode&, const pExprNode&) override;
+    pTypeNode visit(GenericNode&, const pExprNode&) override;
+    pTypeNode visit(UnionNode&, const pExprNode&) override;
+    pTypeNode visit(FunctionTypeNode&, const pExprNode&) override;
+    pTypeNode visit(AggregateNode&, const pExprNode&) override;
+
+private:
+    ProgramData& program;
+    Emitter&     emitter;
+};
+
 class StmtVisitor : public NodeVisitor {
 public:
     StmtVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
         : program(program),
           emitter(emitter),
           allocator(allocator),
-          expression_visitor(program, emitter, allocator) {}
+          expression_visitor(program, emitter, allocator),
+          decay_visitor(program, emitter) {}
 
     void visit(DeclarationNode&) override;
     void visit(ScopeNode&) override;
@@ -105,7 +118,7 @@ public:
     void visit(ExprStmtNode&) override;
 
     inline bool failed() override {
-        return visitor_failed || expression_visitor.failed();
+        return visitor_failed || expression_visitor.failed() || decay_visitor.failed();
     }
 
 private:
@@ -113,6 +126,7 @@ private:
     Emitter&           emitter;
     RegisterAllocator& allocator;
     ExprVisitor        expression_visitor;
+    DecayVisitor       decay_visitor;
 };
 
 class PrintVisitor : public NodeVisitor {

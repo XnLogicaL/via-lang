@@ -5,19 +5,28 @@
 #ifndef _VIA_AST_H
 #define _VIA_AST_H
 
+#include "object.h"
 #include "token.h"
 #include "ast_base.h"
 
-#define VIA_AST_NODE_OVERRIDE_TO_STRING std::string to_string(U32&) override;
-#define VIA_EXPR_NODE_OVERRIDE_ACCEPT   void accept(NodeVisitor&, U32) override;
-#define VIA_STMT_NODE_OVERRIDE_ACCEPT   void accept(NodeVisitor&) override;
+#define VIA_AST_NODE_OVERRIDE_TO_STRING   std::string to_string(U32&) override;
+#define VIA_AST_NODE_OVERRIDE_CLONE(type) type clone() override;
 
-// ================================================================ |
-// File ast.h: Abstract syntax tree declarations.                   |
-// ================================================================ |
+#define VIA_EXPR_NODE_OVERRIDE_ACCEPT     void accept(NodeVisitor&, U32) override;
+#define VIA_EXPR_NODE_OVERRIDE_PRECEDENCE int precedence() const noexcept override;
+#define VIA_EXPR_NODE_OVERRIDE_INFER_TYPE pTypeNode infer_type(ProgramData&) override;
+
+#define VIA_STMT_NODE_OVERRIDE_ACCEPT void accept(NodeVisitor&) override;
+
+#define VIA_TYPE_NODE_OVERRIDE_DECAY                                                               \
+    void decay(NodeVisitor&, pTypeNode&, const pExprNode&) override;
+
+// ===========================================================================================
+// ast.h
+//
 // This file declares the derived abstract syntax tree node classes,
 // see `ast_base.h` for base class definitions.
-// ================================================================ |
+//
 VIA_NAMESPACE_BEGIN
 
 struct Modifiers {
@@ -26,10 +35,9 @@ struct Modifiers {
     std::string to_string() const noexcept;
 };
 
-// ============================ |
-//       Expression Nodes       |
-// ============================ |
-
+// =========================================================================================
+// Expression Nodes
+//
 struct LiteralNode : public ExprNode {
     using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
@@ -37,7 +45,10 @@ struct LiteralNode : public ExprNode {
     variant value;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     LiteralNode(Token value_token, variant value)
         : value_token(value_token),
@@ -48,7 +59,10 @@ struct SymbolNode : public ExprNode {
     Token identifier;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     SymbolNode(Token identifier)
         : identifier(identifier) {}
@@ -58,7 +72,10 @@ struct UnaryNode : public ExprNode {
     pExprNode expression;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     UnaryNode(pExprNode expression)
         : expression(std::move(expression)) {}
@@ -68,20 +85,29 @@ struct GroupNode : public ExprNode {
     pExprNode expression;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
+    VIA_EXPR_NODE_OVERRIDE_PRECEDENCE;
 
     GroupNode(pExprNode expression)
         : expression(std::move(expression)) {}
 };
 
 struct CallNode : public ExprNode {
-    pExprNode              callee;
-    std::vector<pExprNode> arguments;
+    using Arguments = std::vector<pExprNode>;
+
+    pExprNode callee;
+    Arguments arguments;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
-    VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
 
-    CallNode(pExprNode callee, std::vector<pExprNode> arguments)
+    VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
+
+    CallNode(pExprNode callee, Arguments arguments)
         : callee(std::move(callee)),
           arguments(std::move(arguments)) {}
 };
@@ -91,7 +117,10 @@ struct IndexNode : public ExprNode {
     pExprNode index;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     IndexNode(pExprNode object, pExprNode index)
         : object(std::move(object)),
@@ -104,7 +133,10 @@ struct BinaryNode : public ExprNode {
     pExprNode rhs_expression;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
     VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
 
     BinaryNode(Token op, pExprNode lhs, pExprNode rhs)
         : op(op),
@@ -112,74 +144,180 @@ struct BinaryNode : public ExprNode {
           rhs_expression(std::move(rhs)) {}
 };
 
-// ============================ |
-//       Statement Nodes        |
-// ============================ |
+// =========================================================================================
+// Type Nodes
+//
+struct AutoNode : public TypeNode {
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
+    VIA_TYPE_NODE_OVERRIDE_DECAY;
+};
+
+struct PrimitiveNode : public TypeNode {
+    Token     identifier;
+    ValueType type;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    PrimitiveNode(Token id, ValueType valty)
+        : identifier(id),
+          type(valty) {}
+};
+
+struct GenericNode : public TypeNode {
+    using Generics = std::vector<pTypeNode>;
+    Token     identifier;
+    Generics  generics;
+    Modifiers modifiers;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    VIA_TYPE_NODE_OVERRIDE_DECAY;
+
+    GenericNode(Token id, Generics gens, Modifiers modifiers)
+        : identifier(id),
+          generics(std::move(gens)),
+          modifiers(modifiers) {}
+};
+
+struct UnionNode : public TypeNode {
+    pTypeNode lhs;
+    pTypeNode rhs;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    VIA_TYPE_NODE_OVERRIDE_DECAY;
+
+    UnionNode(pTypeNode lhs, pTypeNode rhs)
+        : lhs(std::move(lhs)),
+          rhs(std::move(rhs)) {}
+};
+
+struct FunctionTypeNode : public TypeNode {
+    using Parameters = std::vector<pTypeNode>;
+    Parameters parameters;
+    pTypeNode  returns;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    VIA_TYPE_NODE_OVERRIDE_DECAY;
+
+    FunctionTypeNode(Parameters args, pTypeNode rets)
+        : parameters(std::move(args)),
+          returns(std::move(rets)) {}
+};
+
+struct AggregateNode : public TypeNode {
+    using Fields = std::unordered_map<std::string, pTypeNode>;
+    Fields fields;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    VIA_TYPE_NODE_OVERRIDE_DECAY;
+
+    pTypeNode get_field(const std::string&);
+
+    AggregateNode(Fields fields)
+        : fields(std::move(fields)) {}
+};
+
+// =========================================================================================
+// Statement Nodes
+//
 struct DeclarationNode : public StmtNode {
     bool      is_global;
     Modifiers modifiers;
     Token     identifier;
     pExprNode value_expression;
+    pTypeNode type;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
-    DeclarationNode(bool is_global, Modifiers modifiers, Token identifier, pExprNode value)
+    DeclarationNode(
+        bool is_global, Modifiers modifiers, Token identifier, pExprNode value, pTypeNode type
+    )
         : is_global(is_global),
           modifiers(modifiers),
           identifier(identifier),
-          value_expression(std::move(value)) {}
+          value_expression(std::move(value)),
+          type(std::move(type)) {}
 };
 
 struct ScopeNode : public StmtNode {
-    std::vector<pStmtNode> statements;
+    using Statements = std::vector<pStmtNode>;
+    Statements statements;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
-    ScopeNode(std::vector<pStmtNode> statements)
+    ScopeNode(Statements statements)
         : statements(std::move(statements)) {}
 };
 
 struct FunctionNode : public StmtNode {
     struct ParameterNode {
-        Token identifier;
+        Token     identifier;
+        Modifiers modifiers;
+        pTypeNode type;
 
-        ParameterNode(Token identifier)
-            : identifier(identifier) {}
+        ParameterNode(Token identifier, Modifiers modifiers, pTypeNode type)
+            : identifier(identifier),
+              modifiers(modifiers),
+              type(std::move(type)) {}
     };
 
-    struct StackNode {
-        bool                       is_global;
-        Modifiers                  modifiers;
-        Token                      identifier;
-        std::vector<ParameterNode> parameters;
+    using Parameters = std::vector<ParameterNode>;
 
-        StackNode(bool is_global, Modifiers modifiers, Token identifier,
-            std::vector<ParameterNode> parameters)
+    struct StackNode {
+        bool       is_global;
+        Modifiers  modifiers;
+        Token      identifier;
+        Parameters parameters;
+
+        StackNode(bool is_global, Modifiers modifiers, Token identifier, Parameters parameters)
             : is_global(is_global),
               modifiers(modifiers),
               identifier(identifier),
-              parameters(parameters) {}
+              parameters(std::move(parameters)) {}
     };
 
-    bool                       is_global;
-    Modifiers                  modifiers;
-    Token                      identifier;
-    pStmtNode                  body;
-    std::vector<ParameterNode> parameters;
+    bool       is_global;
+    Modifiers  modifiers;
+    Token      identifier;
+    pStmtNode  body;
+    pTypeNode  returns;
+    Parameters parameters;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
-    FunctionNode(bool is_global, Modifiers modifiers, Token identifier, pStmtNode body,
-        std::vector<ParameterNode> parameters)
+    FunctionNode(
+        bool       is_global,
+        Modifiers  modifiers,
+        Token      identifier,
+        pStmtNode  body,
+        pTypeNode  returns,
+        Parameters parameters
+    )
         : is_global(is_global),
           modifiers(modifiers),
           identifier(identifier),
           body(std::move(body)),
-          parameters(parameters) {}
+          returns(std::move(returns)),
+          parameters(std::move(parameters)) {}
 };
 
 struct AssignNode : public StmtNode {
@@ -188,6 +326,8 @@ struct AssignNode : public StmtNode {
     pExprNode value;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
     AssignNode(Token identifier, Token augment, pExprNode value)
@@ -206,16 +346,20 @@ struct IfNode : public StmtNode {
               scope(std::move(scope)) {}
     };
 
-    pExprNode                condition;
-    pStmtNode                scope;
-    std::optional<pStmtNode> else_node;
-    std::vector<ElseIfNode>  elseif_nodes;
+    using ElseIfNodes = std::vector<ElseIfNode>;
+    using ElseNode    = std::optional<pStmtNode>;
+
+    pExprNode   condition;
+    pStmtNode   scope;
+    ElseNode    else_node;
+    ElseIfNodes elseif_nodes;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
-    IfNode(pExprNode condition, pStmtNode scope, std::optional<pStmtNode> else_node,
-        std::vector<ElseIfNode> elseif_nodes)
+    IfNode(pExprNode condition, pStmtNode scope, ElseNode else_node, ElseIfNodes elseif_nodes)
         : condition(std::move(condition)),
           scope(std::move(scope)),
           else_node(std::move(else_node)),
@@ -227,6 +371,8 @@ struct WhileNode : public StmtNode {
     pStmtNode body;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
     WhileNode(pExprNode condition, pStmtNode body)
@@ -238,6 +384,8 @@ struct ExprStmtNode : public StmtNode {
     pExprNode expression;
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pStmtNode);
+
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
     ExprStmtNode(pExprNode expression)

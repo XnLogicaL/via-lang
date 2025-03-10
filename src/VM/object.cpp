@@ -138,11 +138,67 @@ TString::TString(State* V, const char* str) {
     }
 }
 
-// Frees TString resources if not already
 TString::~TString() {
     if (data) {
         delete[] data;  // Free the allocated string memory
         data = nullptr; // Null data pointer
+    }
+}
+
+TTable::~TTable() {
+    if (arr_array) {
+        delete[] arr_array;
+        arr_array = nullptr;
+    }
+
+    if (ht_buckets) {
+        for (SIZE i = 0; i < ht_capacity; ++i) {
+            THashNode* next = ht_buckets[i];
+            while (next) {
+                THashNode* current = next;
+                next               = next->next;
+                delete current;
+            }
+            ht_buckets[i] = nullptr;
+        }
+
+        delete[] ht_buckets;
+        ht_buckets = nullptr;
+    }
+}
+
+TTable::TTable(const TTable& other)
+    : arr_capacity(other.arr_capacity),
+      ht_capacity(other.ht_capacity),
+      arr_size_cache_valid(other.arr_size_cache_valid),
+      ht_size_cache_valid(other.ht_size_cache_valid) {
+
+    if (other.arr_array) {
+        arr_array = new TValue[arr_capacity];
+        for (SIZE i = 0; i < arr_capacity; ++i) {
+            arr_array[i] = other.arr_array[i].clone();
+        }
+    }
+    else {
+        arr_array = nullptr;
+    }
+
+    if (other.ht_buckets) {
+        ht_buckets = new THashNode*[ht_capacity]();
+
+        for (SIZE i = 0; i < ht_capacity; ++i) {
+            THashNode*  src = other.ht_buckets[i];
+            THashNode** dst = &ht_buckets[i];
+
+            while (src) {
+                *dst = new THashNode{src->key, src->value.clone(), nullptr};
+                dst  = &((*dst)->next);
+                src  = src->next;
+            }
+        }
+    }
+    else {
+        ht_buckets = nullptr;
     }
 }
 

@@ -59,7 +59,9 @@ enum class TokenType {
     OP_GEQ,       // >=
     OP_INCREMENT, // ++
     OP_DECREMENT, // --
-    EQUAL,        // =
+    // Pseudo-operators
+    EQUAL,   // =
+    RETURNS, // ->
 
     // Literals
     LIT_INT,    // Integer literals

@@ -443,7 +443,7 @@ TValue weak_primitive_cast(State* VIA_RESTRICT V, const TValue& val, ValueType t
     return via::nil.clone();
 }
 
-void strong_primtive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type) {
+void strong_primitive_cast(State* VIA_RESTRICT V, TValue& val, ValueType type) {
     using enum ValueType;
 
     switch (type) {

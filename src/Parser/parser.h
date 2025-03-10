@@ -53,6 +53,11 @@ private:
 
     Modifiers parse_modifiers();
 
+    pTypeNode parse_generic();
+    pTypeNode parse_type_primary();
+    pTypeNode parse_type_binary();
+    pTypeNode parse_type();
+
     pExprNode parse_primary();
     pExprNode parse_postfix(pExprNode);
     pExprNode parse_binary(int);

@@ -3,6 +3,7 @@
 // =========================================================================================== |
 
 #include "parser.h"
+#include "types.h"
 
 #define EXPECT(expected, message)                                                                  \
     do {                                                                                           \
@@ -32,8 +33,8 @@ Token Parser::consume(U32 ahead) {
     U64 new_pos = position + static_cast<U64>(ahead);
     if (new_pos >= program.tokens->tokens.size()) {
         throw ParserError(
-            std::format("Unexpected end of file (attempted read of: token #{})", new_pos),
-            position);
+            std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
+        );
     }
 
     position = new_pos;
@@ -47,7 +48,7 @@ Modifiers Parser::parse_modifiers() {
         Token cur = current();
         if (cur.type == KW_CONST) {
             if (modifiers.is_const) {
-                emitter.out(cur.position, "Modifier 'const' encountered twice", Warning);
+                emitter.out(cur.position, "Modifier 'const' encountered multiple times", Warning);
             }
 
             modifiers.is_const = true;
@@ -58,6 +59,123 @@ Modifiers Parser::parse_modifiers() {
     }
 
     return modifiers;
+}
+
+pTypeNode Parser::parse_generic() {
+    using Generics = GenericNode::Generics;
+
+    Token     identifier = consume();
+    Generics  generics;
+    Modifiers modifiers = parse_modifiers();
+
+    EXPECT(OP_LT, "Expected '<' to open type generic, got '{}'");
+    consume();
+
+    while (current().type != OP_GT) {
+        generics.emplace_back(parse_type());
+        if (current().type != OP_GT) {
+            EXPECT(COMMA, "Expected ',' to seperate type generics, got '{}'");
+            consume();
+        }
+    }
+
+    EXPECT(OP_GT, "Expected '>' to close type generic, got '{}'");
+    consume();
+
+    return std::make_unique<GenericNode>(identifier, std::move(generics), modifiers);
+}
+
+pTypeNode Parser::parse_type_primary() {
+    Token tok = current();
+
+    switch (tok.type) {
+    case IDENTIFIER: {
+        auto enum_value = magic_enum::enum_cast<ValueType>(tok.lexeme);
+        if (enum_value.has_value()) {
+            return std::make_unique<PrimitiveNode>(consume(), enum_value.value());
+        }
+
+        return parse_generic();
+    }
+    case PAREN_OPEN: {
+        using Parameters = FunctionTypeNode::Parameters;
+        Parameters params;
+
+        consume();
+
+        while (current().type != PAREN_CLOSE) {
+            params.emplace_back(parse_type());
+            if (current().type != PAREN_CLOSE) {
+                EXPECT(COMMA, "Expected ',' to seperate function parameter types, got '{}'");
+                consume();
+            }
+        }
+
+        EXPECT(PAREN_CLOSE, "Expected ')' to close function type parameters, got '{}'");
+        consume();
+
+        EXPECT(RETURNS, "Expected '->' to specify function return type, got '{}'");
+        consume();
+
+        pTypeNode return_type = parse_type();
+        return std::make_unique<FunctionTypeNode>(std::move(params), std::move(return_type));
+    }
+    case BRACE_OPEN: {
+        using Fields = AggregateNode::Fields;
+        Fields fields;
+
+        consume();
+
+        while (current().type != BRACE_CLOSE) {
+            EXPECT(IDENTIFIER, "Expected identifier for aggregate field name, got '{}'");
+            Token field_name = consume();
+
+            EXPECT(COLON, "Expected ':' to segregate aggregate field name and type, got '{}'");
+            consume();
+
+            pTypeNode type = parse_type();
+            fields.emplace(field_name.lexeme, type);
+
+            EXPECT(SEMICOLON, "Expected ';' to close aggregate field pair, got '{}'");
+            consume();
+        }
+
+        EXPECT(BRACE_CLOSE, "Expected '}}' to close aggregate type, got '{}'");
+        consume();
+
+        return std::make_unique<AggregateNode>(std::move(fields));
+    }
+    default: {
+        throw ParserError(
+            std::format("Unexpected token '{}' while parsing type primary", tok.lexeme),
+            tok.position
+        );
+        break;
+    }
+    }
+
+    VIA_UNREACHABLE;
+}
+
+pTypeNode Parser::parse_type_binary() {
+    const auto is_type_binary_operator = [this]() constexpr -> bool {
+        return current().type == AMPERSAND;
+    };
+
+    pTypeNode base = parse_type();
+
+    while (is_type_binary_operator()) {
+        Token bin_operator = consume();
+        if (bin_operator.type == AMPERSAND) {
+            base = std::make_unique<UnionNode>(std::move(base), parse_type());
+        }
+    }
+
+    return base;
+}
+
+pTypeNode Parser::parse_type() {
+    return parse_type_binary();
 }
 
 pExprNode Parser::parse_primary() {
@@ -76,7 +194,8 @@ pExprNode Parser::parse_primary() {
         }
         case LIT_BINARY:
             return std::make_unique<LiteralNode>(
-                token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong()));
+                token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong())
+            );
         case LIT_NIL:
             return std::make_unique<LiteralNode>(token, std::monostate());
         case LIT_BOOL:
@@ -99,7 +218,8 @@ pExprNode Parser::parse_primary() {
         default:
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
-                token.position);
+                token.position
+            );
         }
     }
     catch (const std::invalid_argument&) {
@@ -122,7 +242,8 @@ pExprNode Parser::parse_postfix(pExprNode lhs) {
             Token index_token = consume();
 
             lhs = std::make_unique<IndexNode>(
-                std::move(lhs), std::make_unique<SymbolNode>(index_token));
+                std::move(lhs), std::make_unique<SymbolNode>(index_token)
+            );
 
             break;
         }
@@ -210,37 +331,63 @@ pStmtNode Parser::parse_declaration() {
 
         std::vector<ParameterNode> parameters;
         if (current().type != PAREN_CLOSE) {
-            while (true) {
-                EXPECT(IDENTIFIER, "Expected identifier for function parameter, got '{}'");
-                parameters.emplace_back(consume());
+            while (current().type == COMMA) {
+                consume();
+                Modifiers modifiers = parse_modifiers();
 
-                if (current().type != COMMA) {
-                    break;
-                }
+                EXPECT(IDENTIFIER, "Expected identifier for function parameter name, got '{}'");
+                Token identifier = consume();
 
-                consume(); // Consume ','
+                EXPECT(COLON, "Expected ':' to segregate function parameter and type, got '{}'");
+                consume();
+
+                parameters.emplace_back(identifier, modifiers, parse_type());
             }
         }
 
         EXPECT(PAREN_CLOSE, "Expected ')' to close function parameters, got '{}'");
         consume();
 
+        EXPECT(RETURNS, "Expected '->' to denote function return type, got '{}'");
+        consume();
+
         Modifiers modifiers{is_const};
+        pTypeNode returns    = parse_type();
         pStmtNode body_scope = parse_scope();
 
         return std::make_unique<FunctionNode>(
-            is_global, modifiers, identifier, std::move(body_scope), parameters);
+            is_global,
+            modifiers,
+            identifier,
+            std::move(body_scope),
+            std::move(returns),
+            std::move(parameters)
+        );
     }
+
+    pTypeNode type;
 
     EXPECT(IDENTIFIER, "Expected identifier for variable declaration, got '{}'");
     Token identifier = consume();
+
+    if (current().type == COLON) {
+        consume();
+        type = parse_type();
+    }
+    else {
+        type = std::make_unique<AutoNode>();
+    }
 
     EXPECT(EQUAL, "Expected '=' for variable declaration, got '{}'");
     consume();
     pExprNode value = parse_expr();
 
+    // Add expression reference to type
+    type->expression = value.get();
+
     return std::make_unique<DeclarationNode>(
-        is_global, Modifiers{is_const}, identifier, std::move(value));
+        is_global, Modifiers{is_const}, identifier, std::move(value), std::move(type)
+    );
 }
 
 pStmtNode Parser::parse_scope() {
@@ -306,7 +453,8 @@ pStmtNode Parser::parse_if() {
     }
 
     return std::make_unique<IfNode>(
-        std::move(condition), std::move(scope), std::move(else_scope), std::move(elseif_nodes));
+        std::move(condition), std::move(scope), std::move(else_scope), std::move(elseif_nodes)
+    );
 }
 
 pStmtNode Parser::parse_while() {
@@ -349,7 +497,8 @@ pStmtNode Parser::parse_stmt() {
             // but here I am.
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing statement", initial_token.lexeme),
-                initial_token.position);
+                initial_token.position
+            );
         }
 
         VIA_ASSERT(false, "wait... how did you get this assertion to fail? you're a wizard!")

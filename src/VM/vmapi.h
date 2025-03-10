@@ -129,34 +129,10 @@ VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _V, const TVa
     return std::string(_Type.cast_ptr<TString>()->data);
 }
 
-VIA_INLINE TValue __get_table(TTable* VIA_RESTRICT _Tbl, Operand _Key) noexcept {
-    auto _It = _Tbl->data.find(_Key);
-    if (_It != _Tbl->data.end()) {
-        return _It->second.clone();
-    }
-
-    return _Nil.clone();
-}
-
-VIA_FORCE_INLINE void __set_table(
-    TTable* VIA_RESTRICT _Tbl, Operand _Key, const TValue& _Val
-) noexcept {
-    if (check_nil(_Val)) {
-        const TValue& _Tbl_val = __get_table(_Tbl, _Key);
-
-        if (!check_nil(_Tbl_val)) {
-            _Tbl->data.erase(_Key);
-        }
-    }
-    else {
-        _Tbl->data.emplace(_Key, _Val.clone());
-    }
-}
-
 VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val) {
     if (check_table(_Val)) {
         TTable*       _Tbl  = _Val.cast_ptr<TTable>();
-        const TValue& _Type = __get_table(_Tbl, hash_string_custom("__type"));
+        const TValue& _Type = __table_get(_Tbl, TValue(new TString(_V, "__type")));
 
         if (check_nil(_Type)) {
             return __type(_V, _Val);
@@ -206,18 +182,6 @@ VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc) {
     _Callee->data(_V);
 }
 
-VIA_INLINE_HOT void __method_call(
-    State* VIA_RESTRICT _V, TTable* VIA_RESTRICT _Tbl, Operand _Key, SIZE _Argc
-) noexcept {
-    const TValue& _Method = __get_table(_Tbl, _Key);
-    if (check_function(_Method)) {
-        __native_call(_V, _Method.cast_ptr<TFunction>(), _Argc);
-    }
-    else if (check_cfunction(_Method)) {
-        __extern_call(_V, _Method.cast_ptr<TCFunction>(), _Argc);
-    }
-}
-
 VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, SIZE _Argc) {
     _V->calltype = CallType::CALL;
 
@@ -227,9 +191,6 @@ VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, SIZE _Argc) {
     else if (check_cfunction(_Callee)) {
         __extern_call(_V, _Callee.cast_ptr<TCFunction>(), _Argc);
     }
-    else if (check_table(_Callee)) {
-        __method_call(_V, _Callee.cast_ptr<TTable>(), hash_string_custom("__call"), _Argc);
-    }
     else {
         __set_error_state(
             _V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee))
@@ -237,20 +198,13 @@ VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, SIZE _Argc) {
     }
 }
 
-VIA_FORCE_INLINE TValue __len(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
+VIA_FORCE_INLINE TValue __len(const TValue& _Val) noexcept {
     if (check_string(_Val)) {
-        return TValue(static_cast<int>(strlen(_Val.cast_ptr<TString>()->data)));
+        return TValue(static_cast<TInteger>(_Val.cast_ptr<TString>()->len));
     }
     else if (check_table(_Val)) {
-        Operand       _Metamethod_key = hash_string_custom("__len");
-        const TValue& _Metamethod     = __get_table(_Val.cast_ptr<TTable>(), _Metamethod_key);
-
-        if (check_nil(_Metamethod)) {
-            return TValue(static_cast<int>(_Val.cast_ptr<TTable>()->data.size()));
-        }
-
-        __call(_V, _Metamethod, 1);
-        return __pop(_V);
+        SIZE _Size = __table_size(_Val.cast_ptr<TTable>());
+        return TValue(static_cast<TInteger>(_Size));
     }
 
     return _Nil.clone();
@@ -314,36 +268,15 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexce
         TString* _Str = new TString(_V, _Val.val_boolean ? "true" : "false");
         return TValue(string, _Str);
     }
-    case table: {
-        std::string _Str = "{";
-
-        for (auto& _Elem : _Val.cast_ptr<TTable>()->data) {
-            _Str += __to_string(_V, _Elem.second).cast_ptr<TString>()->data;
-            _Str += ", ";
-        }
-
-        if (_Str.back() == ' ') {
-            _Str += "\b\b";
-        }
-
-        _Str += "}";
-
-        TString* _Tstr = new TString(_V, _Str.c_str());
-        return TValue(string, _Tstr);
-    }
-    case function: {
-        const void* _Faddr = _Val.cast_ptr<TFunction>();
-        std::string _Str   = std::format("<function@{}>", _Faddr);
-        TString*    _Tstr  = new TString(_V, _Str.c_str());
-        return TValue(string, _Tstr);
-    }
+    case table:
+    case function:
     case cfunction: {
-        // This has to be explicitly casted because function pointers be
-        // weird
-        const void* _Cfaddr = _Val.cast_ptr<TCFunction>();
-        std::string _Str    = std::format("<cfunction@{}>", _Cfaddr);
-        TString*    _Tstr   = new TString(_V, _Str.c_str());
-        return TValue(string, _Tstr);
+        auto _Type_str = magic_enum::enum_name(_Val.type);
+        auto _Final_str =
+            std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(_Val.val_pointer));
+
+        TString* _Str = new TString(_V, _Final_str.c_str());
+        return TValue(string, _Str);
     }
     default:
         TString* _Tstr = new TString(_V, "nil");
@@ -497,7 +430,7 @@ __weak_primitive_cast(State* VIA_RESTRICT _V, const TValue& _Val, ValueType _Typ
     return _Nil.clone();
 }
 
-VIA_INLINE void __strong_primtive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type) {
+VIA_INLINE void __strong_primitive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type) {
     using enum ValueType;
 
     switch (_Type) {

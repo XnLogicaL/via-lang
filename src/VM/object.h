@@ -66,9 +66,9 @@ struct VIA_ALIGN_CACHE_LINE TValue {
 };
 
 struct TString {
-    const char* data;
     U32         len;
     U32         hash;
+    const char* data;
 
     VIA_NON_DEFAULT_CONSTRUCTIBLE(TString);
     VIA_CUSTOM_DESTRUCTOR(TString);
@@ -83,16 +83,21 @@ struct THashNode {
 };
 
 struct TTable {
-    TValue*     arr_array;
-    THashNode** ht_buckets;
+    SIZE arr_capacity   = 64;
+    SIZE ht_capacity    = 1024;
+    SIZE arr_size_cache = 0;
+    SIZE ht_size_cache  = 0;
 
-    SIZE arr_capacity;
-    SIZE arr_size_cache;
-    bool arr_size_cache_valid;
+    bool arr_size_cache_valid = true;
+    bool ht_size_cache_valid  = true;
 
-    SIZE ht_capacity;
-    SIZE ht_size_cache;
-    bool ht_size_cache_valid;
+    TValue*     arr_array  = new TValue[arr_capacity]();
+    THashNode** ht_buckets = new THashNode*[ht_capacity];
+
+    VIA_DEFAULT_CONSTRUCTOR(TTable);
+    VIA_CUSTOM_DESTRUCTOR(TTable);
+
+    TTable(const TTable&);
 };
 
 VIA_NAMESPACE_END

@@ -18,8 +18,13 @@
 VIA_NAMESPACE_BEGIN
 
 ProgramData::ProgramData(std::string file, std::string file_source)
-    : file(file), source(file_source), tokens(new TokenHolder()), ast(new AbstractSyntaxTree()),
-      bytecode(new BytecodeHolder()), constants(new ConstantHolder()), test_stack(new TestStack()),
+    : file(file),
+      source(file_source),
+      tokens(new TokenHolder()),
+      ast(new AbstractSyntaxTree()),
+      bytecode(new BytecodeHolder()),
+      constants(new ConstantHolder()),
+      test_stack(new CompilerStack()),
       globals(new GlobalTracker()) {}
 
 ProgramData::~ProgramData() {

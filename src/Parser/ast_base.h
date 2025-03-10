@@ -23,6 +23,8 @@ struct ExprNode {
     virtual VIA_DEFAULT_DESTRUCTOR(ExprNode);
     virtual std::string to_string(U32&)           = 0;
     virtual void        accept(NodeVisitor&, U32) = 0;
+    virtual pExprNode   clone()                   = 0;
+    virtual pTypeNode   infer_type(ProgramData&)  = 0;
     virtual int         precedence() const noexcept {
         return 0;
     };
@@ -32,12 +34,16 @@ struct StmtNode {
     virtual VIA_DEFAULT_DESTRUCTOR(StmtNode);
     virtual std::string to_string(U32&)      = 0;
     virtual void        accept(NodeVisitor&) = 0;
+    virtual pStmtNode   clone()              = 0;
 };
 
 struct TypeNode {
     virtual VIA_DEFAULT_DESTRUCTOR(TypeNode);
-    virtual std::string to_string(U32&)      = 0;
-    virtual void        accept(NodeVisitor&) = 0;
+    virtual std::string to_string(U32&) = 0;
+    virtual void        decay(NodeVisitor&, pTypeNode&, const pExprNode&) {};
+    virtual pTypeNode   clone() = 0;
+
+    ExprNode* expression = nullptr;
 };
 
 VIA_NAMESPACE_END

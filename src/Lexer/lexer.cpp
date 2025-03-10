@@ -55,8 +55,8 @@ Token Tokenizer::read_number(SIZE position) {
     }
 
     // Read the number until the current character isn't numeric
-    while (
-        pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))) {
+    while (pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))
+    ) {
         value.push_back(peek());
         pos++;
         offset++;
@@ -115,35 +115,16 @@ Token Tokenizer::read_ident(SIZE position) {
     }
 
     static const std::unordered_map<std::string, TokenType> keyword_map = {
-        {"do", KW_DO},
-        {"in", KW_IN},
-        {"local", KW_LOCAL},
-        {"global", KW_GLOBAL},
-        {"as", KW_AS},
-        {"const", KW_CONST},
-        {"if", KW_IF},
-        {"else", KW_ELSE},
-        {"elif", KW_ELIF},
-        {"while", KW_WHILE},
-        {"for", KW_FOR},
-        {"return", KW_RETURN},
-        {"func", KW_FUNC},
-        {"break", KW_BREAK},
-        {"continue", KW_CONTINUE},
-        {"switch", KW_MATCH},
-        {"case", KW_CASE},
-        {"default", KW_DEFAULT},
-        {"new", KW_NEW},
-        {"and", KW_AND},
-        {"not", KW_NOT},
-        {"or", KW_OR},
-        {"struct", KW_STRUCT},
-        {"namespace", KW_NAMESPACE},
-        {"import", KW_IMPORT},
-        {"export", KW_EXPORT},
-        {"macro", KW_MACRO},
-        {"define", KW_DEFINE},
-        {"defined", KW_DEFINED},
+        {"do", KW_DO},         {"in", KW_IN},           {"local", KW_LOCAL},
+        {"global", KW_GLOBAL}, {"as", KW_AS},           {"const", KW_CONST},
+        {"if", KW_IF},         {"else", KW_ELSE},       {"elif", KW_ELIF},
+        {"while", KW_WHILE},   {"for", KW_FOR},         {"return", KW_RETURN},
+        {"func", KW_FUNC},     {"break", KW_BREAK},     {"continue", KW_CONTINUE},
+        {"switch", KW_MATCH},  {"case", KW_CASE},       {"default", KW_DEFAULT},
+        {"new", KW_NEW},       {"and", KW_AND},         {"not", KW_NOT},
+        {"or", KW_OR},         {"struct", KW_STRUCT},   {"namespace", KW_NAMESPACE},
+        {"import", KW_IMPORT}, {"export", KW_EXPORT},   {"macro", KW_MACRO},
+        {"define", KW_DEFINE}, {"defined", KW_DEFINED},
     };
 
     // Checks if the identifier is a keyword or not
@@ -302,6 +283,11 @@ Token Tokenizer::get_token() {
     case '+':
         return Token(OP_ADD, "+", line, start_offset, position);
     case '-':
+        if (pos < source_size() && peek() == '>') {
+            pos++;
+            offset++;
+            return Token(RETURNS, "->", line, start_offset, position);
+        }
         return Token(OP_SUB, "-", line, start_offset, position);
     case '*':
         return Token(OP_MUL, "*", line, start_offset, position);

@@ -5,6 +5,7 @@
 #include "api.h"
 #include "bitutils.h"
 #include "stack.h"
+#include "types.h"
 #include "visitor.h"
 
 // ==========================================================================================
@@ -73,9 +74,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
     Token var_id = variable_node.identifier;
 
     std::string            symbol = var_id.lexeme;
-    std::optional<Operand> stk_id = program.test_stack->find_symbol({
-        var_id.lexeme,
-    });
+    std::optional<Operand> stk_id = program.test_stack->find_symbol(var_id.lexeme);
 
     if (stk_id.has_value()) {
         program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
@@ -192,6 +191,29 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
 
     if (is_constant_expression(rhs)) {
         LiteralNode& literal = dynamic_cast<LiteralNode&>(rhs);
+
+        if (base_opcode == DIV) {
+            if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
+                if (*int_val == 0) {
+                    goto division_by_zero;
+                }
+            }
+
+            if (TFloat* float_val = std::get_if<TFloat>(&literal.value)) {
+                if (*float_val == 0.0f) {
+                    goto division_by_zero;
+                }
+            }
+
+            goto good_division;
+
+        division_by_zero:
+            visitor_failed = true;
+            emitter.out(literal.value_token.position, "Explicit division by zero", Error);
+            return;
+
+        good_division:
+        }
 
         lhs.accept(*this, dst);
 

@@ -15,7 +15,7 @@ struct TokenHolder;
 struct AbstractSyntaxTree;
 class BytecodeHolder;
 class ConstantHolder;
-class TestStack;
+class CompilerStack;
 
 class ProgramData {
 public:
@@ -28,7 +28,7 @@ public:
     AbstractSyntaxTree* ast      = nullptr;
     BytecodeHolder*     bytecode = nullptr;
     ConstantHolder*     constants;
-    TestStack*          test_stack;
+    CompilerStack*      test_stack;
     GlobalTracker*      globals;
 
     VIA_CUSTOM_DESTRUCTOR(ProgramData);

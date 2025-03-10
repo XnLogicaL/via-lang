@@ -58,7 +58,7 @@ TValue typeofv(State* VIA_RESTRICT, const TValue&) noexcept;
 void   freeze(TTable* VIA_RESTRICT tbl) noexcept;
 
 TValue weak_primitive_cast(State* VIA_RESTRICT, const TValue& val, ValueType type);
-void   strong_primtive_cast(State* VIA_RESTRICT, TValue& val, ValueType type);
+void   strong_primitive_cast(State* VIA_RESTRICT, TValue& val, ValueType type);
 
 VIA_NAMESPACE_END
 

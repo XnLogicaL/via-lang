@@ -1231,13 +1231,12 @@ dispatch: {
     case GETTABLE: {
         Operand dst = V->ip->operand0;
         Operand tbl = V->ip->operand1;
-        Operand idx = V->ip->operand2;
+        Operand key = V->ip->operand2;
 
         TValue* tbl_val = __get_register(V, tbl);
-        TValue* idx_val = __get_register(V, idx);
+        TValue* key_val = __get_register(V, key);
 
-        Operand       key   = check_string(*idx_val) ? idx_val->cast_ptr<TString>()->hash : idx;
-        const TValue& index = __get_table(tbl_val->cast_ptr<TTable>(), key);
+        const TValue& index = __table_get(tbl_val->cast_ptr<TTable>(), *key_val);
 
         __set_register(V, dst, index);
         VM_NEXT();
@@ -1246,12 +1245,13 @@ dispatch: {
     case SETTABLE: {
         Operand src = V->ip->operand0;
         Operand tbl = V->ip->operand1;
-        Operand key = V->ip->operand2;
+        Operand ky  = V->ip->operand2;
 
         TValue* table = __get_register(V, tbl);
         TValue* value = __get_register(V, src);
+        TValue* key   = __get_register(V, ky);
 
-        __set_table(table->cast_ptr<TTable>(), key, *value);
+        __table_set(table->cast_ptr<TTable>(), TValue(key), *value);
         VM_NEXT();
     }
 
@@ -1273,16 +1273,8 @@ dispatch: {
             next_table[ptr] = 0;
         }
 
-        const auto& table_map = val->cast_ptr<TTable>()->data;
-        auto        field_it  = table_map.find(key);
-
-        if (field_it != table_map.end()) {
-            __set_register(V, dst, field_it->second);
-        }
-        else {
-            __set_register(V, dst, _Nil);
-        }
-
+        const TValue& field = __table_get(val->cast_ptr<TTable>(), TValue(key));
+        __set_register(V, dst, field);
         VM_NEXT();
     }
 
@@ -1291,7 +1283,7 @@ dispatch: {
         Operand tbl = V->ip->operand1;
 
         TValue* val  = __get_register(V, tbl);
-        int     size = val->cast_ptr<TTable>()->data.size();
+        int     size = __table_size(val->cast_ptr<TTable>());
         TValue  val_size(size);
 
         __set_register(V, dst, val_size);
@@ -1331,7 +1323,7 @@ dispatch: {
         Operand objr = V->ip->operand1;
 
         TValue* val = __get_register(V, objr);
-        TValue  len = __len(V, *val);
+        TValue  len = __len(*val);
 
         __set_register(V, rdst, len);
         VM_NEXT();
@@ -1365,9 +1357,10 @@ dispatch: {
         Operand key = V->ip->operand2;
 
         TValue* obj_val = __get_register(V, obj);
+        TValue* key_val = __get_register(V, key);
 
         if VIA_LIKELY (check_table(*obj_val)) {
-            const TValue& val = __get_table(obj_val->cast_ptr<TTable>(), key);
+            const TValue& val = __table_get(obj_val->cast_ptr<TTable>(), *key_val);
             __set_register(V, dst, val);
             VM_NEXT();
         }

@@ -14,35 +14,43 @@
 
 VIA_NAMESPACE_BEGIN
 
-struct TestStackMember {
-    std::string symbol         = "<anonymous-symbol>";
-    bool        is_const       = false;
-    bool        is_constexpr   = false;
-    ValueType   primitive_type = ValueType::nil;
+struct StackObject {
+    bool is_const     = false;
+    bool is_constexpr = false;
+
+    std::string symbol = "<anonymous-symbol>";
+
+    pTypeNode type;
 };
 
-class TestStack {
+class CompilerStack {
 public:
-    TestStack()
-        : sbp(new TestStackMember[VIA_TEST_STACK_SIZE]) {}
+    CompilerStack()
+        : sbp(new StackObject[VIA_TEST_STACK_SIZE]) {}
 
-    ~TestStack() {
+    ~CompilerStack() {
         delete[] sbp;
     }
 
-    void                           push(TestStackMember);
-    TestStackMember                top();
-    TestStackMember                pop();
-    U64                            size();
-    std::optional<TestStackMember> at(SIZE);
-    std::optional<Operand>         find_symbol(const TestStackMember&);
+    void push(StackObject);
+
+    StackObject top();
+    StackObject pop();
+
+    U64 size();
+
+    std::optional<StackObject> at(SIZE);
+
+    std::optional<Operand> find_symbol(const StackObject&);
+    std::optional<Operand> find_symbol(const std::string&);
 
 public:
-    U64                                 sp = 0;
+    U64 sp = 0;
+
     std::stack<FunctionNode::StackNode> function_stack;
 
 private:
-    TestStackMember* sbp = nullptr;
+    StackObject* sbp = nullptr;
 };
 
 VIA_NAMESPACE_END

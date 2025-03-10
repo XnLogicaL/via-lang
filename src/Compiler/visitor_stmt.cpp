@@ -203,19 +203,18 @@ void StmtVisitor::visit(FunctionNode& function_node) {
     allocator.free_register(function_reg);
     program.test_stack->function_stack.pop();
     program.test_stack->push({
-        .symbol         = symbol,
         .is_const       = function_node.modifiers.is_const,
         .is_constexpr   = false,
+        .symbol         = symbol,
         .primitive_type = ValueType::function,
     });
 }
 
 void StmtVisitor::visit(AssignNode& assign_node) {
-    Token                  symbol_token = assign_node.identifier;
-    std::string            symbol       = symbol_token.lexeme;
-    std::optional<Operand> stk_id       = program.test_stack->find_symbol({
-              .symbol = symbol,
-    });
+    Token symbol_token = assign_node.identifier;
+
+    std::string            symbol = symbol_token.lexeme;
+    std::optional<Operand> stk_id = program.test_stack->find_symbol({.symbol = symbol});
 
     if (stk_id.has_value()) {
         const auto& test_stack_member = program.test_stack->at(stk_id.value());

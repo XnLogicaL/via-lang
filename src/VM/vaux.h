@@ -265,7 +265,7 @@ VIA_INLINE void __table_set(TTable* _Tbl, const TValue& _Key, const TValue& _Val
     }
 }
 
-VIA_INLINE TValue* __table_get(TTable* _Tbl, const TValue& _Key) {
+VIA_INLINE const TValue& __table_get(TTable* _Tbl, const TValue& _Key) {
     static thread_local TValue nil;
 
     TValue* _Unsafe = nullptr;
@@ -276,7 +276,7 @@ VIA_INLINE TValue* __table_get(TTable* _Tbl, const TValue& _Key) {
         _Unsafe = __table_ht_get(_Tbl, _Key.cast_ptr<TString>()->data);
     }
 
-    return _Unsafe ? _Unsafe : &nil;
+    return _Unsafe ? *_Unsafe : nil;
 }
 
 VIA_INLINE SIZE __table_size(TTable* _Tbl) {
