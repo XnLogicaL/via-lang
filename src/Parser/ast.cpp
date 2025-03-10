@@ -266,6 +266,10 @@ std::string AutoNode::to_string(U32&) {
     return "AutoNode<>";
 }
 
+std::string AutoNode::to_string_x() {
+    return "<auto>";
+}
+
 void AutoNode::decay(NodeVisitor& visitor, pTypeNode& self) {
     self = visitor.visit(*this);
 }
@@ -278,6 +282,10 @@ pTypeNode AutoNode::clone() {
 // PrimitiveNode
 std::string PrimitiveNode::to_string(U32&) {
     return std::format("PrimitiveNode<{}>", magic_enum::enum_name(type));
+}
+
+std::string PrimitiveNode::to_string_x() {
+    return std::string(magic_enum::enum_name(type));
 }
 
 pTypeNode PrimitiveNode::clone() {
@@ -294,6 +302,10 @@ std::string GenericNode::to_string(U32& depth) {
             generics, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
         )
     );
+}
+
+std::string GenericNode::to_string_x() {
+    return "<generic-truncated>";
 }
 
 void GenericNode::decay(NodeVisitor& visitor, pTypeNode& self) {
@@ -313,6 +325,10 @@ pTypeNode GenericNode::clone() {
 // UnionNode
 std::string UnionNode::to_string(U32& depth) {
     return std::format("UnionNode<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
+}
+
+std::string UnionNode::to_string_x() {
+    return "<union-truncated>";
 }
 
 void UnionNode::decay(NodeVisitor& visitor, pTypeNode& self) {
@@ -335,6 +351,10 @@ std::string FunctionTypeNode::to_string(U32& depth) {
     );
 }
 
+std::string FunctionTypeNode::to_string_x() {
+    return "<function-truncated>";
+}
+
 void FunctionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
     self = visitor.visit(*this);
 }
@@ -352,6 +372,10 @@ pTypeNode FunctionTypeNode::clone() {
 // AggregateNode
 std::string AggregateNode::to_string(U32&) {
     return "AggregateNode<>";
+}
+
+std::string AggregateNode::to_string_x() {
+    return "<aggregate-trunacted>";
 }
 
 void AggregateNode::decay(NodeVisitor& visitor, pTypeNode& self) {
@@ -376,11 +400,12 @@ pTypeNode AggregateNode::get_field(const std::string& key) {
 // DeclarationNode
 std::string DeclarationNode::to_string(U32& depth) {
     return std::format(
-        "{}Declaration<{} {} {} = {}>",
+        "{}Declaration<{} {} {}: {} = {}>",
         DEPTH_TAB_SPACE,
         is_global ? "global" : "local",
         modifiers.to_string(),
         identifier.lexeme,
+        type->to_string(depth),
         value_expression->to_string(depth)
     );
 }
@@ -409,7 +434,7 @@ std::string ScopeNode::to_string(U32& depth) {
 
     depth--;
 
-    oss << DEPTH_TAB_SPACE << "End<>";
+    oss << DEPTH_TAB_SPACE << "EndScope<>";
     return oss.str();
 }
 
@@ -430,21 +455,27 @@ pStmtNode ScopeNode::clone() {
 // FunctionNode
 std::string FunctionNode::to_string(U32& depth) {
     std::ostringstream oss;
-    oss << std::format(
-        "{}Function<{} {} {}>\n",
-        DEPTH_TAB_SPACE,
-        is_global ? "global" : "local",
-        modifiers.to_string(),
-        identifier.lexeme
-    );
+    oss << DEPTH_TAB_SPACE
+        << std::format(
+               "Function<{} {} {}>\n",
+               is_global ? "global" : "local",
+               modifiers.to_string(),
+               identifier.lexeme
+           );
+
+    depth++;
 
     for (const ParameterNode& parameter : parameters) {
-        oss << DEPTH_TAB_SPACE << std::format(" Parameter<{}>", parameter.identifier.lexeme)
-            << "\n";
+        oss << DEPTH_TAB_SPACE << std::format("Parameter<{}>", parameter.identifier.lexeme) << "\n";
     }
 
-    oss << body->to_string(depth) << "\n";
-    oss << DEPTH_TAB_SPACE << "End<>";
+    for (const pStmtNode& stmt : dynamic_cast<ScopeNode&>(*body).statements) {
+        oss << stmt->to_string(depth) << "\n";
+    }
+
+    depth--;
+
+    oss << DEPTH_TAB_SPACE << "EndFunction<>";
     return oss.str();
 }
 
@@ -503,10 +534,13 @@ std::string IfNode::to_string(U32& depth) {
     for (const ElseIfNode& elseif_node : elseif_nodes) {
         oss << DEPTH_TAB_SPACE << std::format("ElseIf<{}>", elseif_node.condition->to_string(depth))
             << "\n";
+
         depth++;
+
         oss << elseif_node.scope->to_string(depth) << "\n";
+
         depth--;
-        oss << DEPTH_TAB_SPACE << "End<>\n";
+        oss << DEPTH_TAB_SPACE << "EndElseIf<>\n";
     }
 
     if (else_node.has_value()) {
@@ -514,12 +548,12 @@ std::string IfNode::to_string(U32& depth) {
         depth++;
         oss << else_node.value()->to_string(depth) << "\n";
         depth--;
-        oss << DEPTH_TAB_SPACE << "End<>" << "\n";
+        oss << DEPTH_TAB_SPACE << "EndElse<>" << "\n";
     }
 
     depth--;
 
-    oss << DEPTH_TAB_SPACE << "End<>" << "\n";
+    oss << DEPTH_TAB_SPACE << "EndIf<>" << "\n";
     return oss.str();
 }
 
@@ -551,10 +585,16 @@ pStmtNode IfNode::clone() {
 std::string WhileNode::to_string(U32& depth) {
     std::ostringstream oss;
     oss << DEPTH_TAB_SPACE << std::format("While<{}>", condition->to_string(depth)) << "\n";
+
     depth++;
-    oss << body->to_string(depth) << "\n";
+
+    for (const pStmtNode& stmt : dynamic_cast<ScopeNode&>(*body).statements) {
+        oss << stmt->to_string(depth) << "\n";
+    }
+
     depth--;
-    oss << "End<>" << "\n";
+
+    oss << DEPTH_TAB_SPACE << "EndWhile<>";
     return oss.str();
 }
 

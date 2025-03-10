@@ -55,7 +55,6 @@ private:
 
     pTypeNode parse_generic();
     pTypeNode parse_type_primary();
-    pTypeNode parse_type_binary();
     pTypeNode parse_type();
 
     pExprNode parse_primary();

@@ -17,28 +17,19 @@ void Preprocessor::declare_definition(Definition def) {
 
 void Preprocessor::declare_default() {
     declare_definition({
+        0,
+        0,
+        0,
         "__version__",
         fast_tokenize(VIA_VERSION),
-        0,
-        0,
-        0,
     });
 
     declare_definition({
+        0,
+        0,
+        0,
         "__file__",
         fast_tokenize(program.file),
-        0,
-        0,
-        0,
-    });
-
-    declare_macro({
-        "printf",
-        {"__fmt", "..."},
-        fast_tokenize("print(string.format(__fmt, ...))"),
-        0,
-        0,
-        0,
     });
 }
 

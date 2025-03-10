@@ -12,7 +12,13 @@ using enum TokenType;
 std::string Token::to_string() const noexcept {
     std::basic_string_view<char> name = magic_enum::enum_name(type);
     std::string                  fmt  = std::format(
-        "Token(type: {}, value: '{}', line: {}, offset: {})", name, lexeme, line, offset);
+        "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
+        name,
+        lexeme,
+        line,
+        offset,
+        position
+    );
 
     return fmt;
 }

@@ -96,6 +96,20 @@ public:
     pTypeNode visit(AggregateNode&) override;
 
 private:
+    ProgramData&              program;
+    [[maybe_unused]] Emitter& emitter;
+};
+
+class TypeVisitor : public NodeVisitor {
+public:
+    TypeVisitor(ProgramData& program, Emitter& emitter)
+        : program(program),
+          emitter(emitter) {}
+
+    void visit(DeclarationNode&) override;
+    void visit(FunctionNode&) override;
+
+private:
     ProgramData& program;
     Emitter&     emitter;
 };
@@ -107,7 +121,8 @@ public:
           emitter(emitter),
           allocator(allocator),
           expression_visitor(program, emitter, allocator),
-          decay_visitor(program, emitter) {}
+          decay_visitor(program, emitter),
+          type_visitor(program, emitter) {}
 
     void visit(DeclarationNode&) override;
     void visit(ScopeNode&) override;
@@ -118,15 +133,18 @@ public:
     void visit(ExprStmtNode&) override;
 
     inline bool failed() override {
-        return visitor_failed || expression_visitor.failed() || decay_visitor.failed();
+        return visitor_failed || expression_visitor.failed() || decay_visitor.failed() ||
+               type_visitor.failed();
     }
 
 private:
     ProgramData&       program;
     Emitter&           emitter;
     RegisterAllocator& allocator;
-    ExprVisitor        expression_visitor;
-    DecayVisitor       decay_visitor;
+
+    ExprVisitor  expression_visitor;
+    DecayVisitor decay_visitor;
+    TypeVisitor  type_visitor;
 };
 
 class PrintVisitor : public NodeVisitor {

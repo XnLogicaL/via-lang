@@ -23,7 +23,7 @@ VIA_LIB_DECL_FUNCTION(base_print) {
 
     std::cout << oss.str();
 
-    VIA_LIB_RETURN(0)
+    VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(base_println) {
@@ -37,13 +37,13 @@ VIA_LIB_DECL_FUNCTION(base_println) {
 
     std::cout << oss.str() << "\n";
 
-    VIA_LIB_RETURN(0);
+    VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(base_error) {
     VIA_LIB_DECL_PARAMETER(arg0, 0);
     __set_error_state(V, __to_cxx_string(V, arg0));
-    VIA_LIB_RETURN(0);
+    VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(base_assert) {
@@ -60,7 +60,7 @@ VIA_LIB_DECL_FUNCTION(base_assert) {
         __call(V, err_fn, 1);
     }
 
-    VIA_LIB_RETURN(0);
+    VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(base_weakPrimCast) {
@@ -76,8 +76,7 @@ VIA_LIB_DECL_FUNCTION(base_weakPrimCast) {
 
     TValue casted_val = __weak_primitive_cast(V, val, val_type.value());
 
-    __push(V, casted_val.clone());
-    VIA_LIB_RETURN(1);
+    VIA_LIB_RETURN(casted_val);
 }
 
 VIA_LIB_DECL_FUNCTION(base_strongPrimCast) {
@@ -92,7 +91,7 @@ VIA_LIB_DECL_FUNCTION(base_strongPrimCast) {
     );
 
     __strong_primitive_cast(V, const_cast<TValue&>(val), val_type.value());
-    VIA_LIB_RETURN(0);
+    VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(open_baselib) {

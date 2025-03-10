@@ -65,64 +65,7 @@ TValue top(State* VIA_RESTRICT V) {
 // Returns a value that contains a String that represents the string-ified
 // version of <val>. The return value is guaranteed to be a String type.
 TValue to_string(State* VIA_RESTRICT V, const TValue& val) noexcept {
-    using enum ValueType;
-
-    if (check_string(val)) {
-        return val.clone();
-    }
-
-    switch (val.type) {
-    case integer: {
-        std::string str  = std::to_string(val.val_integer);
-        TString*    tstr = new TString(V, str.c_str());
-        return TValue(tstr);
-    }
-    case floating_point: {
-        std::string str  = std::to_string(val.val_integer);
-        TString*    tstr = new TString(V, str.c_str());
-        return TValue(tstr);
-    }
-    case boolean: {
-        TString* str = new TString(V, val.val_boolean ? "true" : "false");
-        return TValue(str);
-    }
-    case table: {
-        std::string str = "{";
-
-        for (auto& elem : val.cast_ptr<TTable>()->data) {
-            str += to_string(V, elem.second).cast_ptr<TString>()->data;
-            str += ", ";
-        }
-
-        if (str.back() == ' ') {
-            str += "\b\b";
-        }
-
-        str += "}";
-
-        TString* tstr = new TString(V, str.c_str());
-        return TValue(tstr);
-    }
-    case function: {
-        const void* faddr = val.cast_ptr<TFunction>();
-        std::string str   = std::format("<function@{}>", faddr);
-        TString*    tstr  = new TString(V, str.c_str());
-        return TValue(tstr);
-    }
-    case cfunction: {
-        // This has to be explicitly casted because function pointers be weird
-        const void* cfaddr = val.cast_ptr<TCFunction>();
-        std::string str    = std::format("<cfunction@{}>", cfaddr);
-        TString*    tstr   = new TString(V, str.c_str());
-        return TValue(tstr);
-    }
-    default:
-        TString* tstr = new TString(V, "nil");
-        return TValue(tstr);
-    }
-
-    VIA_UNREACHABLE;
-    return via::nil.clone();
+    return impl::__to_string(V, val);
 }
 
 std::string to_cxx_string(State* VIA_RESTRICT V, const TValue& val) noexcept {
@@ -154,71 +97,13 @@ T to_cxx_number(const TValue& val) noexcept {
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-TValue get_table(TTable* VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept {
-    auto it = tbl->data.find(key);
-    if (it != tbl->data.end()) {
-        return it->second.clone();
-    }
-    else if (search_meta && tbl->meta) {
-        // Disable metatable search to prevent chain searching
-        // Which can cause infinite loops, crashes, and other bugs
-        return get_table(tbl->meta, key, false);
-    }
-
-    // This has to be a pointer because we don't know if the value is a
-    // non-pointer primitive type
-    return nil.clone();
+const TValue& get_table(TTable* VIA_RESTRICT tbl, const TValue& key) noexcept {
+    return impl::__table_get(tbl, key);
 }
 
 // Assigns the given value <val> to key <key> in table <tbl>.
-void set_table(TTable* VIA_RESTRICT tbl, U32 key, const TValue& val) noexcept {
-    if (check_nil(val)) {
-        const TValue& tbl_val = get_table(tbl, key, false);
-
-        if (!check_nil(tbl_val)) {
-            tbl->data.erase(key);
-        }
-    }
-    else {
-        tbl->data.emplace(key, val.clone());
-    }
-}
-
-// Utility function for quickly geting a metamethod associated to <op>.
-TValue get_metamethod(const TValue& val, OpCode op) {
-    if (!check_table(val)) {
-        return nil.clone();
-    }
-
-#define GET_METHOD(id) (get_table(val.cast_ptr<TTable>(), hash_string_custom(id), true))
-    switch (op) {
-    case OpCode::ADD:
-        return GET_METHOD("__add");
-    case OpCode::SUB:
-        return GET_METHOD("__sub");
-    case OpCode::MUL:
-        return GET_METHOD("__mul");
-    case OpCode::DIV:
-        return GET_METHOD("__div");
-    case OpCode::POW:
-        return GET_METHOD("__pow");
-    case OpCode::MOD:
-        return GET_METHOD("__mod");
-    case OpCode::NEG:
-        return GET_METHOD("__neg");
-    case OpCode::INCREMENT:
-        return GET_METHOD("__inc");
-    case OpCode::DECREMENT:
-        return GET_METHOD("__dec");
-    case OpCode::CONCAT:
-        return GET_METHOD("__con");
-    default:
-        VIA_ASSERT(false, "non-operator opcode");
-        break;
-    }
-
-    return nil.clone();
-#undef GET_METHOD
+void set_table(TTable* VIA_RESTRICT tbl, const TValue& key, const TValue& val) noexcept {
+    impl::__table_set(tbl, key, val);
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
@@ -346,8 +231,8 @@ void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) 
 }
 
 // Calls a table method.
-void method_call(State* VIA_RESTRICT V, TTable* VIA_RESTRICT tbl, U32 key, SIZE argc) noexcept {
-    const TValue& method = get_table(tbl, key, true);
+void method_call(State* V, TTable* VIA_RESTRICT tbl, const TValue& key, SIZE argc) noexcept {
+    const TValue& method = get_table(tbl, key);
 
     if (check_function(method)) {
         native_call(V, method.cast_ptr<TFunction>(), argc);
@@ -377,32 +262,14 @@ void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept {
     else if (check_cfunction(val)) {
         extern_call(V, val.cast_ptr<TCFunction>(), argc);
     }
-    else if (check_table(val)) {
-        method_call(V, val.cast_ptr<TTable>(), hash_string_custom("__call"), argc);
-    }
     else {
         VIA_ASSERT(false, "value is not callable");
     }
 }
 
 // Returns the length of value <val>, nil if impossible.
-TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept {
-    if (check_string(val)) {
-        return TValue(static_cast<int>(strlen(val.cast_ptr<TString>()->data)));
-    }
-    else if (check_table(val)) {
-        U32           metamethod_key = hash_string_custom("__len");
-        const TValue& metamethod     = get_table(val.cast_ptr<TTable>(), metamethod_key, true);
-
-        if (check_nil(metamethod)) {
-            return TValue(static_cast<int>(val.cast_ptr<TTable>()->data.size()));
-        }
-
-        call(V, metamethod, 1);
-        return pop(V);
-    }
-
-    return nil.clone();
+TValue len(const TValue& val) noexcept {
+    return impl::__len(val);
 }
 
 // Returns the complex type of value <val>.
@@ -411,7 +278,7 @@ TValue len(State* VIA_RESTRICT V, const TValue& val) noexcept {
 TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept {
     if (check_table(val)) {
         TTable*       tbl = val.cast_ptr<TTable>();
-        const TValue& ty  = get_table(tbl, hash_string_custom("__type"), true);
+        const TValue& ty  = get_table(tbl, TValue(ValueType::string, new TString(V, "__type")));
         // Check if the __type property is Nil
         // if so return the primitive type
         if (check_nil(ty)) {

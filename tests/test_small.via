@@ -1,13 +1,13 @@
-const x = 0
+const x: string = 0
 global Aaaa = 0
 global BB = 100
 
-global func add(a, b) {
-    local var = a * 56 *6 / 62929 * 5 % 10.1
-    local func inner() {
+global func add(a: integer, b: integer) -> nil {
+    local var = a * 56
+    local func inner() -> nil {
         local y = true
         while y and x {
-            local z = y + x % y  % x
+            local z = y + x
             local cond = true and false
         }
     }

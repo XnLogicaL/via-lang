@@ -4,6 +4,7 @@
 
 #include "bitutils.h"
 #include "strutils.h"
+#include "types.h"
 #include "visitor.h"
 #include "stack.h"
 
@@ -19,6 +20,9 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
     ExprNode&   val    = *std::move(declaration_node.value_expression);
     Token       ident  = declaration_node.identifier;
     std::string symbol = ident.lexeme;
+
+    declaration_node.type->decay(decay_visitor, declaration_node.type);
+    declaration_node.accept(type_visitor);
 
     if (is_global) {
         std::string           comment             = symbol;
@@ -54,10 +58,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
             if (std::get_if<std::monostate>(&literal.value)) {
                 program.bytecode->emit(PUSHNIL, {}, comment);
                 program.test_stack->push({
-                    .symbol         = symbol,
-                    .is_const       = is_const,
-                    .is_constexpr   = true,
-                    .primitive_type = ValueType::nil,
+                    .is_const     = is_const,
+                    .is_constexpr = true,
+                    .symbol       = symbol,
+                    .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::nil),
                 });
             }
             else if (int* int_value = std::get_if<int>(&literal.value)) {
@@ -66,10 +70,11 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
                 program.bytecode->emit(PUSHINT, {operands.l, operands.r}, comment);
                 program.test_stack->push({
-                    .symbol         = symbol,
-                    .is_const       = is_const,
-                    .is_constexpr   = true,
-                    .primitive_type = ValueType::integer,
+                    .is_const     = is_const,
+                    .is_constexpr = true,
+                    .symbol       = symbol,
+                    .type =
+                        std::make_unique<PrimitiveNode>(literal.value_token, ValueType::integer),
                 });
             }
             else if (float* float_value = std::get_if<float>(&literal.value)) {
@@ -78,19 +83,22 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
                 program.bytecode->emit(PUSHFLOAT, {operands.l, operands.r}, comment);
                 program.test_stack->push({
-                    .symbol         = symbol,
-                    .is_const       = is_const,
-                    .is_constexpr   = true,
-                    .primitive_type = ValueType::floating_point,
+                    .is_const     = is_const,
+                    .is_constexpr = true,
+                    .symbol       = symbol,
+                    .type         = std::make_unique<PrimitiveNode>(
+                        literal.value_token, ValueType::floating_point
+                    ),
                 });
             }
             else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
                 program.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE, {}, comment);
                 program.test_stack->push({
-                    .symbol         = symbol,
-                    .is_const       = is_const,
-                    .is_constexpr   = true,
-                    .primitive_type = ValueType::boolean,
+                    .is_const     = is_const,
+                    .is_constexpr = true,
+                    .symbol       = symbol,
+                    .type =
+                        std::make_unique<PrimitiveNode>(literal.value_token, ValueType::boolean),
                 });
             }
             else {
@@ -99,10 +107,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
                 program.bytecode->emit(PUSHK, {const_id}, comment);
                 program.test_stack->push({
-                    .symbol         = symbol,
-                    .is_const       = is_const,
-                    .is_constexpr   = true,
-                    .primitive_type = constant.type,
+                    .is_const     = is_const,
+                    .is_constexpr = true,
+                    .symbol       = symbol,
+                    .type = std::make_unique<PrimitiveNode>(literal.value_token, constant.type),
                 });
             }
         }
@@ -113,10 +121,11 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
             program.bytecode->emit(PUSH, {dst}, comment);
             program.test_stack->push({
-                .symbol         = symbol,
-                .is_const       = is_const,
-                .is_constexpr   = false,
-                .primitive_type = ValueType::nil,
+                .is_const     = is_const,
+                .is_constexpr = false,
+                .symbol       = symbol,
+                .type =
+                    std::make_unique<PrimitiveNode>(declaration_node.identifier, ValueType::nil),
             });
 
             allocator.free_register(dst);
@@ -138,14 +147,25 @@ void StmtVisitor::visit(ScopeNode& scope_node) {
 }
 
 void StmtVisitor::visit(FunctionNode& function_node) {
-    Operand function_reg = allocator.allocate_register();
+    using Parameters = FunctionNode::Parameters;
+
+    Operand    function_reg = allocator.allocate_register();
+    Parameters parameters;
+
+    for (auto& parameter : function_node.parameters) {
+        parameters.emplace_back(parameter.identifier, parameter.modifiers, parameter.type->clone());
+        parameter.type->decay(decay_visitor, parameter.type);
+    }
+
+    function_node.returns->decay(decay_visitor, function_node.returns);
+    function_node.accept(type_visitor);
 
     // Push function to the function stack
     program.test_stack->function_stack.push(FunctionNode::StackNode(
         function_node.is_global,
         function_node.modifiers,
         function_node.identifier,
-        function_node.parameters
+        std::move(parameters)
     ));
 
     program.bytecode->emit(LOADFUNCTION, {function_reg}, function_node.identifier.lexeme);
@@ -203,10 +223,10 @@ void StmtVisitor::visit(FunctionNode& function_node) {
     allocator.free_register(function_reg);
     program.test_stack->function_stack.pop();
     program.test_stack->push({
-        .is_const       = function_node.modifiers.is_const,
-        .is_constexpr   = false,
-        .symbol         = symbol,
-        .primitive_type = ValueType::function,
+        .is_const     = function_node.modifiers.is_const,
+        .is_constexpr = false,
+        .symbol       = symbol,
+        .type = std::make_unique<PrimitiveNode>(function_node.identifier, ValueType::function),
     });
 }
 
@@ -214,7 +234,7 @@ void StmtVisitor::visit(AssignNode& assign_node) {
     Token symbol_token = assign_node.identifier;
 
     std::string            symbol = symbol_token.lexeme;
-    std::optional<Operand> stk_id = program.test_stack->find_symbol({.symbol = symbol});
+    std::optional<Operand> stk_id = program.test_stack->find_symbol(symbol);
 
     if (stk_id.has_value()) {
         const auto& test_stack_member = program.test_stack->at(stk_id.value());

@@ -248,7 +248,7 @@ Token Tokenizer::get_token() {
         break;
     }
 
-    SIZE position = program.tokens->tokens.size();
+    SIZE position = pos;
 
     // Check if the position is at the end of the program.source string
     // If so, return an EOF token meant as a sentinel

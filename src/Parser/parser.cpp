@@ -52,6 +52,7 @@ Modifiers Parser::parse_modifiers() {
             }
 
             modifiers.is_const = true;
+            consume();
         }
         else {
             break;
@@ -89,7 +90,8 @@ pTypeNode Parser::parse_type_primary() {
     Token tok = current();
 
     switch (tok.type) {
-    case IDENTIFIER: {
+    case IDENTIFIER:
+    case LIT_NIL: {
         auto enum_value = magic_enum::enum_cast<ValueType>(tok.lexeme);
         if (enum_value.has_value()) {
             return std::make_unique<PrimitiveNode>(consume(), enum_value.value());
@@ -134,7 +136,7 @@ pTypeNode Parser::parse_type_primary() {
             consume();
 
             pTypeNode type = parse_type();
-            fields.emplace(field_name.lexeme, type);
+            fields.emplace(field_name.lexeme, std::move(type));
 
             EXPECT(SEMICOLON, "Expected ';' to close aggregate field pair, got '{}'");
             consume();
@@ -157,25 +159,8 @@ pTypeNode Parser::parse_type_primary() {
     VIA_UNREACHABLE;
 }
 
-pTypeNode Parser::parse_type_binary() {
-    const auto is_type_binary_operator = [this]() constexpr -> bool {
-        return current().type == AMPERSAND;
-    };
-
-    pTypeNode base = parse_type();
-
-    while (is_type_binary_operator()) {
-        Token bin_operator = consume();
-        if (bin_operator.type == AMPERSAND) {
-            base = std::make_unique<UnionNode>(std::move(base), parse_type());
-        }
-    }
-
-    return base;
-}
-
 pTypeNode Parser::parse_type() {
-    return parse_type_binary();
+    return parse_type_primary();
 }
 
 pExprNode Parser::parse_primary() {
@@ -295,7 +280,10 @@ pExprNode Parser::parse_binary(int precedence) {
         }
 
         consume();
-        lhs = std::make_unique<BinaryNode>(op, std::move(lhs), parse_binary(op_prec + 1));
+
+        pExprNode rhs = parse_binary(op_prec + 1);
+
+        lhs = std::make_unique<BinaryNode>(op, std::move(lhs), std::move(rhs));
     }
 
     return lhs;
@@ -330,18 +318,21 @@ pStmtNode Parser::parse_declaration() {
         consume();
 
         std::vector<ParameterNode> parameters;
-        if (current().type != PAREN_CLOSE) {
-            while (current().type == COMMA) {
+
+        while (current().type != PAREN_CLOSE) {
+            Modifiers modifiers = parse_modifiers();
+
+            EXPECT(IDENTIFIER, "Expected identifier for function parameter name, got '{}'");
+            Token identifier = consume();
+
+            EXPECT(COLON, "Expected ':' to segregate function parameter and type, got '{}'");
+            consume();
+
+            parameters.emplace_back(identifier, modifiers, parse_type());
+
+            if (current().type != PAREN_CLOSE) {
+                EXPECT(COMMA, "Expected ',' to seperate function parameters");
                 consume();
-                Modifiers modifiers = parse_modifiers();
-
-                EXPECT(IDENTIFIER, "Expected identifier for function parameter name, got '{}'");
-                Token identifier = consume();
-
-                EXPECT(COLON, "Expected ':' to segregate function parameter and type, got '{}'");
-                consume();
-
-                parameters.emplace_back(identifier, modifiers, parse_type());
             }
         }
 

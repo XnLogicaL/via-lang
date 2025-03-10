@@ -37,7 +37,8 @@ std::string Emitter::get_severity_header(OutputSeverity sev) {
 
 // Function to underline a portion of a line with a cursor (^) at the offset
 std::string Emitter::underline_line(
-    int line_number, int offset, int length, const std::string& message, OutputSeverity sev) {
+    int line_number, int offset, int length, const std::string& message, OutputSeverity sev
+) {
     std::vector<std::string> lines = split_lines();
 
     if (line_number < 1 || line_number > static_cast<int>(lines.size())) {
@@ -71,6 +72,67 @@ std::string Emitter::underline_line(
            std::string(line_number_width, ' ') + " | " + underline;
 }
 
+std::string Emitter::underline_range(
+    int begin_pos, int end_pos, const std::string& message, OutputSeverity sev
+) {
+    // If the range is invalid, just return a basic message.
+    if (begin_pos < 0 || end_pos < 0 || begin_pos >= end_pos) {
+        return std::format("{} {}", get_severity_header(sev), message);
+    }
+
+    // Use the entire source.
+    const std::string& source = program.source;
+
+    // Find the start of the line containing begin_pos.
+    size_t line_start = source.rfind('\n', begin_pos);
+    if (line_start == std::string::npos)
+        line_start = 0;
+    else
+        line_start += 1; // move past the newline
+
+    // Find the end of the line.
+    size_t line_end = source.find('\n', begin_pos);
+    if (line_end == std::string::npos)
+        line_end = source.size();
+
+    // Extract the specific line.
+    std::string line = source.substr(line_start, line_end - line_start);
+
+    // Compute the column offsets relative to the start of the line.
+    int column_begin = begin_pos - static_cast<int>(line_start);
+    int column_end   = end_pos - static_cast<int>(line_start);
+    if (column_end > static_cast<int>(line.size()))
+        column_end = static_cast<int>(line.size());
+
+    // Build an underline for only the error span.
+    // First, create a string of spaces matching the line.
+    std::string underline(line.size(), ' ');
+    // Fill in the error region with tildes.
+    for (int i = column_begin; i < column_end; ++i) {
+        underline[i] = '~';
+    }
+    // Place a caret at the beginning of the error span.
+    if (column_begin < column_end && column_begin < static_cast<int>(underline.size()))
+        underline[column_begin] = '^';
+
+    // Calculate the line number by counting '\n' before begin_pos.
+    int line_number = 1;
+    for (size_t i = 0; i < static_cast<size_t>(begin_pos); ++i) {
+        if (source[i] == '\n')
+            ++line_number;
+    }
+    std::string line_number_str   = std::to_string(line_number);
+    size_t      line_number_width = line_number_str.length();
+
+    // Assemble the final message.
+    std::string result;
+    result += get_severity_header(sev) + message + "\n";
+    result += line_number_str + " | " + line + "\n";
+    result += std::string(line_number_width, ' ') + " | " + underline;
+
+    return result;
+}
+
 // Emits an output message
 void Emitter::out(U64 idx, std::string message, OutputSeverity sev) {
     // This is an internal "flag" that determines if the file name has been displayed before any
@@ -89,6 +151,20 @@ void Emitter::out(U64 idx, std::string message, OutputSeverity sev) {
     SIZE  offset = tok.offset;
     SIZE  length = tok.lexeme.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
+}
+
+void Emitter::out_range(SIZE begin, SIZE end, std::string message, OutputSeverity sev) {
+    // This is an internal "flag" that determines if the file name has been displayed before any
+    // errors
+    static bool has_printed_file_name = false;
+
+    // Check if file information has been printed
+    if (!has_printed_file_name && program.file != "<repl>") {
+        has_printed_file_name = true;
+        std::cout << std::format("In file {}:\n", program.file);
+    }
+
+    std::cout << underline_range(begin, end, message, sev) << "\n";
 }
 
 void Emitter::out_flat(std::string message, OutputSeverity sev) {

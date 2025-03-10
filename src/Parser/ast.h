@@ -18,7 +18,8 @@
 
 #define VIA_STMT_NODE_OVERRIDE_ACCEPT void accept(NodeVisitor&) override;
 
-#define VIA_TYPE_NODE_OVERRIDE_DECAY void decay(NodeVisitor&, pTypeNode&) override;
+#define VIA_TYPE_NODE_OVERRIDE_DECAY      void decay(NodeVisitor&, pTypeNode&) override;
+#define VIA_TYPE_NODE_OVERRIDE_TO_STRINGX std::string to_string_x() override;
 
 // ===========================================================================================
 // ast.h
@@ -52,8 +53,8 @@ struct LiteralNode : public ExprNode {
     LiteralNode(Token value_token, variant value)
         : value_token(value_token),
           value(value) {
-        this->begin = value_token.position;
-        this->end   = value_token.position + value_token.lexeme.length();
+        this->begin = this->value_token.position;
+        this->end   = this->value_token.position + value_token.lexeme.length();
     }
 };
 
@@ -68,8 +69,8 @@ struct SymbolNode : public ExprNode {
 
     SymbolNode(Token identifier)
         : identifier(identifier) {
-        this->begin = identifier.position;
-        this->end   = identifier.position + identifier.lexeme.length();
+        this->begin = this->identifier.position;
+        this->end   = this->identifier.position + identifier.lexeme.length();
     }
 };
 
@@ -84,8 +85,8 @@ struct UnaryNode : public ExprNode {
 
     UnaryNode(pExprNode expression)
         : expression(std::move(expression)) {
-        this->begin = expression->begin - 1; // Account for '-'
-        this->end   = expression->end;
+        this->begin = this->expression->begin - 1; // Account for '-'
+        this->end   = this->expression->end;
     }
 };
 
@@ -101,8 +102,8 @@ struct GroupNode : public ExprNode {
 
     GroupNode(pExprNode expression)
         : expression(std::move(expression)) {
-        this->begin = expression->begin - 1; // Account for '('
-        this->end   = expression->end + 1;   // Account for ')'
+        this->begin = this->expression->begin - 1; // Account for '('
+        this->end   = this->expression->end + 1;   // Account for ')'
     }
 };
 
@@ -121,8 +122,11 @@ struct CallNode : public ExprNode {
     CallNode(pExprNode callee, Arguments arguments)
         : callee(std::move(callee)),
           arguments(std::move(arguments)) {
-        this->begin = callee->begin;
-        this->end   = callee->end;
+
+        pExprNode& last_arg = this->arguments.back();
+
+        this->begin = this->callee->begin;
+        this->end   = last_arg->end + 1; // Account for ')'
     }
 };
 
@@ -139,8 +143,8 @@ struct IndexNode : public ExprNode {
     IndexNode(pExprNode object, pExprNode index)
         : object(std::move(object)),
           index(std::move(index)) {
-        this->begin = object->begin;
-        this->end   = index->end;
+        this->begin = this->object->begin;
+        this->end   = this->index->end;
     }
 };
 
@@ -158,7 +162,10 @@ struct BinaryNode : public ExprNode {
     BinaryNode(Token op, pExprNode lhs, pExprNode rhs)
         : op(op),
           lhs_expression(std::move(lhs)),
-          rhs_expression(std::move(rhs)) {}
+          rhs_expression(std::move(rhs)) {
+        this->begin = this->lhs_expression->begin;
+        this->end   = this->rhs_expression->end;
+    }
 };
 
 // =========================================================================================
@@ -169,6 +176,7 @@ struct AutoNode : public TypeNode {
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
     VIA_TYPE_NODE_OVERRIDE_DECAY;
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 };
 
 struct PrimitiveNode : public TypeNode {
@@ -177,6 +185,8 @@ struct PrimitiveNode : public TypeNode {
 
     VIA_AST_NODE_OVERRIDE_TO_STRING;
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
+
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 
     PrimitiveNode(Token id, ValueType valty)
         : identifier(id),
@@ -193,6 +203,7 @@ struct GenericNode : public TypeNode {
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
     VIA_TYPE_NODE_OVERRIDE_DECAY;
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 
     GenericNode(Token id, Generics gens, Modifiers modifiers)
         : identifier(id),
@@ -208,6 +219,7 @@ struct UnionNode : public TypeNode {
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
     VIA_TYPE_NODE_OVERRIDE_DECAY;
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 
     UnionNode(pTypeNode lhs, pTypeNode rhs)
         : lhs(std::move(lhs)),
@@ -223,6 +235,7 @@ struct FunctionTypeNode : public TypeNode {
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
     VIA_TYPE_NODE_OVERRIDE_DECAY;
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 
     FunctionTypeNode(Parameters args, pTypeNode rets)
         : parameters(std::move(args)),
@@ -237,6 +250,7 @@ struct AggregateNode : public TypeNode {
     VIA_AST_NODE_OVERRIDE_CLONE(pTypeNode);
 
     VIA_TYPE_NODE_OVERRIDE_DECAY;
+    VIA_TYPE_NODE_OVERRIDE_TO_STRINGX;
 
     pTypeNode get_field(const std::string&);
 

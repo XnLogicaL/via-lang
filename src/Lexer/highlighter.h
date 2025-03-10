@@ -21,6 +21,7 @@ public:
         : program(program) {}
 
     void out(U64 position, std::string message, OutputSeverity severity);
+    void out_range(SIZE begin, SIZE end, std::string message, OutputSeverity severity);
     void out_flat(std::string message, OutputSeverity severity);
 
 private:
@@ -28,8 +29,10 @@ private:
 
 private:
     std::vector<std::string> split_lines();
-    std::string              get_severity_header(OutputSeverity);
-    std::string              underline_line(int, int, int, const std::string&, OutputSeverity);
+
+    std::string get_severity_header(OutputSeverity);
+    std::string underline_line(int, int, int, const std::string&, OutputSeverity);
+    std::string underline_range(int, int, const std::string&, OutputSeverity);
 };
 
 VIA_NAMESPACE_END

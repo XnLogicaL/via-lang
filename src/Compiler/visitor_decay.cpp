@@ -12,7 +12,23 @@ VIA_NAMESPACE_BEGIN
 using enum OutputSeverity;
 
 pTypeNode DecayVisitor::visit(AutoNode& auto_node) {
-    pTypeNode type = auto_node.expression->infer_type(program);
+    return auto_node.expression->infer_type(program);
+}
+
+pTypeNode DecayVisitor::visit(GenericNode&) {
+    return nullptr;
+}
+
+pTypeNode DecayVisitor::visit(UnionNode&) {
+    return nullptr;
+}
+
+pTypeNode DecayVisitor::visit(FunctionTypeNode&) {
+    return nullptr;
+}
+
+pTypeNode DecayVisitor::visit(AggregateNode&) {
+    return nullptr;
 }
 
 VIA_NAMESPACE_END

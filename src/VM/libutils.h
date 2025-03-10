@@ -16,7 +16,7 @@
 
 #define VIA_LIB_DECL_FUNCTION(id)       void id(State* V)
 #define VIA_LIB_DECL_PARAMETER(id, idx) const TValue& id = impl::__get_argument(V, idx);
-#define VIA_LIB_RETURN(retc)            impl::__native_return(V, retc);
+#define VIA_LIB_RETURN(val)             impl::__native_return(V, val);
 
 #define VIA_LIB_WRAP_CFPTR(ptr)            (TValue(new TCFunction(ptr)))
 #define VIA_LIB_WRAP_PRIM(val)             (TValue(val))

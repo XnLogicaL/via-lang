@@ -48,6 +48,7 @@ struct TypeNode {
     virtual VIA_DEFAULT_DESTRUCTOR(TypeNode);
 
     virtual std::string to_string(U32&) = 0;
+    virtual std::string to_string_x()   = 0;
     virtual void        decay(NodeVisitor&, pTypeNode&) {};
     virtual pTypeNode   clone() = 0;
 };
