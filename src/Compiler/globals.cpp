@@ -24,12 +24,12 @@ bool GlobalTracker::was_declared(const std::string& symbol) {
     return false;
 }
 
-std::optional<U64> GlobalTracker::get_index(const Global& global) {
+std::optional<u64> GlobalTracker::get_index(const Global& global) {
     return get_index(global.symbol);
 }
 
-std::optional<U64> GlobalTracker::get_index(const std::string& symbol) {
-    U64 index = 0;
+std::optional<u64> GlobalTracker::get_index(const std::string& symbol) {
+    u64 index = 0;
     for (const Global& global : globals) {
         if (global.symbol == symbol) {
             return index;
@@ -51,7 +51,7 @@ std::optional<Global> GlobalTracker::get_global(const std::string& symbol) {
     return std::nullopt;
 }
 
-std::optional<Global> GlobalTracker::get_global(U32 index) {
+std::optional<Global> GlobalTracker::get_global(u32 index) {
     try {
         return globals.at(index);
     }

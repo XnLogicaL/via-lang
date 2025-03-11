@@ -18,13 +18,13 @@ VIA_NAMESPACE_IMPL_BEGIN
 
 // Automatically resizes upvalue vector of closure by VIA_UPV_RESIZE_FACTOR.
 VIA_INLINE void __closure_upvs_resize(TFunction* _Closure) {
-    U32      _Current_size = _Closure->upv_count;
-    U32      _New_size     = _Current_size * 2;
+    u32      _Current_size = _Closure->upv_count;
+    u32      _New_size     = _Current_size * 2;
     UpValue* _New_location = new UpValue[_New_size];
 
     // Move upvalues to new location
     for (UpValue* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
-        U32 offset            = ptr - _Closure->upvs;
+        u32 offset            = ptr - _Closure->upvs;
         _New_location[offset] = std::move(*ptr);
     }
 
@@ -37,13 +37,13 @@ VIA_INLINE void __closure_upvs_resize(TFunction* _Closure) {
 
 // Checks if a given index is within the bounds of the upvalue vector of the closure.
 // Used for resizing.
-VIA_INLINE bool __closure_upvs_range_check(TFunction* _Closure, SIZE index) {
+VIA_INLINE bool __closure_upvs_range_check(TFunction* _Closure, size_t index) {
     return _Closure->upv_count >= index;
 }
 
 // Attempts to retrieve upvalue at index <_Upv_id>.
 // Returns nullptr if <_Upv_id> is out of upvalue vector bounds.
-VIA_INLINE UpValue* __closure_upv_get(TFunction* _Closure, SIZE _Upv_id) {
+VIA_INLINE UpValue* __closure_upv_get(TFunction* _Closure, size_t _Upv_id) {
     if (!__closure_upvs_range_check(_Closure, _Upv_id)) {
         return nullptr;
     }
@@ -52,7 +52,7 @@ VIA_INLINE UpValue* __closure_upv_get(TFunction* _Closure, SIZE _Upv_id) {
 }
 
 // Dynamically reassigns upvalue at index <_Upv_id> the value <_Val>.
-VIA_INLINE void __closure_upv_set(TFunction* _Closure, SIZE _Upv_id, TValue& _Val) {
+VIA_INLINE void __closure_upv_set(TFunction* _Closure, size_t _Upv_id, TValue& _Val) {
     UpValue* _Upv = __closure_upv_get(_Closure, _Upv_id);
     if (_Upv != nullptr) {
         if (_Upv->value != nullptr) {
@@ -75,26 +75,6 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
             cache.push_back(*_State->ip++);
             break;
         }
-        // Special case: Closure assembly-time capturing
-        // Captures stack variables while the closure is being constructed
-        // to ensure that no dangling references occur.
-        else if (_State->ip->op == OpCode::CAPTURE) {
-            Operand stk_id = _State->ip->operand0;
-            Operand upv_id = _State->ip->operand1;
-
-            TFunction* closure = _State->frame;
-            TValue&    stk_val = _State->sbp[stk_id];
-
-            // Check whether if the upvalue vector needs to be resized.
-            if (__closure_upvs_range_check(closure, upv_id)) {
-                __closure_upvs_resize(closure);
-            }
-
-            __closure_upv_set(_Closure, upv_id, stk_val);
-
-            _State->ip++;
-            continue;
-        }
 
         cache.push_back(*_State->ip++);
     }
@@ -103,6 +83,19 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
     _Closure->bytecode     = new Instruction[cache.size()];
 
     std::memcpy(_Closure->bytecode, cache.data(), cache.size());
+
+    for (TValue* _Stk_id = _State->sbp + _State->sp; _Stk_id > _State->sbp; _Stk_id--) {
+        size_t _Pos = _Stk_id - _State->sbp;
+
+        if (__closure_upvs_range_check(_Closure, _Pos)) {
+            __closure_upvs_resize(_Closure);
+        }
+
+        _Closure->upvs[_Pos] = {
+            .is_open = true,
+            .value   = _Stk_id,
+        };
+    }
 }
 
 // Moves upvalues of the current closure into the heap, "closing" them.
@@ -121,8 +114,8 @@ VIA_INLINE void __closure_close_upvalues(TFunction* _Closure) {
 // Table handling
 
 // Hashes a dictionary key using the FNV-1a hashing algorithm.
-VIA_INLINE SIZE __table_ht_hash_key(TTable* _Tbl, const char* _Key) noexcept {
-    SIZE _Hash = 2166136261u;
+VIA_INLINE size_t __table_ht_hash_key(TTable* _Tbl, const char* _Key) noexcept {
+    size_t _Hash = 2166136261u;
 
     while (*_Key) {
         _Hash = (_Hash ^ *_Key++) * 16777619;
@@ -133,7 +126,7 @@ VIA_INLINE SIZE __table_ht_hash_key(TTable* _Tbl, const char* _Key) noexcept {
 
 // Inserts a key-value pair into the hash table component of a given TTable object.
 VIA_INLINE void __table_ht_set(TTable* _Tbl, const char* _Key, const TValue& _Val) noexcept {
-    SIZE _Index = __table_ht_hash_key(_Tbl, _Key);
+    size_t _Index = __table_ht_hash_key(_Tbl, _Key);
 
     THashNode* _Next_node = _Tbl->ht_buckets[_Index];
     THashNode* _Node      = nullptr;
@@ -155,7 +148,7 @@ VIA_INLINE void __table_ht_set(TTable* _Tbl, const char* _Key, const TValue& _Va
 
 // Performs a look-up on the given table with a given key. Returns nullptr upon lookup failure.
 VIA_INLINE TValue* __table_ht_get(TTable* _Tbl, const char* _Key) noexcept {
-    SIZE _Index = __table_ht_hash_key(_Tbl, _Key);
+    size_t _Index = __table_ht_hash_key(_Tbl, _Key);
 
     for (THashNode* _Node = _Tbl->ht_buckets[_Index]; _Node; _Node = _Node->next) {
         if (strcmp(_Node->key, _Key) == 0) {
@@ -166,13 +159,13 @@ VIA_INLINE TValue* __table_ht_get(TTable* _Tbl, const char* _Key) noexcept {
     return nullptr; // Not found
 }
 
-// Returns the real size of the hashtable component of the given table object.
-VIA_INLINE SIZE __table_ht_size(TTable* _Tbl) noexcept {
+// Returns the real size_t of the hashtable component of the given table object.
+VIA_INLINE size_t __table_ht_size(TTable* _Tbl) noexcept {
     if (_Tbl->ht_size_cache_valid) {
         return _Tbl->ht_size_cache;
     }
 
-    SIZE       _Size         = 0;
+    size_t     _Size         = 0;
     THashNode* _Current_node = *_Tbl->ht_buckets;
 
     while (_Current_node->next) {
@@ -191,20 +184,20 @@ VIA_INLINE SIZE __table_ht_size(TTable* _Tbl) noexcept {
 }
 
 // Checks if the given index is out of bounds of a given tables array component.
-VIA_INLINE bool __table_arr_range_check(TTable* _Tbl, SIZE _Index) noexcept {
+VIA_INLINE bool __table_arr_range_check(TTable* _Tbl, size_t _Index) noexcept {
     return _Tbl->arr_capacity > _Index;
 }
 
 // Dynamically grows and relocates the array component of a given TTable object.
 VIA_INLINE void __table_arr_resize(TTable* _Tbl) noexcept {
-    SIZE _Old_capacity = _Tbl->arr_capacity;
-    SIZE _New_capacity = _Old_capacity * 2;
+    size_t _Old_capacity = _Tbl->arr_capacity;
+    size_t _New_capacity = _Old_capacity * 2;
 
     TValue* _Old_location = _Tbl->arr_array;
     TValue* _New_location = new TValue[_New_capacity]();
 
     for (TValue* _Ptr = _Old_location; _Ptr < _Old_location + _Old_capacity; _Ptr++) {
-        SIZE _Position           = _Ptr - _Old_location;
+        size_t _Position         = _Ptr - _Old_location;
         _New_location[_Position] = std::move(*_Ptr);
     }
 
@@ -216,7 +209,7 @@ VIA_INLINE void __table_arr_resize(TTable* _Tbl) noexcept {
 
 // Sets the given index of a table to a given value. Resizes the array component of the TTable
 // object if necessary.
-VIA_INLINE void __table_arr_set(TTable* _Tbl, SIZE _Index, const TValue& _Val) noexcept {
+VIA_INLINE void __table_arr_set(TTable* _Tbl, size_t _Index, const TValue& _Val) noexcept {
     if (!__table_arr_range_check(_Tbl, _Index)) {
         __table_arr_resize(_Tbl);
     }
@@ -227,7 +220,7 @@ VIA_INLINE void __table_arr_set(TTable* _Tbl, SIZE _Index, const TValue& _Val) n
 
 // Attempts to get the value at the given index of the array component of the table. Returns nullptr
 // if the index is out of array capacity range.
-VIA_INLINE TValue* __table_arr_get(TTable* _Tbl, SIZE _Index) noexcept {
+VIA_INLINE TValue* __table_arr_get(TTable* _Tbl, size_t _Index) noexcept {
     if (!__table_arr_range_check(_Tbl, _Index)) {
         return nullptr;
     }
@@ -235,13 +228,13 @@ VIA_INLINE TValue* __table_arr_get(TTable* _Tbl, SIZE _Index) noexcept {
     return &_Tbl->arr_array[_Index];
 }
 
-// Returns the real size of the given tables array component.
-VIA_INLINE SIZE __table_arr_size(TTable* _Tbl) noexcept {
+// Returns the real size_t of the given tables array component.
+VIA_INLINE size_t __table_arr_size(TTable* _Tbl) noexcept {
     if (_Tbl->arr_size_cache_valid) {
         return _Tbl->arr_size_cache;
     }
 
-    SIZE _Size = 0;
+    size_t _Size = 0;
 
     for (TValue* _Ptr = _Tbl->arr_array; _Ptr < _Tbl->arr_array + _Tbl->arr_capacity; _Ptr++) {
         if (!check_nil(*_Ptr)) {
@@ -265,9 +258,7 @@ VIA_INLINE void __table_set(TTable* _Tbl, const TValue& _Key, const TValue& _Val
     }
 }
 
-VIA_INLINE const TValue& __table_get(TTable* _Tbl, const TValue& _Key) {
-    static thread_local TValue nil;
-
+VIA_INLINE TValue __table_get(TTable* _Tbl, const TValue& _Key) {
     TValue* _Unsafe = nullptr;
     if (check_integer(_Key)) {
         _Unsafe = __table_arr_get(_Tbl, _Key.val_integer);
@@ -276,10 +267,10 @@ VIA_INLINE const TValue& __table_get(TTable* _Tbl, const TValue& _Key) {
         _Unsafe = __table_ht_get(_Tbl, _Key.cast_ptr<TString>()->data);
     }
 
-    return _Unsafe ? *_Unsafe : nil;
+    return _Unsafe ? _Unsafe->clone() : TValue();
 }
 
-VIA_INLINE SIZE __table_size(TTable* _Tbl) {
+VIA_INLINE size_t __table_size(TTable* _Tbl) {
     return __table_arr_size(_Tbl) + __table_ht_size(_Tbl);
 }
 

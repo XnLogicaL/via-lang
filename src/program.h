@@ -19,7 +19,7 @@ class CompilerStack;
 
 class ProgramData {
 public:
-    U8 optimization_level = 0;
+    u8 optimization_level = 0;
 
     std::string file;
     std::string source;

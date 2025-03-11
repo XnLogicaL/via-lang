@@ -15,16 +15,16 @@ void BytecodeHolder::add(const Bytecode& bytecode) {
     instructions.push_back(bytecode);
 }
 
-SIZE BytecodeHolder::size() const noexcept {
+size_t BytecodeHolder::size() const noexcept {
     return instructions.size();
 }
 
-void BytecodeHolder::remove(U64 index) {
+void BytecodeHolder::remove(size_t index) {
     instructions.erase(instructions.begin() + index);
 }
 
 void BytecodeHolder::insert(
-    U64 index, OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
+    size_t index, OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
 ) {
     // Insert the instruction at the specified index
     instructions.insert(

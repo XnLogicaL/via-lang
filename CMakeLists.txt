@@ -26,7 +26,7 @@ if(DEBUG_MODE STREQUAL "DEBUG")
     set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 else()
     message(STATUS "Compiling in PROD mode.")
-    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+    set(CMAKE_CXX_COMPILER /usr/bin/g++)
 endif()
 
 # Find sources

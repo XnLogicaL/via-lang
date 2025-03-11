@@ -20,11 +20,11 @@ StackObject CompilerStack::top() {
     return {obj.is_const, obj.is_constexpr, obj.symbol, obj.type->clone()};
 }
 
-U64 CompilerStack::size() {
+u64 CompilerStack::size() {
     return sp;
 }
 
-std::optional<StackObject> CompilerStack::at(SIZE pos) {
+std::optional<StackObject> CompilerStack::at(size_t pos) {
     if (pos > size()) {
         return std::nullopt;
     }

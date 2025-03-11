@@ -26,7 +26,7 @@ State::State(GState* G, ProgramData& program)
     TFunction* main = new TFunction{
         .ret_addr     = ip,
         .bytecode     = ip,
-        .bytecode_len = static_cast<U32>(iep - ibp),
+        .bytecode_len = static_cast<u32>(iep - ibp),
     };
     __native_call(this, main, 0);
 }
@@ -48,7 +48,7 @@ void State::load(BytecodeHolder& bytecode) {
     this->iep = this->ibp + pipeline.size();      // Initialize iep (Instruction base pointer)
     this->ip  = this->ibp;                        // Initialize ip (Instruction pointer)
 
-    U64 position = 0;
+    u64 position = 0;
     for (const Bytecode& pair : pipeline) {
         const Instruction& instruction = pair.instruction;
         this->ibp[position++]          = instruction;

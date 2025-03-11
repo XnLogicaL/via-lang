@@ -42,9 +42,9 @@ struct ErrorState {
 // Global state, should only be instantiated once, and shared across all
 // State's. (threads)
 struct GState {
-    std::unordered_map<U32, TString*> stable;     // String interning table
-    std::unordered_map<U32, TValue>   gtable;     // Global environment
-    std::atomic<U32>                  threads{0}; // Thread count
+    std::unordered_map<u32, TString*> stable;     // String interning table
+    std::unordered_map<u32, TValue>   gtable;     // Global environment
+    std::atomic<u32>                  threads{0}; // Thread count
 
     std::shared_mutex stable_mutex;
     std::mutex        gtable_mutex;
@@ -54,7 +54,7 @@ struct GState {
 // More likely to be cached (hopefully...)
 struct alignas(64) State {
     // Thread and global state
-    U32     id; // Thread ID
+    u32     id; // Thread ID
     GState* G;  // Global state
 
     // Instruction pointers
@@ -69,15 +69,15 @@ struct alignas(64) State {
 
     // Stack state
     TValue* sbp;     // Stack base pointer
-    SIZE    sp  = 0; // Stack pointer
-    SIZE    ssp = 0; // Saved stack pointer
+    size_t  sp  = 0; // Stack pointer
+    size_t  ssp = 0; // Saved stack pointer
 
     // Registers
     TValue* registers;
 
     // Call and frame management
     TFunction* frame    = nullptr;        // Call stack pointer
-    SIZE       argc     = 0;              // Argument count (for CALL and FASTCALLX)
+    size_t     argc     = 0;              // Argument count (for CALL and FASTCALLX)
     CallType   calltype = CallType::CALL; // Current calling convention
 
     // VM control and debugging

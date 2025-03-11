@@ -45,20 +45,18 @@
 
 VIA_NAMESPACE_BEGIN
 
-using U8  = unsigned char;
-using U16 = unsigned short;
-using U32 = unsigned int;
-using U64 = unsigned long long;
+using u8  = unsigned char;
+using u16 = unsigned short;
+using u32 = unsigned int;
+using u64 = unsigned long long;
 
-using I8  = char;
-using I16 = short;
-using I32 = int;
-using I64 = long long;
+using i8  = char;
+using i16 = short;
+using i32 = int;
+using i64 = long long;
 
-using F32 = float;
-using F64 = double;
-
-using SIZE = unsigned long long;
+using f32 = float;
+using f64 = double;
 
 VIA_NAMESPACE_END
 

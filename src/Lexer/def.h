@@ -11,9 +11,9 @@
 VIA_NAMESPACE_BEGIN
 
 struct Definition {
-    SIZE begin;
-    SIZE end;
-    SIZE line;
+    size_t begin;
+    size_t end;
+    size_t line;
 
     std::string        identifier;
     std::vector<Token> replacement;

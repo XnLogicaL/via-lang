@@ -16,12 +16,12 @@ VIA_NAMESPACE_BEGIN
 
 static const TValue nil = TValue();
 
-TValue* get_register(State* V, U32 reg) {
+TValue* get_register(State* V, u32 reg) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
     return V->registers + reg;
 }
 
-void set_register(State* V, U32 reg, const TValue& val) {
+void set_register(State* V, u32 reg, const TValue& val) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
     TValue* addr = V->registers + reg;
@@ -97,7 +97,7 @@ T to_cxx_number(const TValue& val) noexcept {
 
 // Utility function for quick table indexing.
 // Returns the value of key <key> if present in table <tbl>.
-const TValue& get_table(TTable* VIA_RESTRICT tbl, const TValue& key) noexcept {
+TValue get_table(TTable* VIA_RESTRICT tbl, const TValue& key) noexcept {
     return impl::__table_get(tbl, key);
 }
 
@@ -107,8 +107,8 @@ void set_table(TTable* VIA_RESTRICT tbl, const TValue& key, const TValue& val) n
 }
 
 // Returns a local variable located at <offset>, relative to the stack base.
-const TValue& get_local(State* VIA_RESTRICT V, U32 offset) noexcept {
-    // Check if U32 is out of bounds
+const TValue& get_local(State* VIA_RESTRICT V, u32 offset) noexcept {
+    // Check if u32 is out of bounds
     if (offset > V->sp)
         return nil;
 
@@ -118,10 +118,10 @@ const TValue& get_local(State* VIA_RESTRICT V, U32 offset) noexcept {
 }
 
 // Reassigns the stack value at offset <offset> to <val>.
-void set_local(State* VIA_RESTRICT V, U32 offset, const TValue& val) {
+void set_local(State* VIA_RESTRICT V, u32 offset, const TValue& val) {
     std::lock_guard<std::mutex> lock(V->G->symtable_mutex);
 
-    // Check if U32 is out of bounds,
+    // Check if u32 is out of bounds,
     if (offset > V->sp) {
         std::string identifier("<unknown-symbol>");
     }
@@ -131,7 +131,7 @@ void set_local(State* VIA_RESTRICT V, U32 offset, const TValue& val) {
 }
 
 // Returns the global with id <ident>, nil if it has not been declared.
-const TValue& get_global(State* VIA_RESTRICT V, U32 ident) noexcept {
+const TValue& get_global(State* VIA_RESTRICT V, u32 ident) noexcept {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
     auto it = V->G->gtable.find(ident);
@@ -143,7 +143,7 @@ const TValue& get_global(State* VIA_RESTRICT V, U32 ident) noexcept {
 }
 
 // Attempts to declare a new global constant.
-void set_global(State* VIA_RESTRICT V, U32 ident, const TValue& val) {
+void set_global(State* VIA_RESTRICT V, u32 ident, const TValue& val) {
     std::lock_guard<std::mutex> lock(V->G->gtable_mutex);
 
     auto it = V->G->gtable.find(ident);
@@ -154,13 +154,13 @@ void set_global(State* VIA_RESTRICT V, U32 ident, const TValue& val) {
 
 // Returns the nth argument relative to the saved stack pointer of the current
 // stack frame.
-const TValue& get_argument(State* VIA_RESTRICT V, U32 offset) noexcept {
+const TValue& get_argument(State* VIA_RESTRICT V, u32 offset) noexcept {
     // Check if the argument is out of bounds, return nil if so
     if (offset >= V->argc)
         return nil;
 
     // Calculate the stack position of the argument
-    U32 stack_offset = V->ssp + V->argc - 1 - offset;
+    u32 stack_offset = V->ssp + V->argc - 1 - offset;
     // Retrieve stack value
     TValue& val = V->sbp[stack_offset];
     return val;
@@ -168,14 +168,14 @@ const TValue& get_argument(State* VIA_RESTRICT V, U32 offset) noexcept {
 
 // Performs a native return operation, restores the stack and some other state
 // information.
-void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept {
+void native_return(State* VIA_RESTRICT V, size_t retc) noexcept {
     std::vector<TValue> ret_values;
     // Restore state
     V->ip    = V->frame->ret_addr;
     V->frame = V->frame->caller;
 
     // Save return values
-    for (SIZE i = 0; i < retc; i++) {
+    for (size_t i = 0; i < retc; i++) {
         TValue ret_val = pop(V);
         ret_values.push_back(std::move(ret_val));
     }
@@ -184,7 +184,7 @@ void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept {
     V->sp = V->ssp;
 
     // Clean up arguments
-    for (SIZE i = 0; i < V->argc; i++)
+    for (size_t i = 0; i < V->argc; i++)
         pop(V);
 
     // Restore return values
@@ -193,7 +193,7 @@ void native_return(State* VIA_RESTRICT V, SIZE retc) noexcept {
 }
 
 // Calls a native function.
-void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, SIZE argc) noexcept {
+void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, size_t argc) noexcept {
     // Save state
     callee->caller   = V->frame;
     callee->ret_addr = V->ip;
@@ -207,7 +207,7 @@ void native_call(State* VIA_RESTRICT V, TFunction* VIA_RESTRICT callee, SIZE arg
 
 // Calls a C function pointer.
 // Mimics stack behavior as it would behave while calling a native function.
-void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) noexcept {
+void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, size_t argc) noexcept {
     /* Stack allocate id string
         15 additional characters:
         +9 for 'cfunction'
@@ -231,8 +231,8 @@ void extern_call(State* VIA_RESTRICT V, TCFunction* VIA_RESTRICT cf, SIZE argc) 
 }
 
 // Calls a table method.
-void method_call(State* V, TTable* VIA_RESTRICT tbl, const TValue& key, SIZE argc) noexcept {
-    const TValue& method = get_table(tbl, key);
+void method_call(State* V, TTable* VIA_RESTRICT tbl, const TValue& key, size_t argc) noexcept {
+    TValue method = get_table(tbl, key);
 
     if (check_function(method)) {
         native_call(V, method.cast_ptr<TFunction>(), argc);
@@ -253,7 +253,7 @@ TValue type(State* VIA_RESTRICT V, const TValue& val) noexcept {
 
 // Unified call interface.
 // Works on all callable types (TFunction, TCFunction, TTable).
-void call(State* VIA_RESTRICT V, const TValue& val, SIZE argc) noexcept {
+void call(State* VIA_RESTRICT V, const TValue& val, size_t argc) noexcept {
     V->calltype = CallType::CALL;
 
     if (check_function(val)) {
@@ -277,8 +277,8 @@ TValue len(const TValue& val) noexcept {
 // the `__type` key if the given table has it defined.
 TValue typeofv(State* VIA_RESTRICT V, const TValue& val) noexcept {
     if (check_table(val)) {
-        TTable*       tbl = val.cast_ptr<TTable>();
-        const TValue& ty  = get_table(tbl, TValue(ValueType::string, new TString(V, "__type")));
+        TTable* tbl = val.cast_ptr<TTable>();
+        TValue  ty  = get_table(tbl, TValue(ValueType::string, new TString(V, "__type")));
         // Check if the __type property is Nil
         // if so return the primitive type
         if (check_nil(ty)) {

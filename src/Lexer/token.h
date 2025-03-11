@@ -105,7 +105,7 @@ enum class TokenType {
 
 struct Token {
     Token() {}
-    Token(TokenType type, std::string lexeme, U64 line, U64 offset, U64 position)
+    Token(TokenType type, std::string lexeme, u64 line, u64 offset, u64 position)
         : type(type),
           lexeme(lexeme),
           line(line),
@@ -114,9 +114,9 @@ struct Token {
 
     TokenType   type     = TokenType::UNKNOWN;
     std::string lexeme   = "";
-    U64         line     = 0;
-    U64         offset   = 0;
-    U64         position = 0;
+    u64         line     = 0;
+    u64         offset   = 0;
+    u64         position = 0;
 
     std::string to_string() const noexcept;
     bool        is_literal() const noexcept;

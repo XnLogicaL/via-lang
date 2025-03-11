@@ -20,7 +20,7 @@ std::string Modifiers::to_string() const noexcept {
 
 // ===============================
 // LiteralNode
-std::string LiteralNode::to_string(U32&) {
+std::string LiteralNode::to_string(u32&) {
     if (int* integer_value = std::get_if<int>(&value)) {
         return std::format("Literal<{}>", *integer_value);
     }
@@ -38,7 +38,7 @@ std::string LiteralNode::to_string(U32&) {
     }
 }
 
-void LiteralNode::accept(NodeVisitor& visitor, U32 dst) {
+void LiteralNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -60,11 +60,11 @@ pTypeNode LiteralNode::infer_type(ProgramData&) {
 
 // ===============================
 // SymbolNode
-std::string SymbolNode::to_string(U32&) {
+std::string SymbolNode::to_string(u32&) {
     return std::format("Symbol<{}>", identifier.lexeme);
 }
 
-void SymbolNode::accept(NodeVisitor& visitor, U32 dst) {
+void SymbolNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -88,11 +88,11 @@ pTypeNode SymbolNode::infer_type(ProgramData& program) {
 
 // ===============================
 // UnaryNode
-std::string UnaryNode::to_string(U32& depth) {
+std::string UnaryNode::to_string(u32& depth) {
     return std::format("Unary<{}>", expression->to_string(depth));
 }
 
-void UnaryNode::accept(NodeVisitor& visitor, U32 dst) {
+void UnaryNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -111,11 +111,11 @@ pTypeNode UnaryNode::infer_type(ProgramData& program) {
 
 // ===============================
 // GroupNode
-std::string GroupNode::to_string(U32& depth) {
+std::string GroupNode::to_string(u32& depth) {
     return std::format("Group<{}>", expression->to_string(depth));
 }
 
-void GroupNode::accept(NodeVisitor& visitor, U32 dst) {
+void GroupNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -133,7 +133,7 @@ pTypeNode GroupNode::infer_type(ProgramData& program) {
 
 // ===============================
 // CallNode
-std::string CallNode::to_string(U32& depth) {
+std::string CallNode::to_string(u32& depth) {
     return std::format(
         "CallNode<callee {}, args {}>",
         callee->to_string(depth),
@@ -143,7 +143,7 @@ std::string CallNode::to_string(U32& depth) {
     );
 }
 
-void CallNode::accept(NodeVisitor& visitor, U32 dst) {
+void CallNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -179,13 +179,13 @@ pTypeNode CallNode::infer_type(ProgramData& program) {
 
 // ===============================
 // IndexNode
-std::string IndexNode::to_string(U32& depth) {
+std::string IndexNode::to_string(u32& depth) {
     return std::format(
         "IndexNode<object {}, index {}>", object->to_string(depth), index->to_string(depth)
     );
 }
 
-void IndexNode::accept(NodeVisitor& visitor, U32 dst) {
+void IndexNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -219,7 +219,7 @@ pTypeNode IndexNode::infer_type(ProgramData& program) {
 
 // ===============================
 // BinaryNode
-std::string BinaryNode::to_string(U32& depth) {
+std::string BinaryNode::to_string(u32& depth) {
     return std::format(
         "Binary<{} {} {}>",
         lhs_expression->to_string(depth),
@@ -228,7 +228,7 @@ std::string BinaryNode::to_string(U32& depth) {
     );
 }
 
-void BinaryNode::accept(NodeVisitor& visitor, U32 dst) {
+void BinaryNode::accept(NodeVisitor& visitor, u32 dst) {
     visitor.visit(*this, dst);
 }
 
@@ -262,7 +262,7 @@ pTypeNode BinaryNode::infer_type(ProgramData& program) {
 
 // ===============================
 // AutoNode
-std::string AutoNode::to_string(U32&) {
+std::string AutoNode::to_string(u32&) {
     return "AutoNode<>";
 }
 
@@ -280,7 +280,7 @@ pTypeNode AutoNode::clone() {
 
 // ===============================
 // PrimitiveNode
-std::string PrimitiveNode::to_string(U32&) {
+std::string PrimitiveNode::to_string(u32&) {
     return std::format("PrimitiveNode<{}>", magic_enum::enum_name(type));
 }
 
@@ -294,7 +294,7 @@ pTypeNode PrimitiveNode::clone() {
 
 // ===============================
 // GenericNode
-std::string GenericNode::to_string(U32& depth) {
+std::string GenericNode::to_string(u32& depth) {
     return std::format(
         "GenericNode<{}, {}>",
         identifier.lexeme,
@@ -323,7 +323,7 @@ pTypeNode GenericNode::clone() {
 
 // ===============================
 // UnionNode
-std::string UnionNode::to_string(U32& depth) {
+std::string UnionNode::to_string(u32& depth) {
     return std::format("UnionNode<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
 }
 
@@ -341,7 +341,7 @@ pTypeNode UnionNode::clone() {
 
 // ===============================
 // FunctionNode
-std::string FunctionTypeNode::to_string(U32& depth) {
+std::string FunctionTypeNode::to_string(u32& depth) {
     return std::format(
         "FunctionTypeNode<{} -> {}>",
         utils::format_vector<pTypeNode>(
@@ -370,7 +370,7 @@ pTypeNode FunctionTypeNode::clone() {
 
 // ===============================
 // AggregateNode
-std::string AggregateNode::to_string(U32&) {
+std::string AggregateNode::to_string(u32&) {
     return "AggregateNode<>";
 }
 
@@ -398,7 +398,7 @@ pTypeNode AggregateNode::get_field(const std::string& key) {
 
 // ===============================
 // DeclarationNode
-std::string DeclarationNode::to_string(U32& depth) {
+std::string DeclarationNode::to_string(u32& depth) {
     return std::format(
         "{}Declaration<{} {} {}: {} = {}>",
         DEPTH_TAB_SPACE,
@@ -422,7 +422,7 @@ pStmtNode DeclarationNode::clone() {
 
 // ===============================
 // ScopeNode
-std::string ScopeNode::to_string(U32& depth) {
+std::string ScopeNode::to_string(u32& depth) {
     std::ostringstream oss;
     oss << DEPTH_TAB_SPACE << "Scope<>\n";
 
@@ -453,7 +453,7 @@ pStmtNode ScopeNode::clone() {
 
 // ===============================
 // FunctionNode
-std::string FunctionNode::to_string(U32& depth) {
+std::string FunctionNode::to_string(u32& depth) {
     std::ostringstream oss;
     oss << DEPTH_TAB_SPACE
         << std::format(
@@ -503,12 +503,12 @@ pStmtNode FunctionNode::clone() {
 
 // ===============================
 // AssignNode
-std::string AssignNode::to_string(U32& depth) {
+std::string AssignNode::to_string(u32& depth) {
     return std::format(
         "{}Assign<{} {}= {}>",
         DEPTH_TAB_SPACE,
         augmentation_operator.lexeme,
-        identifier.lexeme,
+        assignee->to_string(depth),
         value->to_string(depth)
     );
 }
@@ -518,12 +518,12 @@ void AssignNode::accept(NodeVisitor& visitor) {
 }
 
 pStmtNode AssignNode::clone() {
-    return std::make_unique<AssignNode>(identifier, augmentation_operator, value->clone());
+    return std::make_unique<AssignNode>(assignee->clone(), augmentation_operator, value->clone());
 }
 
 // ===============================
 // FunctionNode
-std::string IfNode::to_string(U32& depth) {
+std::string IfNode::to_string(u32& depth) {
     std::ostringstream oss;
     oss << DEPTH_TAB_SPACE << std::format("IfNode<{}>", condition->to_string(depth)) << "\n";
 
@@ -582,7 +582,7 @@ pStmtNode IfNode::clone() {
 
 // ===============================
 // WhileNode
-std::string WhileNode::to_string(U32& depth) {
+std::string WhileNode::to_string(u32& depth) {
     std::ostringstream oss;
     oss << DEPTH_TAB_SPACE << std::format("While<{}>", condition->to_string(depth)) << "\n";
 
@@ -608,7 +608,7 @@ pStmtNode WhileNode::clone() {
 
 // ===============================
 // ExprStmtNode
-std::string ExprStmtNode::to_string(U32& depth) {
+std::string ExprStmtNode::to_string(u32& depth) {
     return std::format("{}ExpressionStatement<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
 }
 

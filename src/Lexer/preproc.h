@@ -14,7 +14,7 @@
 
 #define PREPROCESSOR_ERROR(message)                                                                \
     do {                                                                                           \
-        emitter.out(pos, (message), OutputSeverity::Error);                                        \
+        emitter.out(program.tokens->tokens.at(pos), (message), OutputSeverity::Error);             \
         failed = true;                                                                             \
     } while (0)
 
@@ -37,18 +37,18 @@ private:
     Emitter                                     emitter;
     std::unordered_map<std::string, Macro>      macro_table;
     std::unordered_map<std::string, Definition> def_table;
-    SIZE                                        pos    = 0;
+    size_t                                      pos    = 0;
     bool                                        failed = false;
 
 private:
-    Token consume(SIZE ahead = 1);
+    Token consume(size_t ahead = 1);
     Token peek(int ahead = 0);
 
     Macro      parse_macro();
     Definition parse_definition();
     void       expand_macro(const Macro&);
     void       expand_definition(const Definition&);
-    void       erase_from_stream(SIZE, SIZE);
+    void       erase_from_stream(size_t, size_t);
 };
 
 VIA_NAMESPACE_END

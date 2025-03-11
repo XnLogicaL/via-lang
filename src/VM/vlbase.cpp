@@ -15,7 +15,7 @@ using namespace impl;
 VIA_LIB_DECL_FUNCTION(base_print) {
     std::ostringstream oss;
 
-    U16 i = 0;
+    u16 i = 0;
     while (i++ < V->argc) {
         VIA_LIB_DECL_PARAMETER(argx, i);
         oss << __to_cxx_string(V, argx) << " ";
@@ -29,7 +29,7 @@ VIA_LIB_DECL_FUNCTION(base_print) {
 VIA_LIB_DECL_FUNCTION(base_println) {
     std::ostringstream oss;
 
-    U8 i = 0;
+    u8 i = 0;
     while (i++ < V->argc) {
         VIA_LIB_DECL_PARAMETER(argx, i);
         oss << __to_cxx_string(V, argx) << " ";
@@ -95,7 +95,7 @@ VIA_LIB_DECL_FUNCTION(base_strongPrimCast) {
 }
 
 VIA_LIB_DECL_FUNCTION(open_baselib) {
-    std::unordered_map<U32, TValue> base_properties;
+    std::unordered_map<u32, TValue> base_properties;
 
     VIA_LIB_MAP_EMPLACE(base_properties, "print", VIA_LIB_WRAP_CFPTR(base_print));
     VIA_LIB_MAP_EMPLACE(base_properties, "println", VIA_LIB_WRAP_CFPTR(base_println));

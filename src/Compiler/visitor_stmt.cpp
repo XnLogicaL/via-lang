@@ -21,9 +21,6 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
     Token       ident  = declaration_node.identifier;
     std::string symbol = ident.lexeme;
 
-    declaration_node.type->decay(decay_visitor, declaration_node.type);
-    declaration_node.accept(type_visitor);
-
     if (is_global) {
         std::string           comment             = symbol;
         std::optional<Global> previously_declared = program.globals->get_global(symbol);
@@ -33,19 +30,17 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                 std::format("Attempt to re-declare global '{}'", symbol);
 
             visitor_failed = true;
-            emitter.out(ident.position, previously_declared_error, Error);
-            emitter.out(previously_declared->token.position, "Previously declared here", Info);
+            emitter.out(ident, previously_declared_error, Error);
+            emitter.out(previously_declared->token, "Previously declared here", Info);
         }
         else {
             Operand value_reg   = allocator.allocate_register();
             Operand symbol_hash = hash_string_custom(symbol.c_str());
 
-            declaration_node.value_expression->accept(expression_visitor, value_reg);
-
             Global global{.token = ident, .symbol = symbol};
             program.globals->declare_global(global);
+            declaration_node.value_expression->accept(expression_visitor, value_reg);
             program.bytecode->emit(SETGLOBAL, {value_reg, symbol_hash}, comment);
-
             allocator.free_register(value_reg);
         }
     }
@@ -65,7 +60,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                 });
             }
             else if (int* int_value = std::get_if<int>(&literal.value)) {
-                U32  final_value = *int_value;
+                u32  final_value = *int_value;
                 auto operands    = reinterpret_u32_as_2u16(final_value);
 
                 program.bytecode->emit(PUSHINT, {operands.l, operands.r}, comment);
@@ -78,7 +73,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                 });
             }
             else if (float* float_value = std::get_if<float>(&literal.value)) {
-                U32  final_value = std::bit_cast<U32>(*float_value);
+                u32  final_value = std::bit_cast<u32>(*float_value);
                 auto operands    = reinterpret_u32_as_2u16(final_value);
 
                 program.bytecode->emit(PUSHFLOAT, {operands.l, operands.r}, comment);
@@ -117,8 +112,6 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         else {
             Operand dst = allocator.allocate_register();
 
-            declaration_node.value_expression->accept(expression_visitor, dst);
-
             program.bytecode->emit(PUSH, {dst}, comment);
             program.test_stack->push({
                 .is_const     = is_const,
@@ -128,8 +121,15 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                     std::make_unique<PrimitiveNode>(declaration_node.identifier, ValueType::nil),
             });
 
+            declaration_node.value_expression->accept(expression_visitor, dst);
             allocator.free_register(dst);
         }
+    }
+
+    declaration_node.type->decay(decay_visitor, declaration_node.type);
+
+    if (!failed()) {
+        declaration_node.accept(type_visitor);
     }
 }
 
@@ -152,6 +152,21 @@ void StmtVisitor::visit(FunctionNode& function_node) {
     Operand    function_reg = allocator.allocate_register();
     Parameters parameters;
 
+    program.test_stack->push({
+        .is_const     = function_node.modifiers.is_const,
+        .is_constexpr = false,
+        .symbol       = function_node.identifier.lexeme,
+        .type = std::make_unique<PrimitiveNode>(function_node.identifier, ValueType::function),
+    });
+
+    program.test_stack->function_stack.push(FunctionNode::StackNode(
+        function_node.is_global,
+        program.test_stack->sp,
+        function_node.modifiers,
+        function_node.identifier,
+        std::move(parameters)
+    ));
+
     for (auto& parameter : function_node.parameters) {
         parameters.emplace_back(parameter.identifier, parameter.modifiers, parameter.type->clone());
         parameter.type->decay(decay_visitor, parameter.type);
@@ -159,15 +174,6 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     function_node.returns->decay(decay_visitor, function_node.returns);
     function_node.accept(type_visitor);
-
-    // Push function to the function stack
-    program.test_stack->function_stack.push(FunctionNode::StackNode(
-        function_node.is_global,
-        function_node.modifiers,
-        function_node.identifier,
-        std::move(parameters)
-    ));
-
     program.bytecode->emit(LOADFUNCTION, {function_reg}, function_node.identifier.lexeme);
 
     ScopeNode& scope = dynamic_cast<ScopeNode&>(*function_node.body);
@@ -180,12 +186,12 @@ void StmtVisitor::visit(FunctionNode& function_node) {
         if (declaration_node || function_node) {
             bool is_global =
                 declaration_node ? declaration_node->is_global : function_node->is_global;
-            SIZE identifier_position = declaration_node ? declaration_node->identifier.position
-                                                        : function_node->identifier.position;
+            Token identifier =
+                declaration_node ? declaration_node->identifier : function_node->identifier;
 
             if (is_global) {
                 visitor_failed = true;
-                emitter.out(identifier_position, "Function scopes cannot declare globals", Error);
+                emitter.out(identifier, "Function scopes cannot declare globals", Error);
                 emitter.out_flat(
                     "Function scopes containing global declarations may cause previously declared "
                     "globals to be re-declared, therefore are not allowed.",
@@ -200,15 +206,13 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     Token       symbol_token = function_node.identifier;
     std::string symbol       = symbol_token.lexeme;
-    U32         symbol_hash  = hash_string_custom(symbol.c_str());
+    u32         symbol_hash  = hash_string_custom(symbol.c_str());
 
     if (function_node.is_global) {
         if (program.globals->was_declared(symbol)) {
             visitor_failed = true;
             emitter.out(
-                symbol_token.position,
-                std::format("Attempt to re-declare global '{}'", symbol),
-                Error
+                symbol_token, std::format("Attempt to re-declare global '{}'", symbol), Error
             );
             return;
         }
@@ -222,45 +226,143 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     allocator.free_register(function_reg);
     program.test_stack->function_stack.pop();
-    program.test_stack->push({
-        .is_const     = function_node.modifiers.is_const,
-        .is_constexpr = false,
-        .symbol       = symbol,
-        .type = std::make_unique<PrimitiveNode>(function_node.identifier, ValueType::function),
-    });
 }
 
 void StmtVisitor::visit(AssignNode& assign_node) {
-    Token symbol_token = assign_node.identifier;
+    if (SymbolNode* symbol_node =
+            get_derived_instance<ExprNode, SymbolNode>(*assign_node.assignee)) {
+        Token symbol_token = symbol_node->identifier;
 
-    std::string            symbol = symbol_token.lexeme;
-    std::optional<Operand> stk_id = program.test_stack->find_symbol(symbol);
+        std::string            symbol = symbol_token.lexeme;
+        std::optional<Operand> stk_id = program.test_stack->find_symbol(symbol);
 
-    if (stk_id.has_value()) {
-        const auto& test_stack_member = program.test_stack->at(stk_id.value());
-        if (test_stack_member.has_value() && test_stack_member->is_const) {
+        if (stk_id.has_value()) {
+            const auto& current_closure   = program.test_stack->function_stack.top();
+            const auto& test_stack_member = program.test_stack->at(stk_id.value());
+
+            if (test_stack_member.has_value() && test_stack_member->is_const) {
+                visitor_failed = true;
+                emitter.out(
+                    symbol_token, std::format("Assignment to constant variable '{}'", symbol), Error
+                );
+
+                return;
+            }
+
+            Operand value_reg = allocator.allocate_register();
+            assign_node.value->accept(expression_visitor, value_reg);
+
+            if (current_closure.upvalues < stk_id.value()) {
+                program.bytecode->emit(SETSTACK, {value_reg, stk_id.value()}, symbol);
+            }
+            else {
+                program.bytecode->emit(SETUPVALUE, {value_reg, stk_id.value()}, symbol);
+            }
+        }
+        else {
             visitor_failed = true;
             emitter.out(
-                symbol_token.position,
-                std::format("Attempt to modify constant variable '{}'", symbol),
-                Error
+                symbol_token, "Assignment to invalid lvalue, symbol has not been declared", Error
             );
-
-            return;
         }
-
-        Operand value_reg = allocator.allocate_register();
-        assign_node.value->accept(expression_visitor, value_reg);
-        program.bytecode->emit(SETSTACK, {value_reg, stk_id.value()});
     }
     else {
         visitor_failed = true;
-        emitter.out(symbol_token.position, "Attempt to assign to undeclared symbol", Error);
+        emitter.out_range(
+            assign_node.assignee->begin,
+            assign_node.assignee->end,
+            "Assignment to invalid lvalue",
+            Error
+        );
     }
 }
 
-void StmtVisitor::visit(IfNode&) {}
-void StmtVisitor::visit(WhileNode&) {}
+void StmtVisitor::visit(IfNode& if_node) {
+    /*
+
+    0000 jumplabelif    0, 0    ; if
+    0001 jumplabelif    1, 1    ; elseif #1
+    0002 jumplabel      2       ; else
+    ...
+    0003 label          0       ; if
+    ...
+    0004 jumplabel      3
+    0005 label          1       ; elseif #1
+    ...
+    0006 jumplabel      3
+    0007 label          2       ; else
+    ...
+    0008 label          3       ; escape
+
+    */
+    Operand cond_reg = allocator.allocate_register();
+    Operand if_label = label_counter++;
+
+    if_node.condition->accept(expression_visitor, cond_reg);
+    program.bytecode->emit(JUMPLABELIF, {cond_reg, if_label}, "if");
+
+    for (const auto& elseif_node : if_node.elseif_nodes) {
+        Operand label = label_counter++;
+
+        elseif_node.condition->accept(expression_visitor, cond_reg);
+        program.bytecode->emit(
+            JUMPLABELIF, {cond_reg, label}, std::format("elseif #{}", label - if_label)
+        );
+    }
+
+    allocator.free_register(cond_reg);
+
+    Operand escape_label = label_counter++;
+
+    program.bytecode->emit(JUMPLABEL, {escape_label}, "else");
+    program.bytecode->emit(LABEL, {if_label});
+    if_node.scope->accept(*this);
+    program.bytecode->emit(JUMPLABEL, {escape_label});
+
+    size_t label_id = 0;
+    for (const auto& elseif_node : if_node.elseif_nodes) {
+        Operand label = if_label + ++label_id;
+
+        program.bytecode->emit(LABEL, {label});
+        elseif_node.scope->accept(*this);
+        program.bytecode->emit(JUMPLABEL, {escape_label});
+    }
+
+    program.bytecode->emit(LABEL, {escape_label});
+
+    if (if_node.else_node.has_value()) {
+        if_node.else_node.value()->accept(*this);
+    }
+}
+
+void StmtVisitor::visit(WhileNode& while_node) {
+    /*
+
+    0000 label          0
+    0001 jumplabelifnot 0, 1
+    ...
+    0002 jumplabel      0
+    0003 label          1
+
+    */
+
+    repeat_label = label_counter++;
+    escape_label = label_counter++;
+
+    Operand cond_reg       = allocator.allocate_register();
+    Operand l_repeat_label = repeat_label.value();
+    Operand l_escape_label = escape_label.value();
+
+    program.bytecode->emit(LABEL, {l_repeat_label});
+    while_node.condition->accept(expression_visitor, cond_reg);
+    program.bytecode->emit(JUMPLABELIFNOT, {cond_reg, l_escape_label});
+    while_node.body->accept(*this);
+    program.bytecode->emit(JUMPLABEL, {l_repeat_label});
+    allocator.free_register(cond_reg);
+
+    repeat_label = std::nullopt;
+    escape_label = std::nullopt;
+}
 
 void StmtVisitor::visit(ExprStmtNode& expr_stmt) {
     Operand trash_register = allocator.allocate_register();

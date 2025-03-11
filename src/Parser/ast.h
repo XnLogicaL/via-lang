@@ -9,10 +9,10 @@
 #include "token.h"
 #include "ast_base.h"
 
-#define VIA_AST_NODE_OVERRIDE_TO_STRING   std::string to_string(U32&) override;
+#define VIA_AST_NODE_OVERRIDE_TO_STRING   std::string to_string(u32&) override;
 #define VIA_AST_NODE_OVERRIDE_CLONE(type) type clone() override;
 
-#define VIA_EXPR_NODE_OVERRIDE_ACCEPT     void accept(NodeVisitor&, U32) override;
+#define VIA_EXPR_NODE_OVERRIDE_ACCEPT     void accept(NodeVisitor&, u32) override;
 #define VIA_EXPR_NODE_OVERRIDE_PRECEDENCE int precedence() const noexcept override;
 #define VIA_EXPR_NODE_OVERRIDE_INFER_TYPE pTypeNode infer_type(ProgramData&) override;
 
@@ -311,13 +311,23 @@ struct FunctionNode : public StmtNode {
     using Parameters = std::vector<ParameterNode>;
 
     struct StackNode {
-        bool       is_global;
+        bool is_global;
+
+        size_t upvalues;
+
         Modifiers  modifiers;
         Token      identifier;
         Parameters parameters;
 
-        StackNode(bool is_global, Modifiers modifiers, Token identifier, Parameters parameters)
+        StackNode(
+            bool       is_global,
+            size_t     upvalues,
+            Modifiers  modifiers,
+            Token      identifier,
+            Parameters parameters
+        )
             : is_global(is_global),
+              upvalues(upvalues),
               modifiers(modifiers),
               identifier(identifier),
               parameters(std::move(parameters)) {}
@@ -352,7 +362,7 @@ struct FunctionNode : public StmtNode {
 };
 
 struct AssignNode : public StmtNode {
-    Token     identifier;
+    pExprNode assignee;
     Token     augmentation_operator;
     pExprNode value;
 
@@ -361,8 +371,8 @@ struct AssignNode : public StmtNode {
 
     VIA_STMT_NODE_OVERRIDE_ACCEPT;
 
-    AssignNode(Token identifier, Token augment, pExprNode value)
-        : identifier(identifier),
+    AssignNode(pExprNode assignee, Token augment, pExprNode value)
+        : assignee(std::move(assignee)),
           augmentation_operator(augment),
           value(std::move(value)) {}
 };

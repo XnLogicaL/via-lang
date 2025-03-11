@@ -9,7 +9,7 @@
 
 VIA_NAMESPACE_BEGIN
 
-enum class OpCode : U16 {
+enum class OpCode : u16 {
     NOP,
     LABEL,
     EXIT,
@@ -67,9 +67,9 @@ enum class OpCode : U16 {
 
     GETGLOBAL,
     SETGLOBAL,
+
     SETUPVALUE,
     GETUPVALUE,
-    CAPTURE,
 
     INCREMENT,
     DECREMENT,

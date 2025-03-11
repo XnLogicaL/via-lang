@@ -22,11 +22,11 @@ public:
     bool was_declared(const Global&);
     bool was_declared(const std::string&);
 
-    std::optional<U64> get_index(const std::string&);
-    std::optional<U64> get_index(const Global&);
+    std::optional<u64> get_index(const std::string&);
+    std::optional<u64> get_index(const Global&);
 
     std::optional<Global> get_global(const std::string&);
-    std::optional<Global> get_global(U32);
+    std::optional<Global> get_global(u32);
 
     const std::vector<Global>& get();
 

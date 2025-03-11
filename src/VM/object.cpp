@@ -152,7 +152,7 @@ TTable::~TTable() {
     }
 
     if (ht_buckets) {
-        for (SIZE i = 0; i < ht_capacity; ++i) {
+        for (size_t i = 0; i < ht_capacity; ++i) {
             THashNode* next = ht_buckets[i];
             while (next) {
                 THashNode* current = next;
@@ -175,7 +175,7 @@ TTable::TTable(const TTable& other)
 
     if (other.arr_array) {
         arr_array = new TValue[arr_capacity];
-        for (SIZE i = 0; i < arr_capacity; ++i) {
+        for (size_t i = 0; i < arr_capacity; ++i) {
             arr_array[i] = other.arr_array[i].clone();
         }
     }
@@ -186,7 +186,7 @@ TTable::TTable(const TTable& other)
     if (other.ht_buckets) {
         ht_buckets = new THashNode*[ht_capacity]();
 
-        for (SIZE i = 0; i < ht_capacity; ++i) {
+        for (size_t i = 0; i < ht_capacity; ++i) {
             THashNode*  src = other.ht_buckets[i];
             THashNode** dst = &ht_buckets[i];
 

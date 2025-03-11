@@ -33,8 +33,8 @@ void Preprocessor::declare_default() {
     });
 }
 
-Token Preprocessor::consume(SIZE ahead) {
-    SIZE old_pos = pos;
+Token Preprocessor::consume(size_t ahead) {
+    size_t old_pos = pos;
     pos += ahead;
     return program.tokens->tokens.at(old_pos);
 }
@@ -70,7 +70,7 @@ bool Preprocessor::preprocess() {
     return failed;
 }
 
-void Preprocessor::erase_from_stream(SIZE begin, SIZE end) {
+void Preprocessor::erase_from_stream(size_t begin, size_t end) {
     auto tokens_begin = program.tokens->tokens.begin();
     program.tokens->tokens.erase(tokens_begin + begin, tokens_begin + end);
 }

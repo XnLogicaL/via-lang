@@ -18,13 +18,13 @@ char* duplicate_string(const char* str) {
     return chars;
 }
 
-U32 hash_string_custom(const char* str) {
-    static const constexpr U32 BASE = 31;
-    static const constexpr U32 MOD  = 0xFFFFFFFF;
+u32 hash_string_custom(const char* str) {
+    static const constexpr u32 BASE = 31;
+    static const constexpr u32 MOD  = 0xFFFFFFFF;
 
-    U32 hash = 0;
+    u32 hash = 0;
     while (char chr = *str++) {
-        hash = (hash * BASE + static_cast<U32>(chr)) % MOD;
+        hash = (hash * BASE + static_cast<u32>(chr)) % MOD;
     }
 
     return hash;

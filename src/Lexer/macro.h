@@ -11,9 +11,9 @@
 VIA_NAMESPACE_BEGIN
 
 struct Macro {
-    SIZE begin;
-    SIZE end;
-    SIZE line;
+    size_t begin;
+    size_t end;
+    size_t line;
 
     std::string              name;   // Name of the macro
     std::vector<std::string> params; // Macro parameter names

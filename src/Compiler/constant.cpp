@@ -10,7 +10,7 @@
 VIA_NAMESPACE_BEGIN
 
 Operand ConstantHolder::push_constant(const TValue& constant) {
-    for (U32 index = 0; index < constants.size(); index++) {
+    for (u32 index = 0; index < constants.size(); index++) {
         const TValue& val = constants[index];
         if VIA_UNLIKELY (compare(val, constant)) {
             return index;
@@ -21,15 +21,15 @@ Operand ConstantHolder::push_constant(const TValue& constant) {
     return constants.size() - 1;
 }
 
-SIZE ConstantHolder::size() const noexcept {
+size_t ConstantHolder::size() const noexcept {
     return constants.size();
 }
 
-const TValue& ConstantHolder::at(SIZE index) const {
+const TValue& ConstantHolder::at(size_t index) const {
     return constants.at(index);
 }
 
-const TValue& ConstantHolder::at_s(SIZE index) const noexcept {
+const TValue& ConstantHolder::at_s(size_t index) const noexcept {
     static const TValue nil;
     if (index >= size()) {
         return nil;

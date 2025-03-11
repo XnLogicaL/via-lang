@@ -3,9 +3,8 @@
 
 #include "via.h"
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
-    std::string input(reinterpret_cast<const char*>(data), size);
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size_t) {
+    std::string input(reinterpret_cast<const char*>(data), size_t);
 
     via::ProgramData program("<fuzz>", input);
     via::Tokenizer   tokenizer(program);

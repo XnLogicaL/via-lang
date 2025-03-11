@@ -20,13 +20,13 @@ using pStmtNode = std::unique_ptr<StmtNode>;
 using pTypeNode = std::unique_ptr<TypeNode>;
 
 struct ExprNode {
-    SIZE begin;
-    SIZE end;
+    size_t begin;
+    size_t end;
 
     virtual VIA_DEFAULT_DESTRUCTOR(ExprNode);
 
-    virtual std::string to_string(U32&)           = 0;
-    virtual void        accept(NodeVisitor&, U32) = 0;
+    virtual std::string to_string(u32&)           = 0;
+    virtual void        accept(NodeVisitor&, u32) = 0;
     virtual pExprNode   clone()                   = 0;
     virtual pTypeNode   infer_type(ProgramData&)  = 0;
     virtual int         precedence() const noexcept {
@@ -37,7 +37,7 @@ struct ExprNode {
 struct StmtNode {
     virtual VIA_DEFAULT_DESTRUCTOR(StmtNode);
 
-    virtual std::string to_string(U32&)      = 0;
+    virtual std::string to_string(u32&)      = 0;
     virtual void        accept(NodeVisitor&) = 0;
     virtual pStmtNode   clone()              = 0;
 };
@@ -47,7 +47,7 @@ struct TypeNode {
 
     virtual VIA_DEFAULT_DESTRUCTOR(TypeNode);
 
-    virtual std::string to_string(U32&) = 0;
+    virtual std::string to_string(u32&) = 0;
     virtual std::string to_string_x()   = 0;
     virtual void        decay(NodeVisitor&, pTypeNode&) {};
     virtual pTypeNode   clone() = 0;

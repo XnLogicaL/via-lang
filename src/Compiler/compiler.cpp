@@ -30,17 +30,17 @@ bool Compiler::check_global_collisions() {
     Emitter emitter(program);
 
     bool                            failed = false;
-    std::unordered_map<U32, Global> global_map;
+    std::unordered_map<u32, Global> global_map;
 
     for (const Global& global : program.globals->get()) {
-        U32  hash = hash_string_custom(global.symbol.c_str());
+        u32  hash = hash_string_custom(global.symbol.c_str());
         auto it   = global_map.find(hash);
 
         if (it != global_map.end()) {
             failed = true;
 
             emitter.out(
-                global.token.position,
+                global.token,
                 std::format(
                     "Global identifier '{}' collides with global identifier '{}'",
                     global.symbol,
@@ -50,7 +50,7 @@ bool Compiler::check_global_collisions() {
             );
 
             emitter.out(
-                it->second.token.position,
+                it->second.token,
                 std::format("Global '{}' declared here", it->second.symbol),
                 OutputSeverity::Info
             );

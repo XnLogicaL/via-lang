@@ -14,11 +14,11 @@ bool Tokenizer::is_hex_char(char chr) {
     return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
 }
 
-SIZE Tokenizer::source_size() {
+size_t Tokenizer::source_size() {
     return program.source.size();
 }
 
-char Tokenizer::peek(SIZE ahead) {
+char Tokenizer::peek(size_t ahead) {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
@@ -26,7 +26,7 @@ char Tokenizer::peek(SIZE ahead) {
     return program.source.at(pos + ahead);
 }
 
-char Tokenizer::consume(SIZE ahead) {
+char Tokenizer::consume(size_t ahead) {
     if (pos + ahead >= source_size()) {
         return '\0';
     }
@@ -34,9 +34,9 @@ char Tokenizer::consume(SIZE ahead) {
     return program.source.at(pos += ahead);
 }
 
-Token Tokenizer::read_number(SIZE position) {
+Token Tokenizer::read_number(size_t position) {
     TokenType   type         = LIT_INT; // Specify default type as integer literal
-    SIZE        start_offset = offset;  // Record starting offset of the number
+    size_t      start_offset = offset;  // Record starting offset of the number
     std::string value;                  // Value of the number, as a string for convenience
     char        delimiter;
 
@@ -86,7 +86,7 @@ Token Tokenizer::read_number(SIZE position) {
     return Token(type, value, line, start_offset, position);
 }
 
-Token Tokenizer::read_ident(SIZE position) {
+Token Tokenizer::read_ident(size_t position) {
     // List of allowed special characters that can be included in an identifier
     static const std::vector<char> allowed_identifier_spec_chars = {
         '_', '!' /* For macros */
@@ -95,7 +95,7 @@ Token Tokenizer::read_ident(SIZE position) {
     // Default type, this is because this might be an identifier, keyword or boolean literal
     // We can't know in advance which.
     TokenType   type         = IDENTIFIER;
-    SIZE        start_offset = offset; // Record starting offset of the identifier
+    size_t      start_offset = offset; // Record starting offset of the identifier
     std::string identifier;
 
     // Lambda for checking if a character is allowed within an identifier
@@ -147,9 +147,9 @@ Token Tokenizer::read_ident(SIZE position) {
     return Token(type, identifier, line, start_offset, position); // Use start_offset here
 }
 
-Token Tokenizer::read_string(SIZE position) {
+Token Tokenizer::read_string(size_t position) {
     std::string lexeme;
-    SIZE        start_offset = offset; // Record starting offset of the string
+    size_t      start_offset = offset; // Record starting offset of the string
     pos++;                             // Skip opening quote
     offset++;
 
@@ -248,7 +248,7 @@ Token Tokenizer::get_token() {
         break;
     }
 
-    SIZE position = pos;
+    size_t position = pos;
 
     // Check if the position is at the end of the program.source string
     // If so, return an EOF token meant as a sentinel
@@ -256,7 +256,7 @@ Token Tokenizer::get_token() {
         return {EOF_, "\0", line, offset, position};
     }
 
-    SIZE start_offset = offset; // Record starting offset of each token
+    size_t start_offset = offset; // Record starting offset of each token
 
     // Handle numbers
     if (std::isdigit(peek())) {

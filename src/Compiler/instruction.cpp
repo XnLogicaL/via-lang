@@ -33,10 +33,10 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
 
     std::string arg0, arg1, arg2;
     OpCode      opcode    = instruction.op;
-    U32         opcode_id = static_cast<U32>(opcode);
+    u32         opcode_id = static_cast<u32>(opcode);
 
-    if (opcode_id >= static_cast<U32>(JUMP) &&
-        opcode_id <= static_cast<U32>(JUMPIFGREATEROREQUAL)) {
+    if (opcode_id >= static_cast<u32>(JUMP) &&
+        opcode_id <= static_cast<u32>(JUMPIFGREATEROREQUAL)) {
         arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
         arg1 = std::format("{}", static_cast<OperandS>(instruction.operand1));
         arg2 = std::format("{}", static_cast<OperandS>(instruction.operand2));

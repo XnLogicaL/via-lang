@@ -58,7 +58,7 @@ VIA_FORCE_INLINE bool __handle_error(State* _V) {
 
         std::unordered_set<TFunction*> visited;
 
-        SIZE _Idx = 0;
+        size_t _Idx = 0;
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
             std::cerr << std::format(
@@ -84,7 +84,7 @@ VIA_INLINE_HOT TValue* __get_register(State* _V, Operand _Reg) {
     return addr;
 }
 
-VIA_INLINE TValue __get_constant(State* _V, SIZE _Idx) {
+VIA_INLINE TValue __get_constant(State* _V, size_t _Idx) {
     if (_Idx >= _V->program.constants->size()) {
         return _Nil.clone();
     }
@@ -144,7 +144,7 @@ VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val) {
     return __type(_V, _Val);
 }
 
-VIA_INLINE_HOT void __native_call(State* _V, TFunction* _Callee, SIZE _Argc) {
+VIA_INLINE_HOT void __native_call(State* _V, TFunction* _Callee, size_t _Argc) {
     _Callee->caller   = _V->frame;
     _Callee->ret_addr = _V->ip;
     _V->frame         = _Callee;
@@ -157,7 +157,7 @@ VIA_INLINE_HOT void __native_call(State* _V, TFunction* _Callee, SIZE _Argc) {
     _V->ssp           = _V->sp;
 }
 
-VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc) {
+VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, size_t _Argc) {
     char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
     const void* _Addr    = _Callee;
     uintptr_t   _Address = reinterpret_cast<uintptr_t>(_Addr);
@@ -182,7 +182,7 @@ VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, SIZE _Argc) {
     _Callee->data(_V);
 }
 
-VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, SIZE _Argc) {
+VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, size_t _Argc) {
     _V->calltype = CallType::CALL;
 
     if (check_function(_Callee)) {
@@ -203,7 +203,7 @@ VIA_FORCE_INLINE TValue __len(const TValue& _Val) noexcept {
         return TValue(static_cast<TInteger>(_Val.cast_ptr<TString>()->len));
     }
     else if (check_table(_Val)) {
-        SIZE _Size = __table_size(_Val.cast_ptr<TTable>());
+        size_t _Size = __table_size(_Val.cast_ptr<TTable>());
         return TValue(static_cast<TInteger>(_Size));
     }
 

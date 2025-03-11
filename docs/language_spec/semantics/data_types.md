@@ -66,7 +66,7 @@ local val2: Bool = false
 
 ## String type
 
-The `String` type is a data type used to represent string literals. It is automatically managed and doesn't have a definite size.
+The `String` type is a data type used to represent string literals. It is automatically managed and doesn't have a definite size_t.
 
 Declaring a variable with `String`:
 ```lua

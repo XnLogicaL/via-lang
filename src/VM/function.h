@@ -20,7 +20,7 @@ struct UpValue {
 };
 
 struct TFunction {
-    U32         line = 0;
+    u32         line = 0;
     const char* id   = "<anonymous-function>";
 
     bool is_error_handler = false;
@@ -31,8 +31,8 @@ struct TFunction {
     TFunction*   caller   = nullptr;
     UpValue*     upvs     = new UpValue[VIA_UPV_COUNT];
 
-    U32 bytecode_len = 0;
-    U32 upv_count    = VIA_UPV_COUNT;
+    u32 bytecode_len = 0;
+    u32 upv_count    = VIA_UPV_COUNT;
 };
 
 struct TCFunction {

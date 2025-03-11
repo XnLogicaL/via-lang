@@ -18,9 +18,11 @@ Definition Preprocessor::parse_definition() {
 
     auto it = def_table.find(peek().lexeme);
     if (it != def_table.end())
-        PREPROCESSOR_ERROR(
-            std::format("Redefinition of definition '{}', previously defined on line {}",
-                it->second.identifier, it->second.line));
+        PREPROCESSOR_ERROR(std::format(
+            "Redefinition of definition '{}', previously defined on line {}",
+            it->second.identifier,
+            it->second.line
+        ));
 
     // Consume 'define' keyword and extract identifier
     consume();
@@ -51,7 +53,7 @@ void Preprocessor::expand_definition(const Definition& def) {
     std::vector<Token> toks = program.tokens->tokens;
 
     // Iterate through all tokens in the program
-    for (SIZE i = 0; i < toks.size(); ++i) {
+    for (size_t i = 0; i < toks.size(); ++i) {
         const Token& tok = toks.at(i);
 
         // If we find the definition identifier, replace it

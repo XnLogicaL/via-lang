@@ -29,8 +29,8 @@ Token Parser::peek(int ahead) {
     return program.tokens->tokens[position + ahead];
 }
 
-Token Parser::consume(U32 ahead) {
-    U64 new_pos = position + static_cast<U64>(ahead);
+Token Parser::consume(u32 ahead) {
+    u64 new_pos = position + static_cast<u64>(ahead);
     if (new_pos >= program.tokens->tokens.size()) {
         throw ParserError(
             std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
@@ -38,7 +38,7 @@ Token Parser::consume(U32 ahead) {
     }
 
     position = new_pos;
-    return peek(-static_cast<I32>(ahead));
+    return peek(-static_cast<i32>(ahead));
 }
 
 Modifiers Parser::parse_modifiers() {
@@ -48,7 +48,7 @@ Modifiers Parser::parse_modifiers() {
         Token cur = current();
         if (cur.type == KW_CONST) {
             if (modifiers.is_const) {
-                emitter.out(cur.position, "Modifier 'const' encountered multiple times", Warning);
+                emitter.out(cur, "Modifier 'const' encountered multiple times", Warning);
             }
 
             modifiers.is_const = true;
@@ -149,8 +149,7 @@ pTypeNode Parser::parse_type_primary() {
     }
     default: {
         throw ParserError(
-            std::format("Unexpected token '{}' while parsing type primary", tok.lexeme),
-            tok.position
+            std::format("Unexpected token '{}' while parsing type primary", tok.lexeme), position
         );
         break;
     }
@@ -164,54 +163,56 @@ pTypeNode Parser::parse_type() {
 }
 
 pExprNode Parser::parse_primary() {
-    Token token = consume();
+    Token token = current();
 
     try {
         switch (token.type) {
         case LIT_INT:
         case LIT_HEX: {
+            consume();
             int value = std::stoi(token.lexeme);
             return std::make_unique<LiteralNode>(token, value);
         }
         case LIT_FLOAT: {
+            consume();
             float value = std::stof(token.lexeme);
             return std::make_unique<LiteralNode>(token, value);
         }
         case LIT_BINARY:
+            consume();
             return std::make_unique<LiteralNode>(
                 token, static_cast<int>(std::bitset<64>(token.lexeme.substr(2)).to_ullong())
             );
         case LIT_NIL:
+            consume();
             return std::make_unique<LiteralNode>(token, std::monostate());
         case LIT_BOOL:
+            consume();
             return std::make_unique<LiteralNode>(token, token.lexeme == "true");
         case IDENTIFIER:
+            consume();
             return std::make_unique<SymbolNode>(token);
         case LIT_STRING:
+            consume();
             return std::make_unique<LiteralNode>(token, token.lexeme);
         case OP_SUB: {
+            consume();
             Token     op   = token;
             pExprNode expr = parse_primary();
             return std::make_unique<UnaryNode>(std::move(expr));
         }
-        case PAREN_OPEN: {
-            consume();
-            pExprNode expression = parse_expr();
-            EXPECT(PAREN_CLOSE, "Expected ')' to close grouping expression, got '{}'");
-            return expression;
-        }
         default:
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing primary expression", token.lexeme),
-                token.position
+                position
             );
         }
     }
     catch (const std::invalid_argument&) {
-        throw ParserError(std::format("Malformed numeric format"), token.position);
+        throw ParserError(std::format("Malformed numeric format"), position);
     }
-    catch (const std::out_of_range&) {
-        throw ParserError(std::format("Numeric value out of range"), token.position);
+    catch (const std::out_of_range& err) {
+        throw ParserError(std::format("Numeric value out of range ({})", err.what()), position);
     }
 
     VIA_UNREACHABLE;
@@ -397,22 +398,6 @@ pStmtNode Parser::parse_scope() {
     return std::make_unique<ScopeNode>(std::move(scope_statements));
 }
 
-pStmtNode Parser::parse_assign() {
-    EXPECT(IDENTIFIER, "Expected identifier for assignment, got '{}'");
-    Token identifier = consume();
-    Token augmentation_operator;
-
-    if (current().type != EQUAL && current().is_operator()) {
-        augmentation_operator = consume();
-    }
-
-    EXPECT(EQUAL, "Expected '=' for assignment, got '{}'");
-    consume();
-
-    pExprNode value = parse_expr();
-    return std::make_unique<AssignNode>(identifier, augmentation_operator, std::move(value));
-}
-
 pStmtNode Parser::parse_if() {
     using ElseIfNode = IfNode::ElseIfNode;
 
@@ -458,7 +443,9 @@ pStmtNode Parser::parse_while() {
 }
 
 pStmtNode Parser::parse_stmt() {
-    Token initial_token = current();
+    Token  initial_token    = current();
+    size_t initial_position = position;
+
     switch (initial_token.type) {
     case KW_LOCAL:
     case KW_GLOBAL:
@@ -472,15 +459,21 @@ pStmtNode Parser::parse_stmt() {
         return parse_if();
     case KW_WHILE:
         return parse_while();
-    case IDENTIFIER:
-        if (peek().lexeme == "=" || (peek().is_operator() && peek(2).lexeme == "=")) {
-            return parse_assign();
-        }
-        // Not assignment, probably expression statement.
-        [[fallthrough]]; // <-- Also what the fuck is this ISO-C++??
     default:
         try {
             pExprNode expression = parse_expr();
+
+            if (current().lexeme == "=" || (current().is_operator() && peek().lexeme == "=")) {
+                Token possible_augment = consume();
+                if (possible_augment.lexeme != "=") {
+                    consume();
+                }
+
+                return std::make_unique<AssignNode>(
+                    std::move(expression), possible_augment, parse_expr()
+                );
+            }
+
             return std::make_unique<ExprStmtNode>(std::move(expression));
         }
         catch (const ParserError&) {
@@ -488,7 +481,7 @@ pStmtNode Parser::parse_stmt() {
             // but here I am.
             throw ParserError(
                 std::format("Unexpected token '{}' while parsing statement", initial_token.lexeme),
-                initial_token.position
+                initial_position
             );
         }
 
@@ -512,7 +505,7 @@ bool Parser::parse() noexcept {
         }
         catch (const ParserError& e) {
             failed = true;
-            emitter.out(e.where(), e.what(), Error);
+            emitter.out(program.tokens->tokens.at(e.where()), e.what(), Error);
             break;
         }
         catch (const std::exception& e) {

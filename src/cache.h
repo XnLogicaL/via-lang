@@ -18,7 +18,7 @@
     |32 bytes   | File hash. (SHA-256)
     |16 bytes   | Platform info. (Arch, OS, etc.)
     |16 bytes   | Runtime flags. (-O3, -O2, etc.)
-    |16 bytes   | Code section offset/size.
+    |16 bytes   | Code section offset/size_t.
     |8 bytes    | Checksum A.
     |...bytes   | Bytecode.
     |8 bytes    | Checksum B.
@@ -32,33 +32,33 @@ VIA_INLINE std::string hash_string_sha256(const std::string& src) {
     SHA256 sha;
     sha.update(src);
 
-    std::array<U8, 32> digest = sha.digest();
+    std::array<u8, 32> digest = sha.digest();
     std::string        hash   = sha.toString(digest);
 
     return hash;
 }
 
-VIA_INLINE U8* hash_file_sha256(const std::string& src) {
+VIA_INLINE u8* hash_file_sha256(const std::string& src) {
     SHA256 sha;
     sha.update(src);
 
-    std::array<U8, 32> digest     = sha.digest();
+    std::array<u8, 32> digest     = sha.digest();
     std::string        hash       = sha.toString(digest);
-    U8*                hash_final = new U8[32];
+    u8*                hash_final = new u8[32];
 
-    for (SIZE i = 0; i < 32; ++i) {
+    for (size_t i = 0; i < 32; ++i) {
         std::stringstream ss;
         ss << std::hex << hash.substr(i * 2, 2);
         int byte_value;
         ss >> byte_value;
-        hash_final[i] = static_cast<U8>(byte_value);
+        hash_final[i] = static_cast<u8>(byte_value);
     }
 
     return hash_final;
 }
 
 VIA_INLINE const char* get_platform_info() {
-    static char buffer[32]; // Sufficient size for "windows-x86-64" etc.
+    static char buffer[32]; // Sufficient size_t for "windows-x86-64" etc.
 
 #ifndef _VIA_PLATFORM_INFO_FETCHED
 #define _VIA_PLATFORM_INFO_FETCHED

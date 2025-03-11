@@ -24,26 +24,26 @@ public:
     void tokenize();
 
 private:
-    bool is_hex_char(char chr);
-    SIZE source_size();
-    char peek(SIZE ahead = 0);
-    char consume(SIZE ahead = 1);
+    bool   is_hex_char(char chr);
+    size_t source_size();
+    char   peek(size_t ahead = 0);
+    char   consume(size_t ahead = 1);
 
     // Starts reading a "number" literal
     // Which can be a negative/positive floating point or integer
-    Token read_number(SIZE);
+    Token read_number(size_t);
     // Reads an alpha-numeric identifier
     // Cannot start with a numeric character
-    Token read_ident(SIZE);
+    Token read_ident(size_t);
     // Reads a string literal that can be denoted with quotes
-    Token read_string(SIZE);
+    Token read_string(size_t);
     // Reads and returns the current token
     Token get_token();
 
 private:
-    SIZE         pos    = 0;
-    SIZE         line   = 1;
-    SIZE         offset = 0;
+    size_t       pos    = 0;
+    size_t       line   = 1;
+    size_t       offset = 0;
     ProgramData& program;
 };
 

@@ -1,14 +1,28 @@
-const x: string = 0
+local x: integer = 0
 global Aaaa = 0
 global BB = 100
 
 global func add(a: integer, b: integer) -> nil {
-    local var = a * 56
+    local var = x * 56
+    x = var * 2
     local func inner() -> nil {
         local y = true
+
+        if y {
+            local xx = 100914
+        }
+        elif y * 2 {
+            local zz = 192591952
+            local arjjfw = 528385
+            local cond = zz + arjjfw
+        }
+        else {
+            local yes = false
+        }
+
         while y and x {
-            local z = y + x
-            local cond = true and false
+            local z = 1500 + 0xdeadbeef
+            local cond = false
         }
     }
 

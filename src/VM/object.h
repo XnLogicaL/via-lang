@@ -12,17 +12,17 @@ VIA_NAMESPACE_BEGIN
 
 #ifdef VIA_64BIT
 
-using TInteger = I64;
-using TFloat   = F64;
+using TInteger = i64;
+using TFloat   = f64;
 
 #else
 
-using TInteger = I32;
-using TFloat   = F32;
+using TInteger = i32;
+using TFloat   = f32;
 
 #endif
 
-enum class ValueType : U8 {
+enum class ValueType : u8 {
     nil,            // Empty type, null
     integer,        // Integer type
     floating_point, // Floating point type
@@ -60,14 +60,14 @@ struct VIA_ALIGN_CACHE_LINE TValue {
     VIA_NO_DISCARD TValue clone() const noexcept;
 
     template<typename T>
-    VIA_NO_DISCARD VIA_INLINE_HOT_NODEBUG T* cast_ptr() const noexcept {
+    VIA_NO_DISCARD VIA_INLINE_HOT T* cast_ptr() const noexcept {
         return reinterpret_cast<T*>(val_pointer);
     }
 };
 
 struct TString {
-    U32         len;
-    U32         hash;
+    u32         len;
+    u32         hash;
     const char* data;
 
     VIA_NON_DEFAULT_CONSTRUCTIBLE(TString);
@@ -83,10 +83,10 @@ struct THashNode {
 };
 
 struct TTable {
-    SIZE arr_capacity   = 64;
-    SIZE ht_capacity    = 1024;
-    SIZE arr_size_cache = 0;
-    SIZE ht_size_cache  = 0;
+    size_t arr_capacity   = 64;
+    size_t ht_capacity    = 1024;
+    size_t arr_size_cache = 0;
+    size_t ht_size_cache  = 0;
 
     bool arr_size_cache_valid = true;
     bool ht_size_cache_valid  = true;

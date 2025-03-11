@@ -32,12 +32,12 @@ public:
     // Inserts a given bytecode pair to the vector.
     void add(const Bytecode&);
     // Removes the bytecode pair located in a given index.
-    void remove(SIZE);
-    // Returns the current size or next index of the bytecode pair vector.
-    SIZE size() const noexcept;
+    void remove(size_t);
+    // Returns the current size_t or next index of the bytecode pair vector.
+    size_t size() const noexcept;
     // Inserts a locally constructed instruction to a given index.
     void insert(
-        SIZE                          index    = 0,
+        size_t                        index    = 0,
         OpCode                        opcode   = OpCode::NOP,
         const std::array<Operand, 3>& operands = {},
         const std::string&            comment  = ""

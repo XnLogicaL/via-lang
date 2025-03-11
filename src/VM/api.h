@@ -18,8 +18,8 @@ VIA_NAMESPACE_BEGIN
 
 static const TValue nil = TValue();
 
-TValue* get_register(State*, U32 reg);
-void    set_register(State*, U32 reg, const TValue& val);
+TValue* get_register(State*, u32 reg);
+void    set_register(State*, u32 reg, const TValue& val);
 
 void* to_pointer(const TValue& val) noexcept;
 bool  is_heap(const TValue& val) noexcept;
@@ -38,19 +38,19 @@ TValue      to_bool(const TValue& val) noexcept;
 bool        to_cxx_bool(const TValue& val) noexcept;
 TValue      to_number(const TValue& val) noexcept;
 
-TValue get_table(TTable* VIA_RESTRICT tbl, U32 key, bool search_meta) noexcept;
-void   set_table(TTable* VIA_RESTRICT tbl, U32 key, const TValue& val) noexcept;
+TValue get_table(TTable* VIA_RESTRICT tbl, u32 key, bool search_meta) noexcept;
+void   set_table(TTable* VIA_RESTRICT tbl, u32 key, const TValue& val) noexcept;
 TValue get_metamethod(const TValue& val, OpCode op);
 
-const TValue& get_local(State* VIA_RESTRICT, U32 offset) noexcept;
-const TValue& get_global(State* VIA_RESTRICT, U32 ident) noexcept;
-void          set_global(State* VIA_RESTRICT, U32, const TValue&);
-const TValue& get_argument(State* VIA_RESTRICT, U32) noexcept;
+const TValue& get_local(State* VIA_RESTRICT, u32 offset) noexcept;
+const TValue& get_global(State* VIA_RESTRICT, u32 ident) noexcept;
+void          set_global(State* VIA_RESTRICT, u32, const TValue&);
+const TValue& get_argument(State* VIA_RESTRICT, u32) noexcept;
 
-void native_return(State* VIA_RESTRICT, SIZE) noexcept;
-void native_call(State* VIA_RESTRICT, TFunction* VIA_RESTRICT, SIZE) noexcept;
-void method_call(State* VIA_RESTRICT, TTable* VIA_RESTRICT, U32, SIZE) noexcept;
-void call(State* VIA_RESTRICT, const TValue&, SIZE argc) noexcept;
+void native_return(State* VIA_RESTRICT, size_t) noexcept;
+void native_call(State* VIA_RESTRICT, TFunction* VIA_RESTRICT, size_t) noexcept;
+void method_call(State* VIA_RESTRICT, TTable* VIA_RESTRICT, u32, size_t) noexcept;
+void call(State* VIA_RESTRICT, const TValue&, size_t argc) noexcept;
 
 TValue len(State* VIA_RESTRICT, const TValue&) noexcept;
 TValue type(State* VIA_RESTRICT, const TValue&) noexcept;

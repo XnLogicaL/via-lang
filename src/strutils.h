@@ -11,7 +11,7 @@ VIA_NAMESPACE_BEGIN
 
 char* duplicate_string(const std::string&);
 char* duplicate_string(const char*);
-U32   hash_string_custom(const char*);
+u32   hash_string_custom(const char*);
 
 VIA_NAMESPACE_END
 

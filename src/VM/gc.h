@@ -24,9 +24,9 @@ struct GarbageCollector {
     void add_defered_callback(const CleanupFunction&);
 
 private:
-    bool terminating = false;
-    SIZE collections = 0;
-    SIZE size        = 0;
+    bool   terminating = false;
+    size_t collections = 0;
+    size_t size        = 0;
 
     std::vector<CleanupFunction> periodic_callback_list;
     std::vector<CleanupFunction> defered_callback_list;

@@ -7,6 +7,8 @@
 
 VIA_NAMESPACE_BEGIN
 
+static bool has_printed_file_name = false;
+
 // Splits a source string into lines
 std::vector<std::string> Emitter::split_lines() {
     std::vector<std::string> lines;
@@ -134,30 +136,20 @@ std::string Emitter::underline_range(
 }
 
 // Emits an output message
-void Emitter::out(U64 idx, std::string message, OutputSeverity sev) {
-    // This is an internal "flag" that determines if the file name has been displayed before any
-    // errors
-    static bool has_printed_file_name = false;
-
+void Emitter::out(Token tok, std::string message, OutputSeverity sev) {
     // Check if file information has been printed
     if (!has_printed_file_name && program.file != "<repl>") {
         has_printed_file_name = true;
         std::cout << std::format("In file {}:\n", program.file);
     }
 
-    // Find token
-    Token tok    = program.tokens->tokens.at(idx);
-    SIZE  line   = tok.line;
-    SIZE  offset = tok.offset;
-    SIZE  length = tok.lexeme.length();
+    size_t line   = tok.line;
+    size_t offset = tok.offset;
+    size_t length = tok.lexeme.length();
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 
-void Emitter::out_range(SIZE begin, SIZE end, std::string message, OutputSeverity sev) {
-    // This is an internal "flag" that determines if the file name has been displayed before any
-    // errors
-    static bool has_printed_file_name = false;
-
+void Emitter::out_range(size_t begin, size_t end, std::string message, OutputSeverity sev) {
     // Check if file information has been printed
     if (!has_printed_file_name && program.file != "<repl>") {
         has_printed_file_name = true;

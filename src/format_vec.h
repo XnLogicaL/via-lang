@@ -25,7 +25,7 @@ std::string format_vector(
     std::ostringstream oss;
     oss << delimiter_begin;
 
-    SIZE index = 0;
+    size_t index = 0;
     for (const T& elem : vec) {
         oss << to_str(elem);
 

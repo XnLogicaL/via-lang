@@ -12,9 +12,9 @@ VIA_NAMESPACE_BEGIN
 
 class RegisterAllocator {
 public:
-    RegisterAllocator(U32 size, bool default_value) {
-        registers.reserve(size);
-        for (U32 reg = 0; reg < size; reg++) {
+    RegisterAllocator(u32 size_t, bool default_value) {
+        registers.reserve(size_t);
+        for (u32 reg = 0; reg < size_t; reg++) {
             registers.emplace(reg, default_value);
         }
     }

@@ -48,13 +48,13 @@ void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
     using enum ValueType;
 
     if (int* integer_value = std::get_if<int>(&literal_node.value)) {
-        U32  final_value = *integer_value;
+        u32  final_value = *integer_value;
         auto operands    = reinterpret_u32_as_2u16(final_value);
 
         program.bytecode->emit(LOADINT, {dst, operands.l, operands.r});
     }
     else if (float* float_value = std::get_if<float>(&literal_node.value)) {
-        U32  final_value = std::bit_cast<U32>(*float_value);
+        u32  final_value = std::bit_cast<u32>(*float_value);
         auto operands    = reinterpret_u32_as_2u16(final_value);
 
         program.bytecode->emit(LOADFLOAT, {dst, operands.l, operands.r});
@@ -77,18 +77,24 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
     std::optional<Operand> stk_id = program.test_stack->find_symbol(var_id.lexeme);
 
     if (stk_id.has_value()) {
-        program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
+        auto& current_closure = program.test_stack->function_stack.top();
+        if (current_closure.upvalues < stk_id.value()) {
+            program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
+        }
+        else {
+            program.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
+        }
         return;
     }
     else if (program.globals->was_declared(symbol)) {
-        U32  symbol_hash = hash_string_custom(symbol.c_str());
+        u32  symbol_hash = hash_string_custom(symbol.c_str());
         auto operands    = reinterpret_u32_as_2u16(symbol_hash);
 
         program.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
         return;
     }
     else if (!program.test_stack->function_stack.empty()) {
-        U16   index = 0;
+        u16   index = 0;
         auto& top   = program.test_stack->function_stack.top();
 
         for (const auto& parameter : top.parameters) {
@@ -102,9 +108,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
     }
 
     visitor_failed = true;
-    emitter.out(
-        var_id.position, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error
-    );
+    emitter.out(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error);
 }
 
 void ExprVisitor::visit(UnaryNode& unary_node, Operand dst) {
@@ -178,7 +182,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
     if (it == operator_map.end()) {
         visitor_failed = true;
         emitter.out(
-            binary_node.op.position,
+            binary_node.op,
             std::format("Unknown binary operator '{}'", binary_node.op.lexeme),
             Error
         );
@@ -209,7 +213,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
 
         division_by_zero:
             visitor_failed = true;
-            emitter.out(literal.value_token.position, "Explicit division by zero", Error);
+            emitter.out(literal.value_token, "Explicit division by zero", Error);
             return;
 
         good_division:
@@ -237,14 +241,14 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
 
         if (int* int_value = std::get_if<int>(&literal.value)) {
             OpCode opcode      = static_cast<OpCode>(opcode_id + 2); // OPINT
-            U32    final_value = *int_value;
+            u32    final_value = *int_value;
             auto   operands    = reinterpret_u32_as_2u16(final_value);
 
             program.bytecode->emit(opcode, {dst, operands.l, operands.r});
         }
         else if (float* float_value = std::get_if<float>(&literal.value)) {
             OpCode opcode      = static_cast<OpCode>(opcode_id + 3); // OPFLOAT
-            U32    final_value = std::bit_cast<U32>(*float_value);
+            u32    final_value = std::bit_cast<u32>(*float_value);
             auto   operands    = reinterpret_u32_as_2u16(final_value);
 
             program.bytecode->emit(opcode, {dst, operands.l, operands.r});

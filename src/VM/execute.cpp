@@ -56,7 +56,7 @@
 VIA_NAMESPACE_BEGIN
 
 void vm_save_snapshot(State* VIA_RESTRICT V) {
-    U64         pos  = V->ip - V->ibp;
+    u64         pos  = V->ip - V->ibp;
     std::string file = std::format("vm_snapshot.{}.log", pos);
 
     std::ostringstream headers;
@@ -70,7 +70,7 @@ void vm_save_snapshot(State* VIA_RESTRICT V) {
 
     // Generate stack map
     for (TValue* ptr = V->sbp; ptr < V->sbp + V->sp; ptr++) {
-        U32 pos = ptr - V->sbp;
+        u32 pos = ptr - V->sbp;
         stack << "|" << std::setw(2) << std::setfill('0') << pos << "| "
               << impl::__to_cxx_string(V, *ptr) << ' ' << memdump(ptr, sizeof(TValue));
     }
@@ -137,7 +137,6 @@ dispatch: {
     // Handle special/internal opcodes
     case NOP:
     case LABEL:
-    case CAPTURE:
         VM_NEXT();
 
     case ADD: {
@@ -710,7 +709,7 @@ dispatch: {
     case GETGLOBAL: {
         Operand dst = V->ip->operand0;
 
-        U32           hash   = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
+        u32           hash   = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
         const TValue& global = __get_global(V, hash);
 
         __set_register(V, dst, global);
@@ -720,7 +719,7 @@ dispatch: {
     case SETGLOBAL: {
         Operand src = V->ip->operand0;
 
-        U32     hash   = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
+        u32     hash   = reinterpret_u16_as_u32(V->ip->operand1, V->ip->operand2);
         TValue* global = __get_register(V, src);
 
         __set_global(V, hash, *global);
@@ -1282,9 +1281,9 @@ dispatch: {
         Operand dst = V->ip->operand0;
         Operand tbl = V->ip->operand1;
 
-        TValue* val  = __get_register(V, tbl);
-        int     size = __table_size(val->cast_ptr<TTable>());
-        TValue  val_size(size);
+        TValue* val    = __get_register(V, tbl);
+        int     size_t = __table_size(val->cast_ptr<TTable>());
+        TValue  val_size(size_t);
 
         __set_register(V, dst, val_size);
         VM_NEXT();
@@ -1310,7 +1309,7 @@ dispatch: {
         TValue* str_val = __get_register(V, str);
         TValue* idx_val = __get_register(V, idx);
 
-        SIZE index = idx_val->val_integer;
+        size_t index = idx_val->val_integer;
         if VIA_UNLIKELY (index > str_val->cast_ptr<TString>()->len) {
             __set_register(V, dst, _Nil);
         }

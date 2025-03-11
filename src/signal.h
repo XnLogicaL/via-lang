@@ -17,8 +17,11 @@ public:
 
     class Connection {
     public:
-        Connection(std::vector<Slot>& _Slots, std::mutex& _Mutex, SIZE _Connection_id)
-            : slots(_Slots), mutex(_Mutex), connection_id(_Connection_id), active(true) {}
+        Connection(std::vector<Slot>& _Slots, std::mutex& _Mutex, size_t _Connection_id)
+            : slots(_Slots),
+              mutex(_Mutex),
+              connection_id(_Connection_id),
+              active(true) {}
 
         void disconnect();
 
@@ -26,8 +29,8 @@ public:
         std::vector<Slot>& slots;
         std::mutex&        mutex;
 
-        SIZE connection_id;
-        bool active;
+        size_t connection_id;
+        bool   active;
     };
 
     Connection connect(const Slot&);

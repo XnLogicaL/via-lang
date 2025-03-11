@@ -37,15 +37,15 @@ public:
     StackObject top();
     StackObject pop();
 
-    U64 size();
+    u64 size();
 
-    std::optional<StackObject> at(SIZE);
+    std::optional<StackObject> at(size_t);
 
     std::optional<Operand> find_symbol(const StackObject&);
     std::optional<Operand> find_symbol(const std::string&);
 
 public:
-    U64 sp = 0;
+    u64 sp = 0;
 
     std::stack<FunctionNode::StackNode> function_stack;
 

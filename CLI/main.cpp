@@ -6,6 +6,7 @@
 #include "argparse.hpp"
 #include "fileio.h"
 #include "via.h"
+#include <cstddef>
 
 [[maybe_unused]]
 static constexpr const char REPL_WELCOME[] =
@@ -81,7 +82,7 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-ast")) {
             print_flag_label("--dump-ast");
 
-            U32 depth = 0;
+            u32 depth = 0;
 
             for (const pStmtNode& pstmt : program.ast->statements) {
                 std::cout << pstmt->to_string(depth) << "\n";
@@ -91,7 +92,7 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-bytecode")) {
             print_flag_label("--dump-bytecode");
 
-            U32 counter = 0;
+            u32 counter = 0;
 
             for (const Bytecode& bytecode : program.bytecode->get()) {
                 std::cout << std::format("{:0>3} ", counter++)
@@ -106,7 +107,7 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
                 const Instruction& instruction = bytecode.instruction;
 
                 const size_t   size = sizeof(Instruction);
-                const uint8_t* data = reinterpret_cast<const U8*>(&instruction);
+                const uint8_t* data = reinterpret_cast<const u8*>(&instruction);
 
                 for (size_t i = 0; i < size; i++) {
                     std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
@@ -129,7 +130,8 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
             std::chrono::duration<double, std::milli>(compilation_end - compilation_start).count();
 
         local_emitter.out_flat(
-            std::format("Compilation finished in {}s", compilation_time / 1000), Info);
+            std::format("Compilation finished in {}s", compilation_time / 1000), Info
+        );
     }
 
     return program;
@@ -181,7 +183,7 @@ int main(int argc, char* argv[]) {
 
     compile_command.add_argument("--optimize", "-O")
         .help("Sets optimization level to the given integer")
-        .scan<'u', U32>()
+        .scan<'u', u32>()
         .default_value(1);
 
     compile_command.add_argument("--verbose", "-v").help("Enables verbosity").flag();

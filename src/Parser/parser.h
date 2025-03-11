@@ -15,7 +15,7 @@ VIA_NAMESPACE_BEGIN
 
 class ParserError : public std::exception {
 public:
-    ParserError(const std::string& error, U64 position)
+    ParserError(const std::string& error, u64 position)
         : message(error),
           position(position) {}
 
@@ -23,13 +23,13 @@ public:
         return message.c_str();
     }
 
-    U64 where() const noexcept {
+    u64 where() const noexcept {
         return position;
     }
 
 private:
     std::string message;
-    U64         position;
+    u64         position;
 };
 
 class Parser {
@@ -44,12 +44,12 @@ private:
     ProgramData& program;
     Emitter      emitter;
 
-    U64 position = 0;
+    u64 position = 0;
 
 private:
     Token current();
     Token peek(int ahead = 1);
-    Token consume(U32 ahead = 1);
+    Token consume(u32 ahead = 1);
 
     Modifiers parse_modifiers();
 
@@ -63,7 +63,6 @@ private:
     pExprNode parse_expr();
 
     pStmtNode parse_declaration();
-    pStmtNode parse_assign();
     pStmtNode parse_scope();
     pStmtNode parse_if();
     pStmtNode parse_while();

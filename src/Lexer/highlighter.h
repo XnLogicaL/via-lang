@@ -20,8 +20,8 @@ public:
     Emitter(ProgramData& program)
         : program(program) {}
 
-    void out(U64 position, std::string message, OutputSeverity severity);
-    void out_range(SIZE begin, SIZE end, std::string message, OutputSeverity severity);
+    void out(Token, std::string message, OutputSeverity severity);
+    void out_range(size_t begin, size_t end, std::string message, OutputSeverity severity);
     void out_flat(std::string message, OutputSeverity severity);
 
 private:

@@ -15,7 +15,7 @@ struct Chunk {
     void*        mcode = nullptr;
     Instruction* begin = nullptr;
     Instruction* end   = nullptr;
-    U32          pc;
+    u32          pc;
 };
 
 VIA_NAMESPACE_END

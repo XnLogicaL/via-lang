@@ -9,16 +9,16 @@
 
 VIA_NAMESPACE_BEGIN
 
-struct U16Result {
-    U16 l;
-    U16 r;
+struct u16Result {
+    u16 l;
+    u16 r;
 };
 
-U32 reinterpret_u16_as_u32(U16 high, U16 low);
-I32 reinterpret_u16_as_i32(U16 high, U16 low);
-F32 reinterpret_u16_as_f32(U16 high, U16 low);
+u32 reinterpret_u16_as_u32(u16 high, u16 low);
+i32 reinterpret_u16_as_i32(u16 high, u16 low);
+f32 reinterpret_u16_as_f32(u16 high, u16 low);
 
-U16Result reinterpret_u32_as_2u16(U32 data);
+u16Result reinterpret_u32_as_2u16(u32 data);
 
 VIA_NAMESPACE_END
 

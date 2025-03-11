@@ -12,8 +12,8 @@
 
 VIA_NAMESPACE_BEGIN
 
-using Operand  = U16;
-using OperandS = I16;
+using Operand  = u16;
+using OperandS = i16;
 
 struct Chunk;
 struct InstructionData {

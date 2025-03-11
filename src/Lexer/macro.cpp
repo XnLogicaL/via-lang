@@ -20,13 +20,13 @@ void Preprocessor::expand_macro(const Macro& macro) {
         if (tok.lexeme.ends_with('!') &&
             tok.lexeme.substr(0, tok.lexeme.length() - 1) == macro.name && pos + 1 < toks.size() &&
             peek(1).type == TokenType::PAREN_OPEN) {
-            SIZE start_pos = pos;
+            size_t start_pos = pos;
             consume(2); // Consume macro_name! and the opening parenthesis
 
             // Parse macro arguments
             std::vector<std::vector<Token>> macro_args;
             std::vector<Token>              current_arg;
-            SIZE                            depth = 1;
+            size_t                          depth = 1;
 
             // Loop to parse arguments within parentheses
             while (pos < toks.size()) {
@@ -72,13 +72,16 @@ void Preprocessor::expand_macro(const Macro& macro) {
 
             // Check for argument count mismatch
             if (macro_args.size() != macro.params.size())
-                PREPROCESSOR_ERROR(
-                    std::format("Macro '{}' expected {} arguments, but {} were provided",
-                        macro.name, macro.params.size(), macro_args.size()));
+                PREPROCESSOR_ERROR(std::format(
+                    "Macro '{}' expected {} arguments, but {} were provided",
+                    macro.name,
+                    macro.params.size(),
+                    macro_args.size()
+                ));
 
             // Map parameter names to their arguments
             std::unordered_map<std::string, std::vector<Token>> arg_map;
-            for (SIZE i = 0; i < macro.params.size(); ++i)
+            for (size_t i = 0; i < macro.params.size(); ++i)
                 arg_map[macro.params[i]] = macro_args[i];
 
             // Replace parameters in the macro body
@@ -87,7 +90,8 @@ void Preprocessor::expand_macro(const Macro& macro) {
                 if (body_tok.type == TokenType::IDENTIFIER && arg_map.count(body_tok.lexeme)) {
                     const std::vector<Token>& replacement = arg_map[body_tok.lexeme];
                     expanded_body.insert(
-                        expanded_body.end(), replacement.begin(), replacement.end());
+                        expanded_body.end(), replacement.begin(), replacement.end()
+                    );
                 }
                 else
                     expanded_body.push_back(body_tok);
@@ -116,8 +120,11 @@ Macro Preprocessor::parse_macro() {
 
     auto it = macro_table.find(peek().lexeme);
     if (it != macro_table.end())
-        PREPROCESSOR_ERROR(std::format("Redefinition of macro '{}', previously defined on line {}",
-            peek().lexeme, it->second.line));
+        PREPROCESSOR_ERROR(std::format(
+            "Redefinition of macro '{}', previously defined on line {}",
+            peek().lexeme,
+            it->second.line
+        ));
 
     Macro mac;
     mac.line  = peek().line;
