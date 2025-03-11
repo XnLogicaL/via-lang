@@ -28,6 +28,8 @@ State::State(GState* G, ProgramData& program)
         .bytecode     = ip,
         .bytecode_len = static_cast<u32>(iep - ibp),
     };
+
+    __label_load(this, program.label_count);
     __native_call(this, main, 0);
 }
 
@@ -87,6 +89,8 @@ State::~State() {
     if (this->sbp) {
         delete[] this->sbp;
     }
+
+    __label_deallocate(this);
 }
 
 std::string to_string(State* state) {

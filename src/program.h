@@ -21,6 +21,8 @@ class ProgramData {
 public:
     u8 optimization_level = 0;
 
+    size_t label_count = 0;
+
     std::string file;
     std::string source;
 

@@ -274,6 +274,34 @@ VIA_INLINE size_t __table_size(TTable* _Tbl) {
     return __table_arr_size(_Tbl) + __table_ht_size(_Tbl);
 }
 
+// ==========================================================
+// Label handling
+VIA_INLINE void __label_allocate(State* _State, size_t _Count) {
+    _State->labels = new Instruction*[_Count];
+}
+
+VIA_INLINE void __label_deallocate(State* _State) {
+    if (_State->labels) {
+        delete[] _State->labels;
+        _State->labels = nullptr;
+    }
+}
+
+VIA_INLINE Instruction* __label_get(State* _State, size_t _Idx) {
+    return _State->labels[_Idx];
+}
+
+VIA_INLINE void __label_load(State* _State, size_t _Count) {
+    __label_allocate(_State, _Count);
+
+    for (Instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
+        size_t _Idx = _Ip - _State->ibp;
+        if (_Ip->op == OpCode::LABEL) {
+            _State->labels[_Idx] = _Ip;
+        }
+    }
+}
+
 VIA_NAMESPACE_END
 
 #endif

@@ -23,6 +23,8 @@ bool Compiler::generate() {
         return true;
     }
 
+    program.label_count = visitor.label_counter;
+
     return visitor.failed();
 }
 

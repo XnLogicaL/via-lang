@@ -75,6 +75,9 @@ struct alignas(64) State {
     // Registers
     TValue* registers;
 
+    // Labels
+    Instruction** labels;
+
     // Call and frame management
     TFunction* frame    = nullptr;        // Call stack pointer
     size_t     argc     = 0;              // Argument count (for CALL and FASTCALLX)

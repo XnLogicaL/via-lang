@@ -138,6 +138,9 @@ public:
                type_visitor.failed();
     }
 
+public:
+    size_t label_counter = 0;
+
 private:
     ProgramData&       program;
     Emitter&           emitter;
@@ -146,8 +149,6 @@ private:
     ExprVisitor  expression_visitor;
     DecayVisitor decay_visitor;
     TypeVisitor  type_visitor;
-
-    size_t label_counter = 0;
 
     std::optional<size_t> escape_label = std::nullopt;
     std::optional<size_t> repeat_label = std::nullopt;

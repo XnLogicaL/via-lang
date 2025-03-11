@@ -1181,6 +1181,222 @@ dispatch: {
         goto dispatch;
     }
 
+    case JUMPLABEL: {
+        Operand label = V->ip->operand0;
+
+        V->ip = __label_get(V, label);
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIF: {
+        Operand cond  = V->ip->operand0;
+        Operand label = V->ip->operand1;
+
+        TValue* cond_val = __get_register(V, cond);
+        if (__to_cxx_bool(*cond_val)) {
+            V->ip = __label_get(V, label);
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFNOT: {
+        Operand cond  = V->ip->operand0;
+        Operand label = V->ip->operand1;
+
+        TValue* cond_val = __get_register(V, cond);
+        if (!__to_cxx_bool(*cond_val)) {
+            V->ip = __label_get(V, label);
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFEQUAL: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        if VIA_UNLIKELY (cond_lhs == cond_rhs) {
+            V->ip = __label_get(V, label);
+        }
+        else {
+            TValue* lhs_val = __get_register(V, cond_lhs);
+            TValue* rhs_val = __get_register(V, cond_rhs);
+
+            if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
+                V->ip = __label_get(V, label);
+            }
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFNOTEQUAL: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        if VIA_LIKELY (cond_lhs != cond_rhs) {
+            V->ip = __label_get(V, label);
+        }
+        else {
+            TValue* lhs_val = __get_register(V, cond_lhs);
+            TValue* rhs_val = __get_register(V, cond_rhs);
+
+            if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
+                V->ip = __label_get(V, label);
+            }
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFLESS: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, cond_lhs);
+        TValue* rhs_val = __get_register(V, cond_rhs);
+
+        if VIA_LIKELY (check_integer(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_integer < rhs_val->val_integer) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+        else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer)) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFGREATER: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, cond_lhs);
+        TValue* rhs_val = __get_register(V, cond_rhs);
+
+        if VIA_LIKELY (check_integer(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_integer > rhs_val->val_integer) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+        else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer)) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFLESSOREQUAL: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, cond_lhs);
+        TValue* rhs_val = __get_register(V, cond_rhs);
+
+        if VIA_LIKELY (check_integer(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_integer <= rhs_val->val_integer) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+        else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer)) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+
+        goto dispatch;
+    }
+
+    case JUMPLABELIFGREATEROREQUAL: {
+        Operand cond_lhs = V->ip->operand0;
+        Operand cond_rhs = V->ip->operand1;
+        Operand label    = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, cond_lhs);
+        TValue* rhs_val = __get_register(V, cond_rhs);
+
+        if VIA_LIKELY (check_integer(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_integer >= rhs_val->val_integer) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+        else if VIA_UNLIKELY (check_floating_point(*lhs_val)) {
+            if VIA_LIKELY (check_integer(*rhs_val)) {
+                if (lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer)) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+            else if VIA_UNLIKELY (check_floating_point(*rhs_val)) {
+                if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
+                    V->ip = __label_get(V, label);
+                }
+            }
+        }
+
+        goto dispatch;
+    }
+
     case CALL: {
         Operand fn     = V->ip->operand0;
         Operand argc   = V->ip->operand1;
