@@ -11,6 +11,10 @@
 //
 VIA_NAMESPACE_BEGIN
 
+using comment_type    = BytecodeHolder::comment_type;
+using operands_array  = BytecodeHolder::operands_array;
+using bytecode_vector = BytecodeHolder::bytecode_vector;
+
 void BytecodeHolder::add(const Bytecode& bytecode) {
     instructions.push_back(bytecode);
 }
@@ -24,7 +28,7 @@ void BytecodeHolder::remove(size_t index) {
 }
 
 void BytecodeHolder::insert(
-    size_t index, OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
+    size_t index, OpCode opcode, operands_array& operands, comment_type& comment
 ) {
     // Insert the instruction at the specified index
     instructions.insert(
@@ -46,9 +50,7 @@ void BytecodeHolder::insert(
     );
 }
 
-void BytecodeHolder::emit(
-    OpCode opcode, const std::array<Operand, 3>& operands, const std::string& comment
-) {
+void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type& comment) {
     add({
         .instruction =
             {
@@ -65,7 +67,7 @@ void BytecodeHolder::emit(
     });
 }
 
-const std::vector<Bytecode>& BytecodeHolder::get() const noexcept {
+const bytecode_vector& BytecodeHolder::get() const noexcept {
     return instructions;
 }
 

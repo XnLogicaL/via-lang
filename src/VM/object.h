@@ -91,13 +91,34 @@ struct TTable {
     bool arr_size_cache_valid = true;
     bool ht_size_cache_valid  = true;
 
-    TValue*     arr_array  = new TValue[arr_capacity]();
+    TValue*     arr_array  = new TValue[arr_capacity];
     THashNode** ht_buckets = new THashNode*[ht_capacity];
 
     VIA_DEFAULT_CONSTRUCTOR(TTable);
     VIA_CUSTOM_DESTRUCTOR(TTable);
 
     TTable(const TTable&);
+};
+
+struct TObject {
+    size_t method_count;
+    size_t field_count;
+
+    TValue constructor;
+    TValue destructor;
+    TValue operator_overloads[16];
+
+    TValue* methods;
+    TValue* fields;
+
+    VIA_DEFAULT_CONSTRUCTOR(TObject);
+    VIA_CUSTOM_DESTRUCTOR(TObject);
+
+    TObject(size_t method_count, size_t field_count)
+        : method_count(method_count),
+          field_count(field_count),
+          methods(new TValue[method_count]),
+          fields(new TValue[field_count]) {}
 };
 
 VIA_NAMESPACE_END

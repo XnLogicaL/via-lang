@@ -6,8 +6,10 @@
 
 VIA_NAMESPACE_BEGIN
 
-Operand RegisterAllocator::allocate_register() {
-    for (Operand reg = 0; reg < 128; reg++) {
+using register_type = RegisterAllocator::register_type;
+
+register_type RegisterAllocator::allocate_register() {
+    for (register_type reg = 0; reg < 128; reg++) {
         if (registers[reg]) {
             registers[reg] = false;
             return reg;
@@ -17,14 +19,18 @@ Operand RegisterAllocator::allocate_register() {
     return VIA_OPERAND_INVALID;
 }
 
-Operand RegisterAllocator::allocate_temp() {
-    Operand reg = allocate_register();
+register_type RegisterAllocator::allocate_temp() {
+    register_type reg = allocate_register();
     free_register(reg);
     return reg;
 }
 
-void RegisterAllocator::free_register(Operand reg) {
+void RegisterAllocator::free_register(register_type reg) {
     registers.emplace(reg, true);
+}
+
+bool RegisterAllocator::is_used(register_type reg) {
+    return registers[reg];
 }
 
 VIA_NAMESPACE_END

@@ -29,30 +29,38 @@ VIA_NAMESPACE_BEGIN
 
 class BytecodeHolder final {
 public:
-    // Inserts a given bytecode pair to the vector.
+    // Type aliases
+    using comment_type    = const std::string;
+    using operands_array  = const std::array<Operand, 3>;
+    using bytecode_vector = std::vector<Bytecode>;
+
+    // Returns the current size of the bytecode pair vector.
+    size_t size() const noexcept;
+
+    // Inserts a given bytecode pair to the bytecode vectors back.
     void add(const Bytecode&);
+
     // Removes the bytecode pair located in a given index.
     void remove(size_t);
-    // Returns the current size_t or next index of the bytecode pair vector.
-    size_t size() const noexcept;
+
     // Inserts a locally constructed instruction to a given index.
     void insert(
-        size_t                        index    = 0,
-        OpCode                        opcode   = OpCode::NOP,
-        const std::array<Operand, 3>& operands = {},
-        const std::string&            comment  = ""
+        size_t          index    = 0,
+        OpCode          opcode   = OpCode::NOP,
+        operands_array& operands = {},
+        comment_type&   comment  = ""
     );
+
     // Emits an instruction at the end of the vector.
     void emit(
-        OpCode                        opcode   = OpCode::NOP,
-        const std::array<Operand, 3>& operands = {},
-        const std::string&            comment  = ""
+        OpCode opcode = OpCode::NOP, operands_array& operands = {}, comment_type& comment = ""
     );
+
     // Returns a reference to the bytecode vector.
-    const std::vector<Bytecode>& get() const noexcept;
+    const bytecode_vector& get() const noexcept;
 
 private:
-    std::vector<Bytecode> instructions;
+    bytecode_vector instructions;
 };
 
 VIA_NAMESPACE_END

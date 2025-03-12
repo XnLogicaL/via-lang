@@ -134,13 +134,13 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 }
 
 void StmtVisitor::visit(ScopeNode& scope_node) {
-    Operand stack_pointer = program.test_stack->sp;
+    Operand stack_pointer = program.test_stack->size();
 
     for (const pStmtNode& pstmt : scope_node.statements) {
         pstmt->accept(*this);
     }
 
-    Operand stack_allocations = program.test_stack->sp - stack_pointer;
+    Operand stack_allocations = program.test_stack->size() - stack_pointer;
     for (; stack_allocations > 0; stack_allocations--) {
         program.bytecode->emit(DROP);
     }
@@ -161,7 +161,7 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     program.test_stack->function_stack.push(FunctionNode::StackNode(
         function_node.is_global,
-        program.test_stack->sp,
+        program.test_stack->size(),
         function_node.modifiers,
         function_node.identifier,
         std::move(parameters)

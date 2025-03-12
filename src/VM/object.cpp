@@ -202,4 +202,16 @@ TTable::TTable(const TTable& other)
     }
 }
 
+TObject::~TObject() {
+    if (methods) {
+        delete[] methods;
+        methods = nullptr;
+    }
+
+    if (fields) {
+        delete[] fields;
+        fields = nullptr;
+    }
+}
+
 VIA_NAMESPACE_END

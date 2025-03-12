@@ -63,37 +63,6 @@ VIA_LIB_DECL_FUNCTION(base_assert) {
     VIA_LIB_RETURN(nil);
 }
 
-VIA_LIB_DECL_FUNCTION(base_weakPrimCast) {
-    VIA_LIB_DECL_PARAMETER(val, 0);
-    VIA_LIB_DECL_PARAMETER(type, 1);
-
-    std::string              type_str = __to_cxx_string(V, type);
-    std::optional<ValueType> val_type = magic_enum::enum_cast<ValueType>(type_str);
-
-    VIA_LIB_ASSERT(
-        val_type.has_value(), std::format("'{}' is not a valid primitive typename", type_str)
-    );
-
-    TValue casted_val = __weak_primitive_cast(V, val, val_type.value());
-
-    VIA_LIB_RETURN(casted_val);
-}
-
-VIA_LIB_DECL_FUNCTION(base_strongPrimCast) {
-    VIA_LIB_DECL_PARAMETER(val, 0);
-    VIA_LIB_DECL_PARAMETER(type, 1);
-
-    std::string              type_str = __to_cxx_string(V, type);
-    std::optional<ValueType> val_type = magic_enum::enum_cast<ValueType>(type_str);
-
-    VIA_LIB_ASSERT(
-        val_type.has_value(), std::format("'{}' is not a valid primitive typename", type_str)
-    );
-
-    __strong_primitive_cast(V, const_cast<TValue&>(val), val_type.value());
-    VIA_LIB_RETURN(nil);
-}
-
 VIA_LIB_DECL_FUNCTION(open_baselib) {
     std::unordered_map<u32, TValue> base_properties;
 
@@ -101,12 +70,6 @@ VIA_LIB_DECL_FUNCTION(open_baselib) {
     VIA_LIB_MAP_EMPLACE(base_properties, "println", VIA_LIB_WRAP_CFPTR(base_println));
     VIA_LIB_MAP_EMPLACE(base_properties, "error", VIA_LIB_WRAP_CFPTR(base_error));
     VIA_LIB_MAP_EMPLACE(base_properties, "assert", VIA_LIB_WRAP_CFPTR(base_assert));
-    VIA_LIB_MAP_EMPLACE(
-        base_properties, "weakPrimitiveCast", VIA_LIB_WRAP_CFPTR(base_weakPrimCast)
-    );
-    VIA_LIB_MAP_EMPLACE(
-        base_properties, "strongPrimitiveCast", VIA_LIB_WRAP_CFPTR(base_strongPrimCast)
-    );
 
     for (const auto& [ident, val] : base_properties) {
         __set_global(V, ident, val);

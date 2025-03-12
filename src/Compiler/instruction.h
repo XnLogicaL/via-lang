@@ -21,14 +21,15 @@ struct InstructionData {
     std::string comment = "";
 };
 
-struct alignas(8) Instruction {
-    OpCode  op       = OpCode::NOP;
+struct VIA_ALIGN_CACHE_LINE Instruction {
+    OpCode op = OpCode::NOP;
+
     Operand operand0 = 0;
     Operand operand1 = 0;
     Operand operand2 = 0;
 };
 
-struct alignas(64) Bytecode {
+struct Bytecode {
     Instruction     instruction;
     InstructionData meta_data;
 };

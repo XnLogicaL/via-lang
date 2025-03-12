@@ -24,12 +24,15 @@
 //
 VIA_NAMESPACE_BEGIN
 
+using Label = size_t;
+
 TValue construct_constant(LiteralNode&);
 
 class NodeVisitor {
 public:
     virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
 
+    // Expression visitors
     virtual void visit(LiteralNode&, Operand) INVALID_VISIT;
     virtual void visit(SymbolNode&, Operand) INVALID_VISIT;
     virtual void visit(UnaryNode&, Operand) INVALID_VISIT;
@@ -38,12 +41,14 @@ public:
     virtual void visit(IndexNode&, Operand) INVALID_VISIT;
     virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
 
+    // Type visitors (return type is due to type-decaying)
     virtual pTypeNode visit(AutoNode&) INVALID_VISIT;
     virtual pTypeNode visit(GenericNode&) INVALID_VISIT;
     virtual pTypeNode visit(UnionNode&) INVALID_VISIT;
     virtual pTypeNode visit(FunctionTypeNode&) INVALID_VISIT;
     virtual pTypeNode visit(AggregateNode&) INVALID_VISIT;
 
+    // Statement visitors
     virtual void visit(DeclarationNode&) INVALID_VISIT;
     virtual void visit(ScopeNode&) INVALID_VISIT;
     virtual void visit(FunctionNode&) INVALID_VISIT;
@@ -139,7 +144,7 @@ public:
     }
 
 public:
-    size_t label_counter = 0;
+    Label label_counter = 0;
 
 private:
     ProgramData&       program;
@@ -150,17 +155,8 @@ private:
     DecayVisitor decay_visitor;
     TypeVisitor  type_visitor;
 
-    std::optional<size_t> escape_label = std::nullopt;
-    std::optional<size_t> repeat_label = std::nullopt;
-};
-
-class PrintVisitor : public NodeVisitor {
-public:
-    void visit(LiteralNode&, Operand) override;
-    void visit(SymbolNode&, Operand) override;
-    void visit(UnaryNode&, Operand) override;
-    void visit(GroupNode&, Operand) override;
-    void visit(BinaryNode&, Operand) override;
+    std::optional<Label> escape_label = std::nullopt;
+    std::optional<Label> repeat_label = std::nullopt;
 };
 
 VIA_NAMESPACE_END

@@ -11,54 +11,113 @@
 #include "opcode.h"
 #include "state.h"
 #include "rttypes.h"
-#include "vmapi.h"
 #include <cmath>
 
+#define VALUE_TYPE   const TValue&
+#define CLOSURE_TYPE TFunction*
+#define TABLE_TYPE   TTable*
+#define OBJECT_TYPE  TObject*
+
+#define HASH_TYPE u32
+#define REG_TYPE  Operand
+#define STK_ID    size_t
+
+// ===========================================================================================
+// api.h
+//
 VIA_NAMESPACE_BEGIN
 
 static const TValue nil = TValue();
 
-TValue* get_register(State*, u32 reg);
-void    set_register(State*, u32 reg, const TValue& val);
+// ===========================================================================================
+// Register manipulation
 
-void* to_pointer(const TValue& val) noexcept;
-bool  is_heap(const TValue& val) noexcept;
-bool  compare(const TValue& v0, const TValue& v1) noexcept;
+TValue& get_register(State&, REG_TYPE reg);
+void    set_register(State&, REG_TYPE reg, VALUE_TYPE value);
 
-void   push(State* VIA_RESTRICT, const TValue& val);
-TValue pop(State* VIA_RESTRICT);
-TValue top(State* VIA_RESTRICT);
+// ===========================================================================================
+// Comparison and metadata
 
-template<typename T>
-    requires std::is_arithmetic_v<T>
-T           to_cxx_number(const TValue& val) noexcept;
-TValue      to_string(State* VIA_RESTRICT, const TValue& val) noexcept;
-std::string to_cxx_string(State* VIA_RESTRICT, const TValue& val) noexcept;
-TValue      to_bool(const TValue& val) noexcept;
-bool        to_cxx_bool(const TValue& val) noexcept;
-TValue      to_number(const TValue& val) noexcept;
+bool is_heap(VALUE_TYPE value);
+bool compare(VALUE_TYPE left, VALUE_TYPE right);
 
-TValue get_table(TTable* VIA_RESTRICT tbl, u32 key, bool search_meta) noexcept;
-void   set_table(TTable* VIA_RESTRICT tbl, u32 key, const TValue& val) noexcept;
-TValue get_metamethod(const TValue& val, OpCode op);
+// ===========================================================================================
+// Basic stack manipulation
 
-const TValue& get_local(State* VIA_RESTRICT, u32 offset) noexcept;
-const TValue& get_global(State* VIA_RESTRICT, u32 ident) noexcept;
-void          set_global(State* VIA_RESTRICT, u32, const TValue&);
-const TValue& get_argument(State* VIA_RESTRICT, u32) noexcept;
+void push_nil(State& state);
+void push_int(State& state, TInteger value);
+void push_float(State& state, TFloat value);
+void push_true(State& state);
+void push_false(State& state);
+void push_string(State& state, const char* str);
+void push_table(State& state);
+void push_function(State& state);
+void push_object(State& state);
 
-void native_return(State* VIA_RESTRICT, size_t) noexcept;
-void native_call(State* VIA_RESTRICT, TFunction* VIA_RESTRICT, size_t) noexcept;
-void method_call(State* VIA_RESTRICT, TTable* VIA_RESTRICT, u32, size_t) noexcept;
-void call(State* VIA_RESTRICT, const TValue&, size_t argc) noexcept;
+void   replace(State& state, STK_ID position, VALUE_TYPE replacement);
+void   push(State& state, VALUE_TYPE value);
+void   drop(State& state);
+TValue pop(State& state);
+TValue top(State& state);
 
-TValue len(State* VIA_RESTRICT, const TValue&) noexcept;
-TValue type(State* VIA_RESTRICT, const TValue&) noexcept;
-TValue typeofv(State* VIA_RESTRICT, const TValue&) noexcept;
-void   freeze(TTable* VIA_RESTRICT tbl) noexcept;
+// ===========================================================================================
+// Advanced stack manipulation
 
-TValue weak_primitive_cast(State* VIA_RESTRICT, const TValue& val, ValueType type);
-void   strong_primitive_cast(State* VIA_RESTRICT, TValue& val, ValueType type);
+void       set_stack(State& state, VALUE_TYPE value);
+VALUE_TYPE get_stack(State& state);
+VALUE_TYPE get_argument(State& state, STK_ID offset);
+
+size_t get_local_count();
+
+// ===========================================================================================
+// Value manipulation
+
+TValue to_integer(VALUE_TYPE value);
+TValue to_float(VALUE_TYPE value);
+TValue to_boolean(VALUE_TYPE value);
+TValue to_string(VALUE_TYPE value);
+
+// ===========================================================================================
+// Table manipulation
+
+TValue get_table(TABLE_TYPE tbl, HASH_TYPE key);
+void   set_table(TABLE_TYPE tbl, HASH_TYPE key, VALUE_TYPE value);
+
+// ===========================================================================================
+// Object manipulation
+
+TValue get_field(OBJECT_TYPE obj, size_t index);
+TValue get_method(OBJECT_TYPE obj, size_t index);
+TValue get_constructor(OBJECT_TYPE object);
+TValue get_destructor(OBJECT_TYPE object);
+TValue get_operator_overload(OBJECT_TYPE object, OpCode operation);
+
+// ===========================================================================================
+// Global manipulation
+
+VALUE_TYPE get_global(State& state, HASH_TYPE hash);
+void       set_global(State& state, HASH_TYPE hash, VALUE_TYPE value);
+
+// ===========================================================================================
+// Function manipulation
+
+void native_return(State& state, VALUE_TYPE return_value);
+void native_call(State& state, CLOSURE_TYPE target, size_t argc);
+void method_call(State& state, TABLE_TYPE table, HASH_TYPE key, size_t argc);
+void call(State& state, VALUE_TYPE callee, size_t argc);
+
+CLOSURE_TYPE get_stack_frame();
+VALUE_TYPE   get_upvalue(CLOSURE_TYPE closure);
+void         set_upvalue(CLOSURE_TYPE closure, STK_ID index, VALUE_TYPE value);
+size_t       get_upvalue_count(CLOSURE_TYPE closure);
+size_t       get_local_count_closure();
+
+// ===========================================================================================
+// General operations
+
+TValue len(State& state, VALUE_TYPE target);
+TValue arith(State& state, TValue& left, TValue& right, OpCode operation);
+TValue concat(State& state, TValue& left, TValue& right);
 
 VIA_NAMESPACE_END
 

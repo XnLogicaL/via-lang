@@ -16,8 +16,6 @@ VIA_LIB_DECL_FUNCTION(base_print);
 VIA_LIB_DECL_FUNCTION(base_println);
 VIA_LIB_DECL_FUNCTION(base_error);
 VIA_LIB_DECL_FUNCTION(base_assert);
-VIA_LIB_DECL_FUNCTION(base_weakPrimCast);
-VIA_LIB_DECL_FUNCTION(base_strongPrimCast);
 VIA_LIB_DECL_FUNCTION(open_baselib);
 
 VIA_NAMESPACE_END

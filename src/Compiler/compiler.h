@@ -24,11 +24,12 @@
 //  multiple times, but it is not recommended to do so.
 VIA_NAMESPACE_BEGIN
 
-class Compiler {
+class Compiler final {
 public:
     Compiler(ProgramData& program)
         : program(program) {}
 
+    // Compiler entry point.
     bool generate();
 
 private:

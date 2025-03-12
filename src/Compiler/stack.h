@@ -10,7 +10,7 @@
 #include "rttypes.h"
 #include "common.h"
 
-#define VIA_TEST_STACK_SIZE 1024 * 1024 // 1 MB
+#define VIA_TEST_STACK_SIZE 2048
 
 VIA_NAMESPACE_BEGIN
 
@@ -23,34 +23,56 @@ struct StackObject {
     pTypeNode type;
 };
 
-class CompilerStack {
+class CompilerStack final {
 public:
-    CompilerStack()
-        : sbp(new StackObject[VIA_TEST_STACK_SIZE]) {}
+    // Type aliases
+    using index_query_result  = std::optional<StackObject>;
+    using find_query_result   = std::optional<Operand>;
+    using function_stack_node = FunctionNode::StackNode;
+    using function_stack_type = std::stack<function_stack_node>;
+    using symbol              = std::string;
 
+    // Constructor
+    CompilerStack()
+        : capacity(VIA_TEST_STACK_SIZE),
+          sbp(new StackObject[capacity]) {}
+
+    // Destructor
     ~CompilerStack() {
         delete[] sbp;
     }
 
-    void push(StackObject);
+    // Returns the size of the stack.
+    size_t size() noexcept;
 
-    StackObject top();
-    StackObject pop();
+    // Pushes a given stack object onto the stack.
+    void push(StackObject) noexcept;
 
-    u64 size();
+    // Returns the top stack object of the stack.
+    StackObject top() noexcept;
 
-    std::optional<StackObject> at(size_t);
+    // Pops and returns a clone of the top-most stack object of the stack.
+    StackObject pop() noexcept;
 
-    std::optional<Operand> find_symbol(const StackObject&);
-    std::optional<Operand> find_symbol(const std::string&);
+    // Returns the stack object at a given index.
+    index_query_result at(size_t) noexcept;
+
+    // Returns the stack id of a given stack object.
+    find_query_result find_symbol(const StackObject&) noexcept;
+    find_query_result find_symbol(const symbol&) noexcept;
 
 public:
-    u64 sp = 0;
-
-    std::stack<FunctionNode::StackNode> function_stack;
+    function_stack_type function_stack;
 
 private:
-    StackObject* sbp = nullptr;
+    size_t sp = 0;
+    size_t capacity;
+
+    StackObject* sbp;
+
+private:
+    // Dynamically grows and relocates the stack.
+    void grow_stack() noexcept;
 };
 
 VIA_NAMESPACE_END

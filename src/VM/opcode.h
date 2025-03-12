@@ -18,26 +18,32 @@ enum class OpCode : u16 {
     ADDK,
     ADDINT,
     ADDFLOAT,
+
     SUB,
     SUBK,
     SUBINT,
     SUBFLOAT,
+
     MUL,
     MULK,
     MULINT,
     MULFLOAT,
+
     DIV,
     DIVK,
     DIVINT,
     DIVFLOAT,
+
     MOD,
     MODK,
     MODINT,
     MODFLOAT,
+
     POW,
     POWK,
     POWINT,
     POWFLOAT,
+
     NEG,
 
     MOVE,
@@ -115,15 +121,9 @@ enum class OpCode : u16 {
     LENTABLE,
 
     CONCAT,
-    CONCATK,
     GETSTRING,
     SETSTRING,
     LENSTRING,
-
-    LEN,
-    TYPEOF,
-    TYPE,
-    GET,
 };
 
 VIA_NAMESPACE_END

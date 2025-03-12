@@ -9,8 +9,15 @@
 //
 VIA_NAMESPACE_BEGIN
 
-Operand ConstantHolder::push_constant(const TValue& constant) {
-    for (u32 index = 0; index < constants.size(); index++) {
+using constant_type   = ConstantHolder::constant_type;
+using constant_vector = ConstantHolder::constant_vector;
+
+size_t ConstantHolder::size() const noexcept {
+    return constants.size();
+}
+
+Operand ConstantHolder::push_constant(constant_type& constant) {
+    for (size_t index = 0; index < constants.size(); index++) {
         const TValue& val = constants[index];
         if VIA_UNLIKELY (compare(val, constant)) {
             return index;
@@ -21,15 +28,11 @@ Operand ConstantHolder::push_constant(const TValue& constant) {
     return constants.size() - 1;
 }
 
-size_t ConstantHolder::size() const noexcept {
-    return constants.size();
-}
-
-const TValue& ConstantHolder::at(size_t index) const {
+constant_type& ConstantHolder::at(size_t index) const {
     return constants.at(index);
 }
 
-const TValue& ConstantHolder::at_s(size_t index) const noexcept {
+constant_type& ConstantHolder::at_s(size_t index) const noexcept {
     static const TValue nil;
     if (index >= size()) {
         return nil;
@@ -38,7 +41,7 @@ const TValue& ConstantHolder::at_s(size_t index) const noexcept {
     return at(index);
 }
 
-const std::vector<TValue>& ConstantHolder::get() const noexcept {
+const constant_vector& ConstantHolder::get() const noexcept {
     return constants;
 }
 

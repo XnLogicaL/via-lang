@@ -2,11 +2,14 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
+// !========================================================================================== |
+// ! DO NOT FUZZ THIS FILE! ONLY UNIT TEST AFTER CHECKING FOR THE VIA_DEBUG MACRO!             |
+// !========================================================================================== |
+
 #include "execute.h"
 #include "fileio.h"
 #include "vmapi.h"
 #include "bitutils.h"
-#include "chunk.h"
 #include "common.h"
 #include "state.h"
 #include "rttypes.h"
@@ -14,14 +17,7 @@
 #include "vaux.h"
 #include <cmath>
 
-// How many times a chunk needs to be executed to be flagged as "hot"
-#define VIA_HOTPATH_THRESHOLD 64
-
-// Index of the current instruction
-#define VM_POS                 (V->ip - V->ibp)
-#define VM_CHECK_JMP(addr)     ((addr >= V->ibp) && (addr <= V->iep))
-#define VM_CHECK_OPERAND(oper) (oper != VIA_OPERAND_INVALID)
-
+// Macro that throws a virtual error
 #define VM_ERROR(message)                                                                          \
     do {                                                                                           \
         __set_error_state(V, message);                                                             \
@@ -29,6 +25,7 @@
         goto dispatch;                                                                             \
     } while (0)
 
+// Macro that throws a fatal error
 #define VM_FATAL(message)                                                                          \
     do {                                                                                           \
         std::cerr << "VM terminated with message: " << message << '\n';                            \
@@ -37,23 +34,31 @@
     } while (0)
 
 // Macro for loading the next instruction
-// Has bound checks
 #define VM_LOAD()                                                                                  \
     do {                                                                                           \
-        if (!VM_CHECK_JMP(V->ip + 1)) {                                                            \
+        if (V->ip + 1 > V->iep) {                                                                  \
             goto exit;                                                                             \
         }                                                                                          \
         V->ip++;                                                                                   \
     } while (0)
 
-// Macro that "signals" the VM has completed an execution cycle
+// Macro that completes an execution cycle
 #define VM_NEXT()                                                                                  \
     do {                                                                                           \
         VM_LOAD();                                                                                 \
         goto dispatch;                                                                             \
     } while (0)
 
+// ==================================================================================================
+// execute.cpp
+//
 VIA_NAMESPACE_BEGIN
+
+using enum ValueType;
+using enum OpCode;
+using enum ThreadState;
+
+using namespace impl;
 
 void vm_save_snapshot(State* VIA_RESTRICT V) {
     u64         pos  = V->ip - V->ibp;
@@ -103,18 +108,16 @@ void vm_save_snapshot(State* VIA_RESTRICT V) {
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
 void execute(State* VIA_RESTRICT V) {
-    using enum ValueType;
-    using enum OpCode;
-    using namespace impl;
-
-    VIA_ASSERT(V->tstate == ThreadState::PAUSED, "via::execute must be called on inactive thread");
-    V->tstate = ThreadState::RUNNING;
+    VIA_ASSERT(V->tstate == PAUSED, "via::execute must be called on paused thread");
+    V->tstate = RUNNING;
 
     goto dispatch;
 
 dispatch: {
 
+#ifdef VIA_DEBUG
     vm_save_snapshot(V);
+#endif
 
     // Check for errors and attempt handling them.
     // The __handle_error function works by unwinding the stack until
@@ -1405,6 +1408,7 @@ dispatch: {
         __call(V, *fn_val, argc);
         VM_NEXT();
     }
+
     case EXTERNCALL: {
         Operand fn    = V->ip->operand0;
         Operand argc  = V->ip->operand1;
@@ -1413,6 +1417,7 @@ dispatch: {
         __extern_call(V, cfunc->cast_ptr<TCFunction>(), argc);
         VM_NEXT();
     }
+
     case NATIVECALL: {
         Operand fn   = V->ip->operand0;
         Operand argc = V->ip->operand1;
@@ -1421,6 +1426,7 @@ dispatch: {
         __native_call(V, func->cast_ptr<TFunction>(), argc);
         VM_NEXT();
     }
+
     case METHODCALL: {
         Operand obj  = V->ip->operand0;
         Operand fn   = V->ip->operand1;
@@ -1497,11 +1503,10 @@ dispatch: {
         Operand dst = V->ip->operand0;
         Operand tbl = V->ip->operand1;
 
-        TValue* val    = __get_register(V, tbl);
-        int     size_t = __table_size(val->cast_ptr<TTable>());
-        TValue  val_size(size_t);
+        TValue*  val  = __get_register(V, tbl);
+        TInteger size = __table_size(val->cast_ptr<TTable>());
 
-        __set_register(V, dst, val_size);
+        __set_register(V, dst, TValue(size));
         VM_NEXT();
     }
 
@@ -1509,11 +1514,35 @@ dispatch: {
         Operand rdst = V->ip->operand0;
         Operand objr = V->ip->operand1;
 
-        TValue* val = __get_register(V, objr);
-        int     len = val->cast_ptr<TString>()->len;
-        TValue  val_len(len);
+        TValue*  val = __get_register(V, objr);
+        TInteger len = val->cast_ptr<TString>()->len;
 
-        __set_register(V, rdst, val_len);
+        __set_register(V, rdst, TValue(len));
+        VM_NEXT();
+    }
+
+    case CONCAT: {
+        Operand left  = V->ip->operand0;
+        Operand right = V->ip->operand1;
+
+        TValue* left_val  = __get_register(V, left);
+        TValue* right_val = __get_register(V, right);
+
+        TString* left_str  = left_val->cast_ptr<TString>();
+        TString* right_str = right_val->cast_ptr<TString>();
+
+        size_t new_length = left_str->len + right_str->len;
+        char*  new_string = new char[new_length + 1];
+
+        std::memcpy(new_string, left_str->data, left_str->len);
+        std::memcpy(new_string + left_str->len, right_str->data, right_str->len);
+
+        TString* new_str = new TString(V, new_string);
+
+        __set_register(V, left, TValue(string, new_str));
+
+        delete[] new_string;
+
         VM_NEXT();
     }
 
@@ -1522,66 +1551,32 @@ dispatch: {
         Operand str = V->ip->operand1;
         Operand idx = V->ip->operand2;
 
-        TValue* str_val = __get_register(V, str);
-        TValue* idx_val = __get_register(V, idx);
+        TValue*  str_val = __get_register(V, str);
+        TString* tstr    = str_val->cast_ptr<TString>();
 
-        size_t index = idx_val->val_integer;
-        if VIA_UNLIKELY (index > str_val->cast_ptr<TString>()->len) {
-            __set_register(V, dst, _Nil);
-        }
+        char     chr    = tstr->data[idx];
+        TString* result = new TString(V, &chr);
 
+        __set_register(V, dst, TValue(string, result));
         VM_NEXT();
     }
 
-    case LEN: {
-        Operand rdst = V->ip->operand0;
-        Operand objr = V->ip->operand1;
+    case SETSTRING: {
+        Operand str = V->ip->operand0;
+        Operand src = V->ip->operand1;
+        Operand idx = V->ip->operand2;
 
-        TValue* val = __get_register(V, objr);
-        TValue  len = __len(*val);
+        TValue*  str_val = __get_register(V, str);
+        TString* tstr    = str_val->cast_ptr<TString>();
 
-        __set_register(V, rdst, len);
-        VM_NEXT();
-    }
+        char  chr     = static_cast<char>(src);
+        char* str_cpy = duplicate_string(tstr->data);
+        str_cpy[idx]  = chr;
 
-    case TYPE: {
-        Operand rdst = V->ip->operand0;
-        Operand objr = V->ip->operand1;
+        TString* result = new TString(V, str_cpy);
+        __set_register(V, str, TValue(result));
 
-        TValue* val = __get_register(V, objr);
-        TValue  ty  = __type(V, *val);
-
-        __set_register(V, rdst, ty);
-        VM_NEXT();
-    }
-
-    case TYPEOF: {
-        Operand rdst = V->ip->operand0;
-        Operand objr = V->ip->operand1;
-
-        TValue* val  = __get_register(V, objr);
-        TValue  type = __typeofv(V, *val);
-
-        __set_register(V, rdst, type);
-        VM_NEXT();
-    }
-
-    case GET: {
-        Operand dst = V->ip->operand0;
-        Operand obj = V->ip->operand1;
-        Operand key = V->ip->operand2;
-
-        TValue* obj_val = __get_register(V, obj);
-        TValue* key_val = __get_register(V, key);
-
-        if VIA_LIKELY (check_table(*obj_val)) {
-            const TValue& val = __table_get(obj_val->cast_ptr<TTable>(), *key_val);
-            __set_register(V, dst, val);
-            VM_NEXT();
-        }
-        else if (check_string(*obj_val)) {
-        }
-
+        delete[] str_cpy;
         VM_NEXT();
     }
 
@@ -1593,29 +1588,29 @@ dispatch: {
 
 exit:
     V->sig_exit.fire();
-    V->tstate = ThreadState::PAUSED;
+    V->tstate = PAUSED;
 }
 
 // Permanently kills the thread. Does not clean up the state object.
 void kill_thread(State* VIA_RESTRICT V) {
-    if (V->tstate == ThreadState::RUNNING) {
+    if (V->tstate == RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
     }
 
     // Mark as dead thread
-    V->tstate = ThreadState::DEAD;
+    V->tstate = DEAD;
     V->G->threads.fetch_add(-1);
 }
 
 // Temporarily pauses the thread.
 void pause_thread(State* VIA_RESTRICT V) {
-    if (V->tstate == ThreadState::RUNNING) {
+    if (V->tstate == RUNNING) {
         V->abort = true;
         V->sig_exit.wait();
     }
 
-    V->tstate = ThreadState::PAUSED;
+    V->tstate = PAUSED;
 }
 
 VIA_NAMESPACE_END

@@ -7,6 +7,19 @@
 #include "bytecode.h"
 #include "gc.h"
 #include "vaux.h"
+#include "vmapi.h"
+
+#define DELETE_IF(symbol)                                                                          \
+    if (symbol) {                                                                                  \
+        delete symbol;                                                                             \
+        symbol = nullptr;                                                                          \
+    }
+
+#define DELETE_ARR_IF(symbol)                                                                      \
+    if (symbol) {                                                                                  \
+        delete[] symbol;                                                                           \
+        symbol = nullptr;                                                                          \
+    }
 
 VIA_NAMESPACE_BEGIN
 
@@ -34,31 +47,28 @@ State::State(GState* G, ProgramData& program)
 }
 
 void State::load(BytecodeHolder& bytecode) {
-    if (this->ibp) { // Clean up previous instruction pipeline
-        delete[] this->ibp;
-        this->ibp = nullptr;
-    }
+    DELETE_ARR_IF(ibp);
 
-    const std::vector<Bytecode>& pipeline = bytecode.get();
+    auto& pipeline = bytecode.get();
 
     if (pipeline.empty()) {
-        this->ibp = this->iep = this->ip = nullptr;
+        ibp = iep = ip = nullptr;
         return;
     }
 
-    this->ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction head pointer)
-    this->iep = this->ibp + pipeline.size();      // Initialize iep (Instruction base pointer)
-    this->ip  = this->ibp;                        // Initialize ip (Instruction pointer)
+    ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
+    iep = ibp + pipeline.size();            // Initialize iep (Instruction end pointer)
+    ip  = ibp;                              // Initialize ip (Instruction pointer)
 
     u64 position = 0;
     for (const Bytecode& pair : pipeline) {
         const Instruction& instruction = pair.instruction;
-        this->ibp[position++]          = instruction;
+        ibp[position++]                = instruction;
     }
 }
 
 State::~State() {
-    if (this->sstate) {
+    if (sstate) {
         // Invalidate shared resources to avoid double frees
         sstate->gc = nullptr;
 
@@ -70,25 +80,14 @@ State::~State() {
             sstate->sbp = nullptr;
         }
 
-        delete this->sstate;
+        delete sstate;
     }
 
 
-    if (this->gc) {
-        delete this->gc;
-    }
-
-    if (this->registers) {
-        delete[] this->registers;
-    }
-
-    if (this->ibp) {
-        delete[] this->ibp;
-    }
-
-    if (this->sbp) {
-        delete[] this->sbp;
-    }
+    DELETE_IF(gc);
+    DELETE_ARR_IF(registers);
+    DELETE_ARR_IF(ibp);
+    DELETE_ARR_IF(sbp);
 
     __label_deallocate(this);
 }
