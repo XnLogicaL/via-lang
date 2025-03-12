@@ -20,9 +20,6 @@ struct UpValue {
 };
 
 struct TFunction {
-    u32         line = 0;
-    const char* id   = "<anonymous-function>";
-
     bool is_error_handler = false;
     bool is_vararg        = false;
 

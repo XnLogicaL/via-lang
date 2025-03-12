@@ -49,6 +49,16 @@
         goto dispatch;                                                                             \
     } while (0)
 
+#define VM_CHECK_ZERO_DIVISON_INT(divisor)                                                         \
+    if ((divisor)->val_integer == 0) {                                                             \
+        VM_ERROR("Division by zero");                                                              \
+    }
+
+#define VM_CHECK_ZERO_DIVISON_FLT(divisor)                                                         \
+    if ((divisor)->val_floating_point == 0.0f) {                                                   \
+        VM_ERROR("Division by zero");                                                              \
+    }
+
 // ==================================================================================================
 // execute.cpp
 //
@@ -204,6 +214,44 @@ dispatch: {
 
         VM_NEXT();
     }
+    case ADDINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer += imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point += imm;
+        }
+
+        VM_NEXT();
+    }
+    case ADDFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer += imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point += imm;
+        }
+
+        VM_NEXT();
+    }
 
     case SUB: {
         Operand lhs = V->ip->operand0;
@@ -263,6 +311,44 @@ dispatch: {
             else if VIA_UNLIKELY (rhs_type == floating_point) {
                 lhs_val->val_floating_point -= rhs_val.val_floating_point;
             }
+        }
+
+        VM_NEXT();
+    }
+    case SUBINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer -= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point -= imm;
+        }
+
+        VM_NEXT();
+    }
+    case SUBFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer -= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point -= imm;
         }
 
         VM_NEXT();
@@ -330,6 +416,44 @@ dispatch: {
 
         VM_NEXT();
     }
+    case MULINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer *= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point *= imm;
+        }
+
+        VM_NEXT();
+    }
+    case MULFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer *= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point *= imm;
+        }
+
+        VM_NEXT();
+    }
 
     case DIV: {
         Operand lhs = V->ip->operand0;
@@ -343,9 +467,13 @@ dispatch: {
 
         if VIA_LIKELY (lhs_type == integer) {
             if VIA_LIKELY (rhs_type == integer) {
+                VM_CHECK_ZERO_DIVISON_INT(rhs_val);
+
                 lhs_val->val_integer /= rhs_val->val_integer;
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val);
+
                 lhs_val->val_floating_point =
                     static_cast<TFloat>(lhs_val->val_integer) / rhs_val->val_floating_point;
                 lhs_val->type = floating_point;
@@ -353,9 +481,13 @@ dispatch: {
         }
         else if (lhs_type == floating_point) {
             if VIA_LIKELY (rhs_type == integer) {
+                VM_CHECK_ZERO_DIVISON_INT(rhs_val);
+
                 lhs_val->val_floating_point /= static_cast<TFloat>(rhs_val->val_integer);
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val);
+
                 lhs_val->val_floating_point /= rhs_val->val_floating_point;
             }
         }
@@ -374,9 +506,13 @@ dispatch: {
 
         if VIA_LIKELY (lhs_type == integer) {
             if VIA_LIKELY (rhs_type == integer) {
+                VM_CHECK_ZERO_DIVISON_INT(&rhs_val);
+
                 lhs_val->val_integer /= rhs_val.val_integer;
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
+                VM_CHECK_ZERO_DIVISON_FLT(&rhs_val);
+
                 lhs_val->val_floating_point =
                     static_cast<TFloat>(lhs_val->val_integer) / rhs_val.val_floating_point;
                 lhs_val->type = floating_point;
@@ -384,11 +520,61 @@ dispatch: {
         }
         else if (lhs_type == floating_point) {
             if VIA_LIKELY (rhs_type == integer) {
+                VM_CHECK_ZERO_DIVISON_INT(&rhs_val);
+
                 lhs_val->val_floating_point /= static_cast<TFloat>(rhs_val.val_integer);
             }
             else if VIA_UNLIKELY (rhs_type == floating_point) {
+                VM_CHECK_ZERO_DIVISON_FLT(&rhs_val);
+
                 lhs_val->val_floating_point /= rhs_val.val_floating_point;
             }
+        }
+
+        VM_NEXT();
+    }
+    case DIVINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        if (imm == 0) {
+            VM_ERROR("Division by zero");
+        }
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer /= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point /= imm;
+        }
+
+        VM_NEXT();
+    }
+    case DIVFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        if (imm == 0.0f) {
+            VM_ERROR("Division by zero");
+        }
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer /= imm;
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point /= imm;
         }
 
         VM_NEXT();
@@ -462,6 +648,44 @@ dispatch: {
 
         VM_NEXT();
     }
+    case POWINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point = std::pow(lhs_val->val_floating_point, imm);
+        }
+
+        VM_NEXT();
+    }
+    case POWFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point = std::pow(lhs_val->val_floating_point, imm);
+        }
+
+        VM_NEXT();
+    }
 
     case MOD: {
         Operand lhs = V->ip->operand0;
@@ -529,6 +753,59 @@ dispatch: {
                 lhs_val->val_floating_point =
                     std::fmod(lhs_val->val_floating_point, rhs_val.val_floating_point);
             }
+        }
+
+        VM_NEXT();
+    }
+    case MODINT: {
+        Operand lhs      = V->ip->operand0;
+        Operand int_high = V->ip->operand1;
+        Operand int_low  = V->ip->operand2;
+
+        TValue*  lhs_val = __get_register(V, lhs);
+        TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer = std::fmod(lhs_val->val_integer, imm);
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point = std::fmod(lhs_val->val_floating_point, imm);
+        }
+
+        VM_NEXT();
+    }
+    case MODFLOAT: {
+        Operand lhs      = V->ip->operand0;
+        Operand flt_high = V->ip->operand1;
+        Operand flt_low  = V->ip->operand2;
+
+        TValue* lhs_val = __get_register(V, lhs);
+        TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+
+        ValueType lhs_type = lhs_val->type;
+
+        if VIA_LIKELY (lhs_type == integer) {
+            lhs_val->val_integer = std::fmod(lhs_val->val_integer, imm);
+        }
+        else if (lhs_type == floating_point) {
+            lhs_val->val_floating_point = std::fmod(lhs_val->val_floating_point, imm);
+        }
+
+        VM_NEXT();
+    }
+
+    case NEG: {
+        Operand   dst  = V->ip->operand0;
+        TValue*   val  = __get_register(V, dst);
+        ValueType type = val->type;
+
+        if (type == integer) {
+            val->val_integer = -val->val_integer;
+        }
+        else if (type == floating_point) {
+            val->val_floating_point = -val->val_floating_point;
         }
 
         VM_NEXT();

@@ -19,27 +19,27 @@ VIA_NAMESPACE_IMPL_BEGIN
 
 static const TValue _Nil = TValue();
 
-VIA_INLINE_HOT void __set_error_state(State* _V, const std::string& _Msg) {
-    _V->err->frame   = _V->frame;
-    _V->err->message = _Msg;
+VIA_INLINE_HOT void __set_error_state(State* _State, const std::string& _Msg) {
+    _State->err->frame   = _State->frame;
+    _State->err->message = _Msg;
 }
 
-VIA_INLINE_HOT void __clear_error_state(State* _V) {
-    _V->err->frame   = nullptr;
-    _V->err->message = "";
+VIA_INLINE_HOT void __clear_error_state(State* _State) {
+    _State->err->frame   = nullptr;
+    _State->err->message = "";
 }
 
-VIA_INLINE_HOT bool __has_error(State* _V) {
-    return _V->err->frame != nullptr;
+VIA_INLINE_HOT bool __has_error(State* _State) {
+    return _State->err->frame != nullptr;
 }
 
-VIA_FORCE_INLINE bool __handle_error(State* _V) {
-    TFunction* _Current_frame = _V->frame;
-    TFunction* _Error_frame   = _V->frame;
+VIA_FORCE_INLINE bool __handle_error(State* _State) {
+    TFunction* _Current_frame = _State->frame;
+    TFunction* _Error_frame   = _State->frame;
 
     while (_Current_frame) {
         if (_Current_frame->is_error_handler) {
-            _V->err->frame = _Current_frame;
+            _State->err->frame = _Current_frame;
             break;
         }
         _Current_frame = _Current_frame->caller;
@@ -48,10 +48,9 @@ VIA_FORCE_INLINE bool __handle_error(State* _V) {
     if (!_Current_frame) {
         if (_Error_frame) {
             std::string _Error = std::format(
-                "{} <frame@0x{:x}>: {}\n\n",
-                _Error_frame->id,
+                "error at <frame@0x{:x}>: {}\n\n",
                 reinterpret_cast<uintptr_t>(_Error_frame),
-                _V->err->message
+                _State->err->message
             );
             std::cerr << _Error;
         }
@@ -62,10 +61,7 @@ VIA_FORCE_INLINE bool __handle_error(State* _V) {
         while (_Error_frame && !visited.count(_Error_frame)) {
             visited.insert(_Error_frame);
             std::cerr << std::format(
-                "#{} {} <frame@0x{:x}>\n",
-                _Error_frame->id,
-                _Idx++,
-                reinterpret_cast<uintptr_t>(_Error_frame)
+                "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
             );
             _Error_frame = _Error_frame->caller;
         }
@@ -74,90 +70,90 @@ VIA_FORCE_INLINE bool __handle_error(State* _V) {
     return static_cast<bool>(_Current_frame);
 }
 
-VIA_INLINE_HOT void __set_register(State* _V, Operand _Reg, const TValue& _Val) {
-    TValue* addr = _V->registers + _Reg;
+VIA_INLINE_HOT void __set_register(State* _State, Operand _Reg, const TValue& _Val) {
+    TValue* addr = _State->registers + _Reg;
     *addr        = _Val.clone();
 }
 
-VIA_INLINE_HOT TValue* __get_register(State* _V, Operand _Reg) {
-    TValue* addr = _V->registers + _Reg;
+VIA_INLINE_HOT TValue* __get_register(State* _State, Operand _Reg) {
+    TValue* addr = _State->registers + _Reg;
     return addr;
 }
 
-VIA_INLINE TValue __get_constant(State* _V, size_t _Idx) {
-    if (_Idx >= _V->program.constants->size()) {
+VIA_INLINE TValue __get_constant(State* _State, size_t _Idx) {
+    if (_Idx >= _State->program.constants->size()) {
         return _Nil.clone();
     }
 
-    return _V->program.constants->at(_Idx).clone();
+    return _State->program.constants->at(_Idx).clone();
 }
 
-VIA_INLINE_HOT void __push(State* _V, const TValue& _Val) {
-    _V->sbp[_V->sp++] = _Val.clone();
+VIA_INLINE_HOT void __push(State* _State, const TValue& _Val) {
+    _State->sbp[_State->sp++] = _Val.clone();
 }
 
-VIA_INLINE_HOT TValue __pop(State* _V) {
-    return _V->sbp[_V->sp--].clone();
+VIA_INLINE_HOT TValue __pop(State* _State) {
+    return _State->sbp[_State->sp--].clone();
 }
 
-VIA_INLINE_HOT TValue __get_stack(State* _V, Operand _Offset) noexcept {
-    return _V->sbp[_Offset].clone();
+VIA_INLINE_HOT TValue __get_stack(State* _State, Operand _Offset) noexcept {
+    return _State->sbp[_Offset].clone();
 }
 
-VIA_INLINE_HOT void __set_stack(State* _V, Operand _Offset, TValue& _Val) noexcept {
-    _V->sbp[_Offset] = _Val.clone();
+VIA_INLINE_HOT void __set_stack(State* _State, Operand _Offset, TValue& _Val) noexcept {
+    _State->sbp[_Offset] = _Val.clone();
 }
 
-VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _V, Operand _Offset) noexcept {
-    if (_Offset >= _V->argc) {
+VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, Operand _Offset) noexcept {
+    if (_Offset >= _State->argc) {
         return _Nil.clone();
     }
 
-    const Operand _Stk_offset = _V->ssp + _V->argc - 1 - _Offset;
-    const TValue& _Val        = _V->sbp[_Stk_offset];
+    const Operand _Stk_offset = _State->ssp + _State->argc - 1 - _Offset;
+    const TValue& _Val        = _State->sbp[_Stk_offset];
 
     return _Val.clone();
 }
 
-VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
+VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _State, const TValue& _Val) noexcept {
     char* _Str = duplicate_string(std::string(magic_enum::enum_name(_Val.type)));
-    return TValue(new TString(_V, _Str));
+    return TValue(new TString(_State, _Str));
 }
 
-VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) {
-    TValue _Type = __type(_V, _Val);
+VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _State, const TValue& _Val) {
+    TValue _Type = __type(_State, _Val);
     return std::string(_Type.cast_ptr<TString>()->data);
 }
 
-VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _V, const TValue& _Val) {
+VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _State, const TValue& _Val) {
     if (check_table(_Val)) {
         TTable*       _Tbl  = _Val.cast_ptr<TTable>();
-        const TValue& _Type = __table_get(_Tbl, TValue(new TString(_V, "__type")));
+        const TValue& _Type = __table_get(_Tbl, TValue(new TString(_State, "__type")));
 
         if (check_nil(_Type)) {
-            return __type(_V, _Val);
+            return __type(_State, _Val);
         }
 
-        return TValue(new TString(_V, _Type.cast_ptr<TString>()->data));
+        return TValue(new TString(_State, _Type.cast_ptr<TString>()->data));
     }
 
-    return __type(_V, _Val);
+    return __type(_State, _Val);
 }
 
-VIA_INLINE_HOT void __native_call(State* _V, TFunction* _Callee, size_t _Argc) {
-    _Callee->caller   = _V->frame;
-    _Callee->ret_addr = _V->ip;
-    _V->frame         = _Callee;
-    _V->sibp          = _V->ibp;
-    _V->siep          = _V->iep;
-    _V->ip            = _Callee->bytecode;
-    _V->ibp           = _Callee->bytecode;
-    _V->iep           = _Callee->bytecode + _Callee->bytecode_len;
-    _V->argc          = _Argc;
-    _V->ssp           = _V->sp;
+VIA_INLINE_HOT void __native_call(State* _State, TFunction* _Callee, size_t _Argc) {
+    _Callee->caller   = _State->frame;
+    _Callee->ret_addr = _State->ip;
+    _State->frame     = _Callee;
+    _State->sibp      = _State->ibp;
+    _State->siep      = _State->iep;
+    _State->ip        = _Callee->bytecode;
+    _State->ibp       = _Callee->bytecode;
+    _State->iep       = _Callee->bytecode + _Callee->bytecode_len;
+    _State->argc      = _Argc;
+    _State->ssp       = _State->sp;
 }
 
-VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, size_t _Argc) {
+VIA_INLINE_HOT void __extern_call(State* _State, TCFunction* _Callee, size_t _Argc) {
     char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
     const void* _Addr    = _Callee;
     uintptr_t   _Address = reinterpret_cast<uintptr_t>(_Addr);
@@ -170,30 +166,28 @@ VIA_INLINE_HOT void __extern_call(State* _V, TCFunction* _Callee, size_t _Argc) 
     }
 
     TFunction _Func{
-        .line             = 0,
-        .id               = "<cfunction>",
         .is_error_handler = _Callee->is_error_handler,
         .is_vararg        = false,
-        .ret_addr         = _V->ip,
-        .caller           = _V->frame,
+        .ret_addr         = _State->ip,
+        .caller           = _State->frame,
     };
 
-    __native_call(_V, &_Func, _Argc);
-    _Callee->data(_V);
+    __native_call(_State, &_Func, _Argc);
+    _Callee->data(_State);
 }
 
-VIA_INLINE_HOT void __call(State* _V, const TValue& _Callee, size_t _Argc) {
-    _V->calltype = CallType::CALL;
+VIA_INLINE_HOT void __call(State* _State, const TValue& _Callee, size_t _Argc) {
+    _State->calltype = CallType::CALL;
 
     if (check_function(_Callee)) {
-        __native_call(_V, _Callee.cast_ptr<TFunction>(), _Argc);
+        __native_call(_State, _Callee.cast_ptr<TFunction>(), _Argc);
     }
     else if (check_cfunction(_Callee)) {
-        __extern_call(_V, _Callee.cast_ptr<TCFunction>(), _Argc);
+        __extern_call(_State, _Callee.cast_ptr<TCFunction>(), _Argc);
     }
     else {
         __set_error_state(
-            _V, std::format("attempt to call a {} value", __type_cxx_string(_V, _Callee))
+            _State, std::format("attempt to call a {} value", __type_cxx_string(_State, _Callee))
         );
     }
 }
@@ -210,43 +204,45 @@ VIA_FORCE_INLINE TValue __len(const TValue& _Val) noexcept {
     return _Nil.clone();
 }
 
-VIA_FORCE_INLINE void __native_return(State* VIA_RESTRICT _V, const TValue& _Ret_value) noexcept {
-    __closure_close_upvalues(_V->frame);
+VIA_FORCE_INLINE void __native_return(
+    State* VIA_RESTRICT _State, const TValue& _Ret_value
+) noexcept {
+    __closure_close_upvalues(_State->frame);
 
-    _V->ibp   = _V->sibp;
-    _V->iep   = _V->siep;
-    _V->ip    = _V->frame->ret_addr;
-    _V->frame = _V->frame->caller;
+    _State->ibp   = _State->sibp;
+    _State->iep   = _State->siep;
+    _State->ip    = _State->frame->ret_addr;
+    _State->frame = _State->frame->caller;
 
-    _V->sp = _V->ssp;
-    _V->sp -= _V->argc;
+    _State->sp = _State->ssp;
+    _State->sp -= _State->argc;
 
-    __push(_V, _Ret_value);
+    __push(_State, _Ret_value);
 }
 
-VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _V, Operand _Id) noexcept {
-    std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
+VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _State, Operand _Id) noexcept {
+    std::lock_guard<std::mutex> lock(_State->G->gtable_mutex);
 
-    auto _It = _V->G->gtable.find(_Id);
-    if (_It != _V->G->gtable.end()) {
+    auto _It = _State->G->gtable.find(_Id);
+    if (_It != _State->G->gtable.end()) {
         return _It->second.clone();
     }
 
     return _Nil.clone();
 }
 
-VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _V, Operand _Id, const TValue& _Val) {
-    std::lock_guard<std::mutex> lock(_V->G->gtable_mutex);
+VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _State, Operand _Id, const TValue& _Val) {
+    std::lock_guard<std::mutex> lock(_State->G->gtable_mutex);
 
-    auto _It = _V->G->gtable.find(_Id);
-    if (_It != _V->G->gtable.end()) {
-        __set_error_state(_V, std::format("attempt to reassign global '{}'", _Id));
+    auto _It = _State->G->gtable.find(_Id);
+    if (_It != _State->G->gtable.end()) {
+        __set_error_state(_State, std::format("attempt to reassign global '{}'", _Id));
     }
 
-    _V->G->gtable.emplace(_Id, _Val.clone());
+    _State->G->gtable.emplace(_Id, _Val.clone());
 }
 
-VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
+VIA_INLINE TValue __to_string(State* VIA_RESTRICT _State, const TValue& _Val) noexcept {
     using enum ValueType;
 
     if (check_string(_Val)) {
@@ -256,16 +252,16 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexce
     switch (_Val.type) {
     case integer: {
         std::string _Str  = std::to_string(_Val.val_integer);
-        TString*    _Tstr = new TString(_V, _Str.c_str());
+        TString*    _Tstr = new TString(_State, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case floating_point: {
         std::string _Str  = std::to_string(_Val.val_floating_point);
-        TString*    _Tstr = new TString(_V, _Str.c_str());
+        TString*    _Tstr = new TString(_State, _Str.c_str());
         return TValue(string, _Tstr);
     }
     case boolean: {
-        TString* _Str = new TString(_V, _Val.val_boolean ? "true" : "false");
+        TString* _Str = new TString(_State, _Val.val_boolean ? "true" : "false");
         return TValue(string, _Str);
     }
     case table:
@@ -275,11 +271,11 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexce
         auto _Final_str =
             std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(_Val.val_pointer));
 
-        TString* _Str = new TString(_V, _Final_str.c_str());
+        TString* _Str = new TString(_State, _Final_str.c_str());
         return TValue(string, _Str);
     }
     default:
-        TString* _Tstr = new TString(_V, "nil");
+        TString* _Tstr = new TString(_State, "nil");
         return TValue(string, _Tstr);
     }
 
@@ -287,8 +283,10 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _V, const TValue& _Val) noexce
     return _Nil.clone();
 }
 
-VIA_FORCE_INLINE std::string __to_cxx_string(State* VIA_RESTRICT _V, const TValue& _Val) noexcept {
-    TValue _Str = __to_string(_V, _Val);
+VIA_FORCE_INLINE std::string __to_cxx_string(
+    State* VIA_RESTRICT _State, const TValue& _Val
+) noexcept {
+    TValue _Str = __to_string(_State, _Val);
     return std::string(_Str.cast_ptr<TString>()->data);
 }
 
@@ -410,75 +408,6 @@ VIA_INLINE_HOT bool __compare(const TValue& _Val_0, const TValue& _Val_1) noexce
     VIA_UNREACHABLE;
     return false;
 };
-
-VIA_INLINE TValue
-__weak_primitive_cast(State* VIA_RESTRICT _V, const TValue& _Val, ValueType _Type) {
-    using enum ValueType;
-
-    switch (_Type) {
-    case integer:
-    case floating_point:
-        return __to_number(_Val);
-    case boolean:
-        return __to_bool(_Val);
-    case string:
-        return __to_string(_V, _Val);
-    default:
-        break;
-    }
-
-    return _Nil.clone();
-}
-
-VIA_INLINE void __strong_primitive_cast(State* VIA_RESTRICT _V, TValue& _Val, ValueType _Type) {
-    using enum ValueType;
-
-    switch (_Type) {
-    case integer: {
-        int _Num         = __to_cxx_number<int>(_Val);
-        _Val.val_integer = _Num;
-        break;
-    }
-    case floating_point: {
-        float _Num = __to_cxx_number<float>(_Val);
-        if (_Num != _Num) {
-            goto error;
-        }
-
-        _Val.val_floating_point = _Num;
-        break;
-    }
-    case boolean:
-        _Val.val_boolean = __to_cxx_bool(_Val);
-        break;
-    case string: {
-        TValue   _Non_owned_val = __to_string(_V, _Val);
-        TString* _Owned_val     = _Val.cast_ptr<TString>();
-
-        _Val.val_pointer = new TString(_V, _Non_owned_val.cast_ptr<TString>()->data);
-
-        if (_Owned_val) {
-            delete _Owned_val;
-        }
-
-        break;
-    }
-    default:
-        goto error;
-    }
-
-    _Val.type = _Type;
-    return;
-error:
-    __set_error_state(
-        _V,
-        std::format(
-            "type '{}' is not primitive castable into type '{}'",
-            magic_enum::enum_name(_Val.type),
-            magic_enum::enum_name(_Type)
-        )
-    );
-}
 
 VIA_NAMESPACE_END
 
