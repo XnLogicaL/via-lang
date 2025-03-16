@@ -10,17 +10,14 @@ VIA_NAMESPACE_BEGIN
 using enum TokenType;
 
 std::string Token::to_string() const noexcept {
-    std::basic_string_view<char> name = magic_enum::enum_name(type);
-    std::string                  fmt  = std::format(
+    return std::format(
         "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
-        name,
+        magic_enum::enum_name(type),
         lexeme,
         line,
         offset,
         position
     );
-
-    return fmt;
 }
 
 bool Token::is_literal() const noexcept {
@@ -61,6 +58,34 @@ int Token::bin_prec() const noexcept {
     default:
         return -1;
     }
+}
+
+using token_vector = TokenStream::token_vector;
+using at_result    = TokenStream::at_result;
+
+size_t TokenStream::size() noexcept {
+    return tokens.size();
+}
+
+Token& TokenStream::at(size_t position) {
+    return tokens.at(position);
+}
+
+at_result TokenStream::at_s(size_t position) noexcept {
+    try {
+        return tokens.at(position);
+    }
+    catch (std::exception&) {
+        return std::nullopt;
+    }
+}
+
+void TokenStream::push(const Token& token) noexcept {
+    tokens.push_back(token);
+}
+
+token_vector& TokenStream::get() noexcept {
+    return tokens;
 }
 
 VIA_NAMESPACE_END

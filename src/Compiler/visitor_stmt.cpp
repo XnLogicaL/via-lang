@@ -291,6 +291,20 @@ void StmtVisitor::visit(AssignNode& assign_node) {
     }
 }
 
+void StmtVisitor::visit(ReturnNode& return_node) {
+    if (return_node.expression.get()) {
+        Operand expr_reg = allocator.allocate_register();
+
+        return_node.expression->accept(expression_visitor, expr_reg);
+        program.bytecode->emit(RETURN, {expr_reg});
+
+        allocator.free_register(expr_reg);
+    }
+    else {
+        program.bytecode->emit(RETURNNIL);
+    }
+}
+
 void StmtVisitor::visit(IfNode& if_node) {
     /*
 

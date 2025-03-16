@@ -43,6 +43,14 @@ enum class TokenType {
     KW_TYPE,      // type
     KW_TYPEOF,    // typeof
     KW_DEFINED,   // defined
+    KW_MEMBER,    // member
+    KW_PRAGMA,    // pragma
+    KW_CONSTRUCT, // construct
+    KW_DESTRUCT,  // destruct
+    KW_ENUM,      // enum
+    KW_TRY,
+    KW_CATCH,
+    KW_RAISE,
 
     // Operators
     OP_ADD,       // +
@@ -125,8 +133,23 @@ struct Token {
     int         bin_prec() const noexcept;
 };
 
-struct TokenHolder {
-    std::vector<Token> tokens;
+class TokenStream {
+public:
+    using token_vector = std::vector<Token>;
+    using at_result    = std::optional<Token>;
+
+    size_t size() noexcept;
+
+    Token& at(size_t);
+
+    at_result at_s(size_t) noexcept;
+
+    void push(const Token&) noexcept;
+
+    token_vector& get() noexcept;
+
+private:
+    token_vector tokens;
 };
 
 VIA_NAMESPACE_END

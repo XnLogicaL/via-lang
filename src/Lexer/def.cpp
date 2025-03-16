@@ -9,20 +9,26 @@ VIA_NAMESPACE_BEGIN
 
 Definition Preprocessor::parse_definition() {
     Definition def;
-    def.begin               = pos;
-    std::vector<Token> toks = program.tokens->tokens;
+    def.begin = pos;
+
+    auto& toks = program.token_stream->get();
 
     // Ensure there are enough tokens to parse
-    if (pos >= toks.size())
-        PREPROCESSOR_ERROR("Unexpected end of input after 'define'");
+    if (pos >= toks.size()) {
+        PREPROCESSOR_ERROR(pos, "Unexpected end of input after 'define'");
+    }
 
     auto it = def_table.find(peek().lexeme);
-    if (it != def_table.end())
-        PREPROCESSOR_ERROR(std::format(
-            "Redefinition of definition '{}', previously defined on line {}",
-            it->second.identifier,
-            it->second.line
-        ));
+    if (it != def_table.end()) {
+        PREPROCESSOR_ERROR(
+            pos,
+            std::format(
+                "Redefinition of definition '{}', previously defined on line {}",
+                it->second.identifier,
+                it->second.line
+            )
+        );
+    }
 
     // Consume 'define' keyword and extract identifier
     consume();
@@ -30,16 +36,19 @@ Definition Preprocessor::parse_definition() {
     def.identifier = consume().lexeme;
 
     // Check and consume opening parenthesis
-    if (++pos >= toks.size() || peek().type != TokenType::PAREN_OPEN)
-        PREPROCESSOR_ERROR("Expected '(' after identifier in definition");
+    if (++pos >= toks.size() || peek().type != TokenType::PAREN_OPEN) {
+        PREPROCESSOR_ERROR(pos, "Expected '(' to open definition substitute");
+    }
 
     // Collect tokens until closing parenthesis
-    while (++pos < toks.size() && peek().type != TokenType::PAREN_CLOSE)
+    while (++pos < toks.size() && peek().type != TokenType::PAREN_CLOSE) {
         def.replacement.push_back(toks.at(pos));
+    }
 
     // Ensure a closing parenthesis was found
-    if (pos >= toks.size() || peek().type != TokenType::PAREN_CLOSE)
-        PREPROCESSOR_ERROR("Missing closing ')' in definition");
+    if (pos >= toks.size() || peek().type != TokenType::PAREN_CLOSE) {
+        PREPROCESSOR_ERROR(pos, "Expected ')' to close definition substitute");
+    }
 
     // Consume closing parenthesis
     ++pos;
@@ -50,7 +59,7 @@ Definition Preprocessor::parse_definition() {
 }
 
 void Preprocessor::expand_definition(const Definition& def) {
-    std::vector<Token> toks = program.tokens->tokens;
+    auto& toks = program.token_stream->get();
 
     // Iterate through all tokens in the program
     for (size_t i = 0; i < toks.size(); ++i) {

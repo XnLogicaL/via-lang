@@ -105,23 +105,19 @@ struct TTable {
 };
 
 struct TObject {
-    size_t method_count;
     size_t field_count;
 
     TValue constructor;
     TValue destructor;
     TValue operator_overloads[16];
 
-    TValue* methods;
     TValue* fields;
 
     VIA_DEFAULT_CONSTRUCTOR(TObject);
     VIA_CUSTOM_DESTRUCTOR(TObject);
 
-    TObject(size_t method_count, size_t field_count)
-        : method_count(method_count),
-          field_count(field_count),
-          methods(new TValue[method_count]),
+    TObject(size_t field_count)
+        : field_count(field_count),
           fields(new TValue[field_count]) {}
 };
 

@@ -165,7 +165,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-tokens")) {
             print_flag_label("--dump-tokens");
 
-            for (const Token& token : program.tokens->tokens) {
+            for (const Token& token : program.token_stream->get()) {
                 std::cout << token.to_string() << "\n";
             }
         }

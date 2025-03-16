@@ -11,7 +11,7 @@
 
 VIA_NAMESPACE_BEGIN
 
-struct TokenHolder;
+class TokenStream;
 struct AbstractSyntaxTree;
 class BytecodeHolder;
 class ConstantHolder;
@@ -26,9 +26,9 @@ public:
     std::string file;
     std::string source;
 
-    TokenHolder*        tokens   = nullptr;
-    AbstractSyntaxTree* ast      = nullptr;
-    BytecodeHolder*     bytecode = nullptr;
+    TokenStream*        token_stream;
+    AbstractSyntaxTree* ast;
+    BytecodeHolder*     bytecode;
     ConstantHolder*     constants;
     CompilerStack*      test_stack;
     GlobalTracker*      globals;
@@ -42,7 +42,7 @@ public:
           label_count(other.label_count),
           file(other.file),
           source(other.source),
-          tokens(other.tokens),
+          token_stream(other.token_stream),
           ast(other.ast),
           bytecode(other.bytecode),
           constants(other.constants),
@@ -53,12 +53,12 @@ public:
         other.file               = "";
         other.source             = "";
 
-        other.tokens     = nullptr;
-        other.ast        = nullptr;
-        other.bytecode   = nullptr;
-        other.constants  = nullptr;
-        other.test_stack = nullptr;
-        other.globals    = nullptr;
+        other.token_stream = nullptr;
+        other.ast          = nullptr;
+        other.bytecode     = nullptr;
+        other.constants    = nullptr;
+        other.test_stack   = nullptr;
+        other.globals      = nullptr;
     }
 
     // Move assignment operator

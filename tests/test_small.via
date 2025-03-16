@@ -1,14 +1,14 @@
-global Aaaa: integer = 0
-global BB: integer = 100
+global Aaaa: int = 0
+global BB: int = 100
 
-global func add(a: integer, b: integer) -> nil {
+global func add(a: int, b: int) -> () {
     local x = 31
     local var = 56
-    local func inner() -> nil { ## SP 2
+    local func inner() -> () {
         local y = true
 
         if y {
-            local xx = 100914 as floating_point
+            local xx = 100914 as float
         }
         elif y {
             local zz = 192591952

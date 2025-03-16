@@ -65,6 +65,7 @@ private:
     pStmtNode parse_declaration();
     pStmtNode parse_scope();
     pStmtNode parse_if();
+    pStmtNode parse_return();
     pStmtNode parse_while();
     pStmtNode parse_stmt();
 };

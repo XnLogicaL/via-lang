@@ -51,7 +51,7 @@ VIA_INLINE std::vector<Token> fast_tokenize(std::string source) {
     ProgramData program("<unknown>", source);
     Tokenizer   tokenizer(program);
     tokenizer.tokenize();
-    return program.tokens->tokens;
+    return program.token_stream;
 }
 
 VIA_NAMESPACE_END

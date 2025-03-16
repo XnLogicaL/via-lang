@@ -4,11 +4,15 @@
   "patterns": [
     {
       "name": "keyword.control",
-      "match": "\\b(with|elif|typeof|defined|new|define|macro|import|export|struct|type|namespace|property|do|in|local|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|meta)\\b"
+      "match": "\\b(with|elif|typeof|defined|new|define|macro|import|export|struct|type|namespace|do|in|local|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|construct|destruct|member|try|catch|raise|enum|pragma)\\b"
     },
     {
       "name": "storage.modifier",
-      "match": "\\b(strict|const)\\b"
+      "match": "\\b(const)\\b"
+    },
+    {
+      "name": "entity.other.attribute-name",
+      "match": "@[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()|@[A-Za-z_][A-Za-z0-9_]*"
     },
     {
       "name": "variable",
@@ -22,6 +26,17 @@
         {
           "name": "constant.character.escape",
           "match": "\\\\."
+        },
+        {
+          "name": "string.interpolation",
+          "begin": "\\$\\{",
+          "end": "\\}",
+          "patterns": [
+            {
+              "name": "variable.other",
+              "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+            }
+          ]
         }
       ]
     },
@@ -36,11 +51,7 @@
     },
     {
       "name": "support.function.builtin",
-      "match": "\\b(print|println|error|require|setmetatable|getmetatable|pcall)\\b"
-    },
-    {
-      "name": "support.variable.builtin",
-      "match": "\\b(math|table|string|memory|http|os|thread)\\b(?:\\.[A-Za-z0-9_]+)*"
+      "match": "\\b(print|println)\\b"
     },
     {
       "name": "constant.language.boolean",
@@ -76,7 +87,7 @@
     },
     {
       "name": "storage.type",
-      "match": "\\b(nil|number|bool|table|string)\\b"
+      "match": "\\b(nil|int|float|bool|string)\\b"
     },
     {
       "name": "entity.name.function",
@@ -84,7 +95,7 @@
     },
     {
       "name": "entity.name.function",
-      "match": "func ?(strict|const)? ?(strict|const)? ([A-Za-z0-9_]+)",
+      "match": "func ?(const)? ?(const)? ([A-Za-z0-9_]+)",
       "captures": {
         "0": {
           "name": "keyword.control"

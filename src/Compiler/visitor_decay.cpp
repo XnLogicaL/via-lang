@@ -27,8 +27,4 @@ pTypeNode DecayVisitor::visit(FunctionTypeNode&) {
     return nullptr;
 }
 
-pTypeNode DecayVisitor::visit(AggregateNode&) {
-    return nullptr;
-}
-
 VIA_NAMESPACE_END

@@ -26,11 +26,13 @@ struct StackObject {
 class CompilerStack final {
 public:
     // Type aliases
-    using index_query_result  = std::optional<StackObject>;
-    using find_query_result   = std::optional<Operand>;
+    using index_query_result = std::optional<StackObject>;
+    using find_query_result  = std::optional<Operand>;
+
     using function_stack_node = FunctionNode::StackNode;
     using function_stack_type = std::stack<function_stack_node>;
-    using symbol              = std::string;
+
+    using symbol = std::string;
 
     // Constructor
     CompilerStack()

@@ -1,5 +1,0 @@
-macro do_stuff(){
-    println("Hello, world")
-}
-
-do_stuff!()

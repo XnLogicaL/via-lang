@@ -205,13 +205,7 @@ pTypeNode IndexNode::infer_type(ProgramData& program) {
             return nullptr;
         }
 
-        if (AggregateNode* aggregate =
-                get_derived_instance<TypeNode, AggregateNode>(*stk_obj->type)) {
-
-            if (LiteralNode* key = get_derived_instance<ExprNode, LiteralNode>(*index)) {
-                return aggregate->get_field(key->value_token.lexeme);
-            }
-        }
+        return stk_obj->type->clone();
     }
 
     return nullptr;
@@ -391,34 +385,6 @@ pTypeNode FunctionTypeNode::clone() {
     }
 
     return std::make_unique<FunctionTypeNode>(std::move(parameters), returns->clone());
-}
-
-// ===============================
-// AggregateNode
-std::string AggregateNode::to_string(u32&) {
-    return "AggregateNode<>";
-}
-
-std::string AggregateNode::to_string_x() {
-    return "<aggregate-trunacted>";
-}
-
-void AggregateNode::decay(NodeVisitor& visitor, pTypeNode& self) {
-    self = visitor.visit(*this);
-}
-
-pTypeNode AggregateNode::clone() {
-    Fields fields_clone;
-    for (auto& [key, val] : fields) {
-        fields_clone.emplace(key, val->clone());
-    }
-
-    return std::make_unique<AggregateNode>(std::move(fields_clone));
-}
-
-pTypeNode AggregateNode::get_field(const std::string& key) {
-    auto it = fields.find(key);
-    return it != fields.end() ? it->second->clone() : nullptr;
 }
 
 // ===============================

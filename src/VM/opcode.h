@@ -57,6 +57,7 @@ enum class OpCode : u16 {
     LOADFALSE,
     LOADTABLE,
     LOADFUNCTION,
+    LOADOBJECT,
 
     PUSH,
     PUSHK,
@@ -115,6 +116,10 @@ enum class OpCode : u16 {
     METHODCALL,
     RETURN,
     RETURNNIL,
+
+    RAISE,
+    TRY,
+    CATCH,
 
     GETTABLE,
     SETTABLE,

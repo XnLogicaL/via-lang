@@ -34,10 +34,39 @@
 //  It first checks the stack for the symbol, if found, emits a `GETSTACK` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPVALUE`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
-//  `program::test_stack::function_stack` and looking for the symbol and if found, emits
+//  `program::test_stack::function_stack` and looking for the symbol. If found, emits
 //  `GETARGUMENT`. Finally, looks for the variable in the global scope by querying
-//  `program::globals` and if found emits GETGLOBAL. If all of these queries fail, throws an
+//  `program::globals` and if found emits GETGLOBAL. If all of these queries fail, throws a
 //  "Use of undeclared variable" compilation error.
+//
+// - UnaryNode compilation:
+//  This node emits a NEG instruction onto the inner expression.
+//
+// - GroupNode compilation:
+//  Compiles the inner expression into dst.
+//
+// - CallNode compilation:
+//  This node represents a function call expression, which first loads the arguments onto the stack
+//  (LIFO), loads the callee object, and calls it. And finally, emits a POP instruction to retrieve
+//  the return value.
+//
+// - IndexNode compilation:
+//  This node represents a member access, which could follow either of these patterns:
+//    -> Direct table member access: table.index
+//      This pattern compiles into a GETTABLE instruction that uses the hashed version of the index.
+//    -> Expressional table access: table[index]
+//      This pattern first compiles the index expression, then casts it into a string, and finally
+//      uses it as a table index.
+//    -> Object member access: object::index
+//      This pattern is by far the most complex pattern with multiple arbitriary checks in order to
+//      ensure access validity, conventional integrity, and type safety. It first checks if the
+//      index value is a symbol or not to make the guarantee that aggregate types can only have
+//      symbols as keys. After that, it searches for the field name inside the aggregate type, if
+//      not found, throws a "Aggregate object has no field named ..." compilation error. And the
+//      final check, which checks for private member access patterns (object::_index) which by
+//      convention tell the compiler that members prefixed with '_' are private members of the
+//      object. Upon failure, throws a "Private member access into object..." warning.
+//
 //
 // ==================================================================================================
 VIA_NAMESPACE_BEGIN
@@ -141,39 +170,39 @@ void ExprVisitor::visit(CallNode& call_node, Operand dst) {
 }
 
 void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
-    Operand obj_reg = allocator.allocate_register();
-    index_node.object->accept(*this, obj_reg);
-
+    Operand obj_reg   = allocator.allocate_register();
     Operand index_reg = allocator.allocate_register();
+
+    index_node.object->accept(*this, obj_reg);
     index_node.index->accept(*this, index_reg);
 
     pTypeNode object_type = index_node.object->infer_type(program);
     pTypeNode index_type  = index_node.index->infer_type(program);
 
-    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
+    // Validate index type
+    if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
         if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
-            goto bad_index_type;
+            visitor_failed = true;
+            emitter.out_range(
+                index_node.index->begin,
+                index_node.index->end,
+                "Index type must be a string or integer",
+                Error
+            );
+            return;
         }
-    }
-    else {
-    bad_index_type:
-        visitor_failed = true;
-        emitter.out_range(
-            index_node.index->begin,
-            index_node.index->end,
-            "Index type is not a string or integer",
-            Error
-        );
     }
 
-    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
-        if (primitive->type == ValueType::string) {
+    // Handle different object types
+    if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
+        switch (primitive->type) {
+        case ValueType::string:
             program.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
-        }
-        else if (primitive->type == ValueType::table) {
+            break;
+        case ValueType::table:
             program.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
-        }
-        else {
+            break;
+        default:
             visitor_failed = true;
             emitter.out_range(
                 index_node.object->begin,
@@ -183,9 +212,6 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
             );
         }
     }
-
-    allocator.free_register(obj_reg);
-    allocator.free_register(index_reg);
 }
 
 void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {

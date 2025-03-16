@@ -1,9 +1,0 @@
-local SharedVariable = 35
-
-Lua {
-    local total = viaload("SharedVariable") + 34
-
-    if total ~= 0 then
-        print(total)
-    end
-}

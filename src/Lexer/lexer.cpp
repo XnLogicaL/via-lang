@@ -351,11 +351,11 @@ Token Tokenizer::get_token() {
 }
 
 void Tokenizer::tokenize() {
-    TokenHolder* tokens = program.tokens;
+    TokenStream* tokens = program.token_stream;
 
     while (true) {
         Token token = get_token();
-        tokens->tokens.push_back(token);
+        tokens->push(token);
 
         if (token.type == EOF_) {
             break;

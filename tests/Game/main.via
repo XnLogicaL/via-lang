@@ -1,76 +1,74 @@
-import "vector_utils.viam" as Vec2 ## Syntax sugar for `global const [name] = require([file])`
+import "vector_utils.viam" as Vec2
 
-type Player {
-    name: String;
-    position: Vec2;
-    health: Number;
-
-    move: (new_x: Number, new_y: Number) -> void;
-    heal: (amount: Number) -> void;
+enum GameState {
+    RUNNING = 0,
 }
 
 struct Player {
-    property name: String
-    property position: Vec2
-    property health: Number = 100.0
+    member name: string
+    member position: Vec2
+    member health: int = 100
 
-    func move(new_x: Number, new_y: Number) {
-        self.position = Vec2 { x = new_x, y = new_y }
+    func move(new_x: float, new_y: float) -> () {
+        self::position = new Vec2(new_x, new_y)
     }
 
-    func heal(amount: Number) {
-        if self.health < 100 {
-            self.health += amount
+    func heal(amount: int) -> () {
+        if self::health < 100 {
+            self::health += amount
 
-            if self.health > 100 {
-                self.health = 100
+            if self::health > 100 {
+                self::health = 100
             }
         }
     }
-
-    func new(name: String, pos: Vec2) {
-        self.name = name
-        self.position = pos
+    
+    construct(name: string, pos: Vec2) {
+        self::name = name
+        self::position = pos
     }
 }
 
 struct Game {
-    property players: {Player}
-    property state: Number
+    member players: {Player}
+    member state: int
 
-    func addPlayer(player: memory.pointer<Player>): void {
-        table.insert(self.players, memory.dereference(player))
+    func addPlayer(player: Player) -> () {
+        table.insert(self::players, player)
     }
 
-    func removePlayer(name: String) {
-        local [player, i] = table.find(self.players, func(i, v) {
+    func removePlayer(name: string) -> () {
+        local result = table.find(self::players, func (i, v) {
             return v.name == name
         })
 
-        if player ~= nil {
-            table.remove(self.players, i)
+        if result.v != nil {
+            self::players[i] = nil
         }
         else {
-            error(string.format("Could not find player %s in game instance %s", name, to_string(self)))
+            raise "Could not find player ${name} in game instance"
         }
     }
 }
 
-local func main() {
-    local const game = Game.new()
+local func getCircleArea(radius: float) -> float {
+    return math.pi * radius ^ 2
+}
 
-    local player = Player.new("Alice", Vector2.new(0, 0))
-    player.move(5, 10)
+local func main() -> () {
+    const game = new Game()
 
-    game.addPlayer(memory.reference(player))
+    local player = new Player("Alice", new Vec2(0, 0))
+    player::move(5, 10)
+
+    game::addPlayer(player)
 
     local steps = 0
-    
     while steps < 5 {
         steps++
         printf!("Step %d", steps)
 
-        switch steps {
+        match steps {
             case 1 { print("Started moving...") }
             case 3 { print("Halfway there!") }
             case 5 { print("Arrived!") }
@@ -79,13 +77,16 @@ local func main() {
     }
 
     local radius = 3.0
-    local area = math.pi * radius ^ 2
+    local area = getCircleArea(radius)
     
-    printf!("Area of circle with radius %d is %d", radius, area)
+    println("Area of circle with radius ${radius} is ${area}")
 
     return
 }
 
-print("Running program")
+println("Running program")
 
-main()
+try { main() }
+catch err {
+    println(err)
+}

@@ -60,7 +60,6 @@ public:
     virtual pTypeNode visit(GenericNode&) INVALID_VISIT;
     virtual pTypeNode visit(UnionNode&) INVALID_VISIT;
     virtual pTypeNode visit(FunctionTypeNode&) INVALID_VISIT;
-    virtual pTypeNode visit(AggregateNode&) INVALID_VISIT;
 
     // Statement visitors
     virtual void visit(DeclarationNode&) INVALID_VISIT;
@@ -68,6 +67,7 @@ public:
     virtual void visit(FunctionNode&) INVALID_VISIT;
     virtual void visit(AssignNode&) INVALID_VISIT;
     virtual void visit(IfNode&) INVALID_VISIT;
+    virtual void visit(ReturnNode&) INVALID_VISIT;
     virtual void visit(WhileNode&) INVALID_VISIT;
     virtual void visit(ExprStmtNode&) INVALID_VISIT;
 
@@ -113,7 +113,6 @@ public:
     pTypeNode visit(GenericNode&) override;
     pTypeNode visit(UnionNode&) override;
     pTypeNode visit(FunctionTypeNode&) override;
-    pTypeNode visit(AggregateNode&) override;
 
 private:
     ProgramData&              program;
@@ -150,6 +149,7 @@ public:
     void visit(FunctionNode&) override;
     void visit(AssignNode&) override;
     void visit(IfNode&) override;
+    void visit(ReturnNode&) override;
     void visit(WhileNode&) override;
     void visit(ExprStmtNode&) override;
 

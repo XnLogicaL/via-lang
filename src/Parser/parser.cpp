@@ -22,16 +22,16 @@ Token Parser::current() {
 }
 
 Token Parser::peek(int ahead) {
-    if (position + ahead >= program.tokens->tokens.size()) {
+    if (position + ahead >= program.token_stream->size()) {
         return Token();
     }
 
-    return program.tokens->tokens[position + ahead];
+    return program.token_stream->at(position + ahead);
 }
 
 Token Parser::consume(u32 ahead) {
     u64 new_pos = position + static_cast<u64>(ahead);
-    if (new_pos >= program.tokens->tokens.size()) {
+    if (new_pos >= program.token_stream->size()) {
         throw ParserError(
             std::format("Unexpected end of file (attempted read of: token #{})", new_pos), position
         );
@@ -87,14 +87,21 @@ pTypeNode Parser::parse_generic() {
 }
 
 pTypeNode Parser::parse_type_primary() {
+    static std::unordered_map<std::string, ValueType> primitive_map = {
+        {"int", ValueType::integer},
+        {"float", ValueType::floating_point},
+        {"bool", ValueType::boolean},
+        {"string", ValueType::string},
+    };
+
     Token tok = current();
 
     switch (tok.type) {
     case IDENTIFIER:
     case LIT_NIL: {
-        auto enum_value = magic_enum::enum_cast<ValueType>(tok.lexeme);
-        if (enum_value.has_value()) {
-            return std::make_unique<PrimitiveNode>(consume(), enum_value.value());
+        auto it = primitive_map.find(tok.lexeme);
+        if (it != primitive_map.end()) {
+            return std::make_unique<PrimitiveNode>(consume(), it->second);
         }
 
         return parse_generic();
@@ -121,31 +128,6 @@ pTypeNode Parser::parse_type_primary() {
 
         pTypeNode return_type = parse_type();
         return std::make_unique<FunctionTypeNode>(std::move(params), std::move(return_type));
-    }
-    case BRACE_OPEN: {
-        using Fields = AggregateNode::Fields;
-        Fields fields;
-
-        consume();
-
-        while (current().type != BRACE_CLOSE) {
-            EXPECT(IDENTIFIER, "Expected identifier for aggregate field name, got '{}'");
-            Token field_name = consume();
-
-            EXPECT(COLON, "Expected ':' to segregate aggregate field name and type, got '{}'");
-            consume();
-
-            pTypeNode type = parse_type();
-            fields.emplace(field_name.lexeme, std::move(type));
-
-            EXPECT(SEMICOLON, "Expected ';' to close aggregate field pair, got '{}'");
-            consume();
-        }
-
-        EXPECT(BRACE_CLOSE, "Expected '}}' to close aggregate type, got '{}'");
-        consume();
-
-        return std::make_unique<AggregateNode>(std::move(fields));
     }
     default: {
         throw ParserError(
@@ -243,6 +225,17 @@ pExprNode Parser::parse_postfix(pExprNode lhs) {
             lhs = std::make_unique<IndexNode>(std::move(lhs), std::move(index));
             break;
         }
+        case COLON: { // Member access obj::id
+            consume();
+
+            EXPECT(COLON, "Expected ':' to complete member access delimiter, got '{}'");
+            consume();
+
+            EXPECT(IDENTIFIER, "Expected identifier for member access specifier, got '{}'");
+            Token id = consume();
+
+            lhs = std::make_unique<IndexNode>(std::move(lhs), std::make_unique<SymbolNode>(id));
+        }
         case PAREN_OPEN: { // Function calls: func(arg1, arg2)
             consume();
             std::vector<pExprNode> arguments;
@@ -280,7 +273,7 @@ pExprNode Parser::parse_postfix(pExprNode lhs) {
 pExprNode Parser::parse_binary(int precedence) {
     pExprNode lhs = parse_postfix(parse_primary());
 
-    while (position < program.tokens->tokens.size() && current().is_operator()) {
+    while (position < program.token_stream->size() && current().is_operator()) {
         Token op      = current();
         int   op_prec = op.bin_prec();
         if (op_prec < precedence) {
@@ -302,8 +295,6 @@ pExprNode Parser::parse_expr() {
 }
 
 pStmtNode Parser::parse_declaration() {
-    using ParameterNode = FunctionNode::ParameterNode;
-
     Token     declaration_keyword = consume();
     TokenType declaration_type    = declaration_keyword.type;
 
@@ -440,6 +431,18 @@ pStmtNode Parser::parse_if() {
     );
 }
 
+pStmtNode Parser::parse_return() {
+    consume();
+
+    try { // Optional return value
+        pExprNode expr = parse_expr();
+        return std::make_unique<ReturnNode>(std::move(expr));
+    }
+    catch (const ParserError& e) {
+        return std::make_unique<ReturnNode>(nullptr);
+    }
+}
+
 pStmtNode Parser::parse_while() {
     consume();
 
@@ -464,6 +467,8 @@ pStmtNode Parser::parse_stmt() {
         return parse_scope();
     case KW_IF:
         return parse_if();
+    case KW_RETURN:
+        return parse_return();
     case KW_WHILE:
         return parse_while();
     default:
@@ -512,7 +517,7 @@ bool Parser::parse() noexcept {
         }
         catch (const ParserError& e) {
             failed = true;
-            emitter.out(program.tokens->tokens.at(e.where()), e.what(), Error);
+            emitter.out(program.token_stream->at(e.where()), e.what(), Error);
             break;
         }
         catch (const std::exception& e) {
