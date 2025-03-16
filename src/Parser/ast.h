@@ -168,6 +168,24 @@ struct BinaryNode : public ExprNode {
     }
 };
 
+struct TypeCastNode : public ExprNode {
+    pExprNode expression;
+    pTypeNode type;
+
+    VIA_AST_NODE_OVERRIDE_TO_STRING;
+    VIA_AST_NODE_OVERRIDE_CLONE(pExprNode);
+
+    VIA_EXPR_NODE_OVERRIDE_ACCEPT;
+    VIA_EXPR_NODE_OVERRIDE_INFER_TYPE;
+
+    TypeCastNode(pExprNode expression, pTypeNode type)
+        : expression(std::move(expression)),
+          type(std::move(type)) {
+        this->begin = this->expression->begin;
+        this->end   = this->expression->end;
+    }
+};
+
 // =========================================================================================
 // Type Nodes
 //

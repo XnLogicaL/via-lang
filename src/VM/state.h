@@ -79,6 +79,7 @@ struct alignas(64) State {
     Instruction** labels;
 
     // Call and frame management
+    TFunction* main     = nullptr;
     TFunction* frame    = nullptr;        // Call stack pointer
     size_t     argc     = 0;              // Argument count (for CALL and FASTCALLX)
     CallType   calltype = CallType::CALL; // Current calling convention
@@ -99,8 +100,10 @@ struct alignas(64) State {
 
     ProgramData& program;
 
+    VIA_NON_COPYABLE(State);
+    VIA_CUSTOM_DESTRUCTOR(State);
+
     State(GState*, ProgramData&);
-    ~State();
 
     void load(BytecodeHolder&);
 };

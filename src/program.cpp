@@ -13,6 +13,7 @@
 #define DELETE_IF(target)                                                                          \
     if (target) {                                                                                  \
         delete target;                                                                             \
+        target = nullptr;                                                                          \
     }
 
 VIA_NAMESPACE_BEGIN

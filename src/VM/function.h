@@ -30,6 +30,17 @@ struct TFunction {
 
     u32 bytecode_len = 0;
     u32 upv_count    = VIA_UPV_COUNT;
+
+    VIA_DEFAULT_CONSTRUCTOR(TFunction);
+    VIA_CUSTOM_DESTRUCTOR(TFunction);
+
+    TFunction(bool is_error_handler, bool is_vararg, Instruction* return_address, TFunction* caller)
+        : is_error_handler(is_error_handler),
+          is_vararg(is_vararg),
+          ret_addr(return_address),
+          caller(caller) {}
+
+    TFunction(const TFunction& other);
 };
 
 struct TCFunction {

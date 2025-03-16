@@ -50,6 +50,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         if (is_constant_expression(val)) {
             LiteralNode& literal = dynamic_cast<LiteralNode&>(val);
 
+            // Check for nil
             if (std::get_if<std::monostate>(&literal.value)) {
                 program.bytecode->emit(PUSHNIL, {}, comment);
                 program.test_stack->push({
@@ -59,6 +60,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                     .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::nil),
                 });
             }
+            // Check for integer
             else if (int* int_value = std::get_if<int>(&literal.value)) {
                 u32  final_value = *int_value;
                 auto operands    = reinterpret_u32_as_2u16(final_value);
@@ -72,6 +74,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                         std::make_unique<PrimitiveNode>(literal.value_token, ValueType::integer),
                 });
             }
+            // Check for float
             else if (float* float_value = std::get_if<float>(&literal.value)) {
                 u32  final_value = std::bit_cast<u32>(*float_value);
                 auto operands    = reinterpret_u32_as_2u16(final_value);
@@ -86,6 +89,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                     ),
                 });
             }
+            // Check for boolean
             else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
                 program.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE, {}, comment);
                 program.test_stack->push({
@@ -96,6 +100,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                         std::make_unique<PrimitiveNode>(literal.value_token, ValueType::boolean),
                 });
             }
+            // Other constant
             else {
                 const TValue& constant = construct_constant(dynamic_cast<LiteralNode&>(val));
                 const Operand const_id = program.constants->push_constant(constant);
@@ -126,8 +131,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         }
     }
 
+    // Decay statement type before type checking
     declaration_node.type->decay(decay_visitor, declaration_node.type);
 
+    // Only do type checking if statement successfully compiled
     if (!failed()) {
         declaration_node.accept(type_visitor);
     }
@@ -202,6 +209,13 @@ void StmtVisitor::visit(FunctionNode& function_node) {
         }
 
         pstmt->accept(*this);
+    }
+
+    Bytecode last_bytecode = program.bytecode->back();
+    OpCode   last_opcode   = last_bytecode.instruction.op;
+
+    if (last_opcode != RETURN && last_opcode != RETURNNIL) {
+        program.bytecode->emit(RETURNNIL);
     }
 
     Token       symbol_token = function_node.identifier;

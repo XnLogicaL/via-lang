@@ -6,10 +6,10 @@
 // ! DO NOT FUZZ THIS FILE! ONLY UNIT TEST AFTER CHECKING FOR THE VIA_DEBUG MACRO!             |
 // !========================================================================================== |
 
+#include "bitutils.h"
 #include "execute.h"
 #include "fileio.h"
 #include "vmapi.h"
-#include "bitutils.h"
 #include "common.h"
 #include "state.h"
 #include "rttypes.h"
@@ -875,10 +875,10 @@ dispatch: {
 
     case LOADFUNCTION: {
         Operand    dst  = V->ip->operand0;
-        TFunction* func = new TFunction;
+        TFunction* func = new TFunction();
 
         __closure_bytecode_load(V, func);
-        __set_register(V, dst, TValue(func));
+        __set_register(V, dst, TValue(function, func));
         VM_NEXT();
     }
 
@@ -886,6 +886,8 @@ dispatch: {
         Operand  dst    = V->ip->operand0;
         Operand  upv_id = V->ip->operand1;
         UpValue* upv    = __closure_upv_get(V->frame, upv_id);
+
+        dump_struct(*upv->value);
 
         __set_register(V, dst, *upv->value);
         VM_NEXT();

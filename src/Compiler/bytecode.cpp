@@ -15,12 +15,24 @@ using comment_type    = BytecodeHolder::comment_type;
 using operands_array  = BytecodeHolder::operands_array;
 using bytecode_vector = BytecodeHolder::bytecode_vector;
 
-void BytecodeHolder::add(const Bytecode& bytecode) {
-    instructions.push_back(bytecode);
-}
-
 size_t BytecodeHolder::size() const noexcept {
     return instructions.size();
+}
+
+Bytecode& BytecodeHolder::front() {
+    return instructions.front();
+}
+
+Bytecode& BytecodeHolder::back() {
+    return instructions.back();
+}
+
+Bytecode& BytecodeHolder::at(size_t pos) {
+    return instructions.at(pos);
+}
+
+void BytecodeHolder::add(const Bytecode& bytecode) {
+    instructions.push_back(bytecode);
 }
 
 void BytecodeHolder::remove(size_t index) {

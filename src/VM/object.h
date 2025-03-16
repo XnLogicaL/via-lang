@@ -57,7 +57,11 @@ struct VIA_ALIGN_CACHE_LINE TValue {
     explicit TValue(ValueType type, void* ptr)  : type(type), val_pointer(ptr) {}
     /* clang-format on */
 
+    // Returns a clone of the object.
     VIA_NO_DISCARD TValue clone() const noexcept;
+
+    // Frees the internal resources of the object and resets union tag to nil.
+    void reset() const noexcept;
 
     template<typename T>
     VIA_NO_DISCARD VIA_INLINE_HOT T* cast_ptr() const noexcept {

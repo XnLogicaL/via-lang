@@ -114,6 +114,7 @@ enum class OpCode : u16 {
     NATIVECALL,
     METHODCALL,
     RETURN,
+    RETURNNIL,
 
     GETTABLE,
     SETTABLE,
@@ -124,6 +125,11 @@ enum class OpCode : u16 {
     GETSTRING,
     SETSTRING,
     LENSTRING,
+
+    TOINT,
+    TOFLOAT,
+    TOSTRING,
+    TOBOOL,
 };
 
 VIA_NAMESPACE_END

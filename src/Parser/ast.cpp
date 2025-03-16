@@ -106,7 +106,7 @@ pTypeNode UnaryNode::infer_type(ProgramData& program) {
         return nullptr;
     }
 
-    return is_arithmetic(*inner) ? std::move(inner) : nullptr;
+    return is_arithmetic(inner) ? std::move(inner) : nullptr;
 }
 
 // ===============================
@@ -240,7 +240,7 @@ pTypeNode BinaryNode::infer_type(ProgramData& program) {
     pTypeNode lhs = lhs_expression->infer_type(program);
     pTypeNode rhs = rhs_expression->infer_type(program);
 
-    if (!lhs || !rhs || !is_integral(*lhs) || !is_integral(*rhs)) {
+    if (!lhs || !rhs || !is_integral(lhs) || !is_integral(rhs)) {
         return nullptr;
     }
 
@@ -258,6 +258,31 @@ pTypeNode BinaryNode::infer_type(ProgramData& program) {
     }
 
     return nullptr;
+}
+
+// ===============================
+// TypeCastNode
+std::string TypeCastNode::to_string(u32& depth) {
+    return std::format(
+        "TypeCastNode<{} as {}>", expression->to_string(depth), type->to_string(depth)
+    );
+}
+
+void TypeCastNode::accept(NodeVisitor& visitor, u32 dst) {
+    visitor.visit(*this, dst);
+}
+
+pExprNode TypeCastNode::clone() {
+    return std::make_unique<TypeCastNode>(expression->clone(), type->clone());
+}
+
+pTypeNode TypeCastNode::infer_type(ProgramData& program) {
+    pTypeNode expr_type = expression->infer_type(program);
+    if (!is_castable(expr_type, type)) {
+        return nullptr;
+    }
+
+    return type->clone();
 }
 
 // ===============================

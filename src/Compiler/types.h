@@ -61,11 +61,12 @@ bool is_constant_expression(Expression& expression) {
 }
 
 template<typename Derived>
-    requires std::is_base_of_v<TypeNode, Derived>
-bool is_integral(Derived& type) {
+concept is_type_node_derivative = requires { std::is_base_of_v<TypeNode, Derived>; };
+
+VIA_INLINE bool is_integral(pTypeNode& type) {
     using enum ValueType;
 
-    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(type)) {
+    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type)) {
         return primitive->type == integer;
     }
 
@@ -73,12 +74,10 @@ bool is_integral(Derived& type) {
     return false;
 }
 
-template<typename Derived>
-    requires std::is_base_of_v<TypeNode, Derived>
-bool is_floating_point(Derived& type) {
+VIA_INLINE bool is_floating_point(pTypeNode& type) {
     using enum ValueType;
 
-    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(type)) {
+    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type)) {
         return primitive->type == floating_point;
     }
 
@@ -86,28 +85,50 @@ bool is_floating_point(Derived& type) {
     return false;
 }
 
-template<typename Derived>
-    requires std::is_base_of_v<TypeNode, Derived>
-bool is_arithmetic(Derived& type) {
+VIA_INLINE bool is_arithmetic(pTypeNode& type) {
     return is_integral(type) || is_floating_point(type);
 }
 
-template<typename DervivedLeft, typename DervivedRight>
-    requires std::is_base_of_v<TypeNode, DervivedLeft> && std::is_base_of_v<TypeNode, DervivedRight>
-bool is_compatible(DervivedLeft& left, DervivedRight& right) {
-    if constexpr (!std::is_same_v<DervivedLeft, DervivedRight>) {
-        return false;
-    }
+VIA_INLINE bool is_compatible(pTypeNode& left, pTypeNode& right) {
+    if (PrimitiveNode* primitive_left = get_derived_instance<TypeNode, PrimitiveNode>(*left)) {
+        if (PrimitiveNode* primitive_right =
+                get_derived_instance<TypeNode, PrimitiveNode>(*right)) {
 
-    if (PrimitiveNode* primitive_left = get_derived_instance<TypeNode, PrimitiveNode>(left)) {
-        PrimitiveNode* primitive_right = get_derived_instance<TypeNode, PrimitiveNode>(right);
-        return primitive_left->type == primitive_right->type;
+            return primitive_left->type == primitive_right->type;
+        }
     }
 
     return false;
 }
 
+VIA_INLINE bool is_castable(pTypeNode& from, pTypeNode& into) {
+    if (PrimitiveNode* primitive_right = get_derived_instance<TypeNode, PrimitiveNode>(*into)) {
+        if (get_derived_instance<TypeNode, PrimitiveNode>(*from)) {
+            if (primitive_right->type == ValueType::string) {
+                return true;
+            }
+            else if (is_arithmetic(into)) {
+                return is_arithmetic(from);
+            }
+        }
+    }
 
+    return false;
+}
+
+VIA_INLINE bool is_castable(pTypeNode& from, ValueType to) {
+    if (PrimitiveNode* primitive_left = get_derived_instance<TypeNode, PrimitiveNode>(*from)) {
+        if (to == ValueType::string) {
+            return true;
+        }
+        else if (to == ValueType::integer) {
+            return primitive_left->type == ValueType::floating_point ||
+                   primitive_left->type == ValueType::string;
+        }
+    }
+
+    return false;
+}
 
 VIA_NAMESPACE_END
 

@@ -5,7 +5,6 @@
 
 #include "common.h"
 #include "bytecode.h"
-#include "cleaner.h"
 #include "instruction.h"
 #include "ast.h"
 #include "visitor.h"

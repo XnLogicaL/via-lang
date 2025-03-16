@@ -36,11 +36,12 @@ State::State(GState* G, ProgramData& program)
       program(program) {
     load(*program.bytecode);
 
-    TFunction* main = new TFunction{
-        .ret_addr     = ip,
-        .bytecode     = ip,
-        .bytecode_len = static_cast<u32>(iep - ibp),
-    };
+    main = new TFunction(false, false, ip, nullptr);
+
+    main->bytecode_len = static_cast<u32>(iep - ibp);
+    main->bytecode     = new Instruction[main->bytecode_len];
+
+    std::memcpy(main->bytecode, ibp, main->bytecode_len);
 
     __label_load(this, program.label_count);
     __native_call(this, main, 0);
@@ -85,6 +86,9 @@ State::~State() {
 
 
     DELETE_IF(gc);
+    DELETE_IF(err);
+    DELETE_IF(main);
+
     DELETE_ARR_IF(registers);
     DELETE_ARR_IF(ibp);
     DELETE_ARR_IF(sbp);

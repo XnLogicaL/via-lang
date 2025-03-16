@@ -19,6 +19,19 @@
         VIA_ASSERT(false, "invalid visit");                                                        \
     }
 
+#define CHECK_TYPE_INFERENCE_FAILURE(type, expr)                                                   \
+    if (!type.get()) {                                                                             \
+        visitor_failed = true;                                                                     \
+        emitter.out_range(expr->begin, expr->end, "Expression type could not be infered", Error);  \
+        emitter.out_flat(                                                                          \
+            "This error message likely indicates an internal compiler bug. Please create an "      \
+            "issue "                                                                               \
+            "at https://github.com/XnLogicaL/via-lang",                                            \
+            Info                                                                                   \
+        );                                                                                         \
+        return;                                                                                    \
+    }
+
 // =============================================================================================
 // visitor.h
 //
@@ -40,6 +53,7 @@ public:
     virtual void visit(CallNode&, Operand) INVALID_VISIT;
     virtual void visit(IndexNode&, Operand) INVALID_VISIT;
     virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
+    virtual void visit(TypeCastNode&, Operand) INVALID_VISIT;
 
     // Type visitors (return type is due to type-decaying)
     virtual pTypeNode visit(AutoNode&) INVALID_VISIT;
@@ -81,6 +95,7 @@ public:
     void visit(CallNode&, Operand) override;
     void visit(IndexNode&, Operand) override;
     void visit(BinaryNode&, Operand) override;
+    void visit(TypeCastNode&, Operand) override;
 
 private:
     ProgramData&       program;

@@ -45,14 +45,33 @@ target_compile_options(via PUBLIC
     -Wextra                # Enable extra warnings
     -Werror                # Treat warnings as errors
     -g                     # Enable debugging symbols
-    -O3                    # Optimization level 3
 )
 
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
     target_compile_definitions(via PRIVATE -DVIA_DEBUG)
-    target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-    target_link_libraries(via PRIVATE -fsanitize=address,fuzzer,undefined)
+    if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
+        target_compile_options(via PRIVATE -fsanitize=address,undefined)
+        target_link_libraries(via PRIVATE -fsanitize=address,undefined)
+    else()
+        target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
+        target_link_libraries(via PRIVATE -fsanitize=address,fuzzer,undefined)
+    endif()
+else()
+    target_compile_options(via PUBLIC
+        -flto
+        -march=native
+        -mtune=native
+        -Ofast
+        -ffast-math
+        -funroll-loops
+        -ftree-vectorize
+        -fomit-frame-pointer
+        -fmerge-all-constants
+        -finline-functions
+        -ftree-pre
+        -fprefetch-loop-arrays
+    )
 endif()
 
 # Apply include directories for each subdirectory in src

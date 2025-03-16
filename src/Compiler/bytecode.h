@@ -40,6 +40,10 @@ public:
     // Inserts a given bytecode pair to the bytecode vectors back.
     void add(const Bytecode&);
 
+    Bytecode& front();
+    Bytecode& back();
+    Bytecode& at(size_t);
+
     // Removes the bytecode pair located in a given index.
     void remove(size_t);
 

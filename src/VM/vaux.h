@@ -2,9 +2,10 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_VMAPI_AUX_H
-#define _VIA_VMAPI_AUX_H
+#ifndef _VIA_VAUX_H
+#define _VIA_VAUX_H
 
+#include "memutils.h"
 #include "common.h"
 #include "function.h"
 #include "rttypes.h"
@@ -69,15 +70,21 @@ VIA_INLINE void __closure_upv_set(TFunction* _Closure, size_t _Upv_id, TValue& _
 VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
     std::vector<Instruction> cache;
 
+    std::cout << _State->ibp << " " << _State->iep << " " << _State->ip << "\n";
+
     while (_State->ip <= _State->iep) {
         // Special case: Terminator opcode
-        if (_State->ip->op == OpCode::RETURN) {
-            cache.push_back(*_State->ip++);
+        if (_State->ip->op == OpCode::RETURN || _State->ip->op == OpCode::RETURNNIL) {
+            cache.push_back(*_State->ip);
+            ++_State->ip;
             break;
         }
 
-        cache.push_back(*_State->ip++);
+        cache.push_back(*_State->ip);
+        ++_State->ip;
     }
+
+    return;
 
     _Closure->bytecode_len = cache.size();
     _Closure->bytecode     = new Instruction[cache.size()];
@@ -294,10 +301,10 @@ VIA_INLINE Instruction* __label_get(State* _State, size_t _Idx) {
 VIA_INLINE void __label_load(State* _State, size_t _Count) {
     __label_allocate(_State, _Count);
 
+    size_t _Idx = 0;
     for (Instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
-        size_t _Idx = _Ip - _State->ibp;
         if (_Ip->op == OpCode::LABEL) {
-            _State->labels[_Idx] = _Ip;
+            _State->labels[_Idx++] = _Ip;
         }
     }
 }

@@ -208,8 +208,8 @@ pExprNode Parser::parse_primary() {
             );
         }
     }
-    catch (const std::invalid_argument&) {
-        throw ParserError(std::format("Malformed numeric format"), position);
+    catch (const std::invalid_argument& err) {
+        throw ParserError(std::format("Malformed numeric format ({})", err.what()), position);
     }
     catch (const std::out_of_range& err) {
         throw ParserError(std::format("Numeric value out of range ({})", err.what()), position);
@@ -264,10 +264,17 @@ pExprNode Parser::parse_postfix(pExprNode lhs) {
             lhs = std::make_unique<CallNode>(std::move(lhs), std::move(arguments));
             break;
         }
+        case KW_AS: {
+            consume();
+            lhs = std::make_unique<TypeCastNode>(std::move(lhs), parse_type());
+            break;
+        }
         default:
             return lhs;
         }
     }
+
+    return lhs;
 }
 
 pExprNode Parser::parse_binary(int precedence) {

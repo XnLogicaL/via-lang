@@ -13,109 +13,167 @@
 #include "rttypes.h"
 #include <cmath>
 
-#define VALUE_TYPE   const TValue&
-#define CLOSURE_TYPE TFunction*
-#define TABLE_TYPE   TTable*
-#define OBJECT_TYPE  TObject*
-
-#define HASH_TYPE u32
-#define REG_TYPE  Operand
-#define STK_ID    size_t
-
 // ===========================================================================================
 // api.h
 //
 VIA_NAMESPACE_BEGIN
 
-static const TValue nil = TValue();
+static const TValue nil;
 
 // ===========================================================================================
 // Register manipulation
 
-TValue& get_register(State&, REG_TYPE reg);
-void    set_register(State&, REG_TYPE reg, VALUE_TYPE value);
+// Returns a reference to the value that lives in a given register.
+TValue& get_register(State&, Operand reg);
+
+// Sets a given register to a given value.
+void set_register(State&, Operand reg, const TValue& value);
 
 // ===========================================================================================
 // Comparison and metadata
 
-bool is_heap(VALUE_TYPE value);
-bool compare(VALUE_TYPE left, VALUE_TYPE right);
+// Returns whether if a given value has a heap-allocated component.
+bool is_heap(const TValue& value);
+
+// Compares two given values.
+bool compare(const TValue& left, const TValue& right);
 
 // ===========================================================================================
 // Basic stack manipulation
 
+// Pushes nil onto the stack.
 void push_nil(State& state);
-void push_int(State& state, TInteger value);
-void push_float(State& state, TFloat value);
-void push_true(State& state);
-void push_false(State& state);
-void push_string(State& state, const char* str);
-void push_table(State& state);
-void push_function(State& state);
-void push_object(State& state);
 
-void   replace(State& state, STK_ID position, VALUE_TYPE replacement);
-void   push(State& state, VALUE_TYPE value);
-void   drop(State& state);
+// Pushes an integer onto the stack.
+void push_int(State& state, TInteger value);
+
+// Pushes a float onto the stack.
+void push_float(State& state, TFloat value);
+
+// Pushes a boolean with value `true` onto the stack.
+void push_true(State& state);
+
+// Pushes a boolean with value `false` onto the stack.
+void push_false(State& state);
+
+// Pushes a string onto the stack.
+void push_string(State& state, const char* str);
+
+// Pushes an empty table onto the stack.
+void push_table(State& state);
+
+// Pushes a value onto the stack.
+void push(State& state, const TValue& value);
+
+// Drops a value from the stack, frees the resources of the dropped value.
+void drop(State& state);
+
+// Pops a value from the stack and returns it.
 TValue pop(State& state);
-TValue top(State& state);
+
+// Returns the top value on the stack.
+const TValue& top(State& state);
 
 // ===========================================================================================
 // Advanced stack manipulation
 
-void       set_stack(State& state, VALUE_TYPE value);
-VALUE_TYPE get_stack(State& state);
-VALUE_TYPE get_argument(State& state, STK_ID offset);
+// Sets the value at a given position on the stack to a given value.
+void set_stack(State& state, size_t position, TValue value);
 
-size_t get_local_count();
+// Returns the stack value at a given position.
+const TValue& get_stack(State& state, size_t position);
+
+// Returns the stack value at a given offset relative to the current stack-frame's stack pointer.
+const TValue& get_argument(State& state, size_t offset);
+
+// Returns the size of stack.
+size_t stack_size(State& state);
 
 // ===========================================================================================
 // Value manipulation
 
-TValue to_integer(VALUE_TYPE value);
-TValue to_float(VALUE_TYPE value);
-TValue to_boolean(VALUE_TYPE value);
-TValue to_string(VALUE_TYPE value);
+// Attempts to convert a given value into an integer.
+TValue to_integer(const TValue& value);
+
+// Attempts to convert a given value into a float.
+TValue to_float(const TValue& value);
+
+// Converts a given value into a boolean.
+TValue to_boolean(const TValue& value);
+
+// Converts a given value into a string.
+TValue to_string(const TValue& value);
 
 // ===========================================================================================
 // Table manipulation
 
-TValue get_table(TABLE_TYPE tbl, HASH_TYPE key);
-void   set_table(TABLE_TYPE tbl, HASH_TYPE key, VALUE_TYPE value);
+// Returns the field that lives in a given hashed key of a given table.
+const TValue& get_table(TTable* tbl, u32 key);
+
+// Sets the given tables corresponding hashed key field to a given value.
+void set_table(TTable* tbl, u32 key, const TValue& value);
 
 // ===========================================================================================
 // Object manipulation
 
-TValue get_field(OBJECT_TYPE obj, size_t index);
-TValue get_method(OBJECT_TYPE obj, size_t index);
-TValue get_constructor(OBJECT_TYPE object);
-TValue get_destructor(OBJECT_TYPE object);
-TValue get_operator_overload(OBJECT_TYPE object, OpCode operation);
+// Returns the field that lives in a given index of a given object.
+TValue get_field(TObject* obj, size_t index);
+
+// Returns the method that lives in a given index of a given object.
+TValue get_method(TObject* obj, size_t index);
+
+// Returns the constructor of a given object.
+TValue get_constructor(TObject* object);
+
+// Returns the destructor of a given object.
+TValue get_destructor(TObject* object);
+
+// Returns the given operators overload of a given object.
+TValue get_operator_overload(TObject* object, OpCode operation);
 
 // ===========================================================================================
 // Global manipulation
 
-VALUE_TYPE get_global(State& state, HASH_TYPE hash);
-void       set_global(State& state, HASH_TYPE hash, VALUE_TYPE value);
+// Returns the global that corresponds to a given hashed identifier.
+const TValue& get_global(State& state, u32 hash);
+
+// Sets the global that corresponds to a given hashed identifier to a given value.
+void set_global(State& state, u32 hash, const TValue& value);
 
 // ===========================================================================================
 // Function manipulation
 
-void native_return(State& state, VALUE_TYPE return_value);
-void native_call(State& state, CLOSURE_TYPE target, size_t argc);
-void method_call(State& state, TABLE_TYPE table, HASH_TYPE key, size_t argc);
-void call(State& state, VALUE_TYPE callee, size_t argc);
+// Standard return. Returns from the current function with an optional value.
+void native_return(State& state, const TValue& return_value);
 
-CLOSURE_TYPE get_stack_frame();
-VALUE_TYPE   get_upvalue(CLOSURE_TYPE closure);
-void         set_upvalue(CLOSURE_TYPE closure, STK_ID index, VALUE_TYPE value);
-size_t       get_upvalue_count(CLOSURE_TYPE closure);
-size_t       get_local_count_closure();
+// Calls the given TFunction object with a given argument count.
+void native_call(State& state, TFunction* target, size_t argc);
+
+// Calls the method that lives in a given index of a given object with a given argument count.
+void method_call(State& state, TObject* object, size_t index, size_t argc);
+
+// Attempts to call the given value object with the given argument count.
+void call(State& state, const TValue& callee, size_t argc);
+
+// Returns the current stack frame.
+TFunction* get_stack_frame();
+
+// Attempts to return the upvalue that lives in the given index of the given closure.
+const TValue& get_upvalue(TFunction* closure, size_t index);
+
+// Attempts to set the upvalue that lives in the given index of the given closure to a given value.
+void set_upvalue(TFunction* closure, size_t index, const TValue& value);
+
+// Returns the upvalue count of the given closure.
+size_t get_upvalue_count(TFunction* closure);
+
+// Returns the local count of the given closure.
+size_t get_local_count_closure(TFunction* closure);
 
 // ===========================================================================================
 // General operations
 
-TValue len(State& state, VALUE_TYPE target);
+TValue len(State& state, const TValue& target);
 TValue arith(State& state, TValue& left, TValue& right, OpCode operation);
 TValue concat(State& state, TValue& left, TValue& right);
 

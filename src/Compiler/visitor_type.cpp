@@ -7,19 +7,6 @@
 #include "types.h"
 #include "ast.h"
 
-#define CHECK_TYPE_INFERENCE_FAILURE(type, expr)                                                   \
-    if (!type.get()) {                                                                             \
-        visitor_failed = true;                                                                     \
-        emitter.out_range(expr->begin, expr->end, "Expression type could not be infered", Error);  \
-        emitter.out_flat(                                                                          \
-            "This error message likely indicates an internal compiler bug. Please create an "      \
-            "issue "                                                                               \
-            "at https://github.com/XnLogicaL/via-lang",                                            \
-            Info                                                                                   \
-        );                                                                                         \
-        return;                                                                                    \
-    }
-
 VIA_NAMESPACE_BEGIN
 
 using enum OutputSeverity;
@@ -31,7 +18,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
     CHECK_TYPE_INFERENCE_FAILURE(infered_type, declaration_node.value_expression);
     CHECK_TYPE_INFERENCE_FAILURE(annotated_type, declaration_node.value_expression);
 
-    if (!is_compatible(*infered_type, *annotated_type)) {
+    if (!is_compatible(infered_type, annotated_type)) {
         visitor_failed = true;
         emitter.out_range(
             declaration_node.value_expression->begin,
@@ -54,7 +41,7 @@ void TypeVisitor::visit(AssignNode& assign_node) {
     CHECK_TYPE_INFERENCE_FAILURE(infered_type, assign_node.assignee);
     CHECK_TYPE_INFERENCE_FAILURE(assigned_type, assign_node.value);
 
-    if (!is_compatible(*infered_type, *assigned_type)) {
+    if (!is_compatible(infered_type, assigned_type)) {
         visitor_failed = true;
         emitter.out_range(
             assign_node.value->begin,

@@ -8,6 +8,9 @@
 #include "via.h"
 #include <cstddef>
 
+#define SET_PROFILER_POINT(id)     [[maybe_unused]] const auto id = std::chrono::steady_clock::now();
+#define GET_PROFILER_DIFF_MS(l, r) std::chrono::duration<double, std::milli>(r - l).count()
+
 [[maybe_unused]]
 static constexpr const char REPL_WELCOME[] =
     "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
@@ -23,7 +26,17 @@ static constexpr const char REPL_HELP[] =
 [[maybe_unused]]
 static constexpr const char REPL_HEAD[] = ">> ";
 
-via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
+struct CompilationResult {
+    bool             failed;
+    via::ProgramData program;
+
+    // Constructor
+    CompilationResult(bool failed, via::ProgramData program)
+        : failed(failed),
+          program(std::move(program)) {}
+};
+
+CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     using namespace via;
 
     using enum via::OutputSeverity;
@@ -41,7 +54,9 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     std::string file = subcommand_parser.get<std::string>("target");
     std::string source;
-    const auto  compilation_start = std::chrono::steady_clock::now();
+
+    // Record compilation start time
+    SET_PROFILER_POINT(compilation_start)
 
     ProgramData program(file, source);
     Emitter     local_emitter(program);
@@ -51,7 +66,7 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
     }
     catch (const std::exception& e) {
         local_emitter.out_flat(std::format("Failed to read file '{}': {}", file, e.what()), Error);
-        return program;
+        return CompilationResult(true, std::move(program));
     }
 
     program.source = source;
@@ -65,10 +80,86 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
         local_emitter.out_flat("Compilation started", Info);
     }
 
+    SET_PROFILER_POINT(lex_start);
+
     lexer.tokenize();
+
+    if (verbosity_flag) {
+        SET_PROFILER_POINT(lex_end);
+        local_emitter.out_flat(
+            std::format(
+                "Tokenization finished in {:0.9f}s", GET_PROFILER_DIFF_MS(lex_start, lex_end) / 1000
+            ),
+            Info
+        );
+    }
+
     preprocessor.declare_default();
 
-    bool failed = preprocessor.preprocess() || parser.parse() || compiler.generate();
+    SET_PROFILER_POINT(preproc_start);
+
+    bool preproc_failed = preprocessor.preprocess();
+
+    if (verbosity_flag) {
+        if (preproc_failed) {
+            local_emitter.out_flat("Preprocessing failed", Error);
+            return CompilationResult(true, std::move(program));
+        }
+
+        SET_PROFILER_POINT(preproc_end);
+
+        local_emitter.out_flat(
+            std::format(
+                "Preprocessing finished in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(preproc_start, preproc_end) / 1000
+            ),
+            Info
+        );
+    }
+
+    SET_PROFILER_POINT(parser_start);
+
+    bool parser_failed = parser.parse();
+
+    if (verbosity_flag) {
+        if (parser_failed) {
+            local_emitter.out_flat("Parsing failed", Error);
+            return CompilationResult(true, std::move(program));
+        }
+
+        SET_PROFILER_POINT(parser_end);
+
+        local_emitter.out_flat(
+            std::format(
+                "Parsing finished in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(parser_start, parser_end) / 1000
+            ),
+            Info
+        );
+    }
+
+    SET_PROFILER_POINT(codegen_start)
+
+    bool compiler_failed = compiler.generate();
+
+    if (verbosity_flag) {
+        if (compiler_failed) {
+            local_emitter.out_flat("Bytecode generation failed", Error);
+            return CompilationResult(true, std::move(program));
+        }
+
+        SET_PROFILER_POINT(codegen_end);
+
+        local_emitter.out_flat(
+            std::format(
+                "Bytecode generation finished in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(codegen_start, codegen_end) / 1000
+            ),
+            Info
+        );
+    }
+
+    bool failed = preproc_failed || parser_failed || compiler_failed;
 
     if (!failed) {
         if (get_flag("--dump-tokens")) {
@@ -122,22 +213,36 @@ via::ProgramData handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (verbosity_flag) {
         if (failed) {
             local_emitter.out_flat("Compilation failed", Error);
-            return program;
+            return CompilationResult(true, std::move(program));
         }
 
-        auto   compilation_end = std::chrono::steady_clock::now();
-        double compilation_time =
-            std::chrono::duration<double, std::milli>(compilation_end - compilation_start).count();
+        SET_PROFILER_POINT(compilation_end);
+
+        double compilation_time = GET_PROFILER_DIFF_MS(compilation_start, compilation_end);
 
         local_emitter.out_flat(
-            std::format("Compilation finished in {}s", compilation_time / 1000), Info
+            std::format("Compilation finished in {:0.9f}s", compilation_time / 1000), Info
         );
     }
 
-    return program;
+    return CompilationResult(failed, std::move(program));
 }
 
-via::ProgramData handle_repl(argparse::ArgumentParser&) {
+CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
+    using namespace via;
+
+    CompilationResult result = handle_compile(subcommand_parser);
+
+    if (!result.failed) {
+        GState gstate;
+        State  state(&gstate, result.program);
+        execute(&state);
+    }
+
+    return result;
+}
+
+CompilationResult handle_repl(argparse::ArgumentParser&) {
     using namespace via;
 
     using enum via::OutputSeverity;
@@ -147,7 +252,7 @@ via::ProgramData handle_repl(argparse::ArgumentParser&) {
 
     ProgramData program(s, s);
 
-    return program;
+    return CompilationResult(false, std::move(program));
 }
 
 int main(int argc, char* argv[]) {
@@ -192,8 +297,44 @@ int main(int argc, char* argv[]) {
         .help("Whether to captialize opcodes inside bytecode dumps")
         .flag();
 
+    ArgumentParser run_command("run");
+    run_command.add_description("Compiles and executes the given source file");
+    run_command.add_argument("target");
+
+    run_command.add_argument("--dump-ast", "-Da")
+        .help("Dumps the abstract syntax tree representation of the program")
+        .flag();
+
+    run_command.add_argument("--dump-bytecode", "-Db")
+        .help("Dumps human-readable bytecode to the console upon compilation of the given source "
+              "file is completed")
+        .flag();
+
+    run_command.add_argument("--dump-machine-code", "-Dmc")
+        .help("Dumps raw machine code to the console when compilation of the given source file is "
+              "completed")
+        .flag();
+
+    run_command.add_argument("--dump-tokens", "-Dt")
+        .help("Dumps tokenized representation of the given source file upon tokenization of the "
+              "given source file "
+              "is completed")
+        .flag();
+
+    run_command.add_argument("--optimize", "-O")
+        .help("Sets optimization level to the given integer")
+        .scan<'u', u32>()
+        .default_value(1);
+
+    run_command.add_argument("--verbose", "-v").help("Enables verbosity").flag();
+
+    run_command.add_argument("--Bcapitalize-opcodes")
+        .help("Whether to captialize opcodes inside bytecode dumps")
+        .flag();
+
     // Argument parser initialization
     argument_parser.add_subparser(compile_command);
+    argument_parser.add_subparser(run_command);
 
     try {
         argument_parser.parse_args(argc, argv);
@@ -206,5 +347,8 @@ int main(int argc, char* argv[]) {
 
     if (argument_parser.is_subcommand_used(compile_command)) {
         handle_compile(compile_command);
+    }
+    else if (argument_parser.is_subcommand_used(run_command)) {
+        handle_run(run_command);
     }
 }

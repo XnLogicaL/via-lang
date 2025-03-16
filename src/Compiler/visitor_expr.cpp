@@ -5,6 +5,7 @@
 #include "api.h"
 #include "bitutils.h"
 #include "stack.h"
+#include "strutils.h"
 #include "types.h"
 #include "visitor.h"
 
@@ -78,20 +79,19 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
 
     if (stk_id.has_value()) {
         auto& current_closure = program.test_stack->function_stack.top();
-        if (current_closure.upvalues < stk_id.value()) {
-            program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
-        }
-        else {
+
+        if (current_closure.upvalues > stk_id.value()) {
             program.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
         }
-        return;
+        else {
+            program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
+        }
     }
     else if (program.globals->was_declared(symbol)) {
         u32  symbol_hash = hash_string_custom(symbol.c_str());
         auto operands    = reinterpret_u32_as_2u16(symbol_hash);
 
         program.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
-        return;
     }
     else if (!program.test_stack->function_stack.empty()) {
         u16   index = 0;
@@ -106,9 +106,10 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
             ++index;
         }
     }
-
-    visitor_failed = true;
-    emitter.out(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error);
+    else {
+        visitor_failed = true;
+        emitter.out(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error);
+    }
 }
 
 void ExprVisitor::visit(UnaryNode& unary_node, Operand dst) {
@@ -146,7 +147,43 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
     Operand index_reg = allocator.allocate_register();
     index_node.index->accept(*this, index_reg);
 
-    program.bytecode->emit(GET, {dst, obj_reg, index_reg});
+    pTypeNode object_type = index_node.object->infer_type(program);
+    pTypeNode index_type  = index_node.index->infer_type(program);
+
+    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
+        if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
+            goto bad_index_type;
+        }
+    }
+    else {
+    bad_index_type:
+        visitor_failed = true;
+        emitter.out_range(
+            index_node.index->begin,
+            index_node.index->end,
+            "Index type is not a string or integer",
+            Error
+        );
+    }
+
+    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
+        if (primitive->type == ValueType::string) {
+            program.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
+        }
+        else if (primitive->type == ValueType::table) {
+            program.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
+        }
+        else {
+            visitor_failed = true;
+            emitter.out_range(
+                index_node.object->begin,
+                index_node.object->end,
+                "Expression type is not subscriptable",
+                Error
+            );
+        }
+    }
+
     allocator.free_register(obj_reg);
     allocator.free_register(index_reg);
 }
@@ -185,6 +222,20 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
             binary_node.op,
             std::format("Unknown binary operator '{}'", binary_node.op.lexeme),
             Error
+        );
+        return;
+    }
+
+    pTypeNode left_type  = p_lhs->infer_type(program);
+    pTypeNode right_type = p_rhs->infer_type(program);
+
+    CHECK_TYPE_INFERENCE_FAILURE(left_type, binary_node.lhs_expression);
+    CHECK_TYPE_INFERENCE_FAILURE(right_type, binary_node.rhs_expression);
+
+    if (!is_compatible(left_type, right_type)) {
+        visitor_failed = true;
+        emitter.out_range(
+            binary_node.begin, binary_node.end, "Binary operation on incompatible types", Error
         );
         return;
     }
@@ -276,6 +327,39 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
         program.bytecode->emit(base_opcode, {dst, reg});
         allocator.free_register(reg);
     }
+}
+
+void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
+    pTypeNode left_type = type_cast.expression->infer_type(program);
+
+    CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
+
+    if (!is_castable(left_type, type_cast.type)) {
+        visitor_failed = true;
+        emitter.out_range(
+            type_cast.expression->begin,
+            type_cast.expression->end,
+            std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x()),
+            Error
+        );
+    }
+
+    Operand temp = allocator.allocate_register();
+    type_cast.expression->accept(*this, temp);
+
+    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type_cast.type)) {
+        if (primitive->type == ValueType::integer) {
+            program.bytecode->emit(TOINT, {dst, temp});
+        }
+        else if (primitive->type == ValueType::floating_point) {
+            program.bytecode->emit(TOFLOAT, {dst, temp});
+        }
+        else if (primitive->type == ValueType::string) {
+            program.bytecode->emit(TOSTRING, {dst, temp});
+        }
+    }
+
+    allocator.free_register(temp);
 }
 
 VIA_NAMESPACE_END

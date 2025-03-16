@@ -21,7 +21,7 @@ static const TValue _Nil = TValue();
 
 VIA_INLINE_HOT void __set_error_state(State* _State, const std::string& _Msg) {
     _State->err->frame   = _State->frame;
-    _State->err->message = _Msg;
+    _State->err->message = std::string(_Msg);
 }
 
 VIA_INLINE_HOT void __clear_error_state(State* _State) {
@@ -96,15 +96,20 @@ VIA_INLINE_HOT TValue __pop(State* _State) {
     return _State->sbp[_State->sp--].clone();
 }
 
-VIA_INLINE_HOT TValue __get_stack(State* _State, Operand _Offset) noexcept {
-    return _State->sbp[_Offset].clone();
+VIA_INLINE_HOT void __drop(State* _State) {
+    const TValue& _Dropped_val = _State->sbp[_State->sp--];
+    _Dropped_val.reset();
 }
 
-VIA_INLINE_HOT void __set_stack(State* _State, Operand _Offset, TValue& _Val) noexcept {
+VIA_INLINE_HOT const TValue& __get_stack(State* _State, size_t _Offset) noexcept {
+    return _State->sbp[_Offset];
+}
+
+VIA_INLINE_HOT void __set_stack(State* _State, size_t _Offset, TValue& _Val) noexcept {
     _State->sbp[_Offset] = _Val.clone();
 }
 
-VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, Operand _Offset) noexcept {
+VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, size_t _Offset) noexcept {
     if (_Offset >= _State->argc) {
         return _Nil.clone();
     }
@@ -116,8 +121,9 @@ VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, Operand _Offs
 }
 
 VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _State, const TValue& _Val) noexcept {
-    char* _Str = duplicate_string(std::string(magic_enum::enum_name(_Val.type)));
-    return TValue(new TString(_State, _Str));
+    std::string _Temp = std::string(magic_enum::enum_name(_Val.type));
+    const char* _Str  = _Temp.c_str();
+    return TValue(ValueType::string, new TString(_State, _Str));
 }
 
 VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _State, const TValue& _Val) {
@@ -165,12 +171,7 @@ VIA_INLINE_HOT void __extern_call(State* _State, TCFunction* _Callee, size_t _Ar
         std::memset(_Buf + 2, '0', sizeof(_Buf) - 2);
     }
 
-    TFunction _Func{
-        .is_error_handler = _Callee->is_error_handler,
-        .is_vararg        = false,
-        .ret_addr         = _State->ip,
-        .caller           = _State->frame,
-    };
+    TFunction _Func(_Callee->is_error_handler, false, _State->ip, _State->frame);
 
     __native_call(_State, &_Func, _Argc);
     _Callee->data(_State);
