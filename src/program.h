@@ -9,6 +9,9 @@
 #include "common_nodep.h"
 #include "api_config.h"
 
+#define VFLAG_VERBOSE int(1 << 0)
+#define VFLAG_SASSY   int(1 << 7)
+
 VIA_NAMESPACE_BEGIN
 
 class TokenStream;
@@ -19,9 +22,9 @@ class CompilerStack;
 
 class ProgramData {
 public:
-    u8 optimization_level = 0;
-
-    size_t label_count = 0;
+    int    flags              = 0;
+    u8     optimization_level = 0;
+    size_t label_count        = 0;
 
     std::string file;
     std::string source;

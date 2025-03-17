@@ -37,7 +37,7 @@
 //
 VIA_NAMESPACE_BEGIN
 
-using Label = size_t;
+using Label = Operand;
 
 TValue construct_constant(LiteralNode&);
 
@@ -72,6 +72,8 @@ public:
     virtual void visit(AssignNode&) INVALID_VISIT;
     virtual void visit(IfNode&) INVALID_VISIT;
     virtual void visit(ReturnNode&) INVALID_VISIT;
+    virtual void visit(BreakNode&) INVALID_VISIT;
+    virtual void visit(ContinueNode&) INVALID_VISIT;
     virtual void visit(WhileNode&) INVALID_VISIT;
     virtual void visit(ExprStmtNode&) INVALID_VISIT;
 
@@ -156,6 +158,8 @@ public:
     void visit(AssignNode&) override;
     void visit(IfNode&) override;
     void visit(ReturnNode&) override;
+    void visit(BreakNode&) override;
+    void visit(ContinueNode&) override;
     void visit(WhileNode&) override;
     void visit(ExprStmtNode&) override;
 

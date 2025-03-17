@@ -148,7 +148,7 @@ void CallNode::accept(NodeVisitor& visitor, u32 dst) {
 }
 
 pExprNode CallNode::clone() {
-    Arguments arguments_clone;
+    argument_vector arguments_clone;
     for (pExprNode& argument : arguments) {
         arguments_clone.emplace_back(argument->clone());
     }
@@ -544,7 +544,7 @@ std::string IfNode::to_string(u32& depth) {
 
     depth--;
 
-    oss << DEPTH_TAB_SPACE << "EndIf<>" << "\n";
+    oss << DEPTH_TAB_SPACE << "EndIf<>";
     return oss.str();
 }
 
@@ -572,10 +572,55 @@ pStmtNode IfNode::clone() {
 }
 
 // ===============================
+// ReturnNode
+
+std::string ReturnNode::to_string(u32& depth) {
+    return DEPTH_TAB_SPACE + std::format("ReturnNode<{}>", expression->to_string(depth));
+}
+
+pStmtNode ReturnNode::clone() {
+    return std::make_unique<ReturnNode>(expression->clone());
+}
+
+void ReturnNode::accept(NodeVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ===============================
+// BreakNode
+
+std::string BreakNode::to_string(u32& depth) {
+    return DEPTH_TAB_SPACE + "BreakNode<>";
+}
+
+pStmtNode BreakNode::clone() {
+    return std::make_unique<BreakNode>(token);
+}
+
+void BreakNode::accept(NodeVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ===============================
+// ContinueNode
+
+std::string ContinueNode::to_string(u32& depth) {
+    return DEPTH_TAB_SPACE + "ContinueNode<>";
+}
+
+pStmtNode ContinueNode::clone() {
+    return std::make_unique<ContinueNode>(token);
+}
+
+void ContinueNode::accept(NodeVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ===============================
 // WhileNode
 std::string WhileNode::to_string(u32& depth) {
     std::ostringstream oss;
-    oss << DEPTH_TAB_SPACE << std::format("While<{}>", condition->to_string(depth)) << "\n";
+    oss << DEPTH_TAB_SPACE << std::format("WhileNode<{}>", condition->to_string(depth)) << "\n";
 
     depth++;
 
@@ -600,7 +645,7 @@ pStmtNode WhileNode::clone() {
 // ===============================
 // ExprStmtNode
 std::string ExprStmtNode::to_string(u32& depth) {
-    return std::format("{}ExpressionStatement<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
+    return std::format("{}ExprStmtNode<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
 }
 
 void ExprStmtNode::accept(NodeVisitor& visitor) {

@@ -401,8 +401,7 @@ struct MemberNode : public StmtNode {
     pExprNode initializer;
 
     std::string to_string(u32&) override;
-
-    pStmtNode clone() override;
+    pStmtNode   clone() override;
 
     void accept(NodeVisitor&) override;
 
@@ -418,8 +417,7 @@ struct AssignNode : public StmtNode {
     pExprNode value;
 
     std::string to_string(u32&) override;
-
-    pStmtNode clone() override;
+    pStmtNode   clone() override;
 
     void accept(NodeVisitor&) override;
 
@@ -448,8 +446,7 @@ struct IfNode : public StmtNode {
     ElseIfNodes elseif_nodes;
 
     std::string to_string(u32&) override;
-
-    pStmtNode clone() override;
+    pStmtNode   clone() override;
 
     void accept(NodeVisitor&) override;
 
@@ -464,8 +461,7 @@ struct ReturnNode : public StmtNode {
     pExprNode expression;
 
     std::string to_string(u32&) override;
-
-    pStmtNode clone() override;
+    pStmtNode   clone() override;
 
     void accept(NodeVisitor&) override;
 
@@ -473,13 +469,36 @@ struct ReturnNode : public StmtNode {
         : expression(std::move(expression)) {}
 };
 
+struct BreakNode : public StmtNode {
+    Token token;
+
+    std::string to_string(u32&) override;
+    pStmtNode   clone() override;
+
+    void accept(NodeVisitor&) override;
+
+    BreakNode(Token tok)
+        : token(tok) {}
+};
+
+struct ContinueNode : public StmtNode {
+    Token token;
+
+    std::string to_string(u32&) override;
+    pStmtNode   clone() override;
+
+    void accept(NodeVisitor&) override;
+
+    ContinueNode(Token tok)
+        : token(tok) {}
+};
+
 struct WhileNode : public StmtNode {
     pExprNode condition;
     pStmtNode body;
 
     std::string to_string(u32&) override;
-
-    pStmtNode clone() override;
+    pStmtNode   clone() override;
 
     void accept(NodeVisitor&) override;
 

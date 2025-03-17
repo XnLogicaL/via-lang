@@ -291,6 +291,24 @@ void StmtVisitor::visit(ReturnNode& return_node) {
     }
 }
 
+void StmtVisitor::visit(BreakNode& break_node) {
+    if (!escape_label.has_value()) {
+        compiler_error(break_node.token, "'break' statement not within loop or switch");
+    }
+    else {
+        program.bytecode->emit(JUMPLABEL, {escape_label.value()}, "break");
+    }
+}
+
+void StmtVisitor::visit(ContinueNode& continue_node) {
+    if (!repeat_label.has_value()) {
+        compiler_error(continue_node.token, "'continue' statement not within loop");
+    }
+    else {
+        program.bytecode->emit(JUMPLABEL, {repeat_label.value()}, "continue");
+    }
+}
+
 void StmtVisitor::visit(IfNode& if_node) {
     /*
 

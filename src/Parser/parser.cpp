@@ -471,6 +471,10 @@ pStmtNode Parser::parse_stmt() {
         return parse_return();
     case KW_WHILE:
         return parse_while();
+    case KW_BREAK:
+        return std::make_unique<BreakNode>(consume());
+    case KW_CONTINUE:
+        return std::make_unique<ContinueNode>(consume());
     default:
         try {
             pExprNode expression = parse_expr();

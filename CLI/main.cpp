@@ -11,6 +11,9 @@
 #define SET_PROFILER_POINT(id)     [[maybe_unused]] const auto id = std::chrono::steady_clock::now();
 #define GET_PROFILER_DIFF_MS(l, r) std::chrono::duration<double, std::milli>(r - l).count()
 
+using namespace argparse;
+using namespace via;
+
 [[maybe_unused]]
 static constexpr const char REPL_WELCOME[] =
     "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
@@ -27,8 +30,8 @@ static constexpr const char REPL_HELP[] =
 static constexpr const char REPL_HEAD[] = ">> ";
 
 struct CompilationResult {
-    bool             failed;
-    via::ProgramData program;
+    bool        failed;
+    ProgramData program;
 
     // Constructor
     CompilationResult(bool failed, via::ProgramData program)
@@ -37,10 +40,8 @@ struct CompilationResult {
 };
 
 CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
-    using namespace via;
-
-    using enum via::OutputSeverity;
-    using enum via::TokenType;
+    using enum OutputSeverity;
+    using enum TokenType;
 
     const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
         return subcommand_parser.get<bool>(flag);
@@ -51,6 +52,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     };
 
     const bool verbosity_flag = get_flag("--verbose");
+    const bool sassy_flag     = get_flag("--sassy");
 
     std::string file = subcommand_parser.get<std::string>("target");
     std::string source;
@@ -60,6 +62,14 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     ProgramData  program(file, source);
     ErrorEmitter local_emitter(program);
+
+    if (verbosity_flag) {
+        program.flags |= VFLAG_VERBOSE;
+    }
+
+    if (sassy_flag) {
+        program.flags |= VFLAG_SASSY;
+    }
 
     try {
         source = utils::read_from_file(file);
@@ -255,86 +265,60 @@ CompilationResult handle_repl(argparse::ArgumentParser&) {
     return CompilationResult(false, std::move(program));
 }
 
-int main(int argc, char* argv[]) {
-    using namespace via;
-    using namespace argparse;
+std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
+    auto command = std::make_unique<ArgumentParser>(name);
+    command->add_argument("target");
+    command->add_argument("--dump-ast", "-Da")
+        .help("Dumps the abstract syntax tree representation of the program")
+        .flag();
 
+    command->add_argument("--dump-bytecode", "-Db")
+        .help("Dumps human-readable bytecode to the console upon compilation of the given source "
+              "file is completed")
+        .flag();
+
+    command->add_argument("--dump-machine-code", "-Dmc")
+        .help("Dumps raw machine code to the console when compilation of the given source file is "
+              "completed")
+        .flag();
+
+    command->add_argument("--dump-tokens", "-Dt")
+        .help("Dumps tokenized representation of the given source file upon tokenization of the "
+              "given source file "
+              "is completed")
+        .flag();
+
+    command->add_argument("--optimize", "-O")
+        .help("Sets optimization level to the given integer")
+        .scan<'u', via::u32>()
+        .default_value(1);
+
+    // Verbose mode
+    command->add_argument("--verbose", "-v").help("Enables verbosity").flag();
+
+    // Sassy mode
+    command->add_argument("--sassy").help("Enables sassy mode 😉").flag();
+
+    command->add_argument("--Bcapitalize-opcodes")
+        .help("Whether to captialize opcodes inside bytecode dumps")
+        .flag();
+
+    return command;
+}
+
+int main(int argc, char* argv[]) {
     // Argument parser entry point
     ArgumentParser argument_parser("via", VIA_VERSION);
 
-    // Compile subcommand
-    ArgumentParser compile_command("compile");
-    compile_command.add_description("Compiles the given source file");
-    compile_command.add_argument("target");
-    compile_command.add_argument("--dump-ast", "-Da")
-        .help("Dumps the abstract syntax tree representation of the program")
-        .flag();
+    auto compile_parser = get_standard_parser("compile");
+    compile_parser->add_description("Compiles the given source file.");
 
-    compile_command.add_argument("--dump-bytecode", "-Db")
-        .help("Dumps human-readable bytecode to the console upon compilation of the given source "
-              "file is completed")
-        .flag();
-
-    compile_command.add_argument("--dump-machine-code", "-Dmc")
-        .help("Dumps raw machine code to the console when compilation of the given source file is "
-              "completed")
-        .flag();
-
-    compile_command.add_argument("--dump-tokens", "-Dt")
-        .help("Dumps tokenized representation of the given source file upon tokenization of the "
-              "given source file "
-              "is completed")
-        .flag();
-
-    compile_command.add_argument("--optimize", "-O")
-        .help("Sets optimization level to the given integer")
-        .scan<'u', u32>()
-        .default_value(1);
-
-    compile_command.add_argument("--verbose", "-v").help("Enables verbosity").flag();
-
-    compile_command.add_argument("--Bcapitalize-opcodes")
-        .help("Whether to captialize opcodes inside bytecode dumps")
-        .flag();
-
-    ArgumentParser run_command("run");
-    run_command.add_description("Compiles and executes the given source file");
-    run_command.add_argument("target");
-
-    run_command.add_argument("--dump-ast", "-Da")
-        .help("Dumps the abstract syntax tree representation of the program")
-        .flag();
-
-    run_command.add_argument("--dump-bytecode", "-Db")
-        .help("Dumps human-readable bytecode to the console upon compilation of the given source "
-              "file is completed")
-        .flag();
-
-    run_command.add_argument("--dump-machine-code", "-Dmc")
-        .help("Dumps raw machine code to the console when compilation of the given source file is "
-              "completed")
-        .flag();
-
-    run_command.add_argument("--dump-tokens", "-Dt")
-        .help("Dumps tokenized representation of the given source file upon tokenization of the "
-              "given source file "
-              "is completed")
-        .flag();
-
-    run_command.add_argument("--optimize", "-O")
-        .help("Sets optimization level to the given integer")
-        .scan<'u', u32>()
-        .default_value(1);
-
-    run_command.add_argument("--verbose", "-v").help("Enables verbosity").flag();
-
-    run_command.add_argument("--Bcapitalize-opcodes")
-        .help("Whether to captialize opcodes inside bytecode dumps")
-        .flag();
+    auto run_parser = get_standard_parser("run");
+    run_parser->add_description("Compiles and runs the given source file.");
 
     // Argument parser initialization
-    argument_parser.add_subparser(compile_command);
-    argument_parser.add_subparser(run_command);
+    argument_parser.add_subparser(*compile_parser);
+    argument_parser.add_subparser(*run_parser);
 
     try {
         argument_parser.parse_args(argc, argv);
@@ -345,10 +329,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (argument_parser.is_subcommand_used(compile_command)) {
-        handle_compile(compile_command);
+    if (argument_parser.is_subcommand_used(*compile_parser)) {
+        handle_compile(*compile_parser);
     }
-    else if (argument_parser.is_subcommand_used(run_command)) {
-        handle_run(run_command);
+    else if (argument_parser.is_subcommand_used(*run_parser)) {
+        handle_run(*run_parser);
     }
 }
