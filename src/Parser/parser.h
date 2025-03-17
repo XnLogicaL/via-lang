@@ -42,7 +42,7 @@ public:
 
 private:
     ProgramData& program;
-    Emitter      emitter;
+    ErrorEmitter emitter;
 
     u64 position = 0;
 

@@ -43,7 +43,7 @@
     target& operator=(const target&) = delete;                                                     \
     target(const target&)            = delete;
 
-#define VIA_ALIGN_CACHE_LINE alignas(8)
+#define VIA_ALIGN_8 alignas(8)
 
 // Utility macros
 #define VIA_ASSERT(condition, message)                                                             \

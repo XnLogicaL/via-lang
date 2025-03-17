@@ -10,7 +10,7 @@ VIA_NAMESPACE_BEGIN
 static bool has_printed_file_name = false;
 
 // Splits a source string into lines
-std::vector<std::string> Emitter::split_lines() {
+std::vector<std::string> ErrorEmitter::split_lines() {
     std::vector<std::string> lines;
     std::istringstream       stream(program.source);
     std::string              line;
@@ -23,7 +23,7 @@ std::vector<std::string> Emitter::split_lines() {
 }
 
 // Returns a "title" or "header" for output messages based on severity
-std::string Emitter::get_severity_header(OutputSeverity sev) {
+std::string ErrorEmitter::get_severity_header(OutputSeverity sev) {
     switch (sev) {
     case OutputSeverity::Info:
         return "\033[1;34minfo:\033[0m "; // Blue color for info
@@ -38,7 +38,7 @@ std::string Emitter::get_severity_header(OutputSeverity sev) {
 }
 
 // Function to underline a portion of a line with a cursor (^) at the offset
-std::string Emitter::underline_line(
+std::string ErrorEmitter::underline_line(
     int line_number, int offset, int length, const std::string& message, OutputSeverity sev
 ) {
     std::vector<std::string> lines = split_lines();
@@ -74,7 +74,7 @@ std::string Emitter::underline_line(
            std::string(line_number_width, ' ') + " | " + underline;
 }
 
-std::string Emitter::underline_range(
+std::string ErrorEmitter::underline_range(
     int begin_pos, int end_pos, const std::string& message, OutputSeverity sev
 ) {
     // If the range is invalid, just return a basic message.
@@ -136,7 +136,7 @@ std::string Emitter::underline_range(
 }
 
 // Emits an output message
-void Emitter::out(Token tok, std::string message, OutputSeverity sev) {
+void ErrorEmitter::out(Token tok, std::string message, OutputSeverity sev) {
     // Check if file information has been printed
     if (!has_printed_file_name && program.file != "<repl>") {
         has_printed_file_name = true;
@@ -149,7 +149,7 @@ void Emitter::out(Token tok, std::string message, OutputSeverity sev) {
     std::cout << underline_line(line, offset, length, message, sev) << "\n";
 }
 
-void Emitter::out_range(size_t begin, size_t end, std::string message, OutputSeverity sev) {
+void ErrorEmitter::out_range(size_t begin, size_t end, std::string message, OutputSeverity sev) {
     // Check if file information has been printed
     if (!has_printed_file_name && program.file != "<repl>") {
         has_printed_file_name = true;
@@ -159,7 +159,7 @@ void Emitter::out_range(size_t begin, size_t end, std::string message, OutputSev
     std::cout << underline_range(begin, end, message, sev) << "\n";
 }
 
-void Emitter::out_flat(std::string message, OutputSeverity sev) {
+void ErrorEmitter::out_flat(std::string message, OutputSeverity sev) {
     std::cout << get_severity_header(sev) << message << "\n";
 }
 

@@ -34,7 +34,7 @@ enum class ValueType : u8 {
     object,         // Object type, pointer to TObject
 };
 
-struct VIA_ALIGN_CACHE_LINE TValue {
+struct VIA_ALIGN_8 TValue {
     ValueType type;
     union {
         TInteger val_integer;        // Integer value

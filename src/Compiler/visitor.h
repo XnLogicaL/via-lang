@@ -43,6 +43,10 @@ TValue construct_constant(LiteralNode&);
 
 class NodeVisitor {
 public:
+    NodeVisitor(ProgramData& program, ErrorEmitter& emitter)
+        : program(program),
+          emitter(emitter) {}
+
     virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
 
     // Expression visitors
@@ -77,15 +81,30 @@ public:
 
 protected:
     bool visitor_failed = false;
+
+    ProgramData&  program;
+    ErrorEmitter& emitter;
+
+protected:
+    void compiler_error(size_t begin, size_t end, const std::string&);
+    void compiler_error(const Token&, const std::string&);
+    void compiler_error(const std::string&);
+
+    void compiler_warning(size_t begin, size_t end, const std::string&);
+    void compiler_warning(const Token&, const std::string&);
+    void compiler_warning(const std::string&);
+
+    void compiler_info(size_t begin, size_t end, const std::string&);
+    void compiler_info(const Token&, const std::string&);
+    void compiler_info(const std::string&);
 };
 
 #undef INVALID_VISIT
 
 class ExprVisitor : public NodeVisitor {
 public:
-    ExprVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
-        : program(program),
-          emitter(emitter),
+    ExprVisitor(ProgramData& program, ErrorEmitter& emitter, RegisterAllocator& allocator)
+        : NodeVisitor(program, emitter),
           allocator(allocator) {}
 
     void visit(LiteralNode&, Operand) override;
@@ -98,47 +117,34 @@ public:
     void visit(TypeCastNode&, Operand) override;
 
 private:
-    ProgramData&       program;
-    Emitter&           emitter;
     RegisterAllocator& allocator;
 };
 
 class DecayVisitor : public NodeVisitor {
 public:
-    DecayVisitor(ProgramData& program, Emitter& emitter)
-        : program(program),
-          emitter(emitter) {}
+    DecayVisitor(ProgramData& program, ErrorEmitter& emitter)
+        : NodeVisitor(program, emitter) {}
 
     pTypeNode visit(AutoNode&) override;
     pTypeNode visit(GenericNode&) override;
     pTypeNode visit(UnionNode&) override;
     pTypeNode visit(FunctionTypeNode&) override;
-
-private:
-    ProgramData&              program;
-    [[maybe_unused]] Emitter& emitter;
 };
 
 class TypeVisitor : public NodeVisitor {
 public:
-    TypeVisitor(ProgramData& program, Emitter& emitter)
-        : program(program),
-          emitter(emitter) {}
+    TypeVisitor(ProgramData& program, ErrorEmitter& emitter)
+        : NodeVisitor(program, emitter) {}
 
     void visit(DeclarationNode&) override;
     void visit(AssignNode&) override;
     void visit(FunctionNode&) override;
-
-private:
-    ProgramData& program;
-    Emitter&     emitter;
 };
 
 class StmtVisitor : public NodeVisitor {
 public:
-    StmtVisitor(ProgramData& program, Emitter& emitter, RegisterAllocator& allocator)
-        : program(program),
-          emitter(emitter),
+    StmtVisitor(ProgramData& program, ErrorEmitter& emitter, RegisterAllocator& allocator)
+        : NodeVisitor(program, emitter),
           allocator(allocator),
           expression_visitor(program, emitter, allocator),
           decay_visitor(program, emitter),
@@ -162,8 +168,6 @@ public:
     Label label_counter = 0;
 
 private:
-    ProgramData&       program;
-    Emitter&           emitter;
     RegisterAllocator& allocator;
 
     ExprVisitor  expression_visitor;

@@ -21,7 +21,7 @@ struct InstructionData {
     std::string comment = "";
 };
 
-struct VIA_ALIGN_CACHE_LINE Instruction {
+struct VIA_ALIGN_8 Instruction {
     OpCode op = OpCode::NOP;
 
     Operand operand0 = 0;

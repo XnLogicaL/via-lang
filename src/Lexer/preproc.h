@@ -51,7 +51,7 @@ private:
     size_t pos = 0;
 
     ProgramData& program;
-    Emitter      emitter;
+    ErrorEmitter emitter;
 
     std::unordered_map<std::string, Macro>      macro_table;
     std::unordered_map<std::string, Definition> def_table;

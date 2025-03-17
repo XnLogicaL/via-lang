@@ -136,8 +136,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
         }
     }
     else {
-        visitor_failed = true;
-        emitter.out(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme), Error);
+        compiler_error(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme));
     }
 }
 
@@ -182,12 +181,10 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
     // Validate index type
     if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
         if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
-            visitor_failed = true;
-            emitter.out_range(
+            compiler_error(
                 index_node.index->begin,
                 index_node.index->end,
-                "Index type must be a string or integer",
-                Error
+                "Index type must be a string or integer"
             );
             return;
         }
@@ -203,12 +200,10 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
             program.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
             break;
         default:
-            visitor_failed = true;
-            emitter.out_range(
+            compiler_error(
                 index_node.object->begin,
                 index_node.object->end,
-                "Expression type is not subscriptable",
-                Error
+                "Expression type is not subscriptable"
             );
         }
     }
@@ -243,11 +238,8 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
 
     auto it = operator_map.find(binary_node.op.type);
     if (it == operator_map.end()) {
-        visitor_failed = true;
-        emitter.out(
-            binary_node.op,
-            std::format("Unknown binary operator '{}'", binary_node.op.lexeme),
-            Error
+        compiler_error(
+            binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
         );
         return;
     }
@@ -259,9 +251,8 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
     CHECK_TYPE_INFERENCE_FAILURE(right_type, binary_node.rhs_expression);
 
     if (!is_compatible(left_type, right_type)) {
-        visitor_failed = true;
-        emitter.out_range(
-            binary_node.begin, binary_node.end, "Binary operation on incompatible types", Error
+        compiler_error(
+            binary_node.begin, binary_node.end, "Binary operation on incompatible types"
         );
         return;
     }
@@ -289,8 +280,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
             goto good_division;
 
         division_by_zero:
-            visitor_failed = true;
-            emitter.out(literal.value_token, "Explicit division by zero", Error);
+            compiler_error(literal.value_token, "Explicit division by zero");
             return;
 
         good_division:
@@ -361,12 +351,10 @@ void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
     CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
 
     if (!is_castable(left_type, type_cast.type)) {
-        visitor_failed = true;
-        emitter.out_range(
+        compiler_error(
             type_cast.expression->begin,
             type_cast.expression->end,
-            std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x()),
-            Error
+            std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
         );
     }
 

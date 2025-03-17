@@ -58,8 +58,8 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     // Record compilation start time
     SET_PROFILER_POINT(compilation_start)
 
-    ProgramData program(file, source);
-    Emitter     local_emitter(program);
+    ProgramData  program(file, source);
+    ErrorEmitter local_emitter(program);
 
     try {
         source = utils::read_from_file(file);

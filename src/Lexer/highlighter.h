@@ -15,9 +15,9 @@ enum class OutputSeverity {
     Error,
 };
 
-class Emitter {
+class ErrorEmitter {
 public:
-    Emitter(ProgramData& program)
+    ErrorEmitter(ProgramData& program)
         : program(program) {}
 
     void out(Token, std::string message, OutputSeverity severity);

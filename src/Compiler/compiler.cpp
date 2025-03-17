@@ -12,7 +12,7 @@ VIA_NAMESPACE_BEGIN
 
 bool Compiler::generate() {
     RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
-    Emitter           emitter(program);
+    ErrorEmitter      emitter(program);
     StmtVisitor       visitor(program, emitter, allocator);
 
     for (pStmtNode& stmt : program.ast->statements) {
@@ -29,7 +29,7 @@ bool Compiler::generate() {
 }
 
 bool Compiler::check_global_collisions() {
-    Emitter emitter(program);
+    ErrorEmitter emitter(program);
 
     bool                            failed = false;
     std::unordered_map<u32, Global> global_map;

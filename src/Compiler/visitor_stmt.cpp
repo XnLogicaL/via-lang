@@ -17,8 +17,9 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
     bool is_global = declaration_node.is_global;
     bool is_const  = declaration_node.modifiers.is_const;
 
-    ExprNode&   val    = *std::move(declaration_node.value_expression);
-    Token       ident  = declaration_node.identifier;
+    ExprNode& val   = *declaration_node.value_expression;
+    Token     ident = declaration_node.identifier;
+
     std::string symbol = ident.lexeme;
 
     if (is_global) {
@@ -26,12 +27,8 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         std::optional<Global> previously_declared = program.globals->get_global(symbol);
 
         if (previously_declared.has_value()) {
-            std::string previously_declared_error =
-                std::format("Attempt to re-declare global '{}'", symbol);
-
-            visitor_failed = true;
-            emitter.out(ident, previously_declared_error, Error);
-            emitter.out(previously_declared->token, "Previously declared here", Info);
+            compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
+            compiler_info(previously_declared->token, "Previously declared here");
         }
         else {
             Operand value_reg   = allocator.allocate_register();
@@ -197,12 +194,10 @@ void StmtVisitor::visit(FunctionNode& function_node) {
                 declaration_node ? declaration_node->identifier : function_node->identifier;
 
             if (is_global) {
-                visitor_failed = true;
-                emitter.out(identifier, "Function scopes cannot declare globals", Error);
-                emitter.out_flat(
+                compiler_error(identifier, "Function scopes cannot declare globals");
+                compiler_info(
                     "Function scopes containing global declarations may cause previously declared "
-                    "globals to be re-declared, therefore are not allowed.",
-                    Info
+                    "globals to be re-declared, therefore are not allowed."
                 );
                 break;
             }
@@ -224,10 +219,7 @@ void StmtVisitor::visit(FunctionNode& function_node) {
 
     if (function_node.is_global) {
         if (program.globals->was_declared(symbol)) {
-            visitor_failed = true;
-            emitter.out(
-                symbol_token, std::format("Attempt to re-declare global '{}'", symbol), Error
-            );
+            compiler_error(symbol_token, std::format("Attempt to re-declare global '{}'", symbol));
             return;
         }
 
@@ -255,9 +247,8 @@ void StmtVisitor::visit(AssignNode& assign_node) {
             const auto& test_stack_member = program.test_stack->at(stk_id.value());
 
             if (test_stack_member.has_value() && test_stack_member->is_const) {
-                visitor_failed = true;
-                emitter.out(
-                    symbol_token, std::format("Assignment to constant variable '{}'", symbol), Error
+                compiler_error(
+                    symbol_token, std::format("Assignment to constant variable '{}'", symbol)
                 );
 
                 return;
@@ -274,19 +265,14 @@ void StmtVisitor::visit(AssignNode& assign_node) {
             }
         }
         else {
-            visitor_failed = true;
-            emitter.out(
-                symbol_token, "Assignment to invalid lvalue, symbol has not been declared", Error
+            compiler_error(
+                symbol_token, "Assignment to invalid lvalue, symbol has not been declared"
             );
         }
     }
     else {
-        visitor_failed = true;
-        emitter.out_range(
-            assign_node.assignee->begin,
-            assign_node.assignee->end,
-            "Assignment to invalid lvalue",
-            Error
+        compiler_error(
+            assign_node.assignee->begin, assign_node.assignee->end, "Assignment to invalid lvalue"
         );
     }
 }

@@ -19,8 +19,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
     CHECK_TYPE_INFERENCE_FAILURE(annotated_type, declaration_node.value_expression);
 
     if (!is_compatible(infered_type, annotated_type)) {
-        visitor_failed = true;
-        emitter.out_range(
+        compiler_error(
             declaration_node.value_expression->begin,
             declaration_node.value_expression->end,
             std::format(
@@ -28,8 +27,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
                 "'{}'",
                 infered_type->to_string_x(),
                 annotated_type->to_string_x()
-            ),
-            Error
+            )
         );
     }
 }
@@ -42,16 +40,14 @@ void TypeVisitor::visit(AssignNode& assign_node) {
     CHECK_TYPE_INFERENCE_FAILURE(assigned_type, assign_node.value);
 
     if (!is_compatible(infered_type, assigned_type)) {
-        visitor_failed = true;
-        emitter.out_range(
+        compiler_error(
             assign_node.value->begin,
             assign_node.value->end,
             std::format(
                 "Assigning incompatible type '{}' to an lvalue that holds type '{}'",
                 assigned_type->to_string_x(),
                 infered_type->to_string_x()
-            ),
-            Error
+            )
         );
     }
 }
