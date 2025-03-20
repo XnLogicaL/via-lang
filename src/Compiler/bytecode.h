@@ -35,7 +35,7 @@ public:
     using bytecode_vector = std::vector<Bytecode>;
 
     // Returns the current size of the bytecode pair vector.
-    size_t size() const noexcept;
+    size_t size() const;
 
     // Inserts a given bytecode pair to the bytecode vectors back.
     void add(const Bytecode&);
@@ -61,7 +61,7 @@ public:
     );
 
     // Returns a reference to the bytecode vector.
-    const bytecode_vector& get() const noexcept;
+    const bytecode_vector& get() const;
 
 private:
     bytecode_vector instructions;

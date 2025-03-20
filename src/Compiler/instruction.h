@@ -12,12 +12,11 @@
 
 VIA_NAMESPACE_BEGIN
 
-using Operand  = u16;
-using OperandS = i16;
+using Operand  = uint16_t;
+using OperandS = int16_t;
 
 struct Chunk;
 struct InstructionData {
-    Chunk*      chunk   = nullptr;
     std::string comment = "";
 };
 

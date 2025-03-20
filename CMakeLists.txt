@@ -37,7 +37,7 @@ file(GLOB_RECURSE SRC_INCLUDES LIST_DIRECTORIES true src/*)
 add_executable(via ${MAIN_FILE_PATH} ${MAIN_SOURCES})
 
 # Include directories
-target_include_directories(via PRIVATE include/ src/)
+target_include_directories(via PRIVATE include/ src/ src/lex src/parse src/compiler src/preprocessor src/interpreter)
 
 # Set compiler flags
 target_compile_options(via PUBLIC
@@ -71,6 +71,7 @@ else()
         -finline-functions
         -ftree-pre
         -fprefetch-loop-arrays
+        -fno-exceptions
     )
 endif()
 

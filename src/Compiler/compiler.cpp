@@ -3,7 +3,7 @@
 // =========================================================================================== |
 
 #include "compiler.h"
-#include "strutils.h"
+#include "string-utility.h"
 
 // ===========================================================================================
 // compiler.cpp
@@ -31,12 +31,12 @@ bool Compiler::generate() {
 bool Compiler::check_global_collisions() {
     ErrorEmitter emitter(program);
 
-    bool                            failed = false;
-    std::unordered_map<u32, Global> global_map;
+    bool                                 failed = false;
+    std::unordered_map<uint32_t, Global> global_map;
 
     for (const Global& global : program.globals->get()) {
-        u32  hash = hash_string_custom(global.symbol.c_str());
-        auto it   = global_map.find(hash);
+        uint32_t hash = hash_string_custom(global.symbol.c_str());
+        auto     it   = global_map.find(hash);
 
         if (it != global_map.end()) {
             failed = true;

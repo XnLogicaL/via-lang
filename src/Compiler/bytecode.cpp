@@ -15,7 +15,7 @@ using comment_type    = BytecodeHolder::comment_type;
 using operands_array  = BytecodeHolder::operands_array;
 using bytecode_vector = BytecodeHolder::bytecode_vector;
 
-size_t BytecodeHolder::size() const noexcept {
+size_t BytecodeHolder::size() const {
     return instructions.size();
 }
 
@@ -79,7 +79,7 @@ void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type&
     });
 }
 
-const bytecode_vector& BytecodeHolder::get() const noexcept {
+const bytecode_vector& BytecodeHolder::get() const {
     return instructions;
 }
 

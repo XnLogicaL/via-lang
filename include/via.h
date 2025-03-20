@@ -11,17 +11,18 @@
 #include "signal.h"
 #include "fileio.h"
 
-#include "Lexer/lexer.h"
-#include "Lexer/preproc.h"
+#include "lex/lexer.h"
 
-#include "Parser/parser.h"
-#include "Parser/ast.h"
+#include "preprocessor/preproc.h"
 
-#include "Compiler/compiler.h"
+#include "parse/parser.h"
+#include "parse/ast.h"
 
-#include "VM/state.h"
-#include "VM/execute.h"
-#include "VM/api.h"
-#include "VM/vlbase.h"
+#include "compiler/compiler.h"
+
+#include "interpreter/state.h"
+#include "interpreter/execute.h"
+#include "interpreter/api.h"
+#include "interpreter/vlbase.h"
 
 #endif

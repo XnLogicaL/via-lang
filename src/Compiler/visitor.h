@@ -6,10 +6,10 @@
 #define _VIA_VISITOR_H
 
 #include "ast.h"
-#include "register_allocator.h"
+#include "register-allocator.h"
 #include "token.h"
 #include "common.h"
-#include "rttypes.h"
+#include "rt-types.h"
 #include "bytecode.h"
 #include "constant.h"
 #include "highlighter.h"

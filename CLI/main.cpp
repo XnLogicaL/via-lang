@@ -4,7 +4,7 @@
 
 #include "linenoise.hpp"
 #include "argparse.hpp"
-#include "fileio.h"
+#include "file-io.h"
 #include "via.h"
 #include <cstddef>
 
@@ -183,7 +183,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-ast")) {
             print_flag_label("--dump-ast");
 
-            u32 depth = 0;
+            uint32_t depth = 0;
 
             for (const pStmtNode& pstmt : program.ast->statements) {
                 std::cout << pstmt->to_string(depth) << "\n";
@@ -193,7 +193,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-bytecode")) {
             print_flag_label("--dump-bytecode");
 
-            u32 counter = 0;
+            uint32_t counter = 0;
 
             for (const Bytecode& bytecode : program.bytecode->get()) {
                 std::cout << std::format("{:0>3} ", counter++)
@@ -208,7 +208,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
                 const Instruction& instruction = bytecode.instruction;
 
                 const size_t   size = sizeof(Instruction);
-                const uint8_t* data = reinterpret_cast<const u8*>(&instruction);
+                const uint8_t* data = reinterpret_cast<const uint8_t*>(&instruction);
 
                 for (size_t i = 0; i < size; i++) {
                     std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
@@ -290,7 +290,7 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
 
     command->add_argument("--optimize", "-O")
         .help("Sets optimization level to the given integer")
-        .scan<'u', via::u32>()
+        .scan<'u', via::uint32_t>()
         .default_value(1);
 
     // Verbose mode

@@ -6,8 +6,8 @@
 #define _VIA_STACK_H
 
 #include "ast.h"
-#include "ast_base.h"
-#include "rttypes.h"
+#include "ast-base.h"
+#include "rt-types.h"
 #include "common.h"
 
 #define VIA_TEST_STACK_SIZE 2048
@@ -45,23 +45,23 @@ public:
     }
 
     // Returns the size of the stack.
-    size_t size() noexcept;
+    size_t size();
 
     // Pushes a given stack object onto the stack.
-    void push(StackObject) noexcept;
+    void push(StackObject);
 
     // Returns the top stack object of the stack.
-    StackObject top() noexcept;
+    StackObject top();
 
     // Pops and returns a clone of the top-most stack object of the stack.
-    StackObject pop() noexcept;
+    StackObject pop();
 
     // Returns the stack object at a given index.
-    index_query_result at(size_t) noexcept;
+    index_query_result at(size_t);
 
     // Returns the stack id of a given stack object.
-    find_query_result find_symbol(const StackObject&) noexcept;
-    find_query_result find_symbol(const symbol&) noexcept;
+    find_query_result find_symbol(const StackObject&);
+    find_query_result find_symbol(const symbol&);
 
 public:
     function_stack_type function_stack;
@@ -74,7 +74,7 @@ private:
 
 private:
     // Dynamically grows and relocates the stack.
-    void grow_stack() noexcept;
+    void grow_stack();
 };
 
 VIA_NAMESPACE_END

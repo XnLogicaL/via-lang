@@ -3,7 +3,7 @@
 // =========================================================================================== |
 
 #include "instruction.h"
-#include "bitutils.h"
+#include "bit-utility.h"
 #include "bytecode.h"
 #include "object.h"
 
@@ -33,10 +33,10 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
 
     std::string arg0, arg1, arg2;
     OpCode      opcode    = instruction.op;
-    u32         opcode_id = static_cast<u32>(opcode);
+    uint32_t    opcode_id = static_cast<uint32_t>(opcode);
 
-    if (opcode_id >= static_cast<u32>(JUMP) &&
-        opcode_id <= static_cast<u32>(JUMPIFGREATEROREQUAL)) {
+    if (opcode_id >= static_cast<uint32_t>(JUMP) &&
+        opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
         arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
         arg1 = std::format("{}", static_cast<OperandS>(instruction.operand1));
         arg2 = std::format("{}", static_cast<OperandS>(instruction.operand2));

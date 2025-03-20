@@ -10,19 +10,19 @@ using index_query_result  = GlobalTracker::index_query_result;
 using global_query_result = GlobalTracker::global_query_result;
 using global_vector       = GlobalTracker::global_vector;
 
-size_t GlobalTracker::size() noexcept {
+size_t GlobalTracker::size() {
     return globals.size();
 }
 
-void GlobalTracker::declare_global(const Global& global) noexcept {
+void GlobalTracker::declare_global(const Global& global) {
     globals.emplace_back(global);
 }
 
-bool GlobalTracker::was_declared(const Global& global) noexcept {
+bool GlobalTracker::was_declared(const Global& global) {
     return was_declared(global.symbol);
 }
 
-bool GlobalTracker::was_declared(const std::string& symbol) noexcept {
+bool GlobalTracker::was_declared(const std::string& symbol) {
     for (const Global& global : globals) {
         if (global.symbol == symbol) {
             return true;
@@ -32,12 +32,12 @@ bool GlobalTracker::was_declared(const std::string& symbol) noexcept {
     return false;
 }
 
-index_query_result GlobalTracker::get_index(const Global& global) noexcept {
+index_query_result GlobalTracker::get_index(const Global& global) {
     return get_index(global.symbol);
 }
 
-index_query_result GlobalTracker::get_index(const std::string& symbol) noexcept {
-    u64 index = 0;
+index_query_result GlobalTracker::get_index(const std::string& symbol) {
+    uint64_t index = 0;
     for (const Global& global : globals) {
         if (global.symbol == symbol) {
             return index;
@@ -49,7 +49,7 @@ index_query_result GlobalTracker::get_index(const std::string& symbol) noexcept 
     return std::nullopt;
 }
 
-global_query_result GlobalTracker::get_global(const std::string& symbol) noexcept {
+global_query_result GlobalTracker::get_global(const std::string& symbol) {
     for (const Global& global : globals) {
         if (global.symbol == symbol) {
             return global;
@@ -59,7 +59,7 @@ global_query_result GlobalTracker::get_global(const std::string& symbol) noexcep
     return std::nullopt;
 }
 
-global_query_result GlobalTracker::get_global(size_t index) noexcept {
+global_query_result GlobalTracker::get_global(size_t index) {
     try {
         return globals.at(index);
     }
@@ -68,7 +68,7 @@ global_query_result GlobalTracker::get_global(size_t index) noexcept {
     }
 }
 
-const global_vector& GlobalTracker::get() noexcept {
+const global_vector& GlobalTracker::get() {
     return globals;
 }
 

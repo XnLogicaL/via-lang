@@ -6,8 +6,8 @@
 #define _VIA_PROGRAM_H
 
 #include "globals.h"
-#include "common_nodep.h"
-#include "api_config.h"
+#include "common-defs.h"
+#include "common-macros.h"
 
 #define VFLAG_VERBOSE int(1 << 0)
 #define VFLAG_SASSY   int(1 << 7)
@@ -15,16 +15,16 @@
 VIA_NAMESPACE_BEGIN
 
 class TokenStream;
-struct AbstractSyntaxTree;
+class AbstractSyntaxTree;
 class BytecodeHolder;
 class ConstantHolder;
 class CompilerStack;
 
-class ProgramData {
+class ProgramData final {
 public:
-    int    flags              = 0;
-    u8     optimization_level = 0;
-    size_t label_count        = 0;
+    int     flags              = 0;
+    uint8_t optimization_level = 0;
+    size_t  label_count        = 0;
 
     std::string file;
     std::string source;
@@ -40,7 +40,7 @@ public:
     VIA_CUSTOM_DESTRUCTOR(ProgramData);
 
     // Move constructor
-    ProgramData(ProgramData&& other) noexcept
+    ProgramData(ProgramData&& other)
         : optimization_level(other.optimization_level),
           label_count(other.label_count),
           file(other.file),
@@ -64,9 +64,7 @@ public:
         other.globals      = nullptr;
     }
 
-    // Move assignment operator
-    ProgramData& operator=(ProgramData&& other) noexcept = delete;
-
+    ProgramData& operator=(ProgramData&& other) = delete;
     ProgramData(std::string file, std::string source);
 };
 

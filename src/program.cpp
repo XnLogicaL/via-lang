@@ -7,7 +7,7 @@
 #include "token.h"
 #include "bytecode.h"
 #include "constant.h"
-#include "rttypes.h"
+#include "rt-types.h"
 #include "stack.h"
 
 #define DELETE_IF(target)                                                                          \
@@ -21,7 +21,7 @@ VIA_NAMESPACE_BEGIN
 ProgramData::ProgramData(std::string file, std::string file_source)
     : file(file),
       source(file_source),
-      tokens(new TokenHolder()),
+      token_stream(new TokenStream()),
       ast(new AbstractSyntaxTree()),
       bytecode(new BytecodeHolder()),
       constants(new ConstantHolder()),
@@ -29,7 +29,7 @@ ProgramData::ProgramData(std::string file, std::string file_source)
       globals(new GlobalTracker()) {}
 
 ProgramData::~ProgramData() {
-    DELETE_IF(tokens);
+    DELETE_IF(token_stream);
     DELETE_IF(ast);
     DELETE_IF(bytecode);
     DELETE_IF(constants);

@@ -12,11 +12,11 @@ using function_stack_node = CompilerStack::function_stack_node;
 using function_stack_type = CompilerStack::function_stack_type;
 using symbol              = CompilerStack::symbol;
 
-size_t CompilerStack::size() noexcept {
+size_t CompilerStack::size() {
     return sp;
 }
 
-void CompilerStack::push(StackObject val) noexcept {
+void CompilerStack::push(StackObject val) {
     if (sp >= capacity) {
         grow_stack();
     }
@@ -24,17 +24,17 @@ void CompilerStack::push(StackObject val) noexcept {
     sbp[sp++] = {val.is_const, val.is_constexpr, val.symbol, val.type->clone()};
 }
 
-StackObject CompilerStack::pop() noexcept {
+StackObject CompilerStack::pop() {
     StackObject& val = sbp[sp--];
     return {val.is_const, val.is_const, val.symbol, val.type->clone()};
 }
 
-StackObject CompilerStack::top() noexcept {
+StackObject CompilerStack::top() {
     StackObject& obj = sbp[sp--];
     return {obj.is_const, obj.is_constexpr, obj.symbol, obj.type->clone()};
 }
 
-index_query_result CompilerStack::at(size_t pos) noexcept {
+index_query_result CompilerStack::at(size_t pos) {
     if (pos > size()) {
         return std::nullopt;
     }
@@ -43,7 +43,7 @@ index_query_result CompilerStack::at(size_t pos) noexcept {
     return StackObject{obj.is_const, obj.is_constexpr, obj.symbol, obj.type->clone()};
 }
 
-find_query_result CompilerStack::find_symbol(const symbol& symbol) noexcept {
+find_query_result CompilerStack::find_symbol(const symbol& symbol) {
     for (StackObject* stk_id = sbp; stk_id < sbp + sp; stk_id++) {
         if (stk_id->symbol == symbol) {
             return stk_id - sbp;
@@ -53,11 +53,11 @@ find_query_result CompilerStack::find_symbol(const symbol& symbol) noexcept {
     return std::nullopt;
 }
 
-find_query_result CompilerStack::find_symbol(const StackObject& member) noexcept {
+find_query_result CompilerStack::find_symbol(const StackObject& member) {
     return find_symbol(member.symbol);
 }
 
-void CompilerStack::grow_stack() noexcept {
+void CompilerStack::grow_stack() {
     size_t old_capacity = capacity;
     size_t new_capacity = old_capacity * 2;
 
