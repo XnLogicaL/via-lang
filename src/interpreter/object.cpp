@@ -96,7 +96,7 @@ TValue::~TValue() {
 }
 
 // Return a clone of the TValue based on its type
-VIA_NO_DISCARD TValue TValue::clone() const {
+TValue TValue::clone() const {
     switch (type) {
     case integer:
         return TValue(val_integer);

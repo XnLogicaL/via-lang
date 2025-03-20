@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_COMMON_NODEP_H
-#define _VIA_COMMON_NODEP_H
+#ifndef _VIA_COMMON_DEFS_H
+#define _VIA_COMMON_DEFS_H
 
 // C++ std imports
 #include <bitset>

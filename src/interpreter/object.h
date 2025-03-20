@@ -58,13 +58,13 @@ struct VIA_ALIGN_8 TValue {
     /* clang-format on */
 
     // Returns a clone of the object.
-    VIA_NO_DISCARD TValue clone() const;
+    [[nodiscard]] TValue clone() const;
 
     // Frees the internal resources of the object and resets union tag to nil.
-    void reset() const;
+    void reset();
 
     template<typename T>
-    VIA_NO_DISCARD VIA_INLINE_HOT T* cast_ptr() const {
+    [[nodiscard]] VIA_INLINE_HOT T* cast_ptr() const {
         return reinterpret_cast<T*>(val_pointer);
     }
 };
@@ -74,7 +74,6 @@ struct TString {
     uint32_t    hash;
     const char* data;
 
-    VIA_NON_DEFAULT_CONSTRUCTIBLE(TString);
     VIA_CUSTOM_DESTRUCTOR(TString);
 
     explicit TString(State*, const char*);
