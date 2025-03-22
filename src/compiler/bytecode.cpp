@@ -55,7 +55,6 @@ void BytecodeHolder::insert(
                 },
             .meta_data =
                 {
-                    .chunk   = nullptr,
                     .comment = comment,
                 },
         }
@@ -73,7 +72,6 @@ void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type&
             },
         .meta_data =
             {
-                .chunk   = nullptr,
                 .comment = comment,
             },
     });

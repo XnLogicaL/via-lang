@@ -1,19 +1,14 @@
 global Aaaa: int = 0
 global BB: int = 100
 
-global func add(a: int, b: int) -> () {
+global func add(a: int, b: int) -> nil {
     local x = 31
     local var = 56
-    local func inner() -> () {
+    local func inner() -> nil {
         local y = true
 
         if y {
             local xx = 100914 as float
-        }
-        elif y {
-            local zz = 192591952
-            local arjjfw = 528385
-            local cond = zz + arjjfw
         }
         else {
             local yes = false

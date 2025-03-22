@@ -6,32 +6,34 @@
 #include "gc.h"
 #include "instruction.h"
 #include "opcode.h"
-#include "state.h"
 #include "string-utility.h"
 #include "rt-types.h"
 #include "api-impl.h"
-#include "api.h"
+#include "api-aux.h"
+#include "state.h"
 #include <cmath>
 
 VIA_NAMESPACE_BEGIN
 
-TValue& get_register(State& state, Operand reg) {
+using enum ValueType;
+
+TValue& State::get_register(Operand reg) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
-    return state.registers[reg];
+    return registers[reg];
 }
 
-void set_register(State& state, Operand reg, const TValue& val) {
+void State::set_register(Operand reg, const TValue& val) {
     VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
-    TValue* addr = state.registers + reg;
+    TValue* addr = registers + reg;
     *addr        = val.clone();
 }
 
-bool is_heap(const TValue& value) {
+bool State::is_heap(const TValue& value) {
     return static_cast<uint32_t>(value.type) >= static_cast<uint32_t>(ValueType::string);
 }
 
-bool compare(const TValue& left, const TValue& right) {
+bool State::compare(const TValue& left, const TValue& right) {
     if (left.type != right.type) {
         return false;
     }
@@ -39,69 +41,70 @@ bool compare(const TValue& left, const TValue& right) {
     return true;
 }
 
-void push_nil(State& state) {
-    push(state, TValue());
+void State::push_nil() {
+    push(TValue());
 }
 
-void push_int(State& state, TInteger value) {
-    push(state, TValue(value));
+void State::push_int(TInteger value) {
+    push(TValue(value));
 }
 
-void push_float(State& state, TFloat value) {
-    push(state, TValue(value));
+void State::push_float(TFloat value) {
+    push(TValue(value));
 }
 
-void push_true(State& state) {
-    push(state, TValue(true));
+void State::push_true() {
+    push(TValue(true));
 }
 
-void push_false(State& state) {
-    push(state, TValue(false));
+void State::push_false() {
+    push(TValue(false));
 }
 
-void push_string(State& state, const char* str) {
-    push(state, TValue(new TString(&state, str)));
+void State::push_string(const char* str) {
+    TString* tstr = new TString(this, str);
+    push(TValue(string, tstr));
 }
 
-void push_table(State& state) {
-    push(state, TValue(ValueType::table, new TTable()));
+void State::push_table() {
+    push(TValue(table, new TTable()));
 }
 
-void push(State& state, const TValue& val) {
-    VIA_ASSERT(state.sp < VIA_VM_STACK_SIZE, "stack overflow");
-    impl::__push(&state, val);
+void State::push(const TValue& val) {
+    VIA_ASSERT(sp < VIA_VM_STACK_SIZE, "stack overflow");
+    impl::__push(this, val);
 }
 
-void drop(State& state) {
-    VIA_ASSERT(state.sp > 0, "stack underflow");
-    impl::__drop(&state);
+void State::drop() {
+    VIA_ASSERT(sp > 0, "stack underflow");
+    impl::__drop(this);
 }
 
-TValue pop(State& state) {
-    VIA_ASSERT(state.sp > 0, "stack underflow");
-    return impl::__pop(&state);
+TValue State::pop() {
+    VIA_ASSERT(sp > 0, "stack underflow");
+    return impl::__pop(this);
 }
 
-const TValue& top(State& state) {
-    VIA_ASSERT(state.sp > 0, "stack underflow");
-    return state.sbp[state.sp];
+const TValue& State::top() {
+    VIA_ASSERT(sp > 0, "stack underflow");
+    return sbp[sp];
 }
 
-void set_stack(State& state, size_t position, TValue value) {
-    VIA_ASSERT(state.sp >= position, "stack overflow");
-    impl::__set_stack(&state, position, value);
+void State::set_stack(size_t position, TValue value) {
+    VIA_ASSERT(sp >= position, "stack overflow");
+    impl::__set_stack(this, position, value);
 }
 
-const TValue& get_stack(State& state, size_t position) {
-    VIA_ASSERT(state.sp >= position, "stack overflow");
-    return impl::__get_stack(&state, position);
+const TValue& State::get_stack(size_t position) {
+    VIA_ASSERT(sp >= position, "stack overflow");
+    return impl::__get_stack(this, position);
 }
 
-size_t stack_size(State& state) {
-    return state.sp;
+size_t State::stack_size() {
+    return sp;
 }
 
-TValue to_integer(const TValue& value) {
+TValue State::to_integer(const TValue& value) {
     switch (value.type) {
     case ValueType::floating_point:
         return TValue(static_cast<TFloat>(value.val_integer));
@@ -125,7 +128,7 @@ TValue to_integer(const TValue& value) {
     VIA_UNREACHABLE;
 }
 
-TValue to_float(const TValue& value) {
+TValue State::to_float(const TValue& value) {
     switch (value.type) {
     case ValueType::integer:
         return TValue(static_cast<TInteger>(value.val_integer));
@@ -147,7 +150,7 @@ TValue to_float(const TValue& value) {
     return TValue();
 }
 
-TValue to_boolean(const TValue& value) {
+TValue State::to_boolean(const TValue& value) {
     switch (value.type) {
     case ValueType::nil:
         return TValue(false);
@@ -160,6 +163,8 @@ TValue to_boolean(const TValue& value) {
     return TValue(true);
 }
 
-TValue to_string(const TValue& value) {}
+TValue State::to_string(const TValue&) {
+    return TValue();
+}
 
 VIA_NAMESPACE_END

@@ -278,16 +278,16 @@ void StmtVisitor::visit(AssignNode& assign_node) {
 }
 
 void StmtVisitor::visit(ReturnNode& return_node) {
+    auto& this_function = program.test_stack->function_stack.top();
     if (return_node.expression.get()) {
         Operand expr_reg = allocator.allocate_register();
 
         return_node.expression->accept(expression_visitor, expr_reg);
-        program.bytecode->emit(RETURN, {expr_reg});
-
+        program.bytecode->emit(RETURN, {expr_reg}, this_function.identifier.lexeme);
         allocator.free_register(expr_reg);
     }
     else {
-        program.bytecode->emit(RETURNNIL);
+        program.bytecode->emit(RETURNNIL, {}, this_function.identifier.lexeme);
     }
 }
 

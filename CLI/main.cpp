@@ -42,6 +42,7 @@ struct CompilationResult {
 CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     using enum OutputSeverity;
     using enum TokenType;
+    using namespace utils;
 
     const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
         return subcommand_parser.get<bool>(flag);
@@ -55,12 +56,11 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     const bool sassy_flag     = get_flag("--sassy");
 
     std::string file = subcommand_parser.get<std::string>("target");
-    std::string source;
 
     // Record compilation start time
     SET_PROFILER_POINT(compilation_start)
 
-    ProgramData  program(file, source);
+    ProgramData  program(file, "");
     ErrorEmitter local_emitter(program);
 
     if (verbosity_flag) {
@@ -71,15 +71,13 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         program.flags |= VFLAG_SASSY;
     }
 
-    try {
-        source = utils::read_from_file(file);
-    }
-    catch (const std::exception& e) {
-        local_emitter.out_flat(std::format("Failed to read file '{}': {}", file, e.what()), Error);
-        return CompilationResult(true, std::move(program));
+    ReadResult source_result = read_from_file(file);
+    if (!source_result.has_value()) {
+        local_emitter.out_flat(source_result.error(), Error);
+        return {true, std::move(program)};
     }
 
-    program.source = source;
+    program.source = *source_result;
 
     Tokenizer    lexer(program);
     Preprocessor preprocessor(program);
@@ -193,11 +191,22 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         if (get_flag("--dump-bytecode")) {
             print_flag_label("--dump-bytecode");
 
-            uint32_t counter = 0;
+            std::cout << "main:\n";
 
             for (const Bytecode& bytecode : program.bytecode->get()) {
-                std::cout << std::format("{:0>3} ", counter++)
-                          << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
+                if (bytecode.instruction.op == OpCode::LABEL) {
+                    std::cout << std::format(
+                        "{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
+                    );
+                    continue;
+                }
+                else if (bytecode.instruction.op == OpCode::LOADFUNCTION) {
+                    std::cout << bytecode.meta_data.comment << ":\n";
+                    continue;
+                }
+
+                std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes"))
+                          << "\n";
             }
         }
 
@@ -246,7 +255,7 @@ CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
     if (!result.failed) {
         GState gstate;
         State  state(&gstate, result.program);
-        execute(&state);
+        state.execute();
     }
 
     return result;
@@ -290,7 +299,7 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
 
     command->add_argument("--optimize", "-O")
         .help("Sets optimization level to the given integer")
-        .scan<'u', via::uint32_t>()
+        .scan<'u', uint32_t>()
         .default_value(1);
 
     // Verbose mode

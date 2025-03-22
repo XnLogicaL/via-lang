@@ -6,6 +6,7 @@
 #include "rt-types.h"
 #include "object.h"
 #include "function.h"
+#include "api-aux.h"
 
 VIA_NAMESPACE_BEGIN
 
@@ -119,6 +120,12 @@ TValue TValue::clone() const {
     VIA_UNREACHABLE;
 }
 
+void TValue::reset() {}
+
+bool TValue::compare(const TValue&) const {
+    return false;
+}
+
 // Constructs a new TString object
 TString::TString(State* V, const char* str) {
     if (V != nullptr) {
@@ -143,6 +150,28 @@ TString::~TString() {
         delete[] data;  // Free the allocated string memory
         data = nullptr; // Null data pointer
     }
+}
+
+size_t TString::size() {
+    return len;
+}
+
+void TString::set_string(size_t position, const TValue& value) {
+    VIA_ASSERT(position < len, "String index position out of bounds");
+    VIA_ASSERT(check_string(value), "Setting string index to non-string value");
+
+    TString* val = value.cast_ptr<TString>();
+
+    VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
+
+    data[position] = value.cast_ptr<TString>()->data[0];
+}
+
+TValue TString::get_string(size_t position) {
+    VIA_ASSERT(position < len, "String index position out of bounds");
+    char     chr  = data[position];
+    TString* tstr = new TString(nullptr, &chr);
+    return TValue(tstr);
 }
 
 TTable::~TTable() {
@@ -202,8 +231,31 @@ TTable::TTable(const TTable& other)
     }
 }
 
-TObject::~TObject() {
+size_t TTable::size() {
+    return impl::__table_size(this);
+}
 
+void TTable::set_table(const char* key, const TValue& value) {
+    TValue index(new TString(nullptr, key));
+    impl::__table_set(this, index, value);
+}
+
+void TTable::set_table(size_t position, const TValue& value) {
+    TValue index(static_cast<TInteger>(position));
+    impl::__table_set(this, index, value);
+}
+
+TValue TTable::get_table(const char* key) {
+    TValue index(new TString(nullptr, key));
+    return impl::__table_get(this, index);
+}
+
+TValue TTable::get_table(size_t position) {
+    TValue index(static_cast<TInteger>(position));
+    return impl::__table_get(this, index);
+}
+
+TObject::~TObject() {
     if (fields) {
         delete[] fields;
         fields = nullptr;

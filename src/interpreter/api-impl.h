@@ -97,7 +97,7 @@ VIA_INLINE_HOT TValue __pop(State* _State) {
 }
 
 VIA_INLINE_HOT void __drop(State* _State) {
-    const TValue& _Dropped_val = _State->sbp[_State->sp--];
+    TValue& _Dropped_val = _State->sbp[_State->sp--];
     _Dropped_val.reset();
 }
 

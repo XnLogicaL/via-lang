@@ -3,12 +3,13 @@
 // =========================================================================================== |
 
 #include "lib-base.h"
-#include "api.h"
 #include "api-impl.h"
 #include "lib-utility.h"
 #include "rt-types.h"
 
 VIA_NAMESPACE_LIB_BEGIN
+
+static TValue nil = TValue();
 
 using namespace impl;
 

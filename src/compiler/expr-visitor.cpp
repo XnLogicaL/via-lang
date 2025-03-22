@@ -2,7 +2,7 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#include "api.h"
+#include "state.h"
 #include "bit-utility.h"
 #include "stack.h"
 #include "string-utility.h"

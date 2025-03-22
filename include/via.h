@@ -5,15 +5,18 @@
 #ifndef _VIA_H
 #define _VIA_H
 
-#include "common_nodep.h"
+#include "common-macros.h"
+#include "common-defs.h"
 #include "common.h"
 #include "cache.h"
 #include "signal.h"
-#include "fileio.h"
+#include "file-io.h"
 
+#include "lex/token.h"
+#include "lex/highlighter.h"
 #include "lex/lexer.h"
 
-#include "preprocessor/preproc.h"
+#include "preprocessor/preprocessor.h"
 
 #include "parse/parser.h"
 #include "parse/ast.h"
@@ -21,8 +24,6 @@
 #include "compiler/compiler.h"
 
 #include "interpreter/state.h"
-#include "interpreter/execute.h"
-#include "interpreter/api.h"
-#include "interpreter/vlbase.h"
+#include "interpreter/lib-base.h"
 
 #endif

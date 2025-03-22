@@ -6,7 +6,6 @@
 #define _VIA_OBJECT_H
 
 #include "common.h"
-#include "state.h"
 
 VIA_NAMESPACE_BEGIN
 
@@ -21,6 +20,11 @@ using TInteger = int32_t;
 using TFloat   = float32_t;
 
 #endif
+
+struct State;
+struct TString;
+struct TTable;
+struct TObject;
 
 enum class ValueType : uint8_t {
     nil,            // Empty type, null
@@ -54,6 +58,9 @@ struct VIA_ALIGN_8 TValue {
     explicit TValue(bool b)                     : type(ValueType::boolean), val_boolean(b) {}
     explicit TValue(TInteger x)                 : type(ValueType::integer), val_integer(x) {}
     explicit TValue(TFloat x)                   : type(ValueType::floating_point), val_floating_point(x) {}
+    explicit TValue(TString* ptr)               : type(ValueType::string), val_pointer(ptr) {}
+    explicit TValue(TTable* ptr)                : type(ValueType::table), val_pointer(ptr) {}
+    explicit TValue(TObject* ptr)               : type(ValueType::object), val_pointer(ptr) {}
     explicit TValue(ValueType type, void* ptr)  : type(type), val_pointer(ptr) {}
     /* clang-format on */
 
@@ -63,6 +70,9 @@ struct VIA_ALIGN_8 TValue {
     // Frees the internal resources of the object and resets union tag to nil.
     void reset();
 
+    // Compares self with a given TValue.
+    bool compare(const TValue& other) const;
+
     template<typename T>
     [[nodiscard]] VIA_INLINE_HOT T* cast_ptr() const {
         return reinterpret_cast<T*>(val_pointer);
@@ -70,13 +80,17 @@ struct VIA_ALIGN_8 TValue {
 };
 
 struct TString {
-    uint32_t    len;
-    uint32_t    hash;
-    const char* data;
+    uint32_t len;
+    uint32_t hash;
+    char*    data;
 
     VIA_CUSTOM_DESTRUCTOR(TString);
 
     explicit TString(State*, const char*);
+
+    size_t size();
+    TValue get_string(size_t position);
+    void   set_string(size_t position, const TValue& value);
 };
 
 struct THashNode {
@@ -101,6 +115,18 @@ struct TTable {
     VIA_CUSTOM_DESTRUCTOR(TTable);
 
     TTable(const TTable&);
+
+    // Returns the real size of the table.
+    size_t size();
+
+    // Returns the element that lives in the given index.
+    // Returns nil upon failure.
+    TValue get_table(size_t position);
+    TValue get_table(const char* key);
+
+    // Sets the element that lives in the given index to the given value.
+    void set_table(size_t position, const TValue& value);
+    void set_table(const char* key, const TValue& value);
 };
 
 struct TObject {

@@ -521,6 +521,7 @@ struct ExprStmtNode : public StmtNode {
 };
 
 class AbstractSyntaxTree {
+public:
     std::vector<pStmtNode> statements;
 };
 

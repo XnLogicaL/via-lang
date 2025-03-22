@@ -31,7 +31,7 @@ struct ExprNode {
     virtual pTypeNode   infer_type(ProgramData&)       = 0;
     virtual int         precedence() const {
         return 0;
-    };
+    }
 };
 
 struct StmtNode {

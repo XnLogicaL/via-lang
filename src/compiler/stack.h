@@ -7,6 +7,7 @@
 
 #include "ast.h"
 #include "ast-base.h"
+#include "instruction.h"
 #include "rt-types.h"
 #include "common.h"
 

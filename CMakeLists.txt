@@ -50,6 +50,7 @@ target_compile_options(via PUBLIC
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
     target_compile_definitions(via PRIVATE -DVIA_DEBUG)
+
     if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
         target_compile_options(via PRIVATE -fsanitize=address,undefined)
         target_link_libraries(via PRIVATE -fsanitize=address,undefined)

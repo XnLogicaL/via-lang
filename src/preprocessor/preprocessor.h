@@ -22,8 +22,8 @@ public:
     void declare_default();
 
 private:
-    ProgramData& program;
-    ErrorEmitter emitter;
+    [[maybe_unused]] ProgramData& program;
+    [[maybe_unused]] ErrorEmitter emitter;
 };
 
 VIA_NAMESPACE_END

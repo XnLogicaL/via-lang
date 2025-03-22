@@ -25,7 +25,6 @@
 #include <optional>
 #include <shared_mutex>
 #include <stack>
-#include <stacktrace>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -36,7 +35,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <expected>
 
 #include "common-macros.h"
 

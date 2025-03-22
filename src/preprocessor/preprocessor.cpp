@@ -2,7 +2,7 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#include "preproc.h"
+#include "preprocessor.h"
 #include "lexer.h"
 
 VIA_NAMESPACE_BEGIN

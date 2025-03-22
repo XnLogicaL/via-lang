@@ -10,6 +10,7 @@
 #include "ast-base.h"
 #include "highlighter.h"
 #include "token.h"
+#include "expected.hpp"
 
 VIA_NAMESPACE_BEGIN
 
@@ -21,7 +22,7 @@ struct ParserError {
 class Parser final {
 public:
     template<typename T>
-    using result = std::expected<T, ParserError>;
+    using result = tl::expected<T, ParserError>;
 
     Parser(ProgramData& program)
         : program(program),
@@ -39,19 +40,7 @@ private:
     result<Token> current();
     result<Token> peek(int32_t ahead = 1);
     result<Token> consume(uint32_t ahead = 1);
-
-    result<Token> expect_consume(TokenType type, const std::string& what) {
-        result<Token> curr = current();
-        if (!curr.has_value()) {
-            return curr;
-        }
-
-        if (curr->type == type) {
-            return consume();
-        }
-
-        return std::unexpected<ParserError>({position, what});
-    }
+    result<Token> expect_consume(TokenType type, const std::string& what);
 
     result<Modifiers> parse_modifiers();
 

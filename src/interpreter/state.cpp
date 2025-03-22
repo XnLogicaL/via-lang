@@ -3,7 +3,6 @@
 // =========================================================================================== |
 
 #include "state.h"
-#include "api.h"
 #include "bytecode.h"
 #include "gc.h"
 #include "api-aux.h"
@@ -47,6 +46,33 @@ State::State(GState* G, ProgramData& program)
     __native_call(this, main, 0);
 }
 
+State::~State() {
+    if (sstate) {
+        // Invalidate shared resources to avoid double frees
+        sstate->gc = nullptr;
+
+        if (sstate->ibp == ibp) {
+            sstate->ibp = nullptr;
+        }
+
+        if (sstate->sbp == sbp) {
+            sstate->sbp = nullptr;
+        }
+
+        delete sstate;
+    }
+
+    DELETE_IF(gc);
+    DELETE_IF(err);
+    DELETE_IF(main);
+
+    DELETE_ARR_IF(registers);
+    DELETE_ARR_IF(ibp);
+    DELETE_ARR_IF(sbp);
+
+    __label_deallocate(this);
+}
+
 void State::load(BytecodeHolder& bytecode) {
     DELETE_ARR_IF(ibp);
 
@@ -66,34 +92,6 @@ void State::load(BytecodeHolder& bytecode) {
         const Instruction& instruction = pair.instruction;
         ibp[position++]                = instruction;
     }
-}
-
-State::~State() {
-    if (sstate) {
-        // Invalidate shared resources to avoid double frees
-        sstate->gc = nullptr;
-
-        if (sstate->ibp == ibp) {
-            sstate->ibp = nullptr;
-        }
-
-        if (sstate->sbp == sbp) {
-            sstate->sbp = nullptr;
-        }
-
-        delete sstate;
-    }
-
-
-    DELETE_IF(gc);
-    DELETE_IF(err);
-    DELETE_IF(main);
-
-    DELETE_ARR_IF(registers);
-    DELETE_ARR_IF(ibp);
-    DELETE_ARR_IF(sbp);
-
-    __label_deallocate(this);
 }
 
 std::string to_string(State* state) {

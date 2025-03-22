@@ -5,7 +5,7 @@
 #ifndef _VIA_VLBASE_H
 #define _VIA_VLBASE_H
 
-#include "api.h"
+#include "state.h"
 #include "lib-utility.h"
 #include "rt-types.h"
 #include "state.h"

@@ -6,6 +6,7 @@
 #define _VIA_CONSTANT_H
 
 #include "common.h"
+#include "instruction.h"
 #include "rt-types.h"
 
 // ===========================================================================================
