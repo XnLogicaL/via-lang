@@ -1,0 +1,9 @@
+[submodule "asmjit"]
+	path = asmjit
+	url = https://github.com/asmjit/asmjit.git
+[submodule "SHA256"]
+	path = SHA256
+	url = https://github.com/System-Glitch/SHA256.git
+[submodule "argparse"]
+	path = argparse
+	url = https://github.com/p-ranav/argparse.git

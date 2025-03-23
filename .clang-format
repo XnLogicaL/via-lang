@@ -1,0 +1,43 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: false
+  AfterControlStatement: false
+  AfterStruct: false
+  AfterClass: false
+  AfterEnum: false
+  AfterNamespace: false
+  BeforeLambdaBody: false
+  BeforeElse: true
+  BeforeCatch: true
+PackConstructorInitializers: Never
+BreakInheritanceList: BeforeComma
+ColumnLimit: 100
+IndentCaseLabels: false
+SortIncludes: false
+IndentWidth: 4
+TabWidth: 4
+AllowAllArgumentsOnNextLine: true
+ObjCBlockIndentWidth: 4
+UseTab: Never
+PointerAlignment: Left
+SpaceAfterTemplateKeyword: false
+AlignEscapedNewlines: Right
+AlwaysBreakTemplateDeclarations: Yes
+MaxEmptyLinesToKeep: 10
+AllowAllParametersOfDeclarationOnNextLine: true
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: false
+PenaltyReturnTypeOnItsOwnLine: 10000
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+ContinuationIndentWidth: 4

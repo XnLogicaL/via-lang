@@ -1,0 +1,92 @@
+import "vector_utils.viam" as Vec2
+
+enum GameState {
+    RUNNING = 0,
+}
+
+struct Player {
+    member name: string
+    member position: Vec2
+    member health: int = 100
+
+    func move(new_x: float, new_y: float) -> () {
+        self::position = new Vec2(new_x, new_y)
+    }
+
+    func heal(amount: int) -> () {
+        if self::health < 100 {
+            self::health += amount
+
+            if self::health > 100 {
+                self::health = 100
+            }
+        }
+    }
+    
+    construct(name: string, pos: Vec2) {
+        self::name = name
+        self::position = pos
+    }
+}
+
+struct Game {
+    member players: {Player}
+    member state: int
+
+    func addPlayer(player: Player) -> () {
+        table.insert(self::players, player)
+    }
+
+    func removePlayer(name: string) -> () {
+        local result = table.find(self::players, func (i, v) {
+            return v.name == name
+        })
+
+        if result.v != nil {
+            self::players[i] = nil
+        }
+        else {
+            raise "Could not find player ${name} in game instance"
+        }
+    }
+}
+
+local func getCircleArea(radius: float) -> float {
+    return math.pi * radius ^ 2
+}
+
+local func main() -> () {
+    const game = new Game()
+
+    local player = new Player("Alice", new Vec2(0, 0))
+    player::move(5, 10)
+
+    game::addPlayer(player)
+
+    local steps = 0
+    while steps < 5 {
+        steps++
+        printf!("Step %d", steps)
+
+        match steps {
+            case 1 { print("Started moving...") }
+            case 3 { print("Halfway there!") }
+            case 5 { print("Arrived!") }
+            default { print("Still moving...") }
+        }
+    }
+
+    local radius = 3.0
+    local area = getCircleArea(radius)
+    
+    println("Area of circle with radius ${radius} is ${area}")
+
+    return
+}
+
+println("Running program")
+
+try { main() }
+catch err {
+    println(err)
+}

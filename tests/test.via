@@ -1,0 +1,96 @@
+pragma optimize(3)
+
+## Example 1: Variable Declaration and Assignment
+local x = 10
+local y = 20
+println(x + y)  ## Output: 30
+
+## Example 2: Conditionals (if-else)
+local x = 5
+if x > 0 {
+    println("Positive")
+}
+else {
+    println("Negative or Zero")
+}  ## Output: Positive
+
+## Example 3: Looping (for loop)
+for i = 0, i <= 5, i++ {
+    print(i)
+}  ## Output: 012345
+
+local x = 0
+while x > 3 {
+    println("hello")
+}
+
+local func add(a: int, b: int) {
+    return a + b
+}
+
+println(add(4, 5) + add(68, 34683))
+
+local func factorial(const n: int) {
+    if n <= 1 {
+        return 1
+    }
+
+    return n * factorial(n - 1)
+}
+
+type callback = (int) -> int
+local func outer(x: int) -> callback {
+    return func(y: int) -> int {
+        return x + y
+    }
+}
+
+local add5 = outer(5)
+println(add5(10))  ## Output: 15
+
+## Example 9: Higher-Order Functions (Function as an Argument)
+local func apply(fun: (int) -> int, x: int) -> int {
+    return fun(x)
+}
+
+local func square(x: int) {
+    return x * x
+}
+
+println(apply(square, 5))  ## Output: 25
+
+local multiply = func(x: int, y: int) {
+    return x * y
+}
+
+println(multiply(2))  ## Output: 6
+
+## Example 12: Arrays (Access and Modification)
+local arr = {1, 2, 3, 4}
+arr[2] = 10
+println(arr[2])  ## Output: 10
+
+## Example 14: Objects and Classes (Simple Class)
+struct Point {
+    member x: float
+    member y: float
+
+    construct(x: float, y: float) -> () {
+        self::x = x
+        self::y = y
+    }
+
+    func display() -> () {
+        println("Point(${self::x}, ${self::y})")
+    }
+}
+
+match x {
+    case 0 {
+        println("x is zero.")
+    }
+
+    default {
+        printf!()
+    } 
+}
