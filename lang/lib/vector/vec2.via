@@ -1,0 +1,74 @@
+##
+## vec2.via
+##
+## A via standard library extension.
+##
+## ==================================================
+## Copyright (c) 2025 XnLogicaL, via-lang authors 
+##  @ <https://github.com/XnLogicaL/via-lang>
+## Licensed under GNU GPL v3.0
+## ==================================================
+##
+
+## Forcefully optimize the module.
+pragma optimize(2)
+
+import "../common/type_traits.via" as type_traits
+import "./vec_traits.via" as vec_traits
+
+struct Vec2 {
+    let x: float = 0.0
+    let y: float = 0.0
+
+    @inline
+    fn magnitude()
+        impl vec_traits.magnitude -> float
+    {
+        return math.sqrt(self.x ^ 2 + self.y ^ 2)
+    }
+
+    @inline
+    fn normalize()
+        impl vec_traits.normalize -> float 
+    {
+        let mag = self.magnitude()
+        if mag == 0 {
+            return Vec2.new()
+        }
+        
+        return Vec2.new(self.x / mag, self.y / mag)
+    }
+
+    fn operator+(other: Vec2) -> Vec2 {
+        return Vec2.new(
+            self.x + other.x,
+            self.y + other.y
+        )
+    }
+
+    fn operator-(other: Vec2) -> Vec2 {
+        return Vec2.new(
+            self.x - other.x,
+            self.y - other.y
+        )
+    }
+
+    fn operator*(other: Vec2) -> Vec2 {
+        return Vec2.new(
+            self.x * other.x,
+            self.y * other.y
+        )
+    }
+
+    fn operator/(other: Vec2) -> Vec2 {
+        return Vec2.new(
+            self.x / other.x,
+            self.y / other.y
+        )
+    }
+
+    ## Static by default.
+    fn new(x: float, y: float) -> () {
+        self.x, self.y = x, y
+    }
+}

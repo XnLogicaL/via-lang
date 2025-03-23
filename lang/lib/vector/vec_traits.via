@@ -1,0 +1,21 @@
+##
+## vec_traits.via
+##
+## A via standard library extension.
+##
+## ==================================================
+## Copyright (c) 2025 XnLogicaL, via-lang authors 
+##  @ <https://github.com/XnLogicaL/via-lang>
+## Licensed under GNU GPL v3.0
+## ==================================================
+##
+
+trait magnitude {
+    fn magnitude() -> float
+}
+
+trait normalize {
+    fn normalize() -> struct ## SRTT.
+}
+
+

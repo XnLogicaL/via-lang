@@ -6,13 +6,11 @@
 #define _VIA_VMAPI_H
 
 #include "common.h"
-#include "gc.h"
 #include "constant.h"
 #include "instruction.h"
 #include "opcode.h"
 #include "state.h"
 #include "string-utility.h"
-#include "rt-types.h"
 #include "api-aux.h"
 
 VIA_NAMESPACE_IMPL_BEGIN
@@ -132,11 +130,11 @@ VIA_FORCE_INLINE std::string __type_cxx_string(State* VIA_RESTRICT _State, const
 }
 
 VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _State, const TValue& _Val) {
-    if (check_table(_Val)) {
-        TTable*       _Tbl  = _Val.cast_ptr<TTable>();
+    if (_Val.is_table()) {
+        const TTable* _Tbl  = _Val.cast_ptr<TTable>();
         const TValue& _Type = __table_get(_Tbl, TValue(new TString(_State, "__type")));
 
-        if (check_nil(_Type)) {
+        if (_Type.is_nil()) {
             return __type(_State, _Val);
         }
 
@@ -177,13 +175,13 @@ VIA_INLINE_HOT void __extern_call(State* _State, TCFunction* _Callee, size_t _Ar
     _Callee->data(_State);
 }
 
-VIA_INLINE_HOT void __call(State* _State, const TValue& _Callee, size_t _Argc) {
+VIA_INLINE_HOT void __call(State* _State, TValue& _Callee, size_t _Argc) {
     _State->calltype = CallType::CALL;
 
-    if (check_function(_Callee)) {
+    if (_Callee.is_function()) {
         __native_call(_State, _Callee.cast_ptr<TFunction>(), _Argc);
     }
-    else if (check_cfunction(_Callee)) {
+    else if (_Callee.is_cfunction()) {
         __extern_call(_State, _Callee.cast_ptr<TCFunction>(), _Argc);
     }
     else {
@@ -193,11 +191,11 @@ VIA_INLINE_HOT void __call(State* _State, const TValue& _Callee, size_t _Argc) {
     }
 }
 
-VIA_FORCE_INLINE TValue __len(const TValue& _Val) {
-    if (check_string(_Val)) {
+VIA_FORCE_INLINE TValue __len(TValue& _Val) {
+    if (_Val.is_string()) {
         return TValue(static_cast<TInteger>(_Val.cast_ptr<TString>()->len));
     }
-    else if (check_table(_Val)) {
+    else if (_Val.is_table()) {
         size_t _Size = __table_size(_Val.cast_ptr<TTable>());
         return TValue(static_cast<TInteger>(_Size));
     }
@@ -244,7 +242,7 @@ VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _State, Operand _Id, cons
 VIA_INLINE TValue __to_string(State* VIA_RESTRICT _State, const TValue& _Val) {
     using enum ValueType;
 
-    if (check_string(_Val)) {
+    if (_Val.is_string()) {
         return _Val.clone();
     }
 
@@ -288,7 +286,7 @@ VIA_FORCE_INLINE std::string __to_cxx_string(State* VIA_RESTRICT _State, const T
 }
 
 VIA_FORCE_INLINE TValue __to_bool(const TValue& _Val) {
-    if (check_bool(_Val)) {
+    if (_Val.is_bool()) {
         return _Val.clone();
     }
 
@@ -305,7 +303,7 @@ VIA_FORCE_INLINE bool __to_cxx_bool(const TValue& _Val) {
 VIA_FORCE_INLINE TValue __to_number(const TValue& _Val) {
     using enum ValueType;
 
-    if (check_number(_Val)) {
+    if (_Val.is_number()) {
         return _Val.clone();
     }
 

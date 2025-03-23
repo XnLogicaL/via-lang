@@ -6,7 +6,6 @@
 #define _VIA_TOKEN_H
 
 #include "common-defs.h"
-#include "arena.h"
 
 VIA_NAMESPACE_BEGIN
 

@@ -1,49 +1,50 @@
 import "vector_utils.viam" as Vec2
 
 enum GameState {
-    RUNNING = 0,
+    PAUSED = 0x0,
+    RUNNING = 0x1,
 }
 
 struct Player {
-    member name: string
-    member position: Vec2
-    member health: int = 100
+    let name: string
+    let position: Vec2
+    let health: int = 100
 
-    func move(new_x: float, new_y: float) -> () {
-        self::position = new Vec2(new_x, new_y)
+    fn move(new_x: float, new_y: float) -> () {
+        self.position = new Vec2(new_x, new_y)
     }
 
-    func heal(amount: int) -> () {
-        if self::health < 100 {
-            self::health += amount
+    fn heal(amount: int) -> () {
+        if self.health < 100 {
+            self.health += amount
 
-            if self::health > 100 {
-                self::health = 100
+            if self.health > 100 {
+                self.health = 100
             }
         }
     }
     
-    construct(name: string, pos: Vec2) {
-        self::name = name
-        self::position = pos
+    fn new(name: string, pos: Vec2) {
+        self.name = name
+        self.position = pos
     }
 }
 
 struct Game {
-    member players: {Player}
-    member state: int
+    let players: {Player} = {}
+    let state: int = GameState::PAUSED
 
-    func addPlayer(player: Player) -> () {
-        table.insert(self::players, player)
+    fn addPlayer(player: Player) -> () {
+        table.insert(self.players, player)
     }
 
-    func removePlayer(name: string) -> () {
-        local result = table.find(self::players, func (i, v) {
+    fn removePlayer(name: string) -> () {
+        let result = table.find(self.players, fn (i, v) {
             return v.name == name
         })
 
         if result.v != nil {
-            self::players[i] = nil
+            self.players[i] = nil
         }
         else {
             raise "Could not find player ${name} in game instance"
@@ -51,22 +52,22 @@ struct Game {
     }
 }
 
-local func getCircleArea(radius: float) -> float {
+fn getCircleArea(radius: float) -> float {
     return math.pi * radius ^ 2
 }
 
-local func main() -> () {
+fn main() -> () {
     const game = new Game()
 
-    local player = new Player("Alice", new Vec2(0, 0))
-    player::move(5, 10)
+    let player = new Player("Alice", new Vec2(0, 0))
+    player.move(5, 10)
 
-    game::addPlayer(player)
+    game.addPlayer(player)
 
-    local steps = 0
+    let steps = 0
     while steps < 5 {
         steps++
-        printf!("Step %d", steps)
+        print("Step ${steps}")
 
         match steps {
             case 1 { print("Started moving...") }
@@ -76,8 +77,8 @@ local func main() -> () {
         }
     }
 
-    local radius = 3.0
-    local area = getCircleArea(radius)
+    let radius = 3.0
+    let area = getCircleArea(radius)
     
     println("Area of circle with radius ${radius} is ${area}")
 
@@ -86,7 +87,5 @@ local func main() -> () {
 
 println("Running program")
 
-try { main() }
-catch err {
-    println(err)
-}
+let result = pcall(main)
+let success, error = result::s, result::e

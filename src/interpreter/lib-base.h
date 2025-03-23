@@ -7,7 +7,6 @@
 
 #include "state.h"
 #include "lib-utility.h"
-#include "rt-types.h"
 #include "state.h"
 
 VIA_NAMESPACE_LIB_BEGIN

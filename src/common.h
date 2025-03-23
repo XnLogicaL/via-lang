@@ -9,7 +9,6 @@
 // External imports
 #include "magic_enum.hpp"
 #include "linenoise.hpp"
-#include "arena.h"
 // Internal imports
 #include "common-defs.h"
 #include "common-macros.h"

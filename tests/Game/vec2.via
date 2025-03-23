@@ -1,24 +1,32 @@
-struct Vec2 {
-    member x: float = 0.0
-    member y: float = 0.0
+pragma optimize(2)
 
-    func magnitude() -> float {
-        return math.sqrt(self::x ^ 2 + self::y ^ 2)
+macro square(a) { a ^ 2 }
+
+struct Vec2 {
+    let x: float = 0.0
+    let y: float = 0.0
+
+    @inline
+    fn to_string() -> string {
+        return "Vec2(${self.x}, ${self.y})"
     }
 
-    func normalize() -> Vec2 {
-        local mag = self::magnitude()
+    fn magnitude() -> float {
+        return math.sqrt(square!(self.x) + square!(self.y))
+    }
 
+    fn normalize() -> Vec2 {
+        let mag = self.magnitude()
         if mag == 0 {
-            return new Vec2()
+            return Vec2::new()
         }
         
-        return new Vec2(self.x / mag, self.y / mag)
+        return Vec2::new(self.x / mag, self.y / mag)
     }
 
-    construct(x: float, y: float) {
-        self::x = x
-        self::y = y
+    fn new(x: float, y: float) {
+        self.x = x
+        self.y = y
     }
 }
 

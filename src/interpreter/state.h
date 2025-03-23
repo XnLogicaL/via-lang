@@ -62,9 +62,6 @@ struct alignas(64) State {
     Instruction* sibp = nullptr;
     Instruction* siep = nullptr;
 
-    // VM execution state
-    GarbageCollector* gc; // Pointer to VM garbage collector state
-
     // Stack state
     TValue* sbp;     // Stack base pointer
     size_t  sp  = 0; // Stack pointer

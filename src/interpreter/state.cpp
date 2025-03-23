@@ -4,7 +4,6 @@
 
 #include "state.h"
 #include "bytecode.h"
-#include "gc.h"
 #include "api-aux.h"
 #include "api-impl.h"
 
@@ -28,7 +27,6 @@ using namespace impl;
 State::State(GState* G, ProgramData& program)
     : id(G->threads++),
       G(G),
-      gc(new GarbageCollector()),
       sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)]),
       registers(new TValue[VIA_REGISTER_COUNT]),
       err(new ErrorState()),
@@ -48,9 +46,6 @@ State::State(GState* G, ProgramData& program)
 
 State::~State() {
     if (sstate) {
-        // Invalidate shared resources to avoid double frees
-        sstate->gc = nullptr;
-
         if (sstate->ibp == ibp) {
             sstate->ibp = nullptr;
         }
@@ -62,7 +57,6 @@ State::~State() {
         delete sstate;
     }
 
-    DELETE_IF(gc);
     DELETE_IF(err);
     DELETE_IF(main);
 
@@ -106,7 +100,6 @@ std::string to_string(State* state) {
     oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
     oss << std::format("|iep   | {}\n", TO_VOID_STAR(state->iep));
     oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));
-    oss << std::format("|gc    | {}\n", TO_VOID_STAR(state->gc));
     oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));
     oss << std::format("|sp    | {}\n", state->sp);
     oss << std::format("|ssp   | {}\n", state->ssp);

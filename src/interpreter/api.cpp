@@ -3,11 +3,9 @@
 // =========================================================================================== |
 
 #include "common.h"
-#include "gc.h"
 #include "instruction.h"
 #include "opcode.h"
 #include "string-utility.h"
-#include "rt-types.h"
 #include "api-impl.h"
 #include "api-aux.h"
 #include "state.h"

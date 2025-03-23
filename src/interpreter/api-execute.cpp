@@ -48,12 +48,12 @@
     } while (0)
 
 #define VM_CHECK_ZERO_DIVISON_INT(divisor)                                                         \
-    if ((divisor)->val_integer == 0) {                                                             \
+    if (divisor == 0) {                                                                            \
         VM_ERROR("Division by zero");                                                              \
     }
 
 #define VM_CHECK_ZERO_DIVISON_FLT(divisor)                                                         \
-    if ((divisor)->val_floating_point == 0.0f) {                                                   \
+    if (divisor == 0.0f) {                                                                         \
         VM_ERROR("Division by zero");                                                              \
     }
 
@@ -437,7 +437,7 @@ dispatch: {
                 lhs_val->val_integer /= rhs_val->val_integer;
             }
             else if VIA_UNLIKELY (rhs_val->is_float()) {
-                VM_CHECK_ZERO_DIVISON_FLT(rhs_val);
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val->val_floating_point);
 
                 lhs_val->val_floating_point =
                     static_cast<TFloat>(lhs_val->val_integer) / rhs_val->val_floating_point;
@@ -451,7 +451,7 @@ dispatch: {
                 lhs_val->val_floating_point /= static_cast<TFloat>(rhs_val->val_integer);
             }
             else if VIA_UNLIKELY (rhs_val->is_float()) {
-                VM_CHECK_ZERO_DIVISON_FLT(rhs_val);
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val->val_floating_point);
 
                 lhs_val->val_floating_point /= rhs_val->val_floating_point;
             }
@@ -468,12 +468,12 @@ dispatch: {
 
         if VIA_LIKELY (lhs_val->is_int()) {
             if VIA_LIKELY (rhs_val.is_int()) {
-                VM_CHECK_ZERO_DIVISON_INT(&rhs_val);
+                VM_CHECK_ZERO_DIVISON_INT(rhs_val.val_integer);
 
                 lhs_val->val_integer /= rhs_val.val_integer;
             }
             else if VIA_UNLIKELY (rhs_val.is_float()) {
-                VM_CHECK_ZERO_DIVISON_FLT(&rhs_val);
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val.val_floating_point);
 
                 lhs_val->val_floating_point =
                     static_cast<TFloat>(lhs_val->val_integer) / rhs_val.val_floating_point;
@@ -482,12 +482,12 @@ dispatch: {
         }
         else if (lhs_val->is_float()) {
             if VIA_LIKELY (rhs_val.is_int()) {
-                VM_CHECK_ZERO_DIVISON_INT(&rhs_val);
+                VM_CHECK_ZERO_DIVISON_INT(rhs_val.val_integer);
 
                 lhs_val->val_floating_point /= static_cast<TFloat>(rhs_val.val_integer);
             }
             else if VIA_UNLIKELY (rhs_val.is_float()) {
-                VM_CHECK_ZERO_DIVISON_FLT(&rhs_val);
+                VM_CHECK_ZERO_DIVISON_FLT(rhs_val.val_floating_point);
 
                 lhs_val->val_floating_point /= rhs_val.val_floating_point;
             }
@@ -503,9 +503,7 @@ dispatch: {
         TValue*  lhs_val = __get_register(this, lhs);
         TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
 
-        if (imm == 0) {
-            VM_ERROR("Division by zero");
-        }
+        VM_CHECK_ZERO_DIVISON_INT(imm);
 
         if VIA_LIKELY (lhs_val->is_int()) {
             lhs_val->val_integer /= imm;
@@ -524,9 +522,7 @@ dispatch: {
         TValue* lhs_val = __get_register(this, lhs);
         TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
 
-        if (imm == 0.0f) {
-            VM_ERROR("Division by zero");
-        }
+        VM_CHECK_ZERO_DIVISON_FLT(imm);
 
         if VIA_LIKELY (lhs_val->is_int()) {
             lhs_val->val_integer /= imm;

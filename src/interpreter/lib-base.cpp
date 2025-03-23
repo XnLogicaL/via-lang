@@ -5,7 +5,6 @@
 #include "lib-base.h"
 #include "api-impl.h"
 #include "lib-utility.h"
-#include "rt-types.h"
 
 VIA_NAMESPACE_LIB_BEGIN
 

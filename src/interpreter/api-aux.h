@@ -120,9 +120,8 @@ VIA_INLINE void __closure_close_upvalues(TFunction* _Closure) {
 // Table handling
 
 // Hashes a dictionary key using the FNV-1a hashing algorithm.
-VIA_INLINE size_t __table_ht_hash_key(TTable* _Tbl, const char* _Key) {
+VIA_INLINE size_t __table_ht_hash_key(const TTable* _Tbl, const char* _Key) {
     size_t _Hash = 2166136261u;
-
     while (*_Key) {
         _Hash = (_Hash ^ *_Key++) * 16777619;
     }
@@ -153,7 +152,7 @@ VIA_INLINE void __table_ht_set(TTable* _Tbl, const char* _Key, const TValue& _Va
 }
 
 // Performs a look-up on the given table with a given key. Returns nullptr upon lookup failure.
-VIA_INLINE TValue* __table_ht_get(TTable* _Tbl, const char* _Key) {
+VIA_INLINE TValue* __table_ht_get(const TTable* _Tbl, const char* _Key) {
     size_t _Index = __table_ht_hash_key(_Tbl, _Key);
 
     for (THashNode* _Node = _Tbl->ht_buckets[_Index]; _Node; _Node = _Node->next) {
@@ -190,7 +189,7 @@ VIA_INLINE size_t __table_ht_size(TTable* _Tbl) {
 }
 
 // Checks if the given index is out of bounds of a given tables array component.
-VIA_INLINE bool __table_arr_range_check(TTable* _Tbl, size_t _Index) {
+VIA_INLINE bool __table_arr_range_check(const TTable* _Tbl, size_t _Index) {
     return _Tbl->arr_capacity > _Index;
 }
 
@@ -226,7 +225,7 @@ VIA_INLINE void __table_arr_set(TTable* _Tbl, size_t _Index, const TValue& _Val)
 
 // Attempts to get the value at the given index of the array component of the table. Returns nullptr
 // if the index is out of array capacity range.
-VIA_INLINE TValue* __table_arr_get(TTable* _Tbl, size_t _Index) {
+VIA_INLINE TValue* __table_arr_get(const TTable* _Tbl, size_t _Index) {
     if (!__table_arr_range_check(_Tbl, _Index)) {
         return nullptr;
     }
@@ -259,12 +258,12 @@ VIA_INLINE void __table_set(TTable* _Tbl, const TValue& _Key, const TValue& _Val
         __table_arr_set(_Tbl, _Key.val_integer, _Val);
     }
     else if (_Key.is_string()) {
-        TString* _Val_string = _Key.cast_ptr<TString>();
+        const TString* _Val_string = _Key.cast_ptr<TString>();
         __table_ht_set(_Tbl, _Val_string->data, _Val);
     }
 }
 
-VIA_INLINE TValue __table_get(TTable* _Tbl, const TValue& _Key) {
+VIA_INLINE TValue __table_get(const TTable* _Tbl, const TValue& _Key) {
     TValue* _Unsafe = nullptr;
     if (_Key.is_int()) {
         _Unsafe = __table_arr_get(_Tbl, _Key.val_integer);

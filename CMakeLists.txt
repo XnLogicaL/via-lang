@@ -18,7 +18,6 @@ message(STATUS "Using MAIN_FILE_PATH: ${MAIN_FILE_PATH}")
 # Add subdirectories for components
 add_subdirectory(asmjit)
 add_subdirectory(SHA256)
-add_subdirectory(ArenaAllocator)
 add_subdirectory(argparse)
 
 # Set the compiler
@@ -104,7 +103,7 @@ foreach(dir ${SRC_INCLUDES})
 endforeach()
 
 # Link libraries for external dependencies
-target_link_libraries(via PUBLIC asmjit sha256 ArenaAllocator argparse)
+target_link_libraries(via PUBLIC asmjit sha256 argparse)
 
 # Optional: Link standard backtrace library if necessary
 target_link_libraries(via PUBLIC stdc++_libbacktrace)

@@ -56,45 +56,121 @@ struct VIA_ALIGN_8 TValue {
     TValue(TValue&& other);
     TValue& operator=(TValue&&);
 
-    // clang-format off
-    explicit TValue()                           : type(ValueType::nil) {}
-    explicit TValue(bool b)                     : type(ValueType::boolean), val_boolean(b) {}
-    explicit TValue(TInteger x)                 : type(ValueType::integer), val_integer(x) {}
-    explicit TValue(TFloat x)                   : type(ValueType::floating_point), val_floating_point(x) {}
-    explicit TValue(TString* ptr)               : type(ValueType::string), val_pointer(ptr) {}
-    explicit TValue(TTable* ptr)                : type(ValueType::table), val_pointer(ptr) {}
-    explicit TValue(TFunction *ptr)             : type(ValueType::function), val_pointer(ptr) {}
-    explicit TValue(TCFunction *ptr)            : type(ValueType::cfunction), val_pointer(ptr) {}
-    explicit TValue(TObject* ptr)               : type(ValueType::object), val_pointer(ptr) {}
-    explicit TValue(ValueType type, void* ptr)  : type(type), val_pointer(ptr) {}
+    explicit TValue()
+        : type(ValueType::nil) {}
+
+    explicit TValue(bool b)
+        : type(ValueType::boolean),
+          val_boolean(b) {}
+
+    explicit TValue(TInteger x)
+        : type(ValueType::integer),
+          val_integer(x) {}
+
+    explicit TValue(TFloat x)
+        : type(ValueType::floating_point),
+          val_floating_point(x) {}
+
+    explicit TValue(TString* ptr)
+        : type(ValueType::string),
+          val_pointer(ptr) {}
+
+    explicit TValue(TTable* ptr)
+        : type(ValueType::table),
+          val_pointer(ptr) {}
+
+    explicit TValue(TFunction* ptr)
+        : type(ValueType::function),
+          val_pointer(ptr) {}
+
+    explicit TValue(TCFunction* ptr)
+        : type(ValueType::cfunction),
+          val_pointer(ptr) {}
+
+    explicit TValue(TObject* ptr)
+        : type(ValueType::object),
+          val_pointer(ptr) {}
+
+    explicit TValue(ValueType type, void* ptr)
+        : type(type),
+          val_pointer(ptr) {}
 
     // Returns whether if the object holds a given type.
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is(ValueType other) const { return type == other; }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_nil()           const { return is(ValueType::nil); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_bool()          const { return is(ValueType::boolean); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_int()           const { return is(ValueType::integer); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_float()         const { return is(ValueType::floating_point); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_number()        const { return is_int() || is_float(); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_string()        const { return is(ValueType::string); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_table()         const { return is(ValueType::table); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_subscriptable() const { return is_string() || is_table(); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_function()      const { return is(ValueType::function); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_cfunction()     const { return is(ValueType::cfunction); }
-    VIA_NO_DISCARD VIA_FORCE_INLINE constexpr bool is_callable()      const { return is_function() || is_cfunction(); }
-    // clang-format on
+    VIA_FORCE_INLINE constexpr bool is(ValueType other) const {
+        return type == other;
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_nil() const {
+        return is(ValueType::nil);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_bool() const {
+        return is(ValueType::boolean);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_int() const {
+        return is(ValueType::integer);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_float() const {
+        return is(ValueType::floating_point);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_number() const {
+        return is_int() || is_float();
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_string() const {
+        return is(ValueType::string);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_table() const {
+        return is(ValueType::table);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_subscriptable() const {
+        return is_string() || is_table();
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_function() const {
+        return is(ValueType::function);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_cfunction() const {
+        return is(ValueType::cfunction);
+    }
+
+    VIA_FORCE_INLINE constexpr bool is_callable() const {
+        return is_function() || is_cfunction();
+    }
 
     // Returns a clone of the object.
-    VIA_NO_DISCARD TValue clone() const;
+    TValue clone() const;
 
     // Frees the internal resources of the object and resets union tag to nil.
     void reset();
 
     // Compares self with a given TValue.
-    bool compare(const TValue& other) const;
+    [[nodiscard]] bool compare(const TValue& other) const;
+
+    // Moves the value and returns it as an rvalue reference.
+    [[nodiscard]] VIA_FORCE_INLINE TValue&& move() {
+        return static_cast<TValue&&>(*this);
+    }
+
+    [[nodiscard]] VIA_FORCE_INLINE const TValue&& move() const {
+        return static_cast<const TValue&&>(*this);
+    }
+
+    // Returns the pointer value as a pointer to type T.
+    template<typename T>
+    [[nodiscard]] VIA_FORCE_INLINE T* cast_ptr() {
+        return reinterpret_cast<T*>(val_pointer);
+    }
 
     template<typename T>
-    VIA_NO_DISCARD VIA_INLINE_HOT T* cast_ptr() const {
-        return reinterpret_cast<T*>(val_pointer);
+    [[nodiscard]] VIA_FORCE_INLINE const T* cast_ptr() const {
+        return reinterpret_cast<const T*>(val_pointer);
     }
 };
 

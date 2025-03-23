@@ -3,7 +3,6 @@
 // =========================================================================================== |
 
 #include "string-utility.h"
-#include "rt-types.h"
 #include "object.h"
 #include "function.h"
 #include "api-aux.h"
@@ -158,9 +157,9 @@ size_t TString::size() {
 
 void TString::set_string(size_t position, const TValue& value) {
     VIA_ASSERT(position < len, "String index position out of bounds");
-    VIA_ASSERT(check_string(value), "Setting string index to non-string value");
+    VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
 
-    TString* val = value.cast_ptr<TString>();
+    const TString* val = value.cast_ptr<TString>();
 
     VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
 
