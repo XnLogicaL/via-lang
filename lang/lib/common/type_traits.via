@@ -10,7 +10,13 @@
 ## ==================================================
 ##
 
-## Uses 
+namespace common {
+
+## Utilizes OMAAI.
 trait convertible<T> {
     fn convert() -> T
 }
+
+}
+
+export common

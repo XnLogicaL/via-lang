@@ -10,12 +10,16 @@
 ## ==================================================
 ##
 
+namespace vec_traits {
+
 trait magnitude {
     fn magnitude() -> float
 }
 
 trait normalize {
-    fn normalize() -> struct ## SRTT.
+    fn normalize() -> struct ## Uses SRTT.
 }
 
+}
 
+export vec_traits

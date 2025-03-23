@@ -16,7 +16,7 @@ pragma optimize(2)
 import "../common/type_traits.via" as type_traits
 import "./vec_traits.via" as vec_traits
 
-struct Vec2 {
+struct vector2 {
     let x: float = 0.0
     let y: float = 0.0
 
@@ -33,35 +33,42 @@ struct Vec2 {
     {
         let mag = self.magnitude()
         if mag == 0 {
-            return Vec2.new()
+            return vector2.new()
         }
         
-        return Vec2.new(self.x / mag, self.y / mag)
+        return vector2.new(self.x / mag, self.y / mag)
     }
 
-    fn operator+(other: Vec2) -> Vec2 {
-        return Vec2.new(
+    @inline
+    fn convert()
+        impl type_traits.convertible<string> -> string
+    {
+        return "vector2(${self.x}, ${self.y})"
+    }
+
+    fn operator+(other: vector2) -> vector2 {
+        return vector2.new(
             self.x + other.x,
             self.y + other.y
         )
     }
 
-    fn operator-(other: Vec2) -> Vec2 {
-        return Vec2.new(
+    fn operator-(other: vector2) -> vector2 {
+        return vector2.new(
             self.x - other.x,
             self.y - other.y
         )
     }
 
-    fn operator*(other: Vec2) -> Vec2 {
-        return Vec2.new(
+    fn operator*(other: vector2) -> vector2 {
+        return vector2.new(
             self.x * other.x,
             self.y * other.y
         )
     }
 
-    fn operator/(other: Vec2) -> Vec2 {
-        return Vec2.new(
+    fn operator/(other: vector2) -> vector2 {
+        return vector2.new(
             self.x / other.x,
             self.y / other.y
         )
@@ -72,3 +79,5 @@ struct Vec2 {
         self.x, self.y = x, y
     }
 }
+
+export vector2
