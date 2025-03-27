@@ -102,22 +102,22 @@ std::string CompilerError::to_string() const {
     if (lines.size() == 1) {
       // Single-line error: underline from local_begin.offset to local_end.offset.
       underline =
-          std::string(local_begin.offset, ' ') +
-          std::string(local_end.offset - local_begin.offset, '^') +
-          std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
+        std::string(local_begin.offset, ' ') +
+        std::string(local_end.offset - local_begin.offset, '^') +
+        std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
     }
     else {
       // Multi-line error.
       if (pos == 0) {
         // First line: underline from local_begin.offset to end of line.
-        underline = std::string(local_begin.offset, ' ') +
-                    std::string(line.size() - local_begin.offset, '^');
+        underline =
+          std::string(local_begin.offset, ' ') + std::string(line.size() - local_begin.offset, '^');
       }
       else if (pos == lines.size() - 1) {
         // Last line: underline from beginning of line up to local_end.offset.
         underline =
-            std::string(local_end.offset, '^') +
-            std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
+          std::string(local_end.offset, '^') +
+          std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
       }
       else {
         // Intermediate lines: fully underline the entire line.

@@ -39,4 +39,4 @@ PenaltyReturnTypeOnItsOwnLine: 10000
 AlignConsecutiveDeclarations: true
 AlignConsecutiveAssignments: true
 AlignConsecutiveMacros: true
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 2

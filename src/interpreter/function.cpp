@@ -30,10 +30,10 @@ TFunction::TFunction(const TFunction& other)
     }
 
     upvs[i] = {
-        .is_open    = upv.is_open,
-        .is_valid   = true,
-        .value      = upv.is_open ? upv.value : &upvs[i].heap_value,
-        .heap_value = upv.heap_value.clone(),
+      .is_open    = upv.is_open,
+      .is_valid   = true,
+      .value      = upv.is_open ? upv.value : &upvs[i].heap_value,
+      .heap_value = upv.heap_value.clone(),
     };
   }
 }

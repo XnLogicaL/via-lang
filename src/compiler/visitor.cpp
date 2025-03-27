@@ -30,26 +30,26 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
 TValue construct_constant(LiteralNode& literal_node) {
   using enum ValueType;
   return std::visit(
-      [](auto&& val) -> TValue {
-        using T = std::decay_t<decltype(val)>;
+    [](auto&& val) -> TValue {
+      using T = std::decay_t<decltype(val)>;
 
-        if constexpr (std::is_same_v<T, int>) {
-          return TValue(val);
-        }
-        else if constexpr (std::is_same_v<T, bool>) {
-          return TValue(val);
-        }
-        else if constexpr (std::is_same_v<T, float>) {
-          return TValue(val);
-        }
-        else if constexpr (std::is_same_v<T, std::string>) {
-          TString* tstring = new TString(nullptr, val.data());
-          return TValue(string, static_cast<void*>(tstring));
-        }
+      if constexpr (std::is_same_v<T, int>) {
+        return TValue(val);
+      }
+      else if constexpr (std::is_same_v<T, bool>) {
+        return TValue(val);
+      }
+      else if constexpr (std::is_same_v<T, float>) {
+        return TValue(val);
+      }
+      else if constexpr (std::is_same_v<T, std::string>) {
+        TString* tstring = new TString(nullptr, val.data());
+        return TValue(string, static_cast<void*>(tstring));
+      }
 
-        VIA_UNREACHABLE;
-      },
-      literal_node.value
+      VIA_UNREACHABLE;
+    },
+    literal_node.value
   );
 }
 

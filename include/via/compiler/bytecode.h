@@ -49,10 +49,10 @@ class BytecodeHolder final {
 
   // Inserts a locally constructed instruction to a given index.
   void insert(
-      size_t          index    = 0,
-      OpCode          opcode   = OpCode::NOP,
-      operands_array& operands = {},
-      comment_type&   comment  = ""
+    size_t          index    = 0,
+    OpCode          opcode   = OpCode::NOP,
+    operands_array& operands = {},
+    comment_type&   comment  = ""
   );
 
   // Emits an instruction at the end of the vector.

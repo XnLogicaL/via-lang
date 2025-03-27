@@ -22,8 +22,8 @@ float32_t reinterpret_u16_as_f32(uint16_t high, uint16_t low) {
 
 u16Result reinterpret_u32_as_2u16(uint32_t data) {
   return {
-      .l = static_cast<uint16_t>(data & 0xFFFF),
-      .r = static_cast<uint16_t>(data >> 16),
+    .l = static_cast<uint16_t>(data & 0xFFFF),
+    .r = static_cast<uint16_t>(data >> 16),
   };
 }
 

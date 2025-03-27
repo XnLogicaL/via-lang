@@ -17,14 +17,14 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
 
   if (!is_compatible(infered_type, annotated_type)) {
     compiler_error(
-        declaration_node.value_expression->begin,
-        declaration_node.value_expression->end,
-        std::format(
-            "Expression type '{}' is not related to or implicitly castable into annotated type "
-            "'{}'",
-            infered_type->to_string_x(),
-            annotated_type->to_string_x()
-        )
+      declaration_node.value_expression->begin,
+      declaration_node.value_expression->end,
+      std::format(
+        "Expression type '{}' is not related to or implicitly castable into annotated type "
+        "'{}'",
+        infered_type->to_string_x(),
+        annotated_type->to_string_x()
+      )
     );
   }
 }
@@ -38,13 +38,13 @@ void TypeVisitor::visit(AssignNode& assign_node) {
 
   if (!is_compatible(infered_type, assigned_type)) {
     compiler_error(
-        assign_node.value->begin,
-        assign_node.value->end,
-        std::format(
-            "Assigning incompatible type '{}' to an lvalue that holds type '{}'",
-            assigned_type->to_string_x(),
-            infered_type->to_string_x()
-        )
+      assign_node.value->begin,
+      assign_node.value->end,
+      std::format(
+        "Assigning incompatible type '{}' to an lvalue that holds type '{}'",
+        assigned_type->to_string_x(),
+        infered_type->to_string_x()
+      )
     );
   }
 }

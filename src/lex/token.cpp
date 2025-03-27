@@ -11,12 +11,12 @@ using enum TokenType;
 
 std::string Token::to_string() const {
   return std::format(
-      "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
-      magic_enum::enum_name(type),
-      lexeme,
-      line,
-      offset,
-      position
+    "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
+    magic_enum::enum_name(type),
+    lexeme,
+    line,
+    offset,
+    position
   );
 }
 

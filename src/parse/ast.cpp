@@ -48,11 +48,11 @@ pExprNode LiteralNode::clone() {
 
 pTypeNode LiteralNode::infer_type(TransUnitContext&) {
   ValueType value_type = std::visit(
-      [](auto&& value) {
-        using T = std::decay_t<decltype(value)>;
-        return DataType<T>::value_type;
-      },
-      value
+    [](auto&& value) {
+      using T = std::decay_t<decltype(value)>;
+      return DataType<T>::value_type;
+    },
+    value
   );
 
   return std::make_unique<PrimitiveNode>(value_token, value_type);
@@ -135,11 +135,11 @@ pTypeNode GroupNode::infer_type(TransUnitContext& program) {
 // CallNode
 std::string CallNode::to_string(uint32_t& depth) {
   return std::format(
-      "CallNode<callee {}, args {}>",
-      callee->to_string(depth),
-      utils::format_vector<pExprNode>(
-          arguments, [&depth](const pExprNode& expr) { return expr->to_string(depth); }
-      )
+    "CallNode<callee {}, args {}>",
+    callee->to_string(depth),
+    utils::format_vector<pExprNode>(
+      arguments, [&depth](const pExprNode& expr) { return expr->to_string(depth); }
+    )
   );
 }
 
@@ -181,7 +181,7 @@ pTypeNode CallNode::infer_type(TransUnitContext& program) {
 // IndexNode
 std::string IndexNode::to_string(uint32_t& depth) {
   return std::format(
-      "IndexNode<object {}, index {}>", object->to_string(depth), index->to_string(depth)
+    "IndexNode<object {}, index {}>", object->to_string(depth), index->to_string(depth)
   );
 }
 
@@ -215,10 +215,10 @@ pTypeNode IndexNode::infer_type(TransUnitContext& program) {
 // BinaryNode
 std::string BinaryNode::to_string(uint32_t& depth) {
   return std::format(
-      "Binary<{} {} {}>",
-      lhs_expression->to_string(depth),
-      op.lexeme,
-      rhs_expression->to_string(depth)
+    "Binary<{} {} {}>",
+    lhs_expression->to_string(depth),
+    op.lexeme,
+    rhs_expression->to_string(depth)
   );
 }
 
@@ -258,7 +258,7 @@ pTypeNode BinaryNode::infer_type(TransUnitContext& program) {
 // TypeCastNode
 std::string TypeCastNode::to_string(uint32_t& depth) {
   return std::format(
-      "TypeCastNode<{} as {}>", expression->to_string(depth), type->to_string(depth)
+    "TypeCastNode<{} as {}>", expression->to_string(depth), type->to_string(depth)
   );
 }
 
@@ -315,11 +315,11 @@ pTypeNode PrimitiveNode::clone() {
 // GenericNode
 std::string GenericNode::to_string(uint32_t& depth) {
   return std::format(
-      "GenericNode<{}, {}>",
-      identifier.lexeme,
-      utils::format_vector<pTypeNode>(
-          generics, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
-      )
+    "GenericNode<{}, {}>",
+    identifier.lexeme,
+    utils::format_vector<pTypeNode>(
+      generics, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
+    )
   );
 }
 
@@ -362,11 +362,11 @@ pTypeNode UnionNode::clone() {
 // FunctionNode
 std::string FunctionTypeNode::to_string(uint32_t& depth) {
   return std::format(
-      "FunctionTypeNode<{} -> {}>",
-      utils::format_vector<pTypeNode>(
-          parameters, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
-      ),
-      returns->to_string(depth)
+    "FunctionTypeNode<{} -> {}>",
+    utils::format_vector<pTypeNode>(
+      parameters, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
+    ),
+    returns->to_string(depth)
   );
 }
 
@@ -391,13 +391,13 @@ pTypeNode FunctionTypeNode::clone() {
 // DeclarationNode
 std::string DeclarationNode::to_string(uint32_t& depth) {
   return std::format(
-      "{}Declaration<{} {} {}: {} = {}>",
-      DEPTH_TAB_SPACE,
-      is_global ? "global" : "local",
-      modifiers.to_string(),
-      identifier.lexeme,
-      type->to_string(depth),
-      value_expression->to_string(depth)
+    "{}Declaration<{} {} {}: {} = {}>",
+    DEPTH_TAB_SPACE,
+    is_global ? "global" : "local",
+    modifiers.to_string(),
+    identifier.lexeme,
+    type->to_string(depth),
+    value_expression->to_string(depth)
   );
 }
 
@@ -407,7 +407,7 @@ void DeclarationNode::accept(NodeVisitor& visitor) {
 
 pStmtNode DeclarationNode::clone() {
   return std::make_unique<DeclarationNode>(
-      is_global, modifiers, identifier, value_expression->clone(), type->clone()
+    is_global, modifiers, identifier, value_expression->clone(), type->clone()
   );
 }
 
@@ -448,10 +448,10 @@ std::string FunctionNode::to_string(uint32_t& depth) {
   std::ostringstream oss;
   oss << DEPTH_TAB_SPACE
       << std::format(
-             "Function<{} {} {}>\n",
-             is_global ? "global" : "local",
-             modifiers.to_string(),
-             identifier.lexeme
+           "Function<{} {} {}>\n",
+           is_global ? "global" : "local",
+           modifiers.to_string(),
+           identifier.lexeme
          );
 
   depth++;
@@ -478,12 +478,12 @@ pStmtNode FunctionNode::clone() {
   Parameters parameters_clone;
   for (ParameterNode& parameter : parameters) {
     parameters_clone.emplace_back(
-        parameter.identifier, parameter.modifiers, parameter.type->clone()
+      parameter.identifier, parameter.modifiers, parameter.type->clone()
     );
   }
 
   return std::make_unique<FunctionNode>(
-      is_global, modifiers, identifier, body->clone(), returns->clone(), std::move(parameters_clone)
+    is_global, modifiers, identifier, body->clone(), returns->clone(), std::move(parameters_clone)
   );
 }
 
@@ -491,11 +491,11 @@ pStmtNode FunctionNode::clone() {
 // AssignNode
 std::string AssignNode::to_string(uint32_t& depth) {
   return std::format(
-      "{}Assign<{} {}= {}>",
-      DEPTH_TAB_SPACE,
-      augmentation_operator.lexeme,
-      assignee->to_string(depth),
-      value->to_string(depth)
+    "{}Assign<{} {}= {}>",
+    DEPTH_TAB_SPACE,
+    augmentation_operator.lexeme,
+    assignee->to_string(depth),
+    value->to_string(depth)
   );
 }
 
@@ -561,7 +561,7 @@ pStmtNode IfNode::clone() {
   }
 
   return std::make_unique<IfNode>(
-      condition->clone(), scope->clone(), std::move(else_node_clone), std::move(elseif_nodes_clone)
+    condition->clone(), scope->clone(), std::move(else_node_clone), std::move(elseif_nodes_clone)
   );
 }
 

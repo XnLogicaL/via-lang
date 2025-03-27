@@ -47,11 +47,11 @@ class GlobalTracker final {
 
   VIA_INLINE void declare_builtins() {
     static const builtin_vector builtins = {
-        "print",
-        "println",
-        "exit",
-        "typeof",
-        "assert",
+      "print",
+      "println",
+      "exit",
+      "typeof",
+      "assert",
     };
 
     for (const std::string& built_in : builtins) {

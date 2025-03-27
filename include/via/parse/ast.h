@@ -283,7 +283,7 @@ struct DeclarationNode : public StmtNode {
   void accept(NodeVisitor&) override;
 
   DeclarationNode(
-      bool is_global, Modifiers modifiers, Token identifier, pExprNode value, pTypeNode type
+    bool is_global, Modifiers modifiers, Token identifier, pExprNode value, pTypeNode type
   )
       : is_global(is_global),
         modifiers(modifiers),
@@ -330,11 +330,7 @@ struct FunctionNode : public StmtNode {
     Parameters parameters;
 
     StackNode(
-        bool       is_global,
-        size_t     upvalues,
-        Modifiers  modifiers,
-        Token      identifier,
-        Parameters parameters
+      bool is_global, size_t upvalues, Modifiers modifiers, Token identifier, Parameters parameters
     )
         : is_global(is_global),
           upvalues(upvalues),
@@ -357,12 +353,12 @@ struct FunctionNode : public StmtNode {
   void accept(NodeVisitor&) override;
 
   FunctionNode(
-      bool       is_global,
-      Modifiers  modifiers,
-      Token      identifier,
-      pStmtNode  body,
-      pTypeNode  returns,
-      Parameters parameters
+    bool       is_global,
+    Modifiers  modifiers,
+    Token      identifier,
+    pStmtNode  body,
+    pTypeNode  returns,
+    Parameters parameters
   )
       : is_global(is_global),
         modifiers(modifiers),

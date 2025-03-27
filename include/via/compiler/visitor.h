@@ -21,9 +21,9 @@
     visitor_failed = true;                                                                         \
     compiler_error(expr->begin, expr->end, "Expression type could not be infered");                \
     compiler_info(                                                                                 \
-        "This error message likely indicates an internal compiler bug. Please create an "          \
-        "issue "                                                                                   \
-        "at https://github.com/XnLogicaL/via-lang"                                                 \
+      "This error message likely indicates an internal compiler bug. Please create an "            \
+      "issue "                                                                                     \
+      "at https://github.com/XnLogicaL/via-lang"                                                   \
     );                                                                                             \
     return;                                                                                        \
   }

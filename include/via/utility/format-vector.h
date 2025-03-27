@@ -17,10 +17,10 @@ using FmtFunction = const std::function<std::string(const T&)>&;
 
 template<typename T>
 std::string format_vector(
-    FmtVector<T>   vec             = {},
-    FmtFunction<T> to_str          = {},
-    char           delimiter_begin = '{',
-    char           delimiter_end   = '}'
+  FmtVector<T>   vec             = {},
+  FmtFunction<T> to_str          = {},
+  char           delimiter_begin = '{',
+  char           delimiter_end   = '}'
 ) {
   std::ostringstream oss;
   oss << delimiter_begin;

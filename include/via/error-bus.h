@@ -42,11 +42,11 @@ class CompilerError final {
   std::string to_string() const;
 
   CompilerError(
-      bool                  flt,
-      const std::string&    msg,
-      TransUnitContext&     ctx,
-      CompilerErrorLevel    lvl,
-      CompilerErrorPosition pos
+    bool                  flt,
+    const std::string&    msg,
+    TransUnitContext&     ctx,
+    CompilerErrorLevel    lvl,
+    CompilerErrorPosition pos
   )
       : is_flat(flt),
         message(msg),

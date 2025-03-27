@@ -46,9 +46,9 @@ VIA_FORCE_INLINE bool __handle_error(State* _State) {
   if (!_Current_frame) {
     if (_Error_frame) {
       std::string _Error = std::format(
-          "error at <frame@0x{:x}>: {}\n\n",
-          reinterpret_cast<uintptr_t>(_Error_frame),
-          _State->err->message
+        "error at <frame@0x{:x}>: {}\n\n",
+        reinterpret_cast<uintptr_t>(_Error_frame),
+        _State->err->message
       );
       std::cerr << _Error;
     }
@@ -59,7 +59,7 @@ VIA_FORCE_INLINE bool __handle_error(State* _State) {
     while (_Error_frame && !visited.count(_Error_frame)) {
       visited.insert(_Error_frame);
       std::cerr << std::format(
-          "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
+        "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
       );
       _Error_frame = _Error_frame->call_info.caller;
     }
@@ -137,7 +137,7 @@ VIA_INLINE_HOT void __call(State* _State, TValue& _Callee, size_t _Argc) {
   }
   else {
     __set_error_state(
-        _State, std::format("attempt to call a {} value", __type_cxx_string(_State, _Callee))
+      _State, std::format("attempt to call a {} value", __type_cxx_string(_State, _Callee))
     );
   }
 }
@@ -219,7 +219,7 @@ VIA_INLINE TValue __to_string(State* VIA_RESTRICT _State, const TValue& _Val) {
   case cfunction: {
     auto _Type_str = magic_enum::enum_name(_Val.type);
     auto _Final_str =
-        std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(_Val.val_pointer));
+      std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(_Val.val_pointer));
 
     TString* _Str = new TString(_State, _Final_str.c_str());
     return TValue(string, _Str);

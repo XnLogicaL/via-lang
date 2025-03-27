@@ -44,33 +44,33 @@ bool Compiler::check_global_collisions() {
       failed = true;
 
       emitter.log(
-          {false,
-           std::format(
-               "Global identifier '{}' collides with global identifier '{}'",
-               global.symbol,
-               it->second.symbol
-           ),
-           unit_ctx,
-           CompilerErrorLevel::ERROR_,
-           global.token}
+        {false,
+         std::format(
+           "Global identifier '{}' collides with global identifier '{}'",
+           global.symbol,
+           it->second.symbol
+         ),
+         unit_ctx,
+         CompilerErrorLevel::ERROR_,
+         global.token}
       );
 
       emitter.log(
-          {false,
-           std::format("Global '{}' declared here", it->second.symbol),
-           unit_ctx,
-           CompilerErrorLevel::INFO,
-           it->second.token}
+        {false,
+         std::format("Global '{}' declared here", it->second.symbol),
+         unit_ctx,
+         CompilerErrorLevel::INFO,
+         it->second.token}
       );
 
       emitter.log(
-          {true,
-           "This limitation is due to a 32-bit bitspace used to identify "
-           "globals during runtime. To fix it, try renaming either global to a non-related "
-           "identifier.",
-           unit_ctx,
-           CompilerErrorLevel::INFO,
-           {}}
+        {true,
+         "This limitation is due to a 32-bit bitspace used to identify "
+         "globals during runtime. To fix it, try renaming either global to a non-related "
+         "identifier.",
+         unit_ctx,
+         CompilerErrorLevel::INFO,
+         {}}
       );
     }
 

@@ -36,8 +36,8 @@ result<Token> Parser::current() {
 result<Token> Parser::peek(int32_t ahead) {
   if (position + ahead >= unit_ctx.tokens->size()) {
     return tl::unexpected<ParserError>({
-        position,
-        std::format("Unexpected end of file (attempted read of: token #{})", position + ahead),
+      position,
+      std::format("Unexpected end of file (attempted read of: token #{})", position + ahead),
     });
   }
 
@@ -48,8 +48,8 @@ result<Token> Parser::consume(uint32_t ahead) {
   uint64_t new_pos = position + static_cast<uint64_t>(ahead);
   if (new_pos >= unit_ctx.tokens->size()) {
     return tl::unexpected<ParserError>({
-        position,
-        std::format("Unexpected end of file (attempted consumption of: token #{})", new_pos),
+      position,
+      std::format("Unexpected end of file (attempted consumption of: token #{})", new_pos),
     });
   }
 
@@ -136,11 +136,11 @@ result<pTypeNode> Parser::parse_generic() {
 
 result<pTypeNode> Parser::parse_type_primary() {
   static std::unordered_map<std::string, ValueType> primitive_map = {
-      {"nil", ValueType::nil},
-      {"int", ValueType::integer},
-      {"float", ValueType::floating_point},
-      {"bool", ValueType::boolean},
-      {"string", ValueType::string},
+    {"nil", ValueType::nil},
+    {"int", ValueType::integer},
+    {"float", ValueType::floating_point},
+    {"bool", ValueType::boolean},
+    {"string", ValueType::string},
   };
 
   result<Token> tok = current();
@@ -175,16 +175,16 @@ result<pTypeNode> Parser::parse_type_primary() {
 
       if (token->type != PAREN_CLOSE) {
         result<Token> expect_comma =
-            expect_consume(COMMA, "Expected ',' to seperate function parameter types");
+          expect_consume(COMMA, "Expected ',' to seperate function parameter types");
 
         CHECK_RESULT(expect_comma);
       }
     }
 
     result<Token> expect_pc =
-        expect_consume(PAREN_CLOSE, "Expected ')' to close function type parameters");
+      expect_consume(PAREN_CLOSE, "Expected ')' to close function type parameters");
     result<Token> expect_rt =
-        expect_consume(RETURNS, "Expected '->' to specify function return type");
+      expect_consume(RETURNS, "Expected '->' to specify function return type");
     result<pTypeNode> return_type = parse_type();
 
     CHECK_RESULT(expect_pc);
@@ -199,8 +199,8 @@ result<pTypeNode> Parser::parse_type_primary() {
   }
 
   return tl::unexpected<ParserError>({
-      position,
-      std::format("Unexpected token '{}' while parsing type primary", tok->lexeme),
+    position,
+    std::format("Unexpected token '{}' while parsing type primary", tok->lexeme),
   });
 }
 
@@ -229,7 +229,7 @@ result<pExprNode> Parser::parse_primary() {
     consume();
     // Skip the "0b" prefix before converting.
     return std::make_unique<LiteralNode>(
-        *token, static_cast<int>(std::bitset<64>(token->lexeme.substr(2)).to_ullong())
+      *token, static_cast<int>(std::bitset<64>(token->lexeme.substr(2)).to_ullong())
     );
   }
   case LIT_NIL:
@@ -257,8 +257,7 @@ result<pExprNode> Parser::parse_primary() {
 
   // If none of the valid token types were matched, return an error.
   return tl::unexpected<ParserError>(
-      {position,
-       std::format("Unexpected token '{}' while parsing primary expression", token->lexeme)}
+    {position, std::format("Unexpected token '{}' while parsing primary expression", token->lexeme)}
   );
 }
 
@@ -274,7 +273,7 @@ result<pExprNode> Parser::parse_postfix(pExprNode lhs) {
     case DOT: { // Member access: obj.property
       consume();
       result<Token> index_token =
-          expect_consume(IDENTIFIER, "Expected identifier while parsing index");
+        expect_consume(IDENTIFIER, "Expected identifier while parsing index");
       CHECK_RESULT(index_token);
 
       lhs = std::make_unique<IndexNode>(std::move(lhs), std::make_unique<SymbolNode>(*index_token));
@@ -287,7 +286,7 @@ result<pExprNode> Parser::parse_postfix(pExprNode lhs) {
       CHECK_RESULT(index);
 
       result<Token> expect_br =
-          expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
+        expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
       CHECK_RESULT(expect_br);
 
       lhs = std::make_unique<IndexNode>(std::move(lhs), std::move(*index));
@@ -324,7 +323,7 @@ result<pExprNode> Parser::parse_postfix(pExprNode lhs) {
 
       // Expect the closing parenthesis.
       result<Token> expect_par =
-          expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
+        expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
       CHECK_RESULT(expect_par);
 
       lhs = std::make_unique<CallNode>(std::move(lhs), std::move(arguments));
@@ -422,7 +421,7 @@ result<pStmtNode> Parser::parse_declaration() {
   parse_function:
     result<Token> identifier = expect_consume(IDENTIFIER, "Expected function name after 'fn'");
     result<Token> expect_par =
-        expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
+      expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
 
     CHECK_RESULT(identifier);
     CHECK_RESULT(expect_par);
@@ -437,7 +436,7 @@ result<pStmtNode> Parser::parse_declaration() {
 
       result<Modifiers> modifiers = parse_modifiers();
       result<Token>     param_name =
-          expect_consume(IDENTIFIER, "Expected identifier for function parameter name");
+        expect_consume(IDENTIFIER, "Expected identifier for function parameter name");
       result<Token> expect_col = expect_consume(COLON, "Expected ':' between parameter and type");
       result<pTypeNode> param_type = parse_type();
 
@@ -453,7 +452,7 @@ result<pStmtNode> Parser::parse_declaration() {
 
       if (curr->type != PAREN_CLOSE) {
         result<Token> expect_comma =
-            expect_consume(COMMA, "Expected ',' between function parameters");
+          expect_consume(COMMA, "Expected ',' between function parameters");
         CHECK_RESULT(expect_comma);
       }
       else {
@@ -464,9 +463,9 @@ result<pStmtNode> Parser::parse_declaration() {
     Modifiers modifiers{is_const};
 
     result<Token> expect_rpar =
-        expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
+      expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
     result<Token> expect_rets =
-        expect_consume(RETURNS, "Expected '->' to denote function return type");
+      expect_consume(RETURNS, "Expected '->' to denote function return type");
     result<pTypeNode> returns    = parse_type();
     result<pStmtNode> body_scope = parse_scope();
 
@@ -476,19 +475,19 @@ result<pStmtNode> Parser::parse_declaration() {
     CHECK_RESULT(body_scope);
 
     return std::make_unique<FunctionNode>(
-        is_global,
-        modifiers,
-        *identifier,
-        std::move(*body_scope),
-        std::move(*returns),
-        std::move(parameters)
+      is_global,
+      modifiers,
+      *identifier,
+      std::move(*body_scope),
+      std::move(*returns),
+      std::move(parameters)
     );
   }
 
   // If not a function, continue parsing as a variable declaration
   pTypeNode     type;
   result<Token> identifier =
-      expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
+    expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
   curr = current();
 
   CHECK_RESULT(identifier);
@@ -515,7 +514,7 @@ result<pStmtNode> Parser::parse_declaration() {
   type->expression = value->get(); // Attach expression reference to type
 
   return std::make_unique<DeclarationNode>(
-      is_global, Modifiers{is_const}, *identifier, std::move(*value), std::move(type)
+    is_global, Modifiers{is_const}, *identifier, std::move(*value), std::move(type)
   );
 }
 
@@ -599,7 +598,7 @@ result<pStmtNode> Parser::parse_if() {
   }
 
   return std::make_unique<IfNode>(
-      std::move(*condition), std::move(*scope), std::move(*else_scope), std::move(elseif_nodes)
+    std::move(*condition), std::move(*scope), std::move(*else_scope), std::move(elseif_nodes)
   );
 }
 
@@ -679,7 +678,7 @@ result<pStmtNode> Parser::parse_stmt() {
       result<pExprNode> rvalue = parse_expr();
 
       return std::make_unique<AssignNode>(
-          std::move(*lvalue), *possible_augment, std::move(*rvalue)
+        std::move(*lvalue), *possible_augment, std::move(*rvalue)
       );
     }
 

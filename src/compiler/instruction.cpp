@@ -32,8 +32,7 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   OpCode      opcode    = instruction.op;
   uint32_t    opcode_id = static_cast<uint32_t>(opcode);
 
-  if (opcode_id >= static_cast<uint32_t>(JUMP) &&
-      opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
+  if (opcode_id >= static_cast<uint32_t>(JUMP) && opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
     arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
     arg1 = std::format("{}", static_cast<OperandS>(instruction.operand1));
     arg2 = std::format("{}", static_cast<OperandS>(instruction.operand2));
@@ -41,16 +40,15 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   else if (opcode == LOADINT || opcode == ADDINT || opcode == SUBINT || opcode == MULINT || opcode == DIVINT || opcode == POWINT || opcode == MODINT) {
     arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
     arg1 = std::format(
-        "{}",
-        static_cast<TInteger>(reinterpret_u16_as_i32(instruction.operand1, instruction.operand2))
+      "{}",
+      static_cast<TInteger>(reinterpret_u16_as_i32(instruction.operand1, instruction.operand2))
     );
     arg2 = "";
   }
   else if (opcode == LOADFLOAT || opcode == ADDFLOAT || opcode == SUBFLOAT || opcode == MULFLOAT || opcode == DIVFLOAT || opcode == POWFLOAT || opcode == MODFLOAT) {
     arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
     arg1 = std::format(
-        "{}",
-        static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2))
+      "{}", static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2))
     );
     arg2 = "";
   }

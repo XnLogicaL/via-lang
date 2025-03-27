@@ -96,8 +96,8 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
     }
 
     _Closure->upvs[_Pos] = {
-        .is_open = true,
-        .value   = _Stk_id,
+      .is_open = true,
+      .value   = _Stk_id,
     };
   }
 }

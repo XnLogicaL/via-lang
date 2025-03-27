@@ -207,7 +207,7 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
   if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
     if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
       compiler_error(
-          index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
+        index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
       );
       return;
     }
@@ -224,7 +224,7 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
       break;
     default:
       compiler_error(
-          index_node.object->begin, index_node.object->end, "Expression type is not subscriptable"
+        index_node.object->begin, index_node.object->end, "Expression type is not subscriptable"
       );
     }
   }
@@ -235,20 +235,20 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
   using OpCodeId = std::underlying_type_t<OpCode>;
 
   static const std::unordered_map<TokenType, OpCode> operator_map = {
-      {TokenType::OP_ADD, OpCode::ADD},
-      {TokenType::OP_SUB, OpCode::SUB},
-      {TokenType::OP_MUL, OpCode::MUL},
-      {TokenType::OP_DIV, OpCode::DIV},
-      {TokenType::OP_EXP, OpCode::POW},
-      {TokenType::OP_MOD, OpCode::MOD},
-      {TokenType::OP_EQ, OpCode::EQUAL},
-      {TokenType::OP_NEQ, OpCode::NOTEQUAL},
-      {TokenType::OP_LT, OpCode::LESS},
-      {TokenType::OP_GT, OpCode::GREATER},
-      {TokenType::OP_LEQ, OpCode::LESSOREQUAL},
-      {TokenType::OP_GEQ, OpCode::GREATEROREQUAL},
-      {TokenType::KW_AND, OpCode::AND},
-      {TokenType::KW_OR, OpCode::OR},
+    {TokenType::OP_ADD, OpCode::ADD},
+    {TokenType::OP_SUB, OpCode::SUB},
+    {TokenType::OP_MUL, OpCode::MUL},
+    {TokenType::OP_DIV, OpCode::DIV},
+    {TokenType::OP_EXP, OpCode::POW},
+    {TokenType::OP_MOD, OpCode::MOD},
+    {TokenType::OP_EQ, OpCode::EQUAL},
+    {TokenType::OP_NEQ, OpCode::NOTEQUAL},
+    {TokenType::OP_LT, OpCode::LESS},
+    {TokenType::OP_GT, OpCode::GREATER},
+    {TokenType::OP_LEQ, OpCode::LESSOREQUAL},
+    {TokenType::OP_GEQ, OpCode::GREATEROREQUAL},
+    {TokenType::KW_AND, OpCode::AND},
+    {TokenType::KW_OR, OpCode::OR},
   };
 
   pExprNode& p_lhs = binary_node.lhs_expression;
@@ -260,7 +260,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
   auto it = operator_map.find(binary_node.op.type);
   if (it == operator_map.end()) {
     compiler_error(
-        binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
+      binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
     );
     return;
   }
@@ -371,9 +371,9 @@ void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
 
   if (!is_castable(left_type, type_cast.type)) {
     compiler_error(
-        type_cast.expression->begin,
-        type_cast.expression->end,
-        std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
+      type_cast.expression->begin,
+      type_cast.expression->end,
+      std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
     );
   }
 

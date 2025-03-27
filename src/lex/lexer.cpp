@@ -110,18 +110,18 @@ Token Tokenizer::read_ident(size_t position) {
   }
 
   static const std::unordered_map<std::string, TokenType> keyword_map = {
-      {"do", KW_DO},           {"in", KW_IN},         {"let", KW_LOCAL},
-      {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
-      {"if", KW_IF},           {"else", KW_ELSE},     {"elif", KW_ELIF},
-      {"while", KW_WHILE},     {"for", KW_FOR},       {"return", KW_RETURN},
-      {"fn", KW_FUNC},         {"break", KW_BREAK},   {"continue", KW_CONTINUE},
-      {"switch", KW_MATCH},    {"case", KW_CASE},     {"default", KW_DEFAULT},
-      {"new", KW_NEW},         {"and", KW_AND},       {"not", KW_NOT},
-      {"or", KW_OR},           {"struct", KW_STRUCT}, {"import", KW_IMPORT},
-      {"export", KW_EXPORT},   {"macro", KW_MACRO},   {"define", KW_DEFINE},
-      {"defined", KW_DEFINED}, {"type", KW_TYPE},     {"pragma", KW_PRAGMA},
-      {"enum", KW_ENUM},       {"try", KW_TRY},       {"catch", KW_CATCH},
-      {"raise", KW_RAISE},     {"trait", KW_TRAIT}};
+    {"do", KW_DO},           {"in", KW_IN},         {"let", KW_LOCAL},
+    {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
+    {"if", KW_IF},           {"else", KW_ELSE},     {"elif", KW_ELIF},
+    {"while", KW_WHILE},     {"for", KW_FOR},       {"return", KW_RETURN},
+    {"fn", KW_FUNC},         {"break", KW_BREAK},   {"continue", KW_CONTINUE},
+    {"switch", KW_MATCH},    {"case", KW_CASE},     {"default", KW_DEFAULT},
+    {"new", KW_NEW},         {"and", KW_AND},       {"not", KW_NOT},
+    {"or", KW_OR},           {"struct", KW_STRUCT}, {"import", KW_IMPORT},
+    {"export", KW_EXPORT},   {"macro", KW_MACRO},   {"define", KW_DEFINE},
+    {"defined", KW_DEFINED}, {"type", KW_TYPE},     {"pragma", KW_PRAGMA},
+    {"enum", KW_ENUM},       {"try", KW_TRY},       {"catch", KW_CATCH},
+    {"raise", KW_RAISE},     {"trait", KW_TRAIT}};
 
   // Checks if the identifier is a keyword or not
   auto it = keyword_map.find(identifier);

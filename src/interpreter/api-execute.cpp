@@ -163,7 +163,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) + rhs_val->val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) + rhs_val->val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -191,7 +191,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) + rhs_val.val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) + rhs_val.val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -254,7 +254,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) - rhs_val->val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) - rhs_val->val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -282,7 +282,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) - rhs_val.val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) - rhs_val.val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -345,7 +345,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) * rhs_val->val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) * rhs_val->val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -373,7 +373,7 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) * rhs_val.val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) * rhs_val.val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -440,7 +440,7 @@ dispatch : {
         VM_CHECK_ZERO_DIVISON_FLT(rhs_val->val_floating_point);
 
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) / rhs_val->val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) / rhs_val->val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -476,7 +476,7 @@ dispatch : {
         VM_CHECK_ZERO_DIVISON_FLT(rhs_val.val_floating_point);
 
         lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) / rhs_val.val_floating_point;
+          static_cast<TFloat>(lhs_val->val_integer) / rhs_val.val_floating_point;
         lhs_val->type = floating_point;
       }
     }
@@ -547,18 +547,18 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            std::pow(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
+          std::pow(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
         lhs_val->type = floating_point;
       }
     }
     else if (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
+          std::pow(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, rhs_val->val_floating_point);
+          std::pow(lhs_val->val_floating_point, rhs_val->val_floating_point);
       }
     }
 
@@ -577,18 +577,18 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            std::pow(static_cast<TFloat>(lhs_val->val_integer), rhs_val.val_floating_point);
+          std::pow(static_cast<TFloat>(lhs_val->val_integer), rhs_val.val_floating_point);
         lhs_val->type = floating_point;
       }
     }
     else if (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val.is_int()) {
         lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val.val_integer));
+          std::pow(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val.val_integer));
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, rhs_val.val_floating_point);
+          std::pow(lhs_val->val_floating_point, rhs_val.val_floating_point);
       }
     }
 
@@ -642,18 +642,18 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            std::fmod(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
+          std::fmod(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
         lhs_val->type = floating_point;
       }
     }
     else if (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
+          std::fmod(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, rhs_val->val_floating_point);
+          std::fmod(lhs_val->val_floating_point, rhs_val->val_floating_point);
       }
     }
 
@@ -672,18 +672,18 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            std::fmod(static_cast<TFloat>(lhs_val->val_integer), rhs_val.val_floating_point);
+          std::fmod(static_cast<TFloat>(lhs_val->val_integer), rhs_val.val_floating_point);
         lhs_val->type = floating_point;
       }
     }
     else if (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val.is_int()) {
         lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val.val_integer));
+          std::fmod(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val.val_integer));
       }
       else if VIA_UNLIKELY (rhs_val.is_float()) {
         lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, rhs_val.val_floating_point);
+          std::fmod(lhs_val->val_floating_point, rhs_val.val_floating_point);
       }
     }
 
@@ -1039,23 +1039,19 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this,
-            dst,
-            TValue(static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point)
+          this, dst, TValue(static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point)
         );
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         __set_register(
-            this,
-            dst,
-            TValue(lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer))
+          this, dst, TValue(lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer))
         );
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this, dst, TValue(lhs_val->val_floating_point < rhs_val->val_floating_point)
+          this, dst, TValue(lhs_val->val_floating_point < rhs_val->val_floating_point)
         );
       }
     }
@@ -1077,23 +1073,19 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this,
-            dst,
-            TValue(static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point)
+          this, dst, TValue(static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point)
         );
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         __set_register(
-            this,
-            dst,
-            TValue(lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer))
+          this, dst, TValue(lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer))
         );
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this, dst, TValue(lhs_val->val_floating_point > rhs_val->val_floating_point)
+          this, dst, TValue(lhs_val->val_floating_point > rhs_val->val_floating_point)
         );
       }
     }
@@ -1115,23 +1107,23 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this,
-            dst,
-            TValue(static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point)
+          this,
+          dst,
+          TValue(static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point)
         );
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         __set_register(
-            this,
-            dst,
-            TValue(lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer))
+          this,
+          dst,
+          TValue(lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer))
         );
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this, dst, TValue(lhs_val->val_floating_point <= rhs_val->val_floating_point)
+          this, dst, TValue(lhs_val->val_floating_point <= rhs_val->val_floating_point)
         );
       }
     }
@@ -1153,23 +1145,23 @@ dispatch : {
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this,
-            dst,
-            TValue(static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point)
+          this,
+          dst,
+          TValue(static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point)
         );
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         __set_register(
-            this,
-            dst,
-            TValue(lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer))
+          this,
+          dst,
+          TValue(lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer))
         );
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         __set_register(
-            this, dst, TValue(lhs_val->val_floating_point >= rhs_val->val_floating_point)
+          this, dst, TValue(lhs_val->val_floating_point >= rhs_val->val_floating_point)
         );
       }
     }

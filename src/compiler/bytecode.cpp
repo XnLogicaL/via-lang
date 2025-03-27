@@ -40,40 +40,40 @@ void BytecodeHolder::remove(size_t index) {
 }
 
 void BytecodeHolder::insert(
-    size_t index, OpCode opcode, operands_array& operands, comment_type& comment
+  size_t index, OpCode opcode, operands_array& operands, comment_type& comment
 ) {
   // Insert the instruction at the specified index
   instructions.insert(
-      instructions.begin() + index,
-      {
-          .instruction =
-              {
-                  .op       = opcode,
-                  .operand0 = operands.at(0),
-                  .operand1 = operands.at(1),
-                  .operand2 = operands.at(2),
-              },
-          .meta_data =
-              {
-                  .comment = comment,
-              },
-      }
+    instructions.begin() + index,
+    {
+      .instruction =
+        {
+          .op       = opcode,
+          .operand0 = operands.at(0),
+          .operand1 = operands.at(1),
+          .operand2 = operands.at(2),
+        },
+      .meta_data =
+        {
+          .comment = comment,
+        },
+    }
   );
 }
 
 void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type& comment) {
   add({
-      .instruction =
-          {
-              .op       = opcode,
-              .operand0 = operands.at(0),
-              .operand1 = operands.at(1),
-              .operand2 = operands.at(2),
-          },
-      .meta_data =
-          {
-              .comment = comment,
-          },
+    .instruction =
+      {
+        .op       = opcode,
+        .operand0 = operands.at(0),
+        .operand1 = operands.at(1),
+        .operand2 = operands.at(2),
+      },
+    .meta_data =
+      {
+        .comment = comment,
+      },
   });
 }
 

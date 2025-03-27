@@ -50,10 +50,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
       if (std::get_if<std::monostate>(&literal.value)) {
         unit_ctx.bytecode->emit(PUSHNIL, {}, comment);
         unit_ctx.internal.stack->push({
-            .is_const     = is_const,
-            .is_constexpr = true,
-            .symbol       = symbol,
-            .type         = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::nil),
+          .is_const     = is_const,
+          .is_constexpr = true,
+          .symbol       = symbol,
+          .type         = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::nil),
         });
       }
       // Check for integer
@@ -63,10 +63,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
         unit_ctx.bytecode->emit(PUSHINT, {operands.l, operands.r}, comment);
         unit_ctx.internal.stack->push({
-            .is_const     = is_const,
-            .is_constexpr = true,
-            .symbol       = symbol,
-            .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::integer),
+          .is_const     = is_const,
+          .is_constexpr = true,
+          .symbol       = symbol,
+          .type         = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::integer),
         });
       }
       // Check for float
@@ -76,20 +76,20 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
         unit_ctx.bytecode->emit(PUSHFLOAT, {operands.l, operands.r}, comment);
         unit_ctx.internal.stack->push({
-            .is_const     = is_const,
-            .is_constexpr = true,
-            .symbol       = symbol,
-            .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::floating_point),
+          .is_const     = is_const,
+          .is_constexpr = true,
+          .symbol       = symbol,
+          .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::floating_point),
         });
       }
       // Check for boolean
       else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
         unit_ctx.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE, {}, comment);
         unit_ctx.internal.stack->push({
-            .is_const     = is_const,
-            .is_constexpr = true,
-            .symbol       = symbol,
-            .type = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::boolean),
+          .is_const     = is_const,
+          .is_constexpr = true,
+          .symbol       = symbol,
+          .type         = std::make_unique<PrimitiveNode>(literal.value_token, ValueType::boolean),
         });
       }
       // Other constant
@@ -99,10 +99,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
 
         unit_ctx.bytecode->emit(PUSHK, {const_id}, comment);
         unit_ctx.internal.stack->push({
-            .is_const     = is_const,
-            .is_constexpr = true,
-            .symbol       = symbol,
-            .type         = std::make_unique<PrimitiveNode>(literal.value_token, constant.type),
+          .is_const     = is_const,
+          .is_constexpr = true,
+          .symbol       = symbol,
+          .type         = std::make_unique<PrimitiveNode>(literal.value_token, constant.type),
         });
       }
     }
@@ -112,10 +112,10 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
       declaration_node.value_expression->accept(expression_visitor, dst);
       unit_ctx.bytecode->emit(PUSH, {dst}, comment);
       unit_ctx.internal.stack->push({
-          .is_const     = is_const,
-          .is_constexpr = false,
-          .symbol       = symbol,
-          .type = std::make_unique<PrimitiveNode>(declaration_node.identifier, ValueType::nil),
+        .is_const     = is_const,
+        .is_constexpr = false,
+        .symbol       = symbol,
+        .type = std::make_unique<PrimitiveNode>(declaration_node.identifier, ValueType::nil),
       });
 
       allocator.free_register(dst);
@@ -151,18 +151,18 @@ void StmtVisitor::visit(FunctionNode& function_node) {
   Parameters parameters;
 
   unit_ctx.internal.stack->push({
-      .is_const     = function_node.modifiers.is_const,
-      .is_constexpr = false,
-      .symbol       = function_node.identifier.lexeme,
-      .type = std::make_unique<PrimitiveNode>(function_node.identifier, ValueType::function),
+    .is_const     = function_node.modifiers.is_const,
+    .is_constexpr = false,
+    .symbol       = function_node.identifier.lexeme,
+    .type         = std::make_unique<PrimitiveNode>(function_node.identifier, ValueType::function),
   });
 
   unit_ctx.internal.stack->function_stack.push(FunctionNode::StackNode(
-      function_node.is_global,
-      unit_ctx.internal.stack->size(),
-      function_node.modifiers,
-      function_node.identifier,
-      std::move(parameters)
+    function_node.is_global,
+    unit_ctx.internal.stack->size(),
+    function_node.modifiers,
+    function_node.identifier,
+    std::move(parameters)
   ));
 
   for (auto& parameter : function_node.parameters) {
@@ -184,13 +184,13 @@ void StmtVisitor::visit(FunctionNode& function_node) {
     if (declaration_node || function_node) {
       bool  is_global = declaration_node ? declaration_node->is_global : function_node->is_global;
       Token identifier =
-          declaration_node ? declaration_node->identifier : function_node->identifier;
+        declaration_node ? declaration_node->identifier : function_node->identifier;
 
       if (is_global) {
         compiler_error(identifier, "Function scopes cannot declare globals");
         compiler_info(
-            "Function scopes containing global declarations may cause previously declared "
-            "globals to be re-declared, therefore are not allowed."
+          "Function scopes containing global declarations may cause previously declared "
+          "globals to be re-declared, therefore are not allowed."
         );
         break;
       }
@@ -260,7 +260,7 @@ void StmtVisitor::visit(AssignNode& assign_node) {
   }
   else {
     compiler_error(
-        assign_node.assignee->begin, assign_node.assignee->end, "Assignment to invalid lvalue"
+      assign_node.assignee->begin, assign_node.assignee->end, "Assignment to invalid lvalue"
     );
   }
 }
@@ -326,7 +326,7 @@ void StmtVisitor::visit(IfNode& if_node) {
 
     elseif_node.condition->accept(expression_visitor, cond_reg);
     unit_ctx.bytecode->emit(
-        JUMPLABELIF, {cond_reg, label}, std::format("elseif #{}", label - if_label)
+      JUMPLABELIF, {cond_reg, label}, std::format("elseif #{}", label - if_label)
     );
   }
 
