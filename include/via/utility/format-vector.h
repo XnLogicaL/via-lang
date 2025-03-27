@@ -22,20 +22,20 @@ std::string format_vector(
     char           delimiter_begin = '{',
     char           delimiter_end   = '}'
 ) {
-    std::ostringstream oss;
-    oss << delimiter_begin;
+  std::ostringstream oss;
+  oss << delimiter_begin;
 
-    size_t index = 0;
-    for (const T& elem : vec) {
-        oss << to_str(elem);
+  size_t index = 0;
+  for (const T& elem : vec) {
+    oss << to_str(elem);
 
-        if (index++ < vec.size() - 1) {
-            oss << ", ";
-        }
+    if (index++ < vec.size() - 1) {
+      oss << ", ";
     }
+  }
 
-    oss << delimiter_end;
-    return oss.str();
+  oss << delimiter_end;
+  return oss.str();
 }
 
 VIA_NAMESPACE_END

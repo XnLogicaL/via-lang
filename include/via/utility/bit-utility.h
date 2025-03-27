@@ -10,8 +10,8 @@
 VIA_NAMESPACE_BEGIN
 
 struct u16Result {
-    uint16_t l;
-    uint16_t r;
+  uint16_t l;
+  uint16_t r;
 };
 
 uint32_t  reinterpret_u16_as_u32(uint16_t high, uint16_t low);

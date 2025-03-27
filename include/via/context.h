@@ -25,45 +25,45 @@ class CompilerStack;
 class GlobalTracker;
 
 class TransUnitContext final {
-public:
-    // Resets the translation unit context.
-    void clear();
+  public:
+  // Resets the translation unit context.
+  void clear();
 
-    // Encodes the translation unit onto a byte stream.
-    ByteStream encode();
+  // Encodes the translation unit onto a byte stream.
+  ByteStream encode();
 
-    const char* get_platform_info();
+  const char* get_platform_info();
 
-    TransUnitContext(const std::string& file_path, const std::string& file_source);
-    TransUnitContext(const ByteStream& bytes);
+  TransUnitContext(const std::string& file_path, const std::string& file_source);
+  TransUnitContext(const ByteStream& bytes);
 
-public:
-    struct Internal {
-        size_t label_count = 0;
+  public:
+  struct Internal {
+    size_t label_count = 0;
 
-        std::unique_ptr<CompilerStack> stack;
-        std::unique_ptr<GlobalTracker> globals;
+    std::unique_ptr<CompilerStack> stack;
+    std::unique_ptr<GlobalTracker> globals;
 
-        VIA_CUSTOM_CONSTRUCTOR(Internal);
-    };
+    VIA_CUSTOM_CONSTRUCTOR(Internal);
+  };
 
-    const std::string file_path;
-    const std::string file_source;
+  const std::string file_path;
+  const std::string file_source;
 
-    std::unique_ptr<TokenStream>    tokens;
-    std::unique_ptr<SyntaxTree>     ast;
-    std::unique_ptr<BytecodeHolder> bytecode;
-    std::unique_ptr<ConstantHolder> constants;
+  std::unique_ptr<TokenStream>    tokens;
+  std::unique_ptr<SyntaxTree>     ast;
+  std::unique_ptr<BytecodeHolder> bytecode;
+  std::unique_ptr<ConstantHolder> constants;
 
-    Internal internal;
+  Internal internal;
 };
 
 class Context final {
-public:
-public:
-    uint32_t flags;
+  public:
+  public:
+  uint32_t flags;
 
-    std::vector<TransUnitContext> units;
+  std::vector<TransUnitContext> units;
 };
 
 VIA_NAMESPACE_END

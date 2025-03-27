@@ -66,8 +66,8 @@
 
 #define VIA_NON_DEFAULT_CONSTRUCTIBLE(target) target() = delete;
 #define VIA_NON_COPYABLE(target)                                                                   \
-    target& operator=(const target&) = delete;                                                     \
-    target(const target&)            = delete;
+  target& operator=(const target&) = delete;                                                       \
+  target(const target&)            = delete;
 
 #define VIA_ALIGN_8 alignas(8)
 
@@ -79,16 +79,15 @@
 
 // Utility macros
 #define VIA_ASSERT(condition, message)                                                             \
-    if (!(condition)) {                                                                            \
-        std::cerr << "VIA_ASSERT(): assertion '" << #condition << "' failed.\n"                    \
-                  << "File: " << __FILE__ << " | Line: " << __LINE__                               \
-                  << " | Function: " << VIA_FUNCTION_SIGNATURE << "\nMessage: " << message         \
-                  << "\n";                                                                         \
-        if (VIA_HAS_STACKTRACE) {                                                                  \
-            std::cerr << "Call stack:\n" << VIA_STACKTRACE << '\n';                                \
-        }                                                                                          \
-        std::abort();                                                                              \
-    }
+  if (!(condition)) {                                                                              \
+    std::cerr << "VIA_ASSERT(): assertion '" << #condition << "' failed.\n"                        \
+              << "File: " << __FILE__ << " | Line: " << __LINE__                                   \
+              << " | Function: " << VIA_FUNCTION_SIGNATURE << "\nMessage: " << message << "\n";    \
+    if (VIA_HAS_STACKTRACE) {                                                                      \
+      std::cerr << "Call stack:\n" << VIA_STACKTRACE << '\n';                                      \
+    }                                                                                              \
+    std::abort();                                                                                  \
+  }
 
 // Alias macros
 #define u8  uint8_t

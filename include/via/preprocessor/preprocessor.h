@@ -16,19 +16,19 @@
 VIA_NAMESPACE_BEGIN
 
 class Preprocessor final {
-public:
-    ~Preprocessor() = default;
-    Preprocessor(TransUnitContext& unit_ctx)
-        : unit_ctx(unit_ctx) {}
+  public:
+  ~Preprocessor() = default;
+  Preprocessor(TransUnitContext& unit_ctx)
+      : unit_ctx(unit_ctx) {}
 
-    bool preprocess();
+  bool preprocess();
 
-    void declare_default();
+  void declare_default();
 
-private:
-    [[maybe_unused]] TransUnitContext& unit_ctx;
+  private:
+  [[maybe_unused]] TransUnitContext& unit_ctx;
 
-    [[maybe_unused]] ErrorBus err_bus;
+  [[maybe_unused]] ErrorBus err_bus;
 };
 
 VIA_NAMESPACE_END

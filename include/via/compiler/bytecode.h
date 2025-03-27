@@ -28,43 +28,41 @@
 VIA_NAMESPACE_BEGIN
 
 class BytecodeHolder final {
-public:
-    // Type aliases
-    using comment_type    = const std::string;
-    using operands_array  = const std::array<Operand, 3>;
-    using bytecode_vector = std::vector<Bytecode>;
+  public:
+  // Type aliases
+  using comment_type    = const std::string;
+  using operands_array  = const std::array<Operand, 3>;
+  using bytecode_vector = std::vector<Bytecode>;
 
-    // Returns the current size of the bytecode pair vector.
-    size_t size() const;
+  // Returns the current size of the bytecode pair vector.
+  size_t size() const;
 
-    // Inserts a given bytecode pair to the bytecode vectors back.
-    void add(const Bytecode&);
+  // Inserts a given bytecode pair to the bytecode vectors back.
+  void add(const Bytecode&);
 
-    Bytecode& front();
-    Bytecode& back();
-    Bytecode& at(size_t);
+  Bytecode& front();
+  Bytecode& back();
+  Bytecode& at(size_t);
 
-    // Removes the bytecode pair located in a given index.
-    void remove(size_t);
+  // Removes the bytecode pair located in a given index.
+  void remove(size_t);
 
-    // Inserts a locally constructed instruction to a given index.
-    void insert(
-        size_t          index    = 0,
-        OpCode          opcode   = OpCode::NOP,
-        operands_array& operands = {},
-        comment_type&   comment  = ""
-    );
+  // Inserts a locally constructed instruction to a given index.
+  void insert(
+      size_t          index    = 0,
+      OpCode          opcode   = OpCode::NOP,
+      operands_array& operands = {},
+      comment_type&   comment  = ""
+  );
 
-    // Emits an instruction at the end of the vector.
-    void emit(
-        OpCode opcode = OpCode::NOP, operands_array& operands = {}, comment_type& comment = ""
-    );
+  // Emits an instruction at the end of the vector.
+  void emit(OpCode opcode = OpCode::NOP, operands_array& operands = {}, comment_type& comment = "");
 
-    // Returns a reference to the bytecode vector.
-    const bytecode_vector& get() const;
+  // Returns a reference to the bytecode vector.
+  const bytecode_vector& get() const;
 
-private:
-    bytecode_vector instructions;
+  private:
+  bytecode_vector instructions;
 };
 
 VIA_NAMESPACE_END

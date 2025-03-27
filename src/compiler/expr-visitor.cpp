@@ -74,331 +74,325 @@ VIA_NAMESPACE_BEGIN
 using enum OpCode;
 
 void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
-    using enum ValueType;
+  using enum ValueType;
 
-    if (int* integer_value = std::get_if<int>(&literal_node.value)) {
-        uint32_t final_value = *integer_value;
-        auto     operands    = reinterpret_u32_as_2u16(final_value);
+  if (int* integer_value = std::get_if<int>(&literal_node.value)) {
+    uint32_t final_value = *integer_value;
+    auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(LOADINT, {dst, operands.l, operands.r});
-    }
-    else if (float* float_value = std::get_if<float>(&literal_node.value)) {
-        uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-        auto     operands    = reinterpret_u32_as_2u16(final_value);
+    unit_ctx.bytecode->emit(LOADINT, {dst, operands.l, operands.r});
+  }
+  else if (float* float_value = std::get_if<float>(&literal_node.value)) {
+    uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
+    auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(LOADFLOAT, {dst, operands.l, operands.r});
-    }
-    else if (bool* bool_value = std::get_if<bool>(&literal_node.value)) {
-        unit_ctx.bytecode->emit(*bool_value ? LOADTRUE : LOADFALSE, {dst});
-    }
-    else {
-        const TValue& constant    = construct_constant(literal_node);
-        const Operand constant_id = unit_ctx.constants->push_constant(constant);
+    unit_ctx.bytecode->emit(LOADFLOAT, {dst, operands.l, operands.r});
+  }
+  else if (bool* bool_value = std::get_if<bool>(&literal_node.value)) {
+    unit_ctx.bytecode->emit(*bool_value ? LOADTRUE : LOADFALSE, {dst});
+  }
+  else {
+    const TValue& constant    = construct_constant(literal_node);
+    const Operand constant_id = unit_ctx.constants->push_constant(constant);
 
-        unit_ctx.bytecode->emit(LOADK, {dst, constant_id});
-    }
+    unit_ctx.bytecode->emit(LOADK, {dst, constant_id});
+  }
 }
 
 void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
-    Token var_id = variable_node.identifier;
+  Token var_id = variable_node.identifier;
 
-    std::string            symbol = var_id.lexeme;
-    std::optional<Operand> stk_id = unit_ctx.internal.stack->find_symbol(var_id.lexeme);
+  std::string            symbol = var_id.lexeme;
+  std::optional<Operand> stk_id = unit_ctx.internal.stack->find_symbol(var_id.lexeme);
 
-    if (stk_id.has_value()) {
-        if (unit_ctx.internal.stack->function_stack.size() > 0) {
-            auto& current_closure = unit_ctx.internal.stack->function_stack.top();
-            if (current_closure.upvalues > stk_id.value()) {
-                unit_ctx.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
-            }
-        }
-        else {
-            unit_ctx.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
-        }
-    }
-    else if (unit_ctx.internal.globals->was_declared(symbol)) {
-        uint32_t symbol_hash = hash_string_custom(symbol.c_str());
-        auto     operands    = reinterpret_u32_as_2u16(symbol_hash);
-
-        unit_ctx.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
-    }
-    else if (!unit_ctx.internal.stack->function_stack.empty()) {
-        uint16_t index = 0;
-        auto&    top   = unit_ctx.internal.stack->function_stack.top();
-
-        for (const auto& parameter : top.parameters) {
-            if (parameter.identifier.lexeme == symbol) {
-                unit_ctx.bytecode->emit(GETARGUMENT, {dst, index});
-                return;
-            }
-
-            ++index;
-        }
+  if (stk_id.has_value()) {
+    if (unit_ctx.internal.stack->function_stack.size() > 0) {
+      auto& current_closure = unit_ctx.internal.stack->function_stack.top();
+      if (current_closure.upvalues > stk_id.value()) {
+        unit_ctx.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
+      }
     }
     else {
-        compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
+      unit_ctx.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
     }
+  }
+  else if (unit_ctx.internal.globals->was_declared(symbol)) {
+    uint32_t symbol_hash = hash_string_custom(symbol.c_str());
+    auto     operands    = reinterpret_u32_as_2u16(symbol_hash);
+
+    unit_ctx.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
+  }
+  else if (!unit_ctx.internal.stack->function_stack.empty()) {
+    uint16_t index = 0;
+    auto&    top   = unit_ctx.internal.stack->function_stack.top();
+
+    for (const auto& parameter : top.parameters) {
+      if (parameter.identifier.lexeme == symbol) {
+        unit_ctx.bytecode->emit(GETARGUMENT, {dst, index});
+        return;
+      }
+
+      ++index;
+    }
+  }
+  else {
+    compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
+  }
 }
 
 void ExprVisitor::visit(UnaryNode& unary_node, Operand dst) {
-    unary_node.accept(*this, dst);
-    unit_ctx.bytecode->emit(NEG, {dst});
+  unary_node.accept(*this, dst);
+  unit_ctx.bytecode->emit(NEG, {dst});
 }
 
 void ExprVisitor::visit(GroupNode& group_node, Operand dst) {
-    group_node.accept(*this, dst);
+  group_node.accept(*this, dst);
 }
 
 void ExprVisitor::visit(CallNode& call_node, Operand dst) {
-    Operand argc       = call_node.arguments.size();
-    Operand callee_reg = allocator.allocate_register();
+  Operand argc       = call_node.arguments.size();
+  Operand callee_reg = allocator.allocate_register();
 
-    call_node.callee->accept(*this, callee_reg);
+  call_node.callee->accept(*this, callee_reg);
 
-    for (const pExprNode& argument : call_node.arguments) {
-        Operand argument_reg = allocator.allocate_register();
+  for (const pExprNode& argument : call_node.arguments) {
+    Operand argument_reg = allocator.allocate_register();
 
-        if (LiteralNode* literal_node = get_derived_instance<ExprNode, LiteralNode>(*argument)) {
-            if (int* integer_value = std::get_if<int>(&literal_node->value)) {
-                uint32_t final_value = *integer_value;
-                auto     operands    = reinterpret_u32_as_2u16(final_value);
+    if (LiteralNode* literal_node = get_derived_instance<ExprNode, LiteralNode>(*argument)) {
+      if (int* integer_value = std::get_if<int>(&literal_node->value)) {
+        uint32_t final_value = *integer_value;
+        auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-                unit_ctx.bytecode->emit(PUSHINT, {operands.l, operands.r});
-            }
-            else if (float* float_value = std::get_if<float>(&literal_node->value)) {
-                uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-                auto     operands    = reinterpret_u32_as_2u16(final_value);
+        unit_ctx.bytecode->emit(PUSHINT, {operands.l, operands.r});
+      }
+      else if (float* float_value = std::get_if<float>(&literal_node->value)) {
+        uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
+        auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-                unit_ctx.bytecode->emit(PUSHFLOAT, {operands.l, operands.r});
-            }
-            else if (bool* bool_value = std::get_if<bool>(&literal_node->value)) {
-                unit_ctx.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE);
-            }
-            else {
-                const TValue& constant    = construct_constant(*literal_node);
-                const Operand constant_id = unit_ctx.constants->push_constant(constant);
+        unit_ctx.bytecode->emit(PUSHFLOAT, {operands.l, operands.r});
+      }
+      else if (bool* bool_value = std::get_if<bool>(&literal_node->value)) {
+        unit_ctx.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE);
+      }
+      else {
+        const TValue& constant    = construct_constant(*literal_node);
+        const Operand constant_id = unit_ctx.constants->push_constant(constant);
 
-                unit_ctx.bytecode->emit(PUSHK, {constant_id});
-            }
-        }
-        else {
-            argument->accept(*this, argument_reg);
-            unit_ctx.bytecode->emit(PUSH, {argument_reg});
-            allocator.free_register(argument_reg);
-        }
+        unit_ctx.bytecode->emit(PUSHK, {constant_id});
+      }
     }
+    else {
+      argument->accept(*this, argument_reg);
+      unit_ctx.bytecode->emit(PUSH, {argument_reg});
+      allocator.free_register(argument_reg);
+    }
+  }
 
-    unit_ctx.bytecode->emit(CALL, {callee_reg, argc});
-    unit_ctx.bytecode->emit(POP, {dst});
-    allocator.free_register(callee_reg);
+  unit_ctx.bytecode->emit(CALL, {callee_reg, argc});
+  unit_ctx.bytecode->emit(POP, {dst});
+  allocator.free_register(callee_reg);
 }
 
 void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
-    Operand obj_reg   = allocator.allocate_register();
-    Operand index_reg = allocator.allocate_register();
+  Operand obj_reg   = allocator.allocate_register();
+  Operand index_reg = allocator.allocate_register();
 
-    index_node.object->accept(*this, obj_reg);
-    index_node.index->accept(*this, index_reg);
+  index_node.object->accept(*this, obj_reg);
+  index_node.index->accept(*this, index_reg);
 
-    pTypeNode object_type = index_node.object->infer_type(unit_ctx);
-    pTypeNode index_type  = index_node.index->infer_type(unit_ctx);
+  pTypeNode object_type = index_node.object->infer_type(unit_ctx);
+  pTypeNode index_type  = index_node.index->infer_type(unit_ctx);
 
-    // Validate index type
-    if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
-        if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
-            compiler_error(
-                index_node.index->begin,
-                index_node.index->end,
-                "Index type must be a string or integer"
-            );
-            return;
-        }
+  // Validate index type
+  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
+    if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
+      compiler_error(
+          index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
+      );
+      return;
     }
+  }
 
-    // Handle different object types
-    if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
-        switch (primitive->type) {
-        case ValueType::string:
-            unit_ctx.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
-            break;
-        case ValueType::table:
-            unit_ctx.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
-            break;
-        default:
-            compiler_error(
-                index_node.object->begin,
-                index_node.object->end,
-                "Expression type is not subscriptable"
-            );
-        }
+  // Handle different object types
+  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
+    switch (primitive->type) {
+    case ValueType::string:
+      unit_ctx.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
+      break;
+    case ValueType::table:
+      unit_ctx.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
+      break;
+    default:
+      compiler_error(
+          index_node.object->begin, index_node.object->end, "Expression type is not subscriptable"
+      );
     }
+  }
 }
 
 void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
-    using enum TokenType;
-    using OpCodeId = std::underlying_type_t<OpCode>;
+  using enum TokenType;
+  using OpCodeId = std::underlying_type_t<OpCode>;
 
-    static const std::unordered_map<TokenType, OpCode> operator_map = {
-        {TokenType::OP_ADD, OpCode::ADD},
-        {TokenType::OP_SUB, OpCode::SUB},
-        {TokenType::OP_MUL, OpCode::MUL},
-        {TokenType::OP_DIV, OpCode::DIV},
-        {TokenType::OP_EXP, OpCode::POW},
-        {TokenType::OP_MOD, OpCode::MOD},
-        {TokenType::OP_EQ, OpCode::EQUAL},
-        {TokenType::OP_NEQ, OpCode::NOTEQUAL},
-        {TokenType::OP_LT, OpCode::LESS},
-        {TokenType::OP_GT, OpCode::GREATER},
-        {TokenType::OP_LEQ, OpCode::LESSOREQUAL},
-        {TokenType::OP_GEQ, OpCode::GREATEROREQUAL},
-        {TokenType::KW_AND, OpCode::AND},
-        {TokenType::KW_OR, OpCode::OR},
-    };
+  static const std::unordered_map<TokenType, OpCode> operator_map = {
+      {TokenType::OP_ADD, OpCode::ADD},
+      {TokenType::OP_SUB, OpCode::SUB},
+      {TokenType::OP_MUL, OpCode::MUL},
+      {TokenType::OP_DIV, OpCode::DIV},
+      {TokenType::OP_EXP, OpCode::POW},
+      {TokenType::OP_MOD, OpCode::MOD},
+      {TokenType::OP_EQ, OpCode::EQUAL},
+      {TokenType::OP_NEQ, OpCode::NOTEQUAL},
+      {TokenType::OP_LT, OpCode::LESS},
+      {TokenType::OP_GT, OpCode::GREATER},
+      {TokenType::OP_LEQ, OpCode::LESSOREQUAL},
+      {TokenType::OP_GEQ, OpCode::GREATEROREQUAL},
+      {TokenType::KW_AND, OpCode::AND},
+      {TokenType::KW_OR, OpCode::OR},
+  };
 
-    pExprNode& p_lhs = binary_node.lhs_expression;
-    pExprNode& p_rhs = binary_node.rhs_expression;
+  pExprNode& p_lhs = binary_node.lhs_expression;
+  pExprNode& p_rhs = binary_node.rhs_expression;
 
-    ExprNode& lhs = *p_lhs;
-    ExprNode& rhs = *p_rhs;
+  ExprNode& lhs = *p_lhs;
+  ExprNode& rhs = *p_rhs;
 
-    auto it = operator_map.find(binary_node.op.type);
-    if (it == operator_map.end()) {
-        compiler_error(
-            binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
-        );
-        return;
+  auto it = operator_map.find(binary_node.op.type);
+  if (it == operator_map.end()) {
+    compiler_error(
+        binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
+    );
+    return;
+  }
+
+  pTypeNode left_type  = p_lhs->infer_type(unit_ctx);
+  pTypeNode right_type = p_rhs->infer_type(unit_ctx);
+
+  CHECK_TYPE_INFERENCE_FAILURE(left_type, binary_node.lhs_expression);
+  CHECK_TYPE_INFERENCE_FAILURE(right_type, binary_node.rhs_expression);
+
+  if (!is_compatible(left_type, right_type)) {
+    compiler_error(binary_node.begin, binary_node.end, "Binary operation on incompatible types");
+    return;
+  }
+
+  const OpCode   base_opcode    = it->second;
+  const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
+  OpCodeId       opcode_id      = base_opcode_id;
+
+  if (is_constant_expression(rhs)) {
+    LiteralNode& literal = dynamic_cast<LiteralNode&>(rhs);
+
+    if (base_opcode == DIV) {
+      if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
+        if (*int_val == 0) {
+          goto division_by_zero;
+        }
+      }
+
+      if (TFloat* float_val = std::get_if<TFloat>(&literal.value)) {
+        if (*float_val == 0.0f) {
+          goto division_by_zero;
+        }
+      }
+
+      goto good_division;
+
+    division_by_zero:
+      compiler_error(literal.value_token, "Explicit division by zero");
+      return;
+
+    good_division:
     }
 
-    pTypeNode left_type  = p_lhs->infer_type(unit_ctx);
-    pTypeNode right_type = p_rhs->infer_type(unit_ctx);
+    lhs.accept(*this, dst);
 
-    CHECK_TYPE_INFERENCE_FAILURE(left_type, binary_node.lhs_expression);
-    CHECK_TYPE_INFERENCE_FAILURE(right_type, binary_node.rhs_expression);
+    if (base_opcode == AND || base_opcode == OR) {
+      bool is_rhs_falsy = ({
+        bool* rhs_bool = std::get_if<bool>(&literal.value);
+        auto* rhs_nil  = std::get_if<std::monostate>(&literal.value);
+        rhs_bool != nullptr ? !(*rhs_bool) : rhs_nil != nullptr;
+      });
 
-    if (!is_compatible(left_type, right_type)) {
-        compiler_error(
-            binary_node.begin, binary_node.end, "Binary operation on incompatible types"
-        );
-        return;
+      if (base_opcode == AND && is_rhs_falsy) {
+        unit_ctx.bytecode->emit(LOADFALSE, {dst});
+      }
+
+      if (base_opcode == OR && !is_rhs_falsy) {
+        unit_ctx.bytecode->emit(LOADTRUE, {dst});
+      }
+
+      return;
     }
 
-    const OpCode   base_opcode    = it->second;
-    const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
-    OpCodeId       opcode_id      = base_opcode_id;
+    if (int* int_value = std::get_if<int>(&literal.value)) {
+      OpCode   opcode      = static_cast<OpCode>(opcode_id + 2); // OPINT
+      uint32_t final_value = *int_value;
+      auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-    if (is_constant_expression(rhs)) {
-        LiteralNode& literal = dynamic_cast<LiteralNode&>(rhs);
+      unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
+    }
+    else if (float* float_value = std::get_if<float>(&literal.value)) {
+      OpCode   opcode      = static_cast<OpCode>(opcode_id + 3); // OPFLOAT
+      uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
+      auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-        if (base_opcode == DIV) {
-            if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
-                if (*int_val == 0) {
-                    goto division_by_zero;
-                }
-            }
-
-            if (TFloat* float_val = std::get_if<TFloat>(&literal.value)) {
-                if (*float_val == 0.0f) {
-                    goto division_by_zero;
-                }
-            }
-
-            goto good_division;
-
-        division_by_zero:
-            compiler_error(literal.value_token, "Explicit division by zero");
-            return;
-
-        good_division:
-        }
-
-        lhs.accept(*this, dst);
-
-        if (base_opcode == AND || base_opcode == OR) {
-            bool is_rhs_falsy = ({
-                bool* rhs_bool = std::get_if<bool>(&literal.value);
-                auto* rhs_nil  = std::get_if<std::monostate>(&literal.value);
-                rhs_bool != nullptr ? !(*rhs_bool) : rhs_nil != nullptr;
-            });
-
-            if (base_opcode == AND && is_rhs_falsy) {
-                unit_ctx.bytecode->emit(LOADFALSE, {dst});
-            }
-
-            if (base_opcode == OR && !is_rhs_falsy) {
-                unit_ctx.bytecode->emit(LOADTRUE, {dst});
-            }
-
-            return;
-        }
-
-        if (int* int_value = std::get_if<int>(&literal.value)) {
-            OpCode   opcode      = static_cast<OpCode>(opcode_id + 2); // OPINT
-            uint32_t final_value = *int_value;
-            auto     operands    = reinterpret_u32_as_2u16(final_value);
-
-            unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
-        }
-        else if (float* float_value = std::get_if<float>(&literal.value)) {
-            OpCode   opcode      = static_cast<OpCode>(opcode_id + 3); // OPFLOAT
-            uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-            auto     operands    = reinterpret_u32_as_2u16(final_value);
-
-            unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
-        }
-        else {
-            OpCode  opcode          = static_cast<OpCode>(opcode_id + 1); // OPK
-            TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode&>(rhs));
-            Operand right_const_id  = unit_ctx.constants->push_constant(right_const_val);
-
-            unit_ctx.bytecode->emit(opcode, {dst, right_const_id});
-        }
+      unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
     }
     else {
-        Operand reg = allocator.allocate_register();
+      OpCode  opcode          = static_cast<OpCode>(opcode_id + 1); // OPK
+      TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode&>(rhs));
+      Operand right_const_id  = unit_ctx.constants->push_constant(right_const_val);
 
-        if (rhs.precedence() > lhs.precedence()) {
-            rhs.accept(*this, dst);
-            lhs.accept(*this, reg);
-        }
-        else {
-            lhs.accept(*this, dst);
-            rhs.accept(*this, reg);
-        }
-
-        unit_ctx.bytecode->emit(base_opcode, {dst, reg});
-        allocator.free_register(reg);
+      unit_ctx.bytecode->emit(opcode, {dst, right_const_id});
     }
+  }
+  else {
+    Operand reg = allocator.allocate_register();
+
+    if (rhs.precedence() > lhs.precedence()) {
+      rhs.accept(*this, dst);
+      lhs.accept(*this, reg);
+    }
+    else {
+      lhs.accept(*this, dst);
+      rhs.accept(*this, reg);
+    }
+
+    unit_ctx.bytecode->emit(base_opcode, {dst, reg});
+    allocator.free_register(reg);
+  }
 }
 
 void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
-    pTypeNode left_type = type_cast.expression->infer_type(unit_ctx);
+  pTypeNode left_type = type_cast.expression->infer_type(unit_ctx);
 
-    CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
+  CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
 
-    if (!is_castable(left_type, type_cast.type)) {
-        compiler_error(
-            type_cast.expression->begin,
-            type_cast.expression->end,
-            std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
-        );
+  if (!is_castable(left_type, type_cast.type)) {
+    compiler_error(
+        type_cast.expression->begin,
+        type_cast.expression->end,
+        std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
+    );
+  }
+
+  Operand temp = allocator.allocate_register();
+  type_cast.expression->accept(*this, temp);
+
+  if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type_cast.type)) {
+    if (primitive->type == ValueType::integer) {
+      unit_ctx.bytecode->emit(TOINT, {dst, temp});
     }
-
-    Operand temp = allocator.allocate_register();
-    type_cast.expression->accept(*this, temp);
-
-    if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type_cast.type)) {
-        if (primitive->type == ValueType::integer) {
-            unit_ctx.bytecode->emit(TOINT, {dst, temp});
-        }
-        else if (primitive->type == ValueType::floating_point) {
-            unit_ctx.bytecode->emit(TOFLOAT, {dst, temp});
-        }
-        else if (primitive->type == ValueType::string) {
-            unit_ctx.bytecode->emit(TOSTRING, {dst, temp});
-        }
+    else if (primitive->type == ValueType::floating_point) {
+      unit_ctx.bytecode->emit(TOFLOAT, {dst, temp});
     }
+    else if (primitive->type == ValueType::string) {
+      unit_ctx.bytecode->emit(TOSTRING, {dst, temp});
+    }
+  }
 
-    allocator.free_register(temp);
+  allocator.free_register(temp);
 }
 
 VIA_NAMESPACE_END

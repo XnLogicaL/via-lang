@@ -16,7 +16,7 @@ VIA_NAMESPACE_BEGIN
 TransUnitContext::Internal::Internal()
     : stack(std::make_unique<CompilerStack>()),
       globals(std::make_unique<GlobalTracker>()) {
-    globals->declare_builtins();
+  globals->declare_builtins();
 }
 
 TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
@@ -33,37 +33,37 @@ TransUnitContext::TransUnitContext(const ByteStream&) {}
 void TransUnitContext::clear() {}
 
 const char* TransUnitContext::get_platform_info() {
-    static char buffer[32];
-    static bool fetched = false;
+  static char buffer[32];
+  static bool fetched = false;
 
 #ifdef _WIN32
-    const char* os = "windows";
+  const char* os = "windows";
 #elifdef __linux__
-    const char* os = "linux";
+  const char* os   = "linux";
 #else
-    const char* os = "other";
+  const char* os   = "other";
 #endif
 
 #ifdef __x86_64__
-    const char* arch = "x86-64";
+  const char* arch = "x86-64";
 #elifdef i386
-    const char* arch = "x86-32";
+  const char* arch = "x86-32";
 #elifdef __aarch64__
-    const char* arch = "arm-64";
+  const char* arch = "arm-64";
 #else
-    const char* arch = "other";
+  const char* arch = "other";
 #endif
 
-    if (!fetched) {
-        fetched = true;
-        std::snprintf(buffer, sizeof(buffer), "%s-%s", os, arch);
-    }
+  if (!fetched) {
+    fetched = true;
+    std::snprintf(buffer, sizeof(buffer), "%s-%s", os, arch);
+  }
 
-    return buffer;
+  return buffer;
 }
 
 ByteStream TransUnitContext::encode() {
-    return {};
+  return {};
 }
 
 // ==========================================================================================

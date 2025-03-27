@@ -10,19 +10,19 @@
 VIA_NAMESPACE_BEGIN
 
 pTypeNode DecayVisitor::visit(AutoNode& auto_node) {
-    return auto_node.expression->infer_type(unit_ctx);
+  return auto_node.expression->infer_type(unit_ctx);
 }
 
 pTypeNode DecayVisitor::visit(GenericNode&) {
-    return nullptr;
+  return nullptr;
 }
 
 pTypeNode DecayVisitor::visit(UnionNode&) {
-    return nullptr;
+  return nullptr;
 }
 
 pTypeNode DecayVisitor::visit(FunctionTypeNode&) {
-    return nullptr;
+  return nullptr;
 }
 
 VIA_NAMESPACE_END

@@ -12,7 +12,7 @@ using enum TokenType;
 void Preprocessor::declare_default() {}
 
 bool Preprocessor::preprocess() {
-    return false;
+  return false;
 }
 
 VIA_NAMESPACE_END

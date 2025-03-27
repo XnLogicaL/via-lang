@@ -8,10 +8,10 @@
 #include "common.h"
 
 #define VIA_LIB_ASSERT(cond, message)                                                              \
-    if (!(cond)) {                                                                                 \
-        impl::__set_error_state(V, message);                                                       \
-        return;                                                                                    \
-    }
+  if (!(cond)) {                                                                                   \
+    impl::__set_error_state(V, message);                                                           \
+    return;                                                                                        \
+  }
 
 #define VIA_LIB_DECL_FUNCTION(id)       void id(State* V)
 #define VIA_LIB_DECL_PARAMETER(id, idx) const TValue& id = impl::__get_argument(V, idx);

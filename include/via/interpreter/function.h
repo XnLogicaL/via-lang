@@ -12,43 +12,43 @@
 VIA_NAMESPACE_BEGIN
 
 struct UpValue {
-    bool is_open  = true;
-    bool is_valid = false;
+  bool is_open  = true;
+  bool is_valid = false;
 
-    TValue* value      = nullptr;
-    TValue  heap_value = TValue();
+  TValue* value      = nullptr;
+  TValue  heap_value = TValue();
 };
 
 struct CallInfo {
-    TFunction*   caller;
-    Instruction* ip;
-    Instruction* ibp;
-    Instruction* iep;
-    size_t       sp;
-    size_t       argc;
+  TFunction*   caller;
+  Instruction* ip;
+  Instruction* ibp;
+  Instruction* iep;
+  size_t       sp;
+  size_t       argc;
 };
 
 struct TFunction {
-    bool is_error_handler = false;
-    bool is_vararg        = false;
+  bool is_error_handler = false;
+  bool is_vararg        = false;
 
-    CallInfo call_info;
+  CallInfo call_info;
 
-    Instruction* ibp = nullptr;
-    Instruction* iep = nullptr;
+  Instruction* ibp = nullptr;
+  Instruction* iep = nullptr;
 
-    UpValue* upvs      = new UpValue[8];
-    uint32_t upv_count = 8;
+  UpValue* upvs      = new UpValue[8];
+  uint32_t upv_count = 8;
 
-    VIA_DEFAULT_CONSTRUCTOR(TFunction);
-    VIA_CUSTOM_DESTRUCTOR(TFunction);
+  VIA_DEFAULT_CONSTRUCTOR(TFunction);
+  VIA_CUSTOM_DESTRUCTOR(TFunction);
 
-    TFunction(const TFunction& other);
+  TFunction(const TFunction& other);
 };
 
 struct TCFunction {
-    void (*data)(State*)  = nullptr;
-    bool is_error_handler = false;
+  void (*data)(State*)  = nullptr;
+  bool is_error_handler = false;
 };
 
 VIA_NAMESPACE_END

@@ -7,7 +7,7 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 DIR = sys.argv[1]
-SUBDIR_WHITELIST = ['src', 'tests', 'CLI',]
+SUBDIR_WHITELIST = ['src', 'include', 'test', 'fuzz', 'CLI',]
 EXT_WHITELIST = ('.c', '.cpp', '.h', '.hpp')
 
 def get_lines_in_file(file_path: str) -> int:

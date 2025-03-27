@@ -22,10 +22,9 @@ BreakInheritanceList: BeforeComma
 ColumnLimit: 100
 IndentCaseLabels: false
 SortIncludes: false
-IndentWidth: 4
-TabWidth: 4
+IndentWidth: 2
+TabWidth: 2
 AllowAllArgumentsOnNextLine: true
-ObjCBlockIndentWidth: 4
 UseTab: Never
 PointerAlignment: Left
 SpaceAfterTemplateKeyword: false

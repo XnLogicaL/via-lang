@@ -9,28 +9,28 @@ VIA_NAMESPACE_BEGIN
 using register_type = RegisterAllocator::register_type;
 
 register_type RegisterAllocator::allocate_register() {
-    for (register_type reg = 0; reg < 128; reg++) {
-        if (registers[reg]) {
-            registers[reg] = false;
-            return reg;
-        }
+  for (register_type reg = 0; reg < 128; reg++) {
+    if (registers[reg]) {
+      registers[reg] = false;
+      return reg;
     }
+  }
 
-    return VIA_OPERAND_INVALID;
+  return VIA_OPERAND_INVALID;
 }
 
 register_type RegisterAllocator::allocate_temp() {
-    register_type reg = allocate_register();
-    free_register(reg);
-    return reg;
+  register_type reg = allocate_register();
+  free_register(reg);
+  return reg;
 }
 
 void RegisterAllocator::free_register(register_type reg) {
-    registers.emplace(reg, true);
+  registers.emplace(reg, true);
 }
 
 bool RegisterAllocator::is_used(register_type reg) {
-    return registers[reg];
+  return registers[reg];
 }
 
 VIA_NAMESPACE_END

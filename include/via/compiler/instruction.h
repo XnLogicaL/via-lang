@@ -17,20 +17,20 @@ using OperandS = int16_t;
 
 struct Chunk;
 struct InstructionData {
-    std::string comment = "";
+  std::string comment = "";
 };
 
 struct VIA_ALIGN_8 Instruction {
-    OpCode op = OpCode::NOP;
+  OpCode op = OpCode::NOP;
 
-    Operand operand0 = 0;
-    Operand operand1 = 0;
-    Operand operand2 = 0;
+  Operand operand0 = 0;
+  Operand operand1 = 0;
+  Operand operand2 = 0;
 };
 
 struct Bytecode {
-    Instruction     instruction;
-    InstructionData meta_data;
+  Instruction     instruction;
+  InstructionData meta_data;
 };
 
 std::string to_string(const Bytecode&, bool);

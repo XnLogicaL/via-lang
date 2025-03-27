@@ -16,158 +16,158 @@ VIA_NAMESPACE_BEGIN
 using enum ValueType;
 
 TValue& State::get_register(Operand reg) {
-    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
-    return registers[reg];
+  VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+  return registers[reg];
 }
 
 void State::set_register(Operand reg, const TValue& val) {
-    VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
+  VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
-    TValue* addr = registers + reg;
-    *addr        = val.clone();
+  TValue* addr = registers + reg;
+  *addr        = val.clone();
 }
 
 bool State::is_heap(const TValue& value) {
-    return static_cast<uint32_t>(value.type) >= static_cast<uint32_t>(ValueType::string);
+  return static_cast<uint32_t>(value.type) >= static_cast<uint32_t>(ValueType::string);
 }
 
 bool State::compare(const TValue& left, const TValue& right) {
-    if (left.type != right.type) {
-        return false;
-    }
+  if (left.type != right.type) {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 void State::push_nil() {
-    push(TValue());
+  push(TValue());
 }
 
 void State::push_int(TInteger value) {
-    push(TValue(value));
+  push(TValue(value));
 }
 
 void State::push_float(TFloat value) {
-    push(TValue(value));
+  push(TValue(value));
 }
 
 void State::push_true() {
-    push(TValue(true));
+  push(TValue(true));
 }
 
 void State::push_false() {
-    push(TValue(false));
+  push(TValue(false));
 }
 
 void State::push_string(const char* str) {
-    TString* tstr = new TString(this, str);
-    push(TValue(string, tstr));
+  TString* tstr = new TString(this, str);
+  push(TValue(string, tstr));
 }
 
 void State::push_table() {
-    push(TValue(table, new TTable()));
+  push(TValue(table, new TTable()));
 }
 
 void State::push(const TValue& val) {
-    VIA_ASSERT(sp < VIA_VM_STACK_SIZE, "stack overflow");
-    impl::__push(this, val);
+  VIA_ASSERT(sp < VIA_VM_STACK_SIZE, "stack overflow");
+  impl::__push(this, val);
 }
 
 void State::drop() {
-    VIA_ASSERT(sp > 0, "stack underflow");
-    impl::__drop(this);
+  VIA_ASSERT(sp > 0, "stack underflow");
+  impl::__drop(this);
 }
 
 TValue State::pop() {
-    VIA_ASSERT(sp > 0, "stack underflow");
-    return impl::__pop(this);
+  VIA_ASSERT(sp > 0, "stack underflow");
+  return impl::__pop(this);
 }
 
 const TValue& State::top() {
-    VIA_ASSERT(sp > 0, "stack underflow");
-    return sbp[sp];
+  VIA_ASSERT(sp > 0, "stack underflow");
+  return sbp[sp];
 }
 
 void State::set_stack(size_t position, TValue value) {
-    VIA_ASSERT(sp >= position, "stack overflow");
-    impl::__set_stack(this, position, value);
+  VIA_ASSERT(sp >= position, "stack overflow");
+  impl::__set_stack(this, position, value);
 }
 
 const TValue& State::get_stack(size_t position) {
-    VIA_ASSERT(sp >= position, "stack overflow");
-    return impl::__get_stack(this, position);
+  VIA_ASSERT(sp >= position, "stack overflow");
+  return impl::__get_stack(this, position);
 }
 
 size_t State::stack_size() {
-    return sp;
+  return sp;
 }
 
 TValue State::to_integer(const TValue& value) {
-    switch (value.type) {
-    case ValueType::floating_point:
-        return TValue(static_cast<TFloat>(value.val_integer));
-    case ValueType::boolean:
-        return TValue(value.val_boolean ? 1 : 0);
-    case ValueType::string: {
-        const char* data = value.cast_ptr<TString>()->data;
+  switch (value.type) {
+  case ValueType::floating_point:
+    return TValue(static_cast<TFloat>(value.val_integer));
+  case ValueType::boolean:
+    return TValue(value.val_boolean ? 1 : 0);
+  case ValueType::string: {
+    const char* data = value.cast_ptr<TString>()->data;
 
-        TInteger stoi_result = std::stoi(data);
-        return TValue(stoi_result);
-    }
-    default:
-        return TValue();
-    }
+    TInteger stoi_result = std::stoi(data);
+    return TValue(stoi_result);
+  }
+  default:
+    return TValue();
+  }
 
-    VIA_UNREACHABLE;
+  VIA_UNREACHABLE;
 }
 
 TValue State::to_float(const TValue& value) {
-    switch (value.type) {
-    case ValueType::integer:
-        return TValue(static_cast<TInteger>(value.val_integer));
-    case ValueType::boolean:
-        return TValue(value.val_boolean ? 1.0f : 0.0f);
-    case ValueType::string: {
-        const char* data = value.cast_ptr<TString>()->data;
+  switch (value.type) {
+  case ValueType::integer:
+    return TValue(static_cast<TInteger>(value.val_integer));
+  case ValueType::boolean:
+    return TValue(value.val_boolean ? 1.0f : 0.0f);
+  case ValueType::string: {
+    const char* data = value.cast_ptr<TString>()->data;
 
-        TFloat stof_result = std::stof(data);
-        return TValue(stof_result);
-    }
-    default:
-        break;
-    }
+    TFloat stof_result = std::stof(data);
+    return TValue(stof_result);
+  }
+  default:
+    break;
+  }
 
-    return TValue();
+  return TValue();
 }
 
 TValue State::to_boolean(const TValue& value) {
-    switch (value.type) {
-    case ValueType::nil:
-        return TValue(false);
-    case ValueType::boolean:
-        return TValue(value.val_boolean);
-    default:
-        break;
-    }
+  switch (value.type) {
+  case ValueType::nil:
+    return TValue(false);
+  case ValueType::boolean:
+    return TValue(value.val_boolean);
+  default:
+    break;
+  }
 
-    return TValue(true);
+  return TValue(true);
 }
 
 TValue State::to_string(const TValue&) {
-    return TValue();
+  return TValue();
 }
 
 const TValue& State::get_global(uint32_t hash) {
-    static TValue nil = TValue();
+  static TValue nil = TValue();
 
-    std::lock_guard lock(G->gtable_mutex);
+  std::lock_guard lock(G->gtable_mutex);
 
-    auto it = G->gtable.find(hash);
-    if (it != G->gtable.end()) {
-        return it->second;
-    }
+  auto it = G->gtable.find(hash);
+  if (it != G->gtable.end()) {
+    return it->second;
+  }
 
-    return nil;
+  return nil;
 }
 
 VIA_NAMESPACE_END

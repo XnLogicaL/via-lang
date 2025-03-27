@@ -11,33 +11,33 @@
 VIA_NAMESPACE_BEGIN
 
 class RegisterAllocator final {
-public:
-    // Type aliases
-    using register_type = Operand;
-    using register_map  = std::unordered_map<register_type, bool>;
+  public:
+  // Type aliases
+  using register_type = Operand;
+  using register_map  = std::unordered_map<register_type, bool>;
 
-    // Constructor
-    RegisterAllocator(size_t size, bool default_value) {
-        registers.reserve(size);
-        for (register_type reg = 0; reg < size; reg++) {
-            registers.emplace(reg, default_value);
-        }
+  // Constructor
+  RegisterAllocator(size_t size, bool default_value) {
+    registers.reserve(size);
+    for (register_type reg = 0; reg < size; reg++) {
+      registers.emplace(reg, default_value);
     }
+  }
 
-    // Returns a newly allocated register.
-    register_type allocate_register();
+  // Returns a newly allocated register.
+  register_type allocate_register();
 
-    // Returns a temporary, non-allocated register.
-    register_type allocate_temp();
+  // Returns a temporary, non-allocated register.
+  register_type allocate_temp();
 
-    // Frees a given register.
-    void free_register(register_type reg);
+  // Frees a given register.
+  void free_register(register_type reg);
 
-    // Returns wheter if a given register is used.
-    bool is_used(register_type reg);
+  // Returns wheter if a given register is used.
+  bool is_used(register_type reg);
 
-private:
-    register_map registers;
+  private:
+  register_map registers;
 };
 
 VIA_NAMESPACE_END

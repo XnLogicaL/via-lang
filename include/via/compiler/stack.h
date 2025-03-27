@@ -15,66 +15,66 @@
 VIA_NAMESPACE_BEGIN
 
 struct StackObject {
-    bool is_const     = false;
-    bool is_constexpr = false;
+  bool is_const     = false;
+  bool is_constexpr = false;
 
-    std::string symbol = "<anonymous-symbol>";
+  std::string symbol = "<anonymous-symbol>";
 
-    pTypeNode type;
+  pTypeNode type;
 };
 
 class CompilerStack final {
-public:
-    // Type aliases
-    using index_query_result = std::optional<StackObject>;
-    using find_query_result  = std::optional<Operand>;
+  public:
+  // Type aliases
+  using index_query_result = std::optional<StackObject>;
+  using find_query_result  = std::optional<Operand>;
 
-    using function_stack_node = FunctionNode::StackNode;
-    using function_stack_type = std::stack<function_stack_node>;
+  using function_stack_node = FunctionNode::StackNode;
+  using function_stack_type = std::stack<function_stack_node>;
 
-    using symbol = std::string;
+  using symbol = std::string;
 
-    // Constructor
-    CompilerStack()
-        : capacity(VIA_TEST_STACK_SIZE),
-          sbp(new StackObject[capacity]) {}
+  // Constructor
+  CompilerStack()
+      : capacity(VIA_TEST_STACK_SIZE),
+        sbp(new StackObject[capacity]) {}
 
-    // Destructor
-    ~CompilerStack() {
-        delete[] sbp;
-    }
+  // Destructor
+  ~CompilerStack() {
+    delete[] sbp;
+  }
 
-    // Returns the size of the stack.
-    size_t size();
+  // Returns the size of the stack.
+  size_t size();
 
-    // Pushes a given stack object onto the stack.
-    void push(StackObject);
+  // Pushes a given stack object onto the stack.
+  void push(StackObject);
 
-    // Returns the top stack object of the stack.
-    StackObject top();
+  // Returns the top stack object of the stack.
+  StackObject top();
 
-    // Pops and returns a clone of the top-most stack object of the stack.
-    StackObject pop();
+  // Pops and returns a clone of the top-most stack object of the stack.
+  StackObject pop();
 
-    // Returns the stack object at a given index.
-    index_query_result at(size_t);
+  // Returns the stack object at a given index.
+  index_query_result at(size_t);
 
-    // Returns the stack id of a given stack object.
-    find_query_result find_symbol(const StackObject&);
-    find_query_result find_symbol(const symbol&);
+  // Returns the stack id of a given stack object.
+  find_query_result find_symbol(const StackObject&);
+  find_query_result find_symbol(const symbol&);
 
-public:
-    function_stack_type function_stack;
+  public:
+  function_stack_type function_stack;
 
-private:
-    size_t sp = 0;
-    size_t capacity;
+  private:
+  size_t sp = 0;
+  size_t capacity;
 
-    StackObject* sbp;
+  StackObject* sbp;
 
-private:
-    // Dynamically grows and relocates the stack.
-    void grow_stack();
+  private:
+  // Dynamically grows and relocates the stack.
+  void grow_stack();
 };
 
 VIA_NAMESPACE_END

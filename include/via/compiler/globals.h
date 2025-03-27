@@ -11,57 +11,57 @@
 VIA_NAMESPACE_BEGIN
 
 struct Global {
-    Token       token;
-    std::string symbol;
+  Token       token;
+  std::string symbol;
 };
 
 class GlobalTracker final {
-public:
-    // Type aliases
-    using index_query_result  = std::optional<size_t>;
-    using global_query_result = std::optional<Global>;
-    using global_vector       = std::vector<Global>;
-    using builtin_vector      = std::vector<std::string>;
+  public:
+  // Type aliases
+  using index_query_result  = std::optional<size_t>;
+  using global_query_result = std::optional<Global>;
+  using global_vector       = std::vector<Global>;
+  using builtin_vector      = std::vector<std::string>;
 
-    // Returns the size of the global vector.
-    size_t size();
+  // Returns the size of the global vector.
+  size_t size();
 
-    // Declares a new global.
-    // Does not perform sanity checks.
-    void declare_global(const Global&);
+  // Declares a new global.
+  // Does not perform sanity checks.
+  void declare_global(const Global&);
 
-    // Returns whether if a global has been declared.
-    bool was_declared(const Global&);
-    bool was_declared(const std::string&);
+  // Returns whether if a global has been declared.
+  bool was_declared(const Global&);
+  bool was_declared(const std::string&);
 
-    // Returns the index of a given global.
-    index_query_result get_index(const std::string&);
-    index_query_result get_index(const Global&);
+  // Returns the index of a given global.
+  index_query_result get_index(const std::string&);
+  index_query_result get_index(const Global&);
 
-    // Returns the global at a given key or index.
-    global_query_result get_global(const std::string&);
-    global_query_result get_global(size_t);
+  // Returns the global at a given key or index.
+  global_query_result get_global(const std::string&);
+  global_query_result get_global(size_t);
 
-    // Returns a constant reference to the global vector.
-    const global_vector& get();
+  // Returns a constant reference to the global vector.
+  const global_vector& get();
 
-    VIA_INLINE void declare_builtins() {
-        static const builtin_vector builtins = {
-            "print",
-            "println",
-            "exit",
-            "typeof",
-            "assert",
-        };
+  VIA_INLINE void declare_builtins() {
+    static const builtin_vector builtins = {
+        "print",
+        "println",
+        "exit",
+        "typeof",
+        "assert",
+    };
 
-        for (const std::string& built_in : builtins) {
-            Token tok = Token(TokenType::IDENTIFIER, built_in, 0, 0, 0);
-            globals.emplace_back(tok, built_in);
-        }
+    for (const std::string& built_in : builtins) {
+      Token tok = Token(TokenType::IDENTIFIER, built_in, 0, 0, 0);
+      globals.emplace_back(tok, built_in);
     }
+  }
 
-private:
-    global_vector globals;
+  private:
+  global_vector globals;
 };
 
 VIA_NAMESPACE_END
