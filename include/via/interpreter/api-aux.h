@@ -306,7 +306,7 @@ VIA_INLINE void __label_load(State* _State) {
 // ==========================================================
 // Stack handling
 VIA_INLINE void __stack_allocate(State* _State) {
-    _State->sbp = new TValue[VIA_VM_STACK_SIZE];
+    _State->sbp = new TValue[VIA_VM_STACK_SIZE]();
 }
 
 VIA_INLINE void __stack_deallocate(State* _State) {
@@ -345,6 +345,26 @@ VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, size_t _Offse
     const TValue& _Val = _State->sbp[_Stk_offset];
 
     return _Val.clone();
+}
+
+// ==========================================================
+// Register handling
+VIA_INLINE void __register_allocate(State* _State) {
+    _State->registers = new TValue[VIA_REGISTER_COUNT]();
+}
+
+VIA_INLINE void __register_deallocate(State* _State) {
+    delete[] _State->registers;
+}
+
+VIA_INLINE_HOT void __set_register(State* _State, Operand _Reg, const TValue& _Val) {
+    TValue* addr = _State->registers + _Reg;
+    *addr        = _Val.clone();
+}
+
+VIA_INLINE_HOT TValue* __get_register(State* _State, Operand _Reg) {
+    TValue* addr = _State->registers + _Reg;
+    return addr;
 }
 
 VIA_NAMESPACE_END

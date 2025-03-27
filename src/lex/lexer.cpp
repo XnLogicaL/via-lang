@@ -15,7 +15,7 @@ bool Tokenizer::is_hex_char(char chr) {
 }
 
 size_t Tokenizer::source_size() {
-    return program.source.size();
+    return unit_ctx.file_source.size();
 }
 
 char Tokenizer::peek(size_t ahead) {
@@ -23,7 +23,7 @@ char Tokenizer::peek(size_t ahead) {
         return '\0';
     }
 
-    return program.source.at(pos + ahead);
+    return unit_ctx.file_source.at(pos + ahead);
 }
 
 char Tokenizer::consume(size_t ahead) {
@@ -31,7 +31,7 @@ char Tokenizer::consume(size_t ahead) {
         return '\0';
     }
 
-    return program.source.at(pos += ahead);
+    return unit_ctx.file_source.at(pos += ahead);
 }
 
 Token Tokenizer::read_number(size_t position) {
@@ -243,7 +243,7 @@ Token Tokenizer::get_token() {
 
     size_t position = pos;
 
-    // Check if the position is at the end of the program.source string
+    // Check if the position is at the end of the unit_ctx.file_source string
     // If so, return an EOF token meant as a sentinel
     if (pos >= source_size()) {
         return {EOF_, "\0", line, offset, position};
@@ -344,7 +344,7 @@ Token Tokenizer::get_token() {
 }
 
 void Tokenizer::tokenize() {
-    TokenStream* tokens = program.token_stream;
+    auto& tokens = unit_ctx.tokens;
 
     while (true) {
         Token token = get_token();

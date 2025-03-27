@@ -5,11 +5,13 @@
 #ifndef _VIA_PARSER_H
 #define _VIA_PARSER_H
 
-#include "common.h"
+#include "stack.h"
+#include "constant.h"
+#include "bytecode.h"
 #include "ast.h"
+#include "common.h"
 #include "ast-base.h"
-#include "highlighter.h"
-#include "token.h"
+#include "error-bus.h"
 
 VIA_NAMESPACE_BEGIN
 
@@ -23,15 +25,14 @@ public:
     template<typename T>
     using result = tl::expected<T, ParserError>;
 
-    Parser(ProgramData& program)
-        : program(program),
-          emitter(program) {}
+    Parser(TransUnitContext& unit_ctx)
+        : unit_ctx(unit_ctx) {}
 
     bool parse();
 
 private:
-    ProgramData& program;
-    ErrorEmitter emitter;
+    TransUnitContext& unit_ctx;
+    ErrorBus          err_bus;
 
     size_t position = 0;
 

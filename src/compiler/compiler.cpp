@@ -13,10 +13,10 @@ VIA_NAMESPACE_BEGIN
 
 bool Compiler::generate() {
     RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
-    ErrorEmitter      emitter(program);
-    StmtVisitor       visitor(program, emitter, allocator);
+    ErrorBus          emitter;
+    StmtVisitor       visitor(unit_ctx, emitter, allocator);
 
-    for (pStmtNode& stmt : program.ast->statements) {
+    for (pStmtNode& stmt : unit_ctx.ast->statements) {
         stmt->accept(visitor);
     }
 
@@ -24,45 +24,53 @@ bool Compiler::generate() {
         return true;
     }
 
-    program.label_count = visitor.label_counter;
+    unit_ctx.internal.label_count = visitor.label_counter;
 
     return visitor.failed();
 }
 
 bool Compiler::check_global_collisions() {
-    ErrorEmitter emitter(program);
+    ErrorBus emitter;
 
-    bool                                 failed = false;
+    bool failed = false;
+
     std::unordered_map<uint32_t, Global> global_map;
 
-    for (const Global& global : program.globals->get()) {
+    for (const Global& global : unit_ctx.internal.globals->get()) {
         uint32_t hash = hash_string_custom(global.symbol.c_str());
         auto     it   = global_map.find(hash);
 
         if (it != global_map.end()) {
             failed = true;
 
-            emitter.out(
-                global.token,
-                std::format(
-                    "Global identifier '{}' collides with global identifier '{}'",
-                    global.symbol,
-                    it->second.symbol
-                ),
-                OutputSeverity::Error
+            emitter.log(
+                {false,
+                 std::format(
+                     "Global identifier '{}' collides with global identifier '{}'",
+                     global.symbol,
+                     it->second.symbol
+                 ),
+                 unit_ctx,
+                 CompilerErrorLevel::ERROR_,
+                 global.token}
             );
 
-            emitter.out(
-                it->second.token,
-                std::format("Global '{}' declared here", it->second.symbol),
-                OutputSeverity::Info
+            emitter.log(
+                {false,
+                 std::format("Global '{}' declared here", it->second.symbol),
+                 unit_ctx,
+                 CompilerErrorLevel::INFO,
+                 it->second.token}
             );
 
-            emitter.out_flat(
-                "This limitation is due to a 32-bit bitspace used to identify "
-                "globals during runtime. To fix it, try renaming either global to a non-related "
-                "identifier.",
-                OutputSeverity::Info
+            emitter.log(
+                {true,
+                 "This limitation is due to a 32-bit bitspace used to identify "
+                 "globals during runtime. To fix it, try renaming either global to a non-related "
+                 "identifier.",
+                 unit_ctx,
+                 CompilerErrorLevel::INFO,
+                 {}}
             );
         }
 

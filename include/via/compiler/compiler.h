@@ -25,8 +25,8 @@ VIA_NAMESPACE_BEGIN
 
 class Compiler final {
 public:
-    Compiler(ProgramData& program)
-        : program(program) {}
+    Compiler(TransUnitContext& unit_ctx)
+        : unit_ctx(unit_ctx) {}
 
     // Compiler entry point.
     bool generate();
@@ -35,7 +35,7 @@ private:
     bool check_global_collisions();
 
 private:
-    ProgramData& program;
+    TransUnitContext& unit_ctx;
 };
 
 VIA_NAMESPACE_END

@@ -28,7 +28,7 @@ struct ExprNode {
     virtual std::string to_string(uint32_t&)           = 0;
     virtual void        accept(NodeVisitor&, uint32_t) = 0;
     virtual pExprNode   clone()                        = 0;
-    virtual pTypeNode   infer_type(ProgramData&)       = 0;
+    virtual pTypeNode   infer_type(TransUnitContext&)  = 0;
     virtual int         precedence() const {
         return 0;
     }

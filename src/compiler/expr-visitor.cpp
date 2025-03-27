@@ -34,10 +34,10 @@
 //  It first checks the stack for the symbol, if found, emits a `GETSTACK` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPVALUE`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
-//  `program::test_stack::function_stack` and looking for the symbol. If found, emits
+//  `unit_ctx::internal.stack::function_stack` and looking for the symbol. If found, emits
 //  `GETARGUMENT`. Finally, looks for the variable in the global scope by querying
-//  `program::globals` and if found emits GETGLOBAL. If all of these queries fail, throws a
-//  "Use of undeclared variable" compilation error.
+//  `unit_ctx::internal::globals` and if found emits GETGLOBAL. If all of these queries fail, throws
+//  a "Use of undeclared variable" compilation error.
 //
 // - UnaryNode compilation:
 //  This node emits a NEG instruction onto the inner expression.
@@ -72,7 +72,6 @@
 VIA_NAMESPACE_BEGIN
 
 using enum OpCode;
-using enum OutputSeverity;
 
 void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
     using enum ValueType;
@@ -81,22 +80,22 @@ void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
         uint32_t final_value = *integer_value;
         auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-        program.bytecode->emit(LOADINT, {dst, operands.l, operands.r});
+        unit_ctx.bytecode->emit(LOADINT, {dst, operands.l, operands.r});
     }
     else if (float* float_value = std::get_if<float>(&literal_node.value)) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
         auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-        program.bytecode->emit(LOADFLOAT, {dst, operands.l, operands.r});
+        unit_ctx.bytecode->emit(LOADFLOAT, {dst, operands.l, operands.r});
     }
     else if (bool* bool_value = std::get_if<bool>(&literal_node.value)) {
-        program.bytecode->emit(*bool_value ? LOADTRUE : LOADFALSE, {dst});
+        unit_ctx.bytecode->emit(*bool_value ? LOADTRUE : LOADFALSE, {dst});
     }
     else {
         const TValue& constant    = construct_constant(literal_node);
-        const Operand constant_id = program.constants->push_constant(constant);
+        const Operand constant_id = unit_ctx.constants->push_constant(constant);
 
-        program.bytecode->emit(LOADK, {dst, constant_id});
+        unit_ctx.bytecode->emit(LOADK, {dst, constant_id});
     }
 }
 
@@ -104,32 +103,32 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
     Token var_id = variable_node.identifier;
 
     std::string            symbol = var_id.lexeme;
-    std::optional<Operand> stk_id = program.test_stack->find_symbol(var_id.lexeme);
+    std::optional<Operand> stk_id = unit_ctx.internal.stack->find_symbol(var_id.lexeme);
 
     if (stk_id.has_value()) {
-        if (program.test_stack->function_stack.size() > 0) {
-            auto& current_closure = program.test_stack->function_stack.top();
+        if (unit_ctx.internal.stack->function_stack.size() > 0) {
+            auto& current_closure = unit_ctx.internal.stack->function_stack.top();
             if (current_closure.upvalues > stk_id.value()) {
-                program.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
+                unit_ctx.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
             }
         }
         else {
-            program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
+            unit_ctx.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
         }
     }
-    else if (program.globals->was_declared(symbol)) {
+    else if (unit_ctx.internal.globals->was_declared(symbol)) {
         uint32_t symbol_hash = hash_string_custom(symbol.c_str());
         auto     operands    = reinterpret_u32_as_2u16(symbol_hash);
 
-        program.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
+        unit_ctx.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
     }
-    else if (!program.test_stack->function_stack.empty()) {
+    else if (!unit_ctx.internal.stack->function_stack.empty()) {
         uint16_t index = 0;
-        auto&    top   = program.test_stack->function_stack.top();
+        auto&    top   = unit_ctx.internal.stack->function_stack.top();
 
         for (const auto& parameter : top.parameters) {
             if (parameter.identifier.lexeme == symbol) {
-                program.bytecode->emit(GETARGUMENT, {dst, index});
+                unit_ctx.bytecode->emit(GETARGUMENT, {dst, index});
                 return;
             }
 
@@ -143,7 +142,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
 
 void ExprVisitor::visit(UnaryNode& unary_node, Operand dst) {
     unary_node.accept(*this, dst);
-    program.bytecode->emit(NEG, {dst});
+    unit_ctx.bytecode->emit(NEG, {dst});
 }
 
 void ExprVisitor::visit(GroupNode& group_node, Operand dst) {
@@ -164,33 +163,33 @@ void ExprVisitor::visit(CallNode& call_node, Operand dst) {
                 uint32_t final_value = *integer_value;
                 auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-                program.bytecode->emit(PUSHINT, {operands.l, operands.r});
+                unit_ctx.bytecode->emit(PUSHINT, {operands.l, operands.r});
             }
             else if (float* float_value = std::get_if<float>(&literal_node->value)) {
                 uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
                 auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-                program.bytecode->emit(PUSHFLOAT, {operands.l, operands.r});
+                unit_ctx.bytecode->emit(PUSHFLOAT, {operands.l, operands.r});
             }
             else if (bool* bool_value = std::get_if<bool>(&literal_node->value)) {
-                program.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE);
+                unit_ctx.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE);
             }
             else {
                 const TValue& constant    = construct_constant(*literal_node);
-                const Operand constant_id = program.constants->push_constant(constant);
+                const Operand constant_id = unit_ctx.constants->push_constant(constant);
 
-                program.bytecode->emit(PUSHK, {constant_id});
+                unit_ctx.bytecode->emit(PUSHK, {constant_id});
             }
         }
         else {
             argument->accept(*this, argument_reg);
-            program.bytecode->emit(PUSH, {argument_reg});
+            unit_ctx.bytecode->emit(PUSH, {argument_reg});
             allocator.free_register(argument_reg);
         }
     }
 
-    program.bytecode->emit(CALL, {callee_reg, argc});
-    program.bytecode->emit(POP, {dst});
+    unit_ctx.bytecode->emit(CALL, {callee_reg, argc});
+    unit_ctx.bytecode->emit(POP, {dst});
     allocator.free_register(callee_reg);
 }
 
@@ -201,8 +200,8 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
     index_node.object->accept(*this, obj_reg);
     index_node.index->accept(*this, index_reg);
 
-    pTypeNode object_type = index_node.object->infer_type(program);
-    pTypeNode index_type  = index_node.index->infer_type(program);
+    pTypeNode object_type = index_node.object->infer_type(unit_ctx);
+    pTypeNode index_type  = index_node.index->infer_type(unit_ctx);
 
     // Validate index type
     if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
@@ -220,10 +219,10 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
     if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
         switch (primitive->type) {
         case ValueType::string:
-            program.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
+            unit_ctx.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
             break;
         case ValueType::table:
-            program.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
+            unit_ctx.bytecode->emit(GETTABLE, {dst, obj_reg, index_reg});
             break;
         default:
             compiler_error(
@@ -270,8 +269,8 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
         return;
     }
 
-    pTypeNode left_type  = p_lhs->infer_type(program);
-    pTypeNode right_type = p_rhs->infer_type(program);
+    pTypeNode left_type  = p_lhs->infer_type(unit_ctx);
+    pTypeNode right_type = p_rhs->infer_type(unit_ctx);
 
     CHECK_TYPE_INFERENCE_FAILURE(left_type, binary_node.lhs_expression);
     CHECK_TYPE_INFERENCE_FAILURE(right_type, binary_node.rhs_expression);
@@ -322,11 +321,11 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
             });
 
             if (base_opcode == AND && is_rhs_falsy) {
-                program.bytecode->emit(LOADFALSE, {dst});
+                unit_ctx.bytecode->emit(LOADFALSE, {dst});
             }
 
             if (base_opcode == OR && !is_rhs_falsy) {
-                program.bytecode->emit(LOADTRUE, {dst});
+                unit_ctx.bytecode->emit(LOADTRUE, {dst});
             }
 
             return;
@@ -337,21 +336,21 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
             uint32_t final_value = *int_value;
             auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-            program.bytecode->emit(opcode, {dst, operands.l, operands.r});
+            unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
         }
         else if (float* float_value = std::get_if<float>(&literal.value)) {
             OpCode   opcode      = static_cast<OpCode>(opcode_id + 3); // OPFLOAT
             uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
             auto     operands    = reinterpret_u32_as_2u16(final_value);
 
-            program.bytecode->emit(opcode, {dst, operands.l, operands.r});
+            unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
         }
         else {
             OpCode  opcode          = static_cast<OpCode>(opcode_id + 1); // OPK
             TValue  right_const_val = construct_constant(dynamic_cast<LiteralNode&>(rhs));
-            Operand right_const_id  = program.constants->push_constant(right_const_val);
+            Operand right_const_id  = unit_ctx.constants->push_constant(right_const_val);
 
-            program.bytecode->emit(opcode, {dst, right_const_id});
+            unit_ctx.bytecode->emit(opcode, {dst, right_const_id});
         }
     }
     else {
@@ -366,13 +365,13 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
             rhs.accept(*this, reg);
         }
 
-        program.bytecode->emit(base_opcode, {dst, reg});
+        unit_ctx.bytecode->emit(base_opcode, {dst, reg});
         allocator.free_register(reg);
     }
 }
 
 void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
-    pTypeNode left_type = type_cast.expression->infer_type(program);
+    pTypeNode left_type = type_cast.expression->infer_type(unit_ctx);
 
     CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
 
@@ -389,13 +388,13 @@ void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
 
     if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type_cast.type)) {
         if (primitive->type == ValueType::integer) {
-            program.bytecode->emit(TOINT, {dst, temp});
+            unit_ctx.bytecode->emit(TOINT, {dst, temp});
         }
         else if (primitive->type == ValueType::floating_point) {
-            program.bytecode->emit(TOFLOAT, {dst, temp});
+            unit_ctx.bytecode->emit(TOFLOAT, {dst, temp});
         }
         else if (primitive->type == ValueType::string) {
-            program.bytecode->emit(TOSTRING, {dst, temp});
+            unit_ctx.bytecode->emit(TOSTRING, {dst, temp});
         }
     }
 

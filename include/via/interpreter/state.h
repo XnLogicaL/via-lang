@@ -88,14 +88,14 @@ struct alignas(64) State {
     utils::Signal<> sig_error;
     utils::Signal<> sig_fatal;
 
-    ProgramData& program;
+    TransUnitContext& unit_ctx;
 
     VIA_NON_COPYABLE(State);
     VIA_CUSTOM_DESTRUCTOR(State);
 
-    State(GState*, ProgramData&);
+    State(GState* global, TransUnitContext& unit_ctx);
 
-    void load(BytecodeHolder&);
+    void load(const BytecodeHolder& bytecode);
 
     // ===========================================================================================
     // Execution flow

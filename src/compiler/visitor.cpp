@@ -6,6 +6,27 @@
 
 VIA_NAMESPACE_BEGIN
 
+using enum CompilerErrorLevel;
+
+// Helper function to return line and column number from a character offset
+std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t offset) {
+    size_t line   = 1;
+    size_t column = 1;
+
+    // Iterate over the string until we reach the offset
+    for (size_t i = 0; i < offset; ++i) {
+        if (source[i] == '\n') {
+            ++line;
+            column = 1; // Reset column to 1 for a new line
+        }
+        else {
+            ++column;
+        }
+    }
+
+    return {line, column};
+}
+
 TValue construct_constant(LiteralNode& literal_node) {
     using enum ValueType;
     return std::visit(
@@ -33,42 +54,46 @@ TValue construct_constant(LiteralNode& literal_node) {
 }
 
 void NodeVisitor::compiler_error(size_t begin, size_t end, const std::string& message) {
+    auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
+
     visitor_failed = true;
-    emitter.out_range(begin, end, message, OutputSeverity::Error);
+    err_bus.log({false, message, unit_ctx, ERROR_, {begin, end, lc_info.first, lc_info.second}});
 }
 
 void NodeVisitor::compiler_error(const Token& token, const std::string& message) {
     visitor_failed = true;
-    emitter.out(token, message, OutputSeverity::Error);
+    err_bus.log({false, message, unit_ctx, ERROR_, token});
 }
 
 void NodeVisitor::compiler_error(const std::string& message) {
     visitor_failed = true;
-    emitter.out_flat(message, OutputSeverity::Error);
+    err_bus.log({true, message, unit_ctx, ERROR_, {}});
 }
 
 void NodeVisitor::compiler_warning(size_t begin, size_t end, const std::string& message) {
-    emitter.out_range(begin, end, message, OutputSeverity::Warning);
+    auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
+    err_bus.log({false, message, unit_ctx, WARNING, {begin, end, lc_info.first, lc_info.second}});
 }
 
 void NodeVisitor::compiler_warning(const Token& token, const std::string& message) {
-    emitter.out(token, message, OutputSeverity::Warning);
+    err_bus.log({false, message, unit_ctx, WARNING, token});
 }
 
 void NodeVisitor::compiler_warning(const std::string& message) {
-    emitter.out_flat(message, OutputSeverity::Warning);
+    err_bus.log({true, message, unit_ctx, WARNING, {}});
 }
 
 void NodeVisitor::compiler_info(size_t begin, size_t end, const std::string& message) {
-    emitter.out_range(begin, end, message, OutputSeverity::Info);
+    auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
+    err_bus.log({false, message, unit_ctx, INFO, {begin, end, lc_info.first, lc_info.second}});
 }
 
 void NodeVisitor::compiler_info(const Token& token, const std::string& message) {
-    emitter.out(token, message, OutputSeverity::Info);
+    err_bus.log({false, message, unit_ctx, INFO, token});
 }
 
 void NodeVisitor::compiler_info(const std::string& message) {
-    emitter.out_flat(message, OutputSeverity::Info);
+    err_bus.log({true, message, unit_ctx, INFO, {}});
 }
 
 VIA_NAMESPACE_END

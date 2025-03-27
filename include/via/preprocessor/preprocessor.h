@@ -5,8 +5,12 @@
 #ifndef _VIA_PREPROC_H
 #define _VIA_PREPROC_H
 
+#include "error-bus.h"
+#include "stack.h"
+#include "constant.h"
+#include "bytecode.h"
+#include "ast.h"
 #include "common.h"
-#include "highlighter.h"
 #include "token.h"
 
 VIA_NAMESPACE_BEGIN
@@ -14,16 +18,17 @@ VIA_NAMESPACE_BEGIN
 class Preprocessor final {
 public:
     ~Preprocessor() = default;
-    Preprocessor(ProgramData& program)
-        : program(program),
-          emitter(program) {}
+    Preprocessor(TransUnitContext& unit_ctx)
+        : unit_ctx(unit_ctx) {}
 
     bool preprocess();
+
     void declare_default();
 
 private:
-    [[maybe_unused]] ProgramData& program;
-    [[maybe_unused]] ErrorEmitter emitter;
+    [[maybe_unused]] TransUnitContext& unit_ctx;
+
+    [[maybe_unused]] ErrorBus err_bus;
 };
 
 VIA_NAMESPACE_END

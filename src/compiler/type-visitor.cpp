@@ -8,10 +8,8 @@
 
 VIA_NAMESPACE_BEGIN
 
-using enum OutputSeverity;
-
 void TypeVisitor::visit(DeclarationNode& declaration_node) {
-    pTypeNode  infered_type   = declaration_node.value_expression->infer_type(program);
+    pTypeNode  infered_type   = declaration_node.value_expression->infer_type(unit_ctx);
     pTypeNode& annotated_type = declaration_node.type;
 
     CHECK_TYPE_INFERENCE_FAILURE(infered_type, declaration_node.value_expression);
@@ -32,8 +30,8 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
 }
 
 void TypeVisitor::visit(AssignNode& assign_node) {
-    pTypeNode infered_type  = assign_node.assignee->infer_type(program);
-    pTypeNode assigned_type = assign_node.value->infer_type(program);
+    pTypeNode infered_type  = assign_node.assignee->infer_type(unit_ctx);
+    pTypeNode assigned_type = assign_node.value->infer_type(unit_ctx);
 
     CHECK_TYPE_INFERENCE_FAILURE(infered_type, assign_node.assignee);
     CHECK_TYPE_INFERENCE_FAILURE(assigned_type, assign_node.value);

@@ -9,10 +9,8 @@
 
 VIA_NAMESPACE_BEGIN
 
-using enum OutputSeverity;
-
 pTypeNode DecayVisitor::visit(AutoNode& auto_node) {
-    return auto_node.expression->infer_type(program);
+    return auto_node.expression->infer_type(unit_ctx);
 }
 
 pTypeNode DecayVisitor::visit(GenericNode&) {

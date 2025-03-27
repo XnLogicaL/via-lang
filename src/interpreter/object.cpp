@@ -70,29 +70,31 @@ TValue::TValue(TValue&& other)
 
 // Frees the resources of the TValue depending on type
 TValue::~TValue() {
-    if (!val_pointer) {
-        return;
-    }
+    if (static_cast<uint16_t>(type) >= static_cast<uint8_t>(ValueType::string)) {
+        if (!val_pointer) {
+            return;
+        }
 
-    switch (type) {
-    case string:
-        delete cast_ptr<TString>();
-        break;
-    case table:
-        delete cast_ptr<TTable>();
-        break;
-    case function:
-        delete cast_ptr<TFunction>();
-        break;
-    case cfunction:
-        delete cast_ptr<TCFunction>();
-        break;
-    default:
-        break;
-    }
+        switch (type) {
+        case string:
+            delete cast_ptr<TString>();
+            break;
+        case table:
+            delete cast_ptr<TTable>();
+            break;
+        case function:
+            delete cast_ptr<TFunction>();
+            break;
+        case cfunction:
+            delete cast_ptr<TCFunction>();
+            break;
+        default:
+            break;
+        }
 
-    val_pointer = nullptr;
-    type        = nil;
+        val_pointer = nullptr;
+        type        = nil;
+    }
 }
 
 // Return a clone of the TValue based on its type

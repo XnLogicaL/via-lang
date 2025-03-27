@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 # Static linking
 set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 # Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
 option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "PROD")
@@ -33,6 +32,7 @@ if(DEBUG_MODE STREQUAL "DEBUG")
 else()
     message(STATUS "Compiling with g++ in PROD mode.")
     set(CMAKE_CXX_COMPILER /usr/bin/g++)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 # Find sources
@@ -64,18 +64,18 @@ target_compile_options(via PUBLIC
 
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
-    target_compile_definitions(via -DVIA_DEBUG)
+    target_compile_definitions(via PUBLIC -DVIA_DEBUG)
 
     if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
-        target_compile_options(via -fsanitize=address,undefined)
-        target_link_libraries(via -fsanitize=address,undefined)
+        target_compile_options(via PUBLIC -fsanitize=address,undefined)
+        target_link_libraries(via PUBLIC -fsanitize=address,undefined)
     else()
-        target_compile_options(via -fsanitize=address,fuzzer,undefined)
-        target_link_libraries(via -fsanitize=address,fuzzer,undefined)
+        target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
+        target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
     endif()
 else()
     target_compile_options(via PUBLIC
-        -flto
+        -flto=auto
         -march=native
         -mtune=native
         -Ofast
@@ -103,15 +103,15 @@ else()
 endif()
 
 # Link libraries for external dependencies
-target_link_libraries(via  sha256 argparse linenoise magic_enum expected)
+target_link_libraries(via PUBLIC sha256 argparse linenoise magic_enum expected)
 
 # Link standard backtrace library
-target_link_libraries(via  stdc++_libbacktrace)
+target_link_libraries(via PUBLIC stdc++_libbacktrace)
 
 # Handle external definitions and linker settings for fuzzing
 if(DEBUG_MODE STREQUAL "DEBUG" AND MAIN_FILE_PATH MATCHES "fuzz/.*\.cpp")
     message(STATUS "Fuzzing build enabled")
-    target_compile_definitions(via -DFUZZING_ENABLED)
-    target_compile_options(via -fsanitize=address,fuzzer,undefined)
-    target_link_libraries(via -fsanitize=address,fuzzer,undefined)
+    target_compile_definitions(via PUBLIC -DFUZZING_ENABLED)
+    target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
+    target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
 endif()

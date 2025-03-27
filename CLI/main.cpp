@@ -13,33 +13,19 @@
 using namespace argparse;
 using namespace via;
 
-// REPL messages
-[[maybe_unused]]
-static constexpr const char REPL_WELCOME[] =
-    "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
-    "Use ';help' to see a list of commands.\n";
-
-[[maybe_unused]]
-static constexpr const char REPL_HELP[] =
-    "repl commands:\n"
-    "  ;quit - Quits repl\n"
-    "  ;help - Prints this \"menu\"\n"
-    "  ;exitinfo - Displays the last exit info returned by the VM\n";
-
-[[maybe_unused]]
-static constexpr const char REPL_HEAD[] = ">> ";
-
-static ProgramData  dummy_data("<cli>", "");
-static ErrorEmitter emitter((dummy_data));
-
 struct CompilationResult {
-    bool        failed;
-    ProgramData program;
+    bool             failed;
+    TransUnitContext unit;
 
-    CompilationResult(bool failed, via::ProgramData program)
+    CompilationResult(bool failed, TransUnitContext unit)
         : failed(failed),
-          program(std::move(program)) {}
+          unit(std::move(unit)) {}
 };
+
+Context  ctx;
+ErrorBus err_bus;
+
+TransUnitContext dummy_unit_ctx("<unavailable>", "");
 
 std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
     auto command = std::make_unique<ArgumentParser>(name);
@@ -73,8 +59,8 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
 }
 
 CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
-    using enum OutputSeverity;
     using enum TokenType;
+    using enum CompilerErrorLevel;
     using namespace utils;
 
     const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
@@ -89,60 +75,63 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     bool sassy_flag     = get_flag("--sassy");
 
     std::string file = subcommand_parser.get<std::string>("target");
-    ProgramData program(file, "");
+
+    ReadResult       source_result = read_from_file(file);
+    TransUnitContext unit_ctx(file, *source_result);
 
     // Record compilation start time
     SET_PROFILER_POINT(compilation_start)
 
     if (verbosity_flag) {
-        program.flags |= VFLAG_VERBOSE;
+        ctx.flags |= VFLAG_VERBOSE;
     }
     if (sassy_flag) {
-        program.flags |= VFLAG_SASSY;
+        ctx.flags |= VFLAG_SASSY;
     }
 
-    ReadResult source_result = read_from_file(file);
     if (!source_result.has_value()) {
-        emitter.out_flat(source_result.error(), Error);
-        return CompilationResult(true, std::move(program));
+        err_bus.log({true, source_result.error(), dummy_unit_ctx, ERROR_, {}});
+        return {true, std::move(dummy_unit_ctx)};
     }
-    program.source = *source_result;
 
-    Tokenizer    lexer(program);
-    Preprocessor preprocessor(program);
-    Parser       parser(program);
-    Compiler     compiler(program);
+    Tokenizer    lexer(unit_ctx);
+    Preprocessor preprocessor(unit_ctx);
+    Parser       parser(unit_ctx);
+    Compiler     compiler(unit_ctx);
 
     SET_PROFILER_POINT(lex_start);
     lexer.tokenize();
 
     if (verbosity_flag) {
         SET_PROFILER_POINT(lex_end);
-        emitter.out_flat(
-            std::format(
-                "Tokenization finished in {:0.9f}s", GET_PROFILER_DIFF_MS(lex_start, lex_end) / 1000
-            ),
-            Info
+
+        std::string message = std::format(
+            "Tokenization completed in {:0.9f}s", GET_PROFILER_DIFF_MS(lex_start, lex_end) / 1000
         );
+
+        err_bus.log({true, message, unit_ctx, INFO, {}});
     }
 
     preprocessor.declare_default();
+
     SET_PROFILER_POINT(preproc_start);
+
     bool preproc_failed = preprocessor.preprocess();
 
     if (verbosity_flag) {
         if (preproc_failed) {
-            emitter.out_flat("Preprocessing failed", Error);
-            return CompilationResult(true, std::move(program));
+            err_bus.log({true, "Preprocess failed", unit_ctx, ERROR_, {}});
+            return {true, std::move(unit_ctx)};
         }
+
         SET_PROFILER_POINT(preproc_end);
-        emitter.out_flat(
-            std::format(
-                "Preprocessing finished in {:0.9f}s",
-                GET_PROFILER_DIFF_MS(preproc_start, preproc_end) / 1000
-            ),
-            Info
+
+        std::string message = std::format(
+            "Preprocessing completed in {:0.9f}s",
+            GET_PROFILER_DIFF_MS(preproc_start, preproc_end) / 1000
         );
+
+        err_bus.log({true, message, unit_ctx, INFO, {}});
     }
 
     SET_PROFILER_POINT(parser_start);
@@ -150,17 +139,17 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     if (verbosity_flag) {
         if (parser_failed) {
-            emitter.out_flat("Parsing failed", Error);
-            return CompilationResult(true, std::move(program));
+            err_bus.log({true, "Parsing failed", unit_ctx, ERROR_, {}});
+            return {true, std::move(unit_ctx)};
         }
+
         SET_PROFILER_POINT(parser_end);
-        emitter.out_flat(
-            std::format(
-                "Parsing finished in {:0.9f}s",
-                GET_PROFILER_DIFF_MS(parser_start, parser_end) / 1000
-            ),
-            Info
+
+        std::string message = std::format(
+            "Parsing completed in {:0.9f}s", GET_PROFILER_DIFF_MS(parser_start, parser_end) / 1000
         );
+
+        err_bus.log({true, message, unit_ctx, INFO, {}});
     }
 
     SET_PROFILER_POINT(codegen_start);
@@ -168,17 +157,18 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     if (verbosity_flag) {
         if (compiler_failed) {
-            emitter.out_flat("Bytecode generation failed", Error);
-            return CompilationResult(true, std::move(program));
+            err_bus.log({true, "Bytecode generation failed", unit_ctx, ERROR_, {}});
+            return {true, std::move(unit_ctx)};
         }
+
         SET_PROFILER_POINT(codegen_end);
-        emitter.out_flat(
-            std::format(
-                "Bytecode generation finished in {:0.9f}s",
-                GET_PROFILER_DIFF_MS(codegen_start, codegen_end) / 1000
-            ),
-            Info
+
+        std::string message = std::format(
+            "Bytecode generation completed in {:0.9f}s",
+            GET_PROFILER_DIFF_MS(codegen_end, codegen_end) / 1000
         );
+
+        err_bus.log({true, message, unit_ctx, INFO, {}});
     }
 
     bool failed = preproc_failed || parser_failed || compiler_failed;
@@ -186,21 +176,26 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (!failed) {
         if (get_flag("--dump-tokens")) {
             print_flag_label("--dump-tokens");
-            for (const Token& token : program.token_stream->get()) {
+
+            for (const Token& token : unit_ctx.tokens->get()) {
                 std::cout << token.to_string() << "\n";
             }
         }
+
         if (get_flag("--dump-ast")) {
             print_flag_label("--dump-ast");
             uint32_t depth = 0;
-            for (const pStmtNode& pstmt : program.ast->statements) {
+
+            for (const pStmtNode& pstmt : unit_ctx.ast->statements) {
                 std::cout << pstmt->to_string(depth) << "\n";
             }
         }
+
         if (get_flag("--dump-bytecode")) {
             print_flag_label("--dump-bytecode");
             std::cout << "main:\n";
-            for (const Bytecode& bytecode : program.bytecode->get()) {
+
+            for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
                 if (bytecode.instruction.op == OpCode::LABEL) {
                     std::cout << std::format(
                         "{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
@@ -211,20 +206,25 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
                     std::cout << bytecode.meta_data.comment << ":\n";
                     continue;
                 }
+
                 std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes"))
                           << "\n";
             }
         }
+
         if (get_flag("--dump-machine-code")) {
             print_flag_label("--dump-machine-code");
-            for (const Bytecode& bytecode : program.bytecode->get()) {
+
+            for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
                 const Instruction& instruction = bytecode.instruction;
                 const size_t       size        = sizeof(Instruction);
                 const uint8_t*     data        = reinterpret_cast<const uint8_t*>(&instruction);
+
                 for (size_t i = 0; i < size; i++) {
                     std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
                               << static_cast<int>(data[i]) << std::dec << " ";
                 }
+
                 std::cout << std::endl;
             }
         }
@@ -232,42 +232,52 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     if (verbosity_flag) {
         if (failed) {
-            emitter.out_flat("Compilation failed", Error);
-            return CompilationResult(true, std::move(program));
+            err_bus.log({true, "Compilation failed", unit_ctx, ERROR_, {}});
+            return {true, std::move(unit_ctx)};
         }
+
         SET_PROFILER_POINT(compilation_end);
-        double compilation_time = GET_PROFILER_DIFF_MS(compilation_start, compilation_end);
-        emitter.out_flat(
-            std::format("Compilation finished in {:0.9f}s", compilation_time / 1000), Info
+
+        std::string message = std::format(
+            "Compilation finished in {:0.9f}s",
+            GET_PROFILER_DIFF_MS(compilation_start, compilation_end) / 1000
         );
+
+        err_bus.log({true, message, unit_ctx, INFO, {}});
     }
-    return CompilationResult(failed, std::move(program));
+
+    return {failed, std::move(unit_ctx)};
 }
 
 CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
     using namespace via;
+    using enum CompilerErrorLevel;
 
     const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
         return subcommand_parser.get<bool>(flag);
     };
 
-    CompilationResult result         = handle_compile(subcommand_parser);
-    bool              verbosity_flag = get_flag("--verbose");
+    CompilationResult result   = handle_compile(subcommand_parser);
+    TransUnitContext& unit_ctx = result.unit;
+
+    bool verbosity_flag = get_flag("--verbose");
 
     if (!result.failed) {
         SET_PROFILER_POINT(runtime_begin);
         SET_PROFILER_POINT(state_init_begin);
 
         GState gstate;
-        State  state(&gstate, result.program);
+        State  state(&gstate, result.unit);
 
         if (verbosity_flag) {
             SET_PROFILER_POINT(state_init_end);
-            double state_init_time = GET_PROFILER_DIFF_MS(state_init_begin, state_init_end);
-            emitter.out_flat(
-                std::format("State initialized in {:0.9f}s", state_init_time / 1000),
-                OutputSeverity::Info
+
+            std::string message = std::format(
+                "State initialized in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(state_init_begin, state_init_end) / 1000
             );
+
+            err_bus.log({true, message, unit_ctx, INFO, {}});
         }
 
         SET_PROFILER_POINT(lib_load_begin);
@@ -275,11 +285,13 @@ CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
 
         if (verbosity_flag) {
             SET_PROFILER_POINT(lib_load_end);
-            double lib_load_time = GET_PROFILER_DIFF_MS(lib_load_begin, lib_load_end);
-            emitter.out_flat(
-                std::format("C Libraries loaded in {:0.9f}s", lib_load_time / 1000),
-                OutputSeverity::Info
+
+            std::string message = std::format(
+                "C libraries loaded in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(lib_load_begin, lib_load_end) / 1000
             );
+
+            err_bus.log({true, message, unit_ctx, INFO, {}});
         }
 
         SET_PROFILER_POINT(execution_begin);
@@ -287,19 +299,24 @@ CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
 
         if (verbosity_flag) {
             SET_PROFILER_POINT(execution_end);
-            double execution_time = GET_PROFILER_DIFF_MS(execution_begin, execution_end);
-            emitter.out_flat(
-                std::format("Execution completed in {:0.9f}s", execution_time / 1000),
-                OutputSeverity::Info
+
+            std::string message = std::format(
+                "Execution completed in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(execution_begin, execution_end) / 1000
             );
+
+            err_bus.log({true, message, unit_ctx, INFO, {}});
         }
 
         if (verbosity_flag) {
             SET_PROFILER_POINT(runtime_end);
-            double runtime = GET_PROFILER_DIFF_MS(runtime_begin, runtime_end);
-            emitter.out_flat(
-                std::format("Runtime completed in {:0.9f}s", runtime / 1000), OutputSeverity::Info
+
+            std::string message = std::format(
+                "Runtime completed in {:0.9f}s",
+                GET_PROFILER_DIFF_MS(runtime_begin, runtime_end) / 1000
             );
+
+            err_bus.log({true, message, unit_ctx, INFO, {}});
         }
     }
 
@@ -307,13 +324,32 @@ CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
 }
 
 CompilationResult handle_repl(argparse::ArgumentParser&) {
+    // REPL messages
+    [[maybe_unused]]
+    constexpr const char REPL_WELCOME[] =
+        "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
+        "Use ';help' to see a list of commands.\n";
+
+    [[maybe_unused]]
+    constexpr const char REPL_HELP[] =
+        "repl commands:\n"
+        "  ;quit - Quits repl\n"
+        "  ;help - Prints this \"menu\"\n"
+        "  ;exitinfo - Displays the last exit info returned by the VM\n";
+
+    [[maybe_unused]]
+    constexpr const char REPL_HEAD[] = ">> ";
+
     using namespace via;
-    std::string s;
-    ProgramData program(s, s);
-    return CompilationResult(false, std::move(program));
+
+    TransUnitContext unit_ctx("<repl>", "");
+
+    return {false, std::move(unit_ctx)};
 }
 
 int main(int argc, char* argv[]) {
+    using enum CompilerErrorLevel;
+
     try {
         // Argument parser entry point
         ArgumentParser argument_parser("via", VIA_VERSION);
@@ -337,7 +373,8 @@ int main(int argc, char* argv[]) {
         }
     }
     catch (const std::exception& e) {
-        emitter.out_flat(e.what(), OutputSeverity::Error);
+        err_bus.log({true, e.what(), dummy_unit_ctx, ERROR_, {}});
     }
+
     return 0;
 }

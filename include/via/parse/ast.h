@@ -35,7 +35,7 @@ struct LiteralNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -53,7 +53,7 @@ struct SymbolNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -70,7 +70,7 @@ struct UnaryNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -87,7 +87,7 @@ struct GroupNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
     int  precedence() const override;
@@ -108,7 +108,7 @@ struct CallNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -136,7 +136,7 @@ struct IndexNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -156,7 +156,7 @@ struct BinaryNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -176,7 +176,7 @@ struct TypeCastNode : public ExprNode {
     std::string to_string(uint32_t&) override;
 
     pExprNode clone() override;
-    pTypeNode infer_type(ProgramData&) override;
+    pTypeNode infer_type(TransUnitContext&) override;
 
     void accept(NodeVisitor&, uint32_t) override;
 
@@ -526,7 +526,7 @@ struct ExprStmtNode : public StmtNode {
         : expression(std::move(expression)) {}
 };
 
-class AbstractSyntaxTree {
+class SyntaxTree {
 public:
     std::vector<pStmtNode> statements;
 };

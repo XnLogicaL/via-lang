@@ -68,22 +68,12 @@ VIA_FORCE_INLINE bool __handle_error(State* _State) {
     return static_cast<bool>(_Current_frame);
 }
 
-VIA_INLINE_HOT void __set_register(State* _State, Operand _Reg, const TValue& _Val) {
-    TValue* addr = _State->registers + _Reg;
-    *addr        = _Val.clone();
-}
-
-VIA_INLINE_HOT TValue* __get_register(State* _State, Operand _Reg) {
-    TValue* addr = _State->registers + _Reg;
-    return addr;
-}
-
 VIA_INLINE TValue __get_constant(State* _State, size_t _Idx) {
-    if (_Idx >= _State->program.constants->size()) {
+    if (_Idx >= _State->unit_ctx.constants->size()) {
         return _Nil.clone();
     }
 
-    return _State->program.constants->at(_Idx).clone();
+    return _State->unit_ctx.constants->at(_Idx).clone();
 }
 
 VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _State, const TValue& _Val) {

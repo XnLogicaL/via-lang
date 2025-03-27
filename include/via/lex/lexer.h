@@ -5,6 +5,10 @@
 #ifndef _VIA_LEXER_H
 #define _VIA_LEXER_H
 
+#include "stack.h"
+#include "constant.h"
+#include "bytecode.h"
+#include "ast.h"
 #include "common.h"
 #include "token.h"
 
@@ -14,10 +18,10 @@ VIA_NAMESPACE_BEGIN
 // Tokenizes a string into tokens, cannot fail
 class Tokenizer {
 public:
-    Tokenizer(ProgramData& program)
-        : program(program) {}
+    Tokenizer(TransUnitContext& unit_ctx)
+        : unit_ctx(unit_ctx) {}
 
-    // Reads the source file and returns a source program
+    // Reads the source file and returns a source unit_ctx
     void tokenize();
 
 private:
@@ -37,17 +41,19 @@ private:
     Token get_token();
 
 private:
-    size_t       pos    = 0;
-    size_t       line   = 1;
-    size_t       offset = 0;
-    ProgramData& program;
+    size_t            pos    = 0;
+    size_t            line   = 1;
+    size_t            offset = 0;
+    TransUnitContext& unit_ctx;
 };
 
 VIA_INLINE std::vector<Token> fast_tokenize(std::string source) {
-    ProgramData program("<unknown>", source);
-    Tokenizer   tokenizer(program);
+    TransUnitContext unit_ctx("<unknown>", source);
+
+    Tokenizer tokenizer(unit_ctx);
     tokenizer.tokenize();
-    return program.token_stream->get();
+
+    return unit_ctx.tokens->get();
 }
 
 VIA_NAMESPACE_END

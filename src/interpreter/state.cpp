@@ -12,30 +12,30 @@ VIA_NAMESPACE_BEGIN
 using namespace impl;
 
 // Initializes and returns a new State object
-State::State(GState* G, ProgramData& program)
+State::State(GState* G, TransUnitContext& unit_ctx)
     : id(G->threads++),
       G(G),
-      registers(new TValue[VIA_REGISTER_COUNT]),
       err(new ErrorState()),
-      program(program) {
-    load(*program.bytecode);
+      unit_ctx(unit_ctx) {
+    load(*unit_ctx.bytecode);
 
+    __register_allocate(this);
     __stack_allocate(this);
-    __label_allocate(this, program.label_count);
+    __label_allocate(this, unit_ctx.internal.label_count);
     __label_load(this);
 }
 
 State::~State() {
     delete err;
 
-    delete[] registers;
     delete[] sibp;
 
+    __register_deallocate(this);
     __stack_deallocate(this);
     __label_deallocate(this);
 }
 
-void State::load(BytecodeHolder& bytecode) {
+void State::load(const BytecodeHolder& bytecode) {
     delete[] sibp;
 
     auto& pipeline = bytecode.get();

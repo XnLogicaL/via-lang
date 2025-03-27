@@ -7,7 +7,6 @@
 
 VIA_NAMESPACE_BEGIN
 
-using enum OutputSeverity;
 using enum TokenType;
 
 void Preprocessor::declare_default() {}

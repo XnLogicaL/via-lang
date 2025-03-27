@@ -23,7 +23,7 @@ VIA_NAMESPACE_BEGIN
 #pragma warning(disable : 4834)
 #endif
 
-using enum OutputSeverity;
+using enum CompilerErrorLevel;
 using enum TokenType;
 
 template<typename T>
@@ -34,19 +34,19 @@ result<Token> Parser::current() {
 }
 
 result<Token> Parser::peek(int32_t ahead) {
-    if (position + ahead >= program.token_stream->size()) {
+    if (position + ahead >= unit_ctx.tokens->size()) {
         return tl::unexpected<ParserError>({
             position,
             std::format("Unexpected end of file (attempted read of: token #{})", position + ahead),
         });
     }
 
-    return program.token_stream->at(position + ahead);
+    return unit_ctx.tokens->at(position + ahead);
 }
 
 result<Token> Parser::consume(uint32_t ahead) {
     uint64_t new_pos = position + static_cast<uint64_t>(ahead);
-    if (new_pos >= program.token_stream->size()) {
+    if (new_pos >= unit_ctx.tokens->size()) {
         return tl::unexpected<ParserError>({
             position,
             std::format("Unexpected end of file (attempted consumption of: token #{})", new_pos),
@@ -79,7 +79,9 @@ result<Modifiers> Parser::parse_modifiers() {
 
         if (curr->type == KW_CONST) {
             if (modifiers.is_const) {
-                emitter.out(*curr, "Modifier 'const' encountered multiple times", Warning);
+                err_bus.log(
+                    {false, "Modifier 'const' encountered multiple times", unit_ctx, WARNING, *curr}
+                );
             }
 
             modifiers.is_const = true;
@@ -362,7 +364,7 @@ result<pExprNode> Parser::parse_binary(int precedence) {
     CHECK_RESULT(lhs);
 
     // Parse binary operators according to precedence.
-    while (position < program.token_stream->size()) {
+    while (position < unit_ctx.tokens->size()) {
         result<Token> op = current();
         CHECK_RESULT(op);
 
@@ -702,7 +704,8 @@ bool Parser::parse() {
         result<Token> curr = current();
         if (!curr.has_value()) {
             auto err = curr.error();
-            emitter.out(program.token_stream->at(err.where), err.what, Error);
+            err_bus.log({false, err.what, unit_ctx, ERROR_, unit_ctx.tokens->at(err.where)});
+
             return true;
         }
 
@@ -713,11 +716,12 @@ bool Parser::parse() {
         result<pStmtNode> stmt = parse_stmt();
         if (!stmt.has_value()) {
             auto err = stmt.error();
-            emitter.out(program.token_stream->at(err.where), err.what, Error);
+            err_bus.log({false, err.what, unit_ctx, ERROR_, unit_ctx.tokens->at(err.where)});
+
             return true;
         }
 
-        program.ast->statements.emplace_back(std::move(*stmt));
+        unit_ctx.ast->statements.emplace_back(std::move(*stmt));
     }
 
     return false;

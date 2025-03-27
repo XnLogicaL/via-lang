@@ -3,7 +3,6 @@
 // =========================================================================================== |
 
 #include "compiler-types.h"
-#include "highlighter.h"
 #include "stack.h"
 
 VIA_NAMESPACE_BEGIN

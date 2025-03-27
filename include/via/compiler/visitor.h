@@ -11,7 +11,7 @@
 #include "common.h"
 #include "bytecode.h"
 #include "constant.h"
-#include "highlighter.h"
+#include "error-bus.h"
 
 #define INVALID_VISIT                                                                              \
     {                                                                                              \
@@ -21,12 +21,11 @@
 #define CHECK_TYPE_INFERENCE_FAILURE(type, expr)                                                   \
     if (!type.get()) {                                                                             \
         visitor_failed = true;                                                                     \
-        emitter.out_range(expr->begin, expr->end, "Expression type could not be infered", Error);  \
-        emitter.out_flat(                                                                          \
+        compiler_error(expr->begin, expr->end, "Expression type could not be infered");            \
+        compiler_info(                                                                             \
             "This error message likely indicates an internal compiler bug. Please create an "      \
             "issue "                                                                               \
-            "at https://github.com/XnLogicaL/via-lang",                                            \
-            Info                                                                                   \
+            "at https://github.com/XnLogicaL/via-lang"                                             \
         );                                                                                         \
         return;                                                                                    \
     }
@@ -42,9 +41,9 @@ TValue construct_constant(LiteralNode&);
 
 class NodeVisitor {
 public:
-    NodeVisitor(ProgramData& program, ErrorEmitter& emitter)
-        : program(program),
-          emitter(emitter) {}
+    NodeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
+        : unit_ctx(unit_ctx),
+          err_bus(bus) {}
 
     virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
 
@@ -83,8 +82,9 @@ public:
 protected:
     bool visitor_failed = false;
 
-    ProgramData&  program;
-    ErrorEmitter& emitter;
+    TransUnitContext& unit_ctx;
+
+    ErrorBus& err_bus;
 
 protected:
     void compiler_error(size_t begin, size_t end, const std::string&);
@@ -104,8 +104,8 @@ protected:
 
 class ExprVisitor : public NodeVisitor {
 public:
-    ExprVisitor(ProgramData& program, ErrorEmitter& emitter, RegisterAllocator& allocator)
-        : NodeVisitor(program, emitter),
+    ExprVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
+        : NodeVisitor(unit_ctx, bus),
           allocator(allocator) {}
 
     void visit(LiteralNode&, Operand) override;
@@ -123,8 +123,8 @@ private:
 
 class DecayVisitor : public NodeVisitor {
 public:
-    DecayVisitor(ProgramData& program, ErrorEmitter& emitter)
-        : NodeVisitor(program, emitter) {}
+    DecayVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
+        : NodeVisitor(unit_ctx, bus) {}
 
     pTypeNode visit(AutoNode&) override;
     pTypeNode visit(GenericNode&) override;
@@ -134,8 +134,8 @@ public:
 
 class TypeVisitor : public NodeVisitor {
 public:
-    TypeVisitor(ProgramData& program, ErrorEmitter& emitter)
-        : NodeVisitor(program, emitter) {}
+    TypeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
+        : NodeVisitor(unit_ctx, bus) {}
 
     void visit(DeclarationNode&) override;
     void visit(AssignNode&) override;
@@ -144,12 +144,12 @@ public:
 
 class StmtVisitor : public NodeVisitor {
 public:
-    StmtVisitor(ProgramData& program, ErrorEmitter& emitter, RegisterAllocator& allocator)
-        : NodeVisitor(program, emitter),
+    StmtVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
+        : NodeVisitor(unit_ctx, bus),
           allocator(allocator),
-          expression_visitor(program, emitter, allocator),
-          decay_visitor(program, emitter),
-          type_visitor(program, emitter) {}
+          expression_visitor(unit_ctx, bus, allocator),
+          decay_visitor(unit_ctx, bus),
+          type_visitor(unit_ctx, bus) {}
 
     void visit(DeclarationNode&) override;
     void visit(ScopeNode&) override;

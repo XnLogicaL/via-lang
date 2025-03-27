@@ -46,7 +46,7 @@ pExprNode LiteralNode::clone() {
     return std::make_unique<LiteralNode>(*this);
 }
 
-pTypeNode LiteralNode::infer_type(ProgramData&) {
+pTypeNode LiteralNode::infer_type(TransUnitContext&) {
     ValueType value_type = std::visit(
         [](auto&& value) {
             using T = std::decay_t<decltype(value)>;
@@ -72,13 +72,13 @@ pExprNode SymbolNode::clone() {
     return std::make_unique<SymbolNode>(*this);
 }
 
-pTypeNode SymbolNode::infer_type(ProgramData& program) {
-    auto stk_id = program.test_stack->find_symbol(identifier.lexeme);
+pTypeNode SymbolNode::infer_type(TransUnitContext& program) {
+    auto stk_id = program.internal.stack->find_symbol(identifier.lexeme);
     if (!stk_id.has_value()) {
         return nullptr;
     }
 
-    auto stk_obj = program.test_stack->at(stk_id.value());
+    auto stk_obj = program.internal.stack->at(stk_id.value());
     if (!stk_obj.has_value()) {
         return nullptr;
     }
@@ -100,7 +100,7 @@ pExprNode UnaryNode::clone() {
     return std::make_unique<UnaryNode>(expression->clone());
 }
 
-pTypeNode UnaryNode::infer_type(ProgramData& program) {
+pTypeNode UnaryNode::infer_type(TransUnitContext& program) {
     pTypeNode inner = expression->infer_type(program);
     if (!inner.get()) {
         return nullptr;
@@ -127,7 +127,7 @@ int GroupNode::precedence() const {
     return std::numeric_limits<int>::max();
 }
 
-pTypeNode GroupNode::infer_type(ProgramData& program) {
+pTypeNode GroupNode::infer_type(TransUnitContext& program) {
     return expression->infer_type(program);
 }
 
@@ -156,14 +156,14 @@ pExprNode CallNode::clone() {
     return std::make_unique<CallNode>(callee->clone(), std::move(arguments_clone));
 }
 
-pTypeNode CallNode::infer_type(ProgramData& program) {
+pTypeNode CallNode::infer_type(TransUnitContext& program) {
     if (SymbolNode* symbol = get_derived_instance<ExprNode, SymbolNode>(*callee)) {
-        auto stk_id = program.test_stack->find_symbol(symbol->identifier.lexeme);
+        auto stk_id = program.internal.stack->find_symbol(symbol->identifier.lexeme);
         if (!stk_id.has_value()) {
             return nullptr;
         }
 
-        auto stk_obj = program.test_stack->at(stk_id.value());
+        auto stk_obj = program.internal.stack->at(stk_id.value());
         if (!stk_obj.has_value()) {
             return nullptr;
         }
@@ -193,14 +193,14 @@ pExprNode IndexNode::clone() {
     return std::make_unique<IndexNode>(object->clone(), index->clone());
 }
 
-pTypeNode IndexNode::infer_type(ProgramData& program) {
+pTypeNode IndexNode::infer_type(TransUnitContext& program) {
     if (SymbolNode* symbol = get_derived_instance<ExprNode, SymbolNode>(*object)) {
-        auto stk_id = program.test_stack->find_symbol(symbol->identifier.lexeme);
+        auto stk_id = program.internal.stack->find_symbol(symbol->identifier.lexeme);
         if (!stk_id.has_value()) {
             return nullptr;
         }
 
-        auto stk_obj = program.test_stack->at(stk_id.value());
+        auto stk_obj = program.internal.stack->at(stk_id.value());
         if (!stk_obj.has_value()) {
             return nullptr;
         }
@@ -230,7 +230,7 @@ pExprNode BinaryNode::clone() {
     return std::make_unique<BinaryNode>(op, lhs_expression->clone(), rhs_expression->clone());
 }
 
-pTypeNode BinaryNode::infer_type(ProgramData& program) {
+pTypeNode BinaryNode::infer_type(TransUnitContext& program) {
     pTypeNode lhs = lhs_expression->infer_type(program);
     pTypeNode rhs = rhs_expression->infer_type(program);
 
@@ -270,7 +270,7 @@ pExprNode TypeCastNode::clone() {
     return std::make_unique<TypeCastNode>(expression->clone(), type->clone());
 }
 
-pTypeNode TypeCastNode::infer_type(ProgramData& program) {
+pTypeNode TypeCastNode::infer_type(TransUnitContext& program) {
     pTypeNode expr_type = expression->infer_type(program);
     if (!is_castable(expr_type, type)) {
         return nullptr;

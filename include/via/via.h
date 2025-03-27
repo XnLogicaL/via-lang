@@ -8,12 +8,10 @@
 #include "common-macros.h"
 #include "common-defs.h"
 #include "common.h"
-#include "cache.h"
-#include "signal.h"
-#include "file-io.h"
+#include "context.h"
+#include "error-bus.h"
 
 #include "lex/token.h"
-#include "lex/highlighter.h"
 #include "lex/lexer.h"
 
 #include "preprocessor/preprocessor.h"
@@ -29,5 +27,7 @@
 #include "utility/bit-utility.h"
 #include "utility/memory-utility.h"
 #include "utility/string-utility.h"
+#include "utility/signal.h"
+#include "utility/file-io.h"
 
 #endif
