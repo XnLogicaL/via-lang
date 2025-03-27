@@ -28,7 +28,7 @@
 VIA_NAMESPACE_BEGIN
 
 class BytecodeHolder final {
-  public:
+public:
   // Type aliases
   using comment_type    = const std::string;
   using operands_array  = const std::array<Operand, 3>;
@@ -61,7 +61,7 @@ class BytecodeHolder final {
   // Returns a reference to the bytecode vector.
   const bytecode_vector& get() const;
 
-  private:
+private:
   bytecode_vector instructions;
 };
 

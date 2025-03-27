@@ -11,7 +11,7 @@
 VIA_NAMESPACE_BEGIN
 
 class RegisterAllocator final {
-  public:
+public:
   // Type aliases
   using register_type = Operand;
   using register_map  = std::unordered_map<register_type, bool>;
@@ -36,7 +36,7 @@ class RegisterAllocator final {
   // Returns wheter if a given register is used.
   bool is_used(register_type reg);
 
-  private:
+private:
   register_map registers;
 };
 

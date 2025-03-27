@@ -38,7 +38,7 @@ using Label = Operand;
 TValue construct_constant(LiteralNode&);
 
 class NodeVisitor {
-  public:
+public:
   NodeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
       : unit_ctx(unit_ctx),
         err_bus(bus) {}
@@ -77,14 +77,14 @@ class NodeVisitor {
     return visitor_failed;
   }
 
-  protected:
+protected:
   bool visitor_failed = false;
 
   TransUnitContext& unit_ctx;
 
   ErrorBus& err_bus;
 
-  protected:
+protected:
   void compiler_error(size_t begin, size_t end, const std::string&);
   void compiler_error(const Token&, const std::string&);
   void compiler_error(const std::string&);
@@ -101,7 +101,7 @@ class NodeVisitor {
 #undef INVALID_VISIT
 
 class ExprVisitor : public NodeVisitor {
-  public:
+public:
   ExprVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
       : NodeVisitor(unit_ctx, bus),
         allocator(allocator) {}
@@ -115,12 +115,12 @@ class ExprVisitor : public NodeVisitor {
   void visit(BinaryNode&, Operand) override;
   void visit(TypeCastNode&, Operand) override;
 
-  private:
+private:
   RegisterAllocator& allocator;
 };
 
 class DecayVisitor : public NodeVisitor {
-  public:
+public:
   DecayVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
       : NodeVisitor(unit_ctx, bus) {}
 
@@ -131,7 +131,7 @@ class DecayVisitor : public NodeVisitor {
 };
 
 class TypeVisitor : public NodeVisitor {
-  public:
+public:
   TypeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
       : NodeVisitor(unit_ctx, bus) {}
 
@@ -141,7 +141,7 @@ class TypeVisitor : public NodeVisitor {
 };
 
 class StmtVisitor : public NodeVisitor {
-  public:
+public:
   StmtVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
       : NodeVisitor(unit_ctx, bus),
         allocator(allocator),
@@ -165,10 +165,10 @@ class StmtVisitor : public NodeVisitor {
            type_visitor.failed();
   }
 
-  public:
+public:
   Label label_counter = 0;
 
-  private:
+private:
   RegisterAllocator& allocator;
 
   ExprVisitor  expression_visitor;

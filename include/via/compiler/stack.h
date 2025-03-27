@@ -24,7 +24,7 @@ struct StackObject {
 };
 
 class CompilerStack final {
-  public:
+public:
   // Type aliases
   using index_query_result = std::optional<StackObject>;
   using find_query_result  = std::optional<Operand>;
@@ -63,16 +63,16 @@ class CompilerStack final {
   find_query_result find_symbol(const StackObject&);
   find_query_result find_symbol(const symbol&);
 
-  public:
+public:
   function_stack_type function_stack;
 
-  private:
+private:
   size_t sp = 0;
   size_t capacity;
 
   StackObject* sbp;
 
-  private:
+private:
   // Dynamically grows and relocates the stack.
   void grow_stack();
 };

@@ -17,14 +17,14 @@ VIA_NAMESPACE_BEGIN
 // Lexer class
 // Tokenizes a string into tokens, cannot fail
 class Tokenizer {
-  public:
+public:
   Tokenizer(TransUnitContext& unit_ctx)
       : unit_ctx(unit_ctx) {}
 
   // Reads the source file and returns a source unit_ctx
   void tokenize();
 
-  private:
+private:
   bool   is_hex_char(char chr);
   size_t source_size();
   char   peek(size_t ahead = 0);
@@ -40,7 +40,7 @@ class Tokenizer {
   // Reads and returns the current token
   Token get_token();
 
-  private:
+private:
   size_t            pos    = 0;
   size_t            line   = 1;
   size_t            offset = 0;

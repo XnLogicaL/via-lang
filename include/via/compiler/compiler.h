@@ -24,17 +24,17 @@
 VIA_NAMESPACE_BEGIN
 
 class Compiler final {
-  public:
+public:
   Compiler(TransUnitContext& unit_ctx)
       : unit_ctx(unit_ctx) {}
 
   // Compiler entry point.
   bool generate();
 
-  private:
+private:
   bool check_global_collisions();
 
-  private:
+private:
   TransUnitContext& unit_ctx;
 };
 

@@ -16,7 +16,7 @@
 VIA_NAMESPACE_BEGIN
 
 class Preprocessor final {
-  public:
+public:
   ~Preprocessor() = default;
   Preprocessor(TransUnitContext& unit_ctx)
       : unit_ctx(unit_ctx) {}
@@ -25,7 +25,7 @@ class Preprocessor final {
 
   void declare_default();
 
-  private:
+private:
   [[maybe_unused]] TransUnitContext& unit_ctx;
 
   [[maybe_unused]] ErrorBus err_bus;

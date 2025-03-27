@@ -523,7 +523,7 @@ struct ExprStmtNode : public StmtNode {
 };
 
 class SyntaxTree {
-  public:
+public:
   std::vector<pStmtNode> statements;
 };
 

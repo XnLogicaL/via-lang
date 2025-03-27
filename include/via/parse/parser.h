@@ -21,7 +21,7 @@ struct ParserError {
 };
 
 class Parser final {
-  public:
+public:
   template<typename T>
   using result = tl::expected<T, ParserError>;
 
@@ -30,13 +30,13 @@ class Parser final {
 
   bool parse();
 
-  private:
+private:
   TransUnitContext& unit_ctx;
   ErrorBus          err_bus;
 
   size_t position = 0;
 
-  private:
+private:
   result<Token> current();
   result<Token> peek(int32_t ahead = 1);
   result<Token> consume(uint32_t ahead = 1);

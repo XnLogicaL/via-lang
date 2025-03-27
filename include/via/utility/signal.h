@@ -12,11 +12,11 @@ VIA_NAMESPACE_UTIL_BEGIN
 
 template<typename... Args>
 class Signal {
-  public:
+public:
   using Slot = std::function<void(Args...)>;
 
   class Connection {
-public:
+  public:
     Connection(std::vector<Slot>& _Slots, std::mutex& _Mutex, size_t _Connection_id)
         : slots(_Slots),
           mutex(_Mutex),
@@ -25,7 +25,7 @@ public:
 
     void disconnect();
 
-private:
+  private:
     std::vector<Slot>& slots;
     std::mutex&        mutex;
 
@@ -37,7 +37,7 @@ private:
   void       fire(Args...);
   void       wait();
 
-  private:
+private:
   std::vector<Slot>       slots;
   std::mutex              mutex;
   std::condition_variable condition;

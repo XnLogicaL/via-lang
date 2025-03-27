@@ -15,7 +15,7 @@
 VIA_NAMESPACE_BEGIN
 
 class ConstantHolder final {
-  public:
+public:
   // Type aliases
   using constant_type   = const TValue;
   using constant_vector = std::vector<TValue>;
@@ -33,7 +33,7 @@ class ConstantHolder final {
   // Returns a reference to the constant table.
   const constant_vector& get() const;
 
-  private:
+private:
   std::vector<TValue> constants;
 };
 

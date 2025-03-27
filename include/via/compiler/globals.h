@@ -16,7 +16,7 @@ struct Global {
 };
 
 class GlobalTracker final {
-  public:
+public:
   // Type aliases
   using index_query_result  = std::optional<size_t>;
   using global_query_result = std::optional<Global>;
@@ -60,7 +60,7 @@ class GlobalTracker final {
     }
   }
 
-  private:
+private:
   global_vector globals;
 };
 

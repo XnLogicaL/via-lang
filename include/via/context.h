@@ -25,7 +25,7 @@ class CompilerStack;
 class GlobalTracker;
 
 class TransUnitContext final {
-  public:
+public:
   // Resets the translation unit context.
   void clear();
 
@@ -37,7 +37,7 @@ class TransUnitContext final {
   TransUnitContext(const std::string& file_path, const std::string& file_source);
   TransUnitContext(const ByteStream& bytes);
 
-  public:
+public:
   struct Internal {
     size_t label_count = 0;
 
@@ -59,8 +59,8 @@ class TransUnitContext final {
 };
 
 class Context final {
-  public:
-  public:
+public:
+public:
   uint32_t flags;
 
   std::vector<TransUnitContext> units;

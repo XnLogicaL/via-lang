@@ -37,7 +37,7 @@ struct CompilerErrorPosition {
 };
 
 class CompilerError final {
-  public:
+public:
   // Returns the error as a string.
   std::string to_string() const;
 
@@ -54,7 +54,7 @@ class CompilerError final {
         level(lvl),
         position(pos) {}
 
-  public:
+public:
   bool is_flat;
 
   std::string message;
@@ -66,7 +66,7 @@ class CompilerError final {
 };
 
 class ErrorBus final {
-  public:
+public:
   // Appends a user-specified level error to the bus.
   void log(const CompilerError& err);
 
@@ -81,7 +81,7 @@ class ErrorBus final {
 
   VIA_CUSTOM_DESTRUCTOR(ErrorBus);
 
-  private:
+private:
   std::vector<CompilerError> buffer;
 };
 

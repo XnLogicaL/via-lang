@@ -129,7 +129,7 @@ struct Token {
 };
 
 class TokenStream {
-  public:
+public:
   using token_vector = std::vector<Token>;
   using at_result    = std::optional<Token>;
 
@@ -141,7 +141,7 @@ class TokenStream {
 
   token_vector& get();
 
-  private:
+private:
   token_vector tokens;
 };
 
