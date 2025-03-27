@@ -1,10 +1,78 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "via",
   "patterns": [
     {
+      "name": "storage.type",
+      "match": "\\b(nil|int|float|bool|string)\\b"
+    },
+    {
+      "name": "entity.name.function",
+      "match": "fn ([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": {
+          "name": "keyword.control"
+        },
+        "1": {
+          "name": "entity.name.function"
+        }
+      }
+    },
+    {
+      "name": "entity.name.type",
+      "match": "-> ([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": {
+          "name": "keyword.operator"
+        },
+        "1": {
+          "name": "entity.name.type"
+        }
+      }
+    },
+    {
+      "name": "entity.name.class",
+      "match": "struct ([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": {
+          "name": "keyword.control"
+        },
+        "1": {
+          "name": "entity.name.class"
+        }
+      }
+    },
+    {
+      "name": "variable",
+      "match": "let ([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": {
+          "name": "keyword.control"
+        },
+        "1": {
+          "name": "variable.name"
+        }
+      }
+    },
+    {
+      "name": "variable.language.self",
+      "match": "\\bself\\b"
+    },
+    {
+      "name": "entity",
+      "match": "([A-Za-z_][A-Za-z0-9_]*)[.]([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "0": {
+          "name": "variable.name"
+        },
+        "3": {
+          "name": "keyword.operator"
+        }
+      }
+    },
+    {
       "name": "keyword.control",
-      "match": "\\b(impl|trait|type|with|elif|defined|namespace|define|macro|import|export|struct|do|in|let|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
+      "match": "\\b(const|fn|impl|trait|type|with|elif|defined|namespace|define|macro|import|export|struct|do|in|let|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
     },
     {
       "name": "storage.modifier",
@@ -66,10 +134,6 @@
       "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
     },
     {
-      "name": "variable.language.self",
-      "match": "\\bself\\b"
-    },
-    {
       "name": "keyword.operator.arithmetic",
       "match": "[+\\-*/%]"
     },
@@ -86,33 +150,8 @@
       "match": "\\b(and|or|not)\\b"
     },
     {
-      "name": "storage.type",
-      "match": "\\b(nil|int|float|bool|string)\\b"
-    },
-    {
       "name": "entity.name.function",
       "match": "[a-zA-Z_][a-zA-Z0-9_]*!"
-    },
-    {
-      "name": "entity.name.function",
-      "match": "fn ?(const)? ?(const)? ([A-Za-z0-9_]+)",
-      "captures": {
-        "0": {
-          "name": "keyword.control"
-        },
-        "3": {
-          "name": "entity.name.function"
-        }
-      }
-    },
-    {
-      "name": "keyword.control",
-      "match": "(fn)[ ]{0,}(\\()",
-      "captures": {
-        "0": {
-          "name": "keyword.control"
-        }
-      }
     }
   ],
   "scopeName": "source.via"

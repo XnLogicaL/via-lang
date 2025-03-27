@@ -9,36 +9,39 @@
 #include "state.h"
 #include "object.h"
 
-#define VIA_UPV_COUNT 64
-
 VIA_NAMESPACE_BEGIN
 
 struct UpValue {
-    bool    is_open    = true;
+    bool is_open  = true;
+    bool is_valid = false;
+
     TValue* value      = nullptr;
     TValue  heap_value = TValue();
+};
+
+struct CallInfo {
+    TFunction*   caller;
+    Instruction* ip;
+    Instruction* ibp;
+    Instruction* iep;
+    size_t       sp;
+    size_t       argc;
 };
 
 struct TFunction {
     bool is_error_handler = false;
     bool is_vararg        = false;
 
-    Instruction* ret_addr = nullptr;
-    Instruction* bytecode = nullptr;
-    TFunction*   caller   = nullptr;
-    UpValue*     upvs     = new UpValue[VIA_UPV_COUNT];
+    CallInfo call_info;
 
-    uint32_t bytecode_len = 0;
-    uint32_t upv_count    = VIA_UPV_COUNT;
+    Instruction* ibp = nullptr;
+    Instruction* iep = nullptr;
+
+    UpValue* upvs      = new UpValue[8];
+    uint32_t upv_count = 8;
 
     VIA_DEFAULT_CONSTRUCTOR(TFunction);
     VIA_CUSTOM_DESTRUCTOR(TFunction);
-
-    TFunction(bool is_error_handler, bool is_vararg, Instruction* return_address, TFunction* caller)
-        : is_error_handler(is_error_handler),
-          is_vararg(is_vararg),
-          ret_addr(return_address),
-          caller(caller) {}
 
     TFunction(const TFunction& other);
 };

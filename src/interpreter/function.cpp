@@ -4,42 +4,34 @@
 
 #include "function.h"
 
-#define DELETE_IF(target)                                                                          \
-    if (target) {                                                                                  \
-        delete target;                                                                             \
-        target = nullptr;                                                                          \
-    }
-
-#define DELETE_ARR_IF(target)                                                                      \
-    if (target) {                                                                                  \
-        delete[] target;                                                                           \
-        target = nullptr;                                                                          \
-    }
-
 VIA_NAMESPACE_BEGIN
 
 TFunction::~TFunction() {
-    DELETE_ARR_IF(upvs);
-    DELETE_ARR_IF(bytecode);
+    delete[] upvs;
+    delete[] ibp;
 }
 
 TFunction::TFunction(const TFunction& other)
     : is_error_handler(other.is_error_handler),
       is_vararg(other.is_vararg),
-      ret_addr(other.ret_addr),
-      caller(other.caller),
-      bytecode_len(other.bytecode_len),
+      call_info(other.call_info),
       upv_count(other.upv_count) {
-    bytecode = new Instruction[bytecode_len];
-    upvs     = new UpValue[upv_count];
+    size_t bytecode_len = iep - ibp;
 
-    std::memcpy(bytecode, other.bytecode, bytecode_len);
+    ibp  = new Instruction[bytecode_len];
+    upvs = new UpValue[upv_count];
+
+    std::memcpy(ibp, other.ibp, bytecode_len);
 
     for (size_t i = 0; i < other.upv_count; i++) {
         const UpValue& upv = other.upvs[i];
+        if (!upv.is_valid) {
+            continue;
+        }
 
         upvs[i] = {
             .is_open    = upv.is_open,
+            .is_valid   = true,
             .value      = upv.is_open ? upv.value : &upvs[i].heap_value,
             .heap_value = upv.heap_value.clone(),
         };

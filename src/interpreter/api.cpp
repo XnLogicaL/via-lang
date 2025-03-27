@@ -157,4 +157,17 @@ TValue State::to_string(const TValue&) {
     return TValue();
 }
 
+const TValue& State::get_global(uint32_t hash) {
+    static TValue nil = TValue();
+
+    std::lock_guard lock(G->gtable_mutex);
+
+    auto it = G->gtable.find(hash);
+    if (it != G->gtable.end()) {
+        return it->second;
+    }
+
+    return nil;
+}
+
 VIA_NAMESPACE_END

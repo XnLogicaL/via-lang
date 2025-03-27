@@ -13,29 +13,25 @@ static TValue nil = TValue();
 using namespace impl;
 
 VIA_LIB_DECL_FUNCTION(base_print) {
-    std::ostringstream oss;
-
-    uint16_t i = 0;
-    while (i++ < V->argc) {
-        VIA_LIB_DECL_PARAMETER(argx, i);
-        oss << __to_cxx_string(V, argx) << " ";
+    size_t i = 0;
+    while (i < V->frame->call_info.argc) {
+        VIA_LIB_DECL_PARAMETER(argx, i++);
+        std::cout << __to_cxx_string(V, argx);
     }
 
-    std::cout << oss.str();
+    std::cout << std::flush;
 
     VIA_LIB_RETURN(nil);
 }
 
 VIA_LIB_DECL_FUNCTION(base_println) {
-    std::ostringstream oss;
-
-    uint8_t i = 0;
-    while (i++ < V->argc) {
-        VIA_LIB_DECL_PARAMETER(argx, i);
-        oss << __to_cxx_string(V, argx) << " ";
+    size_t i = 0;
+    while (i < V->frame->call_info.argc) {
+        VIA_LIB_DECL_PARAMETER(argx, i++);
+        std::cout << __to_cxx_string(V, argx);
     }
 
-    std::cout << oss.str() << "\n";
+    std::cout << std::endl;
 
     VIA_LIB_RETURN(nil);
 }

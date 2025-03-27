@@ -107,10 +107,11 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
     std::optional<Operand> stk_id = program.test_stack->find_symbol(var_id.lexeme);
 
     if (stk_id.has_value()) {
-        auto& current_closure = program.test_stack->function_stack.top();
-
-        if (current_closure.upvalues > stk_id.value()) {
-            program.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
+        if (program.test_stack->function_stack.size() > 0) {
+            auto& current_closure = program.test_stack->function_stack.top();
+            if (current_closure.upvalues > stk_id.value()) {
+                program.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
+            }
         }
         else {
             program.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
@@ -136,7 +137,7 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
         }
     }
     else {
-        compiler_error(var_id, std::format("Use of undeclared variable '{}'", var_id.lexeme));
+        compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
     }
 }
 
@@ -158,9 +159,34 @@ void ExprVisitor::visit(CallNode& call_node, Operand dst) {
     for (const pExprNode& argument : call_node.arguments) {
         Operand argument_reg = allocator.allocate_register();
 
-        argument->accept(*this, argument_reg);
-        program.bytecode->emit(PUSH, {argument_reg});
-        allocator.free_register(argument_reg);
+        if (LiteralNode* literal_node = get_derived_instance<ExprNode, LiteralNode>(*argument)) {
+            if (int* integer_value = std::get_if<int>(&literal_node->value)) {
+                uint32_t final_value = *integer_value;
+                auto     operands    = reinterpret_u32_as_2u16(final_value);
+
+                program.bytecode->emit(PUSHINT, {operands.l, operands.r});
+            }
+            else if (float* float_value = std::get_if<float>(&literal_node->value)) {
+                uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
+                auto     operands    = reinterpret_u32_as_2u16(final_value);
+
+                program.bytecode->emit(PUSHFLOAT, {operands.l, operands.r});
+            }
+            else if (bool* bool_value = std::get_if<bool>(&literal_node->value)) {
+                program.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE);
+            }
+            else {
+                const TValue& constant    = construct_constant(*literal_node);
+                const Operand constant_id = program.constants->push_constant(constant);
+
+                program.bytecode->emit(PUSHK, {constant_id});
+            }
+        }
+        else {
+            argument->accept(*this, argument_reg);
+            program.bytecode->emit(PUSH, {argument_reg});
+            allocator.free_register(argument_reg);
+        }
     }
 
     program.bytecode->emit(CALL, {callee_reg, argc});

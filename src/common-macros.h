@@ -22,7 +22,7 @@
 #define VIA_NAMESPACE_LIB_BEGIN  namespace via::lib {
 #define VIA_NAMESPACE_END        }
 
-#define VIA_VERSION "0.26.0"
+#define VIA_VERSION "0.26.1"
 
 // Parameter declaration spec macros
 #define VIA_RESTRICT __restrict__

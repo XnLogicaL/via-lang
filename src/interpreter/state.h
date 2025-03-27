@@ -10,7 +10,7 @@
 #include "object.h"
 #include "signal.h"
 
-#define VIA_VM_STACK_SIZE  8 * 1024 * 1024 // 8 MBs
+#define VIA_VM_STACK_SIZE  2048
 #define VIA_REGISTER_COUNT 0xFFFF
 
 VIA_NAMESPACE_BEGIN
@@ -63,9 +63,8 @@ struct alignas(64) State {
     Instruction* siep = nullptr;
 
     // Stack state
-    TValue* sbp;     // Stack base pointer
-    size_t  sp  = 0; // Stack pointer
-    size_t  ssp = 0; // Saved stack pointer
+    TValue* sbp;    // Stack base pointer
+    size_t  sp = 0; // Stack pointer
 
     // Registers
     TValue* registers;
@@ -74,10 +73,7 @@ struct alignas(64) State {
     Instruction** labels;
 
     // Call and frame management
-    TFunction* main     = nullptr;
-    TFunction* frame    = nullptr;        // Call stack pointer
-    size_t     argc     = 0;              // Argument count (for CALL and FASTCALLX)
-    CallType   calltype = CallType::CALL; // Current calling convention
+    TFunction* frame = nullptr; // Call stack pointer
 
     // VM control and debugging
     bool        abort = false;
@@ -85,7 +81,6 @@ struct alignas(64) State {
 
     // Thread state
     ThreadState tstate = ThreadState::PAUSED; // Current thread state
-    State*      sstate = nullptr;             // Saved thread state
 
     // Signals
     utils::Signal<> sig_exit;

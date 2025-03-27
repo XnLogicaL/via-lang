@@ -114,6 +114,7 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
         else {
             Operand dst = allocator.allocate_register();
 
+            declaration_node.value_expression->accept(expression_visitor, dst);
             program.bytecode->emit(PUSH, {dst}, comment);
             program.test_stack->push({
                 .is_const     = is_const,
@@ -123,7 +124,6 @@ void StmtVisitor::visit(DeclarationNode& declaration_node) {
                     std::make_unique<PrimitiveNode>(declaration_node.identifier, ValueType::nil),
             });
 
-            declaration_node.value_expression->accept(expression_visitor, dst);
             allocator.free_register(dst);
         }
     }
@@ -390,6 +390,7 @@ void StmtVisitor::visit(WhileNode& while_node) {
     program.bytecode->emit(JUMPLABELIFNOT, {cond_reg, l_escape_label});
     while_node.body->accept(*this);
     program.bytecode->emit(JUMPLABEL, {l_repeat_label});
+    program.bytecode->emit(LABEL, {l_escape_label});
     allocator.free_register(cond_reg);
 
     repeat_label = std::nullopt;

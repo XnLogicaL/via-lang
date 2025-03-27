@@ -5,7 +5,6 @@
 #ifndef _VIA_LEXER_H
 #define _VIA_LEXER_H
 
-#include "arena.h"
 #include "common.h"
 #include "token.h"
 

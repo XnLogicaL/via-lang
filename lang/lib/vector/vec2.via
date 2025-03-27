@@ -20,30 +20,29 @@ struct vector2 {
     let x: float = 0.0
     let y: float = 0.0
 
-    @inline
-    fn magnitude()
-        impl vec_traits.magnitude -> float
-    {
-        return math.sqrt(self.x ^ 2 + self.y ^ 2)
-    }
-
-    @inline
-    fn normalize()
-        impl vec_traits.normalize -> float 
-    {
-        let mag = self.magnitude()
-        if mag == 0 {
-            return vector2.new()
+    impl vec_traits.magnitude {
+        fn magnitude() -> float {
+            return math.sqrt(self.x ^ 2 + self.y ^ 2)
         }
-        
-        return vector2.new(self.x / mag, self.y / mag)
     }
 
-    @inline
-    fn convert()
-        impl type_traits.convertible<string> -> string
-    {
-        return "vector2(${self.x}, ${self.y})"
+    impl vec_traits.normalize {
+        @inline
+        fn normalize() -> float {
+            let mag = self.magnitude()
+            if mag == 0 {
+                return vector2.new()
+            }
+            
+            return vector2.new(self.x / mag, self.y / mag)
+        }
+    }
+
+    impl type_traits.convertible_to<string> {
+        @inline
+        fn convert() -> string {
+            return "vector2(${self.x}, ${self.y})"
+        }
     }
 
     fn operator+(other: vector2) -> vector2 {

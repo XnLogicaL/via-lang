@@ -181,6 +181,7 @@ struct TString {
 
     VIA_CUSTOM_DESTRUCTOR(TString);
 
+    explicit TString(const TString&);
     explicit TString(State*, const char*);
 
     size_t size();

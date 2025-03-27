@@ -25,7 +25,9 @@ ProgramData::ProgramData(std::string file, std::string file_source)
       bytecode(new BytecodeHolder()),
       constants(new ConstantHolder()),
       test_stack(new CompilerStack()),
-      globals(new GlobalTracker()) {}
+      globals(new GlobalTracker()) {
+    globals->declare_builtins();
+}
 
 ProgramData::~ProgramData() {
     DELETE_IF(token_stream);

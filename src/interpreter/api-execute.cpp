@@ -34,7 +34,7 @@
 // Macro for loading the next instruction
 #define VM_LOAD()                                                                                  \
     do {                                                                                           \
-        if (ip + 1 > iep) {                                                                        \
+        if (ip + 1 == iep) {                                                                       \
             goto exit;                                                                             \
         }                                                                                          \
         ip++;                                                                                      \
@@ -74,6 +74,9 @@ void vm_save_snapshot(State* VIA_RESTRICT V) {
 
     std::ostringstream headers;
     headers << "opcode: " << magic_enum::enum_name(V->ip->op) << "\n";
+    headers << "operand0: " << V->ip->operand0 << "\n";
+    headers << "operand1: " << V->ip->operand1 << "\n";
+    headers << "operand2: " << V->ip->operand2 << "\n";
 
     std::ostringstream registers;
     registers << "==== registers ====\n";

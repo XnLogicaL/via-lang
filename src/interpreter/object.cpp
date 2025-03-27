@@ -144,11 +144,14 @@ TString::TString(State* V, const char* str) {
     }
 }
 
+TString::TString(const TString& other)
+    : len(other.len),
+      hash(other.hash) {
+    data = duplicate_string(other.data);
+}
+
 TString::~TString() {
-    if (data) {
-        delete[] data;  // Free the allocated string memory
-        data = nullptr; // Null data pointer
-    }
+    delete[] data;
 }
 
 size_t TString::size() {
@@ -174,11 +177,6 @@ TValue TString::get_string(size_t position) {
 }
 
 TTable::~TTable() {
-    if (arr_array) {
-        delete[] arr_array;
-        arr_array = nullptr;
-    }
-
     if (ht_buckets) {
         for (size_t i = 0; i < ht_capacity; ++i) {
             THashNode* next = ht_buckets[i];
@@ -189,10 +187,10 @@ TTable::~TTable() {
             }
             ht_buckets[i] = nullptr;
         }
-
-        delete[] ht_buckets;
-        ht_buckets = nullptr;
     }
+
+    delete[] arr_array;
+    delete[] ht_buckets;
 }
 
 TTable::TTable(const TTable& other)

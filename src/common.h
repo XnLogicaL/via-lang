@@ -15,6 +15,4 @@
 #include "token.h"
 #include "program.h"
 
-#define ASMJIT_STATIC
-
 #endif

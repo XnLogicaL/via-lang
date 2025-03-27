@@ -11,44 +11,41 @@ VIA_NAMESPACE_BEGIN
 
 enum class TokenType {
     // Keywords
-    KW_DO,        // do
-    KW_IN,        // in
-    KW_LOCAL,     // local
-    KW_GLOBAL,    // global
-    KW_AS,        // as
-    KW_IF,        // if
-    KW_ELSE,      // else
-    KW_ELIF,      // elif
-    KW_WHILE,     // while
-    KW_FOR,       // for
-    KW_RETURN,    // return
-    KW_FUNC,      // func
-    KW_CONST,     // const
-    KW_NEW,       // new
-    KW_BREAK,     // break
-    KW_CONTINUE,  // continue
-    KW_MATCH,     // switch
-    KW_CASE,      // case
-    KW_DEFAULT,   // default
-    KW_AND,       // and
-    KW_NOT,       // not
-    KW_OR,        // or
-    KW_STRUCT,    // struct
-    KW_IMPORT,    // import
-    KW_EXPORT,    // export
-    KW_MACRO,     // macro
-    KW_DEFINE,    // define
-    KW_TYPE,      // type
-    KW_TYPEOF,    // typeof
-    KW_DEFINED,   // defined
-    KW_MEMBER,    // member
-    KW_PRAGMA,    // pragma
-    KW_CONSTRUCT, // construct
-    KW_DESTRUCT,  // destruct
-    KW_ENUM,      // enum
-    KW_TRY,
-    KW_CATCH,
-    KW_RAISE,
+    KW_DO,       // do
+    KW_IN,       // in
+    KW_LOCAL,    // let
+    KW_GLOBAL,   // glb
+    KW_AS,       // as
+    KW_IF,       // if
+    KW_ELSE,     // else
+    KW_ELIF,     // elif
+    KW_WHILE,    // while
+    KW_FOR,      // for
+    KW_RETURN,   // return
+    KW_FUNC,     // fn
+    KW_CONST,    // const
+    KW_NEW,      // new
+    KW_BREAK,    // break
+    KW_CONTINUE, // continue
+    KW_MATCH,    // switch
+    KW_CASE,     // case
+    KW_DEFAULT,  // default
+    KW_AND,      // and
+    KW_NOT,      // not
+    KW_OR,       // or
+    KW_STRUCT,   // struct
+    KW_IMPORT,   // import
+    KW_EXPORT,   // export
+    KW_MACRO,    // macro
+    KW_DEFINE,   // define
+    KW_TYPE,     // type
+    KW_TRAIT,    // trait
+    KW_DEFINED,  // defined
+    KW_PRAGMA,   // pragma
+    KW_ENUM,     // enum
+    KW_TRY,      // try
+    KW_CATCH,    // catch
+    KW_RAISE,    // raise
 
     // Operators
     OP_ADD,       // +

@@ -13,7 +13,7 @@
 namespace common {
 
 ## Utilizes OMAAI.
-trait convertible<T> {
+trait convertible_to<T> {
     fn convert() -> T
 }
 

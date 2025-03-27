@@ -1,24 +1,4 @@
-global Aaaa: int = 0
-global BB: int = 100
-
-global func add(a: int, b: int) -> nil {
-    local x = 31
-    local var = 56
-    local func inner() -> nil {
-        local y = true
-
-        if y {
-            local xx = 100914 as float
-        }
-        else {
-            local yes = false
-        }
-
-        while true {
-            local z = 1500 + 0xdeadbeef
-            local cond = false
-        }
-    }
-
-    inner(var, x)
-}
+let x = 10
+let y = 20
+let z = x * y + y * x / y % x
+println(z)

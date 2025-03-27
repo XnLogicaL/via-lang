@@ -40,7 +40,7 @@ VIA_FORCE_INLINE bool __handle_error(State* _State) {
             _State->err->frame = _Current_frame;
             break;
         }
-        _Current_frame = _Current_frame->caller;
+        _Current_frame = _Current_frame->call_info.caller;
     }
 
     if (!_Current_frame) {
@@ -61,7 +61,7 @@ VIA_FORCE_INLINE bool __handle_error(State* _State) {
             std::cerr << std::format(
                 "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
             );
-            _Error_frame = _Error_frame->caller;
+            _Error_frame = _Error_frame->call_info.caller;
         }
     }
 
@@ -84,38 +84,6 @@ VIA_INLINE TValue __get_constant(State* _State, size_t _Idx) {
     }
 
     return _State->program.constants->at(_Idx).clone();
-}
-
-VIA_INLINE_HOT void __push(State* _State, const TValue& _Val) {
-    _State->sbp[_State->sp++] = _Val.clone();
-}
-
-VIA_INLINE_HOT TValue __pop(State* _State) {
-    return _State->sbp[_State->sp--].clone();
-}
-
-VIA_INLINE_HOT void __drop(State* _State) {
-    TValue& _Dropped_val = _State->sbp[_State->sp--];
-    _Dropped_val.reset();
-}
-
-VIA_INLINE_HOT const TValue& __get_stack(State* _State, size_t _Offset) {
-    return _State->sbp[_Offset];
-}
-
-VIA_INLINE_HOT void __set_stack(State* _State, size_t _Offset, TValue& _Val) {
-    _State->sbp[_Offset] = _Val.clone();
-}
-
-VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, size_t _Offset) {
-    if (_Offset >= _State->argc) {
-        return _Nil.clone();
-    }
-
-    const Operand _Stk_offset = _State->ssp + _State->argc - 1 - _Offset;
-    const TValue& _Val        = _State->sbp[_Stk_offset];
-
-    return _Val.clone();
 }
 
 VIA_FORCE_INLINE TValue __type(State* VIA_RESTRICT _State, const TValue& _Val) {
@@ -145,39 +113,32 @@ VIA_FORCE_INLINE TValue __typeofv(State* VIA_RESTRICT _State, const TValue& _Val
 }
 
 VIA_INLINE_HOT void __native_call(State* _State, TFunction* _Callee, size_t _Argc) {
-    _Callee->caller   = _State->frame;
-    _Callee->ret_addr = _State->ip;
-    _State->frame     = _Callee;
-    _State->sibp      = _State->ibp;
-    _State->siep      = _State->iep;
-    _State->ip        = _Callee->bytecode;
-    _State->ibp       = _Callee->bytecode;
-    _State->iep       = _Callee->bytecode + _Callee->bytecode_len;
-    _State->argc      = _Argc;
-    _State->ssp       = _State->sp;
+    _Callee->call_info.caller = _State->frame;
+    _Callee->call_info.ibp    = _State->ibp;
+    _Callee->call_info.iep    = _State->iep;
+    _Callee->call_info.ip     = _State->ip;
+    _Callee->call_info.sp     = _State->sp;
+    _Callee->call_info.argc   = _Argc;
+
+    _State->frame = _Callee;
+    _State->ip    = _Callee->ibp;
+    _State->ibp   = _Callee->ibp;
+    _State->iep   = _Callee->iep;
 }
 
 VIA_INLINE_HOT void __extern_call(State* _State, TCFunction* _Callee, size_t _Argc) {
-    char        _Buf[2 + std::numeric_limits<uintptr_t>::digits / 4 + 1];
-    const void* _Addr    = _Callee;
-    uintptr_t   _Address = reinterpret_cast<uintptr_t>(_Addr);
-    _Buf[0]              = '0';
-    _Buf[1]              = 'x';
-
-    auto _Result = std::to_chars(_Buf + 2, _Buf + sizeof(_Buf), _Address, 16);
-    if (_Result.ec != std::errc{}) {
-        std::memset(_Buf + 2, '0', sizeof(_Buf) - 2);
-    }
-
-    TFunction _Func(_Callee->is_error_handler, false, _State->ip, _State->frame);
+    TFunction _Func;
+    _Func.is_error_handler = _Callee->is_error_handler;
+    _Func.call_info.caller = _State->frame;
+    _Func.call_info.ibp    = _State->ibp;
+    _Func.call_info.iep    = _State->iep;
+    _Func.call_info.ip     = _State->ip;
 
     __native_call(_State, &_Func, _Argc);
     _Callee->data(_State);
 }
 
 VIA_INLINE_HOT void __call(State* _State, TValue& _Callee, size_t _Argc) {
-    _State->calltype = CallType::CALL;
-
     if (_Callee.is_function()) {
         __native_call(_State, _Callee.cast_ptr<TFunction>(), _Argc);
     }
@@ -206,18 +167,20 @@ VIA_FORCE_INLINE TValue __len(TValue& _Val) {
 VIA_FORCE_INLINE void __native_return(State* VIA_RESTRICT _State, const TValue& _Ret_value) {
     __closure_close_upvalues(_State->frame);
 
-    _State->ibp   = _State->sibp;
-    _State->iep   = _State->siep;
-    _State->ip    = _State->frame->ret_addr;
-    _State->frame = _State->frame->caller;
+    CallInfo _Call_info = _State->frame->call_info;
 
-    _State->sp = _State->ssp;
-    _State->sp -= _State->argc;
+    _State->ibp   = _Call_info.ibp;
+    _State->iep   = _Call_info.iep;
+    _State->ip    = _Call_info.ip;
+    _State->frame = _Call_info.caller;
+
+    _State->sp = _Call_info.sp;
+    _State->sp -= _Call_info.argc;
 
     __push(_State, _Ret_value);
 }
 
-VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _State, Operand _Id) {
+VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _State, uint32_t _Id) {
     std::lock_guard<std::mutex> lock(_State->G->gtable_mutex);
 
     auto _It = _State->G->gtable.find(_Id);
@@ -228,7 +191,7 @@ VIA_INLINE_HOT TValue __get_global(State* VIA_RESTRICT _State, Operand _Id) {
     return _Nil.clone();
 }
 
-VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _State, Operand _Id, const TValue& _Val) {
+VIA_FORCE_INLINE void __set_global(State* VIA_RESTRICT _State, uint32_t _Id, const TValue& _Val) {
     std::lock_guard<std::mutex> lock(_State->G->gtable_mutex);
 
     auto _It = _State->G->gtable.find(_Id);
@@ -342,7 +305,7 @@ template<typename T>
 VIA_FORCE_INLINE T __to_cxx_number(const TValue& _Val) {
     TValue _Number = __to_number(_Val);
 
-    if (check_nil(_Number)) {
+    if (_Number.is_nil()) {
         if constexpr (std::is_floating_point_v<T>) {
             return std::numeric_limits<T>::quiet_NaN();
         }
@@ -351,10 +314,10 @@ VIA_FORCE_INLINE T __to_cxx_number(const TValue& _Val) {
         }
     }
 
-    if (check_integer(_Number)) {
+    if (_Number.is_int()) {
         return static_cast<T>(_Number.val_integer);
     }
-    if (check_floating_point(_Number)) {
+    if (_Number.is_float()) {
         return static_cast<T>(_Number.val_floating_point);
     }
 

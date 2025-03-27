@@ -116,10 +116,16 @@ struct CallNode : public ExprNode {
         : callee(std::move(callee)),
           arguments(std::move(arguments)) {
 
-        pExprNode& last_arg = this->arguments.back();
+        if (!arguments.empty()) {
+            pExprNode& last_arg = this->arguments.back();
 
-        this->begin = this->callee->begin;
-        this->end   = last_arg->end + 1; // Account for ')'
+            this->begin = this->callee->begin;
+            this->end   = last_arg->end + 1; // Account for ')'
+        }
+        else {
+            this->begin = this->callee->begin;
+            this->end   = this->callee->end + 2; // Account for '()'
+        }
     }
 };
 

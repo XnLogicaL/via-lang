@@ -7,10 +7,8 @@
 VIA_NAMESPACE_BEGIN
 
 const char* get_platform_info() {
-    static char buffer[32]; // Sufficient size_t for "windows-x86-64" etc.
-
-#ifndef _VIA_PLATFORM_INFO_FETCHED
-#define _VIA_PLATFORM_INFO_FETCHED
+    static char buffer[32];
+    static bool fetched = false;
 
 #ifdef _WIN32
     const char* os = "windows";
@@ -30,8 +28,10 @@ const char* get_platform_info() {
     const char* arch = "other";
 #endif
 
-    std::snprintf(buffer, sizeof(buffer), "%s-%s", os, arch);
-#endif
+    if (!fetched) {
+        fetched = true;
+        std::snprintf(buffer, sizeof(buffer), "%s-%s", os, arch);
+    }
 
     return buffer;
 }

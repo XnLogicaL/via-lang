@@ -26,4 +26,8 @@
 #include "interpreter/state.h"
 #include "interpreter/lib-base.h"
 
+#include "utility/bit-utility.h"
+#include "utility/memory-utility.h"
+#include "utility/string-utility.h"
+
 #endif

@@ -7,18 +7,6 @@
 #include "api-aux.h"
 #include "api-impl.h"
 
-#define DELETE_IF(symbol)                                                                          \
-    if (symbol) {                                                                                  \
-        delete symbol;                                                                             \
-        symbol = nullptr;                                                                          \
-    }
-
-#define DELETE_ARR_IF(symbol)                                                                      \
-    if (symbol) {                                                                                  \
-        delete[] symbol;                                                                           \
-        symbol = nullptr;                                                                          \
-    }
-
 VIA_NAMESPACE_BEGIN
 
 using namespace impl;
@@ -27,64 +15,45 @@ using namespace impl;
 State::State(GState* G, ProgramData& program)
     : id(G->threads++),
       G(G),
-      sbp(new TValue[VIA_VM_STACK_SIZE / sizeof(TValue)]),
       registers(new TValue[VIA_REGISTER_COUNT]),
       err(new ErrorState()),
       program(program) {
     load(*program.bytecode);
 
-    main = new TFunction(false, false, ip, nullptr);
-
-    main->bytecode_len = static_cast<uint32_t>(iep - ibp);
-    main->bytecode     = new Instruction[main->bytecode_len];
-
-    std::memcpy(main->bytecode, ibp, main->bytecode_len);
-
-    __label_load(this, program.label_count);
-    __native_call(this, main, 0);
+    __stack_allocate(this);
+    __label_allocate(this, program.label_count);
+    __label_load(this);
 }
 
 State::~State() {
-    if (sstate) {
-        if (sstate->ibp == ibp) {
-            sstate->ibp = nullptr;
-        }
+    delete err;
 
-        if (sstate->sbp == sbp) {
-            sstate->sbp = nullptr;
-        }
+    delete[] registers;
+    delete[] sibp;
 
-        delete sstate;
-    }
-
-    DELETE_IF(err);
-    DELETE_IF(main);
-
-    DELETE_ARR_IF(registers);
-    DELETE_ARR_IF(ibp);
-    DELETE_ARR_IF(sbp);
-
+    __stack_deallocate(this);
     __label_deallocate(this);
 }
 
 void State::load(BytecodeHolder& bytecode) {
-    DELETE_ARR_IF(ibp);
+    delete[] sibp;
 
     auto& pipeline = bytecode.get();
 
     if (pipeline.empty()) {
-        ibp = iep = ip = nullptr;
+        ibp = sibp = siep = iep = ip = nullptr;
         return;
     }
 
-    ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
-    iep = ibp + pipeline.size();            // Initialize iep (Instruction end pointer)
-    ip  = ibp;                              // Initialize ip (Instruction pointer)
+    ibp  = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
+    sibp = ibp;
+    iep  = ibp + pipeline.size(); // Initialize iep (Instruction end pointer)
+    siep = iep;
+    ip   = ibp; // Initialize ip (Instruction pointer)
 
-    uint64_t position = 0;
+    size_t position = 0;
     for (const Bytecode& pair : pipeline) {
-        const Instruction& instruction = pair.instruction;
-        ibp[position++]                = instruction;
+        ibp[position++] = pair.instruction;
     }
 }
 
@@ -102,13 +71,10 @@ std::string to_string(State* state) {
     oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));
     oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));
     oss << std::format("|sp    | {}\n", state->sp);
-    oss << std::format("|ssp   | {}\n", state->ssp);
     oss << std::format("|frame | {}\n", TO_VOID_STAR(state->frame));
-    oss << std::format("|argc  | {}\n", state->argc);
     oss << std::format("|abort | {}\n", state->abort);
     oss << std::format("|err   | <ErrorState@{}>\n", TO_VOID_STAR(state->err));
     oss << std::format("|tstate| {}\n", magic_enum::enum_name(state->tstate));
-    oss << std::format("|sstate| <State@{}>\n", TO_VOID_STAR(state->sstate));
 
     oss << "==== state ====\n";
 

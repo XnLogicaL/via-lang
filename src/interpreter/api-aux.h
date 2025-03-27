@@ -61,6 +61,8 @@ VIA_INLINE void __closure_upv_set(TFunction* _Closure, size_t _Upv_id, TValue& _
         else {
             _Upv->value = &_Val;
         }
+
+        _Upv->is_valid = true;
     }
 }
 
@@ -69,9 +71,7 @@ VIA_INLINE void __closure_upv_set(TFunction* _Closure, size_t _Upv_id, TValue& _
 VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
     std::vector<Instruction> cache;
 
-    std::cout << _State->ibp << " " << _State->iep << " " << _State->ip << "\n";
-
-    while (_State->ip <= _State->iep) {
+    while (_State->ip < _State->iep) {
         // Special case: Terminator opcode
         if (_State->ip->op == OpCode::RETURN || _State->ip->op == OpCode::RETURNNIL) {
             cache.push_back(*_State->ip);
@@ -83,12 +83,10 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
         ++_State->ip;
     }
 
-    return;
+    _Closure->ibp = new Instruction[cache.size()];
+    _Closure->iep = _Closure->ibp + cache.size();
 
-    _Closure->bytecode_len = cache.size();
-    _Closure->bytecode     = new Instruction[cache.size()];
-
-    std::memcpy(_Closure->bytecode, cache.data(), cache.size());
+    std::memcpy(_Closure->ibp, cache.data(), cache.size());
 
     for (TValue* _Stk_id = _State->sbp + _State->sp; _Stk_id > _State->sbp; _Stk_id--) {
         size_t _Pos = _Stk_id - _State->sbp;
@@ -108,7 +106,7 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
 VIA_INLINE void __closure_close_upvalues(TFunction* _Closure) {
     UpValue* _Upv_end = _Closure->upvs + _Closure->upv_count;
     for (UpValue* upv = _Closure->upvs; upv < _Upv_end; upv++) {
-        if (upv->is_open) {
+        if (upv->is_valid && upv->is_open) {
             upv->heap_value = upv->value->clone();
             upv->value      = &upv->heap_value;
             upv->is_open    = false;
@@ -296,15 +294,57 @@ VIA_INLINE Instruction* __label_get(State* _State, size_t _Idx) {
     return _State->labels[_Idx];
 }
 
-VIA_INLINE void __label_load(State* _State, size_t _Count) {
-    __label_allocate(_State, _Count);
-
+VIA_INLINE void __label_load(State* _State) {
     size_t _Idx = 0;
     for (Instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
         if (_Ip->op == OpCode::LABEL) {
             _State->labels[_Idx++] = _Ip;
         }
     }
+}
+
+// ==========================================================
+// Stack handling
+VIA_INLINE void __stack_allocate(State* _State) {
+    _State->sbp = new TValue[VIA_VM_STACK_SIZE];
+}
+
+VIA_INLINE void __stack_deallocate(State* _State) {
+    delete[] _State->sbp;
+}
+
+VIA_INLINE_HOT void __push(State* _State, const TValue& _Val) {
+    _State->sbp[_State->sp++] = _Val.clone();
+}
+
+VIA_INLINE_HOT TValue __pop(State* _State) {
+    return _State->sbp[_State->sp--].move();
+}
+
+VIA_INLINE_HOT void __drop(State* _State) {
+    TValue& _Dropped_val = _State->sbp[_State->sp--];
+    _Dropped_val.reset();
+}
+
+VIA_INLINE_HOT const TValue& __get_stack(State* _State, size_t _Offset) {
+    return _State->sbp[_Offset];
+}
+
+VIA_INLINE_HOT void __set_stack(State* _State, size_t _Offset, TValue& _Val) {
+    _State->sbp[_Offset] = _Val.clone();
+}
+
+VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, size_t _Offset) {
+    if (_Offset >= _State->frame->call_info.argc) {
+        return TValue();
+    }
+
+    // Compute stack offset in reverse order
+    const Operand _Stk_offset =
+        _State->frame->call_info.sp - _State->frame->call_info.argc + _Offset;
+    const TValue& _Val = _State->sbp[_Stk_offset];
+
+    return _Val.clone();
 }
 
 VIA_NAMESPACE_END

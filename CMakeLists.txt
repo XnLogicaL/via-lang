@@ -7,6 +7,10 @@ project(via LANGUAGES CXX)
 # Set C++ standard to C++23
 set(CMAKE_CXX_STANDARD 23)
 
+# Link everything statically
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+
 # Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
 option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "PROD")
 option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" CLI/main.cpp)
@@ -14,6 +18,9 @@ option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" CLI/main.cpp)
 # Print the current configuration
 message(STATUS "Building with DEBUG_MODE: ${DEBUG_MODE}")
 message(STATUS "Using MAIN_FILE_PATH: ${MAIN_FILE_PATH}")
+
+# Statically link asmjit
+set(ASMJIT_STATIC 1)
 
 # Add subdirectories for components
 add_subdirectory(asmjit)

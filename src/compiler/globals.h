@@ -47,9 +47,11 @@ public:
 
     VIA_INLINE void declare_builtins() {
         static const builtin_vector builtins = {
-            "print",     "println", "error",  "exit",  "type",     "typeof", "to_string",
-            "to_number", "to_bool", "assert", "pcall", "xpcall",   "math",   "table",
-            "string",    "random",  "os",     "debug", "function",
+            "print",
+            "println",
+            "exit",
+            "typeof",
+            "assert",
         };
 
         for (const std::string& built_in : builtins) {
