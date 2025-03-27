@@ -7,12 +7,11 @@
 
 #include <cstddef>
 // External imports
-#include "magic_enum.hpp"
-#include "linenoise.hpp"
+#include "magic_enum/magic_enum.hpp"
+#include "tl/expected.hpp"
 // Internal imports
 #include "common-defs.h"
 #include "common-macros.h"
-#include "token.h"
 #include "program.h"
 
 #endif

@@ -6,7 +6,6 @@
 #define _VIA_FILEIO_H
 
 #include "common.h"
-#include "expected.hpp"
 
 VIA_NAMESPACE_UTIL_BEGIN
 

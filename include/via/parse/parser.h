@@ -10,7 +10,6 @@
 #include "ast-base.h"
 #include "highlighter.h"
 #include "token.h"
-#include "expected.hpp"
 
 VIA_NAMESPACE_BEGIN
 

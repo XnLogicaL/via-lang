@@ -5,9 +5,10 @@
 #ifndef _VIA_PROGRAM_H
 #define _VIA_PROGRAM_H
 
-#include "globals.h"
 #include "common-defs.h"
 #include "common-macros.h"
+#include "compiler/globals.h"
+#include "lex/token.h"
 
 #define VFLAG_VERBOSE int(1 << 0)
 #define VFLAG_SASSY   int(1 << 7)
