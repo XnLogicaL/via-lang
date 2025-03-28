@@ -34,10 +34,10 @@
 // Macro for loading the next instruction
 #define VM_LOAD()                                                                                  \
   do {                                                                                             \
-    if (ip + 1 == iep) {                                                                           \
+    if (pc + 1 == iep) {                                                                           \
       goto exit;                                                                                   \
     }                                                                                              \
-    ip++;                                                                                          \
+    pc++;                                                                                          \
   } while (0)
 
 // Macro that completes an execution cycle
@@ -69,14 +69,14 @@ using enum ThreadState;
 using namespace impl;
 
 void vm_save_snapshot(State* VIA_RESTRICT V) {
-  uint64_t    pos  = V->ip - V->ibp;
+  uint64_t pos = V->pc - V->ibp;
   std::string file = std::format("vm_snapshot.{}.log", pos);
 
   std::ostringstream headers;
-  headers << "opcode: " << magic_enum::enum_name(V->ip->op) << "\n";
-  headers << "operand0: " << V->ip->operand0 << "\n";
-  headers << "operand1: " << V->ip->operand1 << "\n";
-  headers << "operand2: " << V->ip->operand2 << "\n";
+  headers << "opcode: " << magic_enum::enum_name(V->pc->op) << "\n";
+  headers << "operand0: " << V->pc->operand0 << "\n";
+  headers << "operand1: " << V->pc->operand1 << "\n";
+  headers << "operand2: " << V->pc->operand2 << "\n";
 
   std::ostringstream registers;
   registers << "==== registers ====\n";
@@ -121,7 +121,7 @@ void State::execute() {
 
   goto dispatch;
 
-dispatch : {
+dispatch: {
 
 #ifdef VIA_DEBUG
   vm_save_snapshot(this);
@@ -144,15 +144,15 @@ dispatch : {
     goto exit;
   }
 
-  switch (ip->op) {
+  switch (pc->op) {
   // Handle special/internal opcodes
   case NOP:
   case LABEL:
     VM_NEXT();
 
   case ADD: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -179,10 +179,10 @@ dispatch : {
     VM_NEXT();
   }
   case ADDK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -207,12 +207,12 @@ dispatch : {
     VM_NEXT();
   }
   case ADDINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer += imm;
@@ -224,12 +224,12 @@ dispatch : {
     VM_NEXT();
   }
   case ADDFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer += imm;
@@ -242,8 +242,8 @@ dispatch : {
   }
 
   case SUB: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -270,10 +270,10 @@ dispatch : {
     VM_NEXT();
   }
   case SUBK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -298,12 +298,12 @@ dispatch : {
     VM_NEXT();
   }
   case SUBINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer -= imm;
@@ -315,12 +315,12 @@ dispatch : {
     VM_NEXT();
   }
   case SUBFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer -= imm;
@@ -333,8 +333,8 @@ dispatch : {
   }
 
   case MUL: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -361,10 +361,10 @@ dispatch : {
     VM_NEXT();
   }
   case MULK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -389,12 +389,12 @@ dispatch : {
     VM_NEXT();
   }
   case MULINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer *= imm;
@@ -406,12 +406,12 @@ dispatch : {
     VM_NEXT();
   }
   case MULFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer *= imm;
@@ -424,8 +424,8 @@ dispatch : {
   }
 
   case DIV: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -460,10 +460,10 @@ dispatch : {
     VM_NEXT();
   }
   case DIVK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -496,12 +496,12 @@ dispatch : {
     VM_NEXT();
   }
   case DIVINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
     VM_CHECK_ZERO_DIVISON_INT(imm);
 
@@ -515,12 +515,12 @@ dispatch : {
     VM_NEXT();
   }
   case DIVFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
     VM_CHECK_ZERO_DIVISON_FLT(imm);
 
@@ -535,8 +535,8 @@ dispatch : {
   }
 
   case POW: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -565,10 +565,10 @@ dispatch : {
     VM_NEXT();
   }
   case POWK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -595,12 +595,12 @@ dispatch : {
     VM_NEXT();
   }
   case POWINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
@@ -612,12 +612,12 @@ dispatch : {
     VM_NEXT();
   }
   case POWFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
     if VIA_LIKELY (lhs_val->is_int()) {
       lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
@@ -630,8 +630,8 @@ dispatch : {
   }
 
   case MOD: {
-    Operand lhs = ip->operand0;
-    Operand rhs = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand rhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -660,10 +660,10 @@ dispatch : {
     VM_NEXT();
   }
   case MODK: {
-    Operand lhs = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand lhs = pc->operand0;
+    Operand idx = pc->operand1;
 
-    TValue*       lhs_val = __get_register(this, lhs);
+    TValue* lhs_val = __get_register(this, lhs);
     const TValue& rhs_val = __get_constant(this, idx);
 
     if VIA_LIKELY (lhs_val->is_int()) {
@@ -690,12 +690,12 @@ dispatch : {
     VM_NEXT();
   }
   case MODINT: {
-    Operand lhs      = ip->operand0;
-    Operand int_high = ip->operand1;
-    Operand int_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand int_high = pc->operand1;
+    Operand int_low = pc->operand2;
 
-    TValue*  lhs_val = __get_register(this, lhs);
-    TInteger imm     = reinterpret_u16_as_i32(int_high, int_low);
+    TValue* lhs_val = __get_register(this, lhs);
+    TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
 
 
 
@@ -709,12 +709,12 @@ dispatch : {
     VM_NEXT();
   }
   case MODFLOAT: {
-    Operand lhs      = ip->operand0;
-    Operand flt_high = ip->operand1;
-    Operand flt_low  = ip->operand2;
+    Operand lhs = pc->operand0;
+    Operand flt_high = pc->operand1;
+    Operand flt_low = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
-    TFloat  imm     = reinterpret_u16_as_f32(flt_high, flt_low);
+    TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
 
 
@@ -729,8 +729,8 @@ dispatch : {
   }
 
   case NEG: {
-    Operand   dst  = ip->operand0;
-    TValue*   val  = __get_register(this, dst);
+    Operand dst = pc->operand0;
+    TValue* val = __get_register(this, dst);
     ValueType type = val->type;
 
     if (type == integer) {
@@ -744,8 +744,8 @@ dispatch : {
   }
 
   case MOVE: {
-    Operand rdst    = ip->operand0;
-    Operand rsrc    = ip->operand1;
+    Operand rdst = pc->operand0;
+    Operand rsrc = pc->operand1;
     TValue* src_val = __get_register(this, rsrc);
 
     __set_register(this, rdst, *src_val);
@@ -753,8 +753,8 @@ dispatch : {
   }
 
   case LOADK: {
-    Operand dst = ip->operand0;
-    Operand idx = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand idx = pc->operand1;
 
     const TValue& kval = __get_constant(this, idx);
 
@@ -763,50 +763,50 @@ dispatch : {
   }
 
   case LOADNIL: {
-    Operand dst = ip->operand0;
+    Operand dst = pc->operand0;
 
     __set_register(this, dst, _Nil);
     VM_NEXT();
   }
 
   case LOADINT: {
-    Operand  dst = ip->operand0;
-    TInteger imm = reinterpret_u16_as_u32(ip->operand1, ip->operand2);
+    Operand dst = pc->operand0;
+    TInteger imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
 
     __set_register(this, dst, TValue(imm));
     VM_NEXT();
   }
 
   case LOADFLOAT: {
-    Operand dst = ip->operand0;
-    TFloat  imm = reinterpret_u16_as_f32(ip->operand1, ip->operand2);
+    Operand dst = pc->operand0;
+    TFloat imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
 
     __set_register(this, dst, TValue(imm));
     VM_NEXT();
   }
 
   case LOADTRUE: {
-    Operand dst = ip->operand0;
+    Operand dst = pc->operand0;
     __set_register(this, dst, TValue(true));
     VM_NEXT();
   }
 
   case LOADFALSE: {
-    Operand dst = ip->operand0;
+    Operand dst = pc->operand0;
     __set_register(this, dst, TValue(false));
     VM_NEXT();
   }
 
   case LOADTABLE: {
-    Operand dst = ip->operand0;
-    TValue  ttable(new TTable());
+    Operand dst = pc->operand0;
+    TValue ttable(new TTable());
 
     __set_register(this, dst, ttable);
     VM_NEXT();
   }
 
   case LOADFUNCTION: {
-    Operand    dst  = ip->operand0;
+    Operand dst = pc->operand0;
     TFunction* func = new TFunction();
 
     __closure_bytecode_load(this, func);
@@ -815,9 +815,9 @@ dispatch : {
   }
 
   case GETUPVALUE: {
-    Operand  dst    = ip->operand0;
-    Operand  upv_id = ip->operand1;
-    UpValue* upv    = __closure_upv_get(frame, upv_id);
+    Operand dst = pc->operand0;
+    Operand upv_id = pc->operand1;
+    UpValue* upv = __closure_upv_get(frame, upv_id);
 
     dump_struct(*upv->value);
 
@@ -826,16 +826,16 @@ dispatch : {
   }
 
   case SETUPVALUE: {
-    Operand src    = ip->operand0;
-    Operand upv_id = ip->operand1;
-    TValue* val    = __get_register(this, src);
+    Operand src = pc->operand0;
+    Operand upv_id = pc->operand1;
+    TValue* val = __get_register(this, src);
 
     __closure_upv_set(frame, upv_id, *val);
     VM_NEXT();
   }
 
   case PUSH: {
-    Operand src = ip->operand0;
+    Operand src = pc->operand0;
     TValue* val = __get_register(this, src);
 
     __push(this, *val);
@@ -843,8 +843,8 @@ dispatch : {
   }
 
   case PUSHK: {
-    Operand const_idx = ip->operand0;
-    TValue  constant  = __get_constant(this, const_idx);
+    Operand const_idx = pc->operand0;
+    TValue constant = __get_constant(this, const_idx);
 
     __push(this, constant);
     VM_NEXT();
@@ -856,13 +856,13 @@ dispatch : {
   }
 
   case PUSHINT: {
-    TInteger imm = reinterpret_u16_as_u32(ip->operand0, ip->operand1);
+    TInteger imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
     __push(this, TValue(imm));
     VM_NEXT();
   }
 
   case PUSHFLOAT: {
-    TFloat imm = reinterpret_u16_as_f32(ip->operand0, ip->operand1);
+    TFloat imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
     __push(this, TValue(imm));
     VM_NEXT();
   }
@@ -878,8 +878,8 @@ dispatch : {
   }
 
   case POP: {
-    Operand dst = ip->operand0;
-    TValue  val = __pop(this);
+    Operand dst = pc->operand0;
+    TValue val = __pop(this);
 
     __set_register(this, dst, val);
     VM_NEXT();
@@ -891,8 +891,8 @@ dispatch : {
   }
 
   case GETSTACK: {
-    Operand dst = ip->operand0;
-    Operand off = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand off = pc->operand1;
 
     const TValue& val = __get_stack(this, off);
 
@@ -901,8 +901,8 @@ dispatch : {
   }
 
   case SETSTACK: {
-    Operand src = ip->operand0;
-    Operand off = ip->operand1;
+    Operand src = pc->operand0;
+    Operand off = pc->operand1;
 
     TValue* val = __get_register(this, src);
 
@@ -911,8 +911,8 @@ dispatch : {
   }
 
   case GETARGUMENT: {
-    Operand dst = ip->operand0;
-    Operand off = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand off = pc->operand1;
 
     const TValue& val = __get_argument(this, off);
 
@@ -921,9 +921,9 @@ dispatch : {
   }
 
   case GETGLOBAL: {
-    Operand dst = ip->operand0;
+    Operand dst = pc->operand0;
 
-    uint32_t      hash   = reinterpret_u16_as_u32(ip->operand1, ip->operand2);
+    uint32_t hash = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
     const TValue& global = __get_global(this, hash);
 
     __set_register(this, dst, global);
@@ -931,19 +931,19 @@ dispatch : {
   }
 
   case SETGLOBAL: {
-    Operand src = ip->operand0;
+    Operand src = pc->operand0;
 
-    uint32_t hash   = reinterpret_u16_as_u32(ip->operand1, ip->operand2);
-    TValue*  global = __get_register(this, src);
+    uint32_t hash = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
+    TValue* global = __get_register(this, src);
 
     __set_global(this, hash, *global);
     VM_NEXT();
   }
 
   case EQUAL: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     if VIA_UNLIKELY (lhs == rhs) {
       __set_register(this, dst, TValue(true));
@@ -965,9 +965,9 @@ dispatch : {
   }
 
   case NOTEQUAL: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     if VIA_LIKELY (lhs != rhs) {
       __set_register(this, dst, TValue(true));
@@ -989,46 +989,46 @@ dispatch : {
   }
 
   case AND: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
-    bool    cond    = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
+    bool cond = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
 
     __set_register(this, dst, TValue(cond));
     VM_NEXT();
   }
 
   case OR: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
-    bool    cond    = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
+    bool cond = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
 
     __set_register(this, dst, TValue(cond));
     VM_NEXT();
   }
 
   case NOT: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
 
     TValue* lhs_val = __get_register(this, lhs);
-    bool    cond    = !__to_cxx_bool(*lhs_val);
+    bool cond = !__to_cxx_bool(*lhs_val);
 
     __set_register(this, dst, TValue(cond));
     VM_NEXT();
   }
 
   case LESS: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -1060,9 +1060,9 @@ dispatch : {
   }
 
   case GREATER: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -1094,9 +1094,9 @@ dispatch : {
   }
 
   case LESSOREQUAL: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -1132,9 +1132,9 @@ dispatch : {
   }
 
   case GREATEROREQUAL: {
-    Operand dst = ip->operand0;
-    Operand lhs = ip->operand1;
-    Operand rhs = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand lhs = pc->operand1;
+    Operand rhs = pc->operand2;
 
     TValue* lhs_val = __get_register(this, lhs);
     TValue* rhs_val = __get_register(this, rhs);
@@ -1174,49 +1174,49 @@ dispatch : {
   }
 
   case JUMP: {
-    OperandS offset = ip->operand0;
-    ip += offset;
+    OperandS offset = pc->operand0;
+    pc += offset;
     goto dispatch;
   }
 
   case JUMPIF: {
-    Operand  cond   = ip->operand0;
-    OperandS offset = ip->operand1;
+    Operand cond = pc->operand0;
+    OperandS offset = pc->operand1;
 
     TValue* cond_val = __get_register(this, cond);
     if (__to_cxx_bool(*cond_val)) {
-      ip += offset;
+      pc += offset;
     }
 
     goto dispatch;
   }
 
   case JUMPIFNOT: {
-    Operand  cond   = ip->operand0;
-    OperandS offset = ip->operand1;
+    Operand cond = pc->operand0;
+    OperandS offset = pc->operand1;
 
     TValue* cond_val = __get_register(this, cond);
     if (!__to_cxx_bool(*cond_val)) {
-      ip += offset;
+      pc += offset;
     }
 
     goto dispatch;
   }
 
   case JUMPIFEQUAL: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     if VIA_UNLIKELY (cond_lhs == cond_rhs) {
-      ip += offset;
+      pc += offset;
     }
     else {
       TValue* lhs_val = __get_register(this, cond_lhs);
       TValue* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
-        ip += offset;
+        pc += offset;
       }
     }
 
@@ -1224,19 +1224,19 @@ dispatch : {
   }
 
   case JUMPIFNOTEQUAL: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     if VIA_LIKELY (cond_lhs != cond_rhs) {
-      ip += offset;
+      pc += offset;
     }
     else {
       TValue* lhs_val = __get_register(this, cond_lhs);
       TValue* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
-        ip += offset;
+        pc += offset;
       }
     }
 
@@ -1244,9 +1244,9 @@ dispatch : {
   }
 
   case JUMPIFLESS: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1254,24 +1254,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer < rhs_val->val_integer) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer)) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
@@ -1280,9 +1280,9 @@ dispatch : {
   }
 
   case JUMPIFGREATER: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1290,24 +1290,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer > rhs_val->val_integer) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer)) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
@@ -1316,9 +1316,9 @@ dispatch : {
   }
 
   case JUMPIFLESSOREQUAL: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1326,24 +1326,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer <= rhs_val->val_integer) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer)) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
@@ -1352,9 +1352,9 @@ dispatch : {
   }
 
   case JUMPIFGREATEROREQUAL: {
-    Operand  cond_lhs = ip->operand0;
-    Operand  cond_rhs = ip->operand1;
-    OperandS offset   = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    OperandS offset = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1362,24 +1362,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer >= rhs_val->val_integer) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer)) {
-          ip += offset;
+          pc += offset;
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
-          ip += offset;
+          pc += offset;
         }
       }
     }
@@ -1388,51 +1388,51 @@ dispatch : {
   }
 
   case JUMPLABEL: {
-    Operand label = ip->operand0;
+    Operand label = pc->operand0;
 
-    ip = __label_get(this, label);
+    pc = __label_get(this, label);
 
     goto dispatch;
   }
 
   case JUMPLABELIF: {
-    Operand cond  = ip->operand0;
-    Operand label = ip->operand1;
+    Operand cond = pc->operand0;
+    Operand label = pc->operand1;
 
     TValue* cond_val = __get_register(this, cond);
     if (__to_cxx_bool(*cond_val)) {
-      ip = __label_get(this, label);
+      pc = __label_get(this, label);
     }
 
     goto dispatch;
   }
 
   case JUMPLABELIFNOT: {
-    Operand cond  = ip->operand0;
-    Operand label = ip->operand1;
+    Operand cond = pc->operand0;
+    Operand label = pc->operand1;
 
     TValue* cond_val = __get_register(this, cond);
     if (!__to_cxx_bool(*cond_val)) {
-      ip = __label_get(this, label);
+      pc = __label_get(this, label);
     }
 
     goto dispatch;
   }
 
   case JUMPLABELIFEQUAL: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     if VIA_UNLIKELY (cond_lhs == cond_rhs) {
-      ip = __label_get(this, label);
+      pc = __label_get(this, label);
     }
     else {
       TValue* lhs_val = __get_register(this, cond_lhs);
       TValue* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
-        ip = __label_get(this, label);
+        pc = __label_get(this, label);
       }
     }
 
@@ -1440,19 +1440,19 @@ dispatch : {
   }
 
   case JUMPLABELIFNOTEQUAL: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     if VIA_LIKELY (cond_lhs != cond_rhs) {
-      ip = __label_get(this, label);
+      pc = __label_get(this, label);
     }
     else {
       TValue* lhs_val = __get_register(this, cond_lhs);
       TValue* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
-        ip = __label_get(this, label);
+        pc = __label_get(this, label);
       }
     }
 
@@ -1460,9 +1460,9 @@ dispatch : {
   }
 
   case JUMPLABELIFLESS: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1470,24 +1470,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer < rhs_val->val_integer) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer)) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
@@ -1496,9 +1496,9 @@ dispatch : {
   }
 
   case JUMPLABELIFGREATER: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1506,24 +1506,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer > rhs_val->val_integer) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer)) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
@@ -1532,9 +1532,9 @@ dispatch : {
   }
 
   case JUMPLABELIFLESSOREQUAL: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1542,24 +1542,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer <= rhs_val->val_integer) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer)) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
@@ -1568,9 +1568,9 @@ dispatch : {
   }
 
   case JUMPLABELIFGREATEROREQUAL: {
-    Operand cond_lhs = ip->operand0;
-    Operand cond_rhs = ip->operand1;
-    Operand label    = ip->operand2;
+    Operand cond_lhs = pc->operand0;
+    Operand cond_rhs = pc->operand1;
+    Operand label = pc->operand2;
 
     TValue* lhs_val = __get_register(this, cond_lhs);
     TValue* rhs_val = __get_register(this, cond_rhs);
@@ -1578,24 +1578,24 @@ dispatch : {
     if VIA_LIKELY (lhs_val->is_int()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_integer >= rhs_val->val_integer) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
     else if VIA_UNLIKELY (lhs_val->is_float()) {
       if VIA_LIKELY (rhs_val->is_int()) {
         if (lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer)) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
       else if VIA_UNLIKELY (rhs_val->is_float()) {
         if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
-          ip = __label_get(this, label);
+          pc = __label_get(this, label);
         }
       }
     }
@@ -1604,8 +1604,8 @@ dispatch : {
   }
 
   case CALL: {
-    Operand fn     = ip->operand0;
-    Operand argc   = ip->operand1;
+    Operand fn = pc->operand0;
+    Operand argc = pc->operand1;
     TValue* fn_val = __get_register(this, fn);
 
     __call(this, *fn_val, argc);
@@ -1613,8 +1613,8 @@ dispatch : {
   }
 
   case EXTERNCALL: {
-    Operand fn    = ip->operand0;
-    Operand argc  = ip->operand1;
+    Operand fn = pc->operand0;
+    Operand argc = pc->operand1;
     TValue* cfunc = __get_register(this, fn);
 
     __extern_call(this, cfunc->cast_ptr<TCFunction>(), argc);
@@ -1622,8 +1622,8 @@ dispatch : {
   }
 
   case NATIVECALL: {
-    Operand fn   = ip->operand0;
-    Operand argc = ip->operand1;
+    Operand fn = pc->operand0;
+    Operand argc = pc->operand1;
     TValue* func = __get_register(this, fn);
 
     __native_call(this, func->cast_ptr<TFunction>(), argc);
@@ -1631,11 +1631,11 @@ dispatch : {
   }
 
   case METHODCALL: {
-    Operand obj  = ip->operand0;
-    Operand fn   = ip->operand1;
-    Operand argc = ip->operand2;
+    Operand obj = pc->operand0;
+    Operand fn = pc->operand1;
+    Operand argc = pc->operand2;
 
-    TValue* func   = __get_register(this, fn);
+    TValue* func = __get_register(this, fn);
     TValue* object = __get_register(this, obj);
 
     __push(this, object->clone());
@@ -1644,7 +1644,7 @@ dispatch : {
   }
 
   case RETURN: {
-    Operand src = ip->operand0;
+    Operand src = pc->operand0;
     TValue* val = __get_register(this, src);
 
     __closure_close_upvalues(frame);
@@ -1653,9 +1653,9 @@ dispatch : {
   }
 
   case GETTABLE: {
-    Operand dst = ip->operand0;
-    Operand tbl = ip->operand1;
-    Operand key = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand tbl = pc->operand1;
+    Operand key = pc->operand2;
 
     TValue* tbl_val = __get_register(this, tbl);
     TValue* key_val = __get_register(this, key);
@@ -1667,13 +1667,13 @@ dispatch : {
   }
 
   case SETTABLE: {
-    Operand src = ip->operand0;
-    Operand tbl = ip->operand1;
-    Operand ky  = ip->operand2;
+    Operand src = pc->operand0;
+    Operand tbl = pc->operand1;
+    Operand ky = pc->operand2;
 
     TValue* table = __get_register(this, tbl);
     TValue* value = __get_register(this, src);
-    TValue* key   = __get_register(this, ky);
+    TValue* key = __get_register(this, ky);
 
     __table_set(table->cast_ptr<TTable>(), TValue(key), *value);
     VM_NEXT();
@@ -1682,11 +1682,11 @@ dispatch : {
   case NEXTTABLE: {
     static std::unordered_map<void*, Operand> next_table;
 
-    Operand dst  = ip->operand0;
-    Operand valr = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand valr = pc->operand1;
 
     TValue* val = __get_register(this, valr);
-    void*   ptr = __to_pointer(*val);
+    void* ptr = __to_pointer(*val);
     Operand key = 0;
 
     auto it = next_table.find(ptr);
@@ -1703,10 +1703,10 @@ dispatch : {
   }
 
   case LENTABLE: {
-    Operand dst = ip->operand0;
-    Operand tbl = ip->operand1;
+    Operand dst = pc->operand0;
+    Operand tbl = pc->operand1;
 
-    TValue*  val  = __get_register(this, tbl);
+    TValue* val = __get_register(this, tbl);
     TInteger size = __table_size(val->cast_ptr<TTable>());
 
     __set_register(this, dst, TValue(size));
@@ -1714,10 +1714,10 @@ dispatch : {
   }
 
   case LENSTRING: {
-    Operand rdst = ip->operand0;
-    Operand objr = ip->operand1;
+    Operand rdst = pc->operand0;
+    Operand objr = pc->operand1;
 
-    TValue*  val = __get_register(this, objr);
+    TValue* val = __get_register(this, objr);
     TInteger len = val->cast_ptr<TString>()->len;
 
     __set_register(this, rdst, TValue(len));
@@ -1725,17 +1725,17 @@ dispatch : {
   }
 
   case CONCAT: {
-    Operand left  = ip->operand0;
-    Operand right = ip->operand1;
+    Operand left = pc->operand0;
+    Operand right = pc->operand1;
 
-    TValue* left_val  = __get_register(this, left);
+    TValue* left_val = __get_register(this, left);
     TValue* right_val = __get_register(this, right);
 
-    TString* left_str  = left_val->cast_ptr<TString>();
+    TString* left_str = left_val->cast_ptr<TString>();
     TString* right_str = right_val->cast_ptr<TString>();
 
     size_t new_length = left_str->len + right_str->len;
-    char*  new_string = new char[new_length + 1];
+    char* new_string = new char[new_length + 1];
 
     std::memcpy(new_string, left_str->data, left_str->len);
     std::memcpy(new_string + left_str->len, right_str->data, right_str->len);
@@ -1750,14 +1750,14 @@ dispatch : {
   }
 
   case GETSTRING: {
-    Operand dst = ip->operand0;
-    Operand str = ip->operand1;
-    Operand idx = ip->operand2;
+    Operand dst = pc->operand0;
+    Operand str = pc->operand1;
+    Operand idx = pc->operand2;
 
-    TValue*  str_val = __get_register(this, str);
-    TString* tstr    = str_val->cast_ptr<TString>();
+    TValue* str_val = __get_register(this, str);
+    TString* tstr = str_val->cast_ptr<TString>();
 
-    char     chr    = tstr->data[idx];
+    char chr = tstr->data[idx];
     TString* result = new TString(this, &chr);
 
     __set_register(this, dst, TValue(string, result));
@@ -1765,16 +1765,16 @@ dispatch : {
   }
 
   case SETSTRING: {
-    Operand str = ip->operand0;
-    Operand src = ip->operand1;
-    Operand idx = ip->operand2;
+    Operand str = pc->operand0;
+    Operand src = pc->operand1;
+    Operand idx = pc->operand2;
 
-    TValue*  str_val = __get_register(this, str);
-    TString* tstr    = str_val->cast_ptr<TString>();
+    TValue* str_val = __get_register(this, str);
+    TString* tstr = str_val->cast_ptr<TString>();
 
-    char  chr     = static_cast<char>(src);
+    char chr = static_cast<char>(src);
     char* str_cpy = duplicate_string(tstr->data);
-    str_cpy[idx]  = chr;
+    str_cpy[idx] = chr;
 
     TString* result = new TString(this, str_cpy);
     __set_register(this, str, TValue(result));
@@ -1783,8 +1783,52 @@ dispatch : {
     VM_NEXT();
   }
 
+  case INTCAST: {
+    Operand dst = pc->operand0;
+    Operand src = pc->operand1;
+
+    TValue* target = __get_register(this, src);
+    TValue result = __to_int(this, *target);
+
+    __set_register(this, dst, result);
+    VM_NEXT();
+  }
+
+  case FLOATCAST: {
+    Operand dst = pc->operand0;
+    Operand src = pc->operand1;
+
+    TValue* target = __get_register(this, src);
+    TValue result = __to_float(this, *target);
+
+    __set_register(this, dst, result);
+    VM_NEXT();
+  }
+
+  case STRINGCAST: {
+    Operand dst = pc->operand0;
+    Operand src = pc->operand1;
+
+    TValue* target = __get_register(this, src);
+    TValue result = __to_string(this, *target);
+
+    __set_register(this, dst, result);
+    VM_NEXT();
+  }
+
+  case BOOLCAST: {
+    Operand dst = pc->operand0;
+    Operand src = pc->operand1;
+
+    TValue* target = __get_register(this, src);
+    TValue result = __to_bool(*target);
+
+    __set_register(this, dst, result);
+    VM_NEXT();
+  }
+
   default: {
-    VM_FATAL(std::format("unknown opcode 0x{:x}", static_cast<int>(ip->op)));
+    VM_FATAL(std::format("unknown opcode 0x{:x}", static_cast<int>(pc->op)));
   }
   }
 }

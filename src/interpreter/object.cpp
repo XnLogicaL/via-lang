@@ -35,7 +35,7 @@ TValue& TValue::operator=(TValue&& other) {
       break;
     }
 
-    type       = other.type;
+    type = other.type;
     other.type = nil;
   }
 
@@ -93,7 +93,7 @@ TValue::~TValue() {
     }
 
     val_pointer = nullptr;
-    type        = nil;
+    type = nil;
   }
 }
 
@@ -131,13 +131,13 @@ bool TValue::compare(const TValue&) const {
 TString::TString(State* V, const char* str) {
   if (V != nullptr) {
     auto& stable = V->G->stable;
-    auto  it     = stable.find(hash);
+    auto it = stable.find(hash);
     if (it != stable.end()) {
       return;
     }
   }
 
-  len  = std::strlen(str);
+  len = std::strlen(str);
   data = duplicate_string(str);
   hash = hash_string_custom(str);
 
@@ -173,7 +173,7 @@ void TString::set_string(size_t position, const TValue& value) {
 
 TValue TString::get_string(size_t position) {
   VIA_ASSERT(position < len, "String index position out of bounds");
-  char     chr  = data[position];
+  char chr = data[position];
   TString* tstr = new TString(nullptr, &chr);
   return TValue(tstr);
 }
@@ -184,7 +184,7 @@ TTable::~TTable() {
       THashNode* next = ht_buckets[i];
       while (next) {
         THashNode* current = next;
-        next               = next->next;
+        next = next->next;
         delete current;
       }
       ht_buckets[i] = nullptr;
@@ -215,13 +215,13 @@ TTable::TTable(const TTable& other)
     ht_buckets = new THashNode*[ht_capacity]();
 
     for (size_t i = 0; i < ht_capacity; ++i) {
-      THashNode*  src = other.ht_buckets[i];
+      THashNode* src = other.ht_buckets[i];
       THashNode** dst = &ht_buckets[i];
 
       while (src) {
         *dst = new THashNode{src->key, src->value.clone(), nullptr};
-        dst  = &((*dst)->next);
-        src  = src->next;
+        dst = &((*dst)->next);
+        src = src->next;
       }
     }
   }

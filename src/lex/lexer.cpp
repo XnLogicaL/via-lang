@@ -35,10 +35,10 @@ char Tokenizer::consume(size_t ahead) {
 }
 
 Token Tokenizer::read_number(size_t position) {
-  TokenType   type         = LIT_INT;
-  size_t      start_offset = offset;
+  TokenType type = LIT_INT;
+  size_t start_offset = offset;
   std::string value;
-  char        delimiter;
+  char delimiter;
 
   // Check for binary or hex literals
   if (peek() == '0' && (peek(1) == 'x' || peek(1) == 'b')) {
@@ -89,14 +89,14 @@ Token Tokenizer::read_ident(size_t position) {
 
   // Default type, this is because this might be an identifier, keyword or boolean literal
   // We can't know in advance which.
-  TokenType   type         = IDENTIFIER;
-  size_t      start_offset = offset;
+  TokenType type = IDENTIFIER;
+  size_t start_offset = offset;
   std::string identifier;
 
   // Lambda for checking if a character is allowed within an identifier
   auto is_allowed = [this](char chr) -> bool {
     auto allow_list = allowed_identifier_spec_chars;
-    bool is_alnum   = isalnum(chr);
+    bool is_alnum = isalnum(chr);
     bool is_allowed = std::ranges::find(allow_list, peek()) != allow_list.end();
     return is_alnum || is_allowed;
   };
@@ -143,7 +143,7 @@ Token Tokenizer::read_ident(size_t position) {
 
 Token Tokenizer::read_string(size_t position) {
   std::string lexeme;
-  size_t      start_offset = offset;
+  size_t start_offset = offset;
 
   pos++; // Skip opening quote
   offset++;

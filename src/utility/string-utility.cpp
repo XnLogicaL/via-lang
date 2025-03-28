@@ -20,7 +20,7 @@ char* duplicate_string(const char* str) {
 
 uint32_t hash_string_custom(const char* str) {
   static const constexpr uint32_t BASE = 31;
-  static const constexpr uint32_t MOD  = 0xFFFFFFFF;
+  static const constexpr uint32_t MOD = 0xFFFFFFFF;
 
   uint32_t hash = 0;
   while (char chr = *str++) {

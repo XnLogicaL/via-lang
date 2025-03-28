@@ -1,4 +1,11 @@
-let x = 10
-let y = 20
-let z = x * y + y * x / y % x
-println(z)
+let x: int = 10
+let y: int = 20
+let z: int = x * y + y * x / y % x
+let very_long_variable_name_bruh = nil
+let not_nil_variable: string = x + println(very_long_variable_name_bruh)
+not_nil_variable = 31
+
+do {
+  println(z)
+  very_long_variable_name_bruh
+}

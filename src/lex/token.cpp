@@ -61,7 +61,7 @@ int Token::bin_prec() const {
 }
 
 using token_vector = TokenStream::token_vector;
-using at_result    = TokenStream::at_result;
+using at_result = TokenStream::at_result;
 
 size_t TokenStream::size() {
   return tokens.size();

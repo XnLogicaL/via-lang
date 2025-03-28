@@ -72,18 +72,23 @@ pExprNode SymbolNode::clone() {
   return std::make_unique<SymbolNode>(*this);
 }
 
-pTypeNode SymbolNode::infer_type(TransUnitContext& program) {
-  auto stk_id = program.internal.stack->find_symbol(identifier.lexeme);
-  if (!stk_id.has_value()) {
+pTypeNode SymbolNode::infer_type(TransUnitContext& unit_ctx) {
+  auto stk_id = unit_ctx.internal.stack->find_symbol(identifier.lexeme);
+  if (stk_id.has_value()) {
+    auto stk_obj = unit_ctx.internal.stack->at(stk_id.value());
+    if (stk_obj.has_value()) {
+      return stk_obj->type->clone();
+    }
+
     return nullptr;
   }
 
-  auto stk_obj = program.internal.stack->at(stk_id.value());
-  if (!stk_obj.has_value()) {
-    return nullptr;
+  auto global = unit_ctx.internal.globals->get_global(identifier.lexeme);
+  if (global.has_value()) {
+    return global->type->clone();
   }
 
-  return stk_obj.value().type->clone();
+  return nullptr;
 }
 
 // ===============================
@@ -100,8 +105,8 @@ pExprNode UnaryNode::clone() {
   return std::make_unique<UnaryNode>(expression->clone());
 }
 
-pTypeNode UnaryNode::infer_type(TransUnitContext& program) {
-  pTypeNode inner = expression->infer_type(program);
+pTypeNode UnaryNode::infer_type(TransUnitContext& unit_ctx) {
+  pTypeNode inner = expression->infer_type(unit_ctx);
   if (!inner.get()) {
     return nullptr;
   }
@@ -127,8 +132,8 @@ int GroupNode::precedence() const {
   return std::numeric_limits<int>::max();
 }
 
-pTypeNode GroupNode::infer_type(TransUnitContext& program) {
-  return expression->infer_type(program);
+pTypeNode GroupNode::infer_type(TransUnitContext& unit_ctx) {
+  return expression->infer_type(unit_ctx);
 }
 
 // ===============================
@@ -156,21 +161,11 @@ pExprNode CallNode::clone() {
   return std::make_unique<CallNode>(callee->clone(), std::move(arguments_clone));
 }
 
-pTypeNode CallNode::infer_type(TransUnitContext& program) {
+pTypeNode CallNode::infer_type(TransUnitContext& unit_ctx) {
   if (SymbolNode* symbol = get_derived_instance<ExprNode, SymbolNode>(*callee)) {
-    auto stk_id = program.internal.stack->find_symbol(symbol->identifier.lexeme);
-    if (!stk_id.has_value()) {
-      return nullptr;
-    }
-
-    auto stk_obj = program.internal.stack->at(stk_id.value());
-    if (!stk_obj.has_value()) {
-      return nullptr;
-    }
-
-    if (FunctionTypeNode* function_type =
-            get_derived_instance<TypeNode, FunctionTypeNode>(*stk_obj.value().type)) {
-      return function_type->returns->clone();
+    pTypeNode ty = symbol->infer_type(unit_ctx);
+    if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNode, FunctionTypeNode>(*ty)) {
+      return fn_ty->returns->clone();
     }
   }
 
@@ -193,14 +188,14 @@ pExprNode IndexNode::clone() {
   return std::make_unique<IndexNode>(object->clone(), index->clone());
 }
 
-pTypeNode IndexNode::infer_type(TransUnitContext& program) {
+pTypeNode IndexNode::infer_type(TransUnitContext& unit_ctx) {
   if (SymbolNode* symbol = get_derived_instance<ExprNode, SymbolNode>(*object)) {
-    auto stk_id = program.internal.stack->find_symbol(symbol->identifier.lexeme);
+    auto stk_id = unit_ctx.internal.stack->find_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
     }
 
-    auto stk_obj = program.internal.stack->at(stk_id.value());
+    auto stk_obj = unit_ctx.internal.stack->at(stk_id.value());
     if (!stk_obj.has_value()) {
       return nullptr;
     }
@@ -230,9 +225,9 @@ pExprNode BinaryNode::clone() {
   return std::make_unique<BinaryNode>(op, lhs_expression->clone(), rhs_expression->clone());
 }
 
-pTypeNode BinaryNode::infer_type(TransUnitContext& program) {
-  pTypeNode lhs = lhs_expression->infer_type(program);
-  pTypeNode rhs = rhs_expression->infer_type(program);
+pTypeNode BinaryNode::infer_type(TransUnitContext& unit_ctx) {
+  pTypeNode lhs = lhs_expression->infer_type(unit_ctx);
+  pTypeNode rhs = rhs_expression->infer_type(unit_ctx);
 
   if (!lhs || !rhs || !is_integral(lhs) || !is_integral(rhs)) {
     return nullptr;
@@ -270,8 +265,8 @@ pExprNode TypeCastNode::clone() {
   return std::make_unique<TypeCastNode>(expression->clone(), type->clone());
 }
 
-pTypeNode TypeCastNode::infer_type(TransUnitContext& program) {
-  pTypeNode expr_type = expression->infer_type(program);
+pTypeNode TypeCastNode::infer_type(TransUnitContext& unit_ctx) {
+  pTypeNode expr_type = expression->infer_type(unit_ctx);
   if (!is_castable(expr_type, type)) {
     return nullptr;
   }
@@ -379,12 +374,12 @@ void FunctionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
 }
 
 pTypeNode FunctionTypeNode::clone() {
-  Parameters parameters_clone;
+  parameter_vector parameters_clone;
   for (pTypeNode& parameter : parameters) {
     parameters_clone.emplace_back(parameter->clone());
   }
 
-  return std::make_unique<FunctionTypeNode>(std::move(parameters), returns->clone());
+  return std::make_unique<FunctionTypeNode>(std::move(parameters_clone), returns->clone());
 }
 
 // ===============================

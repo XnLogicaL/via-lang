@@ -9,7 +9,7 @@
 VIA_NAMESPACE_BEGIN
 
 void TypeVisitor::visit(DeclarationNode& declaration_node) {
-  pTypeNode  infered_type   = declaration_node.value_expression->infer_type(unit_ctx);
+  pTypeNode infered_type = declaration_node.value_expression->infer_type(unit_ctx);
   pTypeNode& annotated_type = declaration_node.type;
 
   CHECK_TYPE_INFERENCE_FAILURE(infered_type, declaration_node.value_expression);
@@ -20,8 +20,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
       declaration_node.value_expression->begin,
       declaration_node.value_expression->end,
       std::format(
-        "Expression type '{}' is not related to or implicitly castable into annotated type "
-        "'{}'",
+        "Variable initializer type '{}' does not match with annotated type '{}'",
         infered_type->to_string_x(),
         annotated_type->to_string_x()
       )
@@ -30,7 +29,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
 }
 
 void TypeVisitor::visit(AssignNode& assign_node) {
-  pTypeNode infered_type  = assign_node.assignee->infer_type(unit_ctx);
+  pTypeNode infered_type = assign_node.assignee->infer_type(unit_ctx);
   pTypeNode assigned_type = assign_node.value->infer_type(unit_ctx);
 
   CHECK_TYPE_INFERENCE_FAILURE(infered_type, assign_node.assignee);
@@ -41,7 +40,7 @@ void TypeVisitor::visit(AssignNode& assign_node) {
       assign_node.value->begin,
       assign_node.value->end,
       std::format(
-        "Assigning incompatible type '{}' to an lvalue that holds type '{}'",
+        "Assigning incompatible type '{}' to variable declared with type '{}'",
         assigned_type->to_string_x(),
         infered_type->to_string_x()
       )

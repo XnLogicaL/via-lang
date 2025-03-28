@@ -22,7 +22,7 @@
 #define VIA_NAMESPACE_LIB_BEGIN  namespace via::lib {
 #define VIA_NAMESPACE_END        }
 
-#define VIA_VERSION "0.27.0"
+#define VIA_VERSION "0.27.1"
 
 // Parameter declaration spec macros
 #define VIA_RESTRICT __restrict__
@@ -67,7 +67,7 @@
 #define VIA_NON_DEFAULT_CONSTRUCTIBLE(target) target() = delete;
 #define VIA_NON_COPYABLE(target)                                                                   \
   target& operator=(const target&) = delete;                                                       \
-  target(const target&)            = delete;
+  target(const target&) = delete;
 
 #define VIA_ALIGN_8 alignas(8)
 

@@ -171,9 +171,9 @@ public:
 private:
   RegisterAllocator& allocator;
 
-  ExprVisitor  expression_visitor;
+  ExprVisitor expression_visitor;
   DecayVisitor decay_visitor;
-  TypeVisitor  type_visitor;
+  TypeVisitor type_visitor;
 
   std::optional<Label> escape_label = std::nullopt;
   std::optional<Label> repeat_label = std::nullopt;

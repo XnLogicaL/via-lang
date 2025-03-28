@@ -50,8 +50,8 @@ public:
   const std::string file_path;
   const std::string file_source;
 
-  std::unique_ptr<TokenStream>    tokens;
-  std::unique_ptr<SyntaxTree>     ast;
+  std::unique_ptr<TokenStream> tokens;
+  std::unique_ptr<SyntaxTree> ast;
   std::unique_ptr<BytecodeHolder> bytecode;
   std::unique_ptr<ConstantHolder> constants;
 

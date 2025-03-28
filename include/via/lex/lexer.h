@@ -25,10 +25,10 @@ public:
   void tokenize();
 
 private:
-  bool   is_hex_char(char chr);
+  bool is_hex_char(char chr);
   size_t source_size();
-  char   peek(size_t ahead = 0);
-  char   consume(size_t ahead = 1);
+  char peek(size_t ahead = 0);
+  char consume(size_t ahead = 1);
 
   // Starts reading a number literal
   Token read_number(size_t);
@@ -41,9 +41,9 @@ private:
   Token get_token();
 
 private:
-  size_t            pos    = 0;
-  size_t            line   = 1;
-  size_t            offset = 0;
+  size_t pos = 0;
+  size_t line = 1;
+  size_t offset = 0;
   TransUnitContext& unit_ctx;
 };
 

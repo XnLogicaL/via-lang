@@ -16,24 +16,24 @@ enum class CompilerErrorLevel : uint8_t {
 };
 
 struct CompilerErrorPosition {
-  size_t line;
-  size_t column;
-  size_t begin;
-  size_t end;
+  const size_t line = 0;
+  const size_t column = 0;
+  const size_t begin = 0;
+  const size_t end = 0;
 
   VIA_DEFAULT_CONSTRUCTOR(CompilerErrorPosition);
 
   CompilerErrorPosition(size_t l, size_t c, size_t b, size_t e)
-      : line(l),
-        column(c),
-        begin(b),
-        end(e) {}
+    : line(l),
+      column(c),
+      begin(b),
+      end(e) {}
 
   CompilerErrorPosition(const Token& tok)
-      : line(tok.line),
-        column(tok.offset),
-        begin(tok.position),
-        end(tok.position + tok.lexeme.length()) {}
+    : line(tok.line),
+      column(tok.offset),
+      begin(tok.position),
+      end(tok.position + tok.lexeme.length()) {}
 };
 
 class CompilerError final {
@@ -42,17 +42,17 @@ public:
   std::string to_string() const;
 
   CompilerError(
-    bool                  flt,
-    const std::string&    msg,
-    TransUnitContext&     ctx,
-    CompilerErrorLevel    lvl,
+    bool flt,
+    const std::string& msg,
+    TransUnitContext& ctx,
+    CompilerErrorLevel lvl,
     CompilerErrorPosition pos
   )
-      : is_flat(flt),
-        message(msg),
-        ctx(ctx),
-        level(lvl),
-        position(pos) {}
+    : is_flat(flt),
+      message(msg),
+      ctx(ctx),
+      level(lvl),
+      position(pos) {}
 
 public:
   bool is_flat;
@@ -61,7 +61,7 @@ public:
 
   TransUnitContext& ctx;
 
-  CompilerErrorLevel    level;
+  CompilerErrorLevel level;
   CompilerErrorPosition position;
 };
 

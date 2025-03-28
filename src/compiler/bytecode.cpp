@@ -11,8 +11,8 @@
 //
 VIA_NAMESPACE_BEGIN
 
-using comment_type    = BytecodeHolder::comment_type;
-using operands_array  = BytecodeHolder::operands_array;
+using comment_type = BytecodeHolder::comment_type;
+using operands_array = BytecodeHolder::operands_array;
 using bytecode_vector = BytecodeHolder::bytecode_vector;
 
 size_t BytecodeHolder::size() const {
@@ -48,7 +48,7 @@ void BytecodeHolder::insert(
     {
       .instruction =
         {
-          .op       = opcode,
+          .op = opcode,
           .operand0 = operands.at(0),
           .operand1 = operands.at(1),
           .operand2 = operands.at(2),
@@ -65,7 +65,7 @@ void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type&
   add({
     .instruction =
       {
-        .op       = opcode,
+        .op = opcode,
         .operand0 = operands.at(0),
         .operand1 = operands.at(1),
         .operand2 = operands.at(2),

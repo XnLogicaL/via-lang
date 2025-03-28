@@ -41,15 +41,15 @@ void State::load(const BytecodeHolder& bytecode) {
   auto& pipeline = bytecode.get();
 
   if (pipeline.empty()) {
-    ibp = sibp = siep = iep = ip = nullptr;
+    ibp = sibp = siep = iep = pc = nullptr;
     return;
   }
 
-  ibp  = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
+  ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
   sibp = ibp;
-  iep  = ibp + pipeline.size(); // Initialize iep (Instruction end pointer)
+  iep = ibp + pipeline.size(); // Initialize iep (Instruction end pointer)
   siep = iep;
-  ip   = ibp; // Initialize ip (Instruction pointer)
+  pc = ibp; // Initialize pc (Instruction pointer)
 
   size_t position = 0;
   for (const Bytecode& pair : pipeline) {
@@ -65,7 +65,7 @@ std::string to_string(State* state) {
   oss << std::format("==== state@{} ====\n", TO_VOID_STAR(state));
   oss << std::format("|id    | {}\n", state->id);
   oss << std::format("|G     | <GState@{}>\n", TO_VOID_STAR(state->G));
-  oss << std::format("|ip    | {}\n", TO_VOID_STAR(state->ip));
+  oss << std::format("|pc    | {}\n", TO_VOID_STAR(state->pc));
   oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
   oss << std::format("|iep   | {}\n", TO_VOID_STAR(state->iep));
   oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));

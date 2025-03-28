@@ -19,8 +19,8 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   // The comment field is formatted as a left-aligned, fixed width of 15 characters in green.
   static constexpr const char* comment_format = "\033[3;32m{:<15}\033[0m";
 
-  const Instruction&     instruction = bytecode.instruction;
-  const InstructionData& data        = bytecode.meta_data;
+  const Instruction& instruction = bytecode.instruction;
+  const InstructionData& data = bytecode.meta_data;
 
   auto get_opcode_string = [&]() -> std::string {
     std::string str(magic_enum::enum_name(instruction.op));
@@ -29,8 +29,8 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   };
 
   std::string arg0, arg1, arg2;
-  OpCode      opcode    = instruction.op;
-  uint32_t    opcode_id = static_cast<uint32_t>(opcode);
+  OpCode opcode = instruction.op;
+  uint32_t opcode_id = static_cast<uint32_t>(opcode);
 
   if (opcode_id >= static_cast<uint32_t>(JUMP) && opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
     arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
@@ -63,9 +63,9 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
     arg2 = std::format("{}", instruction.operand2);
   }
 
-  std::string main_line    = std::format(main_format, get_opcode_string(), arg0, arg1, arg2);
+  std::string main_line = std::format(main_format, get_opcode_string(), arg0, arg1, arg2);
   std::string comment_body = data.comment.empty() ? "" : std::format("; {}", data.comment);
-  std::string comment_str  = std::format(comment_format, comment_body);
+  std::string comment_str = std::format(comment_format, comment_body);
 
   return main_line + " " + comment_str;
 }

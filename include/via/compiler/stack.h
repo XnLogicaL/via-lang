@@ -15,7 +15,7 @@
 VIA_NAMESPACE_BEGIN
 
 struct StackObject {
-  bool is_const     = false;
+  bool is_const = false;
   bool is_constexpr = false;
 
   std::string symbol = "<anonymous-symbol>";
@@ -27,7 +27,7 @@ class CompilerStack final {
 public:
   // Type aliases
   using index_query_result = std::optional<StackObject>;
-  using find_query_result  = std::optional<Operand>;
+  using find_query_result = std::optional<Operand>;
 
   using function_stack_node = FunctionNode::StackNode;
   using function_stack_type = std::stack<function_stack_node>;

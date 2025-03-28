@@ -20,13 +20,13 @@ struct vector2 {
     let x: float = 0.0
     let y: float = 0.0
 
-    impl vec_traits.magnitude {
+    impl vec_traits.__has_method_magnitude {
         fn magnitude() -> float {
             return math.sqrt(self.x ^ 2 + self.y ^ 2)
         }
     }
 
-    impl vec_traits.normalize {
+    impl vec_traits.__has_method_normalize {
         @inline
         fn normalize() -> float {
             let mag = self.magnitude()

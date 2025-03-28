@@ -8,7 +8,7 @@
 //
 VIA_NAMESPACE_BEGIN
 
-using constant_type   = ConstantHolder::constant_type;
+using constant_type = ConstantHolder::constant_type;
 using constant_vector = ConstantHolder::constant_vector;
 
 size_t ConstantHolder::size() const {

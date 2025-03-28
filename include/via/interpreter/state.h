@@ -34,37 +34,37 @@ enum class ThreadState {
 };
 
 struct ErrorState {
-  TFunction*  frame   = nullptr;
+  TFunction* frame = nullptr;
   std::string message = "";
 };
 
 // Global state, should only be instantiated once, and shared across all
 // State's. (threads)
 struct GState {
-  std::unordered_map<uint32_t, TString*> stable;     // String interning table
-  std::unordered_map<uint32_t, TValue>   gtable;     // Global environment
-  std::atomic<uint32_t>                  threads{0}; // Thread count
+  std::unordered_map<uint32_t, TString*> stable; // String interning table
+  std::unordered_map<uint32_t, TValue> gtable;   // Global environment
+  std::atomic<uint32_t> threads{0};              // Thread count
 
   std::shared_mutex stable_mutex;
-  std::mutex        gtable_mutex;
-  std::mutex        symtable_mutex;
+  std::mutex gtable_mutex;
+  std::mutex symtable_mutex;
 };
 
 struct alignas(64) State {
   // Thread and global state
   uint32_t id; // Thread ID
-  GState*  G;  // Global state
+  GState* G;   // Global state
 
   // Instruction pointers
-  Instruction* ip   = nullptr; // Current instruction pointer
-  Instruction* ibp  = nullptr; // Instruction list begin pointer
-  Instruction* iep  = nullptr; // Instruction list end pointer
+  Instruction* pc = nullptr;  // Current instruction pointer
+  Instruction* ibp = nullptr; // Instruction list begin pointer
+  Instruction* iep = nullptr; // Instruction list end pointer
   Instruction* sibp = nullptr;
   Instruction* siep = nullptr;
 
   // Stack state
-  TValue* sbp;    // Stack base pointer
-  size_t  sp = 0; // Stack pointer
+  TValue* sbp;   // Stack base pointer
+  size_t sp = 0; // Stack pointer
 
   // Registers
   TValue* registers;
@@ -76,7 +76,7 @@ struct alignas(64) State {
   TFunction* frame = nullptr; // Call stack pointer
 
   // VM control and debugging
-  bool        abort = false;
+  bool abort = false;
   ErrorState* err;
 
   // Thread state

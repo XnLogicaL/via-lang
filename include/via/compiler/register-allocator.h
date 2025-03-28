@@ -14,7 +14,7 @@ class RegisterAllocator final {
 public:
   // Type aliases
   using register_type = Operand;
-  using register_map  = std::unordered_map<register_type, bool>;
+  using register_map = std::unordered_map<register_type, bool>;
 
   // Constructor
   RegisterAllocator(size_t size, bool default_value) {

@@ -18,9 +18,9 @@ struct LocalOffset {
 //
 // Returns each line in the source as a vector of strings.
 std::vector<std::string> get_lines(const std::string& source) {
-  std::istringstream       stream(source);
+  std::istringstream stream(source);
   std::vector<std::string> lines;
-  std::string              line;
+  std::string line;
 
   while (std::getline(stream, line)) {
     lines.push_back(line);
@@ -43,7 +43,7 @@ std::vector<std::string> get_lines_in_range(const std::string& source, size_t be
 // Converts an absolute character offset to a (line, column) pair.
 LocalOffset localize_offset(const std::string& source, size_t abs_offset) {
   size_t line_number = 1;
-  size_t line_start  = 0;
+  size_t line_start = 0;
 
   for (size_t i = 0; i < source.size() && i < abs_offset; ++i) {
     if (source[i] == '\n') {
@@ -81,12 +81,11 @@ std::string CompilerError::to_string() const {
 
   // Print header with file, line, and column information.
   std::ostringstream oss;
-  oss << header
-      << std::format("{}:{}:{} - {}\n", ctx.file_path, position.line, position.column, message);
+  oss << header << message << '\n';
 
   // Localize absolute offsets into (line, offset) values.
   LocalOffset local_begin = localize_offset(ctx.file_source, position.begin);
-  LocalOffset local_end   = localize_offset(ctx.file_source, position.end);
+  LocalOffset local_end = localize_offset(ctx.file_source, position.end);
 
   // Adjust line indices: our get_lines_in_range expects 0-indexed line numbers.
   // Note: local_begin.line and local_end.line are 1-indexed.
@@ -95,8 +94,8 @@ std::string CompilerError::to_string() const {
   size_t pos = 0;
   for (const std::string& line : lines) {
     // Calculate the actual line number in the source.
-    size_t      current_line_number = local_begin.line + pos;
-    std::string line_number_str     = std::to_string(current_line_number);
+    size_t current_line_number = local_begin.line + pos;
+    std::string line_number_str = std::to_string(current_line_number);
 
     std::string underline;
     if (lines.size() == 1) {
@@ -125,8 +124,8 @@ std::string CompilerError::to_string() const {
       }
     }
 
-    oss << std::format("{} | {}\n", line_number_str, line);
-    oss << std::format("{} | {}\n", std::string(line_number_str.size(), ' '), underline);
+    oss << line_number_str << " | " << line << '\n';
+    oss << std::string(line_number_str.size(), ' ') << " | " << underline << '\n';
 
     ++pos;
   }
@@ -155,7 +154,14 @@ void ErrorBus::clear() {
 }
 
 void ErrorBus::emit() {
+  std::string current_file;
+
   for (const CompilerError& err : buffer) {
+    if (current_file != err.ctx.file_path) {
+      current_file = err.ctx.file_path;
+      std::cout << "in file " << current_file << ":\n";
+    }
+
     std::cout << err.to_string();
   }
 

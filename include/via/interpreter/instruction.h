@@ -12,7 +12,7 @@
 
 VIA_NAMESPACE_BEGIN
 
-using Operand  = uint16_t;
+using Operand = uint16_t;
 using OperandS = int16_t;
 
 struct Chunk;
@@ -29,7 +29,7 @@ struct VIA_ALIGN_8 Instruction {
 };
 
 struct Bytecode {
-  Instruction     instruction;
+  Instruction instruction;
   InstructionData meta_data;
 };
 

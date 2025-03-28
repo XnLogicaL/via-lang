@@ -18,7 +18,7 @@ TFunction::TFunction(const TFunction& other)
       upv_count(other.upv_count) {
   size_t bytecode_len = iep - ibp;
 
-  ibp  = new Instruction[bytecode_len];
+  ibp = new Instruction[bytecode_len];
   upvs = new UpValue[upv_count];
 
   std::memcpy(ibp, other.ibp, bytecode_len);
@@ -30,9 +30,9 @@ TFunction::TFunction(const TFunction& other)
     }
 
     upvs[i] = {
-      .is_open    = upv.is_open,
-      .is_valid   = true,
-      .value      = upv.is_open ? upv.value : &upvs[i].heap_value,
+      .is_open = upv.is_open,
+      .is_valid = true,
+      .value = upv.is_open ? upv.value : &upvs[i].heap_value,
       .heap_value = upv.heap_value.clone(),
     };
   }

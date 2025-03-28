@@ -6,19 +6,19 @@
 #define _VIA_OBJECT_H
 
 #include "common-macros.h"
-#include "common.h"
+#include "common-defs.h"
 
 VIA_NAMESPACE_BEGIN
 
 #ifdef VIA_64BIT
 
 using TInteger = int64_t;
-using TFloat   = float64_t;
+using TFloat = float64_t;
 
 #else
 
 using TInteger = int32_t;
-using TFloat   = float32_t;
+using TFloat = float32_t;
 
 #endif
 
@@ -44,10 +44,10 @@ enum class ValueType : uint8_t {
 struct VIA_ALIGN_8 TValue {
   ValueType type;
   union {
-    TInteger val_integer;        // Integer value
-    TFloat   val_floating_point; // Floating point value
-    bool     val_boolean;        // Boolean value
-    void*    val_pointer;        // Pointer to complex types (string, function, etc.)
+    TInteger val_integer;      // Integer value
+    TFloat val_floating_point; // Floating point value
+    bool val_boolean;          // Boolean value
+    void* val_pointer;         // Pointer to complex types (string, function, etc.)
   };
 
   VIA_CUSTOM_DESTRUCTOR(TValue);
@@ -177,7 +177,7 @@ struct VIA_ALIGN_8 TValue {
 struct TString {
   uint32_t len;
   uint32_t hash;
-  char*    data;
+  char* data;
 
   VIA_CUSTOM_DESTRUCTOR(TString);
 
@@ -186,25 +186,25 @@ struct TString {
 
   size_t size();
   TValue get_string(size_t position);
-  void   set_string(size_t position, const TValue& value);
+  void set_string(size_t position, const TValue& value);
 };
 
 struct THashNode {
   const char* key;
-  TValue      value;
-  THashNode*  next;
+  TValue value;
+  THashNode* next;
 };
 
 struct TTable {
-  size_t arr_capacity   = 64;
-  size_t ht_capacity    = 1024;
+  size_t arr_capacity = 64;
+  size_t ht_capacity = 1024;
   size_t arr_size_cache = 0;
-  size_t ht_size_cache  = 0;
+  size_t ht_size_cache = 0;
 
   bool arr_size_cache_valid = true;
-  bool ht_size_cache_valid  = true;
+  bool ht_size_cache_valid = true;
 
-  TValue*     arr_array  = new TValue[arr_capacity];
+  TValue* arr_array = new TValue[arr_capacity];
   THashNode** ht_buckets = new THashNode*[ht_capacity];
 
   VIA_DEFAULT_CONSTRUCTOR(TTable);

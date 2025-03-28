@@ -6,11 +6,11 @@
 
 VIA_NAMESPACE_BEGIN
 
-using index_query_result  = CompilerStack::index_query_result;
-using find_query_result   = CompilerStack::find_query_result;
+using index_query_result = CompilerStack::index_query_result;
+using find_query_result = CompilerStack::find_query_result;
 using function_stack_node = CompilerStack::function_stack_node;
 using function_stack_type = CompilerStack::function_stack_type;
-using symbol              = CompilerStack::symbol;
+using symbol = CompilerStack::symbol;
 
 size_t CompilerStack::size() {
   return sp;
@@ -65,13 +65,13 @@ void CompilerStack::grow_stack() {
   StackObject* new_location = new StackObject[new_capacity];
 
   for (StackObject* obj = old_location; obj < old_location + old_capacity; obj++) {
-    size_t position        = obj - old_location;
+    size_t position = obj - old_location;
     new_location[position] = std::move(*obj);
   }
 
   delete[] old_location;
 
-  sbp      = new_location;
+  sbp = new_location;
   capacity = new_capacity;
 }
 

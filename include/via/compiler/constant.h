@@ -17,7 +17,7 @@ VIA_NAMESPACE_BEGIN
 class ConstantHolder final {
 public:
   // Type aliases
-  using constant_type   = const TValue;
+  using constant_type = const TValue;
   using constant_vector = std::vector<TValue>;
 
   // Returns the size_t or next index of the constant table.

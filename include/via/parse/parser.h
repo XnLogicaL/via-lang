@@ -16,7 +16,7 @@
 VIA_NAMESPACE_BEGIN
 
 struct ParserError {
-  size_t      where;
+  size_t where;
   std::string what;
 };
 
@@ -32,7 +32,7 @@ public:
 
 private:
   TransUnitContext& unit_ctx;
-  ErrorBus          err_bus;
+  ErrorBus err_bus;
 
   size_t position = 0;
 

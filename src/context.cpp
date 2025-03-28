@@ -15,9 +15,7 @@ VIA_NAMESPACE_BEGIN
 // TransUnitContext
 TransUnitContext::Internal::Internal()
     : stack(std::make_unique<CompilerStack>()),
-      globals(std::make_unique<GlobalTracker>()) {
-  globals->declare_builtins();
-}
+      globals(std::make_unique<GlobalTracker>()) {}
 
 TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
     : file_path(file_path),
@@ -39,9 +37,9 @@ const char* TransUnitContext::get_platform_info() {
 #ifdef _WIN32
   const char* os = "windows";
 #elifdef __linux__
-  const char* os   = "linux";
+  const char* os = "linux";
 #else
-  const char* os   = "other";
+  const char* os = "other";
 #endif
 
 #ifdef __x86_64__

@@ -24,7 +24,7 @@ void State::set_register(Operand reg, const TValue& val) {
   VIA_ASSERT(reg <= VIA_REGISTER_COUNT, "invalid register");
 
   TValue* addr = registers + reg;
-  *addr        = val.clone();
+  *addr = val.clone();
 }
 
 bool State::is_heap(const TValue& value) {

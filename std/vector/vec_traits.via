@@ -12,11 +12,11 @@
 
 namespace vec_traits {
 
-trait magnitude {
+trait __has_method_magnitude {
     fn magnitude() -> float
 }
 
-trait normalize {
+trait __has_method_normalize {
     fn normalize() -> struct ## Uses SRTT.
 }
 

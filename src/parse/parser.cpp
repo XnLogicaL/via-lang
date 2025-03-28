@@ -97,8 +97,8 @@ result<Modifiers> Parser::parse_modifiers() {
 result<pTypeNode> Parser::parse_generic() {
   using Generics = GenericNode::Generics;
 
-  result<Token>     identifier = consume();
-  result<Modifiers> modifiers  = parse_modifiers();
+  result<Token> identifier = consume();
+  result<Modifiers> modifiers = parse_modifiers();
 
   CHECK_RESULT(identifier);
   CHECK_RESULT(modifiers);
@@ -106,14 +106,14 @@ result<pTypeNode> Parser::parse_generic() {
   Generics generics;
 
   result<Token> expect_lt = expect_consume(OP_LT, "Expected '<' to open type generic");
-  result<Token> curr      = current();
+  result<Token> curr = current();
 
   CHECK_RESULT(expect_lt);
   CHECK_RESULT(curr);
 
   while (curr->type != OP_GT) {
-    result<pTypeNode> result_type  = parse_type();
-    result<Token>     result_token = current();
+    result<pTypeNode> result_type = parse_type();
+    result<Token> result_token = current();
 
     CHECK_RESULT(result_type);
     CHECK_RESULT(result_token);
@@ -158,15 +158,15 @@ result<pTypeNode> Parser::parse_type_primary() {
     return parse_generic();
   }
   case PAREN_OPEN: {
-    using parameters = FunctionTypeNode::Parameters;
-    parameters    params;
+    using parameters = FunctionTypeNode::parameter_vector;
+    parameters params;
     result<Token> curr = consume();
 
     CHECK_RESULT(curr);
 
     while (curr->type != PAREN_CLOSE) {
       result<pTypeNode> type_result = parse_type();
-      result<Token>     token       = current();
+      result<Token> token = current();
 
       CHECK_RESULT(type_result);
       CHECK_RESULT(token);
@@ -390,14 +390,14 @@ result<pStmtNode> Parser::parse_declaration() {
 
   TokenType first_type = first->type;
 
-  bool is_local  = false;
+  bool is_local = false;
   bool is_global = false;
-  bool is_const  = false;
+  bool is_const = false;
 
   // Otherwise, handle local/global/const
-  is_local  = first_type == KW_LOCAL;
+  is_local = first_type == KW_LOCAL;
   is_global = first_type == KW_GLOBAL;
-  is_const  = first_type == KW_CONST;
+  is_const = first_type == KW_CONST;
 
   result<Token> curr = current();
   CHECK_RESULT(curr);
@@ -435,7 +435,7 @@ result<pStmtNode> Parser::parse_declaration() {
       }
 
       result<Modifiers> modifiers = parse_modifiers();
-      result<Token>     param_name =
+      result<Token> param_name =
         expect_consume(IDENTIFIER, "Expected identifier for function parameter name");
       result<Token> expect_col = expect_consume(COLON, "Expected ':' between parameter and type");
       result<pTypeNode> param_type = parse_type();
@@ -466,7 +466,7 @@ result<pStmtNode> Parser::parse_declaration() {
       expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
     result<Token> expect_rets =
       expect_consume(RETURNS, "Expected '->' to denote function return type");
-    result<pTypeNode> returns    = parse_type();
+    result<pTypeNode> returns = parse_type();
     result<pStmtNode> body_scope = parse_scope();
 
     CHECK_RESULT(expect_rpar);
@@ -485,7 +485,7 @@ result<pStmtNode> Parser::parse_declaration() {
   }
 
   // If not a function, continue parsing as a variable declaration
-  pTypeNode     type;
+  pTypeNode type;
   result<Token> identifier =
     expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
   curr = current();
@@ -505,8 +505,8 @@ result<pStmtNode> Parser::parse_declaration() {
     type = std::make_unique<AutoNode>();
   }
 
-  result<Token>     expect_eq = expect_consume(EQUAL, "Expected '=' for variable declaration");
-  result<pExprNode> value     = parse_expr();
+  result<Token> expect_eq = expect_consume(EQUAL, "Expected '=' for variable declaration");
+  result<pExprNode> value = parse_expr();
 
   CHECK_RESULT(expect_eq);
   CHECK_RESULT(value);
@@ -520,7 +520,7 @@ result<pStmtNode> Parser::parse_declaration() {
 
 result<pStmtNode> Parser::parse_scope() {
   std::vector<pStmtNode> scope_statements;
-  result<Token>          expect_br = expect_consume(BRACE_OPEN, "Expected '{' to open scope");
+  result<Token> expect_br = expect_consume(BRACE_OPEN, "Expected '{' to open scope");
 
   CHECK_RESULT(expect_br);
 
@@ -553,13 +553,13 @@ result<pStmtNode> Parser::parse_if() {
   consume();
 
   result<pExprNode> condition = parse_expr();
-  result<pStmtNode> scope     = parse_scope();
+  result<pStmtNode> scope = parse_scope();
 
   CHECK_RESULT(condition);
   CHECK_RESULT(scope);
 
   std::optional<pStmtNode> else_scope;
-  std::vector<ElseIfNode>  elseif_nodes;
+  std::vector<ElseIfNode> elseif_nodes;
 
   while (true) {
     result<Token> curr = current();
@@ -571,7 +571,7 @@ result<pStmtNode> Parser::parse_if() {
     }
 
     result<pExprNode> elseif_condition = parse_expr();
-    result<pStmtNode> elseif_scope     = parse_scope();
+    result<pStmtNode> elseif_scope = parse_scope();
 
     CHECK_RESULT(elseif_condition);
     CHECK_RESULT(elseif_scope);
@@ -616,7 +616,7 @@ result<pStmtNode> Parser::parse_while() {
   consume();
 
   result<pExprNode> condition = parse_expr();
-  result<pStmtNode> body      = parse_scope();
+  result<pStmtNode> body = parse_scope();
 
   CHECK_RESULT(condition);
   CHECK_RESULT(body);
@@ -655,7 +655,7 @@ result<pStmtNode> Parser::parse_stmt() {
   }
   default:
     result<pExprNode> lvalue = parse_expr();
-    result<Token>     curr   = current();
+    result<Token> curr = current();
 
     CHECK_RESULT(lvalue);
     CHECK_RESULT(curr);

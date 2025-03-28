@@ -9,8 +9,8 @@
 
 VIA_NAMESPACE_BEGIN
 
-char*    duplicate_string(const std::string&);
-char*    duplicate_string(const char*);
+char* duplicate_string(const std::string&);
+char* duplicate_string(const char*);
 uint32_t hash_string_custom(const char*);
 
 VIA_NAMESPACE_END

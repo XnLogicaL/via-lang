@@ -19,19 +19,19 @@ VIA_NAMESPACE_IMPL_BEGIN
 // Automatically resizes upvalue vector of closure by VIA_UPV_RESIZE_FACTOR.
 VIA_INLINE void __closure_upvs_resize(TFunction* _Closure) {
   uint32_t _Current_size = _Closure->upv_count;
-  uint32_t _New_size     = _Current_size * 2;
+  uint32_t _New_size = _Current_size * 2;
   UpValue* _New_location = new UpValue[_New_size];
 
   // Move upvalues to new location
   for (UpValue* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
-    uint32_t offset       = ptr - _Closure->upvs;
+    uint32_t offset = ptr - _Closure->upvs;
     _New_location[offset] = std::move(*ptr);
   }
 
   // Free old location
   delete[] _Closure->upvs;
   // Update closure
-  _Closure->upvs      = _New_location;
+  _Closure->upvs = _New_location;
   _Closure->upv_count = _New_size;
 }
 
@@ -71,16 +71,16 @@ VIA_INLINE void __closure_upv_set(TFunction* _Closure, size_t _Upv_id, TValue& _
 VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
   std::vector<Instruction> cache;
 
-  while (_State->ip < _State->iep) {
+  while (_State->pc < _State->iep) {
     // Special case: Terminator opcode
-    if (_State->ip->op == OpCode::RETURN || _State->ip->op == OpCode::RETURNNIL) {
-      cache.push_back(*_State->ip);
-      ++_State->ip;
+    if (_State->pc->op == OpCode::RETURN || _State->pc->op == OpCode::RETURNNIL) {
+      cache.push_back(*_State->pc);
+      ++_State->pc;
       break;
     }
 
-    cache.push_back(*_State->ip);
-    ++_State->ip;
+    cache.push_back(*_State->pc);
+    ++_State->pc;
   }
 
   _Closure->ibp = new Instruction[cache.size()];
@@ -97,7 +97,7 @@ VIA_INLINE void __closure_bytecode_load(State* _State, TFunction* _Closure) {
 
     _Closure->upvs[_Pos] = {
       .is_open = true,
-      .value   = _Stk_id,
+      .value = _Stk_id,
     };
   }
 }
@@ -108,8 +108,8 @@ VIA_INLINE void __closure_close_upvalues(TFunction* _Closure) {
   for (UpValue* upv = _Closure->upvs; upv < _Upv_end; upv++) {
     if (upv->is_valid && upv->is_open) {
       upv->heap_value = upv->value->clone();
-      upv->value      = &upv->heap_value;
-      upv->is_open    = false;
+      upv->value = &upv->heap_value;
+      upv->is_open = false;
     }
   }
 }
@@ -132,7 +132,7 @@ VIA_INLINE void __table_ht_set(TTable* _Tbl, const char* _Key, const TValue& _Va
   size_t _Index = __table_ht_hash_key(_Tbl, _Key);
 
   THashNode* _Next_node = _Tbl->ht_buckets[_Index];
-  THashNode* _Node      = nullptr;
+  THashNode* _Node = nullptr;
 
   // Check if the key already exists in the list
   while (_Next_node != nullptr) {
@@ -146,7 +146,7 @@ VIA_INLINE void __table_ht_set(TTable* _Tbl, const char* _Key, const TValue& _Va
   _Node = new THashNode{_Key, _Val.clone(), _Tbl->ht_buckets[_Index]};
 
   _Tbl->ht_size_cache_valid = false;
-  _Tbl->ht_buckets[_Index]  = _Node;
+  _Tbl->ht_buckets[_Index] = _Node;
 }
 
 // Performs a look-up on the given table with a given key. Returns nullptr upon lookup failure.
@@ -168,7 +168,7 @@ VIA_INLINE size_t __table_ht_size(TTable* _Tbl) {
     return _Tbl->ht_size_cache;
   }
 
-  size_t     _Size         = 0;
+  size_t _Size = 0;
   THashNode* _Current_node = *_Tbl->ht_buckets;
 
   while (_Current_node->next) {
@@ -180,7 +180,7 @@ VIA_INLINE size_t __table_ht_size(TTable* _Tbl) {
     _Current_node = _Current_node->next;
   }
 
-  _Tbl->ht_size_cache       = _Size;
+  _Tbl->ht_size_cache = _Size;
   _Tbl->ht_size_cache_valid = true;
 
   return _Size;
@@ -200,11 +200,11 @@ VIA_INLINE void __table_arr_resize(TTable* _Tbl) {
   TValue* _New_location = new TValue[_New_capacity]();
 
   for (TValue* _Ptr = _Old_location; _Ptr < _Old_location + _Old_capacity; _Ptr++) {
-    size_t _Position         = _Ptr - _Old_location;
+    size_t _Position = _Ptr - _Old_location;
     _New_location[_Position] = std::move(*_Ptr);
   }
 
-  _Tbl->arr_array    = _New_location;
+  _Tbl->arr_array = _New_location;
   _Tbl->arr_capacity = _New_capacity;
 
   delete[] _Old_location;
@@ -218,7 +218,7 @@ VIA_INLINE void __table_arr_set(TTable* _Tbl, size_t _Index, const TValue& _Val)
   }
 
   _Tbl->arr_size_cache_valid = false;
-  _Tbl->arr_array[_Index]    = _Val.clone();
+  _Tbl->arr_array[_Index] = _Val.clone();
 }
 
 // Attempts to get the value at the given index of the array component of the table. Returns nullptr
@@ -245,7 +245,7 @@ VIA_INLINE size_t __table_arr_size(TTable* _Tbl) {
     }
   }
 
-  _Tbl->arr_size_cache       = _Size;
+  _Tbl->arr_size_cache = _Size;
   _Tbl->arr_size_cache_valid = true;
 
   return _Size;
@@ -341,7 +341,7 @@ VIA_FORCE_INLINE TValue __get_argument(State* VIA_RESTRICT _State, size_t _Offse
 
   // Compute stack offset in reverse order
   const Operand _Stk_offset = _State->frame->call_info.sp - _State->frame->call_info.argc + _Offset;
-  const TValue& _Val        = _State->sbp[_Stk_offset];
+  const TValue& _Val = _State->sbp[_Stk_offset];
 
   return _Val.clone();
 }
@@ -358,7 +358,7 @@ VIA_INLINE void __register_deallocate(State* _State) {
 
 VIA_INLINE_HOT void __set_register(State* _State, Operand _Reg, const TValue& _Val) {
   TValue* addr = _State->registers + _Reg;
-  *addr        = _Val.clone();
+  *addr = _Val.clone();
 }
 
 VIA_INLINE_HOT TValue* __get_register(State* _State, Operand _Reg) {

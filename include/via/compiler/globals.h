@@ -5,30 +5,33 @@
 #ifndef _VIA_GLOBALS_H
 #define _VIA_GLOBALS_H
 
+#include "ast-base.h"
+#include "object.h"
 #include "common-defs.h"
 #include "token.h"
 
 VIA_NAMESPACE_BEGIN
 
 struct Global {
-  Token       token;
+  Token token;
   std::string symbol;
+  pTypeNode type;
 };
 
 class GlobalTracker final {
 public:
   // Type aliases
-  using index_query_result  = std::optional<size_t>;
+  using index_query_result = std::optional<size_t>;
   using global_query_result = std::optional<Global>;
-  using global_vector       = std::vector<Global>;
-  using builtin_vector      = std::vector<std::string>;
+  using global_vector = std::vector<Global>;
+  using builtin_vector = std::vector<Global>;
 
   // Returns the size of the global vector.
   size_t size();
 
   // Declares a new global.
   // Does not perform sanity checks.
-  void declare_global(const Global&);
+  void declare_global(Global);
 
   // Returns whether if a global has been declared.
   bool was_declared(const Global&);
@@ -45,20 +48,8 @@ public:
   // Returns a constant reference to the global vector.
   const global_vector& get();
 
-  VIA_INLINE void declare_builtins() {
-    static const builtin_vector builtins = {
-      "print",
-      "println",
-      "exit",
-      "typeof",
-      "assert",
-    };
-
-    for (const std::string& built_in : builtins) {
-      Token tok = Token(TokenType::IDENTIFIER, built_in, 0, 0, 0);
-      globals.emplace_back(tok, built_in);
-    }
-  }
+  // Declares all assumed builtins.
+  void declare_builtins();
 
 private:
   global_vector globals;

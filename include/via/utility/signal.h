@@ -27,19 +27,19 @@ public:
 
   private:
     std::vector<Slot>& slots;
-    std::mutex&        mutex;
+    std::mutex& mutex;
 
     size_t connection_id;
-    bool   active;
+    bool active;
   };
 
   Connection connect(const Slot&);
-  void       fire(Args...);
-  void       wait();
+  void fire(Args...);
+  void wait();
 
 private:
-  std::vector<Slot>       slots;
-  std::mutex              mutex;
+  std::vector<Slot> slots;
+  std::mutex mutex;
   std::condition_variable condition;
 };
 

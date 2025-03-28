@@ -115,23 +115,23 @@ struct Token {
         offset(offset),
         position(position) {}
 
-  TokenType   type     = TokenType::UNKNOWN;
-  std::string lexeme   = "";
-  uint64_t    line     = 0;
-  uint64_t    offset   = 0;
-  uint64_t    position = 0;
+  TokenType type = TokenType::UNKNOWN;
+  std::string lexeme = "";
+  uint64_t line = 0;
+  uint64_t offset = 0;
+  uint64_t position = 0;
 
   std::string to_string() const;
-  bool        is_literal() const;
-  bool        is_operator() const;
-  bool        is_modifier() const;
-  int         bin_prec() const;
+  bool is_literal() const;
+  bool is_operator() const;
+  bool is_modifier() const;
+  int bin_prec() const;
 };
 
 class TokenStream {
 public:
   using token_vector = std::vector<Token>;
-  using at_result    = std::optional<Token>;
+  using at_result = std::optional<Token>;
 
   size_t size();
 

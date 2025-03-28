@@ -28,9 +28,11 @@ add_subdirectory(expected)
 # Set the compiler
 if(DEBUG_MODE STREQUAL "DEBUG")
     message(STATUS "Compiling with clang++ in DEBUG mode.")
+    message(STATUS "Linking dynamically in DEBUG mode.")
     set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 else()
     message(STATUS "Compiling with g++ in PROD mode.")
+    message(STATUS "Linking statically in PROD mode.")
     set(CMAKE_CXX_COMPILER /usr/bin/g++)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
@@ -59,12 +61,12 @@ target_compile_options(via PUBLIC
     -Wall                  # Enable all warnings
     -Wextra                # Enable extra warnings
     -Werror                # Treat warnings as errors
-    -g                     # Enable debugging symbols
 )
 
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
     target_compile_definitions(via PUBLIC -DVIA_DEBUG)
+    target_compile_options(via PUBLIC -g)
 
     if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
         target_compile_options(via PUBLIC -fsanitize=address,undefined)
@@ -87,8 +89,6 @@ else()
         -finline-functions
         -ftree-pre
         -fprefetch-loop-arrays
-        -fno-unwind-tables
-        -fno-asynchronous-unwind-tables
         -falign-functions=32
         -falign-jumps=32
         -falign-loops=32

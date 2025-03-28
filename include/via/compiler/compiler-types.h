@@ -17,51 +17,48 @@ struct DataType;
 template<>
 struct DataType<std::monostate> {
   static constexpr ValueType value_type = ValueType::nil;
-  static constexpr int       precedence = -1;
+  static constexpr int precedence = -1;
 };
 
 template<>
 struct DataType<TInteger> {
   static constexpr ValueType value_type = ValueType::integer;
-  static constexpr int       precedence = 1;
+  static constexpr int precedence = 1;
 };
 
 template<>
 struct DataType<TFloat> {
   static constexpr ValueType value_type = ValueType::floating_point;
-  static constexpr int       precedence = 2;
+  static constexpr int precedence = 2;
 };
 
 template<>
 struct DataType<bool> {
   static constexpr ValueType value_type = ValueType::boolean;
-  static constexpr int       precedence = -1;
+  static constexpr int precedence = -1;
 };
 
 template<>
 struct DataType<std::string> {
   static constexpr ValueType value_type = ValueType::string;
-  static constexpr int       precedence = -1;
+  static constexpr int precedence = -1;
 };
 
 template<typename Base, typename Derived>
-bool is_derived_instance(Derived& derived) {
-  return dynamic_cast<Base*>(&derived) != nullptr;
-}
-
-template<typename Base, typename Derived>
+  requires std::is_base_of_v<Base, Derived>
 Derived* get_derived_instance(Base& base) {
   return dynamic_cast<Derived*>(&base);
 }
 
-template<typename Expression>
-  requires std::is_base_of_v<ExprNode, Expression> bool
-is_constant_expression(Expression& expression) {
-  return is_derived_instance<LiteralNode>(expression);
+template<typename Base, typename Derived>
+  requires std::is_base_of_v<Base, Derived>
+bool is_derived_instance(Base& derived) {
+  return get_derived_instance<Base, Derived>(derived) != nullptr;
 }
 
-template<typename Derived>
-concept is_type_node_derivative = requires { std::is_base_of_v<TypeNode, Derived>; };
+VIA_INLINE bool is_constant_expression(ExprNode& expression) {
+  return is_derived_instance<ExprNode, LiteralNode>(expression);
+}
 
 VIA_INLINE bool is_integral(pTypeNode& type) {
   using enum ValueType;
@@ -87,6 +84,14 @@ VIA_INLINE bool is_floating_point(pTypeNode& type) {
 
 VIA_INLINE bool is_arithmetic(pTypeNode& type) {
   return is_integral(type) || is_floating_point(type);
+}
+
+VIA_INLINE bool is_callable(pTypeNode& type) {
+  if (is_derived_instance<TypeNode, FunctionTypeNode>(*type)) {
+    return true;
+  }
+
+  return false;
 }
 
 VIA_INLINE bool is_compatible(pTypeNode& left, pTypeNode& right) {
