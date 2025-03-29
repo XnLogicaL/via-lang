@@ -26,7 +26,7 @@ trans_unit_context::trans_unit_context(const std::string& file_path, const std::
       std::make_unique<global_holder>(),
     }) {}
 
-trans_unit_context::trans_unit_context(const ByteStream&) {}
+trans_unit_context::trans_unit_context(const byte_stream_t&) {}
 
 void trans_unit_context::clear() {}
 
@@ -60,11 +60,11 @@ const char* trans_unit_context::get_platform_info() {
   return buffer;
 }
 
-ByteStream trans_unit_context::encode() {
+byte_stream_t trans_unit_context::encode() {
   return {};
 }
 
 // ==========================================================================================
-// Context
+// compiler_context
 
 } // namespace via

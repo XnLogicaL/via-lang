@@ -71,7 +71,7 @@
 // ==================================================================================================
 namespace via {
 
-using enum opcode_t;
+using enum opcode;
 
 void expr_node_visitor::visit(lit_expr_node& literal_node, operand_t dst) {
   using enum value_type;
@@ -257,23 +257,23 @@ void expr_node_visitor::visit(index_expr_node& index_node, operand_t dst) {
 
 void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   using enum token_type;
-  using OpCodeId = std::underlying_type_t<opcode_t>;
+  using OpCodeId = std::underlying_type_t<opcode>;
 
-  static const std::unordered_map<token_type, opcode_t> operator_map = {
-    {token_type::OP_ADD, opcode_t::ADD},
-    {token_type::OP_SUB, opcode_t::SUB},
-    {token_type::OP_MUL, opcode_t::MUL},
-    {token_type::OP_DIV, opcode_t::DIV},
-    {token_type::OP_EXP, opcode_t::POW},
-    {token_type::OP_MOD, opcode_t::MOD},
-    {token_type::OP_EQ, opcode_t::EQUAL},
-    {token_type::OP_NEQ, opcode_t::NOTEQUAL},
-    {token_type::OP_LT, opcode_t::LESS},
-    {token_type::OP_GT, opcode_t::GREATER},
-    {token_type::OP_LEQ, opcode_t::LESSOREQUAL},
-    {token_type::OP_GEQ, opcode_t::GREATEROREQUAL},
-    {token_type::KW_AND, opcode_t::AND},
-    {token_type::KW_OR, opcode_t::OR},
+  static const std::unordered_map<token_type, opcode> operator_map = {
+    {token_type::OP_ADD, opcode::ADD},
+    {token_type::OP_SUB, opcode::SUB},
+    {token_type::OP_MUL, opcode::MUL},
+    {token_type::OP_DIV, opcode::DIV},
+    {token_type::OP_EXP, opcode::POW},
+    {token_type::OP_MOD, opcode::MOD},
+    {token_type::OP_EQ, opcode::EQUAL},
+    {token_type::OP_NEQ, opcode::NOTEQUAL},
+    {token_type::OP_LT, opcode::LESS},
+    {token_type::OP_GT, opcode::GREATER},
+    {token_type::OP_LEQ, opcode::LESSOREQUAL},
+    {token_type::OP_GEQ, opcode::GREATEROREQUAL},
+    {token_type::KW_AND, opcode::AND},
+    {token_type::KW_OR, opcode::OR},
   };
 
   p_expr_node_t& p_lhs = binary_node.lhs_expression;
@@ -309,7 +309,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     return;
   }
 
-  const opcode_t base_opcode = it->second;
+  const opcode base_opcode = it->second;
   const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
   OpCodeId opcode_id = base_opcode_id;
 
@@ -359,25 +359,25 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     }
 
     if (int* int_value = std::get_if<int>(&literal.value)) {
-      opcode_t opcode = static_cast<opcode_t>(opcode_id + 2); // OPINT
+      opcode opc = static_cast<opcode>(opcode_id + 2); // OPINT
       uint32_t final_value = *int_value;
       auto operands = reinterpret_u32_as_2u16(final_value);
 
-      unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
+      unit_ctx.bytecode->emit(opc, {dst, operands.l, operands.r});
     }
     else if (float* float_value = std::get_if<float>(&literal.value)) {
-      opcode_t opcode = static_cast<opcode_t>(opcode_id + 3); // OPFLOAT
+      opcode opc = static_cast<opcode>(opcode_id + 3); // OPFLOAT
       uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
 
-      unit_ctx.bytecode->emit(opcode, {dst, operands.l, operands.r});
+      unit_ctx.bytecode->emit(opc, {dst, operands.l, operands.r});
     }
     else {
-      opcode_t opcode = static_cast<opcode_t>(opcode_id + 1); // OPK
+      opcode opc = static_cast<opcode>(opcode_id + 1); // OPK
       value_obj right_const_val = construct_constant(dynamic_cast<lit_expr_node&>(rhs));
       operand_t right_const_id = unit_ctx.constants->push_constant(right_const_val);
 
-      unit_ctx.bytecode->emit(opcode, {dst, right_const_id});
+      unit_ctx.bytecode->emit(opc, {dst, right_const_id});
     }
   }
   else {

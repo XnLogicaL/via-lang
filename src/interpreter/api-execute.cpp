@@ -54,7 +54,7 @@
 namespace via {
 
 using enum value_type;
-using enum opcode_t;
+using enum opcode;
 using enum ThreadState;
 
 using namespace impl;
@@ -1827,7 +1827,7 @@ dispatch: {
   }
 
   default: {
-    VM_FATAL(std::format("unknown opcode 0x{:x}", static_cast<int>(pc->op)));
+    vl_vmfatal(std::format("unknown opcode 0x{:x}", static_cast<int>(pc->op)));
   }
   }
 }

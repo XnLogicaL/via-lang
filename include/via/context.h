@@ -15,7 +15,7 @@
 
 namespace via {
 
-using ByteStream = std::vector<uint8_t>;
+using byte_stream_t = std::vector<uint8_t>;
 
 class token_stream;
 class syntax_tree;
@@ -30,12 +30,12 @@ public:
   void clear();
 
   // Encodes the translation unit onto a byte stream.
-  ByteStream encode();
+  byte_stream_t encode();
 
   const char* get_platform_info();
 
   trans_unit_context(const std::string& file_path, const std::string& file_source);
-  trans_unit_context(const ByteStream& bytes);
+  trans_unit_context(const byte_stream_t& bytes);
 
 public:
   const std::string file_path;
@@ -54,7 +54,7 @@ public:
   } internal;
 };
 
-class Context final {
+class compiler_context final {
 public:
 public:
   uint32_t flags;

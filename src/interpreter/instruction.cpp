@@ -9,7 +9,7 @@
 
 namespace via {
 
-using enum opcode_t;
+using enum opcode;
 
 std::string to_string(const bytecode& bytecode, bool capitalize_opcodes) {
   // The main instruction is printed with fixed widths:
@@ -29,7 +29,7 @@ std::string to_string(const bytecode& bytecode, bool capitalize_opcodes) {
   };
 
   std::string arg0, arg1, arg2;
-  opcode_t opcode = instruction.op;
+  opcode opcode = instruction.op;
   uint32_t opcode_id = static_cast<uint32_t>(opcode);
 
   if (opcode_id >= static_cast<uint32_t>(JUMP) &&

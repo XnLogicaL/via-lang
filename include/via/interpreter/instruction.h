@@ -20,7 +20,7 @@ struct instruction_data {
 };
 
 struct vl_align(8) instruction {
-  opcode_t op = opcode_t::NOP;
+  opcode op = opcode::NOP;
 
   operand_t operand0 = 0;
   operand_t operand1 = 0;

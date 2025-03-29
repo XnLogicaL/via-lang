@@ -50,15 +50,13 @@ public:
   // Inserts a locally constructed instruction to a given index.
   void insert(
     size_t index = 0,
-    opcode_t opcode = opcode_t::NOP,
+    opcode opcode = opcode::NOP,
     operands_array& operands = {},
     comment_type& comment = ""
   );
 
   // Emits an instruction at the end of the vector.
-  void emit(
-    opcode_t opcode = opcode_t::NOP, operands_array& operands = {}, comment_type& comment = ""
-  );
+  void emit(opcode opcode = opcode::NOP, operands_array& operands = {}, comment_type& comment = "");
 
   // Returns a reference to the bytecode vector.
   const bytecode_vector& get() const;

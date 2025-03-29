@@ -20,7 +20,7 @@ void compiler::check_global_collisions(bool& failed) {
 }
 
 void compiler::insert_exit0_instruction() {
-  unit_ctx.bytecode->emit(opcode_t::EXIT, {0});
+  unit_ctx.bytecode->emit(opcode::EXIT, {0});
 }
 
 bool compiler::generate() {

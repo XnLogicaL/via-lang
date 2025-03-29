@@ -73,7 +73,7 @@ vl_inline void __closure_bytecode_load(State* _State, tfunction* _Closure) {
 
   while (_State->pc < _State->iep) {
     // Special case: Terminator opcode
-    if (_State->pc->op == opcode_t::RETURN || _State->pc->op == opcode_t::RETURNNIL) {
+    if (_State->pc->op == opcode::RETURN || _State->pc->op == opcode::RETURNNIL) {
       cache.push_back(*_State->pc);
       ++_State->pc;
       break;
@@ -297,7 +297,7 @@ vl_inline instruction* __label_get(State* _State, size_t _Idx) {
 vl_inline void __label_load(State* _State) {
   size_t _Idx = 0;
   for (instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
-    if (_Ip->op == opcode_t::LABEL) {
+    if (_Ip->op == opcode::LABEL) {
       _State->labels[_Idx++] = _Ip;
     }
   }

@@ -40,7 +40,7 @@ void bytecode_holder::remove(size_t index) {
 }
 
 void bytecode_holder::insert(
-  size_t index, opcode_t opcode, operands_array& operands, comment_type& comment
+  size_t index, opcode opcode, operands_array& operands, comment_type& comment
 ) {
   // Insert the instruction at the specified index
   instructions.insert(
@@ -61,7 +61,7 @@ void bytecode_holder::insert(
   );
 }
 
-void bytecode_holder::emit(opcode_t opcode, operands_array& operands, comment_type& comment) {
+void bytecode_holder::emit(opcode opcode, operands_array& operands, comment_type& comment) {
   add({
     .instruction =
       {

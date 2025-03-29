@@ -11,11 +11,11 @@
 
 namespace via {
 
-using enum opcode_t;
+using enum opcode;
 
 void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
   bool is_global = declaration_node.is_global;
-  bool is_const = declaration_node.modifiers.is_const;
+  bool is_const = declaration_node.modifs.is_const;
 
   expr_node_base& val = *declaration_node.value_expression;
   p_type_node_t val_ty = val.infer_type(unit_ctx);
@@ -154,7 +154,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   parameters_t parameters;
 
   unit_ctx.internal.stack->push({
-    .is_const = function_node.modifiers.is_const,
+    .is_const = function_node.modifs.is_const,
     .is_constexpr = false,
     .symbol = function_node.identifier.lexeme,
     .type = std::make_unique<primitive_type_node>(function_node.identifier, value_type::function),
@@ -163,13 +163,13 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   unit_ctx.internal.stack->function_stack.push(func_stmt_node::stack_node(
     function_node.is_global,
     unit_ctx.internal.stack->size(),
-    function_node.modifiers,
+    function_node.modifs,
     function_node.identifier,
     std::move(parameters)
   ));
 
   for (auto& parameter : function_node.parameters) {
-    parameters.emplace_back(parameter.identifier, parameter.modifiers, parameter.type->clone());
+    parameters.emplace_back(parameter.identifier, parameter.modifs, parameter.type->clone());
     parameter.type->decay(decay_visitor, parameter.type);
   }
 
@@ -203,7 +203,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   }
 
   bytecode last_bytecode = unit_ctx.bytecode->back();
-  opcode_t last_opcode = last_bytecode.instruction.op;
+  opcode last_opcode = last_bytecode.instruction.op;
 
   if (last_opcode != RETURN && last_opcode != RETURNNIL) {
     unit_ctx.bytecode->emit(RETURNNIL);
@@ -286,7 +286,7 @@ void stmt_node_visitor::visit(return_stmt_node& return_node) {
 
 void stmt_node_visitor::visit(break_stmt_node& break_node) {
   if (!escape_label.has_value()) {
-    compiler_error(break_node.token, "'break' statement not within loop or switch");
+    compiler_error(break_node.tok, "'break' statement not within loop or switch");
   }
   else {
     unit_ctx.bytecode->emit(JUMPLABEL, {escape_label.value()}, "break");
@@ -295,7 +295,7 @@ void stmt_node_visitor::visit(break_stmt_node& break_node) {
 
 void stmt_node_visitor::visit(continue_stmt_node& continue_node) {
   if (!repeat_label.has_value()) {
-    compiler_error(continue_node.token, "'continue' statement not within loop");
+    compiler_error(continue_node.tok, "'continue' statement not within loop");
   }
   else {
     unit_ctx.bytecode->emit(JUMPLABEL, {repeat_label.value()}, "continue");

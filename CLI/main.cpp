@@ -13,19 +13,18 @@
 using namespace argparse;
 using namespace via;
 
-struct CompilationResult {
+struct comp_result {
   bool failed;
-  TransUnitContext unit;
+  trans_unit_context unit;
 
-  CompilationResult(bool failed, TransUnitContext unit)
+  comp_result(bool failed, trans_unit_context unit)
     : failed(failed),
       unit(std::move(unit)) {}
 };
 
-Context ctx;
-ErrorBus err_bus;
-
-TransUnitContext dummy_unit_ctx("<unavailable>", "");
+compiler_context ctx;
+error_bus err_bus;
+trans_unit_context dummy_unit_ctx("<unavailable>", "");
 
 std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   auto command = std::make_unique<ArgumentParser>(name);
@@ -56,9 +55,9 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   return command;
 }
 
-CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
-  using enum TokenType;
-  using enum CompilerErrorLevel;
+comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
+  using enum token_type;
+  using enum comp_err_lvl;
   using namespace utils;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
@@ -74,8 +73,8 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
   std::string file = subcommand_parser.get<std::string>("target");
 
-  ReadResult source_result = read_from_file(file);
-  TransUnitContext unit_ctx(file, *source_result);
+  rd_result_t source_result = read_from_file(file);
+  trans_unit_context unit_ctx(file, *source_result);
 
   // Record compilation start time
   SET_PROFILER_POINT(compilation_start)
@@ -92,10 +91,10 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     return {true, std::move(dummy_unit_ctx)};
   }
 
-  Tokenizer lexer(unit_ctx);
-  Preprocessor preprocessor(unit_ctx);
-  Parser parser(unit_ctx);
-  Compiler compiler(unit_ctx);
+  lexer lexer(unit_ctx);
+  preprocessor preprocessor(unit_ctx);
+  parser parser(unit_ctx);
+  compiler compiler(unit_ctx);
 
   SET_PROFILER_POINT(lex_start);
   lexer.tokenize();
@@ -174,7 +173,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-tokens")) {
       print_flag_label("--dump-tokens");
 
-      for (const Token& token : unit_ctx.tokens->get()) {
+      for (const token& token : unit_ctx.tokens->get()) {
         std::cout << token.to_string() << "\n";
       }
     }
@@ -183,7 +182,7 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-ast");
       uint32_t depth = 0;
 
-      for (const pStmtNode& pstmt : unit_ctx.ast->statements) {
+      for (const p_stmt_node_t& pstmt : unit_ctx.ast->statements) {
         std::cout << pstmt->to_string(depth) << "\n";
       }
     }
@@ -192,14 +191,14 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-bytecode");
       std::cout << "main:\n";
 
-      for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
-        if (bytecode.instruction.op == OpCode::LABEL) {
+      for (const bytecode& bytecode : unit_ctx.bytecode->get()) {
+        if (bytecode.instruction.op == opcode::LABEL) {
           std::cout << std::format(
             "{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
           );
           continue;
         }
-        else if (bytecode.instruction.op == OpCode::LOADFUNCTION) {
+        else if (bytecode.instruction.op == opcode::LOADFUNCTION) {
           std::cout << bytecode.meta_data.comment << ":\n";
           continue;
         }
@@ -211,10 +210,10 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-machine-code")) {
       print_flag_label("--dump-machine-code");
 
-      for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
-        const Instruction& instruction = bytecode.instruction;
-        const size_t size = sizeof(Instruction);
-        const uint8_t* data = reinterpret_cast<const uint8_t*>(&instruction);
+      for (const bytecode& bytecode : unit_ctx.bytecode->get()) {
+        const instruction& instr = bytecode.instruction;
+        const size_t size = sizeof(instruction);
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(&instr);
 
         for (size_t i = 0; i < size; i++) {
           std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
@@ -245,16 +244,16 @@ CompilationResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
   return {failed, std::move(unit_ctx)};
 }
 
-CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
+comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
-  using enum CompilerErrorLevel;
+  using enum comp_err_lvl;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
     return subcommand_parser.get<bool>(flag);
   };
 
-  CompilationResult result = handle_compile(subcommand_parser);
-  TransUnitContext& unit_ctx = result.unit;
+  comp_result result = handle_compile(subcommand_parser);
+  trans_unit_context& unit_ctx = result.unit;
 
   bool verbosity_flag = get_flag("--verbose");
 
@@ -317,7 +316,7 @@ CompilationResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   return result;
 }
 
-CompilationResult handle_repl(argparse::ArgumentParser&) {
+comp_result handle_repl(argparse::ArgumentParser&) {
   // REPL messages
   [[maybe_unused]]
   constexpr const char REPL_WELCOME[] =
@@ -336,17 +335,17 @@ CompilationResult handle_repl(argparse::ArgumentParser&) {
 
   using namespace via;
 
-  TransUnitContext unit_ctx("<repl>", "");
+  trans_unit_context unit_ctx("<repl>", "");
 
   return {false, std::move(unit_ctx)};
 }
 
 int main(int argc, char* argv[]) {
-  using enum CompilerErrorLevel;
+  using enum comp_err_lvl;
 
   try {
     // Argument parser entry point
-    ArgumentParser argument_parser("via", VIA_VERSION);
+    ArgumentParser argument_parser("via", vl_version);
 
     auto compile_parser = get_standard_parser("compile");
     compile_parser->add_description("Compiles the given source file.");
