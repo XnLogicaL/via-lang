@@ -4,10 +4,10 @@
 
 #include "signal.h"
 
-VIA_NAMESPACE_UTIL_BEGIN
+namespace via::utils {
 
 template<typename... Args>
-void Signal<Args...>::Connection::disconnect() {
+void signal<Args...>::sig_connection_t::disconnect() {
   if (!active) {
     return;
   }
@@ -17,7 +17,7 @@ void Signal<Args...>::Connection::disconnect() {
 }
 
 template<>
-void Signal<>::Connection::disconnect() {
+void signal<>::sig_connection_t::disconnect() {
   if (!active) {
     return;
   }
@@ -27,24 +27,24 @@ void Signal<>::Connection::disconnect() {
 }
 
 template<typename... Args>
-Signal<Args...>::Connection Signal<Args...>::connect(const Slot& slot) {
+signal<Args...>::sig_connection_t signal<Args...>::connect(const sig_slot_t& slot) {
   std::lock_guard<std::mutex> lock(mutex);
   slots.push_back(slot);
-  return Connection(slots, mutex, slots.size() - 1);
+  return sig_connection_t(slots, mutex, slots.size() - 1);
 };
 
 template<>
-Signal<>::Connection Signal<>::connect(const Slot& slot) {
+signal<>::sig_connection_t signal<>::connect(const sig_slot_t& slot) {
   std::lock_guard<std::mutex> lock(mutex);
   slots.push_back(slot);
-  return Connection(slots, mutex, slots.size() - 1);
+  return sig_connection_t(slots, mutex, slots.size() - 1);
 };
 
 template<typename... Args>
-void Signal<Args...>::fire(Args... args) {
+void signal<Args...>::fire(Args... args) {
   std::lock_guard<std::mutex> lock(mutex);
 
-  for (const Slot& slot : slots) {
+  for (const sig_slot_t& slot : slots) {
     slot(args...);
   }
 
@@ -52,10 +52,10 @@ void Signal<Args...>::fire(Args... args) {
 }
 
 template<>
-void Signal<>::fire() {
+void signal<>::fire() {
   std::lock_guard<std::mutex> lock(mutex);
 
-  for (const Slot& slot : slots) {
+  for (const sig_slot_t& slot : slots) {
     slot();
   }
 
@@ -63,15 +63,15 @@ void Signal<>::fire() {
 }
 
 template<typename... Args>
-void Signal<Args...>::wait() {
+void signal<Args...>::wait() {
   std::unique_lock<std::mutex> lock(mutex);
   condition.wait(lock);
 }
 
 template<>
-void Signal<>::wait() {
+void signal<>::wait() {
   std::unique_lock<std::mutex> lock(mutex);
   condition.wait(lock);
 }
 
-VIA_NAMESPACE_END
+} // namespace via::utils

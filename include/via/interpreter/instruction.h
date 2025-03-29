@@ -2,39 +2,38 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_INSTRUCTION_H
-#define _VIA_INSTRUCTION_H
+#ifndef _vl_instruction_h
+#define _vl_instruction_h
 
 #include "common.h"
 #include "opcode.h"
 
-#define VIA_OPERAND_INVALID std::numeric_limits<Operand>::max()
+#define via_operand_invalid std::numeric_limits<operand_t>::max()
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using Operand = uint16_t;
-using OperandS = int16_t;
+using operand_t = uint16_t;
+using signed_operand_t = int16_t;
 
-struct Chunk;
-struct InstructionData {
+struct instruction_data {
   std::string comment = "";
 };
 
-struct VIA_ALIGN_8 Instruction {
-  OpCode op = OpCode::NOP;
+struct vl_align(8) instruction {
+  opcode_t op = opcode_t::NOP;
 
-  Operand operand0 = 0;
-  Operand operand1 = 0;
-  Operand operand2 = 0;
+  operand_t operand0 = 0;
+  operand_t operand1 = 0;
+  operand_t operand2 = 0;
 };
 
-struct Bytecode {
-  Instruction instruction;
-  InstructionData meta_data;
+struct bytecode {
+  instruction instruction;
+  instruction_data meta_data;
 };
 
-std::string to_string(const Bytecode&, bool);
+std::string to_string(const bytecode&, bool);
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

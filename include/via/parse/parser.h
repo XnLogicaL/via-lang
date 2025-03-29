@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_PARSER_H
-#define _VIA_PARSER_H
+#ifndef _vl_parser_h
+#define _vl_parser_h
 
 #include "stack.h"
 #include "constant.h"
@@ -13,57 +13,57 @@
 #include "ast-base.h"
 #include "error-bus.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-struct ParserError {
+struct parse_error {
   size_t where;
   std::string what;
 };
 
-class Parser final {
+class parser final {
 public:
   template<typename T>
-  using result = tl::expected<T, ParserError>;
+  using result = tl::expected<T, parse_error>;
 
-  Parser(TransUnitContext& unit_ctx)
+  parser(trans_unit_context& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
   bool parse();
 
 private:
-  TransUnitContext& unit_ctx;
-  ErrorBus err_bus;
+  trans_unit_context& unit_ctx;
+  error_bus err_bus;
 
   size_t position = 0;
 
-  std::vector<Attribute> attrib_buffer;
+  std::vector<attribute> attrib_buffer;
 
 private:
-  result<Token> current();
-  result<Token> peek(int32_t ahead = 1);
-  result<Token> consume(uint32_t ahead = 1);
-  result<Token> expect_consume(TokenType type, const std::string& what);
+  result<token> current();
+  result<token> peek(int32_t ahead = 1);
+  result<token> consume(uint32_t ahead = 1);
+  result<token> expect_consume(token_type type, const std::string& what);
 
-  result<Modifiers> parse_modifiers();
-  result<Attribute> parse_attribute();
+  result<modifiers> parse_modifiers();
+  result<attribute> parse_attribute();
 
-  result<pTypeNode> parse_generic();
-  result<pTypeNode> parse_type_primary();
-  result<pTypeNode> parse_type();
+  result<p_type_node_t> parse_generic();
+  result<p_type_node_t> parse_type_primary();
+  result<p_type_node_t> parse_type();
 
-  result<pExprNode> parse_primary();
-  result<pExprNode> parse_postfix(pExprNode);
-  result<pExprNode> parse_binary(int);
-  result<pExprNode> parse_expr();
+  result<p_expr_node_t> parse_primary();
+  result<p_expr_node_t> parse_postfix(p_expr_node_t);
+  result<p_expr_node_t> parse_binary(int);
+  result<p_expr_node_t> parse_expr();
 
-  result<pStmtNode> parse_declaration();
-  result<pStmtNode> parse_scope();
-  result<pStmtNode> parse_if();
-  result<pStmtNode> parse_return();
-  result<pStmtNode> parse_while();
-  result<pStmtNode> parse_stmt();
+  result<p_stmt_node_t> parse_declaration();
+  result<p_stmt_node_t> parse_scope();
+  result<p_stmt_node_t> parse_if();
+  result<p_stmt_node_t> parse_return();
+  result<p_stmt_node_t> parse_while();
+  result<p_stmt_node_t> parse_stmt();
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

@@ -2,23 +2,23 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_FORMAT_VEC_H
-#define _VIA_FORMAT_VEC_H
+#ifndef _vl_format_vec_h
+#define _vl_format_vec_h
 
 #include "common.h"
 
-VIA_NAMESPACE_UTIL_BEGIN
+namespace via::utils {
 
 template<typename T>
-using FmtVector = const std::vector<T>&;
+using fmt_vector_t = const std::vector<T>&;
 
 template<typename T>
-using FmtFunction = const std::function<std::string(const T&)>&;
+using fmt_func_t = const std::function<std::string(const T&)>&;
 
 template<typename T>
 std::string format_vector(
-  FmtVector<T> vec = {},
-  FmtFunction<T> to_str = {},
+  fmt_vector_t<T> vec = {},
+  fmt_func_t<T> to_str = {},
   char delimiter_begin = '{',
   char delimiter_end = '}'
 ) {
@@ -38,6 +38,6 @@ std::string format_vector(
   return oss.str();
 }
 
-VIA_NAMESPACE_END
+} // namespace via::utils
 
 #endif

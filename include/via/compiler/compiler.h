@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_COMPILER_H
-#define _VIA_COMPILER_H
+#ifndef _vl_compiler_h
+#define _vl_compiler_h
 
 #include "common.h"
 #include "bytecode.h"
@@ -13,9 +13,9 @@
 
 // ===========================================================================================
 // compiler.h
-// This file declares the Compiler class.
+// This file declares the compiler class.
 //
-// The Compiler class serves as an abstract compilation interface,
+// The compiler class serves as an abstract compilation interface,
 //  taking away the complexity of node visitation, optimization,
 //  global tracking, stack tracking, etc.
 //
@@ -23,14 +23,14 @@
 //  it returns a boolean indicating if the program failed or not, of which
 //  a value of `true` represents failure. The method could theoretically be called
 //  multiple times, but it is not recommended to do so.
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-class Compiler final {
+class compiler final {
 public:
-  Compiler(TransUnitContext& unit_ctx)
+  compiler(trans_unit_context& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
-  // Compiler entry point.
+  // compiler entry point.
   bool generate();
 
 private:
@@ -39,9 +39,9 @@ private:
   void insert_exit0_instruction();
 
 private:
-  TransUnitContext& unit_ctx;
+  trans_unit_context& unit_ctx;
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

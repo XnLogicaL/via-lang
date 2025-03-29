@@ -4,7 +4,7 @@
 
 #include "string-utility.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 char* duplicate_string(const std::string& str) {
   char* chars = new char[str.size() + 1];
@@ -30,4 +30,4 @@ uint32_t hash_string_custom(const char* str) {
   return hash;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

@@ -7,11 +7,11 @@
 #include "bytecode.h"
 #include "object.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum OpCode;
+using enum opcode_t;
 
-std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
+std::string to_string(const bytecode& bytecode, bool capitalize_opcodes) {
   // The main instruction is printed with fixed widths:
   // - Opcode string: 12 characters, colored in magenta.
   // - Three operands: each 3 characters wide.
@@ -19,8 +19,8 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   // The comment field is formatted as a left-aligned, fixed width of 15 characters in green.
   static constexpr const char* comment_format = "\033[3;32m{:<15}\033[0m";
 
-  const Instruction& instruction = bytecode.instruction;
-  const InstructionData& data = bytecode.meta_data;
+  const instruction& instruction = bytecode.instruction;
+  const instruction_data& data = bytecode.meta_data;
 
   auto get_opcode_string = [&]() -> std::string {
     std::string str(magic_enum::enum_name(instruction.op));
@@ -29,24 +29,27 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   };
 
   std::string arg0, arg1, arg2;
-  OpCode opcode = instruction.op;
+  opcode_t opcode = instruction.op;
   uint32_t opcode_id = static_cast<uint32_t>(opcode);
 
-  if (opcode_id >= static_cast<uint32_t>(JUMP) && opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
-    arg0 = std::format("{}", static_cast<OperandS>(instruction.operand0));
-    arg1 = std::format("{}", static_cast<OperandS>(instruction.operand1));
-    arg2 = std::format("{}", static_cast<OperandS>(instruction.operand2));
+  if (opcode_id >= static_cast<uint32_t>(JUMP) &&
+      opcode_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
+    arg0 = std::format("{}", static_cast<signed_operand_t>(instruction.operand0));
+    arg1 = std::format("{}", static_cast<signed_operand_t>(instruction.operand1));
+    arg2 = std::format("{}", static_cast<signed_operand_t>(instruction.operand2));
   }
-  else if (opcode == LOADINT || opcode == ADDINT || opcode == SUBINT || opcode == MULINT || opcode == DIVINT || opcode == POWINT || opcode == MODINT) {
-    arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
+  else if (opcode == LOADINT || opcode == ADDINT || opcode == SUBINT || opcode == MULINT ||
+           opcode == DIVINT || opcode == POWINT || opcode == MODINT) {
+    arg0 = std::format("{}", static_cast<operand_t>(instruction.operand0));
     arg1 = std::format(
       "{}",
       static_cast<TInteger>(reinterpret_u16_as_i32(instruction.operand1, instruction.operand2))
     );
     arg2 = "";
   }
-  else if (opcode == LOADFLOAT || opcode == ADDFLOAT || opcode == SUBFLOAT || opcode == MULFLOAT || opcode == DIVFLOAT || opcode == POWFLOAT || opcode == MODFLOAT) {
-    arg0 = std::format("{}", static_cast<Operand>(instruction.operand0));
+  else if (opcode == LOADFLOAT || opcode == ADDFLOAT || opcode == SUBFLOAT || opcode == MULFLOAT ||
+           opcode == DIVFLOAT || opcode == POWFLOAT || opcode == MODFLOAT) {
+    arg0 = std::format("{}", static_cast<operand_t>(instruction.operand0));
     arg1 = std::format(
       "{}", static_cast<TFloat>(reinterpret_u16_as_f32(instruction.operand1, instruction.operand2))
     );
@@ -70,4 +73,4 @@ std::string to_string(const Bytecode& bytecode, bool capitalize_opcodes) {
   return main_line + " " + comment_str;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

@@ -9,33 +9,33 @@
 #include "stack.h"
 #include "format-vector.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum OpCode;
+using enum opcode_t;
 
-void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
+void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
   bool is_global = declaration_node.is_global;
   bool is_const = declaration_node.modifiers.is_const;
 
-  ExprNode& val = *declaration_node.value_expression;
-  pTypeNode val_ty = val.infer_type(unit_ctx);
-  Token ident = declaration_node.identifier;
+  expr_node_base& val = *declaration_node.value_expression;
+  p_type_node_t val_ty = val.infer_type(unit_ctx);
+  token ident = declaration_node.identifier;
 
   std::string symbol = ident.lexeme;
 
   if (is_global) {
     std::string comment = symbol;
-    std::optional<Global> previously_declared = unit_ctx.internal.globals->get_global(symbol);
+    std::optional<global_obj> previously_declared = unit_ctx.internal.globals->get_global(symbol);
 
     if (previously_declared.has_value()) {
       compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
       compiler_info(previously_declared->token, "Previously declared here");
     }
     else {
-      Operand value_reg = allocator.allocate_register();
-      Operand symbol_hash = hash_string_custom(symbol.c_str());
+      operand_t value_reg = allocator.allocate_register();
+      operand_t symbol_hash = hash_string_custom(symbol.c_str());
 
-      Global global{.token = ident, .symbol = symbol, .type = std::move(val_ty)};
+      global_obj global{.token = ident, .symbol = symbol, .type = std::move(val_ty)};
       unit_ctx.internal.globals->declare_global(std::move(global));
       declaration_node.value_expression->accept(expression_visitor, value_reg);
       unit_ctx.bytecode->emit(SETGLOBAL, {value_reg, symbol_hash}, comment);
@@ -46,7 +46,7 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
     std::string comment = std::format("{}", symbol);
 
     if (is_constant_expression(val)) {
-      LiteralExprNode& literal = dynamic_cast<LiteralExprNode&>(val);
+      lit_expr_node& literal = dynamic_cast<lit_expr_node&>(val);
 
       // Check for nil
       if (std::get_if<std::monostate>(&literal.value)) {
@@ -55,7 +55,7 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<PrimitiveTypeNode>(literal.value_token, ValueType::nil),
+          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::nil),
         });
       }
       // Check for integer
@@ -68,7 +68,7 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<PrimitiveTypeNode>(literal.value_token, ValueType::integer),
+          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::integer),
         });
       }
       // Check for float
@@ -82,7 +82,7 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .type =
-            std::make_unique<PrimitiveTypeNode>(literal.value_token, ValueType::floating_point),
+            std::make_unique<primitive_type_node>(literal.value_token, value_type::floating_point),
         });
       }
       // Check for boolean
@@ -92,25 +92,25 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<PrimitiveTypeNode>(literal.value_token, ValueType::boolean),
+          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::boolean),
         });
       }
       // Other constant
       else {
-        const TValue& constant = construct_constant(dynamic_cast<LiteralExprNode&>(val));
-        const Operand const_id = unit_ctx.constants->push_constant(constant);
+        const value_obj& constant = construct_constant(dynamic_cast<lit_expr_node&>(val));
+        const operand_t const_id = unit_ctx.constants->push_constant(constant);
 
         unit_ctx.bytecode->emit(PUSHK, {const_id}, comment);
         unit_ctx.internal.stack->push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<PrimitiveTypeNode>(literal.value_token, constant.type),
+          .type = std::make_unique<primitive_type_node>(literal.value_token, constant.type),
         });
       }
     }
     else {
-      Operand dst = allocator.allocate_register();
+      operand_t dst = allocator.allocate_register();
 
       declaration_node.value_expression->accept(expression_visitor, dst);
       unit_ctx.bytecode->emit(PUSH, {dst}, comment);
@@ -118,7 +118,7 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
         .is_const = is_const,
         .is_constexpr = false,
         .symbol = symbol,
-        .type = std::make_unique<PrimitiveTypeNode>(declaration_node.identifier, ValueType::nil),
+        .type = std::make_unique<primitive_type_node>(declaration_node.identifier, value_type::nil),
       });
 
       allocator.free_register(dst);
@@ -134,33 +134,33 @@ void StmtVisitor::visit(DeclarationStmtNode& declaration_node) {
   }
 }
 
-void StmtVisitor::visit(ScopeStmtNode& scope_node) {
-  Operand stack_pointer = unit_ctx.internal.stack->size();
+void stmt_node_visitor::visit(scope_stmt_node& scope_node) {
+  operand_t stack_pointer = unit_ctx.internal.stack->size();
 
-  for (const pStmtNode& pstmt : scope_node.statements) {
+  for (const p_stmt_node_t& pstmt : scope_node.statements) {
     pstmt->accept(*this);
   }
 
-  Operand stack_allocations = unit_ctx.internal.stack->size() - stack_pointer;
+  operand_t stack_allocations = unit_ctx.internal.stack->size() - stack_pointer;
   for (; stack_allocations > 0; stack_allocations--) {
     unit_ctx.bytecode->emit(DROP);
   }
 }
 
-void StmtVisitor::visit(FunctionStmtNode& function_node) {
-  using Parameters = FunctionStmtNode::Parameters;
+void stmt_node_visitor::visit(func_stmt_node& function_node) {
+  using parameters_t = func_stmt_node::parameters_t;
 
-  Operand function_reg = allocator.allocate_register();
-  Parameters parameters;
+  operand_t function_reg = allocator.allocate_register();
+  parameters_t parameters;
 
   unit_ctx.internal.stack->push({
     .is_const = function_node.modifiers.is_const,
     .is_constexpr = false,
     .symbol = function_node.identifier.lexeme,
-    .type = std::make_unique<PrimitiveTypeNode>(function_node.identifier, ValueType::function),
+    .type = std::make_unique<primitive_type_node>(function_node.identifier, value_type::function),
   });
 
-  unit_ctx.internal.stack->function_stack.push(FunctionStmtNode::StackNode(
+  unit_ctx.internal.stack->function_stack.push(func_stmt_node::stack_node(
     function_node.is_global,
     unit_ctx.internal.stack->size(),
     function_node.modifiers,
@@ -177,16 +177,16 @@ void StmtVisitor::visit(FunctionStmtNode& function_node) {
   function_node.accept(type_visitor);
   unit_ctx.bytecode->emit(LOADFUNCTION, {function_reg}, function_node.identifier.lexeme);
 
-  ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
-  for (const pStmtNode& pstmt : scope.statements) {
-    const StmtNode& stmt = *pstmt;
+  scope_stmt_node& scope = dynamic_cast<scope_stmt_node&>(*function_node.body);
+  for (const p_stmt_node_t& pstmt : scope.statements) {
+    const stmt_node_base& stmt = *pstmt;
 
-    const DeclarationStmtNode* declaration_node = dynamic_cast<const DeclarationStmtNode*>(&stmt);
-    const FunctionStmtNode* function_node = dynamic_cast<const FunctionStmtNode*>(&stmt);
+    const decl_stmt_node* declaration_node = dynamic_cast<const decl_stmt_node*>(&stmt);
+    const func_stmt_node* function_node = dynamic_cast<const func_stmt_node*>(&stmt);
 
     if (declaration_node || function_node) {
       bool is_global = declaration_node ? declaration_node->is_global : function_node->is_global;
-      Token identifier =
+      token identifier =
         declaration_node ? declaration_node->identifier : function_node->identifier;
 
       if (is_global) {
@@ -202,14 +202,14 @@ void StmtVisitor::visit(FunctionStmtNode& function_node) {
     pstmt->accept(*this);
   }
 
-  Bytecode last_bytecode = unit_ctx.bytecode->back();
-  OpCode last_opcode = last_bytecode.instruction.op;
+  bytecode last_bytecode = unit_ctx.bytecode->back();
+  opcode_t last_opcode = last_bytecode.instruction.op;
 
   if (last_opcode != RETURN && last_opcode != RETURNNIL) {
     unit_ctx.bytecode->emit(RETURNNIL);
   }
 
-  Token symbol_token = function_node.identifier;
+  token symbol_token = function_node.identifier;
   std::string symbol = symbol_token.lexeme;
   uint32_t symbol_hash = hash_string_custom(symbol.c_str());
 
@@ -230,13 +230,13 @@ void StmtVisitor::visit(FunctionStmtNode& function_node) {
   unit_ctx.internal.stack->function_stack.pop();
 }
 
-void StmtVisitor::visit(AssignStmtNode& assign_node) {
-  if (SymbolExprNode* symbol_node =
-        get_derived_instance<ExprNode, SymbolExprNode>(*assign_node.assignee)) {
-    Token symbol_token = symbol_node->identifier;
+void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
+  if (sym_expr_node* symbol_node =
+        get_derived_instance<expr_node_base, sym_expr_node>(*assign_node.assignee)) {
+    token symbol_token = symbol_node->identifier;
 
     std::string symbol = symbol_token.lexeme;
-    std::optional<Operand> stk_id = unit_ctx.internal.stack->find_symbol(symbol);
+    std::optional<operand_t> stk_id = unit_ctx.internal.stack->find_symbol(symbol);
 
     if (stk_id.has_value()) {
       const auto& test_stack_member = unit_ctx.internal.stack->at(stk_id.value());
@@ -246,7 +246,7 @@ void StmtVisitor::visit(AssignStmtNode& assign_node) {
         return;
       }
 
-      Operand value_reg = allocator.allocate_register();
+      operand_t value_reg = allocator.allocate_register();
       assign_node.value->accept(expression_visitor, value_reg);
 
       if (unit_ctx.internal.stack->function_stack.size() > 0) {
@@ -270,10 +270,10 @@ void StmtVisitor::visit(AssignStmtNode& assign_node) {
   }
 }
 
-void StmtVisitor::visit(ReturnStmtNode& return_node) {
+void stmt_node_visitor::visit(return_stmt_node& return_node) {
   auto& this_function = unit_ctx.internal.stack->function_stack.top();
   if (return_node.expression.get()) {
-    Operand expr_reg = allocator.allocate_register();
+    operand_t expr_reg = allocator.allocate_register();
 
     return_node.expression->accept(expression_visitor, expr_reg);
     unit_ctx.bytecode->emit(RETURN, {expr_reg}, this_function.identifier.lexeme);
@@ -284,7 +284,7 @@ void StmtVisitor::visit(ReturnStmtNode& return_node) {
   }
 }
 
-void StmtVisitor::visit(BreakStmtNode& break_node) {
+void stmt_node_visitor::visit(break_stmt_node& break_node) {
   if (!escape_label.has_value()) {
     compiler_error(break_node.token, "'break' statement not within loop or switch");
   }
@@ -293,7 +293,7 @@ void StmtVisitor::visit(BreakStmtNode& break_node) {
   }
 }
 
-void StmtVisitor::visit(ContinueStmtNode& continue_node) {
+void stmt_node_visitor::visit(continue_stmt_node& continue_node) {
   if (!repeat_label.has_value()) {
     compiler_error(continue_node.token, "'continue' statement not within loop");
   }
@@ -302,7 +302,7 @@ void StmtVisitor::visit(ContinueStmtNode& continue_node) {
   }
 }
 
-void StmtVisitor::visit(IfStmtNode& if_node) {
+void stmt_node_visitor::visit(if_stmt_node& if_node) {
   /*
 
   0000 jumplabelif    0, 0    ; if
@@ -320,14 +320,14 @@ void StmtVisitor::visit(IfStmtNode& if_node) {
   0008 label          3       ; escape
 
   */
-  Operand cond_reg = allocator.allocate_register();
-  Operand if_label = unit_ctx.internal.label_count++;
+  operand_t cond_reg = allocator.allocate_register();
+  operand_t if_label = unit_ctx.internal.label_count++;
 
   if_node.condition->accept(expression_visitor, cond_reg);
   unit_ctx.bytecode->emit(JUMPLABELIF, {cond_reg, if_label}, "if");
 
   for (const auto& elseif_node : if_node.elseif_nodes) {
-    Operand label = unit_ctx.internal.label_count++;
+    operand_t label = unit_ctx.internal.label_count++;
 
     elseif_node.condition->accept(expression_visitor, cond_reg);
     unit_ctx.bytecode->emit(
@@ -337,7 +337,7 @@ void StmtVisitor::visit(IfStmtNode& if_node) {
 
   allocator.free_register(cond_reg);
 
-  Operand escape_label = unit_ctx.internal.label_count++;
+  operand_t escape_label = unit_ctx.internal.label_count++;
 
   unit_ctx.bytecode->emit(JUMPLABEL, {escape_label}, "else");
   unit_ctx.bytecode->emit(LABEL, {if_label});
@@ -346,7 +346,7 @@ void StmtVisitor::visit(IfStmtNode& if_node) {
 
   size_t label_id = 0;
   for (const auto& elseif_node : if_node.elseif_nodes) {
-    Operand label = if_label + ++label_id;
+    operand_t label = if_label + ++label_id;
 
     unit_ctx.bytecode->emit(LABEL, {label});
     elseif_node.scope->accept(*this);
@@ -360,7 +360,7 @@ void StmtVisitor::visit(IfStmtNode& if_node) {
   }
 }
 
-void StmtVisitor::visit(WhileStmtNode& while_node) {
+void stmt_node_visitor::visit(while_stmt_node& while_node) {
   /*
 
   0000 label          0
@@ -374,9 +374,9 @@ void StmtVisitor::visit(WhileStmtNode& while_node) {
   repeat_label = unit_ctx.internal.label_count++;
   escape_label = unit_ctx.internal.label_count++;
 
-  Operand cond_reg = allocator.allocate_register();
-  Operand l_repeat_label = repeat_label.value();
-  Operand l_escape_label = escape_label.value();
+  operand_t cond_reg = allocator.allocate_register();
+  operand_t l_repeat_label = repeat_label.value();
+  operand_t l_escape_label = escape_label.value();
 
   unit_ctx.bytecode->emit(LABEL, {l_repeat_label});
   while_node.condition->accept(expression_visitor, cond_reg);
@@ -390,19 +390,20 @@ void StmtVisitor::visit(WhileStmtNode& while_node) {
   escape_label = std::nullopt;
 }
 
-void StmtVisitor::visit(ExprStmtNode& expr_stmt) {
-  pExprNode& expr = expr_stmt.expression;
+void stmt_node_visitor::visit(expr_stmt_node& expr_stmt) {
+  p_expr_node_t& expr = expr_stmt.expression;
   expr->accept(expression_visitor, 0);
 
-  if (CallExprNode* call_node = get_derived_instance<ExprNode, CallExprNode>(*expr)) {
-    pTypeNode callee_ty = call_node->callee->infer_type(unit_ctx);
-    pTypeNode ret_ty = call_node->infer_type(unit_ctx);
+  if (call_expr_node* call_node = get_derived_instance<expr_node_base, call_expr_node>(*expr)) {
+    p_type_node_t callee_ty = call_node->callee->infer_type(unit_ctx);
+    p_type_node_t ret_ty = call_node->infer_type(unit_ctx);
 
-    CHECK_TYPE_INFERENCE_FAILURE(callee_ty, expr);
-    CHECK_TYPE_INFERENCE_FAILURE(ret_ty, expr);
+    vl_tinference_failure(callee_ty, expr);
+    vl_tinference_failure(ret_ty, expr);
 
-    if (PrimitiveTypeNode* prim_ty = get_derived_instance<TypeNode, PrimitiveTypeNode>(*ret_ty)) {
-      if (prim_ty->type != ValueType::nil) {
+    if (primitive_type_node* prim_ty =
+          get_derived_instance<type_node_base, primitive_type_node>(*ret_ty)) {
+      if (prim_ty->type != value_type::nil) {
         goto return_value_ignored;
       }
     }
@@ -413,7 +414,7 @@ void StmtVisitor::visit(ExprStmtNode& expr_stmt) {
     }
 
     // Edit last instruction to drop the return value rather than popping it.
-    Bytecode& last = unit_ctx.bytecode->back();
+    bytecode& last = unit_ctx.bytecode->back();
     last.instruction.op = DROP;
   }
   else {
@@ -421,4 +422,4 @@ void StmtVisitor::visit(ExprStmtNode& expr_stmt) {
   }
 }
 
-VIA_NAMESPACE_END
+} // namespace via

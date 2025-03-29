@@ -2,14 +2,14 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_TOKEN_H
-#define _VIA_TOKEN_H
+#ifndef _vl_token_h
+#define _vl_token_h
 
 #include "common-defs.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-enum class TokenType {
+enum class token_type {
   // Keywords
   KW_DO,       // do
   KW_IN,       // in
@@ -106,38 +106,44 @@ enum class TokenType {
   UNKNOWN // Unknown token
 };
 
-struct Token {
-  Token() {}
-  Token(TokenType type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
-    : type(type),
-      lexeme(lexeme),
-      line(line),
-      offset(offset),
-      position(position) {}
+using token_lexeme_t = std::string;
 
-  TokenType type = TokenType::UNKNOWN;
-  std::string lexeme = "";
+struct token {
+  token_type type = token_type::UNKNOWN;
   uint64_t line = 0;
   uint64_t offset = 0;
   uint64_t position = 0;
+  token_lexeme_t lexeme = "";
+
+  token() = default;
+  token(token_type type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
+    : type(type),
+      line(line),
+      offset(offset),
+      position(position),
+      lexeme(lexeme) {}
 
   std::string to_string() const;
+
   bool is_literal() const;
+
   bool is_operator() const;
+
   bool is_modifier() const;
+
   int bin_prec() const;
 };
 
-class TokenStream {
+class token_stream {
 public:
-  using token_vector = std::vector<Token>;
-  using at_result = std::optional<Token>;
+  using token_vector = std::vector<token>;
+  using at_result = std::optional<token>;
 
   size_t size();
 
-  Token& at(size_t);
+  token& at(size_t);
 
-  void push(const Token&);
+  void push(const token&);
 
   token_vector& get();
 
@@ -145,6 +151,6 @@ private:
   token_vector tokens;
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

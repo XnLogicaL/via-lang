@@ -9,28 +9,28 @@
 #include "constant.h"
 #include "stack.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 // ==========================================================================================
-// TransUnitContext
-TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
+// trans_unit_context
+trans_unit_context::trans_unit_context(const std::string& file_path, const std::string& file_source)
   : file_path(file_path),
     file_source(file_source),
-    tokens(std::make_unique<TokenStream>()),
-    ast(std::make_unique<SyntaxTree>()),
-    bytecode(std::make_unique<BytecodeHolder>()),
-    constants(std::make_unique<ConstantHolder>()),
+    tokens(std::make_unique<token_stream>()),
+    ast(std::make_unique<syntax_tree>()),
+    bytecode(std::make_unique<bytecode_holder>()),
+    constants(std::make_unique<constant_holder>()),
     internal({
       0,
-      std::make_unique<CompilerStack>(),
-      std::make_unique<GlobalTracker>(),
+      std::make_unique<compiler_stack>(),
+      std::make_unique<global_holder>(),
     }) {}
 
-TransUnitContext::TransUnitContext(const ByteStream&) {}
+trans_unit_context::trans_unit_context(const ByteStream&) {}
 
-void TransUnitContext::clear() {}
+void trans_unit_context::clear() {}
 
-const char* TransUnitContext::get_platform_info() {
+const char* trans_unit_context::get_platform_info() {
   static char buffer[32];
   static bool fetched = false;
 
@@ -60,11 +60,11 @@ const char* TransUnitContext::get_platform_info() {
   return buffer;
 }
 
-ByteStream TransUnitContext::encode() {
+ByteStream trans_unit_context::encode() {
   return {};
 }
 
 // ==========================================================================================
 // Context
 
-VIA_NAMESPACE_END
+} // namespace via

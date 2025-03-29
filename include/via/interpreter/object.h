@@ -2,13 +2,13 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_OBJECT_H
-#define _VIA_OBJECT_H
+#ifndef _vl_object_h
+#define _vl_object_h
 
 #include "common-macros.h"
 #include "common-defs.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 #ifdef VIA_64BIT
 
@@ -23,26 +23,26 @@ using TFloat = float32_t;
 #endif
 
 struct State;
-struct TString;
-struct TTable;
-struct TObject;
-struct TFunction;
-struct TCFunction;
+struct string_obj;
+struct table_obj;
+struct object_obj;
+struct tfunction;
+struct tcfunction;
 
-enum class ValueType : uint8_t {
+enum class value_type : uint8_t {
   nil,            // Empty type, null
   integer,        // Integer type
   floating_point, // Floating point type
   boolean,        // Boolean type
-  string,         // String type, pointer to TString
-  function,       // Function type, pointer to TFunction
-  cfunction,      // CFunction type, pointer to TCFunction
-  table,          // Table type, pointer to TTable
-  object,         // Object type, pointer to TObject
+  string,         // String type, pointer to string_obj
+  function,       // Function type, pointer to tfunction
+  cfunction,      // CFunction type, pointer to tcfunction
+  table,          // Table type, pointer to table_obj
+  object,         // Object type, pointer to object_obj
 };
 
-struct VIA_ALIGN_8 TValue {
-  ValueType type;
+struct vl_align(8) value_obj {
+  value_type type;
   union {
     TInteger val_integer;      // Integer value
     TFloat val_floating_point; // Floating point value
@@ -50,152 +50,151 @@ struct VIA_ALIGN_8 TValue {
     void* val_pointer;         // Pointer to complex types (string, function, etc.)
   };
 
-  VIA_CUSTOM_DESTRUCTOR(TValue);
-  VIA_NON_COPYABLE(TValue);
+  vl_nocopy(value_obj);
 
-  TValue(TValue&& other);
-  TValue& operator=(TValue&&);
+  value_obj(value_obj&& other);
+  value_obj& operator=(value_obj&&);
+  ~value_obj();
 
-  explicit TValue()
-      : type(ValueType::nil) {}
+  explicit value_obj()
+    : type(value_type::nil) {}
 
-  explicit TValue(bool b)
-      : type(ValueType::boolean),
-        val_boolean(b) {}
+  explicit value_obj(bool b)
+    : type(value_type::boolean),
+      val_boolean(b) {}
 
-  explicit TValue(TInteger x)
-      : type(ValueType::integer),
-        val_integer(x) {}
+  explicit value_obj(TInteger x)
+    : type(value_type::integer),
+      val_integer(x) {}
 
-  explicit TValue(TFloat x)
-      : type(ValueType::floating_point),
-        val_floating_point(x) {}
+  explicit value_obj(TFloat x)
+    : type(value_type::floating_point),
+      val_floating_point(x) {}
 
-  explicit TValue(TString* ptr)
-      : type(ValueType::string),
-        val_pointer(ptr) {}
+  explicit value_obj(string_obj* ptr)
+    : type(value_type::string),
+      val_pointer(ptr) {}
 
-  explicit TValue(TTable* ptr)
-      : type(ValueType::table),
-        val_pointer(ptr) {}
+  explicit value_obj(table_obj* ptr)
+    : type(value_type::table),
+      val_pointer(ptr) {}
 
-  explicit TValue(TFunction* ptr)
-      : type(ValueType::function),
-        val_pointer(ptr) {}
+  explicit value_obj(tfunction* ptr)
+    : type(value_type::function),
+      val_pointer(ptr) {}
 
-  explicit TValue(TCFunction* ptr)
-      : type(ValueType::cfunction),
-        val_pointer(ptr) {}
+  explicit value_obj(tcfunction* ptr)
+    : type(value_type::cfunction),
+      val_pointer(ptr) {}
 
-  explicit TValue(TObject* ptr)
-      : type(ValueType::object),
-        val_pointer(ptr) {}
+  explicit value_obj(object_obj* ptr)
+    : type(value_type::object),
+      val_pointer(ptr) {}
 
-  explicit TValue(ValueType type, void* ptr)
-      : type(type),
-        val_pointer(ptr) {}
+  explicit value_obj(value_type type, void* ptr)
+    : type(type),
+      val_pointer(ptr) {}
 
   // Returns whether if the object holds a given type.
-  VIA_FORCE_INLINE constexpr bool is(ValueType other) const {
+  vl_forceinline constexpr bool is(value_type other) const {
     return type == other;
   }
 
-  VIA_FORCE_INLINE constexpr bool is_nil() const {
-    return is(ValueType::nil);
+  vl_forceinline constexpr bool is_nil() const {
+    return is(value_type::nil);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_bool() const {
-    return is(ValueType::boolean);
+  vl_forceinline constexpr bool is_bool() const {
+    return is(value_type::boolean);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_int() const {
-    return is(ValueType::integer);
+  vl_forceinline constexpr bool is_int() const {
+    return is(value_type::integer);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_float() const {
-    return is(ValueType::floating_point);
+  vl_forceinline constexpr bool is_float() const {
+    return is(value_type::floating_point);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_number() const {
+  vl_forceinline constexpr bool is_number() const {
     return is_int() || is_float();
   }
 
-  VIA_FORCE_INLINE constexpr bool is_string() const {
-    return is(ValueType::string);
+  vl_forceinline constexpr bool is_string() const {
+    return is(value_type::string);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_table() const {
-    return is(ValueType::table);
+  vl_forceinline constexpr bool is_table() const {
+    return is(value_type::table);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_subscriptable() const {
+  vl_forceinline constexpr bool is_subscriptable() const {
     return is_string() || is_table();
   }
 
-  VIA_FORCE_INLINE constexpr bool is_function() const {
-    return is(ValueType::function);
+  vl_forceinline constexpr bool is_function() const {
+    return is(value_type::function);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_cfunction() const {
-    return is(ValueType::cfunction);
+  vl_forceinline constexpr bool is_cfunction() const {
+    return is(value_type::cfunction);
   }
 
-  VIA_FORCE_INLINE constexpr bool is_callable() const {
+  vl_forceinline constexpr bool is_callable() const {
     return is_function() || is_cfunction();
   }
 
   // Returns a clone of the object.
-  TValue clone() const;
+  value_obj clone() const;
 
   // Frees the internal resources of the object and resets union tag to nil.
   void reset();
 
-  // Compares self with a given TValue.
-  [[nodiscard]] bool compare(const TValue& other) const;
+  // Compares self with a given value_obj.
+  [[nodiscard]] bool compare(const value_obj& other) const;
 
   // Moves the value and returns it as an rvalue reference.
-  [[nodiscard]] VIA_FORCE_INLINE TValue&& move() {
-    return static_cast<TValue&&>(*this);
+  [[nodiscard]] vl_forceinline value_obj&& move() {
+    return static_cast<value_obj&&>(*this);
   }
 
-  [[nodiscard]] VIA_FORCE_INLINE const TValue&& move() const {
-    return static_cast<const TValue&&>(*this);
+  [[nodiscard]] vl_forceinline const value_obj&& move() const {
+    return static_cast<const value_obj&&>(*this);
   }
 
   // Returns the pointer value as a pointer to type T.
   template<typename T>
-  [[nodiscard]] VIA_FORCE_INLINE T* cast_ptr() {
+  [[nodiscard]] vl_forceinline T* cast_ptr() {
     return reinterpret_cast<T*>(val_pointer);
   }
 
   template<typename T>
-  [[nodiscard]] VIA_FORCE_INLINE const T* cast_ptr() const {
+  [[nodiscard]] vl_forceinline const T* cast_ptr() const {
     return reinterpret_cast<const T*>(val_pointer);
   }
 };
 
-struct TString {
+struct string_obj {
   uint32_t len;
   uint32_t hash;
   char* data;
 
-  VIA_CUSTOM_DESTRUCTOR(TString);
-
-  explicit TString(const TString&);
-  explicit TString(State*, const char*);
+  explicit string_obj(const string_obj&);
+  explicit string_obj(State*, const char*);
+  ~string_obj();
 
   size_t size();
-  TValue get_string(size_t position);
-  void set_string(size_t position, const TValue& value);
+  value_obj get_string(size_t position);
+  void set_string(size_t position, const value_obj& value);
 };
 
-struct THashNode {
+struct hash_node_obj {
   const char* key;
-  TValue value;
-  THashNode* next;
+  value_obj value;
+  hash_node_obj* next;
 };
 
-struct TTable {
+struct table_obj {
   size_t arr_capacity = 64;
   size_t ht_capacity = 1024;
   size_t arr_size_cache = 0;
@@ -204,44 +203,42 @@ struct TTable {
   bool arr_size_cache_valid = true;
   bool ht_size_cache_valid = true;
 
-  TValue* arr_array = new TValue[arr_capacity];
-  THashNode** ht_buckets = new THashNode*[ht_capacity];
+  value_obj* arr_array = new value_obj[arr_capacity];
+  hash_node_obj** ht_buckets = new hash_node_obj*[ht_capacity];
 
-  VIA_DEFAULT_CONSTRUCTOR(TTable);
-  VIA_CUSTOM_DESTRUCTOR(TTable);
-
-  TTable(const TTable&);
+  table_obj() = default;
+  table_obj(const table_obj&);
+  ~table_obj();
 
   // Returns the real size of the table.
   size_t size();
 
   // Returns the element that lives in the given index.
   // Returns nil upon failure.
-  TValue get_table(size_t position);
-  TValue get_table(const char* key);
+  value_obj get_table(size_t position);
+  value_obj get_table(const char* key);
 
   // Sets the element that lives in the given index to the given value.
-  void set_table(size_t position, const TValue& value);
-  void set_table(const char* key, const TValue& value);
+  void set_table(size_t position, const value_obj& value);
+  void set_table(const char* key, const value_obj& value);
 };
 
-struct TObject {
+struct object_obj {
   size_t field_count;
 
-  TValue constructor;
-  TValue destructor;
-  TValue operator_overloads[16];
+  value_obj constructor;
+  value_obj destructor;
+  value_obj operator_overloads[16];
 
-  TValue* fields;
+  value_obj* fields;
 
-  VIA_DEFAULT_CONSTRUCTOR(TObject);
-  VIA_CUSTOM_DESTRUCTOR(TObject);
-
-  TObject(size_t field_count)
-      : field_count(field_count),
-        fields(new TValue[field_count]) {}
+  object_obj() = default;
+  ~object_obj();
+  object_obj(size_t field_count)
+    : field_count(field_count),
+      fields(new value_obj[field_count]) {}
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

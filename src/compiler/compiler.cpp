@@ -9,30 +9,30 @@
 // ===========================================================================================
 // compiler.cpp
 //
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-void Compiler::codegen_prep() {
+void compiler::codegen_prep() {
   unit_ctx.internal.globals->declare_builtins();
 }
 
-void Compiler::check_global_collisions(bool& failed) {
+void compiler::check_global_collisions(bool& failed) {
   failed = false;
 }
 
-void Compiler::insert_exit0_instruction() {
-  unit_ctx.bytecode->emit(OpCode::EXIT, {0});
+void compiler::insert_exit0_instruction() {
+  unit_ctx.bytecode->emit(opcode_t::EXIT, {0});
 }
 
-bool Compiler::generate() {
-  ErrorBus emitter;
-  RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
-  StmtVisitor visitor(unit_ctx, emitter, allocator);
+bool compiler::generate() {
+  error_bus emitter;
+  register_allocator allocator(vl_regcount, true);
+  stmt_node_visitor visitor(unit_ctx, emitter, allocator);
 
   bool failed = false;
 
   codegen_prep();
 
-  for (pStmtNode& stmt : unit_ctx.ast->statements) {
+  for (p_stmt_node_t& stmt : unit_ctx.ast->statements) {
     stmt->accept(visitor);
   }
 
@@ -42,4 +42,4 @@ bool Compiler::generate() {
   return failed || visitor.failed();
 }
 
-VIA_NAMESPACE_END
+} // namespace via

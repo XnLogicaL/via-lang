@@ -7,12 +7,12 @@
 #include "function.h"
 #include "api-aux.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum ValueType;
+using enum value_type;
 
 // Move-assignment operator, moves values from other object
-TValue& TValue::operator=(TValue&& other) {
+value_obj& value_obj::operator=(value_obj&& other) {
   if (this != &other) {
     // Move the value based on type
     switch (other.type) {
@@ -43,8 +43,8 @@ TValue& TValue::operator=(TValue&& other) {
 }
 
 // Move constructor, transfer ownership based on type
-TValue::TValue(TValue&& other)
-    : type(other.type) {
+value_obj::value_obj(value_obj&& other)
+  : type(other.type) {
   switch (other.type) {
   case integer:
     val_integer = other.val_integer;
@@ -68,25 +68,25 @@ TValue::TValue(TValue&& other)
   other.type = nil;
 }
 
-// Frees the resources of the TValue depending on type
-TValue::~TValue() {
-  if (static_cast<uint16_t>(type) >= static_cast<uint8_t>(ValueType::string)) {
+// Frees the resources of the value_obj depending on type
+value_obj::~value_obj() {
+  if (static_cast<uint16_t>(type) >= static_cast<uint8_t>(value_type::string)) {
     if (!val_pointer) {
       return;
     }
 
     switch (type) {
     case string:
-      delete cast_ptr<TString>();
+      delete cast_ptr<string_obj>();
       break;
     case table:
-      delete cast_ptr<TTable>();
+      delete cast_ptr<table_obj>();
       break;
     case function:
-      delete cast_ptr<TFunction>();
+      delete cast_ptr<tfunction>();
       break;
     case cfunction:
-      delete cast_ptr<TCFunction>();
+      delete cast_ptr<tcfunction>();
       break;
     default:
       break;
@@ -97,38 +97,38 @@ TValue::~TValue() {
   }
 }
 
-// Return a clone of the TValue based on its type
-TValue TValue::clone() const {
+// Return a clone of the value_obj based on its type
+value_obj value_obj::clone() const {
   switch (type) {
   case integer:
-    return TValue(val_integer);
+    return value_obj(val_integer);
   case floating_point:
-    return TValue(val_floating_point);
+    return value_obj(val_floating_point);
   case boolean:
-    return TValue(val_boolean);
+    return value_obj(val_boolean);
   case string:
-    return TValue(string, new TString(*cast_ptr<TString>()));
+    return value_obj(string, new string_obj(*cast_ptr<string_obj>()));
   case table:
-    return TValue(table, new TTable(*cast_ptr<TTable>()));
+    return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
   case function:
-    return TValue(function, new TFunction(*cast_ptr<TFunction>()));
+    return value_obj(function, new tfunction(*cast_ptr<tfunction>()));
   case cfunction:
-    return TValue(cfunction, new TCFunction(*cast_ptr<TCFunction>()));
+    return value_obj(cfunction, new tcfunction(*cast_ptr<tcfunction>()));
   default:
-    return TValue();
+    return value_obj();
   }
 
-  VIA_UNREACHABLE;
+  vl_unreachable;
 }
 
-void TValue::reset() {}
+void value_obj::reset() {}
 
-bool TValue::compare(const TValue&) const {
+bool value_obj::compare(const value_obj&) const {
   return false;
 }
 
-// Constructs a new TString object
-TString::TString(State* V, const char* str) {
+// Constructs a new string_obj object
+string_obj::string_obj(State* V, const char* str) {
   if (V != nullptr) {
     auto& stable = V->G->stable;
     auto it = stable.find(hash);
@@ -146,44 +146,44 @@ TString::TString(State* V, const char* str) {
   }
 }
 
-TString::TString(const TString& other)
-    : len(other.len),
-      hash(other.hash) {
+string_obj::string_obj(const string_obj& other)
+  : len(other.len),
+    hash(other.hash) {
   data = duplicate_string(other.data);
 }
 
-TString::~TString() {
+string_obj::~string_obj() {
   delete[] data;
 }
 
-size_t TString::size() {
+size_t string_obj::size() {
   return len;
 }
 
-void TString::set_string(size_t position, const TValue& value) {
-  VIA_ASSERT(position < len, "String index position out of bounds");
-  VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
+void string_obj::set_string(size_t position, const value_obj& value) {
+  vl_assert(position < len, "String index position out of bounds");
+  vl_assert(value.is_string(), "Setting string index to non-string value");
 
-  const TString* val = value.cast_ptr<TString>();
+  const string_obj* val = value.cast_ptr<string_obj>();
 
-  VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
+  vl_assert(val->len == 1, "Setting string index to non-character string");
 
-  data[position] = value.cast_ptr<TString>()->data[0];
+  data[position] = value.cast_ptr<string_obj>()->data[0];
 }
 
-TValue TString::get_string(size_t position) {
-  VIA_ASSERT(position < len, "String index position out of bounds");
+value_obj string_obj::get_string(size_t position) {
+  vl_assert(position < len, "String index position out of bounds");
   char chr = data[position];
-  TString* tstr = new TString(nullptr, &chr);
-  return TValue(tstr);
+  string_obj* tstr = new string_obj(nullptr, &chr);
+  return value_obj(tstr);
 }
 
-TTable::~TTable() {
+table_obj::~table_obj() {
   if (ht_buckets) {
     for (size_t i = 0; i < ht_capacity; ++i) {
-      THashNode* next = ht_buckets[i];
+      hash_node_obj* next = ht_buckets[i];
       while (next) {
-        THashNode* current = next;
+        hash_node_obj* current = next;
         next = next->next;
         delete current;
       }
@@ -195,14 +195,14 @@ TTable::~TTable() {
   delete[] ht_buckets;
 }
 
-TTable::TTable(const TTable& other)
-    : arr_capacity(other.arr_capacity),
-      ht_capacity(other.ht_capacity),
-      arr_size_cache_valid(other.arr_size_cache_valid),
-      ht_size_cache_valid(other.ht_size_cache_valid) {
+table_obj::table_obj(const table_obj& other)
+  : arr_capacity(other.arr_capacity),
+    ht_capacity(other.ht_capacity),
+    arr_size_cache_valid(other.arr_size_cache_valid),
+    ht_size_cache_valid(other.ht_size_cache_valid) {
 
   if (other.arr_array) {
-    arr_array = new TValue[arr_capacity];
+    arr_array = new value_obj[arr_capacity];
     for (size_t i = 0; i < arr_capacity; ++i) {
       arr_array[i] = other.arr_array[i].clone();
     }
@@ -212,14 +212,14 @@ TTable::TTable(const TTable& other)
   }
 
   if (other.ht_buckets) {
-    ht_buckets = new THashNode*[ht_capacity]();
+    ht_buckets = new hash_node_obj*[ht_capacity]();
 
     for (size_t i = 0; i < ht_capacity; ++i) {
-      THashNode* src = other.ht_buckets[i];
-      THashNode** dst = &ht_buckets[i];
+      hash_node_obj* src = other.ht_buckets[i];
+      hash_node_obj** dst = &ht_buckets[i];
 
       while (src) {
-        *dst = new THashNode{src->key, src->value.clone(), nullptr};
+        *dst = new hash_node_obj{src->key, src->value.clone(), nullptr};
         dst = &((*dst)->next);
         src = src->next;
       }
@@ -230,35 +230,35 @@ TTable::TTable(const TTable& other)
   }
 }
 
-size_t TTable::size() {
+size_t table_obj::size() {
   return impl::__table_size(this);
 }
 
-void TTable::set_table(const char* key, const TValue& value) {
-  TValue index(new TString(nullptr, key));
+void table_obj::set_table(const char* key, const value_obj& value) {
+  value_obj index(new string_obj(nullptr, key));
   impl::__table_set(this, index, value);
 }
 
-void TTable::set_table(size_t position, const TValue& value) {
-  TValue index(static_cast<TInteger>(position));
+void table_obj::set_table(size_t position, const value_obj& value) {
+  value_obj index(static_cast<TInteger>(position));
   impl::__table_set(this, index, value);
 }
 
-TValue TTable::get_table(const char* key) {
-  TValue index(new TString(nullptr, key));
+value_obj table_obj::get_table(const char* key) {
+  value_obj index(new string_obj(nullptr, key));
   return impl::__table_get(this, index);
 }
 
-TValue TTable::get_table(size_t position) {
-  TValue index(static_cast<TInteger>(position));
+value_obj table_obj::get_table(size_t position) {
+  value_obj index(static_cast<TInteger>(position));
   return impl::__table_get(this, index);
 }
 
-TObject::~TObject() {
+object_obj::~object_obj() {
   if (fields) {
     delete[] fields;
     fields = nullptr;
   }
 }
 
-VIA_NAMESPACE_END
+} // namespace via

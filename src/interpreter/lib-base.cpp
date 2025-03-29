@@ -6,70 +6,70 @@
 #include "api-impl.h"
 #include "lib-utility.h"
 
-VIA_NAMESPACE_LIB_BEGIN
+namespace via::lib {
 
-static TValue nil = TValue();
+static value_obj nil = value_obj();
 
 using namespace impl;
 
-VIA_LIB_DECL_FUNCTION(base_print) {
+vl_libdeclfn(base_print) {
   size_t i = 0;
   while (i < V->frame->call_info.argc) {
-    VIA_LIB_DECL_PARAMETER(argx, i++);
+    vl_libdeclparam(argx, i++);
     std::cout << __to_cxx_string(V, argx);
   }
 
   std::cout << std::flush;
 
-  VIA_LIB_RETURN(nil);
+  vl_libret(nil);
 }
 
-VIA_LIB_DECL_FUNCTION(base_println) {
+vl_libdeclfn(base_println) {
   size_t i = 0;
   while (i < V->frame->call_info.argc) {
-    VIA_LIB_DECL_PARAMETER(argx, i++);
+    vl_libdeclparam(argx, i++);
     std::cout << __to_cxx_string(V, argx);
   }
 
   std::cout << std::endl;
 
-  VIA_LIB_RETURN(nil);
+  vl_libret(nil);
 }
 
-VIA_LIB_DECL_FUNCTION(base_error) {
-  VIA_LIB_DECL_PARAMETER(arg0, 0);
+vl_libdeclfn(base_error) {
+  vl_libdeclparam(arg0, 0);
   __set_error_state(V, __to_cxx_string(V, arg0));
-  VIA_LIB_RETURN(nil);
+  vl_libret(nil);
 }
 
-VIA_LIB_DECL_FUNCTION(base_assert) {
-  VIA_LIB_DECL_PARAMETER(arg0, 0);
-  VIA_LIB_DECL_PARAMETER(arg1, 1);
+vl_libdeclfn(base_assert) {
+  vl_libdeclparam(arg0, 0);
+  vl_libdeclparam(arg1, 1);
 
   if (!__to_cxx_bool(arg0)) {
     std::string err_cxx_str = std::format("assertion failed: {}", __to_cxx_string(V, arg1));
 
-    TValue err_val(new TString(V, err_cxx_str.c_str()));
-    TValue err_fn = VIA_LIB_WRAP_CFPTR(base_error);
+    value_obj err_val(new string_obj(V, err_cxx_str.c_str()));
+    value_obj err_fn = vl_libwrapcfptr(base_error);
 
     __push(V, err_val.clone());
     __call(V, err_fn, 1);
   }
 
-  VIA_LIB_RETURN(nil);
+  vl_libret(nil);
 }
 
-VIA_LIB_DECL_FUNCTION(open_baselib) {
-  std::unordered_map<uint32_t, TValue> base_properties;
+vl_libdeclfn(open_baselib) {
+  std::unordered_map<uint32_t, value_obj> base_properties;
 
-  VIA_LIB_MAP_EMPLACE(base_properties, "print", VIA_LIB_WRAP_CFPTR(base_print));
-  VIA_LIB_MAP_EMPLACE(base_properties, "println", VIA_LIB_WRAP_CFPTR(base_println));
-  VIA_LIB_MAP_EMPLACE(base_properties, "error", VIA_LIB_WRAP_CFPTR(base_error));
-  VIA_LIB_MAP_EMPLACE(base_properties, "assert", VIA_LIB_WRAP_CFPTR(base_assert));
+  vl_libmapempl(base_properties, "print", vl_libwrapcfptr(base_print));
+  vl_libmapempl(base_properties, "println", vl_libwrapcfptr(base_println));
+  vl_libmapempl(base_properties, "error", vl_libwrapcfptr(base_error));
+  vl_libmapempl(base_properties, "assert", vl_libwrapcfptr(base_assert));
 
   for (const auto& [ident, val] : base_properties) {
     __set_global(V, ident, val);
   }
 }
 
-VIA_NAMESPACE_END
+} // namespace via::lib

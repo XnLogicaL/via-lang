@@ -4,12 +4,12 @@
 
 #include "register-allocator.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using register_type = RegisterAllocator::register_type;
+using register_t = register_allocator::register_t;
 
-register_type RegisterAllocator::allocate_register() {
-  for (register_type reg = 0; reg < 128; reg++) {
+register_t register_allocator::allocate_register() {
+  for (register_t reg = 0; reg < 128; reg++) {
     if (registers[reg]) {
       registers[reg] = false;
       return reg;
@@ -19,18 +19,18 @@ register_type RegisterAllocator::allocate_register() {
   return VIA_OPERAND_INVALID;
 }
 
-register_type RegisterAllocator::allocate_temp() {
-  register_type reg = allocate_register();
+register_t register_allocator::allocate_temp() {
+  register_t reg = allocate_register();
   free_register(reg);
   return reg;
 }
 
-void RegisterAllocator::free_register(register_type reg) {
+void register_allocator::free_register(register_t reg) {
   registers.emplace(reg, true);
 }
 
-bool RegisterAllocator::is_used(register_type reg) {
+bool register_allocator::is_used(register_t reg) {
   return registers[reg];
 }
 
-VIA_NAMESPACE_END
+} // namespace via

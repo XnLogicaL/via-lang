@@ -6,14 +6,14 @@
 #include "compiler-types.h"
 #include "ast.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-void TypeVisitor::visit(DeclarationStmtNode& declaration_node) {
-  pTypeNode infered_type = declaration_node.value_expression->infer_type(unit_ctx);
-  pTypeNode& annotated_type = declaration_node.type;
+void type_node_visitor::visit(decl_stmt_node& declaration_node) {
+  p_type_node_t infered_type = declaration_node.value_expression->infer_type(unit_ctx);
+  p_type_node_t& annotated_type = declaration_node.type;
 
-  CHECK_TYPE_INFERENCE_FAILURE(infered_type, declaration_node.value_expression);
-  CHECK_TYPE_INFERENCE_FAILURE(annotated_type, declaration_node.value_expression);
+  vl_tinference_failure(infered_type, declaration_node.value_expression);
+  vl_tinference_failure(annotated_type, declaration_node.value_expression);
 
   if (!is_compatible(infered_type, annotated_type)) {
     compiler_error(
@@ -28,12 +28,12 @@ void TypeVisitor::visit(DeclarationStmtNode& declaration_node) {
   }
 }
 
-void TypeVisitor::visit(AssignStmtNode& assign_node) {
-  pTypeNode infered_type = assign_node.assignee->infer_type(unit_ctx);
-  pTypeNode assigned_type = assign_node.value->infer_type(unit_ctx);
+void type_node_visitor::visit(assign_stmt_node& assign_node) {
+  p_type_node_t infered_type = assign_node.assignee->infer_type(unit_ctx);
+  p_type_node_t assigned_type = assign_node.value->infer_type(unit_ctx);
 
-  CHECK_TYPE_INFERENCE_FAILURE(infered_type, assign_node.assignee);
-  CHECK_TYPE_INFERENCE_FAILURE(assigned_type, assign_node.value);
+  vl_tinference_failure(infered_type, assign_node.assignee);
+  vl_tinference_failure(assigned_type, assign_node.value);
 
   if (!is_compatible(infered_type, assigned_type)) {
     compiler_error(
@@ -48,6 +48,6 @@ void TypeVisitor::visit(AssignStmtNode& assign_node) {
   }
 }
 
-void TypeVisitor::visit(FunctionStmtNode&) {}
+void type_node_visitor::visit(func_stmt_node&) {}
 
-VIA_NAMESPACE_END
+} // namespace via

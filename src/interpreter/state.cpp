@@ -7,16 +7,16 @@
 #include "api-aux.h"
 #include "api-impl.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 using namespace impl;
 
 // Initializes and returns a new State object
-State::State(GState* G, TransUnitContext& unit_ctx)
-    : id(G->threads++),
-      G(G),
-      err(new ErrorState()),
-      unit_ctx(unit_ctx) {
+State::State(GState* G, trans_unit_context& unit_ctx)
+  : id(G->threads++),
+    G(G),
+    err(new ErrorState()),
+    unit_ctx(unit_ctx) {
   load(*unit_ctx.bytecode);
 
   __register_allocate(this);
@@ -35,7 +35,7 @@ State::~State() {
   __label_deallocate(this);
 }
 
-void State::load(const BytecodeHolder& bytecode) {
+void State::load(const bytecode_holder& bytecode) {
   delete[] sibp;
 
   auto& pipeline = bytecode.get();
@@ -45,20 +45,20 @@ void State::load(const BytecodeHolder& bytecode) {
     return;
   }
 
-  ibp = new Instruction[pipeline.size()]; // Allocate ibp (Instruction base/begin pointer)
+  ibp = new instruction[pipeline.size()]; // Allocate ibp (instruction base/begin pointer)
   sibp = ibp;
-  iep = ibp + pipeline.size(); // Initialize iep (Instruction end pointer)
+  iep = ibp + pipeline.size(); // Initialize iep (instruction end pointer)
   siep = iep;
-  pc = ibp; // Initialize pc (Instruction pointer)
+  pc = ibp; // Initialize pc (instruction pointer)
 
   size_t position = 0;
-  for (const Bytecode& pair : pipeline) {
+  for (const bytecode& pair : pipeline) {
     ibp[position++] = pair.instruction;
   }
 }
 
 std::string to_string(State* state) {
-#define TO_VOID_STAR(ptr) reinterpret_cast<void*>(ptr)
+#define to_void_star(ptr) reinterpret_cast<void*>(ptr)
 
   std::ostringstream oss;
 
@@ -82,4 +82,4 @@ std::string to_string(State* state) {
 #undef TO_VOID_STAR
 }
 
-VIA_NAMESPACE_END
+} // namespace via

@@ -4,9 +4,9 @@
 
 #include "file-io.h"
 
-VIA_NAMESPACE_UTIL_BEGIN
+namespace via::utils {
 
-VIA_NO_DISCARD bool write_to_file(const std::string& file_path, const std::string& content) {
+vl_nodiscard bool write_to_file(const std::string& file_path, const std::string& content) {
   std::ofstream file(file_path, std::ios::out | std::ios::trunc); // Open in write mode
   if (!file.is_open()) {
     return false;
@@ -18,7 +18,7 @@ VIA_NO_DISCARD bool write_to_file(const std::string& file_path, const std::strin
   return true;
 }
 
-VIA_NO_DISCARD ReadResult read_from_file(const std::string& file_path) {
+vl_nodiscard rd_result_t read_from_file(const std::string& file_path) {
   auto get_error_string = [&file_path](const std::string& err) -> std::string {
     return std::format("Failed to read file '{}': {}", file_path, err);
   };
@@ -41,4 +41,4 @@ VIA_NO_DISCARD ReadResult read_from_file(const std::string& file_path) {
   return content;
 }
 
-VIA_NAMESPACE_END
+} // namespace via::utils

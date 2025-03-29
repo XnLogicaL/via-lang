@@ -7,22 +7,22 @@
 #include "compiler-types.h"
 #include "ast.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-pTypeNode DecayVisitor::visit(AutoTypeNode& auto_node) {
+p_type_node_t decay_node_visitor::visit(auto_type_node& auto_node) {
   return auto_node.expression->infer_type(unit_ctx);
 }
 
-pTypeNode DecayVisitor::visit(GenericTypeNode&) {
+p_type_node_t decay_node_visitor::visit(generic_type_node&) {
   return nullptr;
 }
 
-pTypeNode DecayVisitor::visit(UnionTypeNode&) {
+p_type_node_t decay_node_visitor::visit(union_type_node&) {
   return nullptr;
 }
 
-pTypeNode DecayVisitor::visit(FunctionTypeNode&) {
+p_type_node_t decay_node_visitor::visit(FunctionTypeNode&) {
   return nullptr;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

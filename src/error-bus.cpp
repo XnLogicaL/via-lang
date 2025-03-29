@@ -4,9 +4,9 @@
 
 #include "error-bus.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum CompilerErrorLevel;
+using enum comp_err_lvl;
 
 struct LocalOffset {
   size_t line;
@@ -57,7 +57,7 @@ LocalOffset localize_offset(const std::string& source, size_t abs_offset) {
 }
 
 // Returns a header string (with ANSI colors) for a given error level.
-std::string get_error_level_header(const CompilerErrorLevel& lvl) {
+std::string get_error_level_header(const comp_err_lvl& lvl) {
   switch (lvl) {
   case INFO:
     return "\033[1;34minfo:\033[0m "; // Blue color for info
@@ -66,13 +66,13 @@ std::string get_error_level_header(const CompilerErrorLevel& lvl) {
   case ERROR_:
     return "\033[1;31merror:\033[0m "; // Red color for error
   default:
-    VIA_UNREACHABLE;
+    vl_unreachable;
   }
 }
 
 // ==========================================================================================
-// CompilerError
-std::string CompilerError::to_string() const {
+// compile_error
+std::string compile_error::to_string() const {
   std::string header = get_error_level_header(level);
 
   if (is_flat) {
@@ -134,13 +134,13 @@ std::string CompilerError::to_string() const {
 }
 
 // ==========================================================================================
-// ErrorBus
-void ErrorBus::log(const CompilerError& err) {
+// error_bus
+void error_bus::log(const compile_error& err) {
   buffer.push_back(err);
 }
 
-bool ErrorBus::has_error() {
-  for (const CompilerError& err : buffer) {
+bool error_bus::has_error() {
+  for (const compile_error& err : buffer) {
     if (err.level == ERROR_) {
       return true;
     }
@@ -149,14 +149,14 @@ bool ErrorBus::has_error() {
   return false;
 }
 
-void ErrorBus::clear() {
+void error_bus::clear() {
   buffer.clear();
 }
 
-void ErrorBus::emit() {
+void error_bus::emit() {
   std::string current_file;
 
-  for (const CompilerError& err : buffer) {
+  for (const compile_error& err : buffer) {
     if (current_file != err.ctx.file_path) {
       current_file = err.ctx.file_path;
       std::cout << "in file " << current_file << ":\n";
@@ -170,8 +170,8 @@ void ErrorBus::emit() {
   clear();
 }
 
-ErrorBus::~ErrorBus() {
+error_bus::~error_bus() {
   emit();
 }
 
-VIA_NAMESPACE_END
+} // namespace via

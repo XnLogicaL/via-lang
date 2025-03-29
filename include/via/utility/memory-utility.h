@@ -2,12 +2,12 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_MEMUTILS_H
-#define _VIA_MEMUTILS_H
+#ifndef _vl_memutils_h
+#define _vl_memutils_h
 
 #include "common.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 // Returns a raw memory dump.
 std::string get_raw_memory_dump(const void* ptr, size_t size);
@@ -45,6 +45,6 @@ void dump_struct(const T& obj) {
   }
 }
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

@@ -2,17 +2,17 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_STRUTILS_H
-#define _VIA_STRUTILS_H
+#ifndef _vl_strutils_h
+#define _vl_strutils_h
 
 #include "common.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 char* duplicate_string(const std::string&);
 char* duplicate_string(const char*);
 uint32_t hash_string_custom(const char*);
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

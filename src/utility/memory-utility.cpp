@@ -4,7 +4,7 @@
 
 #include "memory-utility.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 std::string get_raw_memory_dump(const void* ptr, size_t size) {
   std::ostringstream oss;
@@ -35,4 +35,4 @@ void dump_memory(const void* ptr, size_t size, const std::string& label) {
   dump_raw_memory(ptr, size);
 }
 
-VIA_NAMESPACE_END
+} // namespace via

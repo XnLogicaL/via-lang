@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_PREPROC_H
-#define _VIA_PREPROC_H
+#ifndef _vl_preproc_h
+#define _vl_preproc_h
 
 #include "error-bus.h"
 #include "stack.h"
@@ -13,24 +13,24 @@
 #include "common.h"
 #include "token.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-class Preprocessor final {
+class preprocessor final {
 public:
-  ~Preprocessor() = default;
-  Preprocessor(TransUnitContext& unit_ctx)
-      : unit_ctx(unit_ctx) {}
+  ~preprocessor() = default;
+  preprocessor(trans_unit_context& unit_ctx)
+    : unit_ctx(unit_ctx) {}
 
   bool preprocess();
 
   void declare_default();
 
 private:
-  [[maybe_unused]] TransUnitContext& unit_ctx;
+  [[maybe_unused]] trans_unit_context& unit_ctx;
 
-  [[maybe_unused]] ErrorBus err_bus;
+  [[maybe_unused]] error_bus err_bus;
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

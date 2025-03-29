@@ -5,7 +5,4 @@
 #include "compiler-types.h"
 #include "stack.h"
 
-VIA_NAMESPACE_BEGIN
-
-
-VIA_NAMESPACE_END
+namespace via {}

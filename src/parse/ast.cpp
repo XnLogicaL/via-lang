@@ -8,19 +8,19 @@
 #include "stack.h"
 #include "format-vector.h"
 
-#define DEPTH_TAB_SPACE std::string(depth, ' ')
+#define depth_tab_space std::string(depth, ' ')
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum ValueType;
+using enum value_type;
 
-std::string Modifiers::to_string() const {
+std::string modifiers::to_string() const {
   return std::format("{}", is_const ? "const" : "");
 }
 
 // ===============================
-// LiteralExprNode
-std::string LiteralExprNode::to_string(uint32_t&) {
+// lit_expr_node
+std::string lit_expr_node::to_string(uint32_t&) {
   if (int* integer_value = std::get_if<int>(&value)) {
     return std::format("Literal<{}>", *integer_value);
   }
@@ -38,41 +38,41 @@ std::string LiteralExprNode::to_string(uint32_t&) {
   }
 }
 
-void LiteralExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void lit_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode LiteralExprNode::clone() {
-  return std::make_unique<LiteralExprNode>(*this);
+p_expr_node_t lit_expr_node::clone() {
+  return std::make_unique<lit_expr_node>(*this);
 }
 
-pTypeNode LiteralExprNode::infer_type(TransUnitContext&) {
-  ValueType value_type = std::visit(
+p_type_node_t lit_expr_node::infer_type(trans_unit_context&) {
+  value_type value_type = std::visit(
     [](auto&& value) {
       using T = std::decay_t<decltype(value)>;
-      return DataType<T>::value_type;
+      return data_type<T>::value_type;
     },
     value
   );
 
-  return std::make_unique<PrimitiveTypeNode>(value_token, value_type);
+  return std::make_unique<primitive_type_node>(value_token, value_type);
 }
 
 // ===============================
-// SymbolExprNode
-std::string SymbolExprNode::to_string(uint32_t&) {
+// sym_expr_node
+std::string sym_expr_node::to_string(uint32_t&) {
   return std::format("Symbol<{}>", identifier.lexeme);
 }
 
-void SymbolExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void sym_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode SymbolExprNode::clone() {
-  return std::make_unique<SymbolExprNode>(*this);
+p_expr_node_t sym_expr_node::clone() {
+  return std::make_unique<sym_expr_node>(*this);
 }
 
-pTypeNode SymbolExprNode::infer_type(TransUnitContext& unit_ctx) {
+p_type_node_t sym_expr_node::infer_type(trans_unit_context& unit_ctx) {
   auto stk_id = unit_ctx.internal.stack->find_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
     auto stk_obj = unit_ctx.internal.stack->at(stk_id.value());
@@ -92,21 +92,21 @@ pTypeNode SymbolExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// UnaryExprNode
-std::string UnaryExprNode::to_string(uint32_t& depth) {
+// unary_expr_node
+std::string unary_expr_node::to_string(uint32_t& depth) {
   return std::format("Unary<{}>", expression->to_string(depth));
 }
 
-void UnaryExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void unary_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode UnaryExprNode::clone() {
-  return std::make_unique<UnaryExprNode>(expression->clone());
+p_expr_node_t unary_expr_node::clone() {
+  return std::make_unique<unary_expr_node>(expression->clone());
 }
 
-pTypeNode UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
-  pTypeNode inner = expression->infer_type(unit_ctx);
+p_type_node_t unary_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  p_type_node_t inner = expression->infer_type(unit_ctx);
   if (!inner.get()) {
     return nullptr;
   }
@@ -115,56 +115,56 @@ pTypeNode UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// GroupExprNode
-std::string GroupExprNode::to_string(uint32_t& depth) {
+// grp_expr_node
+std::string grp_expr_node::to_string(uint32_t& depth) {
   return std::format("Group<{}>", expression->to_string(depth));
 }
 
-void GroupExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void grp_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode GroupExprNode::clone() {
-  return std::make_unique<GroupExprNode>(expression->clone());
+p_expr_node_t grp_expr_node::clone() {
+  return std::make_unique<grp_expr_node>(expression->clone());
 }
 
-int GroupExprNode::precedence() const {
+int grp_expr_node::precedence() const {
   return std::numeric_limits<int>::max();
 }
 
-pTypeNode GroupExprNode::infer_type(TransUnitContext& unit_ctx) {
+p_type_node_t grp_expr_node::infer_type(trans_unit_context& unit_ctx) {
   return expression->infer_type(unit_ctx);
 }
 
 // ===============================
-// CallExprNode
-std::string CallExprNode::to_string(uint32_t& depth) {
+// call_expr_node
+std::string call_expr_node::to_string(uint32_t& depth) {
   return std::format(
-    "CallExprNode<callee {}, args {}>",
+    "call_expr_node<callee {}, args {}>",
     callee->to_string(depth),
-    utils::format_vector<pExprNode>(
-      arguments, [&depth](const pExprNode& expr) { return expr->to_string(depth); }
+    utils::format_vector<p_expr_node_t>(
+      arguments, [&depth](const p_expr_node_t& expr) { return expr->to_string(depth); }
     )
   );
 }
 
-void CallExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void call_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode CallExprNode::clone() {
+p_expr_node_t call_expr_node::clone() {
   argument_vector arguments_clone;
-  for (pExprNode& argument : arguments) {
+  for (p_expr_node_t& argument : arguments) {
     arguments_clone.emplace_back(argument->clone());
   }
 
-  return std::make_unique<CallExprNode>(callee->clone(), std::move(arguments_clone));
+  return std::make_unique<call_expr_node>(callee->clone(), std::move(arguments_clone));
 }
 
-pTypeNode CallExprNode::infer_type(TransUnitContext& unit_ctx) {
-  if (SymbolExprNode* symbol = get_derived_instance<ExprNode, SymbolExprNode>(*callee)) {
-    pTypeNode ty = symbol->infer_type(unit_ctx);
-    if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNode, FunctionTypeNode>(*ty)) {
+p_type_node_t call_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  if (sym_expr_node* symbol = get_derived_instance<expr_node_base, sym_expr_node>(*callee)) {
+    p_type_node_t ty = symbol->infer_type(unit_ctx);
+    if (FunctionTypeNode* fn_ty = get_derived_instance<type_node_base, FunctionTypeNode>(*ty)) {
       return fn_ty->returns->clone();
     }
   }
@@ -173,23 +173,23 @@ pTypeNode CallExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// IndexExprNode
-std::string IndexExprNode::to_string(uint32_t& depth) {
+// index_expr_node
+std::string index_expr_node::to_string(uint32_t& depth) {
   return std::format(
-    "IndexExprNode<object {}, index {}>", object->to_string(depth), index->to_string(depth)
+    "index_expr_node<object {}, index {}>", object->to_string(depth), index->to_string(depth)
   );
 }
 
-void IndexExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void index_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode IndexExprNode::clone() {
-  return std::make_unique<IndexExprNode>(object->clone(), index->clone());
+p_expr_node_t index_expr_node::clone() {
+  return std::make_unique<index_expr_node>(object->clone(), index->clone());
 }
 
-pTypeNode IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
-  if (SymbolExprNode* symbol = get_derived_instance<ExprNode, SymbolExprNode>(*object)) {
+p_type_node_t index_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  if (sym_expr_node* symbol = get_derived_instance<expr_node_base, sym_expr_node>(*object)) {
     auto stk_id = unit_ctx.internal.stack->find_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
@@ -207,8 +207,8 @@ pTypeNode IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// BinaryExprNode
-std::string BinaryExprNode::to_string(uint32_t& depth) {
+// bin_expr_node
+std::string bin_expr_node::to_string(uint32_t& depth) {
   return std::format(
     "Binary<{} {} {}>",
     lhs_expression->to_string(depth),
@@ -217,32 +217,33 @@ std::string BinaryExprNode::to_string(uint32_t& depth) {
   );
 }
 
-void BinaryExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void bin_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode BinaryExprNode::clone() {
-  return std::make_unique<BinaryExprNode>(op, lhs_expression->clone(), rhs_expression->clone());
+p_expr_node_t bin_expr_node::clone() {
+  return std::make_unique<bin_expr_node>(op, lhs_expression->clone(), rhs_expression->clone());
 }
 
-pTypeNode BinaryExprNode::infer_type(TransUnitContext& unit_ctx) {
-  pTypeNode lhs = lhs_expression->infer_type(unit_ctx);
-  pTypeNode rhs = rhs_expression->infer_type(unit_ctx);
+p_type_node_t bin_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  p_type_node_t lhs = lhs_expression->infer_type(unit_ctx);
+  p_type_node_t rhs = rhs_expression->infer_type(unit_ctx);
 
   if (!lhs || !rhs || !is_integral(lhs) || !is_integral(rhs)) {
     return nullptr;
   }
 
-  if (PrimitiveTypeNode* lhs_primitive = get_derived_instance<TypeNode, PrimitiveTypeNode>(*lhs)) {
-    if (PrimitiveTypeNode* rhs_primitive =
-          get_derived_instance<TypeNode, PrimitiveTypeNode>(*rhs)) {
+  if (primitive_type_node* lhs_primitive =
+        get_derived_instance<type_node_base, primitive_type_node>(*lhs)) {
+    if (primitive_type_node* rhs_primitive =
+          get_derived_instance<type_node_base, primitive_type_node>(*rhs)) {
       // If either operand is a floating point, result is floating point
       if (lhs_primitive->type == floating_point || rhs_primitive->type == floating_point) {
-        return std::make_unique<PrimitiveTypeNode>(lhs_primitive->identifier, floating_point);
+        return std::make_unique<primitive_type_node>(lhs_primitive->identifier, floating_point);
       }
       // If both operands are integers, result is integer
       else if (lhs_primitive->type == integer && rhs_primitive->type == integer) {
-        return std::make_unique<PrimitiveTypeNode>(lhs_primitive->identifier, integer);
+        return std::make_unique<primitive_type_node>(lhs_primitive->identifier, integer);
       }
     }
   }
@@ -251,23 +252,23 @@ pTypeNode BinaryExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// TypeCastExprNode
-std::string TypeCastExprNode::to_string(uint32_t& depth) {
+// cast_expr_node
+std::string cast_expr_node::to_string(uint32_t& depth) {
   return std::format(
-    "TypeCastExprNode<{} as {}>", expression->to_string(depth), type->to_string(depth)
+    "cast_expr_node<{} as {}>", expression->to_string(depth), type->to_string(depth)
   );
 }
 
-void TypeCastExprNode::accept(NodeVisitor& visitor, uint32_t dst) {
+void cast_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
-pExprNode TypeCastExprNode::clone() {
-  return std::make_unique<TypeCastExprNode>(expression->clone(), type->clone());
+p_expr_node_t cast_expr_node::clone() {
+  return std::make_unique<cast_expr_node>(expression->clone(), type->clone());
 }
 
-pTypeNode TypeCastExprNode::infer_type(TransUnitContext& unit_ctx) {
-  pTypeNode expr_type = expression->infer_type(unit_ctx);
+p_type_node_t cast_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  p_type_node_t expr_type = expression->infer_type(unit_ctx);
   if (!is_castable(expr_type, type)) {
     return nullptr;
   }
@@ -276,91 +277,91 @@ pTypeNode TypeCastExprNode::infer_type(TransUnitContext& unit_ctx) {
 }
 
 // ===============================
-// AutoTypeNode
-std::string AutoTypeNode::to_string(uint32_t&) {
-  return "AutoTypeNode<>";
+// auto_type_node
+std::string auto_type_node::to_string(uint32_t&) {
+  return "auto_type_node<>";
 }
 
-std::string AutoTypeNode::to_string_x() {
+std::string auto_type_node::to_string_x() {
   return "<auto>";
 }
 
-void AutoTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+void auto_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
   self = visitor.visit(*this);
 }
 
-pTypeNode AutoTypeNode::clone() {
-  return std::make_unique<AutoTypeNode>(*this);
+p_type_node_t auto_type_node::clone() {
+  return std::make_unique<auto_type_node>(*this);
 }
 
 // ===============================
-// PrimitiveTypeNode
-std::string PrimitiveTypeNode::to_string(uint32_t&) {
-  return std::format("PrimitiveTypeNode<{}>", magic_enum::enum_name(type));
+// primitive_type_node
+std::string primitive_type_node::to_string(uint32_t&) {
+  return std::format("primitive_type_node<{}>", magic_enum::enum_name(type));
 }
 
-std::string PrimitiveTypeNode::to_string_x() {
+std::string primitive_type_node::to_string_x() {
   return std::string(magic_enum::enum_name(type));
 }
 
-pTypeNode PrimitiveTypeNode::clone() {
-  return std::make_unique<PrimitiveTypeNode>(*this);
+p_type_node_t primitive_type_node::clone() {
+  return std::make_unique<primitive_type_node>(*this);
 }
 
 // ===============================
-// GenericTypeNode
-std::string GenericTypeNode::to_string(uint32_t& depth) {
+// generic_type_node
+std::string generic_type_node::to_string(uint32_t& depth) {
   return std::format(
-    "GenericTypeNode<{}, {}>",
+    "generic_type_node<{}, {}>",
     identifier.lexeme,
-    utils::format_vector<pTypeNode>(
-      generics, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
+    utils::format_vector<p_type_node_t>(
+      generics, [&depth](const p_type_node_t& elem) { return elem->to_string(depth); }
     )
   );
 }
 
-std::string GenericTypeNode::to_string_x() {
+std::string generic_type_node::to_string_x() {
   return "<generic-truncated>";
 }
 
-void GenericTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+void generic_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
   self = visitor.visit(*this);
 }
 
-pTypeNode GenericTypeNode::clone() {
+p_type_node_t generic_type_node::clone() {
   Generics generics_clone;
-  for (pTypeNode& generic : generics) {
+  for (p_type_node_t& generic : generics) {
     generics_clone.emplace_back(generic->clone());
   }
 
-  return std::make_unique<GenericTypeNode>(identifier, std::move(generics_clone), modifiers);
+  return std::make_unique<generic_type_node>(identifier, std::move(generics_clone), modifiers);
 }
 
 // ===============================
-// UnionTypeNode
-std::string UnionTypeNode::to_string(uint32_t& depth) {
-  return std::format("UnionTypeNode<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
+// union_type_node
+std::string union_type_node::to_string(uint32_t& depth) {
+  return std::format("union_type_node<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
 }
 
-std::string UnionTypeNode::to_string_x() {
+std::string union_type_node::to_string_x() {
   return "<union-truncated>";
 }
 
-void UnionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+void union_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
   self = visitor.visit(*this);
 }
 
-pTypeNode UnionTypeNode::clone() {
-  return std::make_unique<UnionTypeNode>(lhs->clone(), rhs->clone());
+p_type_node_t union_type_node::clone() {
+  return std::make_unique<union_type_node>(lhs->clone(), rhs->clone());
 }
 
 // ===============================
-// FunctionStmtNode
+// func_stmt_node
 std::string FunctionTypeNode::to_string(uint32_t& depth) {
   return std::format(
     "FunctionTypeNode<{} -> {}>",
-    utils::format_vector<pTypeNode>(
-      parameters, [&depth](const pTypeNode& elem) { return elem->to_string(depth); }
+    utils::format_vector<p_type_node_t>(
+      parameters, [&depth](const p_type_node_t& elem) { return elem->to_string(depth); }
     ),
     returns->to_string(depth)
   );
@@ -370,13 +371,13 @@ std::string FunctionTypeNode::to_string_x() {
   return "<function-truncated>";
 }
 
-void FunctionTypeNode::decay(NodeVisitor& visitor, pTypeNode& self) {
+void FunctionTypeNode::decay(node_visitor_base& visitor, p_type_node_t& self) {
   self = visitor.visit(*this);
 }
 
-pTypeNode FunctionTypeNode::clone() {
+p_type_node_t FunctionTypeNode::clone() {
   parameter_vector parameters_clone;
-  for (pTypeNode& parameter : parameters) {
+  for (p_type_node_t& parameter : parameters) {
     parameters_clone.emplace_back(parameter->clone());
   }
 
@@ -384,8 +385,8 @@ pTypeNode FunctionTypeNode::clone() {
 }
 
 // ===============================
-// DeclarationStmtNode
-std::string DeclarationStmtNode::to_string(uint32_t& depth) {
+// decl_stmt_node
+std::string decl_stmt_node::to_string(uint32_t& depth) {
   return std::format(
     "{}Declaration<{} {} {}: {} = {}>",
     DEPTH_TAB_SPACE,
@@ -397,25 +398,25 @@ std::string DeclarationStmtNode::to_string(uint32_t& depth) {
   );
 }
 
-void DeclarationStmtNode::accept(NodeVisitor& visitor) {
+void decl_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode DeclarationStmtNode::clone() {
-  return std::make_unique<DeclarationStmtNode>(
+p_stmt_node_t decl_stmt_node::clone() {
+  return std::make_unique<decl_stmt_node>(
     is_global, modifiers, identifier, value_expression->clone(), type->clone()
   );
 }
 
 // ===============================
-// ScopeStmtNode
-std::string ScopeStmtNode::to_string(uint32_t& depth) {
+// scope_stmt_node
+std::string scope_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
   oss << DEPTH_TAB_SPACE << "Scope<>\n";
 
   depth++;
 
-  for (const pStmtNode& pstmt : statements) {
+  for (const p_stmt_node_t& pstmt : statements) {
     oss << pstmt->to_string(depth) << "\n";
   }
 
@@ -425,22 +426,22 @@ std::string ScopeStmtNode::to_string(uint32_t& depth) {
   return oss.str();
 }
 
-void ScopeStmtNode::accept(NodeVisitor& visitor) {
+void scope_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode ScopeStmtNode::clone() {
+p_stmt_node_t scope_stmt_node::clone() {
   Statements statements_clone;
-  for (pStmtNode& statement : statements) {
+  for (p_stmt_node_t& statement : statements) {
     statements_clone.emplace_back(statement->clone());
   }
 
-  return std::make_unique<ScopeStmtNode>(std::move(statements_clone));
+  return std::make_unique<scope_stmt_node>(std::move(statements_clone));
 }
 
 // ===============================
-// FunctionStmtNode
-std::string FunctionStmtNode::to_string(uint32_t& depth) {
+// func_stmt_node
+std::string func_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
   oss << DEPTH_TAB_SPACE
       << std::format(
@@ -452,11 +453,11 @@ std::string FunctionStmtNode::to_string(uint32_t& depth) {
 
   depth++;
 
-  for (const ParameterNode& parameter : parameters) {
+  for (const param_node& parameter : parameters) {
     oss << DEPTH_TAB_SPACE << std::format("Parameter<{}>", parameter.identifier.lexeme) << "\n";
   }
 
-  for (const pStmtNode& stmt : dynamic_cast<ScopeStmtNode&>(*body).statements) {
+  for (const p_stmt_node_t& stmt : dynamic_cast<scope_stmt_node&>(*body).statements) {
     oss << stmt->to_string(depth) << "\n";
   }
 
@@ -466,26 +467,26 @@ std::string FunctionStmtNode::to_string(uint32_t& depth) {
   return oss.str();
 }
 
-void FunctionStmtNode::accept(NodeVisitor& visitor) {
+void func_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode FunctionStmtNode::clone() {
-  Parameters parameters_clone;
-  for (ParameterNode& parameter : parameters) {
+p_stmt_node_t func_stmt_node::clone() {
+  parameters_t parameters_clone;
+  for (param_node& parameter : parameters) {
     parameters_clone.emplace_back(
       parameter.identifier, parameter.modifiers, parameter.type->clone()
     );
   }
 
-  return std::make_unique<FunctionStmtNode>(
+  return std::make_unique<func_stmt_node>(
     is_global, modifiers, identifier, body->clone(), returns->clone(), std::move(parameters_clone)
   );
 }
 
 // ===============================
-// AssignStmtNode
-std::string AssignStmtNode::to_string(uint32_t& depth) {
+// assign_stmt_node
+std::string assign_stmt_node::to_string(uint32_t& depth) {
   return std::format(
     "{}Assign<{} {}= {}>",
     DEPTH_TAB_SPACE,
@@ -495,25 +496,27 @@ std::string AssignStmtNode::to_string(uint32_t& depth) {
   );
 }
 
-void AssignStmtNode::accept(NodeVisitor& visitor) {
+void assign_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode AssignStmtNode::clone() {
-  return std::make_unique<AssignStmtNode>(assignee->clone(), augmentation_operator, value->clone());
+p_stmt_node_t assign_stmt_node::clone() {
+  return std::make_unique<assign_stmt_node>(
+    assignee->clone(), augmentation_operator, value->clone()
+  );
 }
 
 // ===============================
-// FunctionStmtNode
-std::string IfStmtNode::to_string(uint32_t& depth) {
+// func_stmt_node
+std::string if_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE << std::format("IfStmtNode<{}>", condition->to_string(depth)) << "\n";
+  oss << DEPTH_TAB_SPACE << std::format("if_stmt_node<{}>", condition->to_string(depth)) << "\n";
 
   depth++;
 
   oss << scope->to_string(depth) << "\n";
 
-  for (const ElseIfNode& elseif_node : elseif_nodes) {
+  for (const elseif_node& elseif_node : elseif_nodes) {
     oss << DEPTH_TAB_SPACE << std::format("ElseIf<{}>", elseif_node.condition->to_string(depth))
         << "\n";
 
@@ -541,75 +544,75 @@ std::string IfStmtNode::to_string(uint32_t& depth) {
   return oss.str();
 }
 
-void IfStmtNode::accept(NodeVisitor& visitor) {
+void if_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode IfStmtNode::clone() {
-  ElseIfNodes elseif_nodes_clone;
-  for (ElseIfNode& else_if : elseif_nodes) {
+p_stmt_node_t if_stmt_node::clone() {
+  elseif_nodes_t elseif_nodes_clone;
+  for (elseif_node& else_if : elseif_nodes) {
     elseif_nodes_clone.emplace_back(else_if.condition->clone(), else_if.scope->clone());
   }
 
-  return std::make_unique<IfStmtNode>(
+  return std::make_unique<if_stmt_node>(
     condition->clone(), scope->clone(), else_node->clone(), std::move(elseif_nodes_clone)
   );
 }
 
 // ===============================
-// ReturnStmtNode
+// return_stmt_node
 
-std::string ReturnStmtNode::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + std::format("ReturnStmtNode<{}>", expression->to_string(depth));
+std::string return_stmt_node::to_string(uint32_t& depth) {
+  return DEPTH_TAB_SPACE + std::format("return_stmt_node<{}>", expression->to_string(depth));
 }
 
-pStmtNode ReturnStmtNode::clone() {
-  return std::make_unique<ReturnStmtNode>(expression->clone());
+p_stmt_node_t return_stmt_node::clone() {
+  return std::make_unique<return_stmt_node>(expression->clone());
 }
 
-void ReturnStmtNode::accept(NodeVisitor& visitor) {
+void return_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
 // ===============================
-// BreakStmtNode
+// break_stmt_node
 
-std::string BreakStmtNode::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + "BreakStmtNode<>";
+std::string break_stmt_node::to_string(uint32_t& depth) {
+  return DEPTH_TAB_SPACE + "break_stmt_node<>";
 }
 
-pStmtNode BreakStmtNode::clone() {
-  return std::make_unique<BreakStmtNode>(token);
+p_stmt_node_t break_stmt_node::clone() {
+  return std::make_unique<break_stmt_node>(token);
 }
 
-void BreakStmtNode::accept(NodeVisitor& visitor) {
+void break_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
 // ===============================
-// ContinueStmtNode
+// continue_stmt_node
 
-std::string ContinueStmtNode::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + "ContinueStmtNode<>";
+std::string continue_stmt_node::to_string(uint32_t& depth) {
+  return DEPTH_TAB_SPACE + "continue_stmt_node<>";
 }
 
-pStmtNode ContinueStmtNode::clone() {
-  return std::make_unique<ContinueStmtNode>(token);
+p_stmt_node_t continue_stmt_node::clone() {
+  return std::make_unique<continue_stmt_node>(token);
 }
 
-void ContinueStmtNode::accept(NodeVisitor& visitor) {
+void continue_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
 // ===============================
-// WhileStmtNode
-std::string WhileStmtNode::to_string(uint32_t& depth) {
+// while_stmt_node
+std::string while_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE << std::format("WhileStmtNode<{}>", condition->to_string(depth)) << "\n";
+  oss << DEPTH_TAB_SPACE << std::format("while_stmt_node<{}>", condition->to_string(depth)) << "\n";
 
   depth++;
 
-  for (const pStmtNode& stmt : dynamic_cast<ScopeStmtNode&>(*body).statements) {
+  for (const p_stmt_node_t& stmt : dynamic_cast<scope_stmt_node&>(*body).statements) {
     oss << stmt->to_string(depth) << "\n";
   }
 
@@ -619,26 +622,26 @@ std::string WhileStmtNode::to_string(uint32_t& depth) {
   return oss.str();
 }
 
-void WhileStmtNode::accept(NodeVisitor& visitor) {
+void while_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode WhileStmtNode::clone() {
-  return std::make_unique<WhileStmtNode>(condition->clone(), body->clone());
+p_stmt_node_t while_stmt_node::clone() {
+  return std::make_unique<while_stmt_node>(condition->clone(), body->clone());
 }
 
 // ===============================
-// ExprStmtNode
-std::string ExprStmtNode::to_string(uint32_t& depth) {
-  return std::format("{}ExprStmtNode<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
+// expr_stmt_node
+std::string expr_stmt_node::to_string(uint32_t& depth) {
+  return std::format("{}expr_stmt_node<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
 }
 
-void ExprStmtNode::accept(NodeVisitor& visitor) {
+void expr_stmt_node::accept(node_visitor_base& visitor) {
   visitor.visit(*this);
 }
 
-pStmtNode ExprStmtNode::clone() {
-  return std::make_unique<ExprStmtNode>(expression->clone());
+p_stmt_node_t expr_stmt_node::clone() {
+  return std::make_unique<expr_stmt_node>(expression->clone());
 }
 
-VIA_NAMESPACE_END
+} // namespace via

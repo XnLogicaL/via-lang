@@ -5,13 +5,13 @@
 #include "token.h"
 #include "common.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum TokenType;
+using enum token_type;
 
-std::string Token::to_string() const {
+std::string token::to_string() const {
   return std::format(
-    "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
+    "token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
     magic_enum::enum_name(type),
     lexeme,
     line,
@@ -20,22 +20,22 @@ std::string Token::to_string() const {
   );
 }
 
-bool Token::is_literal() const {
+bool token::is_literal() const {
   return type == LIT_BOOL || type == LIT_FLOAT || type == LIT_INT || type == LIT_STRING;
 }
 
-bool Token::is_operator() const {
+bool token::is_operator() const {
   return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ ||
          type == OP_EXP || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT ||
          type == OP_LEQ || type == OP_LT || type == OP_MOD || type == OP_MUL || type == OP_NEQ ||
          type == OP_SUB || type == KW_AND || type == KW_OR;
 }
 
-bool Token::is_modifier() const {
+bool token::is_modifier() const {
   return type == KW_CONST;
 }
 
-int Token::bin_prec() const {
+int token::bin_prec() const {
   switch (type) {
   case OP_EXP:
     return 4;
@@ -60,23 +60,23 @@ int Token::bin_prec() const {
   }
 }
 
-using token_vector = TokenStream::token_vector;
-using at_result = TokenStream::at_result;
+using token_vector = token_stream::token_vector;
+using at_result = token_stream::at_result;
 
-size_t TokenStream::size() {
+size_t token_stream::size() {
   return tokens.size();
 }
 
-Token& TokenStream::at(size_t position) {
+token& token_stream::at(size_t position) {
   return tokens.at(position);
 }
 
-void TokenStream::push(const Token& token) {
+void token_stream::push(const token& token) {
   tokens.push_back(token);
 }
 
-token_vector& TokenStream::get() {
+token_vector& token_stream::get() {
   return tokens;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

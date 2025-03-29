@@ -9,38 +9,38 @@
 // ===========================================================================================
 // bytecode.cpp
 //
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using comment_type = BytecodeHolder::comment_type;
-using operands_array = BytecodeHolder::operands_array;
-using bytecode_vector = BytecodeHolder::bytecode_vector;
+using comment_type = bytecode_holder::comment_type;
+using operands_array = bytecode_holder::operands_array;
+using bytecode_vector = bytecode_holder::bytecode_vector;
 
-size_t BytecodeHolder::size() const {
+size_t bytecode_holder::size() const {
   return instructions.size();
 }
 
-Bytecode& BytecodeHolder::front() {
+bytecode& bytecode_holder::front() {
   return instructions.front();
 }
 
-Bytecode& BytecodeHolder::back() {
+bytecode& bytecode_holder::back() {
   return instructions.back();
 }
 
-Bytecode& BytecodeHolder::at(size_t pos) {
+bytecode& bytecode_holder::at(size_t pos) {
   return instructions.at(pos);
 }
 
-void BytecodeHolder::add(const Bytecode& bytecode) {
+void bytecode_holder::add(const bytecode& bytecode) {
   instructions.push_back(bytecode);
 }
 
-void BytecodeHolder::remove(size_t index) {
+void bytecode_holder::remove(size_t index) {
   instructions.erase(instructions.begin() + index);
 }
 
-void BytecodeHolder::insert(
-  size_t index, OpCode opcode, operands_array& operands, comment_type& comment
+void bytecode_holder::insert(
+  size_t index, opcode_t opcode, operands_array& operands, comment_type& comment
 ) {
   // Insert the instruction at the specified index
   instructions.insert(
@@ -61,7 +61,7 @@ void BytecodeHolder::insert(
   );
 }
 
-void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type& comment) {
+void bytecode_holder::emit(opcode_t opcode, operands_array& operands, comment_type& comment) {
   add({
     .instruction =
       {
@@ -77,8 +77,8 @@ void BytecodeHolder::emit(OpCode opcode, operands_array& operands, comment_type&
   });
 }
 
-const bytecode_vector& BytecodeHolder::get() const {
+const bytecode_vector& bytecode_holder::get() const {
   return instructions;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

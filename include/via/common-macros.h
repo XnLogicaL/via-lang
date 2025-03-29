@@ -2,89 +2,62 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_COMMON_MACROS_H
-#define _VIA_COMMON_MACROS_H
+#ifndef _vl_common_macros_h
+#define _vl_common_macros_h
 
 #include <iostream>
 #include <cstdlib>
 
 #if __has_include(<stacktrace>) && __cplusplus >= 202302L
 #include <stacktrace>
-#define VIA_HAS_STACKTRACE 1
+#define vl_hasstacktrace 1
 #else
-#define VIA_HAS_STACKTRACE 0
+#define vl_hasstacktrace 0
 #endif
 
-// Namespace macros
-#define VIA_NAMESPACE_BEGIN      namespace via {
-#define VIA_NAMESPACE_IMPL_BEGIN namespace via::impl {
-#define VIA_NAMESPACE_UTIL_BEGIN namespace via::utils {
-#define VIA_NAMESPACE_LIB_BEGIN  namespace via::lib {
-#define VIA_NAMESPACE_END        }
-
-#define VIA_VERSION "0.27.2"
+#define vl_version "0.27.2"
 
 // Parameter declaration spec macros
-#define VIA_RESTRICT __restrict__
+#define vl_restrict __restrict__
 
 // Function declaration spec macros
-#define VIA_NO_DISCARD [[nodiscard]]
-#ifdef _MSC_VER // Microsoft Visual C++
-#define VIA_NO_RETURN          __declspec(noreturn)
-#define VIA_NO_INLINE          __declspec(noinline)
-#define VIA_INLINE             __inline
-#define VIA_FORCE_INLINE       __forceinline
-#define VIA_INLINE_HOT         __forceinline
-#define VIA_INLINE_HOT_NODEBUG __forceinline
-#define VIA_UNREACHABLE        __assume(0)
-#define VIA_FUNCTION_SIGNATURE __FUNCSIG__
-#else // GCC / Clang
-#define VIA_NO_RETURN          __attribute__((__noreturn__))
-#define VIA_NO_INLINE          __attribute__((noinline))
-#define VIA_INLINE             inline
-#define VIA_FORCE_INLINE       inline __attribute__((always_inline))
-#define VIA_INLINE_HOT         inline __attribute__((always_inline, hot))
-#define VIA_INLINE_HOT_NODEBUG inline __attribute__((always_inline, hot, __nodebug__))
-#define VIA_UNREACHABLE        __builtin_unreachable()
-#define VIA_FUNCTION_SIGNATURE __PRETTY_FUNCTION__
-#endif
+#define vl_nodiscard   [[nodiscard]]
+#define vl_noreturn    __attribute__((__noreturn__))
+#define vl_noinline    __attribute__((noinline))
+#define vl_inline      inline
+#define vl_forceinline inline __attribute__((always_inline))
+#define vl_optimize    inline __attribute__((always_inline, hot))
+#define vl_unreachable __builtin_unreachable()
+#define vl_funcsig     __PRETTY_FUNCTION__
 
 // Branch prediction macros
-#ifdef _MSC_VER
-#define VIA_LIKELY(a)   (a)
-#define VIA_UNLIKELY(a) (a)
-#else
-#define VIA_LIKELY(a)   (__builtin_expect(!!(a), 1))
-#define VIA_UNLIKELY(a) (__builtin_expect(!!(a), 0))
-#endif
+#define vl_likely(a)   (__builtin_expect(!!(a), 1))
+#define vl_unlikely(a) (__builtin_expect(!!(a), 0))
 
 // Class spec macros
-#define VIA_DEFAULT_CONSTRUCTOR(target) target() = default;
-#define VIA_DEFAULT_DESTRUCTOR(target)  ~target() = default;
-#define VIA_CUSTOM_CONSTRUCTOR(target)  target();
-#define VIA_CUSTOM_DESTRUCTOR(target)   ~target();
+#define vl_defconstructor(target) target() = default;
+#define vl_defdestructor(target)  ~target() = default;
 
-#define VIA_NON_DEFAULT_CONSTRUCTIBLE(target) target() = delete;
-#define VIA_NON_COPYABLE(target)                                                                   \
+#define vl_nocopy(target)                                                                          \
   target& operator=(const target&) = delete;                                                       \
   target(const target&) = delete;
 
-#define VIA_ALIGN_8 alignas(8)
+#define vl_align(x) alignas(x)
 
 #if VIA_HAS_STACKTRACE == 1
-#define VIA_STACKTRACE std::stacktrace::current()
+#define vl_stacktrace std::stacktrace::current()
 #else
-#define VIA_STACKTRACE ""
+#define vl_stacktrace ""
 #endif
 
 // Utility macros
-#define VIA_ASSERT(condition, message)                                                             \
+#define vl_assert(condition, message)                                                              \
   if (!(condition)) {                                                                              \
-    std::cerr << "VIA_ASSERT(): assertion '" << #condition << "' failed.\n"                        \
-              << "File: " << __FILE__ << " | Line: " << __LINE__                                   \
-              << " | Function: " << VIA_FUNCTION_SIGNATURE << "\nMessage: " << message << "\n";    \
-    if (VIA_HAS_STACKTRACE) {                                                                      \
-      std::cerr << "Call stack:\n" << VIA_STACKTRACE << '\n';                                      \
+    std::cerr << "vl_assert(): assertion '" << #condition << "' failed.\n"                         \
+              << "File: " << __FILE__ << " | Line: " << __LINE__ << " | Function: " << vl_funcsig  \
+              << "\nMessage: " << message << "\n";                                                 \
+    if (vl_hasstacktrace) {                                                                        \
+      std::cerr << "Call stack:\n" << vl_stacktrace << '\n';                                       \
     }                                                                                              \
     std::abort();                                                                                  \
   }

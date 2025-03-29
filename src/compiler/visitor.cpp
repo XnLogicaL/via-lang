@@ -4,9 +4,9 @@
 
 #include "visitor.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum CompilerErrorLevel;
+using enum comp_err_lvl;
 
 // Helper function to return line and column number from a character offset
 std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t offset) {
@@ -27,73 +27,73 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
   return {line, column};
 }
 
-TValue construct_constant(LiteralExprNode& literal_node) {
-  using enum ValueType;
+value_obj construct_constant(lit_expr_node& literal_node) {
+  using enum value_type;
   return std::visit(
-    [](auto&& val) -> TValue {
+    [](auto&& val) -> value_obj {
       using T = std::decay_t<decltype(val)>;
 
       if constexpr (std::is_same_v<T, int>) {
-        return TValue(val);
+        return value_obj(val);
       }
       else if constexpr (std::is_same_v<T, bool>) {
-        return TValue(val);
+        return value_obj(val);
       }
       else if constexpr (std::is_same_v<T, float>) {
-        return TValue(val);
+        return value_obj(val);
       }
       else if constexpr (std::is_same_v<T, std::string>) {
-        TString* tstring = new TString(nullptr, val.data());
-        return TValue(string, static_cast<void*>(tstring));
+        string_obj* tstring = new string_obj(nullptr, val.data());
+        return value_obj(string, static_cast<void*>(tstring));
       }
 
-      VIA_UNREACHABLE;
+      vl_unreachable;
     },
     literal_node.value
   );
 }
 
-void NodeVisitor::compiler_error(size_t begin, size_t end, const std::string& message) {
+void node_visitor_base::compiler_error(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
 
   visitor_failed = true;
   err_bus.log({false, message, unit_ctx, ERROR_, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void NodeVisitor::compiler_error(const Token& token, const std::string& message) {
+void node_visitor_base::compiler_error(const token& token, const std::string& message) {
   visitor_failed = true;
   err_bus.log({false, message, unit_ctx, ERROR_, token});
 }
 
-void NodeVisitor::compiler_error(const std::string& message) {
+void node_visitor_base::compiler_error(const std::string& message) {
   visitor_failed = true;
   err_bus.log({true, message, unit_ctx, ERROR_, {}});
 }
 
-void NodeVisitor::compiler_warning(size_t begin, size_t end, const std::string& message) {
+void node_visitor_base::compiler_warning(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
   err_bus.log({false, message, unit_ctx, WARNING, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void NodeVisitor::compiler_warning(const Token& token, const std::string& message) {
+void node_visitor_base::compiler_warning(const token& token, const std::string& message) {
   err_bus.log({false, message, unit_ctx, WARNING, token});
 }
 
-void NodeVisitor::compiler_warning(const std::string& message) {
+void node_visitor_base::compiler_warning(const std::string& message) {
   err_bus.log({true, message, unit_ctx, WARNING, {}});
 }
 
-void NodeVisitor::compiler_info(size_t begin, size_t end, const std::string& message) {
+void node_visitor_base::compiler_info(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
   err_bus.log({false, message, unit_ctx, INFO, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void NodeVisitor::compiler_info(const Token& token, const std::string& message) {
+void node_visitor_base::compiler_info(const token& token, const std::string& message) {
   err_bus.log({false, message, unit_ctx, INFO, token});
 }
 
-void NodeVisitor::compiler_info(const std::string& message) {
+void node_visitor_base::compiler_info(const std::string& message) {
   err_bus.log({true, message, unit_ctx, INFO, {}});
 }
 
-VIA_NAMESPACE_END
+} // namespace via

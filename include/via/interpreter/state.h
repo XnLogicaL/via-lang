@@ -2,21 +2,21 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_STATE_H
-#define _VIA_STATE_H
+#ifndef _vl_state_h
+#define _vl_state_h
 
 #include "common.h"
 #include "instruction.h"
 #include "object.h"
 #include "signal.h"
 
-#define VIA_VM_STACK_SIZE  2048
-#define VIA_REGISTER_COUNT 0xFFFF
+#define vl_vmstacksize 2048
+#define vl_regcount    0xFFFF
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 // Forward declarations
-struct TFunction;
+struct tfunction;
 struct GarbageCollector;
 
 // Calling convention
@@ -34,16 +34,16 @@ enum class ThreadState {
 };
 
 struct ErrorState {
-  TFunction* frame = nullptr;
+  tfunction* frame = nullptr;
   std::string message = "";
 };
 
-// Global state, should only be instantiated once, and shared across all
+// global_obj state, should only be instantiated once, and shared across all
 // State's. (threads)
 struct GState {
-  std::unordered_map<uint32_t, TString*> stable; // String interning table
-  std::unordered_map<uint32_t, TValue> gtable;   // Global environment
-  std::atomic<uint32_t> threads{0};              // Thread count
+  std::unordered_map<uint32_t, string_obj*> stable; // String interning table
+  std::unordered_map<uint32_t, value_obj> gtable;   // global_obj environment
+  std::atomic<uint32_t> threads{0};                 // Thread count
 
   std::shared_mutex stable_mutex;
   std::mutex gtable_mutex;
@@ -53,27 +53,27 @@ struct GState {
 struct alignas(64) State {
   // Thread and global state
   uint32_t id; // Thread ID
-  GState* G;   // Global state
+  GState* G;   // global_obj state
 
-  // Instruction pointers
-  Instruction* pc = nullptr;  // Current instruction pointer
-  Instruction* ibp = nullptr; // Instruction list begin pointer
-  Instruction* iep = nullptr; // Instruction list end pointer
-  Instruction* sibp = nullptr;
-  Instruction* siep = nullptr;
+  // instruction pointers
+  instruction* pc = nullptr;  // Current instruction pointer
+  instruction* ibp = nullptr; // instruction list begin pointer
+  instruction* iep = nullptr; // instruction list end pointer
+  instruction* sibp = nullptr;
+  instruction* siep = nullptr;
 
   // Stack state
-  TValue* sbp;   // Stack base pointer
-  size_t sp = 0; // Stack pointer
+  value_obj* sbp; // Stack base pointer
+  size_t sp = 0;  // Stack pointer
 
   // Registers
-  TValue* registers;
+  value_obj* registers;
 
   // Labels
-  Instruction** labels;
+  instruction** labels;
 
   // Call and frame management
-  TFunction* frame = nullptr; // Call stack pointer
+  tfunction* frame = nullptr; // Call stack pointer
 
   // VM control and debugging
   bool abort = false;
@@ -83,19 +83,19 @@ struct alignas(64) State {
   ThreadState tstate = ThreadState::PAUSED; // Current thread state
 
   // Signals
-  utils::Signal<> sig_exit;
-  utils::Signal<> sig_abort;
-  utils::Signal<> sig_error;
-  utils::Signal<> sig_fatal;
+  utils::signal<> sig_exit;
+  utils::signal<> sig_abort;
+  utils::signal<> sig_error;
+  utils::signal<> sig_fatal;
 
-  TransUnitContext& unit_ctx;
+  trans_unit_context& unit_ctx;
 
-  VIA_NON_COPYABLE(State);
-  VIA_CUSTOM_DESTRUCTOR(State);
+  vl_nocopy(State);
 
-  State(GState* global, TransUnitContext& unit_ctx);
+  State(GState* global, trans_unit_context& unit_ctx);
+  ~State();
 
-  void load(const BytecodeHolder& bytecode);
+  void load(const bytecode_holder& bytecode);
 
   // ===========================================================================================
   // Execution flow
@@ -113,19 +113,19 @@ struct alignas(64) State {
   // Register manipulation
 
   // Returns a reference to the value that lives in a given register.
-  TValue& get_register(Operand reg);
+  value_obj& get_register(operand_t reg);
 
   // Sets a given register to a given value.
-  void set_register(Operand reg, const TValue& value);
+  void set_register(operand_t reg, const value_obj& value);
 
   // ===========================================================================================
   // Comparison and metadata
 
   // Returns whether if a given value has a heap-allocated component.
-  bool is_heap(const TValue& value);
+  bool is_heap(const value_obj& value);
 
   // Compares two given values.
-  bool compare(const TValue& left, const TValue& right);
+  bool compare(const value_obj& left, const value_obj& right);
 
   // ===========================================================================================
   // Basic stack manipulation
@@ -152,29 +152,29 @@ struct alignas(64) State {
   void push_table();
 
   // Pushes a value onto the stack.
-  void push(const TValue& value);
+  void push(const value_obj& value);
 
   // Drops a value from the stack, frees the resources of the dropped value.
   void drop();
 
   // Pops a value from the stack and returns it.
-  TValue pop();
+  value_obj pop();
 
   // Returns the top value on the stack.
-  const TValue& top();
+  const value_obj& top();
 
   // ===========================================================================================
   // Advanced stack manipulation
 
   // Sets the value at a given position on the stack to a given value.
-  void set_stack(size_t position, TValue value);
+  void set_stack(size_t position, value_obj value);
 
   // Returns the stack value at a given position.
-  const TValue& get_stack(size_t position);
+  const value_obj& get_stack(size_t position);
 
   // Returns the stack value at a given offset relative to the current stack-frame's stack
   // pointer.
-  const TValue& get_argument(size_t offset);
+  const value_obj& get_argument(size_t offset);
 
   // Returns the size of stack.
   size_t stack_size();
@@ -183,56 +183,56 @@ struct alignas(64) State {
   // Value manipulation
 
   // Attempts to convert a given value into an integer.
-  TValue to_integer(const TValue& value);
+  value_obj to_integer(const value_obj& value);
 
   // Attempts to convert a given value into a float.
-  TValue to_float(const TValue& value);
+  value_obj to_float(const value_obj& value);
 
   // Converts a given value into a boolean.
-  TValue to_boolean(const TValue& value);
+  value_obj to_boolean(const value_obj& value);
 
   // Converts a given value into a string.
-  TValue to_string(const TValue& value);
+  value_obj to_string(const value_obj& value);
 
   // ===========================================================================================
-  // Global manipulation
+  // global_obj manipulation
 
   // Returns the global that corresponds to a given hashed identifier.
-  const TValue& get_global(uint32_t hash);
+  const value_obj& get_global(uint32_t hash);
 
   // Sets the global that corresponds to a given hashed identifier to a given value.
-  void set_global(uint32_t hash, const TValue& value);
+  void set_global(uint32_t hash, const value_obj& value);
 
   // ===========================================================================================
   // Function manipulation
 
   // Standard return. Returns from the current function with an optional value.
-  void native_return(const TValue& return_value);
+  void native_return(const value_obj& return_value);
 
-  // Calls the given TFunction object with a given argument count.
-  void native_call(TFunction* target, size_t argc);
+  // Calls the given tfunction object with a given argument count.
+  void native_call(tfunction* target, size_t argc);
 
   // Calls the method that lives in a given index of a given object with a given argument count.
-  void method_call(TObject* object, size_t index, size_t argc);
+  void method_call(object_obj* object, size_t index, size_t argc);
 
   // Attempts to call the given value object with the given argument count.
-  void call(const TValue& callee, size_t argc);
+  void call(const value_obj& callee, size_t argc);
 
   // Returns the current stack frame.
-  TFunction* get_stack_frame();
+  tfunction* get_stack_frame();
 
   // Attempts to return the upvalue that lives in the given index of the given closure.
-  const TValue& get_upvalue(TFunction* closure, size_t index);
+  const value_obj& get_upvalue(tfunction* closure, size_t index);
 
   // Attempts to set the upvalue that lives in the given index of the given closure to a given
   // value.
-  void set_upvalue(TFunction* closure, size_t index, const TValue& value);
+  void set_upvalue(tfunction* closure, size_t index, const value_obj& value);
 
   // Returns the upvalue count of the given closure.
-  size_t get_upvalue_count(TFunction* closure);
+  size_t get_upvalue_count(tfunction* closure);
 
   // Returns the local count of the given closure.
-  size_t get_local_count_closure(TFunction* closure);
+  size_t get_local_count_closure(tfunction* closure);
 
   // ===========================================================================================
   // General operations
@@ -240,6 +240,6 @@ struct alignas(64) State {
 
 std::string to_string(State*);
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

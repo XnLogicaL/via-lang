@@ -2,14 +2,14 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_OPCODE_H
-#define _VIA_OPCODE_H
+#ifndef _vl_opcode_h
+#define _vl_opcode_h
 
 #include "common.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-enum class OpCode : uint16_t {
+enum class opcode_t : uint16_t {
   NOP,
   LABEL,
   EXIT,
@@ -137,6 +137,6 @@ enum class OpCode : uint16_t {
   BOOLCAST,
 };
 
-VIA_NAMESPACE_END
+}
 
 #endif

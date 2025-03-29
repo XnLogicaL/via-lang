@@ -2,47 +2,47 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_SIGNAL_H
-#define _VIA_SIGNAL_H
+#ifndef _vl_signal_h
+#define _vl_signal_h
 
 #include "common.h"
 #include <condition_variable>
 
-VIA_NAMESPACE_UTIL_BEGIN
+namespace via::utils {
 
 template<typename... Args>
-class Signal {
+class signal {
 public:
-  using Slot = std::function<void(Args...)>;
+  using sig_slot_t = std::function<void(Args...)>;
 
-  class Connection {
+  class sig_connection_t {
   public:
-    Connection(std::vector<Slot>& _Slots, std::mutex& _Mutex, size_t _Connection_id)
-        : slots(_Slots),
-          mutex(_Mutex),
-          connection_id(_Connection_id),
-          active(true) {}
+    sig_connection_t(std::vector<sig_slot_t>& _Slots, std::mutex& _Mutex, size_t _Connection_id)
+      : slots(_Slots),
+        mutex(_Mutex),
+        connection_id(_Connection_id),
+        active(true) {}
 
     void disconnect();
 
   private:
-    std::vector<Slot>& slots;
+    std::vector<sig_slot_t>& slots;
     std::mutex& mutex;
 
     size_t connection_id;
     bool active;
   };
 
-  Connection connect(const Slot&);
+  sig_connection_t connect(const sig_slot_t&);
   void fire(Args...);
   void wait();
 
 private:
-  std::vector<Slot> slots;
+  std::vector<sig_slot_t> slots;
   std::mutex mutex;
   std::condition_variable condition;
 };
 
-VIA_NAMESPACE_END
+} // namespace via::utils
 
 #endif

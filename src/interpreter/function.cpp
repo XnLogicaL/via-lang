@@ -4,27 +4,27 @@
 
 #include "function.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-TFunction::~TFunction() {
+tfunction::~tfunction() {
   delete[] upvs;
   delete[] ibp;
 }
 
-TFunction::TFunction(const TFunction& other)
-    : is_error_handler(other.is_error_handler),
-      is_vararg(other.is_vararg),
-      call_info(other.call_info),
-      upv_count(other.upv_count) {
+tfunction::tfunction(const tfunction& other)
+  : is_error_handler(other.is_error_handler),
+    is_vararg(other.is_vararg),
+    call_info(other.call_info),
+    upv_count(other.upv_count) {
   size_t bytecode_len = iep - ibp;
 
-  ibp = new Instruction[bytecode_len];
-  upvs = new UpValue[upv_count];
+  ibp = new instruction[bytecode_len];
+  upvs = new upvalue[upv_count];
 
   std::memcpy(ibp, other.ibp, bytecode_len);
 
   for (size_t i = 0; i < other.upv_count; i++) {
-    const UpValue& upv = other.upvs[i];
+    const upvalue& upv = other.upvs[i];
     if (!upv.is_valid) {
       continue;
     }
@@ -38,4 +38,4 @@ TFunction::TFunction(const TFunction& other)
   }
 }
 
-VIA_NAMESPACE_END
+} // namespace via

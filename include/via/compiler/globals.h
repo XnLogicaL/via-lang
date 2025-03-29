@@ -2,44 +2,44 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_GLOBALS_H
-#define _VIA_GLOBALS_H
+#ifndef _vl_globals_h
+#define _vl_globals_h
 
 #include "ast-base.h"
 #include "object.h"
 #include "common-defs.h"
 #include "token.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-struct Global {
-  Token token;
+struct global_obj {
+  token token;
   std::string symbol;
-  pTypeNode type;
+  p_type_node_t type;
 };
 
-class GlobalTracker final {
+class global_holder final {
 public:
   // Type aliases
   using index_query_result = std::optional<size_t>;
-  using global_query_result = std::optional<Global>;
-  using global_vector = std::vector<Global>;
-  using builtin_vector = std::vector<Global>;
+  using global_query_result = std::optional<global_obj>;
+  using global_vector = std::vector<global_obj>;
+  using builtin_vector = std::vector<global_obj>;
 
   // Returns the size of the global vector.
   size_t size();
 
   // Declares a new global.
   // Does not perform sanity checks.
-  void declare_global(Global);
+  void declare_global(global_obj);
 
   // Returns whether if a global has been declared.
-  bool was_declared(const Global&);
+  bool was_declared(const global_obj&);
   bool was_declared(const std::string&);
 
   // Returns the index of a given global.
   index_query_result get_index(const std::string&);
-  index_query_result get_index(const Global&);
+  index_query_result get_index(const global_obj&);
 
   // Returns the global at a given key or index.
   global_query_result get_global(const std::string&);
@@ -55,6 +55,6 @@ private:
   global_vector globals;
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif

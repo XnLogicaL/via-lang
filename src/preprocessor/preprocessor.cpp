@@ -5,14 +5,14 @@
 #include "preprocessor.h"
 #include "lexer.h"
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
-using enum TokenType;
+using enum token_type;
 
-void Preprocessor::declare_default() {}
+void preprocessor::declare_default() {}
 
-bool Preprocessor::preprocess() {
+bool preprocessor::preprocess() {
   return false;
 }
 
-VIA_NAMESPACE_END
+} // namespace via

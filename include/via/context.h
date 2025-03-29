@@ -2,29 +2,29 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _VIA_CONTEXT_H
-#define _VIA_CONTEXT_H
+#ifndef _vl_context_h
+#define _vl_context_h
 
 #include "common-defs.h"
 #include "common-macros.h"
 #include "compiler/globals.h"
 #include "lex/token.h"
 
-#define VFLAG_VERBOSE int(1 << 0)
-#define VFLAG_SASSY   int(1 << 7)
+#define vflag_verbose int(1 << 0)
+#define vflag_sassy   int(1 << 7)
 
-VIA_NAMESPACE_BEGIN
+namespace via {
 
 using ByteStream = std::vector<uint8_t>;
 
-class TokenStream;
-class SyntaxTree;
-class BytecodeHolder;
-class ConstantHolder;
-class CompilerStack;
-class GlobalTracker;
+class token_stream;
+class syntax_tree;
+class bytecode_holder;
+class constant_holder;
+class compiler_stack;
+class global_holder;
 
-class TransUnitContext final {
+class trans_unit_context final {
 public:
   // Resets the translation unit context.
   void clear();
@@ -34,23 +34,23 @@ public:
 
   const char* get_platform_info();
 
-  TransUnitContext(const std::string& file_path, const std::string& file_source);
-  TransUnitContext(const ByteStream& bytes);
+  trans_unit_context(const std::string& file_path, const std::string& file_source);
+  trans_unit_context(const ByteStream& bytes);
 
 public:
   const std::string file_path;
   const std::string file_source;
 
-  std::unique_ptr<TokenStream> tokens;
-  std::unique_ptr<SyntaxTree> ast;
-  std::unique_ptr<BytecodeHolder> bytecode;
-  std::unique_ptr<ConstantHolder> constants;
+  std::unique_ptr<token_stream> tokens;
+  std::unique_ptr<syntax_tree> ast;
+  std::unique_ptr<bytecode_holder> bytecode;
+  std::unique_ptr<constant_holder> constants;
 
   struct Internal {
     size_t label_count;
 
-    std::unique_ptr<CompilerStack> stack;
-    std::unique_ptr<GlobalTracker> globals;
+    std::unique_ptr<compiler_stack> stack;
+    std::unique_ptr<global_holder> globals;
   } internal;
 };
 
@@ -59,9 +59,9 @@ public:
 public:
   uint32_t flags;
 
-  std::vector<TransUnitContext> units;
+  std::vector<trans_unit_context> units;
 };
 
-VIA_NAMESPACE_END
+} // namespace via
 
 #endif
