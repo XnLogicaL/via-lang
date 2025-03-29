@@ -6,12 +6,12 @@
 
 namespace via {
 
-tfunction::~tfunction() {
+function_obj::~function_obj() {
   delete[] upvs;
   delete[] ibp;
 }
 
-tfunction::tfunction(const tfunction& other)
+function_obj::function_obj(const function_obj& other)
   : is_error_handler(other.is_error_handler),
     is_vararg(other.is_vararg),
     call_info(other.call_info),
@@ -19,12 +19,12 @@ tfunction::tfunction(const tfunction& other)
   size_t bytecode_len = iep - ibp;
 
   ibp = new instruction[bytecode_len];
-  upvs = new upvalue[upv_count];
+  upvs = new upv_obj[upv_count];
 
   std::memcpy(ibp, other.ibp, bytecode_len);
 
   for (size_t i = 0; i < other.upv_count; i++) {
-    const upvalue& upv = other.upvs[i];
+    const upv_obj& upv = other.upvs[i];
     if (!upv.is_valid) {
       continue;
     }

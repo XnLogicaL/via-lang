@@ -11,7 +11,7 @@
 
 namespace via {
 
-struct upvalue {
+struct upv_obj {
   bool is_open = true;
   bool is_valid = false;
 
@@ -20,7 +20,7 @@ struct upvalue {
 };
 
 struct call_info {
-  tfunction* caller;
+  function_obj* caller;
   instruction* pc;
   instruction* ibp;
   instruction* iep;
@@ -28,7 +28,7 @@ struct call_info {
   size_t argc;
 };
 
-struct tfunction {
+struct function_obj {
   bool is_error_handler = false;
   bool is_vararg = false;
 
@@ -37,16 +37,16 @@ struct tfunction {
   instruction* ibp = nullptr;
   instruction* iep = nullptr;
 
-  upvalue* upvs = new upvalue[8];
+  upv_obj* upvs = new upv_obj[8];
   uint32_t upv_count = 8;
 
-  tfunction() = default;
-  tfunction(const tfunction& other);
-  ~tfunction();
+  function_obj() = default;
+  function_obj(const function_obj& other);
+  ~function_obj();
 };
 
-struct tcfunction {
-  void (*data)(State*) = nullptr;
+struct cfunction_obj {
+  void (*data)(state*) = nullptr;
   bool is_error_handler = false;
 };
 

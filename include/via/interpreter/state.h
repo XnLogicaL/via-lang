@@ -16,31 +16,30 @@
 namespace via {
 
 // Forward declarations
-struct tfunction;
-struct GarbageCollector;
+struct function_obj;
 
 // Calling convention
-enum class CallType {
+enum class call_type {
   NOCALL,
   CALL,
   FASTCALL,
 };
 
-// State of an State (thread) execution
-enum class ThreadState {
+// state of an state (thread) execution
+enum class thread_state {
   RUNNING,
   PAUSED,
   DEAD,
 };
 
-struct ErrorState {
-  tfunction* frame = nullptr;
+struct error_state {
+  function_obj* frame = nullptr;
   std::string message = "";
 };
 
 // global_obj state, should only be instantiated once, and shared across all
-// State's. (threads)
-struct GState {
+// state's. (threads)
+struct global_state {
   std::unordered_map<uint32_t, string_obj*> stable; // String interning table
   std::unordered_map<uint32_t, value_obj> gtable;   // global_obj environment
   std::atomic<uint32_t> threads{0};                 // Thread count
@@ -50,10 +49,10 @@ struct GState {
   std::mutex symtable_mutex;
 };
 
-struct alignas(64) State {
+struct alignas(64) state {
   // Thread and global state
-  uint32_t id; // Thread ID
-  GState* G;   // global_obj state
+  uint32_t id;       // Thread ID
+  global_state* glb; // global_obj state
 
   // instruction pointers
   instruction* pc = nullptr;  // Current instruction pointer
@@ -73,14 +72,14 @@ struct alignas(64) State {
   instruction** labels;
 
   // Call and frame management
-  tfunction* frame = nullptr; // Call stack pointer
+  function_obj* frame = nullptr; // Call stack pointer
 
   // VM control and debugging
   bool abort = false;
-  ErrorState* err;
+  error_state* err;
 
   // Thread state
-  ThreadState tstate = ThreadState::PAUSED; // Current thread state
+  thread_state tstate = thread_state::PAUSED; // Current thread state
 
   // Signals
   utils::signal<> sig_exit;
@@ -90,10 +89,10 @@ struct alignas(64) State {
 
   trans_unit_context& unit_ctx;
 
-  vl_nocopy(State);
+  vl_nocopy(state);
 
-  State(GState* global, trans_unit_context& unit_ctx);
-  ~State();
+  state(global_state* global, trans_unit_context& unit_ctx);
+  ~state();
 
   void load(const bytecode_holder& bytecode);
 
@@ -209,8 +208,8 @@ struct alignas(64) State {
   // Standard return. Returns from the current function with an optional value.
   void native_return(const value_obj& return_value);
 
-  // Calls the given tfunction object with a given argument count.
-  void native_call(tfunction* target, size_t argc);
+  // Calls the given function_obj object with a given argument count.
+  void native_call(function_obj* target, size_t argc);
 
   // Calls the method that lives in a given index of a given object with a given argument count.
   void method_call(object_obj* object, size_t index, size_t argc);
@@ -219,26 +218,26 @@ struct alignas(64) State {
   void call(const value_obj& callee, size_t argc);
 
   // Returns the current stack frame.
-  tfunction* get_stack_frame();
+  function_obj* get_stack_frame();
 
-  // Attempts to return the upvalue that lives in the given index of the given closure.
-  const value_obj& get_upvalue(tfunction* closure, size_t index);
+  // Attempts to return the upv_obj that lives in the given index of the given closure.
+  const value_obj& get_upvalue(function_obj* closure, size_t index);
 
-  // Attempts to set the upvalue that lives in the given index of the given closure to a given
+  // Attempts to set the upv_obj that lives in the given index of the given closure to a given
   // value.
-  void set_upvalue(tfunction* closure, size_t index, const value_obj& value);
+  void set_upvalue(function_obj* closure, size_t index, const value_obj& value);
 
-  // Returns the upvalue count of the given closure.
-  size_t get_upvalue_count(tfunction* closure);
+  // Returns the upv_obj count of the given closure.
+  size_t get_upvalue_count(function_obj* closure);
 
   // Returns the local count of the given closure.
-  size_t get_local_count_closure(tfunction* closure);
+  size_t get_local_count_closure(function_obj* closure);
 
   // ===========================================================================================
   // General operations
 };
 
-std::string to_string(State*);
+std::string to_string(state*);
 
 } // namespace via
 

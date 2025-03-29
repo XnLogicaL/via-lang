@@ -83,10 +83,10 @@ value_obj::~value_obj() {
       delete cast_ptr<table_obj>();
       break;
     case function:
-      delete cast_ptr<tfunction>();
+      delete cast_ptr<function_obj>();
       break;
     case cfunction:
-      delete cast_ptr<tcfunction>();
+      delete cast_ptr<cfunction_obj>();
       break;
     default:
       break;
@@ -111,9 +111,9 @@ value_obj value_obj::clone() const {
   case table:
     return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
   case function:
-    return value_obj(function, new tfunction(*cast_ptr<tfunction>()));
+    return value_obj(function, new function_obj(*cast_ptr<function_obj>()));
   case cfunction:
-    return value_obj(cfunction, new tcfunction(*cast_ptr<tcfunction>()));
+    return value_obj(cfunction, new cfunction_obj(*cast_ptr<cfunction_obj>()));
   default:
     return value_obj();
   }
@@ -128,9 +128,9 @@ bool value_obj::compare(const value_obj&) const {
 }
 
 // Constructs a new string_obj object
-string_obj::string_obj(State* V, const char* str) {
+string_obj::string_obj(state* V, const char* str) {
   if (V != nullptr) {
-    auto& stable = V->G->stable;
+    auto& stable = V->glb->stable;
     auto it = stable.find(hash);
     if (it != stable.end()) {
       return;
@@ -142,7 +142,7 @@ string_obj::string_obj(State* V, const char* str) {
   hash = hash_string_custom(str);
 
   if (V != nullptr) {
-    V->G->stable.emplace(hash, this);
+    V->glb->stable.emplace(hash, this);
   }
 }
 

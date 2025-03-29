@@ -30,7 +30,7 @@
 //  constant table and emits a `LOADK` instruction with the corresponding constant id.
 //
 // - sym_expr_node compilation:
-//  This node represents a "symbol" that is either a local, global, argument or upvalue.
+//  This node represents a "symbol" that is either a local, global, argument or upv_obj.
 //  It first checks the stack for the symbol, if found, emits a `GETSTACK` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPVALUE`. Next,
 //  it checks for arguments by traversing the parameters of the top function in

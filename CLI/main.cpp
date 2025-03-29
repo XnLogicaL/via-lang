@@ -261,8 +261,8 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(runtime_begin);
     SET_PROFILER_POINT(state_init_begin);
 
-    GState gstate;
-    State state(&gstate, result.unit);
+    global_state gstate;
+    state state(&gstate, result.unit);
 
     if (verbosity_flag) {
       SET_PROFILER_POINT(state_init_end);

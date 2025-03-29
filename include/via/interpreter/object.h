@@ -22,12 +22,12 @@ using TFloat = float32_t;
 
 #endif
 
-struct State;
+struct state;
 struct string_obj;
 struct table_obj;
 struct object_obj;
-struct tfunction;
-struct tcfunction;
+struct function_obj;
+struct cfunction_obj;
 
 enum class value_type : uint8_t {
   nil,            // Empty type, null
@@ -35,8 +35,8 @@ enum class value_type : uint8_t {
   floating_point, // Floating point type
   boolean,        // Boolean type
   string,         // String type, pointer to string_obj
-  function,       // Function type, pointer to tfunction
-  cfunction,      // CFunction type, pointer to tcfunction
+  function,       // Function type, pointer to function_obj
+  cfunction,      // CFunction type, pointer to cfunction_obj
   table,          // Table type, pointer to table_obj
   object,         // Object type, pointer to object_obj
 };
@@ -79,11 +79,11 @@ struct vl_align(8) value_obj {
     : type(value_type::table),
       val_pointer(ptr) {}
 
-  explicit value_obj(tfunction* ptr)
+  explicit value_obj(function_obj* ptr)
     : type(value_type::function),
       val_pointer(ptr) {}
 
-  explicit value_obj(tcfunction* ptr)
+  explicit value_obj(cfunction_obj* ptr)
     : type(value_type::cfunction),
       val_pointer(ptr) {}
 
@@ -180,7 +180,7 @@ struct string_obj {
   char* data;
 
   explicit string_obj(const string_obj&);
-  explicit string_obj(State*, const char*);
+  explicit string_obj(state*, const char*);
   ~string_obj();
 
   size_t size();

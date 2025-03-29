@@ -55,11 +55,11 @@ namespace via {
 
 using enum value_type;
 using enum opcode;
-using enum ThreadState;
+using enum thread_state;
 
 using namespace impl;
 
-void vm_save_snapshot(State* vl_restrict V) {
+void vm_save_snapshot(state* vl_restrict V) {
   uint64_t pos = V->pc - V->ibp;
   std::string file = std::format("vm_snapshot.{}.log", pos);
 
@@ -106,7 +106,7 @@ void vm_save_snapshot(State* vl_restrict V) {
 
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
-void State::execute() {
+void state::execute() {
   vl_assert(tstate == PAUSED, "Execute called on non-paused state");
   tstate = RUNNING;
 
@@ -798,7 +798,7 @@ dispatch: {
 
   case LOADFUNCTION: {
     operand_t dst = pc->operand0;
-    tfunction* func = new tfunction();
+    function_obj* func = new function_obj();
 
     __closure_bytecode_load(this, func);
     __set_register(this, dst, value_obj(function, func));
@@ -808,7 +808,7 @@ dispatch: {
   case GETUPVALUE: {
     operand_t dst = pc->operand0;
     operand_t upv_id = pc->operand1;
-    upvalue* upv = __closure_upv_get(frame, upv_id);
+    upv_obj* upv = __closure_upv_get(frame, upv_id);
 
     dump_struct(*upv->value);
 
@@ -1616,7 +1616,7 @@ dispatch: {
     operand_t argc = pc->operand1;
     value_obj* cfunc = __get_register(this, fn);
 
-    __extern_call(this, cfunc->cast_ptr<tcfunction>(), argc);
+    __extern_call(this, cfunc->cast_ptr<cfunction_obj>(), argc);
     vl_vmnext();
   }
 
@@ -1625,7 +1625,7 @@ dispatch: {
     operand_t argc = pc->operand1;
     value_obj* func = __get_register(this, fn);
 
-    __native_call(this, func->cast_ptr<tfunction>(), argc);
+    __native_call(this, func->cast_ptr<function_obj>(), argc);
     vl_vmnext();
   }
 
@@ -1638,7 +1638,7 @@ dispatch: {
     value_obj* object = __get_register(this, obj);
 
     __push(this, object->clone());
-    __native_call(this, func->cast_ptr<tfunction>(), argc + 1);
+    __native_call(this, func->cast_ptr<function_obj>(), argc + 1);
     vl_vmnext();
   }
 
@@ -1838,7 +1838,7 @@ exit:
 }
 
 // Permanently kills the thread. Does not clean up the state object.
-void State::kill() {
+void state::kill() {
   if (tstate == RUNNING) {
     abort = true;
     sig_exit.wait();
@@ -1846,11 +1846,11 @@ void State::kill() {
 
   // Mark as dead thread
   tstate = DEAD;
-  G->threads.fetch_add(-1);
+  glb->threads.fetch_add(-1);
 }
 
 // Temporarily pauses the thread.
-void State::pause() {
+void state::pause() {
   if (tstate == RUNNING) {
     abort = true;
     sig_exit.wait();

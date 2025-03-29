@@ -16,14 +16,14 @@ namespace via::impl {
 // ===========================================================================================
 // Closure handling
 
-// Automatically resizes upvalue vector of closure by VIA_UPV_RESIZE_FACTOR.
-vl_inline void __closure_upvs_resize(tfunction* _Closure) {
+// Automatically resizes upv_obj vector of closure by VIA_UPV_RESIZE_FACTOR.
+vl_inline void __closure_upvs_resize(function_obj* _Closure) {
   uint32_t _Current_size = _Closure->upv_count;
   uint32_t _New_size = _Current_size * 2;
-  upvalue* _New_location = new upvalue[_New_size];
+  upv_obj* _New_location = new upv_obj[_New_size];
 
   // Move upvalues to new location
-  for (upvalue* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
+  for (upv_obj* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
     uint32_t offset = ptr - _Closure->upvs;
     _New_location[offset] = std::move(*ptr);
   }
@@ -35,15 +35,15 @@ vl_inline void __closure_upvs_resize(tfunction* _Closure) {
   _Closure->upv_count = _New_size;
 }
 
-// Checks if a given index is within the bounds of the upvalue vector of the closure.
+// Checks if a given index is within the bounds of the upv_obj vector of the closure.
 // Used for resizing.
-vl_inline bool __closure_upvs_range_check(tfunction* _Closure, size_t index) {
+vl_inline bool __closure_upvs_range_check(function_obj* _Closure, size_t index) {
   return _Closure->upv_count >= index;
 }
 
-// Attempts to retrieve upvalue at index <_Upv_id>.
-// Returns nullptr if <_Upv_id> is out of upvalue vector bounds.
-vl_inline upvalue* __closure_upv_get(tfunction* _Closure, size_t _Upv_id) {
+// Attempts to retrieve upv_obj at index <_Upv_id>.
+// Returns nullptr if <_Upv_id> is out of upv_obj vector bounds.
+vl_inline upv_obj* __closure_upv_get(function_obj* _Closure, size_t _Upv_id) {
   if (!__closure_upvs_range_check(_Closure, _Upv_id)) {
     return nullptr;
   }
@@ -51,9 +51,9 @@ vl_inline upvalue* __closure_upv_get(tfunction* _Closure, size_t _Upv_id) {
   return &_Closure->upvs[_Upv_id];
 }
 
-// Dynamically reassigns upvalue at index <_Upv_id> the value <_Val>.
-vl_inline void __closure_upv_set(tfunction* _Closure, size_t _Upv_id, value_obj& _Val) {
-  upvalue* _Upv = __closure_upv_get(_Closure, _Upv_id);
+// Dynamically reassigns upv_obj at index <_Upv_id> the value <_Val>.
+vl_inline void __closure_upv_set(function_obj* _Closure, size_t _Upv_id, value_obj& _Val) {
+  upv_obj* _Upv = __closure_upv_get(_Closure, _Upv_id);
   if (_Upv != nullptr) {
     if (_Upv->value != nullptr) {
       *_Upv->value = _Val.clone();
@@ -68,7 +68,7 @@ vl_inline void __closure_upv_set(tfunction* _Closure, size_t _Upv_id, value_obj&
 
 // Loads closure bytecode by iterating over the instruction pipeline.
 // Handles sentinel/special opcodes like RETURN or CAPTURE while assembling closure.
-vl_inline void __closure_bytecode_load(State* _State, tfunction* _Closure) {
+vl_inline void __closure_bytecode_load(state* _State, function_obj* _Closure) {
   std::vector<instruction> cache;
 
   while (_State->pc < _State->iep) {
@@ -103,9 +103,9 @@ vl_inline void __closure_bytecode_load(State* _State, tfunction* _Closure) {
 }
 
 // Moves upvalues of the current closure into the heap, "closing" them.
-vl_inline void __closure_close_upvalues(tfunction* _Closure) {
-  upvalue* _Upv_end = _Closure->upvs + _Closure->upv_count;
-  for (upvalue* upv = _Closure->upvs; upv < _Upv_end; upv++) {
+vl_inline void __closure_close_upvalues(function_obj* _Closure) {
+  upv_obj* _Upv_end = _Closure->upvs + _Closure->upv_count;
+  for (upv_obj* upv = _Closure->upvs; upv < _Upv_end; upv++) {
     if (upv->is_valid && upv->is_open) {
       upv->heap_value = upv->value->clone();
       upv->value = &upv->heap_value;
@@ -279,22 +279,22 @@ vl_inline size_t __table_size(table_obj* _Tbl) {
 
 // ==========================================================
 // Label handling
-vl_inline void __label_allocate(State* _State, size_t _Count) {
+vl_inline void __label_allocate(state* _State, size_t _Count) {
   _State->labels = new instruction*[_Count];
 }
 
-vl_inline void __label_deallocate(State* _State) {
+vl_inline void __label_deallocate(state* _State) {
   if (_State->labels) {
     delete[] _State->labels;
     _State->labels = nullptr;
   }
 }
 
-vl_inline instruction* __label_get(State* _State, size_t _Idx) {
+vl_inline instruction* __label_get(state* _State, size_t _Idx) {
   return _State->labels[_Idx];
 }
 
-vl_inline void __label_load(State* _State) {
+vl_inline void __label_load(state* _State) {
   size_t _Idx = 0;
   for (instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
     if (_Ip->op == opcode::LABEL) {
@@ -305,36 +305,36 @@ vl_inline void __label_load(State* _State) {
 
 // ==========================================================
 // Stack handling
-vl_inline void __stack_allocate(State* _State) {
+vl_inline void __stack_allocate(state* _State) {
   _State->sbp = new value_obj[vl_vmstacksize]();
 }
 
-vl_inline void __stack_deallocate(State* _State) {
+vl_inline void __stack_deallocate(state* _State) {
   delete[] _State->sbp;
 }
 
-vl_optimize void __push(State* _State, const value_obj& _Val) {
+vl_optimize void __push(state* _State, const value_obj& _Val) {
   _State->sbp[_State->sp++] = _Val.clone();
 }
 
-vl_optimize value_obj __pop(State* _State) {
+vl_optimize value_obj __pop(state* _State) {
   return _State->sbp[_State->sp--].move();
 }
 
-vl_optimize void __drop(State* _State) {
+vl_optimize void __drop(state* _State) {
   value_obj& _Dropped_val = _State->sbp[_State->sp--];
   _Dropped_val.reset();
 }
 
-vl_optimize const value_obj& __get_stack(State* _State, size_t _Offset) {
+vl_optimize const value_obj& __get_stack(state* _State, size_t _Offset) {
   return _State->sbp[_Offset];
 }
 
-vl_optimize void __set_stack(State* _State, size_t _Offset, value_obj& _Val) {
+vl_optimize void __set_stack(state* _State, size_t _Offset, value_obj& _Val) {
   _State->sbp[_Offset] = _Val.clone();
 }
 
-vl_forceinline value_obj __get_argument(State* vl_restrict _State, size_t _Offset) {
+vl_forceinline value_obj __get_argument(state* vl_restrict _State, size_t _Offset) {
   if (_Offset >= _State->frame->call_info.argc) {
     return value_obj();
   }
@@ -349,20 +349,20 @@ vl_forceinline value_obj __get_argument(State* vl_restrict _State, size_t _Offse
 
 // ==========================================================
 // Register handling
-vl_inline void __register_allocate(State* _State) {
+vl_inline void __register_allocate(state* _State) {
   _State->registers = new value_obj[vl_regcount]();
 }
 
-vl_inline void __register_deallocate(State* _State) {
+vl_inline void __register_deallocate(state* _State) {
   delete[] _State->registers;
 }
 
-vl_optimize void __set_register(State* _State, operand_t _Reg, const value_obj& _Val) {
+vl_optimize void __set_register(state* _State, operand_t _Reg, const value_obj& _Val) {
   value_obj* addr = _State->registers + _Reg;
   *addr = _Val.clone();
 }
 
-vl_optimize value_obj* __get_register(State* _State, operand_t _Reg) {
+vl_optimize value_obj* __get_register(state* _State, operand_t _Reg) {
   value_obj* addr = _State->registers + _Reg;
   return addr;
 }

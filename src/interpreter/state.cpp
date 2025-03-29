@@ -11,11 +11,11 @@ namespace via {
 
 using namespace impl;
 
-// Initializes and returns a new State object
-State::State(GState* G, trans_unit_context& unit_ctx)
-  : id(G->threads++),
-    G(G),
-    err(new ErrorState()),
+// Initializes and returns a new state object
+state::state(global_state* glb, trans_unit_context& unit_ctx)
+  : id(glb->threads++),
+    glb(glb),
+    err(new error_state()),
     unit_ctx(unit_ctx) {
   load(*unit_ctx.bytecode);
 
@@ -25,7 +25,7 @@ State::State(GState* G, trans_unit_context& unit_ctx)
   __label_load(this);
 }
 
-State::~State() {
+state::~state() {
   delete err;
 
   delete[] sibp;
@@ -35,10 +35,10 @@ State::~State() {
   __label_deallocate(this);
 }
 
-void State::load(const bytecode_holder& bytecode) {
+void state::load(const bytecode_holder& bytecode_holder) {
   delete[] sibp;
 
-  auto& pipeline = bytecode.get();
+  auto& pipeline = bytecode_holder.get();
 
   if (pipeline.empty()) {
     ibp = sibp = siep = iep = pc = nullptr;
@@ -57,29 +57,29 @@ void State::load(const bytecode_holder& bytecode) {
   }
 }
 
-std::string to_string(State* state) {
-#define to_void_star(ptr) reinterpret_cast<void*>(ptr)
+std::string to_string(state* state) {
+#define VOID_STAR(ptr) reinterpret_cast<void*>(ptr)
 
   std::ostringstream oss;
 
-  oss << std::format("==== state@{} ====\n", TO_VOID_STAR(state));
+  oss << std::format("==== state@{} ====\n", VOID_STAR(state));
   oss << std::format("|id    | {}\n", state->id);
-  oss << std::format("|G     | <GState@{}>\n", TO_VOID_STAR(state->G));
-  oss << std::format("|pc    | {}\n", TO_VOID_STAR(state->pc));
-  oss << std::format("|ibp   | {}\n", TO_VOID_STAR(state->ibp));
-  oss << std::format("|iep   | {}\n", TO_VOID_STAR(state->iep));
-  oss << std::format("|reg   | {}\n", TO_VOID_STAR(state->registers));
-  oss << std::format("|sbp   | {}\n", TO_VOID_STAR(state->sbp));
+  oss << std::format("|glb     | <global_state@{}>\n", VOID_STAR(state->glb));
+  oss << std::format("|pc    | {}\n", VOID_STAR(state->pc));
+  oss << std::format("|ibp   | {}\n", VOID_STAR(state->ibp));
+  oss << std::format("|iep   | {}\n", VOID_STAR(state->iep));
+  oss << std::format("|reg   | {}\n", VOID_STAR(state->registers));
+  oss << std::format("|sbp   | {}\n", VOID_STAR(state->sbp));
   oss << std::format("|sp    | {}\n", state->sp);
-  oss << std::format("|frame | {}\n", TO_VOID_STAR(state->frame));
+  oss << std::format("|frame | {}\n", VOID_STAR(state->frame));
   oss << std::format("|abort | {}\n", state->abort);
-  oss << std::format("|err   | <ErrorState@{}>\n", TO_VOID_STAR(state->err));
+  oss << std::format("|err   | <ErrorState@{}>\n", VOID_STAR(state->err));
   oss << std::format("|tstate| {}\n", magic_enum::enum_name(state->tstate));
 
   oss << "==== state ====\n";
 
   return oss.str();
-#undef TO_VOID_STAR
+#undef VOID_STAR
 }
 
 } // namespace via

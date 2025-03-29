@@ -13,11 +13,11 @@
     return;                                                                                        \
   }
 
-#define vl_libdeclfn(id)         void id(State* V)
+#define vl_libdeclfn(id)         void id(state* V)
 #define vl_libdeclparam(id, idx) const value_obj& id = impl::__get_argument(V, idx);
 #define vl_libret(val)           impl::__native_return(V, val);
 
-#define vl_libwrapcfptr(ptr)         (value_obj(value_type::cfunction, new tcfunction(ptr)))
+#define vl_libwrapcfptr(ptr)         (value_obj(value_type::cfunction, new cfunction_obj(ptr)))
 #define vl_libwrapprim(val)          (value_obj(val))
 #define vl_libmapempl(map, key, val) map.emplace(hash_string_custom(key), val);
 
