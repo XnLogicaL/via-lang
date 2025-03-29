@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _vl_bitutils_h
-#define _vl_bitutils_h
+#ifndef vl_has_header_bitutils_h
+#define vl_has_header_bitutils_h
 
 #include "common.h"
 

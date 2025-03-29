@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _vl_memutils_h
-#define _vl_memutils_h
+#ifndef vl_has_header_memutils_h
+#define vl_has_header_memutils_h
 
 #include "common.h"
 

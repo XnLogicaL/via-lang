@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _vl_opcode_h
-#define _vl_opcode_h
+#ifndef vl_has_header_opcode_h
+#define vl_has_header_opcode_h
 
 #include "common.h"
 

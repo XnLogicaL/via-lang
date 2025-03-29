@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef _vl_vaux_h
-#define _vl_vaux_h
+#ifndef vl_has_header_vaux_h
+#define vl_has_header_vaux_h
 
 #include "memory-utility.h"
 #include "common.h"
