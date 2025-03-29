@@ -31,19 +31,10 @@
     std::abort();                                                                                  \
   } while (0)
 
-// Macro for loading the next instruction
-#define VM_LOAD()                                                                                  \
-  do {                                                                                             \
-    if (pc + 1 == iep) {                                                                           \
-      goto exit;                                                                                   \
-    }                                                                                              \
-    pc++;                                                                                          \
-  } while (0)
-
 // Macro that completes an execution cycle
 #define VM_NEXT()                                                                                  \
   do {                                                                                             \
-    VM_LOAD();                                                                                     \
+    ++pc;                                                                                          \
     goto dispatch;                                                                                 \
   } while (0)
 

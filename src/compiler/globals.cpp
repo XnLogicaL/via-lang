@@ -73,10 +73,10 @@ const global_vector& GlobalTracker::get() {
 void GlobalTracker::declare_builtins() {
   static Token tok = Token(TokenType::IDENTIFIER, "", 0, 0, 0);
 
-  pTypeNode ret_void = std::make_unique<PrimitiveNode>(tok, ValueType::nil);
+  pTypeNode ret_void = std::make_unique<PrimitiveTypeNode>(tok, ValueType::nil);
 
   std::vector<pTypeNode> print_args;
-  print_args.emplace_back(std::make_unique<PrimitiveNode>(tok, ValueType::string));
+  print_args.emplace_back(std::make_unique<PrimitiveTypeNode>(tok, ValueType::string));
 
   Global print = {
     tok,
@@ -85,7 +85,7 @@ void GlobalTracker::declare_builtins() {
   };
 
   std::vector<pTypeNode> println_args;
-  println_args.emplace_back(std::make_unique<PrimitiveNode>(tok, ValueType::string));
+  println_args.emplace_back(std::make_unique<PrimitiveTypeNode>(tok, ValueType::string));
 
   Global println = {
     tok,

@@ -38,15 +38,6 @@ public:
   TransUnitContext(const ByteStream& bytes);
 
 public:
-  struct Internal {
-    size_t label_count = 0;
-
-    std::unique_ptr<CompilerStack> stack;
-    std::unique_ptr<GlobalTracker> globals;
-
-    VIA_CUSTOM_CONSTRUCTOR(Internal);
-  };
-
   const std::string file_path;
   const std::string file_source;
 
@@ -55,7 +46,12 @@ public:
   std::unique_ptr<BytecodeHolder> bytecode;
   std::unique_ptr<ConstantHolder> constants;
 
-  Internal internal;
+  struct Internal {
+    size_t label_count;
+
+    std::unique_ptr<CompilerStack> stack;
+    std::unique_ptr<GlobalTracker> globals;
+  } internal;
 };
 
 class Context final {

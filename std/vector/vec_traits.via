@@ -10,16 +10,12 @@
 ## ==================================================
 ##
 
-namespace vec_traits {
-
-trait __has_method_magnitude {
+export namespace {
+  trait __has_method_magnitude {
     fn magnitude() -> float
-}
+  }
 
-trait __has_method_normalize {
-    fn normalize() -> struct ## Uses SRTT.
+  trait __has_method_normalize {
+    fn normalize() -> struct
+  }
 }
-
-}
-
-export vec_traits

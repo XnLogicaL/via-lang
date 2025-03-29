@@ -14,7 +14,9 @@
 #include "error-bus.h"
 
 #define INVALID_VISIT                                                                              \
-  { VIA_ASSERT(false, "invalid visit"); }
+  {                                                                                                \
+    VIA_ASSERT(false, "invalid visit");                                                            \
+  }
 
 #define CHECK_TYPE_INFERENCE_FAILURE(type, expr)                                                   \
   if (!type.get()) {                                                                               \
@@ -35,42 +37,42 @@ VIA_NAMESPACE_BEGIN
 
 using Label = Operand;
 
-TValue construct_constant(LiteralNode&);
+TValue construct_constant(LiteralExprNode&);
 
 class NodeVisitor {
 public:
   NodeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
-      : unit_ctx(unit_ctx),
-        err_bus(bus) {}
+    : unit_ctx(unit_ctx),
+      err_bus(bus) {}
 
   virtual VIA_DEFAULT_DESTRUCTOR(NodeVisitor);
 
   // Expression visitors
-  virtual void visit(LiteralNode&, Operand) INVALID_VISIT;
-  virtual void visit(SymbolNode&, Operand) INVALID_VISIT;
-  virtual void visit(UnaryNode&, Operand) INVALID_VISIT;
-  virtual void visit(GroupNode&, Operand) INVALID_VISIT;
-  virtual void visit(CallNode&, Operand) INVALID_VISIT;
-  virtual void visit(IndexNode&, Operand) INVALID_VISIT;
-  virtual void visit(BinaryNode&, Operand) INVALID_VISIT;
-  virtual void visit(TypeCastNode&, Operand) INVALID_VISIT;
+  virtual void visit(LiteralExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(SymbolExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(UnaryExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(GroupExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(CallExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(IndexExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(BinaryExprNode&, Operand) INVALID_VISIT;
+  virtual void visit(TypeCastExprNode&, Operand) INVALID_VISIT;
 
   // Type visitors (return type is due to type-decaying)
-  virtual pTypeNode visit(AutoNode&) INVALID_VISIT;
-  virtual pTypeNode visit(GenericNode&) INVALID_VISIT;
-  virtual pTypeNode visit(UnionNode&) INVALID_VISIT;
+  virtual pTypeNode visit(AutoTypeNode&) INVALID_VISIT;
+  virtual pTypeNode visit(GenericTypeNode&) INVALID_VISIT;
+  virtual pTypeNode visit(UnionTypeNode&) INVALID_VISIT;
   virtual pTypeNode visit(FunctionTypeNode&) INVALID_VISIT;
 
   // Statement visitors
-  virtual void visit(DeclarationNode&) INVALID_VISIT;
-  virtual void visit(ScopeNode&) INVALID_VISIT;
-  virtual void visit(FunctionNode&) INVALID_VISIT;
-  virtual void visit(AssignNode&) INVALID_VISIT;
-  virtual void visit(IfNode&) INVALID_VISIT;
-  virtual void visit(ReturnNode&) INVALID_VISIT;
-  virtual void visit(BreakNode&) INVALID_VISIT;
-  virtual void visit(ContinueNode&) INVALID_VISIT;
-  virtual void visit(WhileNode&) INVALID_VISIT;
+  virtual void visit(DeclarationStmtNode&) INVALID_VISIT;
+  virtual void visit(ScopeStmtNode&) INVALID_VISIT;
+  virtual void visit(FunctionStmtNode&) INVALID_VISIT;
+  virtual void visit(AssignStmtNode&) INVALID_VISIT;
+  virtual void visit(IfStmtNode&) INVALID_VISIT;
+  virtual void visit(ReturnStmtNode&) INVALID_VISIT;
+  virtual void visit(BreakStmtNode&) INVALID_VISIT;
+  virtual void visit(ContinueStmtNode&) INVALID_VISIT;
+  virtual void visit(WhileStmtNode&) INVALID_VISIT;
   virtual void visit(ExprStmtNode&) INVALID_VISIT;
 
   virtual inline bool failed() {
@@ -103,17 +105,17 @@ protected:
 class ExprVisitor : public NodeVisitor {
 public:
   ExprVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
-      : NodeVisitor(unit_ctx, bus),
-        allocator(allocator) {}
+    : NodeVisitor(unit_ctx, bus),
+      allocator(allocator) {}
 
-  void visit(LiteralNode&, Operand) override;
-  void visit(SymbolNode&, Operand) override;
-  void visit(UnaryNode&, Operand) override;
-  void visit(GroupNode&, Operand) override;
-  void visit(CallNode&, Operand) override;
-  void visit(IndexNode&, Operand) override;
-  void visit(BinaryNode&, Operand) override;
-  void visit(TypeCastNode&, Operand) override;
+  void visit(LiteralExprNode&, Operand) override;
+  void visit(SymbolExprNode&, Operand) override;
+  void visit(UnaryExprNode&, Operand) override;
+  void visit(GroupExprNode&, Operand) override;
+  void visit(CallExprNode&, Operand) override;
+  void visit(IndexExprNode&, Operand) override;
+  void visit(BinaryExprNode&, Operand) override;
+  void visit(TypeCastExprNode&, Operand) override;
 
 private:
   RegisterAllocator& allocator;
@@ -122,51 +124,48 @@ private:
 class DecayVisitor : public NodeVisitor {
 public:
   DecayVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
-      : NodeVisitor(unit_ctx, bus) {}
+    : NodeVisitor(unit_ctx, bus) {}
 
-  pTypeNode visit(AutoNode&) override;
-  pTypeNode visit(GenericNode&) override;
-  pTypeNode visit(UnionNode&) override;
+  pTypeNode visit(AutoTypeNode&) override;
+  pTypeNode visit(GenericTypeNode&) override;
+  pTypeNode visit(UnionTypeNode&) override;
   pTypeNode visit(FunctionTypeNode&) override;
 };
 
 class TypeVisitor : public NodeVisitor {
 public:
   TypeVisitor(TransUnitContext& unit_ctx, ErrorBus& bus)
-      : NodeVisitor(unit_ctx, bus) {}
+    : NodeVisitor(unit_ctx, bus) {}
 
-  void visit(DeclarationNode&) override;
-  void visit(AssignNode&) override;
-  void visit(FunctionNode&) override;
+  void visit(DeclarationStmtNode&) override;
+  void visit(AssignStmtNode&) override;
+  void visit(FunctionStmtNode&) override;
 };
 
 class StmtVisitor : public NodeVisitor {
 public:
   StmtVisitor(TransUnitContext& unit_ctx, ErrorBus& bus, RegisterAllocator& allocator)
-      : NodeVisitor(unit_ctx, bus),
-        allocator(allocator),
-        expression_visitor(unit_ctx, bus, allocator),
-        decay_visitor(unit_ctx, bus),
-        type_visitor(unit_ctx, bus) {}
+    : NodeVisitor(unit_ctx, bus),
+      allocator(allocator),
+      expression_visitor(unit_ctx, bus, allocator),
+      decay_visitor(unit_ctx, bus),
+      type_visitor(unit_ctx, bus) {}
 
-  void visit(DeclarationNode&) override;
-  void visit(ScopeNode&) override;
-  void visit(FunctionNode&) override;
-  void visit(AssignNode&) override;
-  void visit(IfNode&) override;
-  void visit(ReturnNode&) override;
-  void visit(BreakNode&) override;
-  void visit(ContinueNode&) override;
-  void visit(WhileNode&) override;
+  void visit(DeclarationStmtNode&) override;
+  void visit(ScopeStmtNode&) override;
+  void visit(FunctionStmtNode&) override;
+  void visit(AssignStmtNode&) override;
+  void visit(IfStmtNode&) override;
+  void visit(ReturnStmtNode&) override;
+  void visit(BreakStmtNode&) override;
+  void visit(ContinueStmtNode&) override;
+  void visit(WhileStmtNode&) override;
   void visit(ExprStmtNode&) override;
 
   inline bool failed() override {
     return visitor_failed || expression_visitor.failed() || decay_visitor.failed() ||
            type_visitor.failed();
   }
-
-public:
-  Label label_counter = 0;
 
 private:
   RegisterAllocator& allocator;

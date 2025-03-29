@@ -20,6 +20,19 @@ using pExprNode = std::unique_ptr<ExprNode>;
 using pStmtNode = std::unique_ptr<StmtNode>;
 using pTypeNode = std::unique_ptr<TypeNode>;
 
+struct Modifiers {
+  bool is_const;
+
+  std::string to_string() const;
+};
+
+struct Attribute {
+  Token identifier;
+  std::vector<Token> arguments;
+
+  std::string to_string() const;
+};
+
 struct ExprNode {
   size_t begin;
   size_t end;
@@ -36,6 +49,8 @@ struct ExprNode {
 };
 
 struct StmtNode {
+  std::vector<Attribute> attributes{};
+
   virtual VIA_DEFAULT_DESTRUCTOR(StmtNode);
 
   virtual std::string to_string(uint32_t&) = 0;

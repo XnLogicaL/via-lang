@@ -109,11 +109,11 @@ enum class TokenType {
 struct Token {
   Token() {}
   Token(TokenType type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
-      : type(type),
-        lexeme(lexeme),
-        line(line),
-        offset(offset),
-        position(position) {}
+    : type(type),
+      lexeme(lexeme),
+      line(line),
+      offset(offset),
+      position(position) {}
 
   TokenType type = TokenType::UNKNOWN;
   std::string lexeme = "";

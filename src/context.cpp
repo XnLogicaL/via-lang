@@ -13,18 +13,18 @@ VIA_NAMESPACE_BEGIN
 
 // ==========================================================================================
 // TransUnitContext
-TransUnitContext::Internal::Internal()
-    : stack(std::make_unique<CompilerStack>()),
-      globals(std::make_unique<GlobalTracker>()) {}
-
 TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
-    : file_path(file_path),
-      file_source(file_source),
-      tokens(std::make_unique<TokenStream>()),
-      ast(std::make_unique<SyntaxTree>()),
-      bytecode(std::make_unique<BytecodeHolder>()),
-      constants(std::make_unique<ConstantHolder>()),
-      internal() {}
+  : file_path(file_path),
+    file_source(file_source),
+    tokens(std::make_unique<TokenStream>()),
+    ast(std::make_unique<SyntaxTree>()),
+    bytecode(std::make_unique<BytecodeHolder>()),
+    constants(std::make_unique<ConstantHolder>()),
+    internal({
+      0,
+      std::make_unique<CompilerStack>(),
+      std::make_unique<GlobalTracker>(),
+    }) {}
 
 TransUnitContext::TransUnitContext(const ByteStream&) {}
 

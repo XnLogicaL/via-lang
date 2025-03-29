@@ -27,7 +27,7 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
   return {line, column};
 }
 
-TValue construct_constant(LiteralNode& literal_node) {
+TValue construct_constant(LiteralExprNode& literal_node) {
   using enum ValueType;
   return std::visit(
     [](auto&& val) -> TValue {

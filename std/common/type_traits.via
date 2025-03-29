@@ -10,13 +10,9 @@
 ## ==================================================
 ##
 
-namespace common {
-
-## Utilizes OMAAI.
-trait convertible_to<T> {
+export namespace {
+  ## Utilizes OMAAI.
+  trait convertible_to<T> {
     fn convert() -> T
+  }
 }
-
-}
-
-export common

@@ -1,7 +1,9 @@
 // =========================================================================================== |
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
-#pragma once
+
+#ifndef _VIA_COMPILER_H
+#define _VIA_COMPILER_H
 
 #include "common.h"
 #include "bytecode.h"
@@ -26,16 +28,20 @@ VIA_NAMESPACE_BEGIN
 class Compiler final {
 public:
   Compiler(TransUnitContext& unit_ctx)
-      : unit_ctx(unit_ctx) {}
+    : unit_ctx(unit_ctx) {}
 
   // Compiler entry point.
   bool generate();
 
 private:
-  bool check_global_collisions();
+  void codegen_prep();
+  void check_global_collisions(bool& failed);
+  void insert_exit0_instruction();
 
 private:
   TransUnitContext& unit_ctx;
 };
 
 VIA_NAMESPACE_END
+
+#endif

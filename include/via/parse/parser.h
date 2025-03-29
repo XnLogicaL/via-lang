@@ -26,7 +26,7 @@ public:
   using result = tl::expected<T, ParserError>;
 
   Parser(TransUnitContext& unit_ctx)
-      : unit_ctx(unit_ctx) {}
+    : unit_ctx(unit_ctx) {}
 
   bool parse();
 
@@ -36,6 +36,8 @@ private:
 
   size_t position = 0;
 
+  std::vector<Attribute> attrib_buffer;
+
 private:
   result<Token> current();
   result<Token> peek(int32_t ahead = 1);
@@ -43,6 +45,7 @@ private:
   result<Token> expect_consume(TokenType type, const std::string& what);
 
   result<Modifiers> parse_modifiers();
+  result<Attribute> parse_attribute();
 
   result<pTypeNode> parse_generic();
   result<pTypeNode> parse_type_primary();

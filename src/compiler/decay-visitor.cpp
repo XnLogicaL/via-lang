@@ -9,15 +9,15 @@
 
 VIA_NAMESPACE_BEGIN
 
-pTypeNode DecayVisitor::visit(AutoNode& auto_node) {
+pTypeNode DecayVisitor::visit(AutoTypeNode& auto_node) {
   return auto_node.expression->infer_type(unit_ctx);
 }
 
-pTypeNode DecayVisitor::visit(GenericNode&) {
+pTypeNode DecayVisitor::visit(GenericTypeNode&) {
   return nullptr;
 }
 
-pTypeNode DecayVisitor::visit(UnionNode&) {
+pTypeNode DecayVisitor::visit(UnionTypeNode&) {
   return nullptr;
 }
 

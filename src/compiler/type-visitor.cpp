@@ -8,7 +8,7 @@
 
 VIA_NAMESPACE_BEGIN
 
-void TypeVisitor::visit(DeclarationNode& declaration_node) {
+void TypeVisitor::visit(DeclarationStmtNode& declaration_node) {
   pTypeNode infered_type = declaration_node.value_expression->infer_type(unit_ctx);
   pTypeNode& annotated_type = declaration_node.type;
 
@@ -28,7 +28,7 @@ void TypeVisitor::visit(DeclarationNode& declaration_node) {
   }
 }
 
-void TypeVisitor::visit(AssignNode& assign_node) {
+void TypeVisitor::visit(AssignStmtNode& assign_node) {
   pTypeNode infered_type = assign_node.assignee->infer_type(unit_ctx);
   pTypeNode assigned_type = assign_node.value->infer_type(unit_ctx);
 
@@ -48,6 +48,6 @@ void TypeVisitor::visit(AssignNode& assign_node) {
   }
 }
 
-void TypeVisitor::visit(FunctionNode&) {}
+void TypeVisitor::visit(FunctionStmtNode&) {}
 
 VIA_NAMESPACE_END

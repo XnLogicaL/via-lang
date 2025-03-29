@@ -11,28 +11,35 @@
 //
 VIA_NAMESPACE_BEGIN
 
+void Compiler::codegen_prep() {
+  unit_ctx.internal.globals->declare_builtins();
+}
+
+void Compiler::check_global_collisions(bool& failed) {
+  failed = false;
+}
+
+void Compiler::insert_exit0_instruction() {
+  unit_ctx.bytecode->emit(OpCode::EXIT, {0});
+}
+
 bool Compiler::generate() {
-  RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
   ErrorBus emitter;
+  RegisterAllocator allocator(VIA_REGISTER_COUNT, true);
   StmtVisitor visitor(unit_ctx, emitter, allocator);
 
-  unit_ctx.internal.globals->declare_builtins();
+  bool failed = false;
+
+  codegen_prep();
 
   for (pStmtNode& stmt : unit_ctx.ast->statements) {
     stmt->accept(visitor);
   }
 
-  if (check_global_collisions()) {
-    return true;
-  }
+  insert_exit0_instruction();
+  check_global_collisions(failed);
 
-  unit_ctx.internal.label_count = visitor.label_counter;
-
-  return visitor.failed();
-}
-
-bool Compiler::check_global_collisions() {
-  return false;
+  return failed || visitor.failed();
 }
 
 VIA_NAMESPACE_END

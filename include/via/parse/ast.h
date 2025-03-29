@@ -17,16 +17,10 @@
 //
 VIA_NAMESPACE_BEGIN
 
-struct Modifiers {
-  bool is_const;
-
-  std::string to_string() const;
-};
-
 // =========================================================================================
 // Expression Nodes
 //
-struct LiteralNode : public ExprNode {
+struct LiteralExprNode : public ExprNode {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
   Token value_token;
@@ -39,15 +33,15 @@ struct LiteralNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  LiteralNode(Token value_token, variant value)
-      : value_token(value_token),
-        value(value) {
+  LiteralExprNode(Token value_token, variant value)
+    : value_token(value_token),
+      value(value) {
     this->begin = this->value_token.position;
     this->end = this->value_token.position + value_token.lexeme.length();
   }
 };
 
-struct SymbolNode : public ExprNode {
+struct SymbolExprNode : public ExprNode {
   Token identifier;
 
   std::string to_string(uint32_t&) override;
@@ -57,14 +51,14 @@ struct SymbolNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  SymbolNode(Token identifier)
-      : identifier(identifier) {
+  SymbolExprNode(Token identifier)
+    : identifier(identifier) {
     this->begin = this->identifier.position;
     this->end = this->identifier.position + identifier.lexeme.length();
   }
 };
 
-struct UnaryNode : public ExprNode {
+struct UnaryExprNode : public ExprNode {
   pExprNode expression;
 
   std::string to_string(uint32_t&) override;
@@ -74,14 +68,14 @@ struct UnaryNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  UnaryNode(pExprNode expression)
-      : expression(std::move(expression)) {
+  UnaryExprNode(pExprNode expression)
+    : expression(std::move(expression)) {
     this->begin = this->expression->begin - 1; // Account for '-'
     this->end = this->expression->end;
   }
 };
 
-struct GroupNode : public ExprNode {
+struct GroupExprNode : public ExprNode {
   pExprNode expression;
 
   std::string to_string(uint32_t&) override;
@@ -92,14 +86,14 @@ struct GroupNode : public ExprNode {
   void accept(NodeVisitor&, uint32_t) override;
   int precedence() const override;
 
-  GroupNode(pExprNode expression)
-      : expression(std::move(expression)) {
+  GroupExprNode(pExprNode expression)
+    : expression(std::move(expression)) {
     this->begin = this->expression->begin - 1; // Account for '('
     this->end = this->expression->end + 1;     // Account for ')'
   }
 };
 
-struct CallNode : public ExprNode {
+struct CallExprNode : public ExprNode {
   using argument_vector = std::vector<pExprNode>;
 
   pExprNode callee;
@@ -112,9 +106,9 @@ struct CallNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  CallNode(pExprNode callee, argument_vector arguments)
-      : callee(std::move(callee)),
-        arguments(std::move(arguments)) {
+  CallExprNode(pExprNode callee, argument_vector arguments)
+    : callee(std::move(callee)),
+      arguments(std::move(arguments)) {
 
     if (!this->arguments.empty()) {
       pExprNode& last_arg = this->arguments.back();
@@ -129,7 +123,7 @@ struct CallNode : public ExprNode {
   }
 };
 
-struct IndexNode : public ExprNode {
+struct IndexExprNode : public ExprNode {
   pExprNode object;
   pExprNode index;
 
@@ -140,15 +134,15 @@ struct IndexNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  IndexNode(pExprNode object, pExprNode index)
-      : object(std::move(object)),
-        index(std::move(index)) {
+  IndexExprNode(pExprNode object, pExprNode index)
+    : object(std::move(object)),
+      index(std::move(index)) {
     this->begin = this->object->begin;
     this->end = this->index->end;
   }
 };
 
-struct BinaryNode : public ExprNode {
+struct BinaryExprNode : public ExprNode {
   Token op;
   pExprNode lhs_expression;
   pExprNode rhs_expression;
@@ -160,16 +154,16 @@ struct BinaryNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  BinaryNode(Token op, pExprNode lhs, pExprNode rhs)
-      : op(op),
-        lhs_expression(std::move(lhs)),
-        rhs_expression(std::move(rhs)) {
+  BinaryExprNode(Token op, pExprNode lhs, pExprNode rhs)
+    : op(op),
+      lhs_expression(std::move(lhs)),
+      rhs_expression(std::move(rhs)) {
     this->begin = this->lhs_expression->begin;
     this->end = this->rhs_expression->end;
   }
 };
 
-struct TypeCastNode : public ExprNode {
+struct TypeCastExprNode : public ExprNode {
   pExprNode expression;
   pTypeNode type;
 
@@ -180,18 +174,44 @@ struct TypeCastNode : public ExprNode {
 
   void accept(NodeVisitor&, uint32_t) override;
 
-  TypeCastNode(pExprNode expression, pTypeNode type)
-      : expression(std::move(expression)),
-        type(std::move(type)) {
+  TypeCastExprNode(pExprNode expression, pTypeNode type)
+    : expression(std::move(expression)),
+      type(std::move(type)) {
     this->begin = this->expression->begin;
     this->end = this->expression->end;
+  }
+};
+
+struct TableExprNode : public ExprNode {
+  struct KvPair {
+    pExprNode key;
+    pExprNode val;
+  };
+
+  using kvpair_vector = std::vector<KvPair>;
+
+  Token open_brace;
+  Token close_brace;
+  kvpair_vector pairs;
+
+  std::string to_string(uint32_t&) override;
+
+  pExprNode clone() override;
+  pTypeNode infer_type(TransUnitContext&) override;
+
+  void accept(NodeVisitor&, uint32_t) override;
+
+  TableExprNode(Token open_brace, Token close_brace, kvpair_vector pairs)
+    : pairs(std::move(pairs)) {
+    this->begin = open_brace.position;
+    this->end = close_brace.position;
   }
 };
 
 // =========================================================================================
 // Type Nodes
 //
-struct AutoNode : public TypeNode {
+struct AutoTypeNode : public TypeNode {
   std::string to_string(uint32_t&) override;
   std::string to_string_x() override;
 
@@ -200,7 +220,7 @@ struct AutoNode : public TypeNode {
   void decay(NodeVisitor&, pTypeNode&) override;
 };
 
-struct PrimitiveNode : public TypeNode {
+struct PrimitiveTypeNode : public TypeNode {
   Token identifier;
   ValueType type;
 
@@ -209,12 +229,12 @@ struct PrimitiveNode : public TypeNode {
 
   pTypeNode clone() override;
 
-  PrimitiveNode(Token id, ValueType valty)
-      : identifier(id),
-        type(valty) {}
+  PrimitiveTypeNode(Token id, ValueType valty)
+    : identifier(id),
+      type(valty) {}
 };
 
-struct GenericNode : public TypeNode {
+struct GenericTypeNode : public TypeNode {
   using Generics = std::vector<pTypeNode>;
   Token identifier;
   Generics generics;
@@ -227,13 +247,13 @@ struct GenericNode : public TypeNode {
 
   void decay(NodeVisitor&, pTypeNode&) override;
 
-  GenericNode(Token id, Generics gens, Modifiers modifiers)
-      : identifier(id),
-        generics(std::move(gens)),
-        modifiers(modifiers) {}
+  GenericTypeNode(Token id, Generics gens, Modifiers modifiers)
+    : identifier(id),
+      generics(std::move(gens)),
+      modifiers(modifiers) {}
 };
 
-struct UnionNode : public TypeNode {
+struct UnionTypeNode : public TypeNode {
   pTypeNode lhs;
   pTypeNode rhs;
 
@@ -244,9 +264,9 @@ struct UnionNode : public TypeNode {
 
   void decay(NodeVisitor&, pTypeNode&) override;
 
-  UnionNode(pTypeNode lhs, pTypeNode rhs)
-      : lhs(std::move(lhs)),
-        rhs(std::move(rhs)) {}
+  UnionTypeNode(pTypeNode lhs, pTypeNode rhs)
+    : lhs(std::move(lhs)),
+      rhs(std::move(rhs)) {}
 };
 
 struct FunctionTypeNode : public TypeNode {
@@ -263,14 +283,14 @@ struct FunctionTypeNode : public TypeNode {
   void decay(NodeVisitor&, pTypeNode&) override;
 
   FunctionTypeNode(parameter_vector args, pTypeNode rets)
-      : parameters(std::move(args)),
-        returns(std::move(rets)) {}
+    : parameters(std::move(args)),
+      returns(std::move(rets)) {}
 };
 
 // =========================================================================================
 // Statement Nodes
 //
-struct DeclarationNode : public StmtNode {
+struct DeclarationStmtNode : public StmtNode {
   bool is_global;
   Modifiers modifiers;
   Token identifier;
@@ -283,17 +303,17 @@ struct DeclarationNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  DeclarationNode(
+  DeclarationStmtNode(
     bool is_global, Modifiers modifiers, Token identifier, pExprNode value, pTypeNode type
   )
-      : is_global(is_global),
-        modifiers(modifiers),
-        identifier(identifier),
-        value_expression(std::move(value)),
-        type(std::move(type)) {}
+    : is_global(is_global),
+      modifiers(modifiers),
+      identifier(identifier),
+      value_expression(std::move(value)),
+      type(std::move(type)) {}
 };
 
-struct ScopeNode : public StmtNode {
+struct ScopeStmtNode : public StmtNode {
   using Statements = std::vector<pStmtNode>;
   Statements statements;
 
@@ -303,8 +323,8 @@ struct ScopeNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  ScopeNode(Statements statements)
-      : statements(std::move(statements)) {}
+  ScopeStmtNode(Statements statements)
+    : statements(std::move(statements)) {}
 };
 
 struct ParameterNode {
@@ -313,12 +333,12 @@ struct ParameterNode {
   pTypeNode type;
 
   ParameterNode(Token identifier, Modifiers modifiers, pTypeNode type)
-      : identifier(identifier),
-        modifiers(modifiers),
-        type(std::move(type)) {}
+    : identifier(identifier),
+      modifiers(modifiers),
+      type(std::move(type)) {}
 };
 
-struct FunctionNode : public StmtNode {
+struct FunctionStmtNode : public StmtNode {
   using Parameters = std::vector<ParameterNode>;
 
   struct StackNode {
@@ -333,11 +353,11 @@ struct FunctionNode : public StmtNode {
     StackNode(
       bool is_global, size_t upvalues, Modifiers modifiers, Token identifier, Parameters parameters
     )
-        : is_global(is_global),
-          upvalues(upvalues),
-          modifiers(modifiers),
-          identifier(identifier),
-          parameters(std::move(parameters)) {}
+      : is_global(is_global),
+        upvalues(upvalues),
+        modifiers(modifiers),
+        identifier(identifier),
+        parameters(std::move(parameters)) {}
   };
 
   bool is_global;
@@ -353,7 +373,7 @@ struct FunctionNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  FunctionNode(
+  FunctionStmtNode(
     bool is_global,
     Modifiers modifiers,
     Token identifier,
@@ -361,60 +381,15 @@ struct FunctionNode : public StmtNode {
     pTypeNode returns,
     Parameters parameters
   )
-      : is_global(is_global),
-        modifiers(modifiers),
-        identifier(identifier),
-        body(std::move(body)),
-        returns(std::move(returns)),
-        parameters(std::move(parameters)) {}
+    : is_global(is_global),
+      modifiers(modifiers),
+      identifier(identifier),
+      body(std::move(body)),
+      returns(std::move(returns)),
+      parameters(std::move(parameters)) {}
 };
 
-struct ConstructorNode : public StmtNode {
-  using Parameters = std::vector<ParameterNode>;
-
-  pStmtNode body;
-  Parameters parameters;
-
-  std::string to_string(uint32_t&) override;
-
-  pStmtNode clone() override;
-
-  void accept(NodeVisitor&) override;
-
-  ConstructorNode(pStmtNode body, Parameters parameters)
-      : body(std::move(body)),
-        parameters(std::move(parameters)) {}
-};
-
-struct DestructorNode : public StmtNode {
-  pStmtNode body;
-
-  std::string to_string(uint32_t&) override;
-  pStmtNode clone() override;
-
-  void accept(NodeVisitor&) override;
-
-  DestructorNode(pStmtNode body)
-      : body(std::move(body)) {}
-};
-
-struct MemberNode : public StmtNode {
-  Token identifier;
-  pTypeNode type;
-  pExprNode initializer;
-
-  std::string to_string(uint32_t&) override;
-  pStmtNode clone() override;
-
-  void accept(NodeVisitor&) override;
-
-  MemberNode(Token id, pTypeNode ty, pExprNode init)
-      : identifier(id),
-        type(std::move(ty)),
-        initializer(std::move(init)) {}
-};
-
-struct AssignNode : public StmtNode {
+struct AssignStmtNode : public StmtNode {
   pExprNode assignee;
   Token augmentation_operator;
   pExprNode value;
@@ -424,28 +399,27 @@ struct AssignNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  AssignNode(pExprNode assignee, Token augment, pExprNode value)
-      : assignee(std::move(assignee)),
-        augmentation_operator(augment),
-        value(std::move(value)) {}
+  AssignStmtNode(pExprNode assignee, Token augment, pExprNode value)
+    : assignee(std::move(assignee)),
+      augmentation_operator(augment),
+      value(std::move(value)) {}
 };
 
-struct IfNode : public StmtNode {
+struct IfStmtNode : public StmtNode {
   struct ElseIfNode {
     pExprNode condition;
     pStmtNode scope;
 
     ElseIfNode(pExprNode condition, pStmtNode scope)
-        : condition(std::move(condition)),
-          scope(std::move(scope)) {}
+      : condition(std::move(condition)),
+        scope(std::move(scope)) {}
   };
 
   using ElseIfNodes = std::vector<ElseIfNode>;
-  using ElseNode = std::optional<pStmtNode>;
 
   pExprNode condition;
   pStmtNode scope;
-  ElseNode else_node;
+  pStmtNode else_node;
   ElseIfNodes elseif_nodes;
 
   std::string to_string(uint32_t&) override;
@@ -453,14 +427,14 @@ struct IfNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  IfNode(pExprNode condition, pStmtNode scope, ElseNode else_node, ElseIfNodes elseif_nodes)
-      : condition(std::move(condition)),
-        scope(std::move(scope)),
-        else_node(std::move(else_node)),
-        elseif_nodes(std::move(elseif_nodes)) {}
+  IfStmtNode(pExprNode condition, pStmtNode scope, pStmtNode else_node, ElseIfNodes elseif_nodes)
+    : condition(std::move(condition)),
+      scope(std::move(scope)),
+      else_node(std::move(else_node)),
+      elseif_nodes(std::move(elseif_nodes)) {}
 };
 
-struct ReturnNode : public StmtNode {
+struct ReturnStmtNode : public StmtNode {
   pExprNode expression;
 
   std::string to_string(uint32_t&) override;
@@ -468,11 +442,11 @@ struct ReturnNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  ReturnNode(pExprNode expression)
-      : expression(std::move(expression)) {}
+  ReturnStmtNode(pExprNode expression)
+    : expression(std::move(expression)) {}
 };
 
-struct BreakNode : public StmtNode {
+struct BreakStmtNode : public StmtNode {
   Token token;
 
   std::string to_string(uint32_t&) override;
@@ -480,11 +454,11 @@ struct BreakNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  BreakNode(Token tok)
-      : token(tok) {}
+  BreakStmtNode(Token tok)
+    : token(tok) {}
 };
 
-struct ContinueNode : public StmtNode {
+struct ContinueStmtNode : public StmtNode {
   Token token;
 
   std::string to_string(uint32_t&) override;
@@ -492,11 +466,11 @@ struct ContinueNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  ContinueNode(Token tok)
-      : token(tok) {}
+  ContinueStmtNode(Token tok)
+    : token(tok) {}
 };
 
-struct WhileNode : public StmtNode {
+struct WhileStmtNode : public StmtNode {
   pExprNode condition;
   pStmtNode body;
 
@@ -505,9 +479,9 @@ struct WhileNode : public StmtNode {
 
   void accept(NodeVisitor&) override;
 
-  WhileNode(pExprNode condition, pStmtNode body)
-      : condition(std::move(condition)),
-        body(std::move(body)) {}
+  WhileStmtNode(pExprNode condition, pStmtNode body)
+    : condition(std::move(condition)),
+      body(std::move(body)) {}
 };
 
 struct ExprStmtNode : public StmtNode {
@@ -520,7 +494,7 @@ struct ExprStmtNode : public StmtNode {
   void accept(NodeVisitor&) override;
 
   ExprStmtNode(pExprNode expression)
-      : expression(std::move(expression)) {}
+    : expression(std::move(expression)) {}
 };
 
 class SyntaxTree {

@@ -23,13 +23,13 @@
 // Visitor functions compile each type of expression node by first converting it into
 // corresponding opcode(s), and then determining the operands via the built-in node parameters.
 //
-// - LiteralNode compilation:
+// - LiteralExprNode compilation:
 //  This node only emits `LOAD` opcodes, and is considered a constant expression.
 //  It first checks for primitive data types within the node, and emits corresponding bytecode based
 //  on that. If it finds complex data types like strings, tables, etc., it loads them into the
 //  constant table and emits a `LOADK` instruction with the corresponding constant id.
 //
-// - SymbolNode compilation:
+// - SymbolExprNode compilation:
 //  This node represents a "symbol" that is either a local, global, argument or upvalue.
 //  It first checks the stack for the symbol, if found, emits a `GETSTACK` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPVALUE`. Next,
@@ -39,18 +39,18 @@
 //  `unit_ctx::internal::globals` and if found emits GETGLOBAL. If all of these queries fail, throws
 //  a "Use of undeclared variable" compilation error.
 //
-// - UnaryNode compilation:
+// - UnaryExprNode compilation:
 //  This node emits a NEG instruction onto the inner expression.
 //
-// - GroupNode compilation:
+// - GroupExprNode compilation:
 //  Compiles the inner expression into dst.
 //
-// - CallNode compilation:
+// - CallExprNode compilation:
 //  This node represents a function call expression, which first loads the arguments onto the stack
 //  (LIFO), loads the callee object, and calls it. And finally, emits a POP instruction to retrieve
 //  the return value.
 //
-// - IndexNode compilation:
+// - IndexExprNode compilation:
 //  This node represents a member access, which could follow either of these patterns:
 //    -> Direct table member access: table.index
 //      This pattern compiles into a GETTABLE instruction that uses the hashed version of the index.
@@ -73,7 +73,7 @@ VIA_NAMESPACE_BEGIN
 
 using enum OpCode;
 
-void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
+void ExprVisitor::visit(LiteralExprNode& literal_node, Operand dst) {
   using enum ValueType;
 
   if (int* integer_value = std::get_if<int>(&literal_node.value)) {
@@ -99,7 +99,7 @@ void ExprVisitor::visit(LiteralNode& literal_node, Operand dst) {
   }
 }
 
-void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
+void ExprVisitor::visit(SymbolExprNode& variable_node, Operand dst) {
   Token var_id = variable_node.identifier;
 
   std::string symbol = var_id.lexeme;
@@ -140,16 +140,16 @@ void ExprVisitor::visit(SymbolNode& variable_node, Operand dst) {
   }
 }
 
-void ExprVisitor::visit(UnaryNode& unary_node, Operand dst) {
+void ExprVisitor::visit(UnaryExprNode& unary_node, Operand dst) {
   unary_node.accept(*this, dst);
   unit_ctx.bytecode->emit(NEG, {dst});
 }
 
-void ExprVisitor::visit(GroupNode& group_node, Operand dst) {
+void ExprVisitor::visit(GroupExprNode& group_node, Operand dst) {
   group_node.accept(*this, dst);
 }
 
-void ExprVisitor::visit(CallNode& call_node, Operand dst) {
+void ExprVisitor::visit(CallExprNode& call_node, Operand dst) {
   Operand argc = call_node.arguments.size();
   Operand callee_reg = allocator.allocate_register();
 
@@ -181,7 +181,8 @@ void ExprVisitor::visit(CallNode& call_node, Operand dst) {
   for (const pExprNode& argument : call_node.arguments) {
     Operand argument_reg = allocator.allocate_register();
 
-    if (LiteralNode* literal_node = get_derived_instance<ExprNode, LiteralNode>(*argument)) {
+    if (LiteralExprNode* literal_node =
+          get_derived_instance<ExprNode, LiteralExprNode>(*argument)) {
       if (int* integer_value = std::get_if<int>(&literal_node->value)) {
         uint32_t final_value = *integer_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
@@ -216,7 +217,7 @@ void ExprVisitor::visit(CallNode& call_node, Operand dst) {
   allocator.free_register(callee_reg);
 }
 
-void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
+void ExprVisitor::visit(IndexExprNode& index_node, Operand dst) {
   Operand obj_reg = allocator.allocate_register();
   Operand index_reg = allocator.allocate_register();
 
@@ -227,7 +228,7 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
   pTypeNode index_type = index_node.index->infer_type(unit_ctx);
 
   // Validate index type
-  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*index_type)) {
+  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveTypeNode>(*index_type)) {
     if (primitive->type != ValueType::string && primitive->type != ValueType::integer) {
       compiler_error(
         index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
@@ -237,7 +238,7 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
   }
 
   // Handle different object types
-  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*object_type)) {
+  if (auto* primitive = get_derived_instance<TypeNode, PrimitiveTypeNode>(*object_type)) {
     switch (primitive->type) {
     case ValueType::string:
       unit_ctx.bytecode->emit(GETSTRING, {dst, obj_reg, index_reg});
@@ -253,7 +254,7 @@ void ExprVisitor::visit(IndexNode& index_node, Operand dst) {
   }
 }
 
-void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
+void ExprVisitor::visit(BinaryExprNode& binary_node, Operand dst) {
   using enum TokenType;
   using OpCodeId = std::underlying_type_t<OpCode>;
 
@@ -312,7 +313,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
   OpCodeId opcode_id = base_opcode_id;
 
   if (is_constant_expression(rhs)) {
-    LiteralNode& literal = dynamic_cast<LiteralNode&>(rhs);
+    LiteralExprNode& literal = dynamic_cast<LiteralExprNode&>(rhs);
 
     if (base_opcode == DIV) {
       if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
@@ -372,7 +373,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
     }
     else {
       OpCode opcode = static_cast<OpCode>(opcode_id + 1); // OPK
-      TValue right_const_val = construct_constant(dynamic_cast<LiteralNode&>(rhs));
+      TValue right_const_val = construct_constant(dynamic_cast<LiteralExprNode&>(rhs));
       Operand right_const_id = unit_ctx.constants->push_constant(right_const_val);
 
       unit_ctx.bytecode->emit(opcode, {dst, right_const_id});
@@ -395,7 +396,7 @@ void ExprVisitor::visit(BinaryNode& binary_node, Operand dst) {
   }
 }
 
-void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
+void ExprVisitor::visit(TypeCastExprNode& type_cast, Operand dst) {
   pTypeNode left_type = type_cast.expression->infer_type(unit_ctx);
 
   CHECK_TYPE_INFERENCE_FAILURE(left_type, type_cast.expression);
@@ -404,22 +405,30 @@ void ExprVisitor::visit(TypeCastNode& type_cast, Operand dst) {
     compiler_error(
       type_cast.expression->begin,
       type_cast.expression->end,
-      std::format("Cannot cast expression into type '{}'", type_cast.type->to_string_x())
+      std::format(
+        "Expression of type '{}' can not be casted into type '{}'",
+        left_type->to_string_x(),
+        type_cast.type->to_string_x()
+      )
     );
   }
 
   Operand temp = allocator.allocate_register();
   type_cast.expression->accept(*this, temp);
 
-  if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type_cast.type)) {
+  if (PrimitiveTypeNode* primitive =
+        get_derived_instance<TypeNode, PrimitiveTypeNode>(*type_cast.type)) {
     if (primitive->type == ValueType::integer) {
-      unit_ctx.bytecode->emit(TOINT, {dst, temp});
+      unit_ctx.bytecode->emit(INTCAST, {dst, temp});
     }
     else if (primitive->type == ValueType::floating_point) {
-      unit_ctx.bytecode->emit(TOFLOAT, {dst, temp});
+      unit_ctx.bytecode->emit(FLOATCAST, {dst, temp});
     }
     else if (primitive->type == ValueType::string) {
-      unit_ctx.bytecode->emit(TOSTRING, {dst, temp});
+      unit_ctx.bytecode->emit(STRINGCAST, {dst, temp});
+    }
+    else if (primitive->type == ValueType::boolean) {
+      unit_ctx.bytecode->emit();
     }
   }
 

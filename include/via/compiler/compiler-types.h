@@ -57,13 +57,13 @@ bool is_derived_instance(Base& derived) {
 }
 
 VIA_INLINE bool is_constant_expression(ExprNode& expression) {
-  return is_derived_instance<ExprNode, LiteralNode>(expression);
+  return is_derived_instance<ExprNode, LiteralExprNode>(expression);
 }
 
 VIA_INLINE bool is_integral(pTypeNode& type) {
   using enum ValueType;
 
-  if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type)) {
+  if (PrimitiveTypeNode* primitive = get_derived_instance<TypeNode, PrimitiveTypeNode>(*type)) {
     return primitive->type == integer;
   }
 
@@ -74,7 +74,7 @@ VIA_INLINE bool is_integral(pTypeNode& type) {
 VIA_INLINE bool is_floating_point(pTypeNode& type) {
   using enum ValueType;
 
-  if (PrimitiveNode* primitive = get_derived_instance<TypeNode, PrimitiveNode>(*type)) {
+  if (PrimitiveTypeNode* primitive = get_derived_instance<TypeNode, PrimitiveTypeNode>(*type)) {
     return primitive->type == floating_point;
   }
 
@@ -95,8 +95,10 @@ VIA_INLINE bool is_callable(pTypeNode& type) {
 }
 
 VIA_INLINE bool is_compatible(pTypeNode& left, pTypeNode& right) {
-  if (PrimitiveNode* primitive_left = get_derived_instance<TypeNode, PrimitiveNode>(*left)) {
-    if (PrimitiveNode* primitive_right = get_derived_instance<TypeNode, PrimitiveNode>(*right)) {
+  if (PrimitiveTypeNode* primitive_left =
+        get_derived_instance<TypeNode, PrimitiveTypeNode>(*left)) {
+    if (PrimitiveTypeNode* primitive_right =
+          get_derived_instance<TypeNode, PrimitiveTypeNode>(*right)) {
 
       return primitive_left->type == primitive_right->type;
     }
@@ -106,8 +108,9 @@ VIA_INLINE bool is_compatible(pTypeNode& left, pTypeNode& right) {
 }
 
 VIA_INLINE bool is_castable(pTypeNode& from, pTypeNode& into) {
-  if (PrimitiveNode* primitive_right = get_derived_instance<TypeNode, PrimitiveNode>(*into)) {
-    if (get_derived_instance<TypeNode, PrimitiveNode>(*from)) {
+  if (PrimitiveTypeNode* primitive_right =
+        get_derived_instance<TypeNode, PrimitiveTypeNode>(*into)) {
+    if (get_derived_instance<TypeNode, PrimitiveTypeNode>(*from)) {
       if (primitive_right->type == ValueType::string) {
         return true;
       }
@@ -121,7 +124,8 @@ VIA_INLINE bool is_castable(pTypeNode& from, pTypeNode& into) {
 }
 
 VIA_INLINE bool is_castable(pTypeNode& from, ValueType to) {
-  if (PrimitiveNode* primitive_left = get_derived_instance<TypeNode, PrimitiveNode>(*from)) {
+  if (PrimitiveTypeNode* primitive_left =
+        get_derived_instance<TypeNode, PrimitiveTypeNode>(*from)) {
     if (to == ValueType::string) {
       return true;
     }
