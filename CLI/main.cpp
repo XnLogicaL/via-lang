@@ -52,6 +52,10 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
     .help("Whether to capitalize opcodes inside bytecode dumps")
     .flag();
 
+  command->add_argument("--allow-direct-bin-execution")
+    .help("Allows direct binary execution")
+    .flag();
+
   return command;
 }
 
@@ -72,7 +76,6 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   bool sassy_flag = get_flag("--sassy");
 
   std::string file = subcommand_parser.get<std::string>("target");
-
   rd_result_t source_result = read_from_file(file);
   trans_unit_context unit_ctx(file, *source_result);
 
@@ -189,21 +192,48 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     if (get_flag("--dump-bytecode")) {
       print_flag_label("--dump-bytecode");
-      std::cout << "main:\n";
 
-      for (const bytecode& bytecode : unit_ctx.bytecode->get()) {
+      std::stack<std::string> closure_disassembly_stack;
+      std::stack<size_t>
+        closure_bytecode_count_stack; // Stack to track the bytecode count of each closure
+
+      for (size_t i = 0; i < unit_ctx.bytecode->get().size(); ++i) {
+        const bytecode& bytecode = unit_ctx.bytecode->get()[i];
+        std::string current_disassembly;
+
         if (bytecode.instruction.op == opcode::LABEL) {
           std::cout << std::format(
-            "{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
+            ".L{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
           );
           continue;
         }
-        else if (bytecode.instruction.op == opcode::LOADFUNCTION) {
-          std::cout << bytecode.meta_data.comment << ":\n";
+        else if (bytecode.instruction.op == opcode::NEWCLOSURE) {
+          // Push the closure name and bytecode count to the stack
+          closure_disassembly_stack.push(bytecode.meta_data.comment);
+          closure_bytecode_count_stack.push(
+            i + bytecode.instruction.operand1
+          ); // Operand1 is the bytecode count
+
+          std::cout << "Disassembly of function " << bytecode.meta_data.comment << ' '
+                    << std::format("<at register {}>", bytecode.instruction.operand0) << ":\n";
           continue;
         }
 
+        // Print disassembly of the bytecode instruction
         std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
+
+        if (bytecode.instruction.op == opcode::RETURN ||
+            bytecode.instruction.op == opcode::RETURNNIL) {
+          // Check if we are at the last RETURN opcode for the current closure
+          if (!closure_disassembly_stack.empty() && i >= closure_bytecode_count_stack.top()) {
+            // Pop the function from the stack
+            std::string disassembly_of = closure_disassembly_stack.top();
+            closure_disassembly_stack.pop();
+            closure_bytecode_count_stack.pop();
+
+            std::cout << "End of disassembly of function " << disassembly_of << "\n";
+          }
+        }
       }
     }
 
@@ -246,11 +276,34 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
 comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
+  using namespace utils;
   using enum comp_err_lvl;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
     return subcommand_parser.get<bool>(flag);
   };
+
+  std::string file = subcommand_parser.get<std::string>("target");
+  rd_result_t source_result = read_from_file(file);
+
+  // Binary file check
+  if (source_result->starts_with("%viac%")) {
+    trans_unit_context unit_ctx({});
+
+    if (!get_flag("--allow-direct-bin-execution")) {
+      err_bus.log({
+        true,
+        "Executing a viac binary file directly may result in crashes, undefined behavior, or "
+        "execution of untrusted code. Ensure the file is valid and not malicious before "
+        "proceeding. This warning can be suppressed using '--allow-direct-bin-execution'.",
+        dummy_unit_ctx,
+        WARNING,
+        {},
+      });
+    }
+
+    return {false, std::move(unit_ctx)};
+  }
 
   comp_result result = handle_compile(subcommand_parser);
   trans_unit_context& unit_ctx = result.unit;
@@ -317,31 +370,95 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
 }
 
 comp_result handle_repl(argparse::ArgumentParser&) {
-  // REPL messages
-  [[maybe_unused]]
-  constexpr const char REPL_WELCOME[] =
-    "via-lang Copyright (C) 2024-2025 XnLogicaL @ www.github.com/XnLogicaL/via-lang\n"
-    "Use ';help' to see a list of commands.\n";
+  using namespace via;
+  using namespace utils;
 
-  [[maybe_unused]]
+  constexpr const char REPL_WELCOME[] =
+    "via v" vl_version " Copyright (C) 2024-2025 XnLogicaL\nLicensed under GNU GPL v3.0 @ "
+    "https://github.com/XnLogical/via-lang.\n"
+    "Use ':help' to see a list of commands.\n";
+
+  constexpr const char REPL_BYE[] = "Quitting.\n";
+
   constexpr const char REPL_HELP[] =
     "repl commands:\n"
-    "  ;quit - Quits repl\n"
-    "  ;help - Prints this \"menu\"\n"
-    "  ;exitinfo - Displays the last exit info returned by the VM\n";
+    "  :quit, :q - Quits repl\n"
+    "  :help, :h - Prints this \"menu\"\n"
+    "  :exit-code, :ec - Displays the last exit code returned by the VM\n";
 
-  [[maybe_unused]]
-  constexpr const char REPL_HEAD[] = ">> ";
+  constexpr const char REPL_UNKNOWN_CMD[] =
+    "Unkown command. Use ':help' to see a list of commands.\n";
 
-  using namespace via;
+  constexpr const char REPL_HEAD[] = "$> ";
 
   trans_unit_context unit_ctx("<repl>", "");
+
+  std::cout << REPL_WELCOME;
+
+  while (true) {
+    std::string line = linenoise::Readline(REPL_HEAD);
+
+    if (line.starts_with(':')) {
+      if (line == ":quit" || line == ":q") {
+        break;
+      }
+      else if (line == ":help" || line == ":h") {
+        std::cout << REPL_HELP;
+      }
+      else {
+        std::cout << REPL_UNKNOWN_CMD;
+      }
+
+      continue;
+    }
+  }
+
+  std::cout << REPL_BYE;
 
   return {false, std::move(unit_ctx)};
 }
 
+#ifdef __linux__
+
+void linux_ub_sig_handler(int signum) {
+  static std::unordered_map<int, const char*> sig_id_map = {
+    {1, "SIGHUP"},     {2, "SIGINT"},   {3, "SIGQUIT"},   {4, "SIGILL"},   {5, "SIGTRAP"},
+    {6, "SIGABRT"},    {7, "SIGBUS"},   {8, "SIGFPE"},    {9, "SIGKILL"},  {10, "SIGUSR1"},
+    {11, "SIGSEGV"},   {12, "SIGUSR2"}, {13, "SIGPIPE"},  {14, "SIGALRM"}, {15, "SIGTERM"},
+    {16, "SIGSTKFLT"}, {17, "SIGCHLD"}, {18, "SIGCONT"},  {19, "SIGSTOP"}, {20, "SIGTSTP"},
+    {21, "SIGTTIN"},   {22, "SIGTTOU"}, {23, "SIGURG"},   {24, "SIGXCPU"}, {25, "SIGXFSZ"},
+    {26, "SIGVTALRM"}, {27, "SIGPROF"}, {28, "SIGWINCH"}, {29, "SIGIO"},   {30, "SIGPWR"},
+    {31, "SIGSYS"}
+  };
+
+  auto sig_id = "SIGUNKNOWN";
+  auto it = sig_id_map.find(signum);
+  if (it != sig_id_map.end()) {
+    sig_id = it->second;
+  }
+
+  err_bus.log({
+    true,
+    std::format("Program recieved signal {} ({})", signum, sig_id),
+    dummy_unit_ctx,
+    comp_err_lvl::ERROR_,
+    {},
+  });
+
+  err_bus.emit();
+  std::_Exit(1);
+}
+
+#endif // __linux__
+
 int main(int argc, char* argv[]) {
   using enum comp_err_lvl;
+
+#ifdef __linux__
+  std::signal(SIGSEGV, linux_ub_sig_handler);
+  std::signal(SIGILL, linux_ub_sig_handler);
+  std::signal(SIGABRT, linux_ub_sig_handler);
+#endif
 
   try {
     // Argument parser entry point
@@ -353,9 +470,12 @@ int main(int argc, char* argv[]) {
     auto run_parser = get_standard_parser("run");
     run_parser->add_description("Compiles and runs the given source file.");
 
+    ArgumentParser repl_parser("repl");
+
     // Add subparsers
     argument_parser.add_subparser(*compile_parser);
     argument_parser.add_subparser(*run_parser);
+    argument_parser.add_subparser(repl_parser);
     argument_parser.parse_args(argc, argv);
 
     if (argument_parser.is_subcommand_used(*compile_parser)) {
@@ -363,6 +483,12 @@ int main(int argc, char* argv[]) {
     }
     else if (argument_parser.is_subcommand_used(*run_parser)) {
       handle_run(*run_parser);
+    }
+    else if (argument_parser.is_subcommand_used(repl_parser)) {
+      handle_repl(repl_parser);
+    }
+    else {
+      throw std::logic_error("Subcommand expected");
     }
   }
   catch (const std::exception& e) {

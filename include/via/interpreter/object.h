@@ -27,7 +27,8 @@ struct string_obj;
 struct table_obj;
 struct object_obj;
 struct function_obj;
-struct cfunction_obj;
+
+using cfunction_t = void (*)(state*);
 
 enum class value_type : uint8_t {
   nil,            // Empty type, null
@@ -36,7 +37,7 @@ enum class value_type : uint8_t {
   boolean,        // Boolean type
   string,         // String type, pointer to string_obj
   function,       // Function type, pointer to function_obj
-  cfunction,      // CFunction type, pointer to cfunction_obj
+  cfunction,      // CFunction type, pointer to cfunction
   table,          // Table type, pointer to table_obj
   object,         // Object type, pointer to object_obj
 };
@@ -83,9 +84,9 @@ struct vl_align(8) value_obj {
     : type(value_type::function),
       val_pointer(ptr) {}
 
-  explicit value_obj(cfunction_obj* ptr)
+  explicit value_obj(cfunction_t ptr)
     : type(value_type::cfunction),
-      val_pointer(ptr) {}
+      val_pointer(reinterpret_cast<void*>(ptr)) {}
 
   explicit value_obj(object_obj* ptr)
     : type(value_type::object),
@@ -94,6 +95,9 @@ struct vl_align(8) value_obj {
   explicit value_obj(value_type type, void* ptr)
     : type(type),
       val_pointer(ptr) {}
+
+  explicit value_obj(const char* str);
+  explicit value_obj(state* state, const char* str);
 
   // Returns whether if the object holds a given type.
   vl_forceinline constexpr bool is(value_type other) const {
@@ -169,8 +173,20 @@ struct vl_align(8) value_obj {
   }
 
   template<typename T>
+    requires std::is_pointer_v<T>
+  [[nodiscard]] vl_forceinline T cast_ptr() {
+    return reinterpret_cast<T>(val_pointer);
+  }
+
+  template<typename T>
   [[nodiscard]] vl_forceinline const T* cast_ptr() const {
     return reinterpret_cast<const T*>(val_pointer);
+  }
+
+  template<typename T>
+    requires std::is_pointer_v<T>
+  [[nodiscard]] vl_forceinline const T cast_ptr() const {
+    return reinterpret_cast<const T>(val_pointer);
   }
 };
 
@@ -184,8 +200,8 @@ struct string_obj {
   ~string_obj();
 
   size_t size();
-  value_obj get_string(size_t position);
-  void set_string(size_t position, const value_obj& value);
+  value_obj get(size_t position);
+  void set(size_t position, const value_obj& value);
 };
 
 struct hash_node_obj {
@@ -215,12 +231,12 @@ struct table_obj {
 
   // Returns the element that lives in the given index.
   // Returns nil upon failure.
-  value_obj get_table(size_t position);
-  value_obj get_table(const char* key);
+  value_obj get(size_t position);
+  value_obj get(const char* key);
 
   // Sets the element that lives in the given index to the given value.
-  void set_table(size_t position, const value_obj& value);
-  void set_table(const char* key, const value_obj& value);
+  void set(size_t position, const value_obj& value);
+  void set(const char* key, const value_obj& value);
 };
 
 struct object_obj {

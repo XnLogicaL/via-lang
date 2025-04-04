@@ -3,7 +3,7 @@
 // =========================================================================================== |
 
 // !========================================================================================== |
-// ! DO NOT FUZZ THIS FILE! ONLY UNIT TEST AFTER CHECKING FOR THE vl_debug MACRO!             |
+// ! DO NOT FUZZ THIS FILE! ONLY UNIT TEST AFTER CHECKING FOR THE vl_debug MACRO!              |
 // !========================================================================================== |
 
 #include "bit-utility.h"
@@ -19,7 +19,6 @@
 #define vl_vmerror(message)                                                                        \
   do {                                                                                             \
     __set_error_state(this, message);                                                              \
-    sig_error.fire();                                                                              \
     goto dispatch;                                                                                 \
   } while (0)
 
@@ -27,7 +26,6 @@
 #define vl_vmfatal(message)                                                                        \
   do {                                                                                             \
     std::cerr << "VM terminated with message: " << message << '\n';                                \
-    sig_fatal.fire();                                                                              \
     std::abort();                                                                                  \
   } while (0)
 
@@ -55,7 +53,6 @@ namespace via {
 
 using enum value_type;
 using enum opcode;
-using enum thread_state;
 
 using namespace impl;
 
@@ -107,9 +104,6 @@ void vm_save_snapshot(state* vl_restrict V) {
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
 void state::execute() {
-  vl_assert(tstate == PAUSED, "Execute called on non-paused state");
-  tstate = RUNNING;
-
   goto dispatch;
 
 dispatch: {
@@ -131,7 +125,6 @@ dispatch: {
 
   // Abort is second priority due to verbosity.
   if (abort) {
-    sig_abort.fire();
     goto exit;
   }
 
@@ -788,7 +781,7 @@ dispatch: {
     vl_vmnext();
   }
 
-  case LOADTABLE: {
+  case NEWTABLE: {
     operand_t dst = pc->operand0;
     value_obj ttable(new table_obj());
 
@@ -796,7 +789,7 @@ dispatch: {
     vl_vmnext();
   }
 
-  case LOADFUNCTION: {
+  case NEWCLOSURE: {
     operand_t dst = pc->operand0;
     function_obj* func = new function_obj();
 
@@ -913,9 +906,9 @@ dispatch: {
 
   case GETGLOBAL: {
     operand_t dst = pc->operand0;
+    operand_t key = pc->operand1;
 
-    uint32_t hash = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
-    const value_obj& global = __get_global(this, hash);
+    const value_obj& global = glb->gtable.get(key);
 
     __set_register(this, dst, global);
     vl_vmnext();
@@ -923,11 +916,11 @@ dispatch: {
 
   case SETGLOBAL: {
     operand_t src = pc->operand0;
+    operand_t key = pc->operand1;
 
-    uint32_t hash = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
     value_obj* global = __get_register(this, src);
 
-    __set_global(this, hash, *global);
+    glb->gtable.set(key, *global);
     vl_vmnext();
   }
 
@@ -1616,7 +1609,7 @@ dispatch: {
     operand_t argc = pc->operand1;
     value_obj* cfunc = __get_register(this, fn);
 
-    __extern_call(this, cfunc->cast_ptr<cfunction_obj>(), argc);
+    __extern_call(this, *cfunc, argc);
     vl_vmnext();
   }
 
@@ -1832,31 +1825,7 @@ dispatch: {
   }
 }
 
-exit:
-  sig_exit.fire();
-  tstate = PAUSED;
-}
-
-// Permanently kills the thread. Does not clean up the state object.
-void state::kill() {
-  if (tstate == RUNNING) {
-    abort = true;
-    sig_exit.wait();
-  }
-
-  // Mark as dead thread
-  tstate = DEAD;
-  glb->threads.fetch_add(-1);
-}
-
-// Temporarily pauses the thread.
-void state::pause() {
-  if (tstate == RUNNING) {
-    abort = true;
-    sig_exit.wait();
-  }
-
-  tstate = PAUSED;
+exit:;
 }
 
 } // namespace via

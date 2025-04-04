@@ -36,6 +36,7 @@
 namespace via {
 
 using label_t = operand_t;
+using unused_expression_handler_t = std::function<void(const expr_stmt_node&)>;
 
 value_obj construct_constant(lit_expr_node&);
 
@@ -61,7 +62,7 @@ public:
   virtual p_type_node_t visit(auto_type_node&) vl_invalid_visit;
   virtual p_type_node_t visit(generic_type_node&) vl_invalid_visit;
   virtual p_type_node_t visit(union_type_node&) vl_invalid_visit;
-  virtual p_type_node_t visit(FunctionTypeNode&) vl_invalid_visit;
+  virtual p_type_node_t visit(function_type_node&) vl_invalid_visit;
 
   // Statement visitors
   virtual void visit(decl_stmt_node&) vl_invalid_visit;
@@ -129,7 +130,7 @@ public:
   p_type_node_t visit(auto_type_node&) override;
   p_type_node_t visit(generic_type_node&) override;
   p_type_node_t visit(union_type_node&) override;
-  p_type_node_t visit(FunctionTypeNode&) override;
+  p_type_node_t visit(function_type_node&) override;
 };
 
 class type_node_visitor : public node_visitor_base {
@@ -166,6 +167,9 @@ public:
     return visitor_failed || expression_visitor.failed() || decay_visitor.failed() ||
            type_visitor.failed();
   }
+
+public:
+  std::optional<unused_expression_handler_t> unused_expr_handler;
 
 private:
   register_allocator& allocator;

@@ -12,9 +12,7 @@ function_obj::~function_obj() {
 }
 
 function_obj::function_obj(const function_obj& other)
-  : is_error_handler(other.is_error_handler),
-    is_vararg(other.is_vararg),
-    call_info(other.call_info),
+  : call_info(other.call_info),
     upv_count(other.upv_count) {
   size_t bytecode_len = iep - ibp;
 

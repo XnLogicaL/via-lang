@@ -27,14 +27,14 @@ add_subdirectory(expected)
 
 # Set the compiler
 if(DEBUG_MODE STREQUAL "DEBUG")
-    message(STATUS "Compiling with clang++ in DEBUG mode.")
-    message(STATUS "Linking dynamically in DEBUG mode.")
-    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+  message(STATUS "Compiling with clang++ in DEBUG mode")
+  message(STATUS "Linking dynamically in DEBUG mode")
+  set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 else()
-    message(STATUS "Compiling with g++ in PROD mode.")
-    message(STATUS "Linking statically in PROD mode.")
-    set(CMAKE_CXX_COMPILER /usr/bin/g++)
-    set(CMAKE_EXE_LINKER_FLAGS "-static")
+  message(STATUS "Compiling with g++ in PROD mode")
+  message(STATUS "Linking statically in PROD mode")
+  set(CMAKE_CXX_COMPILER /usr/bin/g++)
+  set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 # Find sources
@@ -46,60 +46,60 @@ add_executable(via ${MAIN_FILE_PATH} ${SOURCES})
 
 # Include directories
 target_include_directories(via PUBLIC
-    include/
-    include/via
-    include/via/lex
-    include/via/parse
-    include/via/compiler
-    include/via/preprocessor
-    include/via/interpreter
-    include/via/utility
+  include/
+  include/via
+  include/via/lex
+  include/via/parse
+  include/via/compiler
+  include/via/preprocessor
+  include/via/interpreter
+  include/via/utility
 )
 
 # Set compiler flags
 target_compile_options(via PUBLIC
-    -Wall                  # Enable all warnings
-    -Wextra                # Enable extra warnings
-    -Werror                # Treat warnings as errors
+  -Wall                  # Enable all warnings
+  -Wextra                # Enable extra warnings
+  -Werror                # Treat warnings as errors
 )
 
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
-    target_compile_definitions(via PUBLIC -DVIA_DEBUG)
-    target_compile_options(via PUBLIC -g)
+  target_compile_definitions(via PUBLIC -Dvl_debug)
+  target_compile_options(via PUBLIC -g)
 
-    if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
-        target_compile_options(via PUBLIC -fsanitize=address,undefined)
-        target_link_libraries(via PUBLIC -fsanitize=address,undefined)
-    else()
-        target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
-        target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
-    endif()
+  if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
+    target_compile_options(via PUBLIC -fsanitize=address,undefined)
+    target_link_libraries(via PUBLIC -fsanitize=address,undefined)
+  else()
+    target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
+    target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
+  endif()
 else()
-    target_compile_options(via PUBLIC
-        -flto=auto
-        -march=native
-        -mtune=native
-        -Ofast
-        -ffast-math
-        -funroll-loops
-        -ftree-vectorize
-        -fomit-frame-pointer
-        -fmerge-all-constants
-        -finline-functions
-        -ftree-pre
-        -fprefetch-loop-arrays
-        -falign-functions=32
-        -falign-jumps=32
-        -falign-loops=32
-        -funsafe-math-optimizations
-        -fno-stack-protector
-        -fipa-pta
-        -fdevirtualize-at-ltrans
-        -fgcse-lm
-        -fmerge-all-constants
-        -fno-math-errno
-    )
+  target_compile_options(via PUBLIC
+    -flto=auto
+    -march=native
+    -mtune=native
+    -Ofast
+    -ffast-math
+    -funroll-loops
+    -ftree-vectorize
+    -fomit-frame-pointer
+    -fmerge-all-constants
+    -finline-functions
+    -ftree-pre
+    -fprefetch-loop-arrays
+    -falign-functions=32
+    -falign-jumps=32
+    -falign-loops=32
+    -funsafe-math-optimizations
+    -fno-stack-protector
+    -fipa-pta
+    -fdevirtualize-at-ltrans
+    -fgcse-lm
+    -fmerge-all-constants
+    -fno-math-errno
+  )
 endif()
 
 # Link libraries for external dependencies
@@ -110,8 +110,8 @@ target_link_libraries(via PUBLIC stdc++_libbacktrace)
 
 # Handle external definitions and linker settings for fuzzing
 if(DEBUG_MODE STREQUAL "DEBUG" AND MAIN_FILE_PATH MATCHES "fuzz/.*\.cpp")
-    message(STATUS "Fuzzing build enabled")
-    target_compile_definitions(via PUBLIC -DFUZZING_ENABLED)
-    target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
-    target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
+  message(STATUS "Fuzzing build enabled")
+  target_compile_definitions(via PUBLIC -DFUZZING_ENABLED)
+  target_compile_options(via PUBLIC -fsanitize=address,fuzzer,undefined)
+  target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
 endif()

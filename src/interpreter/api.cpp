@@ -157,17 +157,8 @@ value_obj state::to_string(const value_obj&) {
   return value_obj();
 }
 
-const value_obj& state::get_global(uint32_t hash) {
-  static value_obj nil = value_obj();
-
-  std::lock_guard lock(glb->gtable_mutex);
-
-  auto it = glb->gtable.find(hash);
-  if (it != glb->gtable.end()) {
-    return it->second;
-  }
-
-  return nil;
+value_obj state::get_global(const char* name) {
+  return glb->gtable.get(name);
 }
 
 } // namespace via

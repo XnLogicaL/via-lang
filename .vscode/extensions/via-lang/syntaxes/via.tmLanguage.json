@@ -3,29 +3,45 @@
   "name": "via",
   "patterns": [
     {
-      "name": "storage.type",
-      "match": "\\b(nil|int|float|bool|string)\\b"
-    },
-    {
-      "name": "entity.name.function",
-      "match": "fn ([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(fn) ([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
-        "0": {
+        "1": {
           "name": "keyword.control"
         },
-        "1": {
+        "2": {
           "name": "entity.name.function"
         }
       }
     },
     {
-      "name": "entity.name.type",
-      "match": "-> ([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(->)\\s*([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
-        "0": {
+        "1": {
           "name": "keyword.operator"
         },
+        "2": {
+          "name": "entity.name.type"
+        }
+      }
+    },
+    {
+      "match": "(:)\\s*([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
         "1": {
+          "name": "keyword.operator"
+        },
+        "2": {
+          "name": "entity.name.type"
+        }
+      }
+    },
+    {
+      "match": "(as) ([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control"
+        },
+        "2": {
           "name": "entity.name.type"
         }
       }
@@ -43,30 +59,20 @@
       }
     },
     {
-      "name": "variable",
-      "match": "let ([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "0": {
-          "name": "keyword.control"
-        },
-        "1": {
-          "name": "variable.name"
-        }
-      }
-    },
-    {
       "name": "variable.language.self",
       "match": "\\bself\\b"
     },
     {
-      "name": "entity",
       "match": "([A-Za-z_][A-Za-z0-9_]*)[.]([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
-        "0": {
+        "1": {
           "name": "variable.name"
         },
-        "3": {
+        "2": {
           "name": "keyword.operator"
+        },
+        "3": {
+          "name": "variable.name"
         }
       }
     },
@@ -152,6 +158,10 @@
     {
       "name": "entity.name.function",
       "match": "[a-zA-Z_][a-zA-Z0-9_]*!"
+    },
+    {
+      "name": "variable.name",
+      "match": "[A-Za-z_][A-Za-z0-9_]*"
     }
   ],
   "scopeName": "source.via"

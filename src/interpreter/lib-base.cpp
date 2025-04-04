@@ -36,40 +36,9 @@ vl_libdeclfn(base_println) {
   vl_libret(nil);
 }
 
-vl_libdeclfn(base_error) {
-  vl_libdeclparam(arg0, 0);
-  __set_error_state(V, __to_cxx_string(V, arg0));
-  vl_libret(nil);
-}
-
-vl_libdeclfn(base_assert) {
-  vl_libdeclparam(arg0, 0);
-  vl_libdeclparam(arg1, 1);
-
-  if (!__to_cxx_bool(arg0)) {
-    std::string err_cxx_str = std::format("assertion failed: {}", __to_cxx_string(V, arg1));
-
-    value_obj err_val(new string_obj(V, err_cxx_str.c_str()));
-    value_obj err_fn = vl_libwrapcfptr(base_error);
-
-    __push(V, err_val.clone());
-    __call(V, err_fn, 1);
-  }
-
-  vl_libret(nil);
-}
-
 vl_libdeclfn(open_baselib) {
-  std::unordered_map<uint32_t, value_obj> base_properties;
-
-  vl_libmapempl(base_properties, "print", vl_libwrapcfptr(base_print));
-  vl_libmapempl(base_properties, "println", vl_libwrapcfptr(base_println));
-  vl_libmapempl(base_properties, "error", vl_libwrapcfptr(base_error));
-  vl_libmapempl(base_properties, "assert", vl_libwrapcfptr(base_assert));
-
-  for (const auto& [ident, val] : base_properties) {
-    __set_global(V, ident, val);
-  }
+  V->glb->gtable.set("print", value_obj(base_print));
+  V->glb->gtable.set("println", value_obj(base_println));
 }
 
 } // namespace via::lib

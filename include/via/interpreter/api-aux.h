@@ -17,49 +17,49 @@ namespace via::impl {
 // Closure handling
 
 // Automatically resizes upv_obj vector of closure by VIA_UPV_RESIZE_FACTOR.
-vl_inline void __closure_upvs_resize(function_obj* _Closure) {
-  uint32_t _Current_size = _Closure->upv_count;
-  uint32_t _New_size = _Current_size * 2;
-  upv_obj* _New_location = new upv_obj[_New_size];
+vl_implement void __closure_upvs_resize(function_obj* closure) {
+  uint32_t current_size = closure->upv_count;
+  uint32_t new_size = current_size * 2;
+  upv_obj* new_location = new upv_obj[new_size];
 
   // Move upvalues to new location
-  for (upv_obj* ptr = _Closure->upvs; ptr < _Closure->upvs + _Current_size; ptr++) {
-    uint32_t offset = ptr - _Closure->upvs;
-    _New_location[offset] = std::move(*ptr);
+  for (upv_obj* ptr = closure->upvs; ptr < closure->upvs + current_size; ptr++) {
+    uint32_t offset = ptr - closure->upvs;
+    new_location[offset] = std::move(*ptr);
   }
 
   // Free old location
-  delete[] _Closure->upvs;
+  delete[] closure->upvs;
   // Update closure
-  _Closure->upvs = _New_location;
-  _Closure->upv_count = _New_size;
+  closure->upvs = new_location;
+  closure->upv_count = new_size;
 }
 
 // Checks if a given index is within the bounds of the upv_obj vector of the closure.
 // Used for resizing.
-vl_inline bool __closure_upvs_range_check(function_obj* _Closure, size_t index) {
-  return _Closure->upv_count >= index;
+vl_implement bool __closure_upvs_range_check(function_obj* closure, size_t index) {
+  return closure->upv_count >= index;
 }
 
-// Attempts to retrieve upv_obj at index <_Upv_id>.
-// Returns nullptr if <_Upv_id> is out of upv_obj vector bounds.
-vl_inline upv_obj* __closure_upv_get(function_obj* _Closure, size_t _Upv_id) {
-  if (!__closure_upvs_range_check(_Closure, _Upv_id)) {
+// Attempts to retrieve upv_obj at index <upv_id>.
+// Returns nullptr if <upv_id> is out of upv_obj vector bounds.
+vl_implement upv_obj* __closure_upv_get(function_obj* closure, size_t upv_id) {
+  if (!__closure_upvs_range_check(closure, upv_id)) {
     return nullptr;
   }
 
-  return &_Closure->upvs[_Upv_id];
+  return &closure->upvs[upv_id];
 }
 
-// Dynamically reassigns upv_obj at index <_Upv_id> the value <_Val>.
-vl_inline void __closure_upv_set(function_obj* _Closure, size_t _Upv_id, value_obj& _Val) {
-  upv_obj* _Upv = __closure_upv_get(_Closure, _Upv_id);
+// Dynamically reassigns upv_obj at index <upv_id> the value <val>.
+vl_implement void __closure_upv_set(function_obj* closure, size_t upv_id, value_obj& val) {
+  upv_obj* _Upv = __closure_upv_get(closure, upv_id);
   if (_Upv != nullptr) {
     if (_Upv->value != nullptr) {
-      *_Upv->value = _Val.clone();
+      *_Upv->value = val.clone();
     }
     else {
-      _Upv->value = &_Val;
+      _Upv->value = &val;
     }
 
     _Upv->is_valid = true;
@@ -68,34 +68,34 @@ vl_inline void __closure_upv_set(function_obj* _Closure, size_t _Upv_id, value_o
 
 // Loads closure bytecode by iterating over the instruction pipeline.
 // Handles sentinel/special opcodes like RETURN or CAPTURE while assembling closure.
-vl_inline void __closure_bytecode_load(state* _State, function_obj* _Closure) {
+vl_implement void __closure_bytecode_load(state* state, function_obj* closure) {
   std::vector<instruction> cache;
 
-  while (_State->pc < _State->iep) {
+  while (state->pc < state->iep) {
     // Special case: Terminator opcode
-    if (_State->pc->op == opcode::RETURN || _State->pc->op == opcode::RETURNNIL) {
-      cache.push_back(*_State->pc);
-      ++_State->pc;
+    if (state->pc->op == opcode::RETURN || state->pc->op == opcode::RETURNNIL) {
+      cache.push_back(*state->pc);
+      ++state->pc;
       break;
     }
 
-    cache.push_back(*_State->pc);
-    ++_State->pc;
+    cache.push_back(*state->pc);
+    ++state->pc;
   }
 
-  _Closure->ibp = new instruction[cache.size()];
-  _Closure->iep = _Closure->ibp + cache.size();
+  closure->ibp = new instruction[cache.size()];
+  closure->iep = closure->ibp + cache.size();
 
-  std::memcpy(_Closure->ibp, cache.data(), cache.size());
+  std::memcpy(closure->ibp, cache.data(), cache.size());
 
-  for (value_obj* _Stk_id = _State->sbp + _State->sp; _Stk_id > _State->sbp; _Stk_id--) {
-    size_t _Pos = _Stk_id - _State->sbp;
+  for (value_obj* _Stk_id = state->sbp + state->sp; _Stk_id > state->sbp; _Stk_id--) {
+    size_t _Pos = _Stk_id - state->sbp;
 
-    if (__closure_upvs_range_check(_Closure, _Pos)) {
-      __closure_upvs_resize(_Closure);
+    if (__closure_upvs_range_check(closure, _Pos)) {
+      __closure_upvs_resize(closure);
     }
 
-    _Closure->upvs[_Pos] = {
+    closure->upvs[_Pos] = {
       .is_open = true,
       .value = _Stk_id,
     };
@@ -103,9 +103,9 @@ vl_inline void __closure_bytecode_load(state* _State, function_obj* _Closure) {
 }
 
 // Moves upvalues of the current closure into the heap, "closing" them.
-vl_inline void __closure_close_upvalues(function_obj* _Closure) {
-  upv_obj* _Upv_end = _Closure->upvs + _Closure->upv_count;
-  for (upv_obj* upv = _Closure->upvs; upv < _Upv_end; upv++) {
+vl_implement void __closure_close_upvalues(function_obj* closure) {
+  upv_obj* upv_end = closure->upvs + closure->upv_count;
+  for (upv_obj* upv = closure->upvs; upv < upv_end; upv++) {
     if (upv->is_valid && upv->is_open) {
       upv->heap_value = upv->value->clone();
       upv->value = &upv->heap_value;
@@ -118,44 +118,44 @@ vl_inline void __closure_close_upvalues(function_obj* _Closure) {
 // Table handling
 
 // Hashes a dictionary key using the FNV-1a hashing algorithm.
-vl_inline size_t __table_ht_hash_key(const table_obj* _Tbl, const char* _Key) {
-  size_t _Hash = 2166136261u;
-  while (*_Key) {
-    _Hash = (_Hash ^ *_Key++) * 16777619;
+vl_implement size_t __table_ht_hash_key(const table_obj* table, const char* key) {
+  size_t hash = 2166136261u;
+  while (*key) {
+    hash = (hash ^ *key++) * 16777619;
   }
 
-  return _Hash % _Tbl->ht_capacity;
+  return hash % table->ht_capacity;
 }
 
 // Inserts a key-value pair into the hash table component of a given table_obj object.
-vl_inline void __table_ht_set(table_obj* _Tbl, const char* _Key, const value_obj& _Val) {
-  size_t _Index = __table_ht_hash_key(_Tbl, _Key);
+vl_implement void __table_ht_set(table_obj* table, const char* key, const value_obj& val) {
+  size_t index = __table_ht_hash_key(table, key);
 
-  hash_node_obj* _Next_node = _Tbl->ht_buckets[_Index];
-  hash_node_obj* _Node = nullptr;
+  hash_node_obj* next_node = table->ht_buckets[index];
+  hash_node_obj* node = nullptr;
 
   // Check if the key already exists in the list
-  while (_Next_node != nullptr) {
-    if (strcmp(_Next_node->key, _Key) == 0) {
-      _Next_node->value = _Val.clone();
+  while (next_node != nullptr) {
+    if (strcmp(next_node->key, key) == 0) {
+      next_node->value = val.clone();
       return;
     }
-    _Next_node = _Next_node->next;
+    next_node = next_node->next;
   }
 
-  _Node = new hash_node_obj{_Key, _Val.clone(), _Tbl->ht_buckets[_Index]};
+  node = new hash_node_obj{key, val.clone(), table->ht_buckets[index]};
 
-  _Tbl->ht_size_cache_valid = false;
-  _Tbl->ht_buckets[_Index] = _Node;
+  table->ht_size_cache_valid = false;
+  table->ht_buckets[index] = node;
 }
 
 // Performs a look-up on the given table with a given key. Returns nullptr upon lookup failure.
-vl_inline value_obj* __table_ht_get(const table_obj* _Tbl, const char* _Key) {
-  size_t _Index = __table_ht_hash_key(_Tbl, _Key);
+vl_implement value_obj* __table_ht_get(const table_obj* table, const char* key) {
+  size_t index = __table_ht_hash_key(table, key);
 
-  for (hash_node_obj* _Node = _Tbl->ht_buckets[_Index]; _Node; _Node = _Node->next) {
-    if (strcmp(_Node->key, _Key) == 0) {
-      return &_Node->value;
+  for (hash_node_obj* node = table->ht_buckets[index]; node; node = node->next) {
+    if (strcmp(node->key, key) == 0) {
+      return &node->value;
     }
   }
 
@@ -163,207 +163,206 @@ vl_inline value_obj* __table_ht_get(const table_obj* _Tbl, const char* _Key) {
 }
 
 // Returns the real size_t of the hashtable component of the given table object.
-vl_inline size_t __table_ht_size(table_obj* _Tbl) {
-  if (_Tbl->ht_size_cache_valid) {
-    return _Tbl->ht_size_cache;
+vl_implement size_t __table_ht_size(table_obj* table) {
+  if (table->ht_size_cache_valid) {
+    return table->ht_size_cache;
   }
 
-  size_t _Size = 0;
-  hash_node_obj* _Current_node = *_Tbl->ht_buckets;
+  size_t size = 0;
+  hash_node_obj* current_node = *table->ht_buckets;
 
-  while (_Current_node->next) {
-    const value_obj& _Val = _Current_node->value;
-    if (!_Val.is_nil()) {
-      _Size++;
+  while (current_node->next) {
+    const value_obj& val = current_node->value;
+    if (!val.is_nil()) {
+      size++;
     }
 
-    _Current_node = _Current_node->next;
+    current_node = current_node->next;
   }
 
-  _Tbl->ht_size_cache = _Size;
-  _Tbl->ht_size_cache_valid = true;
+  table->ht_size_cache = size;
+  table->ht_size_cache_valid = true;
 
-  return _Size;
+  return size;
 }
 
 // Checks if the given index is out of bounds of a given tables array component.
-vl_inline bool __table_arr_range_check(const table_obj* _Tbl, size_t _Index) {
-  return _Tbl->arr_capacity > _Index;
+vl_implement bool __table_arr_range_check(const table_obj* table, size_t index) {
+  return table->arr_capacity > index;
 }
 
 // Dynamically grows and relocates the array component of a given table_obj object.
-vl_inline void __table_arr_resize(table_obj* _Tbl) {
-  size_t _Old_capacity = _Tbl->arr_capacity;
-  size_t _New_capacity = _Old_capacity * 2;
+vl_implement void __table_arr_resize(table_obj* table) {
+  size_t old_capacity = table->arr_capacity;
+  size_t new_capacity = old_capacity * 2;
 
-  value_obj* _Old_location = _Tbl->arr_array;
-  value_obj* _New_location = new value_obj[_New_capacity]();
+  value_obj* old_location = table->arr_array;
+  value_obj* new_location = new value_obj[new_capacity]();
 
-  for (value_obj* _Ptr = _Old_location; _Ptr < _Old_location + _Old_capacity; _Ptr++) {
-    size_t _Position = _Ptr - _Old_location;
-    _New_location[_Position] = std::move(*_Ptr);
+  for (value_obj* ptr = old_location; ptr < old_location + old_capacity; ptr++) {
+    size_t position = ptr - old_location;
+    new_location[position] = std::move(*ptr);
   }
 
-  _Tbl->arr_array = _New_location;
-  _Tbl->arr_capacity = _New_capacity;
+  table->arr_array = new_location;
+  table->arr_capacity = new_capacity;
 
-  delete[] _Old_location;
+  delete[] old_location;
 }
 
 // Sets the given index of a table to a given value. Resizes the array component of the table_obj
 // object if necessary.
-vl_inline void __table_arr_set(table_obj* _Tbl, size_t _Index, const value_obj& _Val) {
-  if (!__table_arr_range_check(_Tbl, _Index)) {
-    __table_arr_resize(_Tbl);
+vl_implement void __table_arr_set(table_obj* table, size_t index, const value_obj& val) {
+  if (!__table_arr_range_check(table, index)) {
+    __table_arr_resize(table);
   }
 
-  _Tbl->arr_size_cache_valid = false;
-  _Tbl->arr_array[_Index] = _Val.clone();
+  table->arr_size_cache_valid = false;
+  table->arr_array[index] = val.clone();
 }
 
 // Attempts to get the value at the given index of the array component of the table. Returns nullptr
 // if the index is out of array capacity range.
-vl_inline value_obj* __table_arr_get(const table_obj* _Tbl, size_t _Index) {
-  if (!__table_arr_range_check(_Tbl, _Index)) {
+vl_implement value_obj* __table_arr_get(const table_obj* table, size_t index) {
+  if (!__table_arr_range_check(table, index)) {
     return nullptr;
   }
 
-  return &_Tbl->arr_array[_Index];
+  return &table->arr_array[index];
 }
 
 // Returns the real size_t of the given tables array component.
-vl_inline size_t __table_arr_size(table_obj* _Tbl) {
-  if (_Tbl->arr_size_cache_valid) {
-    return _Tbl->arr_size_cache;
+vl_implement size_t __table_arr_size(table_obj* table) {
+  if (table->arr_size_cache_valid) {
+    return table->arr_size_cache;
   }
 
-  size_t _Size = 0;
+  size_t size = 0;
 
-  for (value_obj* _Ptr = _Tbl->arr_array; _Ptr < _Tbl->arr_array + _Tbl->arr_capacity; _Ptr++) {
-    if (!_Ptr->is_nil()) {
-      _Size++;
+  for (value_obj* ptr = table->arr_array; ptr < table->arr_array + table->arr_capacity; ptr++) {
+    if (!ptr->is_nil()) {
+      size++;
     }
   }
 
-  _Tbl->arr_size_cache = _Size;
-  _Tbl->arr_size_cache_valid = true;
+  table->arr_size_cache = size;
+  table->arr_size_cache_valid = true;
 
-  return _Size;
+  return size;
 }
 
-vl_inline void __table_set(table_obj* _Tbl, const value_obj& _Key, const value_obj& _Val) {
-  if (_Key.is_int()) {
-    __table_arr_set(_Tbl, _Key.val_integer, _Val);
+vl_implement void __table_set(table_obj* table, const value_obj& key, const value_obj& val) {
+  if (key.is_int()) {
+    __table_arr_set(table, key.val_integer, val);
   }
-  else if (_Key.is_string()) {
-    const string_obj* _Val_string = _Key.cast_ptr<string_obj>();
-    __table_ht_set(_Tbl, _Val_string->data, _Val);
+  else if (key.is_string()) {
+    const string_obj* _Val_string = key.cast_ptr<string_obj>();
+    __table_ht_set(table, _Val_string->data, val);
   }
 }
 
-vl_inline value_obj __table_get(const table_obj* _Tbl, const value_obj& _Key) {
-  value_obj* _Unsafe = nullptr;
-  if (_Key.is_int()) {
-    _Unsafe = __table_arr_get(_Tbl, _Key.val_integer);
+vl_implement value_obj __table_get(const table_obj* table, const value_obj& key) {
+  value_obj* unsafe = nullptr;
+  if (key.is_int()) {
+    unsafe = __table_arr_get(table, key.val_integer);
   }
-  else if (_Key.is_string()) {
-    _Unsafe = __table_ht_get(_Tbl, _Key.cast_ptr<string_obj>()->data);
+  else if (key.is_string()) {
+    unsafe = __table_ht_get(table, key.cast_ptr<string_obj>()->data);
   }
 
-  return _Unsafe ? _Unsafe->clone() : value_obj();
+  return unsafe ? unsafe->clone() : value_obj();
 }
 
-vl_inline size_t __table_size(table_obj* _Tbl) {
-  return __table_arr_size(_Tbl) + __table_ht_size(_Tbl);
+vl_implement size_t __table_size(table_obj* table) {
+  return __table_arr_size(table) + __table_ht_size(table);
 }
 
 // ==========================================================
 // Label handling
-vl_inline void __label_allocate(state* _State, size_t _Count) {
-  _State->labels = new instruction*[_Count];
+vl_implement void __label_allocate(state* state, size_t count) {
+  state->labels = new instruction*[count];
 }
 
-vl_inline void __label_deallocate(state* _State) {
-  if (_State->labels) {
-    delete[] _State->labels;
-    _State->labels = nullptr;
+vl_implement void __label_deallocate(state* state) {
+  if (state->labels) {
+    delete[] state->labels;
+    state->labels = nullptr;
   }
 }
 
-vl_inline instruction* __label_get(state* _State, size_t _Idx) {
-  return _State->labels[_Idx];
+vl_implement instruction* __label_get(state* state, size_t index) {
+  return state->labels[index];
 }
 
-vl_inline void __label_load(state* _State) {
-  size_t _Idx = 0;
-  for (instruction* _Ip = _State->ibp; _Ip < _State->iep; _Ip++) {
-    if (_Ip->op == opcode::LABEL) {
-      _State->labels[_Idx++] = _Ip;
+vl_implement void __label_load(state* state) {
+  size_t index = 0;
+  for (instruction* pc = state->ibp; pc < state->iep; pc++) {
+    if (pc->op == opcode::LABEL) {
+      state->labels[index++] = pc;
     }
   }
 }
 
 // ==========================================================
 // Stack handling
-vl_inline void __stack_allocate(state* _State) {
-  _State->sbp = new value_obj[vl_vmstacksize]();
+vl_implement void __stack_allocate(state* state) {
+  state->sbp = new value_obj[vl_vmstacksize]();
 }
 
-vl_inline void __stack_deallocate(state* _State) {
-  delete[] _State->sbp;
+vl_implement void __stack_deallocate(state* state) {
+  delete[] state->sbp;
 }
 
-vl_optimize void __push(state* _State, const value_obj& _Val) {
-  _State->sbp[_State->sp++] = _Val.clone();
+vl_implement void __push(state* state, const value_obj& val) {
+  state->sbp[state->sp++] = val.clone();
 }
 
-vl_optimize value_obj __pop(state* _State) {
-  return _State->sbp[_State->sp--].move();
+vl_implement value_obj __pop(state* state) {
+  return state->sbp[state->sp--].move();
 }
 
-vl_optimize void __drop(state* _State) {
-  value_obj& _Dropped_val = _State->sbp[_State->sp--];
-  _Dropped_val.reset();
+vl_implement void __drop(state* state) {
+  value_obj& dropped = state->sbp[state->sp--];
+  dropped.reset();
 }
 
-vl_optimize const value_obj& __get_stack(state* _State, size_t _Offset) {
-  return _State->sbp[_Offset];
+vl_implement const value_obj& __get_stack(state* state, size_t offset) {
+  return state->sbp[offset];
 }
 
-vl_optimize void __set_stack(state* _State, size_t _Offset, value_obj& _Val) {
-  _State->sbp[_Offset] = _Val.clone();
+vl_implement void __set_stack(state* state, size_t offset, value_obj& val) {
+  state->sbp[offset] = val.clone();
 }
 
-vl_forceinline value_obj __get_argument(state* vl_restrict _State, size_t _Offset) {
-  if (_Offset >= _State->frame->call_info.argc) {
+vl_implement value_obj __get_argument(state* vl_restrict state, size_t offset) {
+  if (offset >= state->frame->call_info.argc) {
     return value_obj();
   }
 
   // Compute stack offset in reverse order
-  const operand_t _Stk_offset =
-    _State->frame->call_info.sp - _State->frame->call_info.argc + _Offset;
-  const value_obj& _Val = _State->sbp[_Stk_offset];
+  const operand_t stk_offset = state->frame->call_info.sp - state->frame->call_info.argc + offset;
+  const value_obj& val = state->sbp[stk_offset];
 
-  return _Val.clone();
+  return val.clone();
 }
 
 // ==========================================================
 // Register handling
-vl_inline void __register_allocate(state* _State) {
-  _State->registers = new value_obj[vl_regcount]();
+vl_implement void __register_allocate(state* state) {
+  state->registers = new value_obj[vl_regcount]();
 }
 
-vl_inline void __register_deallocate(state* _State) {
-  delete[] _State->registers;
+vl_implement void __register_deallocate(state* state) {
+  delete[] state->registers;
 }
 
-vl_optimize void __set_register(state* _State, operand_t _Reg, const value_obj& _Val) {
-  value_obj* addr = _State->registers + _Reg;
-  *addr = _Val.clone();
+vl_implement void __set_register(state* state, operand_t reg, const value_obj& val) {
+  value_obj* addr = state->registers + reg;
+  *addr = val.clone();
 }
 
-vl_optimize value_obj* __get_register(state* _State, operand_t _Reg) {
-  value_obj* addr = _State->registers + _Reg;
+vl_implement value_obj* __get_register(state* state, operand_t reg) {
+  value_obj* addr = state->registers + reg;
   return addr;
 }
 

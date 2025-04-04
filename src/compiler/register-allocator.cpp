@@ -6,8 +6,6 @@
 
 namespace via {
 
-using register_t = register_allocator::register_t;
-
 register_t register_allocator::allocate_register() {
   for (register_t reg = 0; reg < 128; reg++) {
     if (registers[reg]) {
@@ -16,7 +14,7 @@ register_t register_allocator::allocate_register() {
     }
   }
 
-  return VIA_OPERAND_INVALID;
+  return 0xFFFF;
 }
 
 register_t register_allocator::allocate_temp() {

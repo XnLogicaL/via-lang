@@ -7,12 +7,14 @@
 #include "visitor.h"
 #include "stack.h"
 #include "format-vector.h"
+#include "color.h"
 
 #define depth_tab_space std::string(depth, ' ')
 
 namespace via {
 
 using enum value_type;
+using namespace utils;
 
 std::string modifiers::to_string() const {
   return std::format("{}", is_const ? "const" : "");
@@ -73,9 +75,9 @@ p_expr_node_t sym_expr_node::clone() {
 }
 
 p_type_node_t sym_expr_node::infer_type(trans_unit_context& unit_ctx) {
-  auto stk_id = unit_ctx.internal.stack->find_symbol(identifier.lexeme);
+  auto stk_id = unit_ctx.internal.variable_stack->find_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
-    auto stk_obj = unit_ctx.internal.stack->at(stk_id.value());
+    auto stk_obj = unit_ctx.internal.variable_stack->at(stk_id.value());
     if (stk_obj.has_value()) {
       return stk_obj->type->clone();
     }
@@ -86,6 +88,16 @@ p_type_node_t sym_expr_node::infer_type(trans_unit_context& unit_ctx) {
   auto global = unit_ctx.internal.globals->get_global(identifier.lexeme);
   if (global.has_value()) {
     return global->type->clone();
+  }
+
+  if (unit_ctx.internal.function_stack->size() > 0) {
+    auto& top_function = unit_ctx.internal.function_stack->top();
+    for (size_t i = 0; i < top_function.func_stmt->parameters.size(); i++) {
+      const param_node& param = top_function.func_stmt->parameters[i];
+      if (param.identifier.lexeme == identifier.lexeme) {
+        return param.type->clone();
+      }
+    }
   }
 
   return nullptr;
@@ -164,7 +176,7 @@ p_expr_node_t call_expr_node::clone() {
 p_type_node_t call_expr_node::infer_type(trans_unit_context& unit_ctx) {
   if (sym_expr_node* symbol = get_derived_instance<expr_node_base, sym_expr_node>(*callee)) {
     p_type_node_t ty = symbol->infer_type(unit_ctx);
-    if (FunctionTypeNode* fn_ty = get_derived_instance<type_node_base, FunctionTypeNode>(*ty)) {
+    if (function_type_node* fn_ty = get_derived_instance<type_node_base, function_type_node>(*ty)) {
       return fn_ty->returns->clone();
     }
   }
@@ -190,12 +202,12 @@ p_expr_node_t index_expr_node::clone() {
 
 p_type_node_t index_expr_node::infer_type(trans_unit_context& unit_ctx) {
   if (sym_expr_node* symbol = get_derived_instance<expr_node_base, sym_expr_node>(*object)) {
-    auto stk_id = unit_ctx.internal.stack->find_symbol(symbol->identifier.lexeme);
+    auto stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
     }
 
-    auto stk_obj = unit_ctx.internal.stack->at(stk_id.value());
+    auto stk_obj = unit_ctx.internal.variable_stack->at(stk_id.value());
     if (!stk_obj.has_value()) {
       return nullptr;
     }
@@ -282,8 +294,8 @@ std::string auto_type_node::to_string(uint32_t&) {
   return "auto_type_node<>";
 }
 
-std::string auto_type_node::to_string_x() {
-  return "<auto>";
+std::string auto_type_node::to_output_string() {
+  return apply_color("<auto>", fg_color::magenta);
 }
 
 void auto_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
@@ -300,8 +312,9 @@ std::string primitive_type_node::to_string(uint32_t&) {
   return std::format("primitive_type_node<{}>", magic_enum::enum_name(type));
 }
 
-std::string primitive_type_node::to_string_x() {
-  return std::string(magic_enum::enum_name(type));
+std::string primitive_type_node::to_output_string() {
+  std::string enum_name = std::string(magic_enum::enum_name(type));
+  return apply_color(enum_name, fg_color::magenta);
 }
 
 p_type_node_t primitive_type_node::clone() {
@@ -320,8 +333,8 @@ std::string generic_type_node::to_string(uint32_t& depth) {
   );
 }
 
-std::string generic_type_node::to_string_x() {
-  return "<generic-truncated>";
+std::string generic_type_node::to_output_string() {
+  return apply_color("<generic-truncated>", fg_color::magenta);
 }
 
 void generic_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
@@ -329,12 +342,12 @@ void generic_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
 }
 
 p_type_node_t generic_type_node::clone() {
-  Generics generics_clone;
+  generics_t generics_clone;
   for (p_type_node_t& generic : generics) {
     generics_clone.emplace_back(generic->clone());
   }
 
-  return std::make_unique<generic_type_node>(identifier, std::move(generics_clone), modifiers);
+  return std::make_unique<generic_type_node>(identifier, std::move(generics_clone), modifs);
 }
 
 // ===============================
@@ -343,8 +356,8 @@ std::string union_type_node::to_string(uint32_t& depth) {
   return std::format("union_type_node<{} & {}>", lhs->to_string(depth), rhs->to_string(depth));
 }
 
-std::string union_type_node::to_string_x() {
-  return "<union-truncated>";
+std::string union_type_node::to_output_string() {
+  return apply_color("<union-truncated>", fg_color::magenta);
 }
 
 void union_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
@@ -357,31 +370,31 @@ p_type_node_t union_type_node::clone() {
 
 // ===============================
 // func_stmt_node
-std::string FunctionTypeNode::to_string(uint32_t& depth) {
+std::string function_type_node::to_string(uint32_t& depth) {
   return std::format(
-    "FunctionTypeNode<{} -> {}>",
-    utils::format_vector<p_type_node_t>(
-      parameters, [&depth](const p_type_node_t& elem) { return elem->to_string(depth); }
+    "function_type_node<{} -> {}>",
+    utils::format_vector<param_node>(
+      parameters, [](const param_node& elem) { return elem.type->to_output_string(); }
     ),
     returns->to_string(depth)
   );
 }
 
-std::string FunctionTypeNode::to_string_x() {
-  return "<function-truncated>";
+std::string function_type_node::to_output_string() {
+  return apply_color("<function-truncated>", fg_color::magenta);
 }
 
-void FunctionTypeNode::decay(node_visitor_base& visitor, p_type_node_t& self) {
+void function_type_node::decay(node_visitor_base& visitor, p_type_node_t& self) {
   self = visitor.visit(*this);
 }
 
-p_type_node_t FunctionTypeNode::clone() {
+p_type_node_t function_type_node::clone() {
   parameter_vector parameters_clone;
-  for (p_type_node_t& parameter : parameters) {
-    parameters_clone.emplace_back(parameter->clone());
+  for (param_node& parameter : parameters) {
+    parameters_clone.emplace_back(parameter.identifier, parameter.modifs, parameter.type->clone());
   }
 
-  return std::make_unique<FunctionTypeNode>(std::move(parameters_clone), returns->clone());
+  return std::make_unique<function_type_node>(std::move(parameters_clone), returns->clone());
 }
 
 // ===============================
@@ -389,9 +402,9 @@ p_type_node_t FunctionTypeNode::clone() {
 std::string decl_stmt_node::to_string(uint32_t& depth) {
   return std::format(
     "{}Declaration<{} {} {}: {} = {}>",
-    DEPTH_TAB_SPACE,
+    depth_tab_space,
     is_global ? "global" : "local",
-    modifiers.to_string(),
+    modifs.to_string(),
     identifier.lexeme,
     type->to_string(depth),
     value_expression->to_string(depth)
@@ -404,7 +417,7 @@ void decl_stmt_node::accept(node_visitor_base& visitor) {
 
 p_stmt_node_t decl_stmt_node::clone() {
   return std::make_unique<decl_stmt_node>(
-    is_global, modifiers, identifier, value_expression->clone(), type->clone()
+    is_global, modifs, identifier, value_expression->clone(), type->clone()
   );
 }
 
@@ -412,7 +425,7 @@ p_stmt_node_t decl_stmt_node::clone() {
 // scope_stmt_node
 std::string scope_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE << "Scope<>\n";
+  oss << depth_tab_space << "Scope<>\n";
 
   depth++;
 
@@ -422,7 +435,7 @@ std::string scope_stmt_node::to_string(uint32_t& depth) {
 
   depth--;
 
-  oss << DEPTH_TAB_SPACE << "EndScope<>";
+  oss << depth_tab_space << "EndScope<>";
   return oss.str();
 }
 
@@ -443,18 +456,18 @@ p_stmt_node_t scope_stmt_node::clone() {
 // func_stmt_node
 std::string func_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE
+  oss << depth_tab_space
       << std::format(
            "Function<{} {} {}>\n",
            is_global ? "global" : "local",
-           modifiers.to_string(),
+           modifs.to_string(),
            identifier.lexeme
          );
 
   depth++;
 
   for (const param_node& parameter : parameters) {
-    oss << DEPTH_TAB_SPACE << std::format("Parameter<{}>", parameter.identifier.lexeme) << "\n";
+    oss << depth_tab_space << std::format("Parameter<{}>", parameter.identifier.lexeme) << "\n";
   }
 
   for (const p_stmt_node_t& stmt : dynamic_cast<scope_stmt_node&>(*body).statements) {
@@ -463,7 +476,7 @@ std::string func_stmt_node::to_string(uint32_t& depth) {
 
   depth--;
 
-  oss << DEPTH_TAB_SPACE << "EndFunction<>";
+  oss << depth_tab_space << "EndFunction<>";
   return oss.str();
 }
 
@@ -474,13 +487,11 @@ void func_stmt_node::accept(node_visitor_base& visitor) {
 p_stmt_node_t func_stmt_node::clone() {
   parameters_t parameters_clone;
   for (param_node& parameter : parameters) {
-    parameters_clone.emplace_back(
-      parameter.identifier, parameter.modifiers, parameter.type->clone()
-    );
+    parameters_clone.emplace_back(parameter.identifier, parameter.modifs, parameter.type->clone());
   }
 
   return std::make_unique<func_stmt_node>(
-    is_global, modifiers, identifier, body->clone(), returns->clone(), std::move(parameters_clone)
+    is_global, modifs, identifier, body->clone(), returns->clone(), std::move(parameters_clone)
   );
 }
 
@@ -489,7 +500,7 @@ p_stmt_node_t func_stmt_node::clone() {
 std::string assign_stmt_node::to_string(uint32_t& depth) {
   return std::format(
     "{}Assign<{} {}= {}>",
-    DEPTH_TAB_SPACE,
+    depth_tab_space,
     augmentation_operator.lexeme,
     assignee->to_string(depth),
     value->to_string(depth)
@@ -510,14 +521,14 @@ p_stmt_node_t assign_stmt_node::clone() {
 // func_stmt_node
 std::string if_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE << std::format("if_stmt_node<{}>", condition->to_string(depth)) << "\n";
+  oss << depth_tab_space << std::format("if_stmt_node<{}>", condition->to_string(depth)) << "\n";
 
   depth++;
 
   oss << scope->to_string(depth) << "\n";
 
   for (const elseif_node& elseif_node : elseif_nodes) {
-    oss << DEPTH_TAB_SPACE << std::format("ElseIf<{}>", elseif_node.condition->to_string(depth))
+    oss << depth_tab_space << std::format("ElseIf<{}>", elseif_node.condition->to_string(depth))
         << "\n";
 
     depth++;
@@ -525,22 +536,22 @@ std::string if_stmt_node::to_string(uint32_t& depth) {
     oss << elseif_node.scope->to_string(depth) << "\n";
 
     depth--;
-    oss << DEPTH_TAB_SPACE << "EndElseIf<>\n";
+    oss << depth_tab_space << "EndElseIf<>\n";
   }
 
   if (else_node.get()) {
-    oss << DEPTH_TAB_SPACE << "Else<>"
+    oss << depth_tab_space << "Else<>"
         << "\n";
     depth++;
     oss << else_node->to_string(depth) << "\n";
     depth--;
-    oss << DEPTH_TAB_SPACE << "EndElse<>"
+    oss << depth_tab_space << "EndElse<>"
         << "\n";
   }
 
   depth--;
 
-  oss << DEPTH_TAB_SPACE << "EndIf<>";
+  oss << depth_tab_space << "EndIf<>";
   return oss.str();
 }
 
@@ -563,7 +574,7 @@ p_stmt_node_t if_stmt_node::clone() {
 // return_stmt_node
 
 std::string return_stmt_node::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + std::format("return_stmt_node<{}>", expression->to_string(depth));
+  return depth_tab_space + std::format("return_stmt_node<{}>", expression->to_string(depth));
 }
 
 p_stmt_node_t return_stmt_node::clone() {
@@ -578,11 +589,11 @@ void return_stmt_node::accept(node_visitor_base& visitor) {
 // break_stmt_node
 
 std::string break_stmt_node::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + "break_stmt_node<>";
+  return depth_tab_space + "break_stmt_node<>";
 }
 
 p_stmt_node_t break_stmt_node::clone() {
-  return std::make_unique<break_stmt_node>(token);
+  return std::make_unique<break_stmt_node>(tok);
 }
 
 void break_stmt_node::accept(node_visitor_base& visitor) {
@@ -593,11 +604,11 @@ void break_stmt_node::accept(node_visitor_base& visitor) {
 // continue_stmt_node
 
 std::string continue_stmt_node::to_string(uint32_t& depth) {
-  return DEPTH_TAB_SPACE + "continue_stmt_node<>";
+  return depth_tab_space + "continue_stmt_node<>";
 }
 
 p_stmt_node_t continue_stmt_node::clone() {
-  return std::make_unique<continue_stmt_node>(token);
+  return std::make_unique<continue_stmt_node>(tok);
 }
 
 void continue_stmt_node::accept(node_visitor_base& visitor) {
@@ -608,7 +619,7 @@ void continue_stmt_node::accept(node_visitor_base& visitor) {
 // while_stmt_node
 std::string while_stmt_node::to_string(uint32_t& depth) {
   std::ostringstream oss;
-  oss << DEPTH_TAB_SPACE << std::format("while_stmt_node<{}>", condition->to_string(depth)) << "\n";
+  oss << depth_tab_space << std::format("while_stmt_node<{}>", condition->to_string(depth)) << "\n";
 
   depth++;
 
@@ -618,7 +629,7 @@ std::string while_stmt_node::to_string(uint32_t& depth) {
 
   depth--;
 
-  oss << DEPTH_TAB_SPACE << "EndWhile<>";
+  oss << depth_tab_space << "EndWhile<>";
   return oss.str();
 }
 
@@ -633,7 +644,7 @@ p_stmt_node_t while_stmt_node::clone() {
 // ===============================
 // expr_stmt_node
 std::string expr_stmt_node::to_string(uint32_t& depth) {
-  return std::format("{}expr_stmt_node<{}>", DEPTH_TAB_SPACE, expression->to_string(depth));
+  return std::format("{}expr_stmt_node<{}>", depth_tab_space, expression->to_string(depth));
 }
 
 void expr_stmt_node::accept(node_visitor_base& visitor) {

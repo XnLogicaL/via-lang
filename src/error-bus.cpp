@@ -3,9 +3,11 @@
 // =========================================================================================== |
 
 #include "error-bus.h"
+#include "color.h"
 
 namespace via {
 
+using namespace utils;
 using enum comp_err_lvl;
 
 struct LocalOffset {
@@ -60,11 +62,11 @@ LocalOffset localize_offset(const std::string& source, size_t abs_offset) {
 std::string get_error_level_header(const comp_err_lvl& lvl) {
   switch (lvl) {
   case INFO:
-    return "\033[1;34minfo:\033[0m "; // Blue color for info
+    return apply_color("info: ", fg_color::cyan, bg_color::black, style::bold);
   case WARNING:
-    return "\033[1;33mwarning:\033[0m "; // Yellow color for warning
+    return apply_color("warning: ", fg_color::yellow, bg_color::black, style::bold);
   case ERROR_:
-    return "\033[1;31merror:\033[0m "; // Red color for error
+    return apply_color("error: ", fg_color::red, bg_color::black, style::bold);
   default:
     vl_unreachable;
   }
@@ -124,6 +126,8 @@ std::string compile_error::to_string() const {
       }
     }
 
+    underline = apply_color(underline, fg_color::red, bg_color::black, style::bold);
+
     oss << line_number_str << " | " << line << '\n';
     oss << std::string(line_number_str.size(), ' ') << " | " << underline << '\n';
 
@@ -157,7 +161,7 @@ void error_bus::emit() {
   std::string current_file;
 
   for (const compile_error& err : buffer) {
-    if (current_file != err.ctx.file_path) {
+    if (!err.is_flat && current_file != err.ctx.file_path) {
       current_file = err.ctx.file_path;
       std::cout << "in file " << current_file << ":\n";
     }

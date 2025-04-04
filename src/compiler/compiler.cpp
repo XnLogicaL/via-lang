@@ -15,10 +15,6 @@ void compiler::codegen_prep() {
   unit_ctx.internal.globals->declare_builtins();
 }
 
-void compiler::check_global_collisions(bool& failed) {
-  failed = false;
-}
-
 void compiler::insert_exit0_instruction() {
   unit_ctx.bytecode->emit(opcode::EXIT, {0});
 }
@@ -37,7 +33,6 @@ bool compiler::generate() {
   }
 
   insert_exit0_instruction();
-  check_global_collisions(failed);
 
   return failed || visitor.failed();
 }

@@ -71,26 +71,31 @@ const global_vector& global_holder::get() {
 }
 
 void global_holder::declare_builtins() {
-  static token tok = token(token_type::IDENTIFIER, "", 0, 0, 0);
+  token tok = token(token_type::IDENTIFIER, "", 0, 0, 0);
 
-  p_type_node_t ret_void = std::make_unique<primitive_type_node>(tok, value_type::nil);
+  p_type_node_t nil_type = std::make_unique<primitive_type_node>(tok, value_type::nil);
+  p_type_node_t str_type = std::make_unique<primitive_type_node>(tok, value_type::string);
 
-  std::vector<p_type_node_t> print_args;
-  print_args.emplace_back(std::make_unique<primitive_type_node>(tok, value_type::string));
+  auto make_argument = [](const std::string& id, p_type_node_t type) -> param_node {
+    return {token(token_type::IDENTIFIER, id, 0, 0, 0), modifiers{}, std::move(type)};
+  };
+
+  std::vector<param_node> print_args;
+  print_args.push_back(make_argument("arg0", str_type->clone()));
 
   global_obj print = {
     tok,
     "print",
-    std::make_unique<FunctionTypeNode>(std::move(print_args), ret_void->clone()),
+    std::make_unique<function_type_node>(std::move(print_args), nil_type->clone()),
   };
 
-  std::vector<p_type_node_t> println_args;
-  println_args.emplace_back(std::make_unique<primitive_type_node>(tok, value_type::string));
+  std::vector<param_node> println_args;
+  println_args.push_back(make_argument("arg0", str_type->clone()));
 
   global_obj println = {
     tok,
     "println",
-    std::make_unique<FunctionTypeNode>(std::move(println_args), ret_void->clone()),
+    std::make_unique<function_type_node>(std::move(println_args), nil_type->clone()),
   };
 
   globals.emplace_back(std::move(print));

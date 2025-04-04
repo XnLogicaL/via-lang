@@ -8,7 +8,6 @@
 #include "common.h"
 #include "instruction.h"
 #include "object.h"
-#include "signal.h"
 
 #define vl_vmstacksize 2048
 #define vl_regcount    0xFFFF
@@ -25,31 +24,29 @@ enum class call_type {
   FASTCALL,
 };
 
-// state of an state (thread) execution
-enum class thread_state {
-  RUNNING,
-  PAUSED,
-  DEAD,
-};
-
 struct error_state {
   function_obj* frame = nullptr;
   std::string message = "";
 };
 
-// global_obj state, should only be instantiated once, and shared across all
-// state's. (threads)
+// Global state, should only be instantiated once, and shared across all worker contexts.
 struct global_state {
   std::unordered_map<uint32_t, string_obj*> stable; // String interning table
-  std::unordered_map<uint32_t, value_obj> gtable;   // global_obj environment
   std::atomic<uint32_t> threads{0};                 // Thread count
+  table_obj gtable;                                 // global_obj environment
 
   std::shared_mutex stable_mutex;
-  std::mutex gtable_mutex;
-  std::mutex symtable_mutex;
 };
 
-struct alignas(64) state {
+// "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
+// 64-byte alignment for maximum cache friendliness.
+struct vl_align(64) state {
+  vl_nocopy(state);   // Make uncopyable
+  vl_implmove(state); // Make movable
+
+  state(global_state* global, trans_unit_context& unit_ctx);
+  ~state();
+
   // Thread and global state
   uint32_t id;       // Thread ID
   global_state* glb; // global_obj state
@@ -62,14 +59,14 @@ struct alignas(64) state {
   instruction* siep = nullptr;
 
   // Stack state
-  value_obj* sbp; // Stack base pointer
   size_t sp = 0;  // Stack pointer
+  value_obj* sbp; // Stack base pointer
 
   // Registers
-  value_obj* registers;
+  value_obj* registers; // Register array
 
   // Labels
-  instruction** labels;
+  instruction** labels; // Label array
 
   // Call and frame management
   function_obj* frame = nullptr; // Call stack pointer
@@ -78,21 +75,8 @@ struct alignas(64) state {
   bool abort = false;
   error_state* err;
 
-  // Thread state
-  thread_state tstate = thread_state::PAUSED; // Current thread state
-
-  // Signals
-  utils::signal<> sig_exit;
-  utils::signal<> sig_abort;
-  utils::signal<> sig_error;
-  utils::signal<> sig_fatal;
-
+  // Translation unit context reference
   trans_unit_context& unit_ctx;
-
-  vl_nocopy(state);
-
-  state(global_state* global, trans_unit_context& unit_ctx);
-  ~state();
 
   void load(const bytecode_holder& bytecode);
 
@@ -101,12 +85,6 @@ struct alignas(64) state {
 
   // Starts thread execution.
   void execute();
-
-  // Pauses thread.
-  void pause();
-
-  // Kills the thread indefinitely.
-  void kill();
 
   // ===========================================================================================
   // Register manipulation
@@ -197,10 +175,10 @@ struct alignas(64) state {
   // global_obj manipulation
 
   // Returns the global that corresponds to a given hashed identifier.
-  const value_obj& get_global(uint32_t hash);
+  value_obj get_global(const char* name);
 
   // Sets the global that corresponds to a given hashed identifier to a given value.
-  void set_global(uint32_t hash, const value_obj& value);
+  void set_global(const char* name, const value_obj& value);
 
   // ===========================================================================================
   // Function manipulation
@@ -216,9 +194,6 @@ struct alignas(64) state {
 
   // Attempts to call the given value object with the given argument count.
   void call(const value_obj& callee, size_t argc);
-
-  // Returns the current stack frame.
-  function_obj* get_stack_frame();
 
   // Attempts to return the upv_obj that lives in the given index of the given closure.
   const value_obj& get_upvalue(function_obj* closure, size_t index);

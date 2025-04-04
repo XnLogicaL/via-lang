@@ -38,6 +38,11 @@ struct lit_expr_node : public expr_node_base {
       value(value) {
     this->begin = this->value_token.position;
     this->end = this->value_token.position + value_token.lexeme.length();
+
+    if (value_token.type == token_type::LIT_STRING) {
+      // Shift end position by 2 to account for quotes
+      this->end += 2;
+    }
   }
 };
 
@@ -213,11 +218,16 @@ struct table_expr_node : public expr_node_base {
 //
 struct auto_type_node : public type_node_base {
   std::string to_string(uint32_t&) override;
-  std::string to_string_x() override;
+  std::string to_output_string() override;
 
   p_type_node_t clone() override;
 
   void decay(node_visitor_base&, p_type_node_t&) override;
+
+  auto_type_node(size_t begin, size_t end) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct primitive_type_node : public type_node_base {
@@ -225,32 +235,39 @@ struct primitive_type_node : public type_node_base {
   value_type type;
 
   std::string to_string(uint32_t&) override;
-  std::string to_string_x() override;
+  std::string to_output_string() override;
 
   p_type_node_t clone() override;
 
   primitive_type_node(token id, value_type valty)
     : identifier(id),
-      type(valty) {}
+      type(valty) {
+    this->begin = id.position;
+    this->end = id.position + id.lexeme.length();
+  }
 };
 
 struct generic_type_node : public type_node_base {
-  using Generics = std::vector<p_type_node_t>;
+  using generics_t = std::vector<p_type_node_t>;
+
   token identifier;
-  Generics generics;
+  generics_t generics;
   modifiers modifs;
 
   std::string to_string(uint32_t&) override;
-  std::string to_string_x() override;
+  std::string to_output_string() override;
 
   p_type_node_t clone() override;
 
   void decay(node_visitor_base&, p_type_node_t&) override;
 
-  generic_type_node(token id, Generics gens, modifiers modifs)
+  generic_type_node(token id, generics_t gens, modifiers modifs)
     : identifier(id),
       generics(std::move(gens)),
-      modifs(modifs) {}
+      modifs(modifs) {
+    this->begin = id.position;
+    this->end = id.position + id.lexeme.length();
+  }
 };
 
 struct union_type_node : public type_node_base {
@@ -258,7 +275,7 @@ struct union_type_node : public type_node_base {
   p_type_node_t rhs;
 
   std::string to_string(uint32_t&) override;
-  std::string to_string_x() override;
+  std::string to_output_string() override;
 
   p_type_node_t clone() override;
 
@@ -266,25 +283,42 @@ struct union_type_node : public type_node_base {
 
   union_type_node(p_type_node_t lhs, p_type_node_t rhs)
     : lhs(std::move(lhs)),
-      rhs(std::move(rhs)) {}
+      rhs(std::move(rhs)) {
+    this->begin = this->lhs->begin;
+    this->end = this->rhs->end;
+  }
 };
 
-struct FunctionTypeNode : public type_node_base {
-  using parameter_vector = std::vector<p_type_node_t>;
+struct param_node {
+  token identifier;
+  modifiers modifs;
+  p_type_node_t type;
+
+  param_node(token identifier, modifiers modifs, p_type_node_t type)
+    : identifier(identifier),
+      modifs(modifs),
+      type(std::move(type)) {}
+};
+
+struct function_type_node : public type_node_base {
+  using parameter_vector = std::vector<param_node>;
 
   parameter_vector parameters;
   p_type_node_t returns;
 
   std::string to_string(uint32_t&) override;
-  std::string to_string_x() override;
+  std::string to_output_string() override;
 
   p_type_node_t clone() override;
 
   void decay(node_visitor_base&, p_type_node_t&) override;
 
-  FunctionTypeNode(parameter_vector args, p_type_node_t rets)
+  function_type_node(parameter_vector args, p_type_node_t rets)
     : parameters(std::move(args)),
-      returns(std::move(rets)) {}
+      returns(std::move(rets)) {
+    this->begin = this->returns->begin;
+    this->end = this->returns->end;
+  }
 };
 
 // =========================================================================================
@@ -327,38 +361,8 @@ struct scope_stmt_node : public stmt_node_base {
     : statements(std::move(statements)) {}
 };
 
-struct param_node {
-  token identifier;
-  modifiers modifs;
-  p_type_node_t type;
-
-  param_node(token identifier, modifiers modifs, p_type_node_t type)
-    : identifier(identifier),
-      modifs(modifs),
-      type(std::move(type)) {}
-};
-
 struct func_stmt_node : public stmt_node_base {
   using parameters_t = std::vector<param_node>;
-
-  struct stack_node {
-    bool is_global;
-
-    size_t upvalues;
-
-    modifiers modifs;
-    token identifier;
-    parameters_t parameters;
-
-    stack_node(
-      bool is_global, size_t upvalues, modifiers modifs, token identifier, parameters_t parameters
-    )
-      : is_global(is_global),
-        upvalues(upvalues),
-        modifs(modifs),
-        identifier(identifier),
-        parameters(std::move(parameters)) {}
-  };
 
   bool is_global;
   modifiers modifs;

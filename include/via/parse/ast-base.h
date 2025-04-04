@@ -5,6 +5,8 @@
 #ifndef vl_has_header_ast_base_h
 #define vl_has_header_ast_base_h
 
+#include "common-includes.h"
+#include "common-macros.h"
 #include "token.h"
 
 namespace via {
@@ -62,12 +64,14 @@ struct stmt_node_base {
 };
 
 struct type_node_base {
+  size_t begin;
+  size_t end;
   expr_node_base* expression = nullptr;
 
   virtual vl_defdestructor(type_node_base);
 
   virtual std::string to_string(uint32_t&) = 0;
-  virtual std::string to_string_x() = 0;
+  virtual std::string to_output_string() = 0;
   virtual p_type_node_t clone() = 0;
 
   virtual void decay(node_visitor_base&, p_type_node_t&) {};

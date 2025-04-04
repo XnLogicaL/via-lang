@@ -74,7 +74,6 @@ std::string to_string(state* state) {
   oss << std::format("|frame | {}\n", VOID_STAR(state->frame));
   oss << std::format("|abort | {}\n", state->abort);
   oss << std::format("|err   | <ErrorState@{}>\n", VOID_STAR(state->err));
-  oss << std::format("|tstate| {}\n", magic_enum::enum_name(state->tstate));
 
   oss << "==== state ====\n";
 

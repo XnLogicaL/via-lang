@@ -34,7 +34,7 @@
 //  It first checks the stack for the symbol, if found, emits a `GETSTACK` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPVALUE`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
-//  `unit_ctx::internal.stack::function_stack` and looking for the symbol. If found, emits
+//  `unit_ctx::internal.variable_stack::function_stack` and looking for the symbol. If found, emits
 //  `GETARGUMENT`. Finally, looks for the variable in the global scope by querying
 //  `unit_ctx::internal::globals` and if found emits GETGLOBAL. If all of these queries fail, throws
 //  a "Use of undeclared variable" compilation error.
@@ -103,12 +103,12 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
   token var_id = variable_node.identifier;
 
   std::string symbol = var_id.lexeme;
-  std::optional<operand_t> stk_id = unit_ctx.internal.stack->find_symbol(var_id.lexeme);
+  std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(var_id.lexeme);
 
   if (stk_id.has_value()) {
-    if (unit_ctx.internal.stack->function_stack.size() > 0) {
-      auto& current_closure = unit_ctx.internal.stack->function_stack.top();
-      if (current_closure.upvalues > stk_id.value()) {
+    if (unit_ctx.internal.function_stack->size() > 0) {
+      auto& current_closure = unit_ctx.internal.function_stack->top();
+      if (current_closure.stack_pointer > stk_id.value()) {
         unit_ctx.bytecode->emit(GETUPVALUE, {dst, stk_id.value()}, symbol);
       }
     }
@@ -122,11 +122,11 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
 
     unit_ctx.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
   }
-  else if (!unit_ctx.internal.stack->function_stack.empty()) {
+  else if (unit_ctx.internal.function_stack->size() > 0) {
     uint16_t index = 0;
-    auto& top = unit_ctx.internal.stack->function_stack.top();
+    auto& top = unit_ctx.internal.function_stack->top();
 
-    for (const auto& parameter : top.parameters) {
+    for (const auto& parameter : top.func_stmt->parameters) {
       if (parameter.identifier.lexeme == symbol) {
         unit_ctx.bytecode->emit(GETARGUMENT, {dst, index});
         return;
@@ -158,8 +158,8 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
 
   vl_tinference_failure(callee_type, callee);
 
-  if (FunctionTypeNode* fn_ty =
-        get_derived_instance<type_node_base, FunctionTypeNode>(*callee_type)) {
+  if (function_type_node* fn_ty =
+        get_derived_instance<type_node_base, function_type_node>(*callee_type)) {
     size_t expected_argc = fn_ty->parameters.size();
     if (argc != static_cast<operand_t>(expected_argc)) {
       compiler_error(
@@ -173,7 +173,7 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
     compiler_error(
       callee->begin,
       callee->end,
-      std::format("Value of type '{}' is not callable", callee_type->to_string_x())
+      std::format("Value of type '{}' is not callable", callee_type->to_output_string())
     );
   }
 
@@ -302,8 +302,8 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
       binary_node.end,
       std::format(
         "Binary operation on incompatible types '{}' (left) and '{}' (right)",
-        left_type->to_string_x(),
-        right_type->to_string_x()
+        left_type->to_output_string(),
+        right_type->to_output_string()
       )
     );
     return;
@@ -408,8 +408,8 @@ void expr_node_visitor::visit(cast_expr_node& type_cast, operand_t dst) {
       type_cast.expression->end,
       std::format(
         "Expression of type '{}' can not be casted into type '{}'",
-        left_type->to_string_x(),
-        type_cast.type->to_string_x()
+        left_type->to_output_string(),
+        type_cast.type->to_output_string()
       )
     );
   }

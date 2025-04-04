@@ -22,7 +22,8 @@ trans_unit_context::trans_unit_context(const std::string& file_path, const std::
     constants(std::make_unique<constant_holder>()),
     internal({
       0,
-      std::make_unique<compiler_stack>(),
+      std::make_unique<variable_stack>(),
+      std::make_unique<function_stack>(),
       std::make_unique<global_holder>(),
     }) {}
 

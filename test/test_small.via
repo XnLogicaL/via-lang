@@ -1,16 +1,8 @@
-let x: int = 10
-let y: int = 20
-let z: int = x * y + y * x / y % x
+fn factorial(n: int) -> int {
+  if n < 2:
+    return 1
 
-let very_long_variable_name_bruh = nil
-let not_nil_variable: string = x as string
-not_nil_variable = 31
-
-do {
-  do:
-    println(z)
-  do:
-    let float_from_int: float = 10 as float
-  if true:
-    println("hi")
+  return n * factorial(n - 1)
 }
+
+

@@ -21,7 +21,8 @@ class token_stream;
 class syntax_tree;
 class bytecode_holder;
 class constant_holder;
-class compiler_stack;
+class variable_stack;
+class function_stack;
 class global_holder;
 
 class trans_unit_context final {
@@ -49,7 +50,8 @@ public:
   struct Internal {
     size_t label_count;
 
-    std::unique_ptr<compiler_stack> stack;
+    std::unique_ptr<variable_stack> variable_stack;
+    std::unique_ptr<function_stack> function_stack;
     std::unique_ptr<global_holder> globals;
   } internal;
 };

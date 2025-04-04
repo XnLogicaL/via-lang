@@ -27,7 +27,6 @@
 #include "utility/bit-utility.h"
 #include "utility/memory-utility.h"
 #include "utility/string-utility.h"
-#include "utility/signal.h"
 #include "utility/file-io.h"
 
 #endif

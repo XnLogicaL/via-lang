@@ -55,9 +55,8 @@ enum class opcode : uint16_t {
   LOADFLOAT,
   LOADTRUE,
   LOADFALSE,
-  LOADTABLE,
-  LOADFUNCTION,
-  LOADOBJECT,
+  NEWTABLE,
+  NEWCLOSURE,
 
   PUSH,
   PUSHK,

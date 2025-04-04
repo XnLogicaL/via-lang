@@ -1,7 +1,7 @@
--std=c++23
--Wextra
--Wall
 -xc++
+-std=c++23
+-Wall
+-Wextra
 -I./src
 -I./include
 -I./include/via
@@ -17,3 +17,4 @@
 -I./expected/include
 -I./cpp-linenoise
 -I./magic_enum/include
+-I./rang/include

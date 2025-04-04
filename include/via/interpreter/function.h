@@ -29,9 +29,6 @@ struct call_info {
 };
 
 struct function_obj {
-  bool is_error_handler = false;
-  bool is_vararg = false;
-
   call_info call_info;
 
   instruction* ibp = nullptr;
@@ -43,11 +40,6 @@ struct function_obj {
   function_obj() = default;
   function_obj(const function_obj& other);
   ~function_obj();
-};
-
-struct cfunction_obj {
-  void (*data)(state*) = nullptr;
-  bool is_error_handler = false;
 };
 
 } // namespace via

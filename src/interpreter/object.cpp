@@ -85,9 +85,6 @@ value_obj::~value_obj() {
     case function:
       delete cast_ptr<function_obj>();
       break;
-    case cfunction:
-      delete cast_ptr<cfunction_obj>();
-      break;
     default:
       break;
     }
@@ -112,8 +109,6 @@ value_obj value_obj::clone() const {
     return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
   case function:
     return value_obj(function, new function_obj(*cast_ptr<function_obj>()));
-  case cfunction:
-    return value_obj(cfunction, new cfunction_obj(*cast_ptr<cfunction_obj>()));
   default:
     return value_obj();
   }
@@ -126,6 +121,14 @@ void value_obj::reset() {}
 bool value_obj::compare(const value_obj&) const {
   return false;
 }
+
+value_obj::value_obj(const char* str)
+  : type(string),
+    val_pointer(new string_obj(nullptr, str)) {}
+
+value_obj::value_obj(state* state, const char* str)
+  : type(string),
+    val_pointer(new string_obj(state, str)) {}
 
 // Constructs a new string_obj object
 string_obj::string_obj(state* V, const char* str) {
@@ -160,7 +163,7 @@ size_t string_obj::size() {
   return len;
 }
 
-void string_obj::set_string(size_t position, const value_obj& value) {
+void string_obj::set(size_t position, const value_obj& value) {
   vl_assert(position < len, "String index position out of bounds");
   vl_assert(value.is_string(), "Setting string index to non-string value");
 
@@ -171,7 +174,7 @@ void string_obj::set_string(size_t position, const value_obj& value) {
   data[position] = value.cast_ptr<string_obj>()->data[0];
 }
 
-value_obj string_obj::get_string(size_t position) {
+value_obj string_obj::get(size_t position) {
   vl_assert(position < len, "String index position out of bounds");
   char chr = data[position];
   string_obj* tstr = new string_obj(nullptr, &chr);
@@ -234,22 +237,22 @@ size_t table_obj::size() {
   return impl::__table_size(this);
 }
 
-void table_obj::set_table(const char* key, const value_obj& value) {
+void table_obj::set(const char* key, const value_obj& value) {
   value_obj index(new string_obj(nullptr, key));
   impl::__table_set(this, index, value);
 }
 
-void table_obj::set_table(size_t position, const value_obj& value) {
+void table_obj::set(size_t position, const value_obj& value) {
   value_obj index(static_cast<TInteger>(position));
   impl::__table_set(this, index, value);
 }
 
-value_obj table_obj::get_table(const char* key) {
+value_obj table_obj::get(const char* key) {
   value_obj index(new string_obj(nullptr, key));
   return impl::__table_get(this, index);
 }
 
-value_obj table_obj::get_table(size_t position) {
+value_obj table_obj::get(size_t position) {
   value_obj index(static_cast<TInteger>(position));
   return impl::__table_get(this, index);
 }

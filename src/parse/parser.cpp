@@ -135,7 +135,7 @@ result<attribute> parser::parse_attribute() {
 }
 
 result<p_type_node_t> parser::parse_generic() {
-  using Generics = generic_type_node::Generics;
+  using generics_t = generic_type_node::generics_t;
 
   result<token> identifier = consume();
   result<modifiers> modifiers = parse_modifiers();
@@ -143,7 +143,7 @@ result<p_type_node_t> parser::parse_generic() {
   vl_checkresult(identifier);
   vl_checkresult(modifiers);
 
-  Generics generics;
+  generics_t generics;
 
   result<token> expect_lt = expect_consume(OP_LT, "Expected '<' to open type generic");
   result<token> curr = current();
@@ -200,7 +200,7 @@ result<p_type_node_t> parser::parse_type_primary() {
     return parse_generic();
   }
   case PAREN_OPEN: {
-    using parameters = FunctionTypeNode::parameter_vector;
+    using parameters = function_type_node::parameter_vector;
     parameters params;
 
     result<token> curr = consume();
@@ -218,7 +218,9 @@ result<p_type_node_t> parser::parse_type_primary() {
       result<p_type_node_t> type_result = parse_type();
       vl_checkresult(type_result);
 
-      params.emplace_back(std::move(type_result.value()));
+      params.emplace_back(
+        token(token_type::IDENTIFIER, "FUCK", 0, 0, 0), modifiers{}, type_result.value()->clone()
+      );
 
       if (tok->type != PAREN_CLOSE) {
         result<token> expect_comma =
@@ -238,7 +240,7 @@ result<p_type_node_t> parser::parse_type_primary() {
     vl_checkresult(expect_rt);
     vl_checkresult(return_type);
 
-    return std::make_unique<FunctionTypeNode>(std::move(params), std::move(return_type.value()));
+    return std::make_unique<function_type_node>(std::move(params), std::move(return_type.value()));
   }
   default: {
     break;
@@ -564,7 +566,7 @@ result<p_stmt_node_t> parser::parse_declaration() {
     type = std::move(*temp);
   }
   else {
-    type = std::make_unique<auto_type_node>();
+    type = std::make_unique<auto_type_node>(curr->position, curr->position + curr->lexeme.length());
   }
 
   result<token> expect_eq = expect_consume(EQUAL, "Expected '=' for variable declaration");

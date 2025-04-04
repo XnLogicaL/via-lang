@@ -13,8 +13,6 @@ namespace via::lib {
 
 vl_libdeclfn(base_print);
 vl_libdeclfn(base_println);
-vl_libdeclfn(base_error);
-vl_libdeclfn(base_assert);
 vl_libdeclfn(open_baselib);
 
 } // namespace via::lib

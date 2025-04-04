@@ -1,4 +1,2 @@
-If:
-  PathMatch: *.cpp
 Diagnostics:
   UnusedIncludes: None

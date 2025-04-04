@@ -17,215 +17,192 @@ namespace via::impl {
 
 static const value_obj _Nil = value_obj();
 
-vl_optimize void __set_error_state(state* _State, const std::string& _Msg) {
-  _State->err->frame = _State->frame;
-  _State->err->message = std::string(_Msg);
+vl_implement void __set_error_state(state* state, const std::string& message) {
+  state->err->frame = state->frame;
+  state->err->message = std::string(message);
 }
 
-vl_optimize void __clear_error_state(state* _State) {
-  _State->err->frame = nullptr;
-  _State->err->message = "";
+vl_implement void __clear_error_state(state* state) {
+  state->err->frame = nullptr;
+  state->err->message = "";
 }
 
-vl_optimize bool __has_error(state* _State) {
-  return _State->err->frame != nullptr;
+vl_implement bool __has_error(state* state) {
+  return state->err->frame != nullptr;
 }
 
-vl_forceinline bool __handle_error(state* _State) {
-  function_obj* _Current_frame = _State->frame;
-  function_obj* _Error_frame = _State->frame;
+vl_implement bool __handle_error(state* state) {
+  function_obj* current_frame = state->frame;
+  function_obj* error_frame = state->frame;
 
-  while (_Current_frame) {
-    if (_Current_frame->is_error_handler) {
-      _State->err->frame = _Current_frame;
+  while (current_frame) {
+    if (/* TODO */ false) {
+      state->err->frame = current_frame;
       break;
     }
-    _Current_frame = _Current_frame->call_info.caller;
+    current_frame = current_frame->call_info.caller;
   }
 
-  if (!_Current_frame) {
-    if (_Error_frame) {
+  if (!current_frame) {
+    if (error_frame) {
       std::string _Error = std::format(
         "error at <frame@0x{:x}>: {}\n\n",
-        reinterpret_cast<uintptr_t>(_Error_frame),
-        _State->err->message
+        reinterpret_cast<uintptr_t>(error_frame),
+        state->err->message
       );
       std::cerr << _Error;
     }
 
     std::unordered_set<function_obj*> visited;
 
-    size_t _Idx = 0;
-    while (_Error_frame && !visited.count(_Error_frame)) {
-      visited.insert(_Error_frame);
+    size_t index = 0;
+    while (error_frame && !visited.count(error_frame)) {
+      visited.insert(error_frame);
       std::cerr << std::format(
-        "#{} <frame@0x{:x}>\n", _Idx++, reinterpret_cast<uintptr_t>(_Error_frame)
+        "#{} <frame@0x{:x}>\n", index++, reinterpret_cast<uintptr_t>(error_frame)
       );
-      _Error_frame = _Error_frame->call_info.caller;
+      error_frame = error_frame->call_info.caller;
     }
   }
 
-  return static_cast<bool>(_Current_frame);
+  return static_cast<bool>(current_frame);
 }
 
-vl_inline value_obj __get_constant(state* _State, size_t _Idx) {
-  if (_Idx >= _State->unit_ctx.constants->size()) {
+vl_implement value_obj __get_constant(state* state, size_t index) {
+  if (index >= state->unit_ctx.constants->size()) {
     return _Nil.clone();
   }
 
-  return _State->unit_ctx.constants->at(_Idx).clone();
+  return state->unit_ctx.constants->at(index).clone();
 }
 
-vl_forceinline value_obj __type(state* vl_restrict _State, const value_obj& _Val) {
-  std::string _Temp = std::string(magic_enum::enum_name(_Val.type));
+vl_implement value_obj __type(state* vl_restrict state, const value_obj& val) {
+  std::string _Temp = std::string(magic_enum::enum_name(val.type));
   const char* _Str = _Temp.c_str();
-  return value_obj(value_type::string, new string_obj(_State, _Str));
+  return value_obj(value_type::string, new string_obj(state, _Str));
 }
 
-vl_forceinline std::string __type_cxx_string(state* vl_restrict _State, const value_obj& _Val) {
-  value_obj _Type = __type(_State, _Val);
+vl_implement std::string __type_cxx_string(state* vl_restrict state, const value_obj& val) {
+  value_obj _Type = __type(state, val);
   return std::string(_Type.cast_ptr<string_obj>()->data);
 }
 
-vl_forceinline value_obj __typeofv(state* vl_restrict _State, const value_obj& _Val) {
-  if (_Val.is_table()) {
-    const table_obj* _Tbl = _Val.cast_ptr<table_obj>();
-    const value_obj& _Type = __table_get(_Tbl, value_obj(new string_obj(_State, "__type")));
+vl_implement value_obj __typeofv(state* vl_restrict state, const value_obj& val) {
+  if (val.is_table()) {
+    const table_obj* table = val.cast_ptr<table_obj>();
+    const value_obj& _Type = __table_get(table, value_obj(new string_obj(state, "__type")));
 
     if (_Type.is_nil()) {
-      return __type(_State, _Val);
+      return __type(state, val);
     }
 
-    return value_obj(new string_obj(_State, _Type.cast_ptr<string_obj>()->data));
+    return value_obj(new string_obj(state, _Type.cast_ptr<string_obj>()->data));
   }
 
-  return __type(_State, _Val);
+  return __type(state, val);
 }
 
-vl_optimize void __native_call(state* _State, function_obj* _Callee, size_t _Argc) {
-  _Callee->call_info.caller = _State->frame;
-  _Callee->call_info.ibp = _State->ibp;
-  _Callee->call_info.iep = _State->iep;
-  _Callee->call_info.pc = _State->pc;
-  _Callee->call_info.sp = _State->sp;
+vl_implement void __native_call(state* state, function_obj* _Callee, size_t _Argc) {
+  _Callee->call_info.caller = state->frame;
+  _Callee->call_info.ibp = state->ibp;
+  _Callee->call_info.iep = state->iep;
+  _Callee->call_info.pc = state->pc;
+  _Callee->call_info.sp = state->sp;
   _Callee->call_info.argc = _Argc;
 
-  _State->frame = _Callee;
-  _State->pc = _Callee->ibp;
-  _State->ibp = _Callee->ibp;
-  _State->iep = _Callee->iep;
+  state->frame = _Callee;
+  state->pc = _Callee->ibp;
+  state->ibp = _Callee->ibp;
+  state->iep = _Callee->iep;
 }
 
-vl_optimize void __extern_call(state* _State, cfunction_obj* _Callee, size_t _Argc) {
+vl_implement void __extern_call(state* state, const value_obj& _Callee, size_t _Argc) {
   function_obj _Func;
-  _Func.is_error_handler = _Callee->is_error_handler;
-  _Func.call_info.caller = _State->frame;
-  _Func.call_info.ibp = _State->ibp;
-  _Func.call_info.iep = _State->iep;
-  _Func.call_info.pc = _State->pc;
+  _Func.call_info.caller = state->frame;
+  _Func.call_info.ibp = state->ibp;
+  _Func.call_info.iep = state->iep;
+  _Func.call_info.pc = state->pc;
 
-  __native_call(_State, &_Func, _Argc);
-  _Callee->data(_State);
+  __native_call(state, &_Func, _Argc);
+  _Callee.cast_ptr<cfunction_t>()(state);
 }
 
-vl_optimize void __call(state* _State, value_obj& _Callee, size_t _Argc) {
+vl_implement void __call(state* state, value_obj& _Callee, size_t _Argc) {
   if (_Callee.is_function()) {
-    __native_call(_State, _Callee.cast_ptr<function_obj>(), _Argc);
+    __native_call(state, _Callee.cast_ptr<function_obj>(), _Argc);
   }
   else if (_Callee.is_cfunction()) {
-    __extern_call(_State, _Callee.cast_ptr<cfunction_obj>(), _Argc);
+    __extern_call(state, _Callee, _Argc);
   }
   else {
     __set_error_state(
-      _State, std::format("attempt to call a {} value", __type_cxx_string(_State, _Callee))
+      state, std::format("attempt to call a {} value", __type_cxx_string(state, _Callee))
     );
   }
 }
 
-vl_forceinline value_obj __len(value_obj& _Val) {
-  if (_Val.is_string()) {
-    return value_obj(static_cast<TInteger>(_Val.cast_ptr<string_obj>()->len));
+vl_implement value_obj __len(value_obj& val) {
+  if (val.is_string()) {
+    return value_obj(static_cast<TInteger>(val.cast_ptr<string_obj>()->len));
   }
-  else if (_Val.is_table()) {
-    size_t _Size = __table_size(_Val.cast_ptr<table_obj>());
+  else if (val.is_table()) {
+    size_t _Size = __table_size(val.cast_ptr<table_obj>());
     return value_obj(static_cast<TInteger>(_Size));
   }
 
   return _Nil.clone();
 }
 
-vl_forceinline void __native_return(state* vl_restrict _State, const value_obj& _Ret_value) {
-  __closure_close_upvalues(_State->frame);
+vl_implement void __native_return(state* vl_restrict state, const value_obj& _Ret_value) {
+  __closure_close_upvalues(state->frame);
 
-  call_info _Call_info = _State->frame->call_info;
+  call_info _Call_info = state->frame->call_info;
 
-  _State->ibp = _Call_info.ibp;
-  _State->iep = _Call_info.iep;
-  _State->pc = _Call_info.pc;
-  _State->frame = _Call_info.caller;
+  state->ibp = _Call_info.ibp;
+  state->iep = _Call_info.iep;
+  state->pc = _Call_info.pc;
+  state->frame = _Call_info.caller;
 
-  _State->sp = _Call_info.sp;
-  _State->sp -= _Call_info.argc;
+  state->sp = _Call_info.sp;
+  state->sp -= _Call_info.argc;
 
-  __push(_State, _Ret_value);
+  __push(state, _Ret_value);
 }
 
-vl_optimize value_obj __get_global(state* vl_restrict _State, uint32_t _Id) {
-  std::lock_guard<std::mutex> lock(_State->glb->gtable_mutex);
-
-  auto _It = _State->glb->gtable.find(_Id);
-  if (_It != _State->glb->gtable.end()) {
-    return _It->second.clone();
-  }
-
-  return _Nil.clone();
-}
-
-vl_forceinline void __set_global(state* vl_restrict _State, uint32_t _Id, const value_obj& _Val) {
-  std::lock_guard<std::mutex> lock(_State->glb->gtable_mutex);
-
-  auto _It = _State->glb->gtable.find(_Id);
-  if (_It != _State->glb->gtable.end()) {
-    __set_error_state(_State, std::format("attempt to reassign global '{}'", _Id));
-  }
-
-  _State->glb->gtable.emplace(_Id, _Val.clone());
-}
-
-vl_inline value_obj __to_string(state* vl_restrict _State, const value_obj& _Val) {
+vl_implement value_obj __to_string(state* vl_restrict state, const value_obj& val) {
   using enum value_type;
 
-  if (_Val.is_string()) {
-    return _Val.clone();
+  if (val.is_string()) {
+    return val.clone();
   }
 
-  switch (_Val.type) {
+  switch (val.type) {
   case integer: {
-    std::string _Str = std::to_string(_Val.val_integer);
-    string_obj* _Tstr = new string_obj(_State, _Str.c_str());
+    std::string _Str = std::to_string(val.val_integer);
+    string_obj* _Tstr = new string_obj(state, _Str.c_str());
     return value_obj(string, _Tstr);
   }
   case floating_point: {
-    std::string _Str = std::to_string(_Val.val_floating_point);
-    string_obj* _Tstr = new string_obj(_State, _Str.c_str());
+    std::string _Str = std::to_string(val.val_floating_point);
+    string_obj* _Tstr = new string_obj(state, _Str.c_str());
     return value_obj(string, _Tstr);
   }
   case boolean: {
-    string_obj* _Str = new string_obj(_State, _Val.val_boolean ? "true" : "false");
+    string_obj* _Str = new string_obj(state, val.val_boolean ? "true" : "false");
     return value_obj(string, _Str);
   }
   case table:
   case function:
   case cfunction: {
-    auto _Type_str = magic_enum::enum_name(_Val.type);
+    auto _Type_str = magic_enum::enum_name(val.type);
     auto _Final_str =
-      std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(_Val.val_pointer));
+      std::format("<{}@0x{:x}>", _Type_str, reinterpret_cast<uintptr_t>(val.val_pointer));
 
-    string_obj* _Str = new string_obj(_State, _Final_str.c_str());
+    string_obj* _Str = new string_obj(state, _Final_str.c_str());
     return value_obj(string, _Str);
   }
   default:
-    string_obj* _Tstr = new string_obj(_State, "nil");
+    string_obj* _Tstr = new string_obj(state, "nil");
     return value_obj(string, _Tstr);
   }
 
@@ -233,36 +210,36 @@ vl_inline value_obj __to_string(state* vl_restrict _State, const value_obj& _Val
   return _Nil.clone();
 }
 
-vl_forceinline std::string __to_cxx_string(state* vl_restrict _State, const value_obj& _Val) {
-  value_obj _Str = __to_string(_State, _Val);
+vl_implement std::string __to_cxx_string(state* vl_restrict state, const value_obj& val) {
+  value_obj _Str = __to_string(state, val);
   return std::string(_Str.cast_ptr<string_obj>()->data);
 }
 
-vl_forceinline value_obj __to_bool(const value_obj& _Val) {
-  if (_Val.is_bool()) {
-    return _Val.clone();
+vl_implement value_obj __to_bool(const value_obj& val) {
+  if (val.is_bool()) {
+    return val.clone();
   }
 
-  return value_obj(_Val.type != value_type::nil);
+  return value_obj(val.type != value_type::nil);
 
   vl_unreachable;
   return _Nil.clone();
 }
 
-vl_forceinline bool __to_cxx_bool(const value_obj& _Val) {
-  return __to_bool(_Val).val_boolean;
+vl_implement bool __to_cxx_bool(const value_obj& val) {
+  return __to_bool(val).val_boolean;
 }
 
-vl_forceinline value_obj __to_int(state* V, const value_obj& _Val) {
+vl_implement value_obj __to_int(state* V, const value_obj& val) {
   using enum value_type;
 
-  if (_Val.is_number()) {
-    return _Val.clone();
+  if (val.is_number()) {
+    return val.clone();
   }
 
-  switch (_Val.type) {
+  switch (val.type) {
   case string: {
-    const std::string& str = _Val.cast_ptr<string_obj>()->data;
+    const std::string& str = val.cast_ptr<string_obj>()->data;
     if (str.empty()) {
       return _Nil.clone();
     }
@@ -277,7 +254,7 @@ vl_forceinline value_obj __to_int(state* V, const value_obj& _Val) {
     return _Nil.clone();
   }
   case boolean:
-    return value_obj(static_cast<TInteger>(_Val.val_boolean));
+    return value_obj(static_cast<TInteger>(val.val_boolean));
   default:
     break;
   }
@@ -285,16 +262,16 @@ vl_forceinline value_obj __to_int(state* V, const value_obj& _Val) {
   return _Nil.clone();
 }
 
-vl_forceinline value_obj __to_float(state* V, const value_obj& _Val) {
+vl_implement value_obj __to_float(state* V, const value_obj& val) {
   using enum value_type;
 
-  if (_Val.is_number()) {
-    return _Val.clone();
+  if (val.is_number()) {
+    return val.clone();
   }
 
-  switch (_Val.type) {
+  switch (val.type) {
   case string: {
-    const std::string& str = _Val.cast_ptr<string_obj>()->data;
+    const std::string& str = val.cast_ptr<string_obj>()->data;
     if (str.empty()) {
       return _Nil.clone();
     }
@@ -309,7 +286,7 @@ vl_forceinline value_obj __to_float(state* V, const value_obj& _Val) {
     return _Nil.clone();
   }
   case boolean:
-    return value_obj(static_cast<TFloat>(_Val.val_boolean));
+    return value_obj(static_cast<TFloat>(val.val_boolean));
   default:
     break;
   }
@@ -317,19 +294,19 @@ vl_forceinline value_obj __to_float(state* V, const value_obj& _Val) {
   return _Nil.clone();
 }
 
-vl_forceinline void* __to_pointer(const value_obj& _Val) {
-  switch (_Val.type) {
+vl_implement void* __to_pointer(const value_obj& val) {
+  switch (val.type) {
   case value_type::cfunction:
   case value_type::function:
   case value_type::table:
   case value_type::string:
-    return _Val.val_pointer;
+    return val.val_pointer;
   default:
     return nullptr;
   }
 }
 
-vl_optimize bool __compare(const value_obj& _Val_0, const value_obj& _Val_1) {
+vl_implement bool __compare(const value_obj& _Val_0, const value_obj& _Val_1) {
   using enum value_type;
 
   if (_Val_0.type != _Val_1.type) {

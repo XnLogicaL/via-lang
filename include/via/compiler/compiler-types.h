@@ -56,11 +56,22 @@ bool is_derived_instance(base& der) {
   return get_derived_instance<base, derived>(der) != nullptr;
 }
 
-vl_inline bool is_constant_expression(expr_node_base& expression) {
+vl_implement bool is_constant_expression(expr_node_base& expression) {
   return is_derived_instance<expr_node_base, lit_expr_node>(expression);
 }
 
-vl_inline bool is_integral(p_type_node_t& type) {
+vl_implement bool is_nil(p_type_node_t& type) {
+  using enum value_type;
+
+  if (primitive_type_node* primitive =
+        get_derived_instance<type_node_base, primitive_type_node>(*type)) {
+    return primitive->type == nil;
+  }
+
+  return false;
+}
+
+vl_implement bool is_integral(p_type_node_t& type) {
   using enum value_type;
 
   if (primitive_type_node* primitive =
@@ -72,7 +83,7 @@ vl_inline bool is_integral(p_type_node_t& type) {
   return false;
 }
 
-vl_inline bool is_floating_point(p_type_node_t& type) {
+vl_implement bool is_floating_point(p_type_node_t& type) {
   using enum value_type;
 
   if (primitive_type_node* primitive =
@@ -84,19 +95,19 @@ vl_inline bool is_floating_point(p_type_node_t& type) {
   return false;
 }
 
-vl_inline bool is_arithmetic(p_type_node_t& type) {
+vl_implement bool is_arithmetic(p_type_node_t& type) {
   return is_integral(type) || is_floating_point(type);
 }
 
-vl_inline bool is_callable(p_type_node_t& type) {
-  if (is_derived_instance<type_node_base, FunctionTypeNode>(*type)) {
+vl_implement bool is_callable(p_type_node_t& type) {
+  if (is_derived_instance<type_node_base, function_type_node>(*type)) {
     return true;
   }
 
   return false;
 }
 
-vl_inline bool is_compatible(p_type_node_t& left, p_type_node_t& right) {
+vl_implement bool is_compatible(p_type_node_t& left, p_type_node_t& right) {
   if (primitive_type_node* primitive_left =
         get_derived_instance<type_node_base, primitive_type_node>(*left)) {
     if (primitive_type_node* primitive_right =
@@ -109,7 +120,7 @@ vl_inline bool is_compatible(p_type_node_t& left, p_type_node_t& right) {
   return false;
 }
 
-vl_inline bool is_castable(p_type_node_t& from, p_type_node_t& into) {
+vl_implement bool is_castable(p_type_node_t& from, p_type_node_t& into) {
   if (primitive_type_node* primitive_right =
         get_derived_instance<type_node_base, primitive_type_node>(*into)) {
     if (get_derived_instance<type_node_base, primitive_type_node>(*from)) {
@@ -125,7 +136,7 @@ vl_inline bool is_castable(p_type_node_t& from, p_type_node_t& into) {
   return false;
 }
 
-vl_inline bool is_castable(p_type_node_t& from, value_type to) {
+vl_implement bool is_castable(p_type_node_t& from, value_type to) {
   if (primitive_type_node* primitive_left =
         get_derived_instance<type_node_base, primitive_type_node>(*from)) {
     if (to == value_type::string) {

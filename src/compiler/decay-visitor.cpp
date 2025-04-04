@@ -21,7 +21,7 @@ p_type_node_t decay_node_visitor::visit(union_type_node&) {
   return nullptr;
 }
 
-p_type_node_t decay_node_visitor::visit(FunctionTypeNode&) {
+p_type_node_t decay_node_visitor::visit(function_type_node&) {
   return nullptr;
 }
 

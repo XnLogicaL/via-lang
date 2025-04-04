@@ -16,66 +16,63 @@ namespace via {
 
 using symbol_t = std::string;
 
-struct comp_stack_obj {
+struct variable_stack_obj {
   bool is_const = false;
   bool is_constexpr = false;
-
-  std::string symbol = "<anonymous-symbol>";
-
+  symbol_t symbol;
   p_type_node_t type;
 };
 
-class compiler_stack final {
+struct function_stack_obj {
+  size_t stack_pointer = 0;
+  func_stmt_node* func_stmt;
+};
+
+template<typename T>
+class compiler_stack_base {
 public:
-  // Type aliases
-  using index_query_result = std::optional<comp_stack_obj>;
-  using find_query_result = std::optional<operand_t>;
-
-  using function_stack_node = func_stmt_node::stack_node;
-  using function_stack_type = std::stack<function_stack_node>;
-
-  // Constructor
-  compiler_stack()
-    : capacity(vl_tstacksize),
-      sbp(new comp_stack_obj[capacity]) {}
-
-  // Destructor
-  ~compiler_stack() {
-    delete[] sbp;
-  }
+  virtual ~compiler_stack_base() = default;
 
   // Returns the size of the stack.
-  size_t size();
+  vl_implement constexpr size_t size() const {
+    return m_stack_pointer;
+  }
 
-  // Pushes a given stack object onto the stack.
-  void push(comp_stack_obj);
+  // Pushes a value onto the stack.
+  vl_implement void push(T&& val) {
+    m_array[m_stack_pointer++] = std::move(val);
+  }
 
-  // Returns the top stack object of the stack.
-  comp_stack_obj top();
+  // Pops a value from the stack and returns it.
+  vl_implement T pop() {
+    return std::move(m_array[m_stack_pointer--]);
+  }
 
-  // Pops and returns a clone of the top-most stack object of the stack.
-  comp_stack_obj pop();
+  // Returns the top element of the stack.
+  vl_implement T& top() {
+    return m_array[m_stack_pointer - 1];
+  }
 
+  vl_implement const T& top() const {
+    return m_array[m_stack_pointer - 1];
+  }
+
+protected:
+  size_t m_stack_pointer = 0;
+  T m_array[vl_tstacksize];
+};
+
+class variable_stack : public compiler_stack_base<variable_stack_obj> {
+public:
   // Returns the stack object at a given index.
-  index_query_result at(size_t);
+  std::optional<variable_stack_obj> at(size_t);
 
   // Returns the stack id of a given stack object.
-  find_query_result find_symbol(const comp_stack_obj&);
-  find_query_result find_symbol(const symbol_t&);
-
-public:
-  function_stack_type function_stack;
-
-private:
-  size_t sp = 0;
-  size_t capacity;
-
-  comp_stack_obj* sbp;
-
-private:
-  // Dynamically grows and relocates the stack.
-  void grow_stack();
+  std::optional<operand_t> find_symbol(const variable_stack_obj&);
+  std::optional<operand_t> find_symbol(const symbol_t&);
 };
+
+class function_stack : public compiler_stack_base<function_stack_obj> {};
 
 } // namespace via
 

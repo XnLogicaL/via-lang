@@ -30,12 +30,14 @@ public:
   compiler(trans_unit_context& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
-  // compiler entry point.
+  // Compiler entry point.
   bool generate();
+
+  // Adds a custom unused expression handler to the statement visitor.
+  void add_unused_expression_handler(const unused_expression_handler_t& handler);
 
 private:
   void codegen_prep();
-  void check_global_collisions(bool& failed);
   void insert_exit0_instruction();
 
 private:
