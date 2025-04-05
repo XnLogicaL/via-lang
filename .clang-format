@@ -35,6 +35,9 @@ AllowAllParametersOfDeclarationOnNextLine: true
 AlignAfterOpenBracket: BlockIndent
 BinPackArguments: false
 BinPackParameters: false
+AlignOperands: false
+BreakBeforeBinaryOperators: NonAssignment
+PenaltyBreakBeforeFirstCallParameter: 0
 PenaltyReturnTypeOnItsOwnLine: 10000
 AlignConsecutiveMacros: true
 ContinuationIndentWidth: 2

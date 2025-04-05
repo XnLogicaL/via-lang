@@ -46,7 +46,7 @@ void bytecode_holder::insert(
   instructions.insert(
     instructions.begin() + index,
     {
-      .instruction =
+      .instruct =
         {
           .op = opcode,
           .operand0 = operands.at(0),
@@ -63,7 +63,7 @@ void bytecode_holder::insert(
 
 void bytecode_holder::emit(opcode opcode, operands_array& operands, comment_type& comment) {
   add({
-    .instruction =
+    .instruct =
       {
         .op = opcode,
         .operand0 = operands.at(0),

@@ -54,7 +54,7 @@ index_query_result global_holder::get_index(const std::string& symbol) {
 global_query_result global_holder::get_global(const std::string& symbol) {
   for (const global_obj& global : globals) {
     if (global.symbol == symbol) {
-      return global_obj{global.token, global.symbol, global.type->clone()};
+      return global_obj{global.tok, global.symbol, global.type->clone()};
     }
   }
 
@@ -63,7 +63,7 @@ global_query_result global_holder::get_global(const std::string& symbol) {
 
 global_query_result global_holder::get_global(size_t index) {
   global_obj& global = globals.at(index);
-  return global_obj{global.token, global.symbol, global.type->clone()};
+  return global_obj{global.tok, global.symbol, global.type->clone()};
 }
 
 const global_vector& global_holder::get() {

@@ -34,6 +34,11 @@ char lexer::consume(size_t ahead) {
   return unit_ctx.file_source.at(pos += ahead);
 }
 
+#if VIA_USING_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 token lexer::read_number(size_t position) {
   token_type type = LIT_INT;
   size_t start_offset = offset;
@@ -77,11 +82,15 @@ token lexer::read_number(size_t position) {
   }
 
   if (type == LIT_HEX || type == LIT_BINARY) {
-    value = std::string("0") + delimiter + value;
+    value = std::format("0{}{}", delimiter, value);
   }
 
   return token(type, value, line, start_offset, position);
 }
+
+#if VIA_USING_GCC
+#pragma GCC diagnostic pop
+#endif
 
 token lexer::read_ident(size_t position) {
   // List of allowed special characters that can be included in an identifier

@@ -115,12 +115,18 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
     else {
       unit_ctx.bytecode->emit(GETSTACK, {dst, stk_id.value()}, symbol);
     }
+
+    return;
   }
   else if (unit_ctx.internal.globals->was_declared(symbol)) {
-    uint32_t symbol_hash = hash_string_custom(symbol.c_str());
-    auto operands = reinterpret_u32_as_2u16(symbol_hash);
+    lit_expr_node lit_translation = lit_expr_node(variable_node.identifier, symbol);
+    value_obj const_val = construct_constant(lit_translation);
+    operand_t const_id = unit_ctx.constants->push_constant(const_val);
+    operand_t tmp_reg = allocator.allocate_temp();
 
-    unit_ctx.bytecode->emit(GETGLOBAL, {dst, operands.l, operands.r}, symbol);
+    unit_ctx.bytecode->emit(LOADK, {tmp_reg, const_id});
+    unit_ctx.bytecode->emit(GETGLOBAL, {dst, tmp_reg}, symbol);
+    return;
   }
   else if (unit_ctx.internal.function_stack->size() > 0) {
     uint16_t index = 0;
@@ -135,9 +141,7 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
       ++index;
     }
   }
-  else {
-    compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
-  }
+  compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
 }
 
 void expr_node_visitor::visit(unary_expr_node& unary_node, operand_t dst) {
@@ -156,7 +160,7 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
   p_expr_node_t& callee = call_node.callee;
   p_type_node_t callee_type = call_node.callee->infer_type(unit_ctx);
 
-  vl_tinference_failure(callee_type, callee);
+  VIA_TINFERENCE_FAILURE(callee_type, callee);
 
   if (function_type_node* fn_ty =
         get_derived_instance<type_node_base, function_type_node>(*callee_type)) {
@@ -293,8 +297,8 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   p_type_node_t left_type = p_lhs->infer_type(unit_ctx);
   p_type_node_t right_type = p_rhs->infer_type(unit_ctx);
 
-  vl_tinference_failure(left_type, binary_node.lhs_expression);
-  vl_tinference_failure(right_type, binary_node.rhs_expression);
+  VIA_TINFERENCE_FAILURE(left_type, binary_node.lhs_expression);
+  VIA_TINFERENCE_FAILURE(right_type, binary_node.rhs_expression);
 
   if (!is_compatible(left_type, right_type)) {
     compiler_error(
@@ -314,6 +318,11 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   OpCodeId opcode_id = base_opcode_id;
 
   if (is_constant_expression(rhs)) {
+    if (base_opcode == AND || base_opcode == OR || base_opcode == LESS || base_opcode == GREATER
+        || base_opcode == LESSOREQUAL || base_opcode == GREATEROREQUAL) {
+      goto non_constexpr;
+    }
+
     lit_expr_node& literal = dynamic_cast<lit_expr_node&>(rhs);
 
     if (base_opcode == DIV) {
@@ -334,7 +343,6 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     division_by_zero:
       compiler_error(literal.value_token, "Explicit division by zero");
       return;
-
     good_division:
     }
 
@@ -381,6 +389,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     }
   }
   else {
+  non_constexpr:
     operand_t reg = allocator.allocate_register();
 
     if (rhs.precedence() > lhs.precedence()) {
@@ -392,7 +401,18 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
       rhs.accept(*this, reg);
     }
 
-    unit_ctx.bytecode->emit(base_opcode, {dst, reg});
+    if (base_opcode == AND || base_opcode == OR || base_opcode == LESS || base_opcode == GREATER
+        || base_opcode == LESSOREQUAL || base_opcode == GREATEROREQUAL) {
+      operand_t left_reg = allocator.allocate_register();
+
+      unit_ctx.bytecode->emit(MOVE, {left_reg, dst});
+      unit_ctx.bytecode->emit(base_opcode, {dst, left_reg, reg});
+      return;
+    }
+    else {
+      unit_ctx.bytecode->emit(base_opcode, {dst, reg});
+    }
+
     allocator.free_register(reg);
   }
 }
@@ -400,7 +420,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
 void expr_node_visitor::visit(cast_expr_node& type_cast, operand_t dst) {
   p_type_node_t left_type = type_cast.expression->infer_type(unit_ctx);
 
-  vl_tinference_failure(left_type, type_cast.expression);
+  VIA_TINFERENCE_FAILURE(left_type, type_cast.expression);
 
   if (!is_castable(left_type, type_cast.type)) {
     compiler_error(

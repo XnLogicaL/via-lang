@@ -68,7 +68,7 @@ std::string get_error_level_header(const comp_err_lvl& lvl) {
   case ERROR_:
     return apply_color("error: ", fg_color::red, bg_color::black, style::bold);
   default:
-    vl_unreachable;
+    VIA_UNREACHABLE;
   }
 }
 
@@ -102,10 +102,9 @@ std::string compile_error::to_string() const {
     std::string underline;
     if (lines.size() == 1) {
       // Single-line error: underline from local_begin.offset to local_end.offset.
-      underline =
-        std::string(local_begin.offset, ' ') +
-        std::string(local_end.offset - local_begin.offset, '^') +
-        std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
+      underline = std::string(local_begin.offset, ' ')
+        + std::string(local_end.offset - local_begin.offset, '^')
+        + std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
     }
     else {
       // Multi-line error.
@@ -116,9 +115,8 @@ std::string compile_error::to_string() const {
       }
       else if (pos == lines.size() - 1) {
         // Last line: underline from beginning of line up to local_end.offset.
-        underline =
-          std::string(local_end.offset, '^') +
-          std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
+        underline = std::string(local_end.offset, '^')
+          + std::string(line.size() > local_end.offset ? line.size() - local_end.offset : 0, ' ');
       }
       else {
         // Intermediate lines: fully underline the entire line.

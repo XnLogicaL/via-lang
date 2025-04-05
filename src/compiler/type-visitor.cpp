@@ -15,8 +15,8 @@ void type_node_visitor::visit(decl_stmt_node& declaration_node) {
   p_type_node_t infered_type = declaration_node.value_expression->infer_type(unit_ctx);
   p_type_node_t& annotated_type = declaration_node.type;
 
-  vl_tinference_failure(infered_type, declaration_node.value_expression);
-  vl_tinference_failure(annotated_type, declaration_node.value_expression);
+  VIA_TINFERENCE_FAILURE(infered_type, declaration_node.value_expression);
+  VIA_TINFERENCE_FAILURE(annotated_type, declaration_node.value_expression);
 
   if (is_nil(annotated_type)) {
     compiler_warning(
@@ -48,8 +48,8 @@ void type_node_visitor::visit(assign_stmt_node& assign_node) {
   p_type_node_t infered_type = assign_node.assignee->infer_type(unit_ctx);
   p_type_node_t assigned_type = assign_node.value->infer_type(unit_ctx);
 
-  vl_tinference_failure(infered_type, assign_node.assignee);
-  vl_tinference_failure(assigned_type, assign_node.value);
+  VIA_TINFERENCE_FAILURE(infered_type, assign_node.assignee);
+  VIA_TINFERENCE_FAILURE(assigned_type, assign_node.value);
 
   if (!is_compatible(infered_type, assigned_type)) {
     compiler_error(

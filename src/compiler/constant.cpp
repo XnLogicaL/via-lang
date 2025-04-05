@@ -18,7 +18,7 @@ size_t constant_holder::size() const {
 operand_t constant_holder::push_constant(constant_type& constant) {
   for (size_t index = 0; index < constants.size(); index++) {
     const value_obj& val = constants[index];
-    if vl_unlikely (val.compare(constant)) {
+    if VIA_UNLIKELY (val.compare(constant)) {
       return index;
     }
   }

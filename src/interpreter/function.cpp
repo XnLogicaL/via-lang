@@ -12,16 +12,15 @@ function_obj::~function_obj() {
 }
 
 function_obj::function_obj(const function_obj& other)
-  : call_info(other.call_info),
-    upv_count(other.upv_count) {
-  size_t bytecode_len = iep - ibp;
+  : ic(other.ic),
+    upvc(other.upvc),
+    call_data(other.call_data) {
+  ibp = new instruction[ic];
+  upvs = new upv_obj[upvc];
 
-  ibp = new instruction[bytecode_len];
-  upvs = new upv_obj[upv_count];
+  std::memcpy(ibp, other.ibp, ic * sizeof(instruction));
 
-  std::memcpy(ibp, other.ibp, bytecode_len);
-
-  for (size_t i = 0; i < other.upv_count; i++) {
+  for (size_t i = 0; i < other.upvc; i++) {
     const upv_obj& upv = other.upvs[i];
     if (!upv.is_valid) {
       continue;

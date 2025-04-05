@@ -6,7 +6,7 @@
 
 namespace via {
 
-std::optional<variable_stack_obj> variable_stack::at(size_t pos) {
+std::optional<variable_stack_obj> compiler_variable_stack::at(size_t pos) {
   if (pos > size()) {
     return std::nullopt;
   }
@@ -22,17 +22,16 @@ std::optional<variable_stack_obj> variable_stack::at(size_t pos) {
   return new_obj;
 }
 
-std::optional<operand_t> variable_stack::find_symbol(const symbol_t& symbol) {
-  for (variable_stack_obj* stk_id = m_array; stk_id < m_array + m_stack_pointer; stk_id++) {
-    if (stk_id->symbol == symbol) {
-      return stk_id - m_array;
+std::optional<operand_t> compiler_variable_stack::find_symbol(const symbol_t& symbol) {
+  for (int i = m_stack_pointer - 1; i >= 0; --i) {
+    if (m_array[i].symbol == symbol) {
+      return i;
     }
   }
-
   return std::nullopt;
 }
 
-std::optional<operand_t> variable_stack::find_symbol(const variable_stack_obj& member) {
+std::optional<operand_t> compiler_variable_stack::find_symbol(const variable_stack_obj& member) {
   return find_symbol(member.symbol);
 }
 

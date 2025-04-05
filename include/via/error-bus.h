@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_error_bus_h
-#define vl_has_header_error_bus_h
+#ifndef VIA_HAS_HEADER_ERROR_BUS_H
+#define VIA_HAS_HEADER_ERROR_BUS_H
 
 #include "common.h"
 
@@ -21,7 +21,7 @@ struct comp_err_pos {
   const size_t begin = 0;
   const size_t end = 0;
 
-  vl_defconstructor(comp_err_pos);
+  VIA_DEFCONSTRUCTOR(comp_err_pos);
 
   comp_err_pos(size_t l, size_t c, size_t b, size_t e)
     : line(l),

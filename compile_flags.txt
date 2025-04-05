@@ -18,3 +18,4 @@
 -I./cpp-linenoise
 -I./magic_enum/include
 -I./rang/include
+-D__GNUC__

@@ -2,15 +2,15 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_stack_h
-#define vl_has_header_stack_h
+#ifndef VIA_HAS_HEADER_STACK_H
+#define VIA_HAS_HEADER_STACK_H
 
 #include "ast.h"
 #include "ast-base.h"
 #include "instruction.h"
 #include "common.h"
 
-#define vl_tstacksize 2048
+#define VIA_TSTACKSIZE 2048
 
 namespace via {
 
@@ -34,35 +34,35 @@ public:
   virtual ~compiler_stack_base() = default;
 
   // Returns the size of the stack.
-  vl_implement constexpr size_t size() const {
+  VIA_IMPLEMENTATION constexpr size_t size() const {
     return m_stack_pointer;
   }
 
   // Pushes a value onto the stack.
-  vl_implement void push(T&& val) {
+  VIA_IMPLEMENTATION void push(T&& val) {
     m_array[m_stack_pointer++] = std::move(val);
   }
 
   // Pops a value from the stack and returns it.
-  vl_implement T pop() {
+  VIA_IMPLEMENTATION T pop() {
     return std::move(m_array[m_stack_pointer--]);
   }
 
   // Returns the top element of the stack.
-  vl_implement T& top() {
+  VIA_IMPLEMENTATION T& top() {
     return m_array[m_stack_pointer - 1];
   }
 
-  vl_implement const T& top() const {
+  VIA_IMPLEMENTATION const T& top() const {
     return m_array[m_stack_pointer - 1];
   }
 
 protected:
   size_t m_stack_pointer = 0;
-  T m_array[vl_tstacksize];
+  T m_array[VIA_TSTACKSIZE];
 };
 
-class variable_stack : public compiler_stack_base<variable_stack_obj> {
+class compiler_variable_stack : public compiler_stack_base<variable_stack_obj> {
 public:
   // Returns the stack object at a given index.
   std::optional<variable_stack_obj> at(size_t);
@@ -72,7 +72,7 @@ public:
   std::optional<operand_t> find_symbol(const symbol_t&);
 };
 
-class function_stack : public compiler_stack_base<function_stack_obj> {};
+class compiler_function_stack : public compiler_stack_base<function_stack_obj> {};
 
 } // namespace via
 

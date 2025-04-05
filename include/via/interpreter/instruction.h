@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_instruction_h
-#define vl_has_header_instruction_h
+#ifndef VIA_HAS_HEADER_INSTRUCTION_H
+#define VIA_HAS_HEADER_INSTRUCTION_H
 
 #include "common.h"
 #include "opcode.h"
@@ -19,7 +19,7 @@ struct instruction_data {
   std::string comment = "";
 };
 
-struct vl_align(8) instruction {
+struct VIA_ALIGN(8) instruction {
   opcode op = opcode::NOP;
 
   operand_t operand0 = 0;
@@ -28,7 +28,7 @@ struct vl_align(8) instruction {
 };
 
 struct bytecode {
-  instruction instruction;
+  instruction instruct;
   instruction_data meta_data;
 };
 

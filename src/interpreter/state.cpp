@@ -27,7 +27,6 @@ state::state(global_state* glb, trans_unit_context& unit_ctx)
 
 state::~state() {
   delete err;
-
   delete[] sibp;
 
   __register_deallocate(this);
@@ -41,44 +40,18 @@ void state::load(const bytecode_holder& bytecode_holder) {
   auto& pipeline = bytecode_holder.get();
 
   if (pipeline.empty()) {
-    ibp = sibp = siep = iep = pc = nullptr;
+    ibp = sibp = pc = nullptr;
     return;
   }
 
   ibp = new instruction[pipeline.size()]; // Allocate ibp (instruction base/begin pointer)
   sibp = ibp;
-  iep = ibp + pipeline.size(); // Initialize iep (instruction end pointer)
-  siep = iep;
   pc = ibp; // Initialize pc (instruction pointer)
 
   size_t position = 0;
   for (const bytecode& pair : pipeline) {
-    ibp[position++] = pair.instruction;
+    ibp[position++] = pair.instruct;
   }
-}
-
-std::string to_string(state* state) {
-#define VOID_STAR(ptr) reinterpret_cast<void*>(ptr)
-
-  std::ostringstream oss;
-
-  oss << std::format("==== state@{} ====\n", VOID_STAR(state));
-  oss << std::format("|id    | {}\n", state->id);
-  oss << std::format("|glb     | <global_state@{}>\n", VOID_STAR(state->glb));
-  oss << std::format("|pc    | {}\n", VOID_STAR(state->pc));
-  oss << std::format("|ibp   | {}\n", VOID_STAR(state->ibp));
-  oss << std::format("|iep   | {}\n", VOID_STAR(state->iep));
-  oss << std::format("|reg   | {}\n", VOID_STAR(state->registers));
-  oss << std::format("|sbp   | {}\n", VOID_STAR(state->sbp));
-  oss << std::format("|sp    | {}\n", state->sp);
-  oss << std::format("|frame | {}\n", VOID_STAR(state->frame));
-  oss << std::format("|abort | {}\n", state->abort);
-  oss << std::format("|err   | <ErrorState@{}>\n", VOID_STAR(state->err));
-
-  oss << "==== state ====\n";
-
-  return oss.str();
-#undef VOID_STAR
 }
 
 } // namespace via

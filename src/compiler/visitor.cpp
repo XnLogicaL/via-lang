@@ -43,14 +43,13 @@ value_obj construct_constant(lit_expr_node& literal_node) {
         return value_obj(val);
       }
       else if constexpr (std::is_same_v<T, std::string>) {
-        string_obj* tstring = new string_obj(nullptr, val.data());
-        return value_obj(string, static_cast<void*>(tstring));
+        return value_obj(val.data());
       }
       else if constexpr (std::is_same_v<T, std::monostate>) {
         return value_obj();
       }
 
-      vl_unreachable;
+      VIA_UNREACHABLE;
     },
     literal_node.value
   );

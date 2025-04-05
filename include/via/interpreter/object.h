@@ -2,11 +2,12 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_object_h
-#define vl_has_header_object_h
+#ifndef VIA_HAS_HEADER_OBJECT_H
+#define VIA_HAS_HEADER_OBJECT_H
 
 #include "common-macros.h"
 #include "common-defs.h"
+#include "magic_enum/magic_enum.hpp"
 
 namespace via {
 
@@ -42,7 +43,7 @@ enum class value_type : uint8_t {
   object,         // Object type, pointer to object_obj
 };
 
-struct vl_align(8) value_obj {
+struct VIA_ALIGN(8) value_obj {
   value_type type;
   union {
     TInteger val_integer;      // Integer value
@@ -51,7 +52,7 @@ struct vl_align(8) value_obj {
     void* val_pointer;         // Pointer to complex types (string, function, etc.)
   };
 
-  vl_nocopy(value_obj);
+  VIA_NOCOPY(value_obj);
 
   value_obj(value_obj&& other);
   value_obj& operator=(value_obj&&);
@@ -97,56 +98,69 @@ struct vl_align(8) value_obj {
       val_pointer(ptr) {}
 
   explicit value_obj(const char* str);
-  explicit value_obj(state* state, const char* str);
 
   // Returns whether if the object holds a given type.
-  vl_forceinline constexpr bool is(value_type other) const {
+  VIA_FORCEINLINE constexpr bool is(value_type other) const {
     return type == other;
   }
 
-  vl_forceinline constexpr bool is_nil() const {
+  VIA_FORCEINLINE constexpr bool is_nil() const {
     return is(value_type::nil);
   }
 
-  vl_forceinline constexpr bool is_bool() const {
+  VIA_FORCEINLINE constexpr bool is_bool() const {
     return is(value_type::boolean);
   }
 
-  vl_forceinline constexpr bool is_int() const {
+  VIA_FORCEINLINE constexpr bool is_int() const {
     return is(value_type::integer);
   }
 
-  vl_forceinline constexpr bool is_float() const {
+  VIA_FORCEINLINE constexpr bool is_float() const {
     return is(value_type::floating_point);
   }
 
-  vl_forceinline constexpr bool is_number() const {
+  VIA_FORCEINLINE constexpr bool is_number() const {
     return is_int() || is_float();
   }
 
-  vl_forceinline constexpr bool is_string() const {
+  VIA_FORCEINLINE constexpr bool is_string() const {
     return is(value_type::string);
   }
 
-  vl_forceinline constexpr bool is_table() const {
+  VIA_FORCEINLINE constexpr bool is_table() const {
     return is(value_type::table);
   }
 
-  vl_forceinline constexpr bool is_subscriptable() const {
+  VIA_FORCEINLINE constexpr bool is_subscriptable() const {
     return is_string() || is_table();
   }
 
-  vl_forceinline constexpr bool is_function() const {
+  VIA_FORCEINLINE constexpr bool is_function() const {
     return is(value_type::function);
   }
 
-  vl_forceinline constexpr bool is_cfunction() const {
+  VIA_FORCEINLINE constexpr bool is_cfunction() const {
     return is(value_type::cfunction);
   }
 
-  vl_forceinline constexpr bool is_callable() const {
+  VIA_FORCEINLINE constexpr bool is_callable() const {
     return is_function() || is_cfunction();
   }
+
+  // Attempts to convert a given value into an integer.
+  value_obj to_integer() const;
+
+  // Attempts to convert a given value into a float.
+  value_obj to_float() const;
+
+  // Converts a given value into a boolean.
+  value_obj to_boolean() const;
+
+  // Converts a given value into a string.
+  value_obj to_string() const;
+  std::string to_cxx_string() const;
+  std::string to_literal_cxx_string() const;
 
   // Returns a clone of the object.
   value_obj clone() const;
@@ -158,34 +172,34 @@ struct vl_align(8) value_obj {
   [[nodiscard]] bool compare(const value_obj& other) const;
 
   // Moves the value and returns it as an rvalue reference.
-  [[nodiscard]] vl_forceinline value_obj&& move() {
+  [[nodiscard]] VIA_FORCEINLINE value_obj&& move() {
     return static_cast<value_obj&&>(*this);
   }
 
-  [[nodiscard]] vl_forceinline const value_obj&& move() const {
+  [[nodiscard]] VIA_FORCEINLINE const value_obj&& move() const {
     return static_cast<const value_obj&&>(*this);
   }
 
   // Returns the pointer value as a pointer to type T.
   template<typename T>
-  [[nodiscard]] vl_forceinline T* cast_ptr() {
+  [[nodiscard]] VIA_FORCEINLINE T* cast_ptr() {
     return reinterpret_cast<T*>(val_pointer);
   }
 
   template<typename T>
     requires std::is_pointer_v<T>
-  [[nodiscard]] vl_forceinline T cast_ptr() {
+  [[nodiscard]] VIA_FORCEINLINE T cast_ptr() {
     return reinterpret_cast<T>(val_pointer);
   }
 
   template<typename T>
-  [[nodiscard]] vl_forceinline const T* cast_ptr() const {
+  [[nodiscard]] VIA_FORCEINLINE const T* cast_ptr() const {
     return reinterpret_cast<const T*>(val_pointer);
   }
 
   template<typename T>
     requires std::is_pointer_v<T>
-  [[nodiscard]] vl_forceinline const T cast_ptr() const {
+  [[nodiscard]] VIA_FORCEINLINE const T cast_ptr() const {
     return reinterpret_cast<const T>(val_pointer);
   }
 };
@@ -196,7 +210,7 @@ struct string_obj {
   char* data;
 
   explicit string_obj(const string_obj&);
-  explicit string_obj(state*, const char*);
+  explicit string_obj(const char*);
   ~string_obj();
 
   size_t size();
@@ -207,7 +221,8 @@ struct string_obj {
 struct hash_node_obj {
   const char* key;
   value_obj value;
-  hash_node_obj* next;
+
+  ~hash_node_obj();
 };
 
 struct table_obj {
@@ -220,7 +235,7 @@ struct table_obj {
   bool ht_size_cache_valid = true;
 
   value_obj* arr_array = new value_obj[arr_capacity];
-  hash_node_obj** ht_buckets = new hash_node_obj*[ht_capacity];
+  hash_node_obj* ht_buckets = new hash_node_obj[ht_capacity];
 
   table_obj() = default;
   table_obj(const table_obj&);

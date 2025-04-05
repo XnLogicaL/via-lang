@@ -2,79 +2,90 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_common_macros_h
-#define vl_has_header_common_macros_h
+#ifndef VIA_HAS_HEADER_COMMON_MACROS_H
+#define VIA_HAS_HEADER_COMMON_MACROS_H
 
 #include <iostream>
 #include <cstdlib>
 
-#if __has_include(<stacktrace>) && __cplusplus >= 202302L
-#include <stacktrace>
-#define vl_hasstacktrace 1
-#else
-#define vl_hasstacktrace 0
+#define VIA_USING_GCC   !__clang__&& __GNUC__
+#define VIA_USING_CLANG __clang__&& __GNUC__
+
+#if VIA_USING_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmultistatement-macros"
 #endif
 
-#define vl_version "0.28.0"
+#if __has_include(<stacktrace>) && __cplusplus >= 202302L
+#include <stacktrace>
+#define VIA_HASSTACKTRACE 1
+#else
+#define VIA_HASSTACKTRACE 0
+#endif
+
+#define VIA_VERSION "0.28.1"
 
 // Parameter declaration spec macros
-#define vl_restrict __restrict__
+#define VIA_RESTRICT __restrict__
 
 // Function declaration spec macros
-#define vl_nomangle    extern "C"
-#define vl_nodiscard   [[nodiscard]]
-#define vl_noreturn    __attribute__((__noreturn__))
-#define vl_noinline    __attribute__((noinline))
-#define vl_inline      inline
-#define vl_forceinline inline __attribute__((always_inline))
-#define vl_optimize    inline __attribute__((always_inline, hot))
-#define vl_implement   inline // Used for header-only implementations
+#define VIA_NOMANGLE       extern "C"
+#define VIA_NODISCARD      [[nodiscard]]
+#define VIA_NORETURN       __attribute__((__noreturn__))
+#define VIA_NOINLINE       __attribute__((noinline))
+#define VIA_INLINE         inline
+#define VIA_FORCEINLINE    inline __attribute__((always_inline))
+#define VIA_OPTIMIZE       inline __attribute__((always_inline, hot))
+#define VIA_IMPLEMENTATION inline // Used for header-only implementations
 
-#define vl_unreachable __builtin_unreachable()
-#define vl_funcsig     __PRETTY_FUNCTION__
+#define VIA_UNREACHABLE __builtin_unreachable()
+#define VIA_FUNCSIG     __PRETTY_FUNCTION__
 
 // Branch prediction macros
-#define vl_likely(a)   (__builtin_expect(!!(a), 1))
-#define vl_unlikely(a) (__builtin_expect(!!(a), 0))
+#define VIA_LIKELY(a)   (__builtin_expect(!!(a), 1))
+#define VIA_UNLIKELY(a) (__builtin_expect(!!(a), 0))
 
 // Class spec macros
-#define vl_defconstructor(target) target() = default;
-#define vl_defdestructor(target)  ~target() = default;
+#define VIA_DEFCONSTRUCTOR(target) target() = default;
+#define VIA_DEFDESTRUCTOR(target)  ~target() = default;
 
-#define vl_nocopy(target)                                                                          \
+#define VIA_NOCOPY(target)                                                                         \
   target& operator=(const target&) = delete;                                                       \
   target(const target&) = delete;
 
-#define vl_implcopy(target)                                                                        \
+#define VIA_IMPLCOPY(target)                                                                       \
   target& operator=(const target&);                                                                \
   target(const target&);
 
-#define vl_nomove(target)                                                                          \
+#define VIA_NOMOVE(target)                                                                         \
   target& operator=(const target&&) = delete;                                                      \
   target(const target&&) = delete;
 
-#define vl_implmove(target)                                                                        \
+#define VIA_IMPLMOVE(target)                                                                       \
   target& operator=(const target&&);                                                               \
   target(const target&&);
 
-#define vl_align(x) alignas(x)
+#define VIA_ALIGN(x) alignas(x)
 
-#if VIA_HAS_STACKTRACE == 1
-#define vl_stacktrace std::stacktrace::current()
+#if VIA_HASSTACKTRACE == 1
+#define VIA_STACKTRACE std::stacktrace::current()
 #else
-#define vl_stacktrace ""
+#define VIA_STACKTRACE ""
 #endif
 
 // Utility macros
-#define vl_assert(condition, message)                                                              \
+#define VIA_ASSERT(condition, message)                                                             \
   if (!(condition)) {                                                                              \
-    std::cerr << "vl_assert(): assertion '" << #condition << "' failed.\n"                         \
-              << "File: " << __FILE__ << " | Line: " << __LINE__ << " | Function: " << vl_funcsig  \
-              << "\nMessage: " << message << "\n";                                                 \
-    if (vl_hasstacktrace) {                                                                        \
-      std::cerr << "Call stack:\n" << vl_stacktrace << '\n';                                       \
+    std::cerr << "VIA_ASSERT(): assertion '" << #condition << "' failed.\n"                        \
+              << "location: " << __FILE__ << ":" << __LINE__ << "\nmessage: " << message << "\n";  \
+    if (VIA_HASSTACKTRACE) {                                                                       \
+      std::cerr << "callstack:\n" << VIA_STACKTRACE << '\n';                                       \
     }                                                                                              \
     std::abort();                                                                                  \
   }
+
+#if VIA_USING_GCC
+#pragma GCC diagnostic pop
+#endif
 
 #endif

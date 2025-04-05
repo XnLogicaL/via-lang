@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_globals_h
-#define vl_has_header_globals_h
+#ifndef VIA_HAS_HEADER_GLOBALS_H
+#define VIA_HAS_HEADER_GLOBALS_H
 
 #include "ast-base.h"
 #include "object.h"
@@ -13,7 +13,7 @@
 namespace via {
 
 struct global_obj {
-  token token;
+  token tok;
   std::string symbol;
   p_type_node_t type;
 };

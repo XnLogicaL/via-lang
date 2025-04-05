@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_context_h
-#define vl_has_header_context_h
+#ifndef VIA_HAS_HEADER_CONTEXT_H
+#define VIA_HAS_HEADER_CONTEXT_H
 
 #include "common-defs.h"
 #include "common-macros.h"
@@ -21,8 +21,8 @@ class token_stream;
 class syntax_tree;
 class bytecode_holder;
 class constant_holder;
-class variable_stack;
-class function_stack;
+class compiler_variable_stack;
+class compiler_function_stack;
 class global_holder;
 
 class trans_unit_context final {
@@ -33,6 +33,7 @@ public:
   // Encodes the translation unit onto a byte stream.
   byte_stream_t encode();
 
+  // Returns platform info in a static buffer.
   const char* get_platform_info();
 
   trans_unit_context(const std::string& file_path, const std::string& file_source);
@@ -47,11 +48,11 @@ public:
   std::unique_ptr<bytecode_holder> bytecode;
   std::unique_ptr<constant_holder> constants;
 
-  struct Internal {
+  struct {
     size_t label_count;
 
-    std::unique_ptr<variable_stack> variable_stack;
-    std::unique_ptr<function_stack> function_stack;
+    std::unique_ptr<compiler_variable_stack> variable_stack;
+    std::unique_ptr<compiler_function_stack> function_stack;
     std::unique_ptr<global_holder> globals;
   } internal;
 };

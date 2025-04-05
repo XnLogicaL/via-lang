@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_function_h
-#define vl_has_header_function_h
+#ifndef VIA_HAS_HEADER_FUNCTION_H
+#define VIA_HAS_HEADER_FUNCTION_H
 
 #include "common.h"
 #include "state.h"
@@ -23,21 +23,23 @@ struct call_info {
   function_obj* caller;
   instruction* pc;
   instruction* ibp;
-  instruction* iep;
   size_t sp;
   size_t argc;
 };
 
 struct function_obj {
-  call_info call_info;
+  size_t ic;
+  size_t upvc;
 
-  instruction* ibp = nullptr;
-  instruction* iep = nullptr;
+  instruction* ibp;
+  upv_obj* upvs;
 
-  upv_obj* upvs = new upv_obj[8];
-  uint32_t upv_count = 8;
+  call_info call_data;
 
-  function_obj() = default;
+  function_obj()
+    : upvc(8),
+      upvs(new upv_obj[upvc]) {}
+
   function_obj(const function_obj& other);
   ~function_obj();
 };

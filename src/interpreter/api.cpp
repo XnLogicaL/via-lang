@@ -16,12 +16,12 @@ namespace via {
 using enum value_type;
 
 value_obj& state::get_register(operand_t reg) {
-  vl_assert(reg <= vl_regcount, "invalid register");
+  VIA_ASSERT(reg <= VIA_REGCOUNT, "invalid register");
   return registers[reg];
 }
 
 void state::set_register(operand_t reg, const value_obj& val) {
-  vl_assert(reg <= vl_regcount, "invalid register");
+  VIA_ASSERT(reg <= VIA_REGCOUNT, "invalid register");
 
   value_obj* addr = registers + reg;
   *addr = val.clone();
@@ -60,8 +60,7 @@ void state::push_false() {
 }
 
 void state::push_string(const char* str) {
-  string_obj* tstr = new string_obj(this, str);
-  push(value_obj(string, tstr));
+  push(value_obj(str));
 }
 
 void state::push_table() {
@@ -69,92 +68,37 @@ void state::push_table() {
 }
 
 void state::push(const value_obj& val) {
-  vl_assert(sp < vl_vmstacksize, "stack overflow");
+  VIA_ASSERT(sp < VIA_VMSTACKSIZE, "stack overflow");
   impl::__push(this, val);
 }
 
 void state::drop() {
-  vl_assert(sp > 0, "stack underflow");
+  VIA_ASSERT(sp > 0, "stack underflow");
   impl::__drop(this);
 }
 
 value_obj state::pop() {
-  vl_assert(sp > 0, "stack underflow");
+  VIA_ASSERT(sp > 0, "stack underflow");
   return impl::__pop(this);
 }
 
 const value_obj& state::top() {
-  vl_assert(sp > 0, "stack underflow");
+  VIA_ASSERT(sp > 0, "stack underflow");
   return sbp[sp];
 }
 
 void state::set_stack(size_t position, value_obj value) {
-  vl_assert(sp >= position, "stack overflow");
+  VIA_ASSERT(sp >= position, "stack overflow");
   impl::__set_stack(this, position, value);
 }
 
 const value_obj& state::get_stack(size_t position) {
-  vl_assert(sp >= position, "stack overflow");
+  VIA_ASSERT(sp >= position, "stack overflow");
   return impl::__get_stack(this, position);
 }
 
 size_t state::stack_size() {
   return sp;
-}
-
-value_obj state::to_integer(const value_obj& value) {
-  switch (value.type) {
-  case value_type::floating_point:
-    return value_obj(static_cast<TFloat>(value.val_integer));
-  case value_type::boolean:
-    return value_obj(value.val_boolean ? 1 : 0);
-  case value_type::string: {
-    const char* data = value.cast_ptr<string_obj>()->data;
-
-    TInteger stoi_result = std::stoi(data);
-    return value_obj(stoi_result);
-  }
-  default:
-    return value_obj();
-  }
-
-  vl_unreachable;
-}
-
-value_obj state::to_float(const value_obj& value) {
-  switch (value.type) {
-  case value_type::integer:
-    return value_obj(static_cast<TInteger>(value.val_integer));
-  case value_type::boolean:
-    return value_obj(value.val_boolean ? 1.0f : 0.0f);
-  case value_type::string: {
-    const char* data = value.cast_ptr<string_obj>()->data;
-
-    TFloat stof_result = std::stof(data);
-    return value_obj(stof_result);
-  }
-  default:
-    break;
-  }
-
-  return value_obj();
-}
-
-value_obj state::to_boolean(const value_obj& value) {
-  switch (value.type) {
-  case value_type::nil:
-    return value_obj(false);
-  case value_type::boolean:
-    return value_obj(value.val_boolean);
-  default:
-    break;
-  }
-
-  return value_obj(true);
-}
-
-value_obj state::to_string(const value_obj&) {
-  return value_obj();
 }
 
 value_obj state::get_global(const char* name) {

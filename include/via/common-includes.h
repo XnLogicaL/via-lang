@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_common_includes_h
-#define vl_has_header_common_includes_h
+#ifndef VIA_HAS_HEADER_COMMON_INCLUDES_H
+#define VIA_HAS_HEADER_COMMON_INCLUDES_H
 
 // C++ std imports
 #include <bitset>

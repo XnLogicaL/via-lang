@@ -2,15 +2,15 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_state_h
-#define vl_has_header_state_h
+#ifndef VIA_HAS_HEADER_STATE_H
+#define VIA_HAS_HEADER_STATE_H
 
 #include "common.h"
 #include "instruction.h"
 #include "object.h"
 
-#define vl_vmstacksize 2048
-#define vl_regcount    0xFFFF
+#define VIA_VMSTACKSIZE 2048
+#define VIA_REGCOUNT    0xFFFF
 
 namespace via {
 
@@ -40,9 +40,9 @@ struct global_state {
 
 // "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
 // 64-byte alignment for maximum cache friendliness.
-struct vl_align(64) state {
-  vl_nocopy(state);   // Make uncopyable
-  vl_implmove(state); // Make movable
+struct VIA_ALIGN(64) state {
+  VIA_NOCOPY(state);   // Make uncopyable
+  VIA_IMPLMOVE(state); // Make movable
 
   state(global_state* global, trans_unit_context& unit_ctx);
   ~state();
@@ -54,9 +54,7 @@ struct vl_align(64) state {
   // instruction pointers
   instruction* pc = nullptr;  // Current instruction pointer
   instruction* ibp = nullptr; // instruction list begin pointer
-  instruction* iep = nullptr; // instruction list end pointer
   instruction* sibp = nullptr;
-  instruction* siep = nullptr;
 
   // Stack state
   size_t sp = 0;  // Stack pointer
@@ -157,21 +155,6 @@ struct vl_align(64) state {
   size_t stack_size();
 
   // ===========================================================================================
-  // Value manipulation
-
-  // Attempts to convert a given value into an integer.
-  value_obj to_integer(const value_obj& value);
-
-  // Attempts to convert a given value into a float.
-  value_obj to_float(const value_obj& value);
-
-  // Converts a given value into a boolean.
-  value_obj to_boolean(const value_obj& value);
-
-  // Converts a given value into a string.
-  value_obj to_string(const value_obj& value);
-
-  // ===========================================================================================
   // global_obj manipulation
 
   // Returns the global that corresponds to a given hashed identifier.
@@ -211,8 +194,6 @@ struct vl_align(64) state {
   // ===========================================================================================
   // General operations
 };
-
-std::string to_string(state*);
 
 } // namespace via
 

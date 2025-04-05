@@ -52,7 +52,7 @@ p_type_node_t lit_expr_node::infer_type(trans_unit_context&) {
   value_type value_type = std::visit(
     [](auto&& value) {
       using T = std::decay_t<decltype(value)>;
-      return data_type<T>::value_type;
+      return data_type<T>::type;
     },
     value
   );
@@ -241,25 +241,28 @@ p_type_node_t bin_expr_node::infer_type(trans_unit_context& unit_ctx) {
   p_type_node_t lhs = lhs_expression->infer_type(unit_ctx);
   p_type_node_t rhs = rhs_expression->infer_type(unit_ctx);
 
-  if (!lhs || !rhs || !is_integral(lhs) || !is_integral(rhs)) {
+  // Early return if either lhs or rhs is invalid or not arithmetic
+  if (!lhs || !rhs || !is_arithmetic(lhs) || !is_arithmetic(rhs)) {
     return nullptr;
   }
 
+  // Check for valid primitive types in both lhs and rhs
   if (primitive_type_node* lhs_primitive =
         get_derived_instance<type_node_base, primitive_type_node>(*lhs)) {
     if (primitive_type_node* rhs_primitive =
           get_derived_instance<type_node_base, primitive_type_node>(*rhs)) {
-      // If either operand is a floating point, result is floating point
+      // Check for floating-point types
       if (lhs_primitive->type == floating_point || rhs_primitive->type == floating_point) {
         return std::make_unique<primitive_type_node>(lhs_primitive->identifier, floating_point);
       }
-      // If both operands are integers, result is integer
+      // Check for integer types
       else if (lhs_primitive->type == integer && rhs_primitive->type == integer) {
         return std::make_unique<primitive_type_node>(lhs_primitive->identifier, integer);
       }
     }
   }
 
+  // Handle cases where the type inference fails
   return nullptr;
 }
 

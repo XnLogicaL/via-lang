@@ -5,12 +5,12 @@
 #include "parser.h"
 #include "compiler-types.h"
 
-#define vl_checkresult(result)                                                                     \
+#define VIA_CHECKRESULT(result)                                                                    \
   if (!result.has_value()) {                                                                       \
     return tl::unexpected(result.error());                                                         \
   }
 
-#define vl_checkresult_mainfn(result)                                                              \
+#define VIA_CHECKRESULT_MAINFN(result)                                                             \
   if (!result.has_value()) {                                                                       \
     auto err = result.error();                                                                     \
     err_bus.log({false, err.what, unit_ctx, ERROR_, unit_ctx.tokens->at(err.where)});              \
@@ -22,12 +22,6 @@ namespace via {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
-#elifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-result"
-#elifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4834)
 #endif
 
 using enum comp_err_lvl;
@@ -82,7 +76,7 @@ result<modifiers> parser::parse_modifiers() {
 
   while (true) {
     result<token> curr = current();
-    vl_checkresult(curr);
+    VIA_CHECKRESULT(curr);
 
     if (curr->type == KW_CONST) {
       if (modifiers.is_const) {
@@ -106,9 +100,9 @@ result<attribute> parser::parse_attribute() {
   result<token> expect_id = expect_consume(IDENTIFIER, "Expected identifier for attribute name");
   result<token> curr = current();
 
-  vl_checkresult(expect_at);
-  vl_checkresult(expect_id);
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(expect_at);
+  VIA_CHECKRESULT(expect_id);
+  VIA_CHECKRESULT(curr);
 
   attribute attr;
   attr.identifier = *expect_id;
@@ -118,7 +112,7 @@ result<attribute> parser::parse_attribute() {
 
     while (true) {
       curr = current();
-      vl_checkresult(curr);
+      VIA_CHECKRESULT(curr);
 
       if (curr->type == PAREN_CLOSE) {
         break;
@@ -140,36 +134,36 @@ result<p_type_node_t> parser::parse_generic() {
   result<token> identifier = consume();
   result<modifiers> modifiers = parse_modifiers();
 
-  vl_checkresult(identifier);
-  vl_checkresult(modifiers);
+  VIA_CHECKRESULT(identifier);
+  VIA_CHECKRESULT(modifiers);
 
   generics_t generics;
 
   result<token> expect_lt = expect_consume(OP_LT, "Expected '<' to open type generic");
   result<token> curr = current();
 
-  vl_checkresult(expect_lt);
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(expect_lt);
+  VIA_CHECKRESULT(curr);
 
   while (curr->type != OP_GT) {
     result<p_type_node_t> result_type = parse_type();
     result<token> result_token = current();
 
-    vl_checkresult(result_type);
-    vl_checkresult(result_token);
+    VIA_CHECKRESULT(result_type);
+    VIA_CHECKRESULT(result_token);
 
     generics.emplace_back(std::move(result_type.value()));
 
     if (curr->type != OP_GT) {
       result<token> expect_comma = expect_consume(COMMA, "Expected ',' to seperate type generics");
 
-      vl_checkresult(expect_comma);
+      VIA_CHECKRESULT(expect_comma);
     }
   }
 
   result<token> expect_gt = expect_consume(OP_GT, "Expected '>' to close type generic");
 
-  vl_checkresult(expect_gt);
+  VIA_CHECKRESULT(expect_gt);
 
   return std::make_unique<generic_type_node>(
     identifier.value(), std::move(generics), modifiers.value()
@@ -187,7 +181,7 @@ result<p_type_node_t> parser::parse_type_primary() {
 
   result<token> tok = current();
 
-  vl_checkresult(tok);
+  VIA_CHECKRESULT(tok);
 
   switch (tok->type) {
   case IDENTIFIER:
@@ -204,11 +198,11 @@ result<p_type_node_t> parser::parse_type_primary() {
     parameters params;
 
     result<token> curr = consume();
-    vl_checkresult(curr);
+    VIA_CHECKRESULT(curr);
 
     while (true) {
       result<token> tok = current();
-      vl_checkresult(tok);
+      VIA_CHECKRESULT(tok);
 
       if (tok->type == PAREN_CLOSE) {
         consume();
@@ -216,7 +210,7 @@ result<p_type_node_t> parser::parse_type_primary() {
       }
 
       result<p_type_node_t> type_result = parse_type();
-      vl_checkresult(type_result);
+      VIA_CHECKRESULT(type_result);
 
       params.emplace_back(
         token(token_type::IDENTIFIER, "FUCK", 0, 0, 0), modifiers{}, type_result.value()->clone()
@@ -226,7 +220,7 @@ result<p_type_node_t> parser::parse_type_primary() {
         result<token> expect_comma =
           expect_consume(COMMA, "Expected ',' to seperate function parameter types");
 
-        vl_checkresult(expect_comma);
+        VIA_CHECKRESULT(expect_comma);
       }
     }
 
@@ -236,9 +230,9 @@ result<p_type_node_t> parser::parse_type_primary() {
       expect_consume(RETURNS, "Expected '->' to specify function return type");
     result<p_type_node_t> return_type = parse_type();
 
-    vl_checkresult(expect_pc);
-    vl_checkresult(expect_rt);
-    vl_checkresult(return_type);
+    VIA_CHECKRESULT(expect_pc);
+    VIA_CHECKRESULT(expect_rt);
+    VIA_CHECKRESULT(return_type);
 
     return std::make_unique<function_type_node>(std::move(params), std::move(return_type.value()));
   }
@@ -260,7 +254,7 @@ result<p_type_node_t> parser::parse_type() {
 result<p_expr_node_t> parser::parse_primary() {
   // Get the current token.
   result<token> tok = current();
-  vl_checkresult(tok);
+  VIA_CHECKRESULT(tok);
 
   switch (tok->type) {
   case LIT_INT:
@@ -297,7 +291,7 @@ result<p_expr_node_t> parser::parse_primary() {
     consume();
     // Directly parse the operand; no need to keep a copy of token here.
     result<p_expr_node_t> expr = parse_primary();
-    vl_checkresult(expr);
+    VIA_CHECKRESULT(expr);
 
     return std::make_unique<unary_expr_node>(std::move(*expr));
   }
@@ -306,7 +300,7 @@ result<p_expr_node_t> parser::parse_primary() {
 
     while (true) {
       result<token> curr = current();
-      vl_checkresult(curr);
+      VIA_CHECKRESULT(curr);
 
       if (curr->type == BRACKET_CLOSE) {
         break;
@@ -336,7 +330,7 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
       consume();
       result<token> index_token =
         expect_consume(IDENTIFIER, "Expected identifier while parsing index");
-      vl_checkresult(index_token);
+      VIA_CHECKRESULT(index_token);
 
       lhs = std::make_unique<index_expr_node>(
         std::move(lhs), std::make_unique<sym_expr_node>(*index_token)
@@ -347,11 +341,11 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
     case BRACKET_OPEN: { // Array indexing: obj[expr]
       consume();
       result<p_expr_node_t> index = parse_expr();
-      vl_checkresult(index);
+      VIA_CHECKRESULT(index);
 
       result<token> expect_br =
         expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
-      vl_checkresult(expect_br);
+      VIA_CHECKRESULT(expect_br);
 
       lhs = std::make_unique<index_expr_node>(std::move(lhs), std::move(*index));
       continue;
@@ -362,20 +356,20 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
 
       while (true) {
         result<token> curr = current();
-        vl_checkresult(curr);
+        VIA_CHECKRESULT(curr);
 
         if (curr->type == PAREN_CLOSE) {
           break;
         }
 
         result<p_expr_node_t> expr = parse_expr();
-        vl_checkresult(expr);
+        VIA_CHECKRESULT(expr);
 
         arguments.emplace_back(std::move(*expr));
 
         // After an argument, check for a comma.
         curr = current();
-        vl_checkresult(curr);
+        VIA_CHECKRESULT(curr);
 
         if (curr->type == COMMA) {
           consume();
@@ -388,7 +382,7 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
       // Expect the closing parenthesis.
       result<token> expect_par =
         expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
-      vl_checkresult(expect_par);
+      VIA_CHECKRESULT(expect_par);
 
       lhs = std::make_unique<call_expr_node>(std::move(lhs), std::move(arguments));
       continue;
@@ -397,7 +391,7 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
       consume();
 
       result<p_type_node_t> type_result = parse_type();
-      vl_checkresult(type_result);
+      VIA_CHECKRESULT(type_result);
 
       lhs = std::make_unique<cast_expr_node>(std::move(lhs), std::move(*type_result));
       continue;
@@ -412,16 +406,16 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
 result<p_expr_node_t> parser::parse_binary(int precedence) {
   // Parse the primary expression first.
   result<p_expr_node_t> prim = parse_primary();
-  vl_checkresult(prim);
+  VIA_CHECKRESULT(prim);
 
   // Parse any postfix operations that apply to the primary expression.
   result<p_expr_node_t> lhs = parse_postfix(std::move(*prim));
-  vl_checkresult(lhs);
+  VIA_CHECKRESULT(lhs);
 
   // Parse binary operators according to precedence.
   while (position < unit_ctx.tokens->size()) {
     result<token> op = current();
-    vl_checkresult(op);
+    VIA_CHECKRESULT(op);
 
     // Stop if the token is not an operator.
     if (!op->is_operator()) {
@@ -436,7 +430,7 @@ result<p_expr_node_t> parser::parse_binary(int precedence) {
     consume();
 
     result<p_expr_node_t> rhs = parse_binary(op_prec + 1);
-    vl_checkresult(rhs);
+    VIA_CHECKRESULT(rhs);
 
     lhs = std::make_unique<bin_expr_node>(*op, std::move(*lhs), std::move(*rhs));
   }
@@ -450,7 +444,7 @@ result<p_expr_node_t> parser::parse_expr() {
 
 result<p_stmt_node_t> parser::parse_declaration() {
   result<token> first = consume();
-  vl_checkresult(first);
+  VIA_CHECKRESULT(first);
 
   token_type first_type = first->type;
 
@@ -464,7 +458,7 @@ result<p_stmt_node_t> parser::parse_declaration() {
   is_const = first_type == KW_CONST;
 
   result<token> curr = current();
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(curr);
 
   // Detect `fn` at the start (fn name())
   if (first_type == KW_FUNC) {
@@ -477,7 +471,7 @@ result<p_stmt_node_t> parser::parse_declaration() {
   }
 
   curr = current();
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(curr);
 
   if (curr->type == KW_FUNC) {
     consume();
@@ -487,8 +481,8 @@ result<p_stmt_node_t> parser::parse_declaration() {
     result<token> expect_par =
       expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
 
-    vl_checkresult(identifier);
-    vl_checkresult(expect_par);
+    VIA_CHECKRESULT(identifier);
+    VIA_CHECKRESULT(expect_par);
 
     std::vector<param_node> parameters;
 
@@ -504,20 +498,20 @@ result<p_stmt_node_t> parser::parse_declaration() {
       result<token> expect_col = expect_consume(COLON, "Expected ':' between parameter and type");
       result<p_type_node_t> param_type = parse_type();
 
-      vl_checkresult(modifiers);
-      vl_checkresult(param_name);
-      vl_checkresult(expect_col);
-      vl_checkresult(param_type);
+      VIA_CHECKRESULT(modifiers);
+      VIA_CHECKRESULT(param_name);
+      VIA_CHECKRESULT(expect_col);
+      VIA_CHECKRESULT(param_type);
 
       parameters.emplace_back(*param_name, *modifiers, std::move(*param_type));
 
       curr = current();
-      vl_checkresult(curr);
+      VIA_CHECKRESULT(curr);
 
       if (curr->type != PAREN_CLOSE) {
         result<token> expect_comma =
           expect_consume(COMMA, "Expected ',' between function parameters");
-        vl_checkresult(expect_comma);
+        VIA_CHECKRESULT(expect_comma);
       }
       else {
         break;
@@ -533,10 +527,10 @@ result<p_stmt_node_t> parser::parse_declaration() {
     result<p_type_node_t> returns = parse_type();
     result<p_stmt_node_t> body_scope = parse_scope();
 
-    vl_checkresult(expect_rpar);
-    vl_checkresult(expect_rets);
-    vl_checkresult(returns);
-    vl_checkresult(body_scope);
+    VIA_CHECKRESULT(expect_rpar);
+    VIA_CHECKRESULT(expect_rets);
+    VIA_CHECKRESULT(returns);
+    VIA_CHECKRESULT(body_scope);
 
     return std::make_unique<func_stmt_node>(
       is_global,
@@ -554,14 +548,14 @@ result<p_stmt_node_t> parser::parse_declaration() {
     expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
   curr = current();
 
-  vl_checkresult(identifier);
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(identifier);
+  VIA_CHECKRESULT(curr);
 
   if (curr->type == COLON) {
     consume();
 
     result<p_type_node_t> temp = parse_type();
-    vl_checkresult(temp);
+    VIA_CHECKRESULT(temp);
 
     type = std::move(*temp);
   }
@@ -572,8 +566,8 @@ result<p_stmt_node_t> parser::parse_declaration() {
   result<token> expect_eq = expect_consume(EQUAL, "Expected '=' for variable declaration");
   result<p_expr_node_t> value = parse_expr();
 
-  vl_checkresult(expect_eq);
-  vl_checkresult(value);
+  VIA_CHECKRESULT(expect_eq);
+  VIA_CHECKRESULT(value);
 
   type->expression = value->get(); // Attach expression reference to type
 
@@ -586,35 +580,35 @@ result<p_stmt_node_t> parser::parse_scope() {
   std::vector<p_stmt_node_t> scope_statements;
 
   result<token> curr = current();
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(curr);
 
   if (curr->type == BRACE_OPEN) {
     result<token> expect_br = expect_consume(BRACE_OPEN, "Expected '{' to open scope");
-    vl_checkresult(expect_br);
+    VIA_CHECKRESULT(expect_br);
 
     while (true) {
       result<token> curr = current();
-      vl_checkresult(curr);
+      VIA_CHECKRESULT(curr);
 
       if (curr->type == BRACE_CLOSE) {
         break;
       }
 
       result<p_stmt_node_t> stmt = parse_stmt();
-      vl_checkresult(stmt);
+      VIA_CHECKRESULT(stmt);
 
       scope_statements.emplace_back(std::move(*stmt));
     }
 
     expect_br = expect_consume(BRACE_CLOSE, "Expected '}' to close scope");
-    vl_checkresult(expect_br);
+    VIA_CHECKRESULT(expect_br);
   }
   else if (curr->type == COLON) {
     result<token> expect_col = expect_consume(COLON, "Expected ':' to open single-statment scope");
-    vl_checkresult(expect_col);
+    VIA_CHECKRESULT(expect_col);
 
     result<p_stmt_node_t> stmt = parse_stmt();
-    vl_checkresult(stmt);
+    VIA_CHECKRESULT(stmt);
 
     scope_statements.emplace_back(std::move(*stmt));
   }
@@ -635,15 +629,15 @@ result<p_stmt_node_t> parser::parse_if() {
   result<p_expr_node_t> condition = parse_expr();
   result<p_stmt_node_t> scope = parse_scope();
 
-  vl_checkresult(condition);
-  vl_checkresult(scope);
+  VIA_CHECKRESULT(condition);
+  VIA_CHECKRESULT(scope);
 
   std::optional<p_stmt_node_t> else_scope;
   std::vector<elseif_node> elseif_nodes;
 
   while (true) {
     result<token> curr = current();
-    vl_checkresult(curr);
+    VIA_CHECKRESULT(curr);
 
     if (curr->type != KW_ELIF) {
       break;
@@ -652,21 +646,21 @@ result<p_stmt_node_t> parser::parse_if() {
     result<p_expr_node_t> elseif_condition = parse_expr();
     result<p_stmt_node_t> elseif_scope = parse_scope();
 
-    vl_checkresult(elseif_condition);
-    vl_checkresult(elseif_scope);
+    VIA_CHECKRESULT(elseif_condition);
+    VIA_CHECKRESULT(elseif_scope);
 
     elseif_node elseif(std::move(*elseif_condition), std::move(*elseif_scope));
     elseif_nodes.emplace_back(std::move(elseif));
   }
 
   result<token> curr = current();
-  vl_checkresult(curr);
+  VIA_CHECKRESULT(curr);
 
   if (curr->type == KW_ELSE) {
     consume();
 
     result<p_stmt_node_t> else_scope_inner = parse_scope();
-    vl_checkresult(else_scope_inner);
+    VIA_CHECKRESULT(else_scope_inner);
 
     else_scope = std::move(*else_scope_inner);
   }
@@ -684,7 +678,7 @@ result<p_stmt_node_t> parser::parse_return() {
 
   result<p_expr_node_t> expr = parse_expr();
 
-  vl_checkresult(expr);
+  VIA_CHECKRESULT(expr);
 
   return std::make_unique<return_stmt_node>(std::move(*expr));
 }
@@ -695,15 +689,15 @@ result<p_stmt_node_t> parser::parse_while() {
   result<p_expr_node_t> condition = parse_expr();
   result<p_stmt_node_t> body = parse_scope();
 
-  vl_checkresult(condition);
-  vl_checkresult(body);
+  VIA_CHECKRESULT(condition);
+  VIA_CHECKRESULT(body);
 
   return std::make_unique<while_stmt_node>(std::move(*condition), std::move(*body));
 }
 
 result<p_stmt_node_t> parser::parse_stmt() {
   result<token> initial_token = current();
-  vl_checkresult(initial_token);
+  VIA_CHECKRESULT(initial_token);
 
   switch (initial_token->type) {
   case KW_LOCAL:
@@ -722,31 +716,31 @@ result<p_stmt_node_t> parser::parse_stmt() {
     return parse_while();
   case KW_BREAK: {
     result<token> con = consume();
-    vl_checkresult(con);
+    VIA_CHECKRESULT(con);
     return std::make_unique<break_stmt_node>(*con);
   }
   case KW_CONTINUE: {
     result<token> con = consume();
-    vl_checkresult(con);
+    VIA_CHECKRESULT(con);
     return std::make_unique<continue_stmt_node>(*con);
   }
   default:
     result<p_expr_node_t> lvalue = parse_expr();
     result<token> curr = current();
 
-    vl_checkresult(lvalue);
-    vl_checkresult(curr);
+    VIA_CHECKRESULT(lvalue);
+    VIA_CHECKRESULT(curr);
 
     if (curr->type == EOF_) {
       return std::make_unique<expr_stmt_node>(std::move(*lvalue));
     }
 
     result<token> pk = peek();
-    vl_checkresult(pk);
+    VIA_CHECKRESULT(pk);
 
     if (curr->lexeme == "=" || (curr->is_operator() && pk->lexeme == "=")) {
       result<token> possible_augment = consume();
-      vl_checkresult(possible_augment);
+      VIA_CHECKRESULT(possible_augment);
 
       if (possible_augment->lexeme != "=") {
         consume();
@@ -762,14 +756,14 @@ result<p_stmt_node_t> parser::parse_stmt() {
     return std::make_unique<expr_stmt_node>(std::move(*lvalue));
   }
 
-  vl_unreachable;
+  VIA_UNREACHABLE;
   return nullptr;
 }
 
 bool parser::parse() {
   while (true) {
     result<token> curr = current();
-    vl_checkresult_mainfn(curr);
+    VIA_CHECKRESULT_MAINFN(curr);
 
     if (curr->type == EOF_) {
       break;
@@ -777,20 +771,20 @@ bool parser::parse() {
 
     while (true) {
       curr = current();
-      vl_checkresult_mainfn(curr);
+      VIA_CHECKRESULT_MAINFN(curr);
 
       if (curr->type != AT) {
         break;
       }
 
       result<attribute> attrib = parse_attribute();
-      vl_checkresult_mainfn(attrib);
+      VIA_CHECKRESULT_MAINFN(attrib);
 
       attrib_buffer.push_back(*attrib);
     }
 
     result<p_stmt_node_t> stmt = parse_stmt();
-    vl_checkresult_mainfn(stmt);
+    VIA_CHECKRESULT_MAINFN(stmt);
 
     stmt.value()->attributes = attrib_buffer;
     attrib_buffer.clear();
@@ -803,10 +797,6 @@ bool parser::parse() {
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
-#elifdef __clang__
-#pragma clang diagnostic pop
-#elifdef _MSC_VER
-#pragma warning(pop)
 #endif
 
 } // namespace via

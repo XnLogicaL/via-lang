@@ -5,6 +5,7 @@
 #include "linenoise.hpp"
 #include "argparse/argparse.hpp"
 #include "file-io.h"
+#include "color.h"
 #include "via.h"
 
 #define SET_PROFILER_POINT(id)     [[maybe_unused]] const auto id = std::chrono::steady_clock::now();
@@ -32,8 +33,8 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   command->add_argument("--dump-ast", "-Da")
     .help("Dumps the abstract syntax tree representation of the program")
     .flag();
-  command->add_argument("--dump-bytecode", "-Db")
-    .help("Dumps human-readable bytecode to the console upon compilation of the given source file")
+  command->add_argument("--dump-assembly", "-Dasm")
+    .help("Dumps human-readable assembly to the console upon compilation of the given source file")
     .flag();
   command->add_argument("--dump-machine-code", "-Dmc")
     .help("Dumps raw machine code to the console when compilation of the given source file is "
@@ -190,40 +191,44 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
       }
     }
 
-    if (get_flag("--dump-bytecode")) {
-      print_flag_label("--dump-bytecode");
+    if (get_flag("--dump-assembly")) {
+      print_flag_label("--dump-assembly");
 
       std::stack<std::string> closure_disassembly_stack;
       std::stack<size_t>
         closure_bytecode_count_stack; // Stack to track the bytecode count of each closure
 
+      std::cout << apply_color(
+        "[disassembly of section text]", fg_color::yellow, bg_color::black, style::underline
+      ) << "\n";
+
       for (size_t i = 0; i < unit_ctx.bytecode->get().size(); ++i) {
         const bytecode& bytecode = unit_ctx.bytecode->get()[i];
         std::string current_disassembly;
 
-        if (bytecode.instruction.op == opcode::LABEL) {
+        if (bytecode.instruct.op == opcode::LABEL) {
           std::cout << std::format(
-            ".L{}{}:\n", bytecode.meta_data.comment, bytecode.instruction.operand0
+            " .L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
           );
           continue;
         }
-        else if (bytecode.instruction.op == opcode::NEWCLOSURE) {
+        else if (bytecode.instruct.op == opcode::NEWCLOSURE) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
-            i + bytecode.instruction.operand1
+            i + bytecode.instruct.operand1
           ); // Operand1 is the bytecode count
 
-          std::cout << "Disassembly of function " << bytecode.meta_data.comment << ' '
-                    << std::format("<at register {}>", bytecode.instruction.operand0) << ":\n";
+          std::cout << " [disassembly of function " << bytecode.meta_data.comment << ' '
+                    << std::format("<at register {}>", bytecode.instruct.operand0)
+                    << ", <instruction count " << bytecode.instruct.operand1 << '>' << "]:\n";
           continue;
         }
 
         // Print disassembly of the bytecode instruction
         std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
 
-        if (bytecode.instruction.op == opcode::RETURN ||
-            bytecode.instruction.op == opcode::RETURNNIL) {
+        if (bytecode.instruct.op == opcode::RETURN || bytecode.instruct.op == opcode::RETURNNIL) {
           // Check if we are at the last RETURN opcode for the current closure
           if (!closure_disassembly_stack.empty() && i >= closure_bytecode_count_stack.top()) {
             // Pop the function from the stack
@@ -231,9 +236,28 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
             closure_disassembly_stack.pop();
             closure_bytecode_count_stack.pop();
 
-            std::cout << "End of disassembly of function " << disassembly_of << "\n";
+            std::cout << " [end of disassembly of function " << disassembly_of << "]\n";
           }
         }
+      }
+
+      std::cout << apply_color(
+        "[disassembly of section data]", fg_color::yellow, bg_color::black, style::underline
+      ) << "\n";
+
+      // Platform info
+      std::cout << apply_color("  platform_info ", fg_color::magenta, bg_color::black, style::bold)
+                << unit_ctx.get_platform_info() << "\n";
+
+      size_t const_position = 0;
+      for (const value_obj& constant : unit_ctx.constants->get()) {
+        std::cout << apply_color("  constant", fg_color::magenta, bg_color::black, style::bold)
+                  << ' ' << const_position++ << ": '"
+                  << apply_color(constant.to_literal_cxx_string(), fg_color::green) << "' "
+                  << apply_color(
+                       std::format("({})", magic_enum::enum_name(constant.type)), fg_color::red
+                     )
+                  << "\n";
       }
     }
 
@@ -241,7 +265,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-machine-code");
 
       for (const bytecode& bytecode : unit_ctx.bytecode->get()) {
-        const instruction& instr = bytecode.instruction;
+        const instruction& instr = bytecode.instruct;
         const size_t size = sizeof(instruction);
         const uint8_t* data = reinterpret_cast<const uint8_t*>(&instr);
 
@@ -374,7 +398,7 @@ comp_result handle_repl(argparse::ArgumentParser&) {
   using namespace utils;
 
   constexpr const char REPL_WELCOME[] =
-    "via v" vl_version " Copyright (C) 2024-2025 XnLogicaL\nLicensed under GNU GPL v3.0 @ "
+    "via v" VIA_VERSION " Copyright (C) 2024-2025 XnLogicaL\nLicensed under GNU GPL v3.0 @ "
     "https://github.com/XnLogical/via-lang.\n"
     "Use ':help' to see a list of commands.\n";
 
@@ -462,7 +486,7 @@ int main(int argc, char* argv[]) {
 
   try {
     // Argument parser entry point
-    ArgumentParser argument_parser("via", vl_version);
+    ArgumentParser argument_parser("via", VIA_VERSION);
 
     auto compile_parser = get_standard_parser("compile");
     compile_parser->add_description("Compiles the given source file.");

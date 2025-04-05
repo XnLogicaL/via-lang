@@ -30,4 +30,33 @@ uint32_t hash_string_custom(const char* str) {
   return hash;
 }
 
+std::string escape_string(const std::string& str) {
+  std::ostringstream oss;
+  for (unsigned char c : str) {
+    switch (c) {
+      // clang-format off
+    case '\a': oss << "\\a"; break;
+    case '\b': oss << "\\b"; break;
+    case '\f': oss << "\\f"; break;
+    case '\n': oss << "\\n"; break;
+    case '\r': oss << "\\r"; break;
+    case '\t': oss << "\\t"; break;
+    case '\v': oss << "\\v"; break;
+    case '\\': oss << "\\\\"; break;
+    case '\"': oss << "\\\""; break;
+      // clang-format on
+    default:
+      // If the character is printable, output it directly.
+      // Otherwise, output it as a hex escape.
+      if (std::isprint(c))
+        oss << c;
+      else
+        oss << "\\x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(c);
+      break;
+    }
+  }
+
+  return oss.str();
+}
+
 } // namespace via

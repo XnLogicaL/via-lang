@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_lexer_h
-#define vl_has_header_lexer_h
+#ifndef VIA_HAS_HEADER_LEXER_H
+#define VIA_HAS_HEADER_LEXER_H
 
 #include "stack.h"
 #include "constant.h"
@@ -47,7 +47,7 @@ private:
   trans_unit_context& unit_ctx;
 };
 
-vl_inline std::vector<token> fast_tokenize(std::string source) {
+VIA_INLINE std::vector<token> fast_tokenize(std::string source) {
   trans_unit_context unit_ctx("<unknown>", source);
 
   lexer tokenizer(unit_ctx);

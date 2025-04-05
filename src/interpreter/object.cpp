@@ -2,6 +2,7 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
+#include "api-impl.h"
 #include "string-utility.h"
 #include "object.h"
 #include "function.h"
@@ -14,6 +15,8 @@ using enum value_type;
 // Move-assignment operator, moves values from other object
 value_obj& value_obj::operator=(value_obj&& other) {
   if (this != &other) {
+    reset();
+
     // Move the value based on type
     switch (other.type) {
     case integer:
@@ -35,16 +38,17 @@ value_obj& value_obj::operator=(value_obj&& other) {
       break;
     }
 
-    type = other.type;
-    other.type = nil;
+    this->type = other.type;
+    other.type = value_type::nil;
   }
 
   return *this;
 }
 
 // Move constructor, transfer ownership based on type
-value_obj::value_obj(value_obj&& other)
-  : type(other.type) {
+value_obj::value_obj(value_obj&& other) {
+  reset();
+
   switch (other.type) {
   case integer:
     val_integer = other.val_integer;
@@ -65,12 +69,41 @@ value_obj::value_obj(value_obj&& other)
     break;
   }
 
+  this->type = other.type;
   other.type = nil;
 }
 
 // Frees the resources of the value_obj depending on type
 value_obj::~value_obj() {
-  if (static_cast<uint16_t>(type) >= static_cast<uint8_t>(value_type::string)) {
+  reset();
+}
+
+// Return a clone of the value_obj based on its type
+value_obj value_obj::clone() const {
+  switch (type) {
+  case integer:
+    return value_obj(val_integer);
+  case floating_point:
+    return value_obj(val_floating_point);
+  case boolean:
+    return value_obj(val_boolean);
+  case string:
+    return value_obj(cast_ptr<string_obj>()->data);
+  case table:
+    return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
+  case function:
+    return value_obj(function, new function_obj(*cast_ptr<function_obj>()));
+  case cfunction:
+    return value_obj(cfunction, val_pointer);
+  default:
+    return value_obj();
+  }
+
+  VIA_UNREACHABLE;
+}
+
+void value_obj::reset() {
+  if (static_cast<uint8_t>(type) >= static_cast<uint8_t>(value_type::string)) {
     if (!val_pointer) {
       return;
     }
@@ -94,66 +127,36 @@ value_obj::~value_obj() {
   }
 }
 
-// Return a clone of the value_obj based on its type
-value_obj value_obj::clone() const {
-  switch (type) {
-  case integer:
-    return value_obj(val_integer);
-  case floating_point:
-    return value_obj(val_floating_point);
-  case boolean:
-    return value_obj(val_boolean);
-  case string:
-    return value_obj(string, new string_obj(*cast_ptr<string_obj>()));
-  case table:
-    return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
-  case function:
-    return value_obj(function, new function_obj(*cast_ptr<function_obj>()));
-  default:
-    return value_obj();
-  }
-
-  vl_unreachable;
-}
-
-void value_obj::reset() {}
-
 bool value_obj::compare(const value_obj&) const {
   return false;
 }
 
+value_obj value_obj::to_string() const {
+  return impl::__to_string(*this);
+}
+
+std::string value_obj::to_cxx_string() const {
+  return impl::__to_cxx_string(*this);
+}
+
+std::string value_obj::to_literal_cxx_string() const {
+  return impl::__to_literal_cxx_string(*this);
+}
+
 value_obj::value_obj(const char* str)
   : type(string),
-    val_pointer(new string_obj(nullptr, str)) {}
-
-value_obj::value_obj(state* state, const char* str)
-  : type(string),
-    val_pointer(new string_obj(state, str)) {}
+    val_pointer(new string_obj(str)) {}
 
 // Constructs a new string_obj object
-string_obj::string_obj(state* V, const char* str) {
-  if (V != nullptr) {
-    auto& stable = V->glb->stable;
-    auto it = stable.find(hash);
-    if (it != stable.end()) {
-      return;
-    }
-  }
-
-  len = std::strlen(str);
-  data = duplicate_string(str);
-  hash = hash_string_custom(str);
-
-  if (V != nullptr) {
-    V->glb->stable.emplace(hash, this);
-  }
-}
+string_obj::string_obj(const char* str)
+  : len(std::strlen(str)),
+    hash(hash_string_custom(str)),
+    data(duplicate_string(str)) {}
 
 string_obj::string_obj(const string_obj& other)
   : len(other.len),
-    hash(other.hash) {
-  data = duplicate_string(other.data);
-}
+    hash(other.hash),
+    data(duplicate_string(other.data)) {}
 
 string_obj::~string_obj() {
   delete[] data;
@@ -164,36 +167,26 @@ size_t string_obj::size() {
 }
 
 void string_obj::set(size_t position, const value_obj& value) {
-  vl_assert(position < len, "String index position out of bounds");
-  vl_assert(value.is_string(), "Setting string index to non-string value");
+  VIA_ASSERT(position < len, "String index position out of bounds");
+  VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
 
   const string_obj* val = value.cast_ptr<string_obj>();
 
-  vl_assert(val->len == 1, "Setting string index to non-character string");
+  VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
 
   data[position] = value.cast_ptr<string_obj>()->data[0];
 }
 
 value_obj string_obj::get(size_t position) {
-  vl_assert(position < len, "String index position out of bounds");
+  VIA_ASSERT(position < len, "String index position out of bounds");
   char chr = data[position];
-  string_obj* tstr = new string_obj(nullptr, &chr);
+  string_obj* tstr = new string_obj(&chr);
   return value_obj(tstr);
 }
 
-table_obj::~table_obj() {
-  if (ht_buckets) {
-    for (size_t i = 0; i < ht_capacity; ++i) {
-      hash_node_obj* next = ht_buckets[i];
-      while (next) {
-        hash_node_obj* current = next;
-        next = next->next;
-        delete current;
-      }
-      ht_buckets[i] = nullptr;
-    }
-  }
+hash_node_obj::~hash_node_obj() = default;
 
+table_obj::~table_obj() {
   delete[] arr_array;
   delete[] ht_buckets;
 }
@@ -215,17 +208,11 @@ table_obj::table_obj(const table_obj& other)
   }
 
   if (other.ht_buckets) {
-    ht_buckets = new hash_node_obj*[ht_capacity]();
-
     for (size_t i = 0; i < ht_capacity; ++i) {
-      hash_node_obj* src = other.ht_buckets[i];
-      hash_node_obj** dst = &ht_buckets[i];
-
-      while (src) {
-        *dst = new hash_node_obj{src->key, src->value.clone(), nullptr};
-        dst = &((*dst)->next);
-        src = src->next;
-      }
+      hash_node_obj& src = other.ht_buckets[i];
+      hash_node_obj* dst = &ht_buckets[i];
+      dst->key = src.key;
+      dst->value = src.value.clone();
     }
   }
   else {
@@ -238,7 +225,7 @@ size_t table_obj::size() {
 }
 
 void table_obj::set(const char* key, const value_obj& value) {
-  value_obj index(new string_obj(nullptr, key));
+  value_obj index(key);
   impl::__table_set(this, index, value);
 }
 
@@ -248,7 +235,7 @@ void table_obj::set(size_t position, const value_obj& value) {
 }
 
 value_obj table_obj::get(const char* key) {
-  value_obj index(new string_obj(nullptr, key));
+  value_obj index(key);
   return impl::__table_get(this, index);
 }
 

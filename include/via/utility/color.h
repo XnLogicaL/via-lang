@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_color_h
-#define vl_has_header_color_h
+#ifndef VIA_HAS_HEADER_COLOR_H
+#define VIA_HAS_HEADER_COLOR_H
 
 #include "common.h"
 
@@ -40,12 +40,12 @@ enum class style {
 };
 
 // Function to wrap a string with ANSI escape codes
-vl_implement std::string apply_color(
+VIA_IMPLEMENTATION std::string apply_color(
   const std::string& text, fg_color fg, bg_color bg = bg_color::black, style style = style::reset
 ) {
-  return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
-         std::to_string(static_cast<int>(fg)) + ";" + std::to_string(static_cast<int>(bg)) + "m" +
-         text + "\033[0m";
+  return "\033[" + std::to_string(static_cast<int>(style)) + ";"
+    + std::to_string(static_cast<int>(fg)) + ";" + std::to_string(static_cast<int>(bg)) + "m" + text
+    + "\033[0m";
 }
 
 } // namespace via::utils

@@ -28,13 +28,13 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
 
     if (previously_declared.has_value()) {
       compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
-      compiler_info(previously_declared->token, "Previously declared here");
+      compiler_info(previously_declared->tok, "Previously declared here");
     }
     else {
       operand_t value_reg = allocator.allocate_register();
       operand_t symbol_hash = hash_string_custom(symbol.c_str());
 
-      global_obj global{.token = ident, .symbol = symbol, .type = std::move(val_ty)};
+      global_obj global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
       unit_ctx.internal.globals->declare_global(std::move(global));
       declaration_node.value_expression->accept(expression_visitor, value_reg);
       unit_ctx.bytecode->emit(SETGLOBAL, {value_reg, symbol_hash}, comment);
@@ -117,7 +117,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         .is_const = is_const,
         .is_constexpr = false,
         .symbol = symbol,
-        .type = std::make_unique<primitive_type_node>(declaration_node.identifier, value_type::nil),
+        .type = std::move(val_ty),
       });
 
       allocator.free_register(dst);
@@ -209,14 +209,14 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   }
 
   bytecode last_bytecode = unit_ctx.bytecode->back();
-  opcode last_opcode = last_bytecode.instruction.op;
+  opcode last_opcode = last_bytecode.instruct.op;
 
   if (last_opcode != RETURN && last_opcode != RETURNNIL) {
     unit_ctx.bytecode->emit(RETURNNIL);
   }
 
   bytecode& new_closure = unit_ctx.bytecode->at(new_closure_point - 1);
-  new_closure.instruction.operand1 = unit_ctx.bytecode->size() - new_closure_point;
+  new_closure.instruct.operand1 = unit_ctx.bytecode->size() - new_closure_point;
 
   token symbol_token = function_node.identifier;
   symbol_t symbol = symbol_token.lexeme;
@@ -411,8 +411,8 @@ void stmt_node_visitor::visit(expr_stmt_node& expr_stmt) {
     p_type_node_t callee_ty = call_node->callee->infer_type(unit_ctx);
     p_type_node_t ret_ty = call_node->infer_type(unit_ctx);
 
-    vl_tinference_failure(callee_ty, expr);
-    vl_tinference_failure(ret_ty, expr);
+    VIA_TINFERENCE_FAILURE(callee_ty, expr);
+    VIA_TINFERENCE_FAILURE(ret_ty, expr);
 
     if (primitive_type_node* prim_ty =
           get_derived_instance<type_node_base, primitive_type_node>(*ret_ty)) {
@@ -428,7 +428,7 @@ void stmt_node_visitor::visit(expr_stmt_node& expr_stmt) {
 
     // Edit last instruction to drop the return value rather than popping it.
     bytecode& last = unit_ctx.bytecode->back();
-    last.instruction.op = DROP;
+    last.instruct.op = DROP;
   }
   else {
     if (unused_expr_handler.has_value()) {

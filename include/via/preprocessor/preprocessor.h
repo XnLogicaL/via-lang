@@ -2,8 +2,8 @@
 // This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
 // =========================================================================================== |
 
-#ifndef vl_has_header_preproc_h
-#define vl_has_header_preproc_h
+#ifndef VIA_HAS_HEADER_PREPROC_H
+#define VIA_HAS_HEADER_PREPROC_H
 
 #include "error-bus.h"
 #include "stack.h"

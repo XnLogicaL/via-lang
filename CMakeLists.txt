@@ -13,10 +13,12 @@ set(BUILD_SHARED_LIBS OFF)
 # Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
 option(DEBUG_MODE "Set the build mode (DEBUG/PROD)" "PROD")
 option(MAIN_FILE_PATH "Path to the main file (for fuzzing)" "CLI/main.cpp")
+option(OPTIMIZATIONS "Optimizations" TRUE)
 
 # Print the current configuration
 message(STATUS "Building with DEBUG_MODE: ${DEBUG_MODE}")
 message(STATUS "Using MAIN_FILE_PATH: ${MAIN_FILE_PATH}")
+message(STATUS "Optimizations: ${OPTIMIZATIONS}")
 
 # Add subdirectories for components
 add_subdirectory(SHA256)
@@ -65,7 +67,7 @@ target_compile_options(via PUBLIC
 
 # Add fuzzing specific flags for DEBUG mode
 if(DEBUG_MODE STREQUAL "DEBUG")
-  target_compile_definitions(via PUBLIC -Dvl_debug)
+  target_compile_definitions(via PUBLIC -DVIA_DEBUG)
   target_compile_options(via PUBLIC -g)
 
   if (MAIN_FILE_PATH STREQUAL "CLI/main.cpp")
@@ -76,30 +78,37 @@ if(DEBUG_MODE STREQUAL "DEBUG")
     target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
   endif()
 else()
-  target_compile_options(via PUBLIC
-    -flto=auto
-    -march=native
-    -mtune=native
-    -Ofast
-    -ffast-math
-    -funroll-loops
-    -ftree-vectorize
-    -fomit-frame-pointer
-    -fmerge-all-constants
-    -finline-functions
-    -ftree-pre
-    -fprefetch-loop-arrays
-    -falign-functions=32
-    -falign-jumps=32
-    -falign-loops=32
-    -funsafe-math-optimizations
-    -fno-stack-protector
-    -fipa-pta
-    -fdevirtualize-at-ltrans
-    -fgcse-lm
-    -fmerge-all-constants
-    -fno-math-errno
-  )
+  if(OPTIMIZATIONS EQUAL TRUE)
+    target_compile_options(via PUBLIC
+      -flto=auto
+      -march=native
+      -mtune=native
+      -Ofast
+      -ffast-math
+      -funroll-loops
+      -ftree-vectorize
+      -fomit-frame-pointer
+      -fmerge-all-constants
+      -finline-functions
+      -ftree-pre
+      -fprefetch-loop-arrays
+      -falign-functions=32
+      -falign-jumps=32
+      -falign-loops=32
+      -funsafe-math-optimizations
+      -fno-stack-protector
+      -fipa-pta
+      -fdevirtualize-at-ltrans
+      -fgcse-lm
+      -fmerge-all-constants
+      -fno-math-errno
+    )
+  else()
+    target_compile_options(via PUBLIC
+      -Og
+      -g
+    )
+  endif()
 endif()
 
 # Link libraries for external dependencies

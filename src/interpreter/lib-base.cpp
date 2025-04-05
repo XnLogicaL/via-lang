@@ -12,33 +12,20 @@ static value_obj nil = value_obj();
 
 using namespace impl;
 
-vl_libdeclfn(base_print) {
+VIA_LIBDECLFN(base_print) {
   size_t i = 0;
-  while (i < V->frame->call_info.argc) {
-    vl_libdeclparam(argx, i++);
-    std::cout << __to_cxx_string(V, argx);
-  }
-
-  std::cout << std::flush;
-
-  vl_libret(nil);
-}
-
-vl_libdeclfn(base_println) {
-  size_t i = 0;
-  while (i < V->frame->call_info.argc) {
-    vl_libdeclparam(argx, i++);
-    std::cout << __to_cxx_string(V, argx);
+  while (i < V->frame->call_data.argc) {
+    VIA_LIBDECLPARAM(argx, i++);
+    std::cout << __to_cxx_string(argx);
   }
 
   std::cout << std::endl;
 
-  vl_libret(nil);
+  VIA_LIBRET(nil);
 }
 
-vl_libdeclfn(open_baselib) {
+VIA_LIBDECLFN(open_baselib) {
   V->glb->gtable.set("print", value_obj(base_print));
-  V->glb->gtable.set("println", value_obj(base_println));
 }
 
 } // namespace via::lib
