@@ -20,26 +20,21 @@ struct upv_obj {
 };
 
 struct call_info {
+  size_t sp;
+  size_t argc;
   function_obj* caller;
   instruction* pc;
   instruction* ibp;
-  size_t sp;
-  size_t argc;
 };
 
 struct function_obj {
   size_t ic;
-  size_t upvc;
-
-  instruction* ibp;
+  size_t upvc = 0;
   upv_obj* upvs;
-
+  instruction* ibp;
   call_info call_data;
 
-  function_obj()
-    : upvc(8),
-      upvs(new upv_obj[upvc]) {}
-
+  function_obj() = default;
   function_obj(const function_obj& other);
   ~function_obj();
 };

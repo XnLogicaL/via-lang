@@ -8,6 +8,7 @@
 #include "string-utility.h"
 #include "compiler-types.h"
 #include "visitor.h"
+#include <cmath>
 
 // ==========================================================================================
 // visitor_expr.cpp
@@ -80,13 +81,13 @@ void expr_node_visitor::visit(lit_expr_node& literal_node, operand_t dst) {
     uint32_t final_value = *integer_value;
     auto operands = reinterpret_u32_as_2u16(final_value);
 
-    unit_ctx.bytecode->emit(LOADI, {dst, operands.l, operands.r});
+    unit_ctx.bytecode->emit(LOADI, {dst, operands.high, operands.low});
   }
   else if (float* float_value = std::get_if<float>(&literal_node.value)) {
     uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
     auto operands = reinterpret_u32_as_2u16(final_value);
 
-    unit_ctx.bytecode->emit(LOADF, {dst, operands.l, operands.r});
+    unit_ctx.bytecode->emit(LOADF, {dst, operands.high, operands.low});
   }
   else if (bool* bool_value = std::get_if<bool>(&literal_node.value)) {
     unit_ctx.bytecode->emit(*bool_value ? LOADBT : LOADBF, {dst});
@@ -192,13 +193,13 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
         uint32_t final_value = *integer_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHI, {operands.l, operands.r});
+        unit_ctx.bytecode->emit(PUSHI, {operands.high, operands.low});
       }
       else if (float* float_value = std::get_if<float>(&literal_node->value)) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHF, {operands.l, operands.r});
+        unit_ctx.bytecode->emit(PUSHF, {operands.high, operands.low});
       }
       else if (bool* bool_value = std::get_if<bool>(&literal_node->value)) {
         unit_ctx.bytecode->emit(*bool_value ? PUSHBT : PUSHBF);
@@ -264,39 +265,38 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   using OpCodeId = std::underlying_type_t<opcode>;
 
   static const std::unordered_map<token_type, opcode> operator_map = {
-    {token_type::OP_ADD, opcode::ADD},
-    {token_type::OP_SUB, opcode::SUB},
-    {token_type::OP_MUL, opcode::MUL},
-    {token_type::OP_DIV, opcode::DIV},
-    {token_type::OP_EXP, opcode::POW},
-    {token_type::OP_MOD, opcode::MOD},
-    {token_type::OP_EQ, opcode::EQ},
-    {token_type::OP_NEQ, opcode::NEQ},
-    {token_type::OP_LT, opcode::LT},
-    {token_type::OP_GT, opcode::GT},
-    {token_type::OP_LEQ, opcode::LTEQ},
-    {token_type::OP_GEQ, opcode::GTEQ},
-    {token_type::KW_AND, opcode::AND},
-    {token_type::KW_OR, opcode::OR},
+    {OP_ADD, opcode::ADD},
+    {OP_SUB, opcode::SUB},
+    {OP_MUL, opcode::MUL},
+    {OP_DIV, opcode::DIV},
+    {OP_EXP, opcode::POW},
+    {OP_MOD, opcode::MOD},
+    {OP_EQ, opcode::EQ},
+    {OP_NEQ, opcode::NEQ},
+    {OP_LT, opcode::LT},
+    {OP_GT, opcode::GT},
+    {OP_LEQ, opcode::LTEQ},
+    {OP_GEQ, opcode::GTEQ},
+    {KW_AND, opcode::AND},
+    {KW_OR, opcode::OR},
   };
 
   p_expr_node_t& p_lhs = binary_node.lhs_expression;
   p_expr_node_t& p_rhs = binary_node.rhs_expression;
-
   expr_node_base& lhs = *p_lhs;
   expr_node_base& rhs = *p_rhs;
 
-  auto it = operator_map.find(binary_node.op.type);
-  if (it == operator_map.end()) {
+  auto op_it = operator_map.find(binary_node.op.type);
+  if (op_it == operator_map.end()) {
     compiler_error(
       binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
     );
     return;
   }
 
+  // Infer types
   p_type_node_t left_type = p_lhs->infer_type(unit_ctx);
   p_type_node_t right_type = p_rhs->infer_type(unit_ctx);
-
   VIA_TINFERENCE_FAILURE(left_type, binary_node.lhs_expression);
   VIA_TINFERENCE_FAILURE(right_type, binary_node.rhs_expression);
 
@@ -313,85 +313,90 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     return;
   }
 
-  const opcode base_opcode = it->second;
+  const opcode base_opcode = op_it->second;
   const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
   OpCodeId opcode_id = base_opcode_id;
 
-  if (is_constant_expression(rhs)) {
-    if (base_opcode == AND || base_opcode == OR || base_opcode == LT || base_opcode == GT
-        || base_opcode == LTEQ || base_opcode == GTEQ) {
+  // For boolean/relational operations, always handle as non-constant.
+  bool is_bool_or_relational =
+    (base_opcode == AND || base_opcode == OR || base_opcode == LT || base_opcode == GT
+     || base_opcode == LTEQ || base_opcode == GTEQ);
+
+  if (is_constant_expression(unit_ctx, rhs) && is_constant_expression(unit_ctx, lhs)
+      && !is_bool_or_relational) {
+    // Constant folding is an O1 optimization.
+    if (unit_ctx.optimization_level < 1) {
       goto non_constexpr;
     }
 
-    lit_expr_node& literal = dynamic_cast<lit_expr_node&>(rhs);
+    lit_expr_node folded_constant = fold_constant(binary_node);
+    folded_constant.accept(*this, dst);
+  }
+  else if (is_constant_expression(unit_ctx, rhs) && !is_bool_or_relational) {
+    if (unit_ctx.optimization_level < 1) {
+      goto non_constexpr;
+    }
 
+    lit_expr_node literal = fold_constant(rhs);
+
+    // Special handling for DIV: check for division by zero.
     if (base_opcode == DIV) {
       if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
         if (*int_val == 0) {
-          goto division_by_zero;
+          compiler_error(literal.value_token, "Explicit division by zero");
+          return;
         }
       }
-
       if (TFloat* float_val = std::get_if<TFloat>(&literal.value)) {
         if (*float_val == 0.0f) {
-          goto division_by_zero;
+          compiler_error(literal.value_token, "Explicit division by zero");
+          return;
         }
       }
-
-      goto good_division;
-
-    division_by_zero:
-      compiler_error(literal.value_token, "Explicit division by zero");
-      return;
-    good_division:
     }
 
+    // Emit code for the constant-case.
     lhs.accept(*this, dst);
 
+    // Special handling for boolean operations.
     if (base_opcode == AND || base_opcode == OR) {
-      bool is_rhs_falsy = ({
-        bool* rhs_bool = std::get_if<bool>(&literal.value);
-        auto* rhs_nil = std::get_if<std::monostate>(&literal.value);
-        rhs_bool != nullptr ? !(*rhs_bool) : rhs_nil != nullptr;
-      });
+      bool is_rhs_falsy = false;
+      if (bool* rhs_bool = std::get_if<bool>(&literal.value)) {
+        is_rhs_falsy = !(*rhs_bool);
+      }
+      else if (std::get_if<std::monostate>(&literal.value)) {
+        is_rhs_falsy = true;
+      }
 
       if (base_opcode == AND && is_rhs_falsy) {
         unit_ctx.bytecode->emit(LOADBF, {dst});
       }
-
-      if (base_opcode == OR && !is_rhs_falsy) {
+      else if (base_opcode == OR && !is_rhs_falsy) {
         unit_ctx.bytecode->emit(LOADBT, {dst});
       }
-
       return;
     }
 
+    // Handle numeric constant: integer or float.
     if (int* int_value = std::get_if<int>(&literal.value)) {
-      opcode opc = static_cast<opcode>(opcode_id + 2); // OPINT
-      uint32_t final_value = *int_value;
+      opcode opc = static_cast<opcode>(opcode_id + 1); // OPI for integer
+      uint32_t final_value = static_cast<uint32_t>(*int_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
-
-      unit_ctx.bytecode->emit(opc, {dst, operands.l, operands.r});
+      unit_ctx.bytecode->emit(opc, {dst, operands.high, operands.low});
     }
     else if (float* float_value = std::get_if<float>(&literal.value)) {
-      opcode opc = static_cast<opcode>(opcode_id + 3); // OPFLOAT
+      opcode opc = static_cast<opcode>(opcode_id + 2); // OPF for float
       uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
-
-      unit_ctx.bytecode->emit(opc, {dst, operands.l, operands.r});
-    }
-    else {
-      opcode opc = static_cast<opcode>(opcode_id + 1); // OPK
-      value_obj right_const_val = construct_constant(dynamic_cast<lit_expr_node&>(rhs));
-      operand_t right_const_id = unit_ctx.constants->push_constant(right_const_val);
-
-      unit_ctx.bytecode->emit(opc, {dst, right_const_id});
+      unit_ctx.bytecode->emit(opc, {dst, operands.high, operands.low});
     }
   }
   else {
   non_constexpr:
+    // Non-constant expression or boolean/relational operator.
     operand_t reg = allocator.allocate_register();
 
+    // Evaluate expressions based on operator precedence.
     if (rhs.precedence() > lhs.precedence()) {
       rhs.accept(*this, dst);
       lhs.accept(*this, reg);
@@ -401,19 +406,17 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
       rhs.accept(*this, reg);
     }
 
-    if (base_opcode == AND || base_opcode == OR || base_opcode == LT || base_opcode == GT
-        || base_opcode == LTEQ || base_opcode == GTEQ) {
+    if (is_bool_or_relational) {
       operand_t left_reg = allocator.allocate_register();
-
       unit_ctx.bytecode->emit(MOVE, {left_reg, dst});
       unit_ctx.bytecode->emit(base_opcode, {dst, left_reg, reg});
+      allocator.free_register(reg);
       return;
     }
     else {
       unit_ctx.bytecode->emit(base_opcode, {dst, reg});
+      allocator.free_register(reg);
     }
-
-    allocator.free_register(reg);
   }
 }
 

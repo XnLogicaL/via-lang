@@ -80,7 +80,6 @@ value_obj::~value_obj() {
 
 // Return a clone of the value_obj based on its type
 value_obj value_obj::clone() const {
-  std::cout << "cloning " << magic_enum::enum_name(type) << "\n";
   switch (type) {
   case integer:
     return value_obj(val_integer);

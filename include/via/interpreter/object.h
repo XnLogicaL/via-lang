@@ -172,7 +172,7 @@ struct alignas(8) value_obj {
 };
 
 struct string_obj {
-  uint32_t len;
+  size_t len;
   uint32_t hash;
   char* data;
 

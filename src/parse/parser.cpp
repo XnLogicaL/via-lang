@@ -756,7 +756,7 @@ result<p_stmt_node_t> parser::parse_stmt() {
     return std::make_unique<expr_stmt_node>(std::move(*lvalue));
   }
 
-  VIA_UNREACHABLE;
+  VIA_UNREACHABLE();
   return nullptr;
 }
 

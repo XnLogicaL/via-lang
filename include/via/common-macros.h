@@ -5,12 +5,9 @@
 #ifndef VIA_HAS_HEADER_COMMON_MACROS_H
 #define VIA_HAS_HEADER_COMMON_MACROS_H
 
-#include <iostream>
-#include <cstdlib>
-
-#define C_GCC   0
-#define C_CLANG 1
-#define C_MSVC  2
+#define C_GCC   0 // g++ compiler
+#define C_CLANG 1 // clang++ compiler
+#define C_MSVC  2 // msvc compiler
 
 #ifdef __GNUC__
 #ifdef __clang__
@@ -29,6 +26,7 @@
 #pragma GCC diagnostic ignored "-Wmultistatement-macros"
 #endif
 
+// Check if libstacktrace is available.
 #if __has_include(<stacktrace>) && __cplusplus >= 202302L
 #include <stacktrace>
 #define VIA_HASSTACKTRACE 1
@@ -36,9 +34,9 @@
 #define VIA_HASSTACKTRACE 0
 #endif
 
-#define VIA_VERSION "0.28.3"
+// Version information. Should match with git commit version.
+#define VIA_VERSION "0.28.4"
 
-// Detect MSVC
 #if VIA_COMPILER == C_MSVC
 #define VIA_RESTRICT       __restrict
 #define VIA_NOMANGLE       extern "C"
@@ -49,14 +47,11 @@
 #define VIA_FORCEINLINE    __forceinline
 #define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' attribute
 #define VIA_IMPLEMENTATION inline
-
-#define VIA_UNREACHABLE __assume(0)
-#define VIA_FUNCSIG     __FUNCSIG__
-
-#define VIA_LIKELY(x)   (x) // No branch prediction hints in MSVC
-#define VIA_UNLIKELY(x) (x)
-#else
-// GCC / Clang
+#define VIA_UNREACHABLE()  __assume(0)
+#define VIA_FUNCSIG        __FUNCSIG__
+#define VIA_LIKELY(x)      (x) // No branch prediction hints in MSVC
+#define VIA_UNLIKELY(x)    (x)
+#else // GCC / Clang
 #define VIA_RESTRICT       __restrict__
 #define VIA_NOMANGLE       extern "C"
 #define VIA_NODISCARD      [[nodiscard]]
@@ -66,30 +61,40 @@
 #define VIA_FORCEINLINE    inline __attribute__((always_inline))
 #define VIA_OPTIMIZE       inline __attribute__((always_inline, hot))
 #define VIA_IMPLEMENTATION inline
-
-#define VIA_UNREACHABLE __builtin_unreachable()
-#define VIA_FUNCSIG     __PRETTY_FUNCTION__
-
-#define VIA_LIKELY(a)   (__builtin_expect(!!(a), 1))
-#define VIA_UNLIKELY(a) (__builtin_expect(!!(a), 0))
+#define VIA_UNREACHABLE()  __builtin_unreachable()
+#define VIA_FUNCSIG        __PRETTY_FUNCTION__
+#define VIA_LIKELY(a)      (__builtin_expect(!!(a), 1))
+#define VIA_UNLIKELY(a)    (__builtin_expect(!!(a), 0))
 #endif
 
-// Class spec macros
-#define VIA_DEFCONSTRUCTOR(target) target() = default;
-#define VIA_DEFDESTRUCTOR(target)  ~target() = default;
-
+/**
+ * Makes the target class or struct uncopyable in terms of copy semantics.
+ * Must be used inside class or struct clause.
+ */
 #define VIA_NOCOPY(target)                                                                         \
   target& operator=(const target&) = delete;                                                       \
   target(const target&) = delete;
 
+/**
+ * Makes the target class implement custom copy semantics.
+ * Must be used inside class or struct clause.
+ */
 #define VIA_IMPLCOPY(target)                                                                       \
   target& operator=(const target&);                                                                \
   target(const target&);
 
+/**
+ * Makes the target class or struct unmovable in terms of move semantics.
+ * Must be used inside class or struct clause.
+ */
 #define VIA_NOMOVE(target)                                                                         \
   target& operator=(const target&&) = delete;                                                      \
   target(const target&&) = delete;
 
+/**
+ * Makes the target class implement custom move semantics.
+ * Must be used inside class or struct clause.
+ */
 #define VIA_IMPLMOVE(target)                                                                       \
   target& operator=(const target&&);                                                               \
   target(const target&&);
@@ -100,7 +105,14 @@
 #define VIA_STACKTRACE ""
 #endif
 
+// ====================================================================================================
 // Utility macros
+
+/**
+ * Custom assertion macro that contains debug information like condition, file, line, message and
+ * stacktrace on some platforms.
+ * Uses stderr to buffer the output and then calls std::abort().
+ */
 #define VIA_ASSERT(condition, message)                                                             \
   if (!(condition)) {                                                                              \
     std::cerr << "VIA_ASSERT(): assertion '" << #condition << "' failed.\n"                        \

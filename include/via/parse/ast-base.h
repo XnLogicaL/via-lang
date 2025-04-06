@@ -39,7 +39,7 @@ struct expr_node_base {
   size_t begin;
   size_t end;
 
-  virtual VIA_DEFDESTRUCTOR(expr_node_base);
+  virtual ~expr_node_base() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
   virtual p_expr_node_t clone() = 0;
@@ -55,7 +55,7 @@ struct expr_node_base {
 struct stmt_node_base {
   std::vector<attribute> attributes{};
 
-  virtual VIA_DEFDESTRUCTOR(stmt_node_base);
+  virtual ~stmt_node_base() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
   virtual p_stmt_node_t clone() = 0;
@@ -68,7 +68,7 @@ struct type_node_base {
   size_t end;
   expr_node_base* expression = nullptr;
 
-  virtual VIA_DEFDESTRUCTOR(type_node_base);
+  virtual ~type_node_base() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
   virtual std::string to_output_string() = 0;

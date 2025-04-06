@@ -9,6 +9,7 @@
 
 namespace via::utils {
 
+// Read result.
 using rd_result_t = tl::expected<std::string, std::string>;
 
 // Writes the given content to the specified file path

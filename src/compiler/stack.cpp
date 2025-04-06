@@ -17,6 +17,7 @@ std::optional<variable_stack_obj> compiler_variable_stack::at(size_t pos) {
     .is_constexpr = false,
     .symbol = obj.symbol,
     .type = obj.type->clone(),
+    .value = obj.value->clone(),
   };
 
   return new_obj;

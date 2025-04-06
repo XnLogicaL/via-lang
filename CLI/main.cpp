@@ -45,8 +45,8 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
     .flag();
   command->add_argument("--optimize", "-O")
     .help("Sets optimization level to the given integer")
-    .scan<'u', uint32_t>()
-    .default_value(1);
+    .scan<'u', size_t>()
+    .default_value(size_t(1));
   command->add_argument("--verbose", "-v").help("Enables verbosity").flag();
   command->add_argument("--sassy").help("Enables sassy mode 😉").flag();
   command->add_argument("--Bcapitalize-opcodes")
@@ -74,21 +74,15 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   };
 
   bool verbosity_flag = get_flag("--verbose");
-  bool sassy_flag = get_flag("--sassy");
 
   std::string file = subcommand_parser.get<std::string>("target");
+
   rd_result_t source_result = read_from_file(file);
   trans_unit_context unit_ctx(file, *source_result);
+  unit_ctx.optimization_level = subcommand_parser.get<size_t>("--optimize");
 
   // Record compilation start time
   SET_PROFILER_POINT(compilation_start)
-
-  if (verbosity_flag) {
-    ctx.flags |= vflag_verbose;
-  }
-  if (sassy_flag) {
-    ctx.flags |= vflag_sassy;
-  }
 
   if (!source_result.has_value()) {
     err_bus.log({true, source_result.error(), dummy_unit_ctx, ERROR_, {}});
@@ -483,39 +477,34 @@ int main(int argc, char* argv[]) {
   std::signal(SIGABRT, linux_ub_sig_handler);
 #endif
 
-  try {
-    // Argument parser entry point
-    ArgumentParser argument_parser("via", VIA_VERSION);
+  // Argument parser entry point
+  ArgumentParser argument_parser("via", VIA_VERSION);
 
-    auto compile_parser = get_standard_parser("compile");
-    compile_parser->add_description("Compiles the given source file.");
+  auto compile_parser = get_standard_parser("compile");
+  compile_parser->add_description("Compiles the given source file.");
 
-    auto run_parser = get_standard_parser("run");
-    run_parser->add_description("Compiles and runs the given source file.");
+  auto run_parser = get_standard_parser("run");
+  run_parser->add_description("Compiles and runs the given source file.");
 
-    ArgumentParser repl_parser("repl");
+  ArgumentParser repl_parser("repl");
 
-    // Add subparsers
-    argument_parser.add_subparser(*compile_parser);
-    argument_parser.add_subparser(*run_parser);
-    argument_parser.add_subparser(repl_parser);
-    argument_parser.parse_args(argc, argv);
+  // Add subparsers
+  argument_parser.add_subparser(*compile_parser);
+  argument_parser.add_subparser(*run_parser);
+  argument_parser.add_subparser(repl_parser);
+  argument_parser.parse_args(argc, argv);
 
-    if (argument_parser.is_subcommand_used(*compile_parser)) {
-      handle_compile(*compile_parser);
-    }
-    else if (argument_parser.is_subcommand_used(*run_parser)) {
-      handle_run(*run_parser);
-    }
-    else if (argument_parser.is_subcommand_used(repl_parser)) {
-      handle_repl(repl_parser);
-    }
-    else {
-      throw std::logic_error("Subcommand expected");
-    }
+  if (argument_parser.is_subcommand_used(*compile_parser)) {
+    handle_compile(*compile_parser);
   }
-  catch (const std::exception& e) {
-    err_bus.log({true, e.what(), dummy_unit_ctx, ERROR_, {}});
+  else if (argument_parser.is_subcommand_used(*run_parser)) {
+    handle_run(*run_parser);
+  }
+  else if (argument_parser.is_subcommand_used(repl_parser)) {
+    handle_repl(repl_parser);
+  }
+  else {
+    throw std::logic_error("Subcommand expected");
   }
 
   return 0;

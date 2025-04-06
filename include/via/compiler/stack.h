@@ -21,6 +21,7 @@ struct variable_stack_obj {
   bool is_constexpr = false;
   symbol_t symbol;
   p_type_node_t type;
+  p_expr_node_t value;
 };
 
 struct function_stack_obj {

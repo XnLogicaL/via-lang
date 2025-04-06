@@ -9,20 +9,21 @@
 
 namespace via {
 
+// Error level for error header text.
 enum class comp_err_lvl : uint8_t {
   INFO,
   WARNING,
   ERROR_,
 };
 
+// Error location info. Holds line, column and absolute offset information.
 struct comp_err_pos {
   const size_t line = 0;
   const size_t column = 0;
   const size_t begin = 0;
   const size_t end = 0;
 
-  VIA_DEFCONSTRUCTOR(comp_err_pos);
-
+  comp_err_pos() = default;
   comp_err_pos(size_t l, size_t c, size_t b, size_t e)
     : line(l),
       column(c),
@@ -36,6 +37,11 @@ struct comp_err_pos {
       end(tok.position + tok.lexeme.length()) {}
 };
 
+/**
+ * Error object. Includes error level, error location, error message, a reference to the appropriate
+ * translation unit context, and a flag that decides whether if the error bus should print inline
+ * information.
+ */
 class compile_error final {
 public:
   // Returns the error as a string.
@@ -52,15 +58,16 @@ public:
 
 public:
   bool is_flat;
-
   std::string message;
-
   trans_unit_context& ctx;
-
   comp_err_lvl level;
   comp_err_pos position;
 };
 
+/**
+ * Error bus object. Buffers all error objects until error_bus::emit() is called or the object is
+ * destructed.
+ */
 class error_bus final {
 public:
   // Appends a user-specified level error to the bus.

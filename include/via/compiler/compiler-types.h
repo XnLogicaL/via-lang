@@ -8,6 +8,7 @@
 #include "ast.h"
 #include "common.h"
 #include "object.h"
+#include "stack.h"
 
 namespace via {
 
@@ -56,8 +57,35 @@ bool is_derived_instance(base& der) {
   return get_derived_instance<base, derived>(der) != nullptr;
 }
 
-VIA_IMPLEMENTATION bool is_constant_expression(expr_node_base& expression) {
-  return is_derived_instance<expr_node_base, lit_expr_node>(expression);
+VIA_IMPLEMENTATION bool is_constant_expression(
+  trans_unit_context& unit_ctx, expr_node_base& expression, size_t variable_depth = 0
+) {
+  if (is_derived_instance<expr_node_base, lit_expr_node>(expression)) {
+    return true;
+  }
+  else if (bin_expr_node* bin_expr =
+             get_derived_instance<expr_node_base, bin_expr_node>(expression)) {
+    return is_constant_expression(unit_ctx, *bin_expr->lhs_expression, variable_depth + 1)
+      && is_constant_expression(unit_ctx, *bin_expr->rhs_expression, variable_depth + 1);
+  }
+  else if (sym_expr_node* sym_expr =
+             get_derived_instance<expr_node_base, sym_expr_node>(expression)) {
+    auto stk_id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
+    if (!stk_id.has_value()) {
+      return false;
+    }
+
+    auto var_obj = unit_ctx.internal.variable_stack->at(*stk_id);
+
+    // Check if call exceeds variable depth limit
+    if (variable_depth > 5) {
+      return false;
+    }
+
+    return is_constant_expression(unit_ctx, *var_obj->value, ++variable_depth);
+  }
+
+  return false;
 }
 
 VIA_IMPLEMENTATION bool is_nil(p_type_node_t& type) {

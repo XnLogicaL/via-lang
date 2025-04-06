@@ -183,7 +183,7 @@ VIA_IMPLEMENTATION value_obj __to_string(const value_obj& val) {
     return value_obj("nil");
   }
 
-  VIA_UNREACHABLE;
+  VIA_UNREACHABLE();
   return _Nil.clone();
 }
 
@@ -205,7 +205,7 @@ VIA_IMPLEMENTATION value_obj __to_bool(const value_obj& val) {
 
   return value_obj(val.type != value_type::nil);
 
-  VIA_UNREACHABLE;
+  VIA_UNREACHABLE();
   return _Nil.clone();
 }
 
@@ -311,7 +311,7 @@ VIA_IMPLEMENTATION bool __compare(const value_obj& _Val_0, const value_obj& _Val
     return __to_pointer(_Val_0) == __to_pointer(_Val_1);
   }
 
-  VIA_UNREACHABLE;
+  VIA_UNREACHABLE();
   return false;
 };
 

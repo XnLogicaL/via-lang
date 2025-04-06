@@ -9,6 +9,7 @@
 
 namespace via::utils {
 
+// ANSI text foreground color codes.
 enum class fg_color {
   red = 31,
   green = 32,
@@ -20,6 +21,7 @@ enum class fg_color {
   black = 30
 };
 
+// ANSI text background color codes.
 enum class bg_color {
   red = 41,
   green = 42,
@@ -31,6 +33,7 @@ enum class bg_color {
   black = 40
 };
 
+// ANSI text style color codes.
 enum class style {
   reset = 0,
   bold = 1,

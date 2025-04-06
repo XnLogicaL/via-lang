@@ -19,17 +19,21 @@ namespace via::impl {
 // Automatically resizes upv_obj vector of closure by VIA_UPV_RESIZE_FACTOR.
 VIA_IMPLEMENTATION void __closure_upvs_resize(function_obj* closure) {
   uint32_t current_size = closure->upvc;
-  uint32_t new_size = current_size * 2;
+  uint32_t new_size = current_size == 0 ? 8 : (current_size * 2);
   upv_obj* new_location = new upv_obj[new_size];
 
-  // Move upvalues to new location
-  for (upv_obj* ptr = closure->upvs; ptr < closure->upvs + current_size; ptr++) {
-    uint32_t offset = ptr - closure->upvs;
-    new_location[offset] = std::move(*ptr);
+  // Check if upvalues are initialized
+  if (current_size != 0) {
+    // Move upvalues to new location
+    for (upv_obj* ptr = closure->upvs; ptr < closure->upvs + current_size; ptr++) {
+      uint32_t offset = ptr - closure->upvs;
+      new_location[offset] = std::move(*ptr);
+    }
+
+    // Free old location
+    delete[] closure->upvs;
   }
 
-  // Free old location
-  delete[] closure->upvs;
   // Update closure
   closure->upvs = new_location;
   closure->upvc = new_size;

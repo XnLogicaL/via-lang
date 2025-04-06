@@ -22,13 +22,11 @@ public:
     : unit_ctx(unit_ctx) {}
 
   bool preprocess();
-
   void declare_default();
 
 private:
-  [[maybe_unused]] trans_unit_context& unit_ctx;
-
   [[maybe_unused]] error_bus err_bus;
+  [[maybe_unused]] trans_unit_context& unit_ctx;
 };
 
 } // namespace via

@@ -68,7 +68,7 @@ std::string get_error_level_header(const comp_err_lvl& lvl) {
   case ERROR_:
     return apply_color("error: ", fg_color::red, bg_color::black, style::bold);
   default:
-    VIA_UNREACHABLE;
+    VIA_UNREACHABLE();
   }
 }
 

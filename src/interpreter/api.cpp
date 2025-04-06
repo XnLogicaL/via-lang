@@ -85,7 +85,7 @@ const value_obj& state::top() {
 
 void state::set_stack(size_t position, value_obj value) {
   VIA_ASSERT(sp >= position, "stack overflow");
-  impl::__set_stack(this, position, value);
+  impl::__set_stack(this, position, std::move(value));
 }
 
 const value_obj& state::get_stack(size_t position) {

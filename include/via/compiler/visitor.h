@@ -38,15 +38,13 @@ namespace via {
 using label_t = operand_t;
 using unused_expression_handler_t = std::function<void(const expr_stmt_node&)>;
 
-value_obj construct_constant(lit_expr_node&);
-
 class node_visitor_base {
 public:
   node_visitor_base(trans_unit_context& unit_ctx, error_bus& bus)
     : unit_ctx(unit_ctx),
       err_bus(bus) {}
 
-  virtual VIA_DEFDESTRUCTOR(node_visitor_base);
+  virtual ~node_visitor_base() = default;
 
   // Expression visitors
   virtual void visit(lit_expr_node&, operand_t) VIA_INVALID_VISIT;
@@ -108,6 +106,9 @@ public:
   expr_node_visitor(trans_unit_context& unit_ctx, error_bus& bus, register_allocator& allocator)
     : node_visitor_base(unit_ctx, bus),
       allocator(allocator) {}
+
+  value_obj construct_constant(lit_expr_node&);
+  lit_expr_node fold_constant(expr_node_base&, size_t fold_depth = 0);
 
   void visit(lit_expr_node&, operand_t) override;
   void visit(sym_expr_node&, operand_t) override;

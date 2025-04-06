@@ -44,8 +44,13 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
   else {
     std::string comment = std::format("{}", symbol);
 
-    if (is_constant_expression(val)) {
-      lit_expr_node& literal = dynamic_cast<lit_expr_node&>(val);
+    if (is_constant_expression(unit_ctx, val)) {
+      // Constant folding is an O1 optimization.
+      if (unit_ctx.optimization_level < 1) {
+        goto non_constexpr;
+      }
+
+      lit_expr_node literal = expression_visitor.fold_constant(val);
 
       // Check for nil
       if (std::get_if<std::monostate>(&literal.value)) {
@@ -55,6 +60,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::nil),
+          .value = literal.clone(),
         });
       }
       // Check for integer
@@ -62,12 +68,13 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         uint32_t final_value = *int_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHI, {operands.l, operands.r}, comment);
+        unit_ctx.bytecode->emit(PUSHI, {operands.high, operands.low}, comment);
         unit_ctx.internal.variable_stack->push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
           .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::integer),
+          .value = literal.clone(),
         });
       }
       // Check for float
@@ -75,13 +82,14 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHF, {operands.l, operands.r}, comment);
+        unit_ctx.bytecode->emit(PUSHF, {operands.high, operands.low}, comment);
         unit_ctx.internal.variable_stack->push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
           .type =
             std::make_unique<primitive_type_node>(literal.value_token, value_type::floating_point),
+          .value = literal.clone(),
         });
       }
       // Check for boolean
@@ -92,11 +100,13 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::boolean),
+          .value = literal.clone(),
         });
       }
       // Other constant
       else {
-        const value_obj& constant = construct_constant(dynamic_cast<lit_expr_node&>(val));
+        const value_obj& constant =
+          expression_visitor.construct_constant(dynamic_cast<lit_expr_node&>(val));
         const operand_t const_id = unit_ctx.constants->push_constant(constant);
 
         unit_ctx.bytecode->emit(PUSHK, {const_id}, comment);
@@ -105,10 +115,12 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .type = std::make_unique<primitive_type_node>(literal.value_token, constant.type),
+          .value = literal.clone(),
         });
       }
     }
     else {
+    non_constexpr:
       operand_t dst = allocator.allocate_register();
 
       declaration_node.value_expression->accept(expression_visitor, dst);
@@ -118,6 +130,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         .is_constexpr = false,
         .symbol = symbol,
         .type = std::move(val_ty),
+        .value = declaration_node.value_expression->clone(),
       });
 
       allocator.free_register(dst);
@@ -176,6 +189,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
     .symbol = function_node.identifier.lexeme,
     .type =
       std::make_unique<function_type_node>(std::move(parameters_0), function_node.returns->clone()),
+    .value = nullptr,
   });
 
   function_node.returns->decay(decay_visitor, function_node.returns);
@@ -229,7 +243,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
     }
 
     auto operands = reinterpret_u32_as_2u16(symbol_hash);
-    unit_ctx.bytecode->emit(GSET, {function_reg, operands.l, operands.r});
+    unit_ctx.bytecode->emit(GSET, {function_reg, operands.high, operands.low});
   }
   else {
     unit_ctx.bytecode->emit(PUSH, {function_reg});
