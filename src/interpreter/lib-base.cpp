@@ -8,8 +8,6 @@
 
 namespace via::lib {
 
-static value_obj nil = value_obj();
-
 using namespace impl;
 
 VIA_LIBDECLFN(base_print) {
@@ -21,7 +19,7 @@ VIA_LIBDECLFN(base_print) {
 
   std::cout << std::endl;
 
-  VIA_LIBRET(nil);
+  VIA_LIBRET(value_obj());
 }
 
 VIA_LIBDECLFN(open_baselib) {

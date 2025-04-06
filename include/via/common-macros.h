@@ -8,10 +8,23 @@
 #include <iostream>
 #include <cstdlib>
 
-#define VIA_USING_GCC   !__clang__&& __GNUC__
-#define VIA_USING_CLANG __clang__&& __GNUC__
+#define C_GCC   0
+#define C_CLANG 1
+#define C_MSVC  2
 
-#if VIA_USING_GCC
+#ifdef __GNUC__
+#ifdef __clang__
+#define VIA_COMPILER C_CLANG
+#else
+#define VIA_COMPILER C_GCC
+#endif
+#elif defined(_MSC_VER)
+#define VIA_COMPILER C_MSVC
+#else
+#error "Unknown compiler"
+#endif
+
+#if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmultistatement-macros"
 #endif
@@ -23,27 +36,43 @@
 #define VIA_HASSTACKTRACE 0
 #endif
 
-#define VIA_VERSION "0.28.2"
+#define VIA_VERSION "0.28.3"
 
-// Parameter declaration spec macros
-#define VIA_RESTRICT __restrict__
-
-// Function declaration spec macros
+// Detect MSVC
+#if VIA_COMPILER == C_MSVC
+#define VIA_RESTRICT       __restrict
 #define VIA_NOMANGLE       extern "C"
 #define VIA_NODISCARD      [[nodiscard]]
-#define VIA_NORETURN       __attribute__((__noreturn__))
+#define VIA_NORETURN       __declspec(noreturn)
+#define VIA_NOINLINE       __declspec(noinline)
+#define VIA_INLINE         inline
+#define VIA_FORCEINLINE    __forceinline
+#define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' attribute
+#define VIA_IMPLEMENTATION inline
+
+#define VIA_UNREACHABLE __assume(0)
+#define VIA_FUNCSIG     __FUNCSIG__
+
+#define VIA_LIKELY(x)   (x) // No branch prediction hints in MSVC
+#define VIA_UNLIKELY(x) (x)
+#else
+// GCC / Clang
+#define VIA_RESTRICT       __restrict__
+#define VIA_NOMANGLE       extern "C"
+#define VIA_NODISCARD      [[nodiscard]]
+#define VIA_NORETURN       __attribute__((noreturn))
 #define VIA_NOINLINE       __attribute__((noinline))
 #define VIA_INLINE         inline
 #define VIA_FORCEINLINE    inline __attribute__((always_inline))
 #define VIA_OPTIMIZE       inline __attribute__((always_inline, hot))
-#define VIA_IMPLEMENTATION inline // Used for header-only implementations
+#define VIA_IMPLEMENTATION inline
 
 #define VIA_UNREACHABLE __builtin_unreachable()
 #define VIA_FUNCSIG     __PRETTY_FUNCTION__
 
-// Branch prediction macros
 #define VIA_LIKELY(a)   (__builtin_expect(!!(a), 1))
 #define VIA_UNLIKELY(a) (__builtin_expect(!!(a), 0))
+#endif
 
 // Class spec macros
 #define VIA_DEFCONSTRUCTOR(target) target() = default;
@@ -82,7 +111,7 @@
     std::abort();                                                                                  \
   }
 
-#if VIA_USING_GCC
+#if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic pop
 #endif
 

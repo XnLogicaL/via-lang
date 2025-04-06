@@ -9,8 +9,10 @@
 #include "instruction.h"
 #include "object.h"
 
-#define VIA_VMSTACKSIZE 2048
-#define VIA_REGCOUNT    0xFFFF
+#define VIA_VMSTACKSIZE    2048
+#define VIA_STK_REGISTERS  256
+#define VIA_HEAP_REGISTERS 65536 - VIA_STK_REGISTERS
+#define VIA_ALL_REGISTERS  VIA_STK_REGISTERS + VIA_HEAP_REGISTERS
 
 namespace via {
 
@@ -38,30 +40,31 @@ struct global_state {
   std::shared_mutex stable_mutex;
 };
 
+// Register array wrapper.
+template<const size_t Size>
+struct alignas(64) register_holder {
+  value_obj registers[Size];
+};
+
+// Type aliases for stack registers and heap registers.
+using stack_registers_t = register_holder<VIA_STK_REGISTERS>;
+using spill_registers_t = register_holder<VIA_HEAP_REGISTERS>;
+
 // "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
 // 64-byte alignment for maximum cache friendliness.
 struct alignas(64) state {
-  VIA_NOCOPY(state);   // Make uncopyable
-  VIA_IMPLMOVE(state); // Make movable
-
-  state(global_state* global, trans_unit_context& unit_ctx);
-  ~state();
-
   // Thread and global state
   uint32_t id;       // Thread ID
   global_state* glb; // global_obj state
 
   // instruction pointers
-  instruction* pc = nullptr;  // Current instruction pointer
-  instruction* ibp = nullptr; // instruction list begin pointer
-  instruction* sibp = nullptr;
+  instruction* pc = nullptr;   // Current instruction pointer
+  instruction* ibp = nullptr;  // Instruction buffer pointer
+  instruction* sibp = nullptr; // Saved instruction buffer pointer
 
   // Stack state
   size_t sp = 0;  // Stack pointer
   value_obj* sbp; // Stack base pointer
-
-  // Registers
-  value_obj* registers; // Register array
 
   // Labels
   instruction** labels; // Label array
@@ -73,9 +76,31 @@ struct alignas(64) state {
   bool abort = false;
   error_state* err;
 
+  // Register holders
+  stack_registers_t& stack_registers;
+  spill_registers_t* spill_registers;
+
   // Translation unit context reference
   trans_unit_context& unit_ctx;
 
+  // ===========================================================================================
+  // Meta
+public:
+  // Make uncopyable
+  VIA_NOCOPY(state);
+
+  // Make movable
+  VIA_IMPLMOVE(state);
+
+  // Constructor
+  explicit state(
+    global_state* global, stack_registers_t& stk_registers, trans_unit_context& unit_ctx
+  );
+
+  // Destructor
+  ~state();
+
+  // Loads the given containers data into the instruction buffer.
   void load(const bytecode_holder& bytecode);
 
   // ===========================================================================================
@@ -91,7 +116,7 @@ struct alignas(64) state {
   value_obj& get_register(operand_t reg);
 
   // Sets a given register to a given value.
-  void set_register(operand_t reg, const value_obj& value);
+  void set_register(operand_t reg, value_obj value);
 
   // ===========================================================================================
   // Comparison and metadata
@@ -127,7 +152,7 @@ struct alignas(64) state {
   void push_table();
 
   // Pushes a value onto the stack.
-  void push(const value_obj& value);
+  void push(value_obj value);
 
   // Drops a value from the stack, frees the resources of the dropped value.
   void drop();

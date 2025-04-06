@@ -3,11 +3,12 @@
 // =========================================================================================== |
 
 #include "register-allocator.h"
+#include "state.h"
 
 namespace via {
 
 register_t register_allocator::allocate_register() {
-  for (register_t reg = 0; reg < 128; reg++) {
+  for (register_t reg = 0; reg < VIA_ALL_REGISTERS - 1; reg++) {
     if (registers[reg]) {
       registers[reg] = false;
       return reg;

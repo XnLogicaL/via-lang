@@ -66,7 +66,7 @@ VIA_IMPLEMENTATION void __closure_upv_set(function_obj* closure, size_t upv_id, 
   }
 }
 
-#if VIA_USING_CLANG
+#if VIA_COMPILER == C_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wvla-cxx-extension"
 #endif
@@ -103,7 +103,7 @@ VIA_IMPLEMENTATION void __closure_bytecode_load(state* state, function_obj* clos
   }
 }
 
-#if VIA_USING_CLANG
+#if VIA_COMPILER == C_CLANG
 #pragma clang diagnostic pop
 #endif
 
@@ -310,8 +310,8 @@ VIA_IMPLEMENTATION void __stack_deallocate(state* state) {
   delete[] state->sbp;
 }
 
-VIA_IMPLEMENTATION void __push(state* state, const value_obj& val) {
-  state->sbp[state->sp++] = val.clone();
+VIA_IMPLEMENTATION void __push(state* state, value_obj val) {
+  state->sbp[state->sp++] = std::move(val);
 }
 
 VIA_IMPLEMENTATION value_obj __pop(state* state) {
@@ -327,8 +327,8 @@ VIA_IMPLEMENTATION const value_obj& __get_stack(state* state, size_t offset) {
   return state->sbp[offset];
 }
 
-VIA_IMPLEMENTATION void __set_stack(state* state, size_t offset, value_obj& val) {
-  state->sbp[offset] = val.clone();
+VIA_IMPLEMENTATION void __set_stack(state* state, size_t offset, value_obj val) {
+  state->sbp[offset] = std::move(val);
 }
 
 VIA_IMPLEMENTATION value_obj __get_argument(state* VIA_RESTRICT state, size_t offset) {
@@ -346,21 +346,31 @@ VIA_IMPLEMENTATION value_obj __get_argument(state* VIA_RESTRICT state, size_t of
 // ==========================================================
 // Register handling
 VIA_IMPLEMENTATION void __register_allocate(state* state) {
-  state->registers = new value_obj[VIA_REGCOUNT]();
+  state->spill_registers = new spill_registers_t();
 }
 
 VIA_IMPLEMENTATION void __register_deallocate(state* state) {
-  delete[] state->registers;
+  delete state->spill_registers;
 }
 
-VIA_IMPLEMENTATION void __set_register(state* state, operand_t reg, const value_obj& val) {
-  value_obj* addr = state->registers + reg;
-  *addr = val.clone();
+VIA_OPTIMIZE void __set_register(state* state, operand_t reg, value_obj val) {
+  if VIA_LIKELY (reg < VIA_STK_REGISTERS) {
+    state->stack_registers.registers[reg] = val.move();
+  }
+  else {
+    const operand_t offset = reg - VIA_STK_REGISTERS;
+    state->spill_registers->registers[offset] = val.move();
+  }
 }
 
-VIA_IMPLEMENTATION value_obj* __get_register(state* state, operand_t reg) {
-  value_obj* addr = state->registers + reg;
-  return addr;
+VIA_OPTIMIZE value_obj* __get_register(state* state, operand_t reg) {
+  if VIA_LIKELY ((reg & 0xFF) == reg) {
+    return &state->stack_registers.registers[reg];
+  }
+  else {
+    const operand_t offset = reg - VIA_STK_REGISTERS;
+    return &state->spill_registers->registers[offset];
+  }
 }
 
 } // namespace via::impl

@@ -16,15 +16,11 @@ namespace via {
 using enum value_type;
 
 value_obj& state::get_register(operand_t reg) {
-  VIA_ASSERT(reg <= VIA_REGCOUNT, "invalid register");
-  return registers[reg];
+  return *impl::__get_register(this, reg);
 }
 
-void state::set_register(operand_t reg, const value_obj& val) {
-  VIA_ASSERT(reg <= VIA_REGCOUNT, "invalid register");
-
-  value_obj* addr = registers + reg;
-  *addr = val.clone();
+void state::set_register(operand_t reg, value_obj val) {
+  impl::__set_register(this, reg, std::move(val));
 }
 
 bool state::is_heap(const value_obj& value) {
@@ -67,9 +63,9 @@ void state::push_table() {
   push(value_obj(table, new table_obj()));
 }
 
-void state::push(const value_obj& val) {
+void state::push(value_obj val) {
   VIA_ASSERT(sp < VIA_VMSTACKSIZE, "stack overflow");
-  impl::__push(this, val);
+  impl::__push(this, std::move(val));
 }
 
 void state::drop() {

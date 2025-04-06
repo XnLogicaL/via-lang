@@ -113,10 +113,8 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
     err_bus.log({true, message, unit_ctx, INFO, {}});
   }
 
-  preprocessor.declare_default();
-
   SET_PROFILER_POINT(preproc_start);
-
+  preprocessor.declare_default();
   bool preproc_failed = preprocessor.preprocess();
 
   if (verbosity_flag) {
@@ -339,7 +337,8 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(state_init_begin);
 
     global_state gstate;
-    state state(&gstate, result.unit);
+    stack_registers_t stk_registers;
+    state state(&gstate, stk_registers, result.unit);
 
     if (verbosity_flag) {
       SET_PROFILER_POINT(state_init_end);

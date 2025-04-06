@@ -15,39 +15,36 @@ enum class opcode : uint16_t {
   EXIT,
 
   ADD,
-  ADDK,
   ADDI,
   ADDF,
 
+  // ADD2I,
+  // ADD2F,
+  // ADDFI,
+
   SUB,
-  SUBK,
   SUBI,
   SUBF,
 
   MUL,
-  MULK,
   MULI,
   MULF,
 
   DIV,
-  DIVK,
   DIVI,
   DIVF,
 
   MOD,
-  MODK,
   MODI,
   MODF,
 
   POW,
-  POWK,
   POWI,
   POWF,
 
   NEG,
 
   MOVE,
-  SWAP,
 
   LOADK,
   LOADNIL,

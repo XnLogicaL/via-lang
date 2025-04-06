@@ -21,7 +21,7 @@ void compiler::insert_exit0_instruction() {
 
 bool compiler::generate() {
   error_bus emitter;
-  register_allocator allocator(VIA_REGCOUNT, true);
+  register_allocator allocator(VIA_ALL_REGISTERS, true);
   stmt_node_visitor visitor(unit_ctx, emitter, allocator);
 
   bool failed = false;

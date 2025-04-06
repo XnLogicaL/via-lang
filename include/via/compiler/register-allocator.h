@@ -20,8 +20,8 @@ public:
   // Constructor
   register_allocator(size_t size, bool default_value) {
     registers.reserve(size);
-    for (register_t reg = 0; reg < size; reg++) {
-      registers.emplace(reg, default_value);
+    for (register_t reg = 0; reg < size - 1; reg++) {
+      registers[reg] = default_value;
     }
   }
 

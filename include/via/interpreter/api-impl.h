@@ -137,7 +137,7 @@ VIA_IMPLEMENTATION value_obj __len(value_obj& val) {
   return _Nil.clone();
 }
 
-VIA_IMPLEMENTATION void __native_return(state* VIA_RESTRICT state, const value_obj& _Ret_value) {
+VIA_IMPLEMENTATION void __native_return(state* VIA_RESTRICT state, value_obj _Ret_value) {
   __closure_close_upvalues(state->frame);
 
   call_info _Call_info = state->frame->call_data;
@@ -149,7 +149,7 @@ VIA_IMPLEMENTATION void __native_return(state* VIA_RESTRICT state, const value_o
   state->sp = _Call_info.sp;
   state->sp -= _Call_info.argc;
 
-  __push(state, _Ret_value);
+  __push(state, std::move(_Ret_value));
 }
 
 VIA_IMPLEMENTATION value_obj __to_string(const value_obj& val) {

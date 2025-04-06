@@ -12,12 +12,14 @@ namespace via {
 using namespace impl;
 
 // Initializes and returns a new state object
-state::state(global_state* glb, trans_unit_context& unit_ctx)
+state::state(global_state* glb, stack_registers_t& stk_registers, trans_unit_context& unit_ctx)
   : id(glb->threads++),
     glb(glb),
     err(new error_state()),
+    stack_registers(stk_registers),
     unit_ctx(unit_ctx) {
-  load(*unit_ctx.bytecode);
+  // Load initial bytecode into the instruction buffer.
+  this->load(*unit_ctx.bytecode);
 
   __register_allocate(this);
   __stack_allocate(this);

@@ -7,3 +7,4 @@ let x = 10 + 5
 let y = x * x % 56
 
 print_hello()
+print("hello")

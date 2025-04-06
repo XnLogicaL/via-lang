@@ -34,7 +34,7 @@ char lexer::consume(size_t ahead) {
   return unit_ctx.file_source.at(pos += ahead);
 }
 
-#if VIA_USING_GCC
+#if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -88,7 +88,7 @@ token lexer::read_number(size_t position) {
   return token(type, value, line, start_offset, position);
 }
 
-#if VIA_USING_GCC
+#if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic pop
 #endif
 
