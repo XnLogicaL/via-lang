@@ -37,7 +37,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
       global_obj global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
       unit_ctx.internal.globals->declare_global(std::move(global));
       declaration_node.value_expression->accept(expression_visitor, value_reg);
-      unit_ctx.bytecode->emit(SETGLOBAL, {value_reg, symbol_hash}, comment);
+      unit_ctx.bytecode->emit(GSET, {value_reg, symbol_hash}, comment);
       allocator.free_register(value_reg);
     }
   }
@@ -62,7 +62,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         uint32_t final_value = *int_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHINT, {operands.l, operands.r}, comment);
+        unit_ctx.bytecode->emit(PUSHI, {operands.l, operands.r}, comment);
         unit_ctx.internal.variable_stack->push({
           .is_const = is_const,
           .is_constexpr = true,
@@ -75,7 +75,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
         auto operands = reinterpret_u32_as_2u16(final_value);
 
-        unit_ctx.bytecode->emit(PUSHFLOAT, {operands.l, operands.r}, comment);
+        unit_ctx.bytecode->emit(PUSHF, {operands.l, operands.r}, comment);
         unit_ctx.internal.variable_stack->push({
           .is_const = is_const,
           .is_constexpr = true,
@@ -86,7 +86,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
       }
       // Check for boolean
       else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
-        unit_ctx.bytecode->emit(*bool_value ? PUSHTRUE : PUSHFALSE, {}, comment);
+        unit_ctx.bytecode->emit(*bool_value ? PUSHBT : PUSHBF, {}, comment);
         unit_ctx.internal.variable_stack->push({
           .is_const = is_const,
           .is_constexpr = true,
@@ -180,7 +180,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
 
   function_node.returns->decay(decay_visitor, function_node.returns);
   function_node.accept(type_visitor);
-  unit_ctx.bytecode->emit(NEWCLOSURE, {function_reg}, function_node.identifier.lexeme);
+  unit_ctx.bytecode->emit(NEWCLSR, {function_reg}, function_node.identifier.lexeme);
 
   size_t new_closure_point = unit_ctx.bytecode->size();
   scope_stmt_node& scope = dynamic_cast<scope_stmt_node&>(*function_node.body);
@@ -211,8 +211,8 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   bytecode last_bytecode = unit_ctx.bytecode->back();
   opcode last_opcode = last_bytecode.instruct.op;
 
-  if (last_opcode != RETURN && last_opcode != RETURNNIL) {
-    unit_ctx.bytecode->emit(RETURNNIL);
+  if (last_opcode != RET && last_opcode != RETNIL) {
+    unit_ctx.bytecode->emit(RETNIL);
   }
 
   bytecode& new_closure = unit_ctx.bytecode->at(new_closure_point - 1);
@@ -229,7 +229,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
     }
 
     auto operands = reinterpret_u32_as_2u16(symbol_hash);
-    unit_ctx.bytecode->emit(SETGLOBAL, {function_reg, operands.l, operands.r});
+    unit_ctx.bytecode->emit(GSET, {function_reg, operands.l, operands.r});
   }
   else {
     unit_ctx.bytecode->emit(PUSH, {function_reg});
@@ -261,10 +261,10 @@ void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
       if (unit_ctx.internal.function_stack->size() > 0) {
         const auto& current_closure = unit_ctx.internal.function_stack->top();
         if (current_closure.stack_pointer < stk_id.value()) {
-          unit_ctx.bytecode->emit(SETSTACK, {value_reg, stk_id.value()}, symbol);
+          unit_ctx.bytecode->emit(STKSET, {value_reg, stk_id.value()}, symbol);
         }
         else {
-          unit_ctx.bytecode->emit(SETUPVALUE, {value_reg, stk_id.value()}, symbol);
+          unit_ctx.bytecode->emit(UPVSET, {value_reg, stk_id.value()}, symbol);
         }
       }
     }
@@ -289,11 +289,11 @@ void stmt_node_visitor::visit(return_stmt_node& return_node) {
     operand_t expr_reg = allocator.allocate_register();
 
     return_node.expression->accept(expression_visitor, expr_reg);
-    unit_ctx.bytecode->emit(RETURN, {expr_reg}, this_function.func_stmt->identifier.lexeme);
+    unit_ctx.bytecode->emit(RET, {expr_reg}, this_function.func_stmt->identifier.lexeme);
     allocator.free_register(expr_reg);
   }
   else {
-    unit_ctx.bytecode->emit(RETURNNIL, {}, this_function.func_stmt->identifier.lexeme);
+    unit_ctx.bytecode->emit(RETNIL, {}, this_function.func_stmt->identifier.lexeme);
   }
 }
 
@@ -302,7 +302,7 @@ void stmt_node_visitor::visit(break_stmt_node& break_node) {
     compiler_error(break_node.tok, "'break' statement not within loop or switch");
   }
   else {
-    unit_ctx.bytecode->emit(JUMPLABEL, {escape_label.value()}, "break");
+    unit_ctx.bytecode->emit(LJMP, {escape_label.value()}, "break");
   }
 }
 
@@ -311,7 +311,7 @@ void stmt_node_visitor::visit(continue_stmt_node& continue_node) {
     compiler_error(continue_node.tok, "'continue' statement not within loop");
   }
   else {
-    unit_ctx.bytecode->emit(JUMPLABEL, {repeat_label.value()}, "continue");
+    unit_ctx.bytecode->emit(LJMP, {repeat_label.value()}, "continue");
   }
 }
 
@@ -337,36 +337,34 @@ void stmt_node_visitor::visit(if_stmt_node& if_node) {
   operand_t if_label = unit_ctx.internal.label_count++;
 
   if_node.condition->accept(expression_visitor, cond_reg);
-  unit_ctx.bytecode->emit(JUMPLABELIF, {cond_reg, if_label}, "if");
+  unit_ctx.bytecode->emit(LJMPIF, {cond_reg, if_label}, "if");
 
   for (const auto& elseif_node : if_node.elseif_nodes) {
     operand_t label = unit_ctx.internal.label_count++;
 
     elseif_node.condition->accept(expression_visitor, cond_reg);
-    unit_ctx.bytecode->emit(
-      JUMPLABELIF, {cond_reg, label}, std::format("elseif #{}", label - if_label)
-    );
+    unit_ctx.bytecode->emit(LJMPIF, {cond_reg, label}, std::format("elseif #{}", label - if_label));
   }
 
   allocator.free_register(cond_reg);
 
   operand_t escape_label = unit_ctx.internal.label_count++;
 
-  unit_ctx.bytecode->emit(JUMPLABEL, {escape_label}, "else");
-  unit_ctx.bytecode->emit(LABEL, {if_label});
+  unit_ctx.bytecode->emit(LJMP, {escape_label}, "else");
+  unit_ctx.bytecode->emit(LBL, {if_label});
   if_node.scope->accept(*this);
-  unit_ctx.bytecode->emit(JUMPLABEL, {escape_label});
+  unit_ctx.bytecode->emit(LJMP, {escape_label});
 
   size_t label_id = 0;
   for (const auto& elseif_node : if_node.elseif_nodes) {
     operand_t label = if_label + ++label_id;
 
-    unit_ctx.bytecode->emit(LABEL, {label});
+    unit_ctx.bytecode->emit(LBL, {label});
     elseif_node.scope->accept(*this);
-    unit_ctx.bytecode->emit(JUMPLABEL, {escape_label});
+    unit_ctx.bytecode->emit(LJMP, {escape_label});
   }
 
-  unit_ctx.bytecode->emit(LABEL, {escape_label});
+  unit_ctx.bytecode->emit(LBL, {escape_label});
 
   if (if_node.else_node.get()) {
     if_node.else_node->accept(*this);
@@ -391,12 +389,12 @@ void stmt_node_visitor::visit(while_stmt_node& while_node) {
   operand_t l_repeat_label = repeat_label.value();
   operand_t l_escape_label = escape_label.value();
 
-  unit_ctx.bytecode->emit(LABEL, {l_repeat_label});
+  unit_ctx.bytecode->emit(LBL, {l_repeat_label});
   while_node.condition->accept(expression_visitor, cond_reg);
-  unit_ctx.bytecode->emit(JUMPLABELIFNOT, {cond_reg, l_escape_label});
+  unit_ctx.bytecode->emit(LJMPIFN, {cond_reg, l_escape_label});
   while_node.body->accept(*this);
-  unit_ctx.bytecode->emit(JUMPLABEL, {l_repeat_label});
-  unit_ctx.bytecode->emit(LABEL, {l_escape_label});
+  unit_ctx.bytecode->emit(LJMP, {l_repeat_label});
+  unit_ctx.bytecode->emit(LBL, {l_escape_label});
   allocator.free_register(cond_reg);
 
   repeat_label = std::nullopt;
@@ -426,9 +424,15 @@ void stmt_node_visitor::visit(expr_stmt_node& expr_stmt) {
       compiler_info(std::format("Function returns non-nil type '{}'", ret_ty->to_output_string()));
     }
 
-    // Edit last instruction to drop the return value rather than popping it.
+    // Edit last instruction to drop the return value rather than popping it. This is because if a
+    // function call is present under an expression statement, then the result is guaranteed to be
+    // ignored.
     bytecode& last = unit_ctx.bytecode->back();
     last.instruct.op = DROP;
+    // Reset operand values to eliminate deceptive values
+    last.instruct.operand0 = VIA_OPERAND_INVALID;
+    last.instruct.operand1 = VIA_OPERAND_INVALID;
+    last.instruct.operand2 = VIA_OPERAND_INVALID;
   }
   else {
     if (unused_expr_handler.has_value()) {

@@ -27,11 +27,33 @@
 //  is in turn saved to ProgramData::bytecode_info.
 namespace via {
 
+// std::array wrapper with custom initialization support
+template<typename T, const size_t Size, const T Default>
+struct operands_array {
+  std::array<T, Size> data;
+
+  constexpr operands_array() {
+    data.fill(Default);
+  }
+
+  constexpr operands_array(std::initializer_list<T> init) {
+    data.fill(Default);
+    std::copy(init.begin(), init.end(), data.begin());
+  }
+
+  operator std::array<T, Size>&() {
+    return data;
+  }
+
+  operator const std::array<T, Size>&() const {
+    return data;
+  }
+};
+
 class bytecode_holder final {
 public:
   // Type aliases
   using comment_type = const std::string;
-  using operands_array = const std::array<operand_t, 3>;
   using bytecode_vector = std::vector<bytecode>;
 
   // Returns the current size of the bytecode pair vector.
@@ -51,12 +73,16 @@ public:
   void insert(
     size_t index = 0,
     opcode opcode = opcode::NOP,
-    operands_array& operands = {},
+    operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
     comment_type& comment = ""
   );
 
   // Emits an instruction at the end of the vector.
-  void emit(opcode opcode = opcode::NOP, operands_array& operands = {}, comment_type& comment = "");
+  void emit(
+    opcode opcode = opcode::NOP,
+    operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
+    comment_type& comment = ""
+  );
 
   // Returns a reference to the bytecode vector.
   const bytecode_vector& get() const;

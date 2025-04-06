@@ -72,9 +72,9 @@ VIA_IMPLEMENTATION void __closure_upv_set(function_obj* closure, size_t upv_id, 
 #endif
 
 // Loads closure bytecode by iterating over the instruction pipeline.
-// Handles sentinel/special opcodes like RETURN or CAPTURE while assembling closure.
+// Handles sentinel/special opcodes like RET or CAPTURE while assembling closure.
 VIA_IMPLEMENTATION void __closure_bytecode_load(state* state, function_obj* closure, size_t len) {
-  // Skip NEWCLOSURE instruction
+  // Skip NEWCLSR instruction
   state->pc++;
 
   // Copy instructions from PC
@@ -291,7 +291,7 @@ VIA_IMPLEMENTATION instruction* __label_get(state* state, size_t index) {
 VIA_IMPLEMENTATION void __label_load(state* state) {
   size_t index = 0;
   for (instruction* pc = state->ibp; 1; pc++) {
-    if (pc->op == opcode::LABEL) {
+    if (pc->op == opcode::LBL) {
       state->labels[index++] = pc;
     }
     else if (pc->op == opcode::EXIT) {

@@ -63,7 +63,7 @@ enum class token_type {
   OP_INCREMENT, // ++
   OP_DECREMENT, // --
   // Pseudo-operators
-  EQUAL,   // =
+  EQ,      // =
   RETURNS, // ->
 
   // Literals

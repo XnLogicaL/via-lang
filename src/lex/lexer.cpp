@@ -305,7 +305,7 @@ token lexer::get_token() {
       offset++;
       return token(OP_EQ, "==", line, start_offset, position);
     }
-    return token(EQUAL, "=", line, start_offset, position);
+    return token(EQ, "=", line, start_offset, position);
   case '!':
     if (pos < source_size() && peek() == '=') {
       pos++;

@@ -40,7 +40,7 @@ struct global_state {
 
 // "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
 // 64-byte alignment for maximum cache friendliness.
-struct VIA_ALIGN(64) state {
+struct alignas(64) state {
   VIA_NOCOPY(state);   // Make uncopyable
   VIA_IMPLMOVE(state); // Make movable
 

@@ -17,71 +17,64 @@ std::string to_string(const bytecode& bc, bool capitalize_opcodes) {
   const auto& instr = bc.instruct;
   const auto& meta = bc.meta_data;
   const opcode op = instr.op;
-  const uint32_t op_id = static_cast<uint32_t>(op);
 
-  // Helper to get a properly formatted opcode string
-  auto get_opcode_str = [&]() -> std::string {
-    std::string str(magic_enum::enum_name(op));
-    std::transform(str.begin(), str.end(), str.begin(), [capitalize_opcodes](unsigned char c) {
+  constexpr int opcode_column_width = 6;
+  constexpr int operand_column_width = 8;
+
+  auto is_operand_valid = [](const operand_t& operand) { return operand != VIA_OPERAND_INVALID; };
+
+  // Generate raw opcode string and transform case
+  std::string raw_opcode_str = std::string(magic_enum::enum_name(op));
+  std::transform(
+    raw_opcode_str.begin(),
+    raw_opcode_str.end(),
+    raw_opcode_str.begin(),
+    [capitalize_opcodes](unsigned char c) {
       return capitalize_opcodes ? std::toupper(c) : std::tolower(c);
-    });
-    return str;
-  };
-
-  const std::string opcode_string = apply_color(
-    std::format("{:<12}", get_opcode_str()), fg_color::magenta, bg_color::black, style::bold
+    }
   );
 
-  // Format comment only if it's non-empty
-  const std::string comment_string = meta.comment.empty()
-    ? ""
-    : apply_color(
-        std::format("; {:<15}", meta.comment), fg_color::green, bg_color::black, style::italic
-      );
+  // Pad raw opcode string before applying color
+  std::ostringstream opcode_buf;
+  opcode_buf << std::left << std::setw(opcode_column_width) << raw_opcode_str;
+  std::string colored_opcode_str =
+    apply_color(opcode_buf.str(), fg_color::magenta, bg_color::black, style::bold);
 
-  std::string arg0, arg1, arg2;
+  // Build operand string
+  std::string operand_str;
+  if (is_operand_valid(instr.operand0)) {
+    operand_str += std::to_string(instr.operand0);
 
-  // Function to apply "dim" style to zero operands
-  auto dim_operand = [](const std::string& operand) -> std::string {
-    return operand == "0" || operand == "0,"
-      ? apply_color(operand, fg_color::white, bg_color::black, style::faint)
-      : operand;
-  };
+    if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI
+        || op == LOADI || op == PUSHI) {
+      uint32_t result = reinterpret_u16_as_u32(instr.operand1, instr.operand2);
+      operand_str += ", " + std::to_string(result);
+    }
+    else {
+      if (is_operand_valid(instr.operand1)) {
+        operand_str += ", " + std::to_string(instr.operand1);
 
-  // Handle specific opcode groups with custom formatting
-  if (op_id >= static_cast<uint32_t>(JUMP)
-      && op_id <= static_cast<uint32_t>(JUMPIFGREATEROREQUAL)) {
-    arg0 = dim_operand(std::format("{},", static_cast<signed_operand_t>(instr.operand0)));
-    arg1 = dim_operand(std::format("{},", static_cast<signed_operand_t>(instr.operand1)));
-    arg2 = dim_operand(std::format("{}", static_cast<signed_operand_t>(instr.operand2)));
-  }
-  else if (op == LOADINT || op == ADDINT || op == SUBINT || op == MULINT || op == DIVINT
-           || op == POWINT || op == MODINT) {
-    arg0 = dim_operand(std::format("{},", static_cast<operand_t>(instr.operand0)));
-    arg1 = dim_operand(std::format(
-      "{}", static_cast<TInteger>(reinterpret_u16_as_i32(instr.operand1, instr.operand2))
-    ));
-    arg2 = "";
-  }
-  else if (op == LOADFLOAT || op == ADDFLOAT || op == SUBFLOAT || op == MULFLOAT || op == DIVFLOAT
-           || op == POWFLOAT || op == MODFLOAT) {
-    arg0 = dim_operand(std::format("{},", static_cast<operand_t>(instr.operand0)));
-    arg1 = dim_operand(
-      std::format("{}", static_cast<TFloat>(reinterpret_u16_as_f32(instr.operand1, instr.operand2)))
-    );
-    arg2 = "";
-  }
-  else {
-    arg0 = dim_operand(std::format("{},", instr.operand0));
-    arg1 = dim_operand(std::format("{},", instr.operand1));
-    arg2 = dim_operand(std::format("{}", instr.operand2));
+        if (is_operand_valid(instr.operand2)) {
+          operand_str += ", " + std::to_string(instr.operand2);
+        }
+      }
+    }
   }
 
-  std::string main_line = opcode_string + std::format("{} {} {}", arg0, arg1, arg2);
+  // Pad operands
+  std::ostringstream operand_buf;
+  operand_buf << std::left << std::setw(operand_column_width) << operand_str;
 
-  // Append comment if it exists
-  return comment_string.empty() ? main_line
-                                : main_line + std::format("{:>5}", ' ') + comment_string;
+  // Final formatting
+  std::ostringstream oss;
+  oss << colored_opcode_str << ' ' << operand_buf.str();
+
+  if (!meta.comment.empty()) {
+    std::string full_comment = std::format(" ; {}", meta.comment);
+    oss << apply_color(full_comment, fg_color::green, bg_color::black, style::italic);
+  }
+
+  return oss.str();
 }
 
 } // namespace via

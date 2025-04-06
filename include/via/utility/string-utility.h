@@ -5,7 +5,8 @@
 #ifndef VIA_HAS_HEADER_STRUTILS_H
 #define VIA_HAS_HEADER_STRUTILS_H
 
-#include "common.h"
+#include <string>
+#include <cstdint>
 
 namespace via {
 

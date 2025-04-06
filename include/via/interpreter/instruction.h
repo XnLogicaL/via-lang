@@ -8,7 +8,7 @@
 #include "common.h"
 #include "opcode.h"
 
-#define via_operand_invalid std::numeric_limits<operand_t>::max()
+#define VIA_OPERAND_INVALID std::numeric_limits<operand_t>::max()
 
 namespace via {
 
@@ -19,12 +19,12 @@ struct instruction_data {
   std::string comment = "";
 };
 
-struct VIA_ALIGN(8) instruction {
+struct alignas(8) instruction {
   opcode op = opcode::NOP;
 
-  operand_t operand0 = 0;
-  operand_t operand1 = 0;
-  operand_t operand2 = 0;
+  operand_t operand0 = VIA_OPERAND_INVALID;
+  operand_t operand1 = VIA_OPERAND_INVALID;
+  operand_t operand2 = VIA_OPERAND_INVALID;
 };
 
 struct bytecode {

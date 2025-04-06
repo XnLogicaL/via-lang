@@ -563,7 +563,7 @@ result<p_stmt_node_t> parser::parse_declaration() {
     type = std::make_unique<auto_type_node>(curr->position, curr->position + curr->lexeme.length());
   }
 
-  result<token> expect_eq = expect_consume(EQUAL, "Expected '=' for variable declaration");
+  result<token> expect_eq = expect_consume(EQ, "Expected '=' for variable declaration");
   result<p_expr_node_t> value = parse_expr();
 
   VIA_CHECKRESULT(expect_eq);

@@ -23,7 +23,7 @@
 #define VIA_HASSTACKTRACE 0
 #endif
 
-#define VIA_VERSION "0.28.1"
+#define VIA_VERSION "0.28.2"
 
 // Parameter declaration spec macros
 #define VIA_RESTRICT __restrict__
@@ -64,8 +64,6 @@
 #define VIA_IMPLMOVE(target)                                                                       \
   target& operator=(const target&&);                                                               \
   target(const target&&);
-
-#define VIA_ALIGN(x) alignas(x)
 
 #if VIA_HASSTACKTRACE == 1
 #define VIA_STACKTRACE std::stacktrace::current()

@@ -206,13 +206,13 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
         const bytecode& bytecode = unit_ctx.bytecode->get()[i];
         std::string current_disassembly;
 
-        if (bytecode.instruct.op == opcode::LABEL) {
+        if (bytecode.instruct.op == opcode::LBL) {
           std::cout << std::format(
             " .L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
           );
           continue;
         }
-        else if (bytecode.instruct.op == opcode::NEWCLOSURE) {
+        else if (bytecode.instruct.op == opcode::NEWCLSR) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
@@ -228,8 +228,8 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
         // Print disassembly of the bytecode instruction
         std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
 
-        if (bytecode.instruct.op == opcode::RETURN || bytecode.instruct.op == opcode::RETURNNIL) {
-          // Check if we are at the last RETURN opcode for the current closure
+        if (bytecode.instruct.op == opcode::RET || bytecode.instruct.op == opcode::RETNIL) {
+          // Check if we are at the last RET opcode for the current closure
           if (!closure_disassembly_stack.empty() && i >= closure_bytecode_count_stack.top()) {
             // Pop the function from the stack
             std::string disassembly_of = closure_disassembly_stack.top();

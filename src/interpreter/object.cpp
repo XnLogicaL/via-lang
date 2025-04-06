@@ -147,17 +147,6 @@ value_obj::value_obj(const char* str)
   : type(string),
     val_pointer(new string_obj(str)) {}
 
-// Constructs a new string_obj object
-string_obj::string_obj(const char* str)
-  : len(std::strlen(str)),
-    hash(hash_string_custom(str)),
-    data(duplicate_string(str)) {}
-
-string_obj::string_obj(const string_obj& other)
-  : len(other.len),
-    hash(other.hash),
-    data(duplicate_string(other.data)) {}
-
 string_obj::~string_obj() {
   delete[] data;
 }

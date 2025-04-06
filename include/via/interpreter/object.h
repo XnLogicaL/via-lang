@@ -8,19 +8,17 @@
 #include "common-macros.h"
 #include "common-defs.h"
 #include "magic_enum/magic_enum.hpp"
+#include "string-utility.h"
+#include <cstring>
 
 namespace via {
 
 #ifdef VIA_64BIT
-
 using TInteger = int64_t;
 using TFloat = float64_t;
-
 #else
-
 using TInteger = int32_t;
 using TFloat = float32_t;
-
 #endif
 
 struct state;
@@ -43,7 +41,7 @@ enum class value_type : uint8_t {
   object,         // Object type, pointer to object_obj
 };
 
-struct VIA_ALIGN(8) value_obj {
+struct alignas(8) value_obj {
   value_type type;
   union {
     TInteger val_integer;      // Integer value
@@ -99,54 +97,23 @@ struct VIA_ALIGN(8) value_obj {
 
   explicit value_obj(const char* str);
 
+  // clang-format off
+
   // Returns whether if the object holds a given type.
-  VIA_FORCEINLINE constexpr bool is(value_type other) const {
-    return type == other;
-  }
+  VIA_FORCEINLINE constexpr bool is(value_type other) const { return type == other; }
+  VIA_FORCEINLINE constexpr bool is_nil() const { return is(value_type::nil); }
+  VIA_FORCEINLINE constexpr bool is_bool() const { return is(value_type::boolean); }
+  VIA_FORCEINLINE constexpr bool is_int() const { return is(value_type::integer); }
+  VIA_FORCEINLINE constexpr bool is_float() const { return is(value_type::floating_point); }
+  VIA_FORCEINLINE constexpr bool is_number() const { return is_int() || is_float(); }
+  VIA_FORCEINLINE constexpr bool is_string() const { return is(value_type::string); }
+  VIA_FORCEINLINE constexpr bool is_table() const { return is(value_type::table); }
+  VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_table(); }
+  VIA_FORCEINLINE constexpr bool is_function() const { return is(value_type::function); }
+  VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(value_type::cfunction); }
+  VIA_FORCEINLINE constexpr bool is_callable() const { return is_function() || is_cfunction(); }
 
-  VIA_FORCEINLINE constexpr bool is_nil() const {
-    return is(value_type::nil);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_bool() const {
-    return is(value_type::boolean);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_int() const {
-    return is(value_type::integer);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_float() const {
-    return is(value_type::floating_point);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_number() const {
-    return is_int() || is_float();
-  }
-
-  VIA_FORCEINLINE constexpr bool is_string() const {
-    return is(value_type::string);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_table() const {
-    return is(value_type::table);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_subscriptable() const {
-    return is_string() || is_table();
-  }
-
-  VIA_FORCEINLINE constexpr bool is_function() const {
-    return is(value_type::function);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_cfunction() const {
-    return is(value_type::cfunction);
-  }
-
-  VIA_FORCEINLINE constexpr bool is_callable() const {
-    return is_function() || is_cfunction();
-  }
+  // clang-format on
 
   // Attempts to convert a given value into an integer.
   value_obj to_integer() const;
@@ -169,37 +136,37 @@ struct VIA_ALIGN(8) value_obj {
   void reset();
 
   // Compares self with a given value_obj.
-  [[nodiscard]] bool compare(const value_obj& other) const;
+  VIA_NODISCARD bool compare(const value_obj& other) const;
 
   // Moves the value and returns it as an rvalue reference.
-  [[nodiscard]] VIA_FORCEINLINE value_obj&& move() {
+  VIA_NODISCARD VIA_FORCEINLINE value_obj&& move() {
     return static_cast<value_obj&&>(*this);
   }
 
-  [[nodiscard]] VIA_FORCEINLINE const value_obj&& move() const {
+  VIA_NODISCARD VIA_FORCEINLINE const value_obj&& move() const {
     return static_cast<const value_obj&&>(*this);
   }
 
   // Returns the pointer value as a pointer to type T.
   template<typename T>
-  [[nodiscard]] VIA_FORCEINLINE T* cast_ptr() {
+  VIA_NODISCARD VIA_FORCEINLINE T* cast_ptr() {
     return reinterpret_cast<T*>(val_pointer);
   }
 
   template<typename T>
     requires std::is_pointer_v<T>
-  [[nodiscard]] VIA_FORCEINLINE T cast_ptr() {
+  VIA_NODISCARD VIA_FORCEINLINE T cast_ptr() {
     return reinterpret_cast<T>(val_pointer);
   }
 
   template<typename T>
-  [[nodiscard]] VIA_FORCEINLINE const T* cast_ptr() const {
+  VIA_NODISCARD VIA_FORCEINLINE const T* cast_ptr() const {
     return reinterpret_cast<const T*>(val_pointer);
   }
 
   template<typename T>
     requires std::is_pointer_v<T>
-  [[nodiscard]] VIA_FORCEINLINE const T cast_ptr() const {
+  VIA_NODISCARD VIA_FORCEINLINE const T cast_ptr() const {
     return reinterpret_cast<const T>(val_pointer);
   }
 };
@@ -209,8 +176,16 @@ struct string_obj {
   uint32_t hash;
   char* data;
 
-  explicit string_obj(const string_obj&);
-  explicit string_obj(const char*);
+  explicit string_obj(const char* str)
+    : len(std::strlen(str)),
+      hash(hash_string_custom(str)),
+      data(duplicate_string(str)) {}
+
+  explicit string_obj(const string_obj& other)
+    : len(other.len),
+      hash(other.hash),
+      data(duplicate_string(other.data)) {}
+
   ~string_obj();
 
   size_t size();

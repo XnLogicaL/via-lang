@@ -146,7 +146,7 @@ dispatch: {
   switch (pc->op) {
   // Handle special/internal opcodes
   case NOP:
-  case LABEL:
+  case LBL:
     VIA_VMNEXT();
 
   case ADD: {
@@ -205,7 +205,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case ADDINT: {
+  case ADDI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -222,7 +222,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case ADDFLOAT: {
+  case ADDF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -296,7 +296,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case SUBINT: {
+  case SUBI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -313,7 +313,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case SUBFLOAT: {
+  case SUBF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -387,7 +387,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case MULINT: {
+  case MULI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -404,7 +404,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case MULFLOAT: {
+  case MULF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -494,7 +494,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case DIVINT: {
+  case DIVI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -513,7 +513,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case DIVFLOAT: {
+  case DIVF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -593,7 +593,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case POWINT: {
+  case POWI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -610,7 +610,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case POWFLOAT: {
+  case POWF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -688,7 +688,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case MODINT: {
+  case MODI: {
     operand_t lhs = pc->operand0;
     operand_t int_high = pc->operand1;
     operand_t int_low = pc->operand2;
@@ -707,7 +707,7 @@ dispatch: {
 
     VIA_VMNEXT();
   }
-  case MODFLOAT: {
+  case MODF: {
     operand_t lhs = pc->operand0;
     operand_t flt_high = pc->operand1;
     operand_t flt_low = pc->operand2;
@@ -768,7 +768,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LOADINT: {
+  case LOADI: {
     operand_t dst = pc->operand0;
     TInteger imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
 
@@ -776,7 +776,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LOADFLOAT: {
+  case LOADF: {
     operand_t dst = pc->operand0;
     TFloat imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
 
@@ -784,19 +784,19 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LOADTRUE: {
+  case LOADBT: {
     operand_t dst = pc->operand0;
     __set_register(this, dst, value_obj(true));
     VIA_VMNEXT();
   }
 
-  case LOADFALSE: {
+  case LOADBF: {
     operand_t dst = pc->operand0;
     __set_register(this, dst, value_obj(false));
     VIA_VMNEXT();
   }
 
-  case NEWTABLE: {
+  case NEWTBL: {
     operand_t dst = pc->operand0;
     value_obj ttable(new table_obj());
 
@@ -804,7 +804,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case NEWCLOSURE: {
+  case NEWCLSR: {
     operand_t dst = pc->operand0;
     operand_t len = pc->operand1;
 
@@ -817,7 +817,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case GETUPVALUE: {
+  case UPVGET: {
     operand_t dst = pc->operand0;
     operand_t upv_id = pc->operand1;
     upv_obj* upv = __closure_upv_get(frame, upv_id);
@@ -828,7 +828,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case SETUPVALUE: {
+  case UPVSET: {
     operand_t src = pc->operand0;
     operand_t upv_id = pc->operand1;
     value_obj* val = __get_register(this, src);
@@ -858,24 +858,24 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case PUSHINT: {
+  case PUSHI: {
     TInteger imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
     __push(this, value_obj(imm));
     VIA_VMNEXT();
   }
 
-  case PUSHFLOAT: {
+  case PUSHF: {
     TFloat imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
     __push(this, value_obj(imm));
     VIA_VMNEXT();
   }
 
-  case PUSHTRUE: {
+  case PUSHBT: {
     __push(this, value_obj(true));
     VIA_VMNEXT();
   }
 
-  case PUSHFALSE: {
+  case PUSHBF: {
     __push(this, value_obj(false));
     VIA_VMNEXT();
   }
@@ -893,7 +893,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GETSTACK: {
+  case STKGET: {
     operand_t dst = pc->operand0;
     operand_t off = pc->operand1;
 
@@ -903,7 +903,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case SETSTACK: {
+  case STKSET: {
     operand_t src = pc->operand0;
     operand_t off = pc->operand1;
 
@@ -913,7 +913,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GETARGUMENT: {
+  case ARGGET: {
     operand_t dst = pc->operand0;
     operand_t off = pc->operand1;
 
@@ -923,7 +923,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GETGLOBAL: {
+  case GGET: {
     operand_t dst = pc->operand0;
     operand_t key = pc->operand1;
 
@@ -935,7 +935,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case SETGLOBAL: {
+  case GSET: {
     operand_t src = pc->operand0;
     operand_t key = pc->operand1;
 
@@ -947,7 +947,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case EQUAL: {
+  case EQ: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -971,7 +971,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case NOTEQUAL: {
+  case NEQ: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -1032,7 +1032,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LESS: {
+  case LT: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -1070,7 +1070,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GREATER: {
+  case GT: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -1108,7 +1108,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LESSOREQUAL: {
+  case LTEQ: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -1146,7 +1146,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GREATEROREQUAL: {
+  case GTEQ: {
     operand_t dst = pc->operand0;
     operand_t lhs = pc->operand1;
     operand_t rhs = pc->operand2;
@@ -1188,13 +1188,13 @@ dispatch: {
     goto exit;
   }
 
-  case JUMP: {
+  case JMP: {
     signed_operand_t offset = pc->operand0;
     pc += offset;
     goto dispatch;
   }
 
-  case JUMPIF: {
+  case JMPIF: {
     operand_t cond = pc->operand0;
     signed_operand_t offset = pc->operand1;
 
@@ -1206,7 +1206,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFNOT: {
+  case JMPIFN: {
     operand_t cond = pc->operand0;
     signed_operand_t offset = pc->operand1;
 
@@ -1218,7 +1218,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFEQUAL: {
+  case JMPIFEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1238,7 +1238,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFNOTEQUAL: {
+  case JMPIFNEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1258,7 +1258,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFLESS: {
+  case JMPIFLT: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1294,7 +1294,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFGREATER: {
+  case JMPIFGT: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1330,7 +1330,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFLESSOREQUAL: {
+  case JMPIFLTEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1366,7 +1366,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPIFGREATEROREQUAL: {
+  case JMPIFGTEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     signed_operand_t offset = pc->operand2;
@@ -1402,7 +1402,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABEL: {
+  case LJMP: {
     operand_t label = pc->operand0;
 
     pc = __label_get(this, label);
@@ -1410,7 +1410,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIF: {
+  case LJMPIF: {
     operand_t cond = pc->operand0;
     operand_t label = pc->operand1;
 
@@ -1422,7 +1422,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFNOT: {
+  case LJMPIFN: {
     operand_t cond = pc->operand0;
     operand_t label = pc->operand1;
 
@@ -1434,7 +1434,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFEQUAL: {
+  case LJMPIFEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1454,7 +1454,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFNOTEQUAL: {
+  case LJMPIFNEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1474,7 +1474,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFLESS: {
+  case LJMPIFLT: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1510,7 +1510,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFGREATER: {
+  case LJMPIFGT: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1546,7 +1546,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFLESSOREQUAL: {
+  case LJMPIFLTEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1582,7 +1582,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case JUMPLABELIFGREATEROREQUAL: {
+  case LJMPIFGTEQ: {
     operand_t cond_lhs = pc->operand0;
     operand_t cond_rhs = pc->operand1;
     operand_t label = pc->operand2;
@@ -1627,7 +1627,7 @@ dispatch: {
     goto dispatch;
   }
 
-  case EXTERNCALL: {
+  case CCALL: {
     operand_t fn = pc->operand0;
     operand_t argc = pc->operand1;
     value_obj* cfunc = __get_register(this, fn);
@@ -1636,7 +1636,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case NATIVECALL: {
+  case NTVCALL: {
     operand_t fn = pc->operand0;
     operand_t argc = pc->operand1;
     value_obj* func = __get_register(this, fn);
@@ -1645,7 +1645,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case METHODCALL: {
+  case MTDCALL: {
     operand_t obj = pc->operand0;
     operand_t fn = pc->operand1;
     operand_t argc = pc->operand2;
@@ -1658,13 +1658,13 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case RETURNNIL: {
+  case RETNIL: {
     __closure_close_upvalues(frame);
     __native_return(this, _Nil);
     VIA_VMNEXT();
   }
 
-  case RETURN: {
+  case RET: {
     operand_t src = pc->operand0;
     value_obj* val = __get_register(this, src);
 
@@ -1673,7 +1673,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GETTABLE: {
+  case TBLGET: {
     operand_t dst = pc->operand0;
     operand_t tbl = pc->operand1;
     operand_t key = pc->operand2;
@@ -1687,7 +1687,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case SETTABLE: {
+  case TBLSET: {
     operand_t src = pc->operand0;
     operand_t tbl = pc->operand1;
     operand_t ky = pc->operand2;
@@ -1700,7 +1700,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case NEXTTABLE: {
+  case TBLNEXT: {
     static std::unordered_map<void*, operand_t> next_table;
 
     operand_t dst = pc->operand0;
@@ -1723,7 +1723,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LENTABLE: {
+  case TBLLEN: {
     operand_t dst = pc->operand0;
     operand_t tbl = pc->operand1;
 
@@ -1734,7 +1734,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case LENSTRING: {
+  case STRLEN: {
     operand_t rdst = pc->operand0;
     operand_t objr = pc->operand1;
 
@@ -1745,7 +1745,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case CONCAT: {
+  case STRCONCAT: {
     operand_t left = pc->operand0;
     operand_t right = pc->operand1;
 
@@ -1768,7 +1768,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case GETSTRING: {
+  case STRGET: {
     operand_t dst = pc->operand0;
     operand_t str = pc->operand1;
     operand_t idx = pc->operand2;
@@ -1781,7 +1781,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case SETSTRING: {
+  case STRSET: {
     operand_t str = pc->operand0;
     operand_t src = pc->operand1;
     operand_t idx = pc->operand2;
@@ -1798,7 +1798,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case INTCAST: {
+  case CASTI: {
     operand_t dst = pc->operand0;
     operand_t src = pc->operand1;
 
@@ -1809,7 +1809,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case FLOATCAST: {
+  case CASTF: {
     operand_t dst = pc->operand0;
     operand_t src = pc->operand1;
 
@@ -1820,7 +1820,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case STRINGCAST: {
+  case CASTSTR: {
     operand_t dst = pc->operand0;
     operand_t src = pc->operand1;
 
@@ -1831,7 +1831,7 @@ dispatch: {
     VIA_VMNEXT();
   }
 
-  case BOOLCAST: {
+  case CASTB: {
     operand_t dst = pc->operand0;
     operand_t src = pc->operand1;
 

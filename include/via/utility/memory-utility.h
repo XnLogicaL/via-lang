@@ -5,7 +5,9 @@
 #ifndef VIA_HAS_HEADER_MEMUTILS_H
 #define VIA_HAS_HEADER_MEMUTILS_H
 
-#include "common.h"
+#include <string>
+#include <type_traits>
+#include <iostream>
 
 namespace via {
 

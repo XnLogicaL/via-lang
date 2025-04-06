@@ -12,7 +12,6 @@
 namespace via {
 
 using comment_type = bytecode_holder::comment_type;
-using operands_array = bytecode_holder::operands_array;
 using bytecode_vector = bytecode_holder::bytecode_vector;
 
 size_t bytecode_holder::size() const {
@@ -40,7 +39,10 @@ void bytecode_holder::remove(size_t index) {
 }
 
 void bytecode_holder::insert(
-  size_t index, opcode opcode, operands_array& operands, comment_type& comment
+  size_t index,
+  opcode opcode,
+  operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands,
+  comment_type& comment
 ) {
   // Insert the instruction at the specified index
   instructions.insert(
@@ -49,9 +51,9 @@ void bytecode_holder::insert(
       .instruct =
         {
           .op = opcode,
-          .operand0 = operands.at(0),
-          .operand1 = operands.at(1),
-          .operand2 = operands.at(2),
+          .operand0 = operands.data.at(0),
+          .operand1 = operands.data.at(1),
+          .operand2 = operands.data.at(2),
         },
       .meta_data =
         {
@@ -61,14 +63,16 @@ void bytecode_holder::insert(
   );
 }
 
-void bytecode_holder::emit(opcode opcode, operands_array& operands, comment_type& comment) {
+void bytecode_holder::emit(
+  opcode opcode, operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands, comment_type& comment
+) {
   add({
     .instruct =
       {
         .op = opcode,
-        .operand0 = operands.at(0),
-        .operand1 = operands.at(1),
-        .operand2 = operands.at(2),
+        .operand0 = operands.data.at(0),
+        .operand1 = operands.data.at(1),
+        .operand2 = operands.data.at(2),
       },
     .meta_data =
       {
