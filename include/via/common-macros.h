@@ -1,6 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_COMMON_MACROS_H
 #define VIA_HAS_HEADER_COMMON_MACROS_H
@@ -35,7 +35,7 @@
 #endif
 
 // Version information. Should match with git commit version.
-#define VIA_VERSION "0.28.4"
+#define VIA_VERSION "0.28.5"
 
 #if VIA_COMPILER == C_MSVC
 #define VIA_RESTRICT       __restrict
@@ -88,16 +88,16 @@
  * Must be used inside class or struct clause.
  */
 #define VIA_NOMOVE(target)                                                                         \
-  target& operator=(const target&&) = delete;                                                      \
-  target(const target&&) = delete;
+  target& operator=(target&&) = delete;                                                            \
+  target(target&&) = delete;
 
 /**
  * Makes the target class implement custom move semantics.
  * Must be used inside class or struct clause.
  */
 #define VIA_IMPLMOVE(target)                                                                       \
-  target& operator=(const target&&);                                                               \
-  target(const target&&);
+  target& operator=(target&&);                                                                     \
+  target(target&&);
 
 #if VIA_HASSTACKTRACE == 1
 #define VIA_STACKTRACE std::stacktrace::current()

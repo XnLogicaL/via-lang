@@ -1,7 +1,6 @@
-// ===========================================================================================
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0
-// ===========================================================================================
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "linenoise.hpp"
 #include "argparse/argparse.hpp"
 #include "file-io.h"
@@ -157,7 +156,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
     std::string message = std::format(
       "Bytecode generation completed in {:0.9f}s",
-      GET_PROFILER_DIFF_MS(codegen_end, codegen_end) / 1000
+      GET_PROFILER_DIFF_MS(codegen_start, codegen_end) / 1000
     );
 
     err_bus.log({true, message, unit_ctx, INFO, {}});

@@ -1,6 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_OBJECT_H
 #define VIA_HAS_HEADER_OBJECT_H
@@ -11,24 +11,22 @@
 #include "string-utility.h"
 #include <cstring>
 
+//  ==========
+// [ object.h ]
+//  ==========
 namespace via {
 
-#ifdef VIA_64BIT
-using TInteger = int64_t;
-using TFloat = float64_t;
-#else
-using TInteger = int32_t;
-using TFloat = float32_t;
-#endif
-
+// Forward declarations
 struct state;
 struct string_obj;
 struct table_obj;
 struct object_obj;
 struct function_obj;
 
+// C function pointer type alias.
 using cfunction_t = void (*)(state*);
 
+// Value object type.
 enum class value_type : uint8_t {
   nil,            // Empty type, null
   integer,        // Integer type
@@ -36,24 +34,35 @@ enum class value_type : uint8_t {
   boolean,        // Boolean type
   string,         // String type, pointer to string_obj
   function,       // Function type, pointer to function_obj
-  cfunction,      // CFunction type, pointer to cfunction
+  cfunction,      // CFunction type, function pointer
   table,          // Table type, pointer to table_obj
   object,         // Object type, pointer to object_obj
 };
 
+// Optimized tagged union that acts as a "value object".
 struct alignas(8) value_obj {
   value_type type;
   union {
-    TInteger val_integer;      // Integer value
-    TFloat val_floating_point; // Floating point value
-    bool val_boolean;          // Boolean value
-    void* val_pointer;         // Pointer to complex types (string, function, etc.)
+    int val_integer;          // Integer value
+    float val_floating_point; // Floating point value
+    bool val_boolean;         // Boolean value
+    string_obj* val_string;
+    table_obj* val_table;
+    function_obj* val_function;
+    cfunction_t val_cfunction;
+    object_obj* val_object;
   };
 
-  VIA_NOCOPY(value_obj);
+  //  ==================
+  // [ Object semantics ]
+  //  ==================
 
-  value_obj(value_obj&& other);
-  value_obj& operator=(value_obj&&);
+  // Make uncopyable
+  VIA_NOCOPY(value_obj);
+  // Implement custom move semantics
+  VIA_IMPLMOVE(value_obj);
+
+  // Destructor
   ~value_obj();
 
   explicit value_obj()
@@ -63,79 +72,99 @@ struct alignas(8) value_obj {
     : type(value_type::boolean),
       val_boolean(b) {}
 
-  explicit value_obj(TInteger x)
+  explicit value_obj(int x)
     : type(value_type::integer),
       val_integer(x) {}
 
-  explicit value_obj(TFloat x)
+  explicit value_obj(float x)
     : type(value_type::floating_point),
       val_floating_point(x) {}
 
   explicit value_obj(string_obj* ptr)
     : type(value_type::string),
-      val_pointer(ptr) {}
+      val_string(ptr) {}
 
   explicit value_obj(table_obj* ptr)
     : type(value_type::table),
-      val_pointer(ptr) {}
+      val_table(ptr) {}
 
   explicit value_obj(function_obj* ptr)
     : type(value_type::function),
-      val_pointer(ptr) {}
+      val_function(ptr) {}
 
   explicit value_obj(cfunction_t ptr)
     : type(value_type::cfunction),
-      val_pointer(reinterpret_cast<void*>(ptr)) {}
+      val_cfunction(ptr) {}
 
   explicit value_obj(object_obj* ptr)
     : type(value_type::object),
-      val_pointer(ptr) {}
-
-  explicit value_obj(value_type type, void* ptr)
-    : type(type),
-      val_pointer(ptr) {}
+      val_object(ptr) {}
 
   explicit value_obj(const char* str);
 
-  // clang-format off
+  //  ==============
+  // [ Core methods ]
+  //  ==============
 
-  // Returns whether if the object holds a given type.
-  VIA_FORCEINLINE constexpr bool is(value_type other) const { return type == other; }
-  VIA_FORCEINLINE constexpr bool is_nil() const { return is(value_type::nil); }
-  VIA_FORCEINLINE constexpr bool is_bool() const { return is(value_type::boolean); }
-  VIA_FORCEINLINE constexpr bool is_int() const { return is(value_type::integer); }
-  VIA_FORCEINLINE constexpr bool is_float() const { return is(value_type::floating_point); }
-  VIA_FORCEINLINE constexpr bool is_number() const { return is_int() || is_float(); }
-  VIA_FORCEINLINE constexpr bool is_string() const { return is(value_type::string); }
-  VIA_FORCEINLINE constexpr bool is_table() const { return is(value_type::table); }
-  VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_table(); }
-  VIA_FORCEINLINE constexpr bool is_function() const { return is(value_type::function); }
-  VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(value_type::cfunction); }
-  VIA_FORCEINLINE constexpr bool is_callable() const { return is_function() || is_cfunction(); }
-
-  // clang-format on
-
-  // Attempts to convert a given value into an integer.
-  value_obj to_integer() const;
-
-  // Attempts to convert a given value into a float.
-  value_obj to_float() const;
-
-  // Converts a given value into a boolean.
-  value_obj to_boolean() const;
-
-  // Converts a given value into a string.
-  value_obj to_string() const;
-  std::string to_cxx_string() const;
-  std::string to_literal_cxx_string() const;
-
-  // Returns a clone of the object.
-  value_obj clone() const;
+  // Returns a deep clone of the object.
+  VIA_NODISCARD value_obj clone() const;
 
   // Frees the internal resources of the object and resets union tag to nil.
   void reset();
 
-  // Compares self with a given value_obj.
+  //  ===============
+  // [ Query methods ]
+  //  ===============
+
+  // clang-format off
+  // Returns whether if the object holds a given type.
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is(value_type other) const { return type == other; }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_nil() const { return is(value_type::nil); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_bool() const { return is(value_type::boolean); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_int() const { return is(value_type::integer); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_float() const { return is(value_type::floating_point); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_number() const { return is_int() || is_float(); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_string() const { return is(value_type::string); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_table() const { return is(value_type::table); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_table(); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_function() const { return is(value_type::function); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(value_type::cfunction); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_callable() const { return is_function() || is_cfunction(); }
+  // clang-format on
+
+  //  ================
+  // [ Object methods ]
+  //  ================
+
+  // Returns the int interpretation of the value or nil if impossible.
+  VIA_NODISCARD value_obj to_integer() const;
+
+  // Returns the fp interpretation of the value or nil if impossible.
+  VIA_NODISCARD value_obj to_float() const;
+
+  // Returns the boolean interpretation of the value.
+  VIA_NODISCARD value_obj to_boolean() const;
+
+  // Returns the string of the value.
+  VIA_NODISCARD value_obj to_string() const;
+  VIA_NODISCARD std::string to_cxx_string() const;
+  VIA_NODISCARD std::string to_literal_cxx_string() const;
+
+  // Returns the type of the value as a string.
+  VIA_NODISCARD value_obj type_string() const;
+  VIA_NODISCARD std::string type_cxx_string() const;
+
+  /**
+   * Converts the value into a memory address if possible. Returns nullptr if the object contains a
+   * non-heap-allocated type.
+   */
+  VIA_NODISCARD void* to_pointer() const;
+
+  // Returns the length of the underlying type of the value or nil if impossible.
+  VIA_NODISCARD value_obj length() const;
+  VIA_NODISCARD size_t cxx_length() const;
+
+  // Compares equality between self and a given value_obj.
   VIA_NODISCARD bool compare(const value_obj& other) const;
 
   // Moves the value and returns it as an rvalue reference.
@@ -143,31 +172,9 @@ struct alignas(8) value_obj {
     return static_cast<value_obj&&>(*this);
   }
 
+  // Moves the value and returns it as a constant rvalue reference.
   VIA_NODISCARD VIA_FORCEINLINE const value_obj&& move() const {
     return static_cast<const value_obj&&>(*this);
-  }
-
-  // Returns the pointer value as a pointer to type T.
-  template<typename T>
-  VIA_NODISCARD VIA_FORCEINLINE T* cast_ptr() {
-    return reinterpret_cast<T*>(val_pointer);
-  }
-
-  template<typename T>
-    requires std::is_pointer_v<T>
-  VIA_NODISCARD VIA_FORCEINLINE T cast_ptr() {
-    return reinterpret_cast<T>(val_pointer);
-  }
-
-  template<typename T>
-  VIA_NODISCARD VIA_FORCEINLINE const T* cast_ptr() const {
-    return reinterpret_cast<const T*>(val_pointer);
-  }
-
-  template<typename T>
-    requires std::is_pointer_v<T>
-  VIA_NODISCARD VIA_FORCEINLINE const T cast_ptr() const {
-    return reinterpret_cast<const T>(val_pointer);
   }
 };
 

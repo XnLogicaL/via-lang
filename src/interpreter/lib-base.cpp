@@ -1,7 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "lib-base.h"
 #include "api-impl.h"
 #include "lib-utility.h"

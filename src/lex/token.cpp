@@ -1,7 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "token.h"
 #include "common.h"
 
@@ -25,10 +24,10 @@ bool token::is_literal() const {
 }
 
 bool token::is_operator() const {
-  return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ ||
-         type == OP_EXP || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT ||
-         type == OP_LEQ || type == OP_LT || type == OP_MOD || type == OP_MUL || type == OP_NEQ ||
-         type == OP_SUB || type == KW_AND || type == KW_OR;
+  return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ || type == OP_EXP
+    || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT || type == OP_LEQ || type == OP_LT
+    || type == OP_MOD || type == OP_MUL || type == OP_NEQ || type == OP_SUB || type == KW_AND
+    || type == KW_OR;
 }
 
 bool token::is_modifier() const {

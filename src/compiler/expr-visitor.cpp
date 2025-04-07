@@ -1,7 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "state.h"
 #include "bit-utility.h"
 #include "stack.h"
@@ -341,13 +340,13 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
 
     // Special handling for DIV: check for division by zero.
     if (base_opcode == DIV) {
-      if (TInteger* int_val = std::get_if<TInteger>(&literal.value)) {
+      if (int* int_val = std::get_if<int>(&literal.value)) {
         if (*int_val == 0) {
           compiler_error(literal.value_token, "Explicit division by zero");
           return;
         }
       }
-      if (TFloat* float_val = std::get_if<TFloat>(&literal.value)) {
+      if (float* float_val = std::get_if<float>(&literal.value)) {
         if (*float_val == 0.0f) {
           compiler_error(literal.value_token, "Explicit division by zero");
           return;

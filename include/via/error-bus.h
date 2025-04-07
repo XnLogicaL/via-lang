@@ -1,12 +1,15 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_ERROR_BUS_H
 #define VIA_HAS_HEADER_ERROR_BUS_H
 
 #include "common.h"
 
+//  =============
+// [ error-bus.h ]
+//  =============
 namespace via {
 
 // Error level for error header text.
@@ -23,14 +26,14 @@ struct comp_err_pos {
   const size_t begin = 0;
   const size_t end = 0;
 
-  comp_err_pos() = default;
-  comp_err_pos(size_t l, size_t c, size_t b, size_t e)
+  constexpr comp_err_pos() = default;
+  constexpr comp_err_pos(size_t l, size_t c, size_t b, size_t e)
     : line(l),
       column(c),
       begin(b),
       end(e) {}
 
-  comp_err_pos(const token& tok)
+  constexpr comp_err_pos(const token& tok)
     : line(tok.line),
       column(tok.offset),
       begin(tok.position),
@@ -52,16 +55,16 @@ public:
   )
     : is_flat(flt),
       message(msg),
-      ctx(ctx),
       level(lvl),
-      position(pos) {}
+      position(pos),
+      ctx(ctx) {}
 
 public:
   bool is_flat;
   std::string message;
-  trans_unit_context& ctx;
   comp_err_lvl level;
   comp_err_pos position;
+  trans_unit_context& ctx;
 };
 
 /**

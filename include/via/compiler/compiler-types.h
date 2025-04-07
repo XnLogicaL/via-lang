@@ -1,6 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_TYPES_H
 #define VIA_HAS_HEADER_TYPES_H
@@ -22,13 +22,13 @@ struct data_type<std::monostate> {
 };
 
 template<>
-struct data_type<TInteger> {
+struct data_type<int> {
   static constexpr value_type type = value_type::integer;
   static constexpr int precedence = 1;
 };
 
 template<>
-struct data_type<TFloat> {
+struct data_type<float> {
   static constexpr value_type type = value_type::floating_point;
   static constexpr int precedence = 2;
 };

@@ -1,7 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "common.h"
 #include "instruction.h"
 #include "opcode.h"
@@ -39,11 +38,11 @@ void state::push_nil() {
   push(value_obj());
 }
 
-void state::push_int(TInteger value) {
+void state::push_int(int value) {
   push(value_obj(value));
 }
 
-void state::push_float(TFloat value) {
+void state::push_float(float value) {
   push(value_obj(value));
 }
 
@@ -60,7 +59,7 @@ void state::push_string(const char* str) {
 }
 
 void state::push_table() {
-  push(value_obj(table, new table_obj()));
+  push(value_obj(new table_obj()));
 }
 
 void state::push(value_obj val) {

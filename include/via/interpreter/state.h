@@ -1,6 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_STATE_H
 #define VIA_HAS_HEADER_STATE_H
@@ -9,11 +9,18 @@
 #include "instruction.h"
 #include "object.h"
 
-#define VIA_VMSTACKSIZE    2048
-#define VIA_STK_REGISTERS  256
+// Maximum amount of objects on the virtual stack.
+#define VIA_VMSTACKSIZE 2048
+// Stack-allocated "hot" register count.
+#define VIA_STK_REGISTERS 256
+// Heap-allocated "spill" register count.
 #define VIA_HEAP_REGISTERS 65536 - VIA_STK_REGISTERS
-#define VIA_ALL_REGISTERS  VIA_STK_REGISTERS + VIA_HEAP_REGISTERS
+// Combined stack + heap allocated register count.
+#define VIA_ALL_REGISTERS VIA_STK_REGISTERS + VIA_HEAP_REGISTERS
 
+//  =========
+// [ state.h ]
+//  =========
 namespace via {
 
 // Forward declarations
@@ -50,8 +57,10 @@ struct alignas(64) register_holder {
 using stack_registers_t = register_holder<VIA_STK_REGISTERS>;
 using spill_registers_t = register_holder<VIA_HEAP_REGISTERS>;
 
-// "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
-// 64-byte alignment for maximum cache friendliness.
+/**
+ * "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
+ * 64-byte aligned for maximum cache friendliness.
+ */
 struct alignas(64) state {
   // Thread and global state
   uint32_t id;       // Thread ID
@@ -83,12 +92,12 @@ struct alignas(64) state {
   // Translation unit context reference
   trans_unit_context& unit_ctx;
 
-  // ===========================================================================================
-  // Meta
-public:
+  //  ==================
+  // [ Object semantics ]
+  //  ==================
+
   // Make uncopyable
   VIA_NOCOPY(state);
-
   // Make movable
   VIA_IMPLMOVE(state);
 
@@ -100,17 +109,23 @@ public:
   // Destructor
   ~state();
 
+  //  ==============
+  // [ Core methods ]
+  //  ==============
+
   // Loads the given containers data into the instruction buffer.
   void load(const bytecode_holder& bytecode);
 
-  // ===========================================================================================
-  // Execution flow
+  //  ================
+  // [ Execution flow ]
+  //  ================
 
   // Starts thread execution.
   void execute();
 
-  // ===========================================================================================
-  // Register manipulation
+  //  =======================
+  // [ Register manipulation ]
+  //  =======================
 
   // Returns a reference to the value that lives in a given register.
   value_obj& get_register(operand_t reg);
@@ -118,8 +133,9 @@ public:
   // Sets a given register to a given value.
   void set_register(operand_t reg, value_obj value);
 
-  // ===========================================================================================
-  // Comparison and metadata
+  //  =========================
+  // [ Comparison and metadata ]
+  //  =========================
 
   // Returns whether if a given value has a heap-allocated component.
   bool is_heap(const value_obj& value);
@@ -127,17 +143,18 @@ public:
   // Compares two given values.
   bool compare(const value_obj& left, const value_obj& right);
 
-  // ===========================================================================================
-  // Basic stack manipulation
+  //  ==========================
+  // [ Basic stack manipulation ]
+  //  ==========================
 
   // Pushes nil onto the stack.
   void push_nil();
 
   // Pushes an integer onto the stack.
-  void push_int(TInteger value);
+  void push_int(int value);
 
   // Pushes a float onto the stack.
-  void push_float(TFloat value);
+  void push_float(float value);
 
   // Pushes a boolean with value `true` onto the stack.
   void push_true();
@@ -163,8 +180,9 @@ public:
   // Returns the top value on the stack.
   const value_obj& top();
 
-  // ===========================================================================================
-  // Advanced stack manipulation
+  //  =============================
+  // [ Advanced stack manipulation ]
+  //  =============================
 
   // Sets the value at a given position on the stack to a given value.
   void set_stack(size_t position, value_obj value);
@@ -179,8 +197,9 @@ public:
   // Returns the size of stack.
   size_t stack_size();
 
-  // ===========================================================================================
-  // global_obj manipulation
+  //  =====================
+  // [ Global manipulation ]
+  //  =====================
 
   // Returns the global that corresponds to a given hashed identifier.
   value_obj get_global(const char* name);
@@ -188,33 +207,34 @@ public:
   // Sets the global that corresponds to a given hashed identifier to a given value.
   void set_global(const char* name, const value_obj& value);
 
-  // ===========================================================================================
-  // Function manipulation
+  //  =======================
+  // [ Function manipulation ]
+  //  =======================
 
   // Standard return. Returns from the current function with an optional value.
   void native_return(const value_obj& return_value);
 
   // Calls the given function_obj object with a given argument count.
-  void native_call(function_obj* target, size_t argc);
+  void native_call(function_obj& target, size_t argc);
 
   // Calls the method that lives in a given index of a given object with a given argument count.
-  void method_call(object_obj* object, size_t index, size_t argc);
+  void method_call(object_obj& object, size_t index, size_t argc);
 
   // Attempts to call the given value object with the given argument count.
   void call(const value_obj& callee, size_t argc);
 
   // Attempts to return the upv_obj that lives in the given index of the given closure.
-  const value_obj& get_upvalue(function_obj* closure, size_t index);
+  const value_obj& get_upvalue(function_obj& closure, size_t index);
 
   // Attempts to set the upv_obj that lives in the given index of the given closure to a given
   // value.
-  void set_upvalue(function_obj* closure, size_t index, const value_obj& value);
+  void set_upvalue(function_obj& closure, size_t index, const value_obj& value);
 
   // Returns the upv_obj count of the given closure.
-  size_t get_upvalue_count(function_obj* closure);
+  size_t get_upvalue_count(function_obj& closure);
 
   // Returns the local count of the given closure.
-  size_t get_local_count_closure(function_obj* closure);
+  size_t get_local_count_closure(function_obj& closure);
 
   // ===========================================================================================
   // General operations

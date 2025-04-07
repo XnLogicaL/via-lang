@@ -1,6 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #ifndef VIA_HAS_HEADER_VAUX_H
 #define VIA_HAS_HEADER_VAUX_H
@@ -9,12 +9,14 @@
 #include "common.h"
 #include "function.h"
 
-// ===========================================================================================
-// api-aux.h
-//
+//  ===========
+// [ api-aux.h ]
+//  ===========
 namespace via::impl {
-// ===========================================================================================
-// Closure handling
+
+//  ==================
+// [ Closure handling ]
+//  ==================
 
 // Automatically resizes upv_obj vector of closure by VIA_UPV_RESIZE_FACTOR.
 VIA_IMPLEMENTATION void __closure_upvs_resize(function_obj* closure) {
@@ -127,8 +129,9 @@ VIA_IMPLEMENTATION void __closure_close_upvalues(function_obj* closure) {
   }
 }
 
-// ======================================================================================
-// Table handling
+//  ================
+// [ Table handling ]
+//  ================
 
 // Hashes a dictionary key using the FNV-1a hashing algorithm.
 VIA_IMPLEMENTATION size_t __table_ht_hash_key(const table_obj* table, const char* key) {
@@ -254,8 +257,7 @@ VIA_IMPLEMENTATION void __table_set(table_obj* table, const value_obj& key, cons
     __table_arr_set(table, key.val_integer, val);
   }
   else if (key.is_string()) {
-    const string_obj* val_string = key.cast_ptr<string_obj>();
-    __table_ht_set(table, val_string->data, val);
+    __table_ht_set(table, key.val_string->data, val);
   }
 }
 
@@ -265,7 +267,7 @@ VIA_IMPLEMENTATION value_obj __table_get(const table_obj* table, const value_obj
     unsafe = __table_arr_get(table, key.val_integer);
   }
   else if (key.is_string()) {
-    unsafe = __table_ht_get(table, key.cast_ptr<string_obj>()->data);
+    unsafe = __table_ht_get(table, key.val_string->data);
   }
 
   return unsafe ? unsafe->clone() : value_obj();

@@ -212,13 +212,13 @@ dispatch:
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) + rhs_val->val_floating_point;
+            static_cast<float>(lhs_val->val_integer) + rhs_val->val_floating_point;
           lhs_val->type = floating_point;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point += static_cast<TFloat>(rhs_val->val_integer);
+          lhs_val->val_floating_point += static_cast<float>(rhs_val->val_integer);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point += rhs_val->val_floating_point;
@@ -233,7 +233,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer += imm;
@@ -250,7 +250,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer += imm;
@@ -275,13 +275,13 @@ dispatch:
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) - rhs_val->val_floating_point;
+            static_cast<float>(lhs_val->val_integer) - rhs_val->val_floating_point;
           lhs_val->type = floating_point;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point -= static_cast<TFloat>(rhs_val->val_integer);
+          lhs_val->val_floating_point -= static_cast<float>(rhs_val->val_integer);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point -= rhs_val->val_floating_point;
@@ -296,7 +296,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer -= imm;
@@ -313,7 +313,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer -= imm;
@@ -338,13 +338,13 @@ dispatch:
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) * rhs_val->val_floating_point;
+            static_cast<float>(lhs_val->val_integer) * rhs_val->val_floating_point;
           lhs_val->type = floating_point;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point *= static_cast<TFloat>(rhs_val->val_integer);
+          lhs_val->val_floating_point *= static_cast<float>(rhs_val->val_integer);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point *= rhs_val->val_floating_point;
@@ -359,7 +359,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer *= imm;
@@ -376,7 +376,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer *= imm;
@@ -405,7 +405,7 @@ dispatch:
           VM_DIVBY0F(rhs_val->val_floating_point);
 
           lhs_val->val_floating_point =
-            static_cast<TFloat>(lhs_val->val_integer) / rhs_val->val_floating_point;
+            static_cast<float>(lhs_val->val_integer) / rhs_val->val_floating_point;
           lhs_val->type = floating_point;
         }
       }
@@ -413,7 +413,7 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           VM_DIVBY0I(rhs_val);
 
-          lhs_val->val_floating_point /= static_cast<TFloat>(rhs_val->val_integer);
+          lhs_val->val_floating_point /= static_cast<float>(rhs_val->val_integer);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           VM_DIVBY0F(rhs_val->val_floating_point);
@@ -430,7 +430,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       VM_DIVBY0I(imm);
 
@@ -449,7 +449,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       VM_DIVBY0F(imm);
 
@@ -476,14 +476,14 @@ dispatch:
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
-            std::pow(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
+            std::pow(static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point);
           lhs_val->type = floating_point;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
+            std::pow(lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
@@ -499,7 +499,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
@@ -516,7 +516,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
@@ -541,14 +541,14 @@ dispatch:
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
-            std::fmod(static_cast<TFloat>(lhs_val->val_integer), rhs_val->val_floating_point);
+            std::fmod(static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point);
           lhs_val->type = floating_point;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, static_cast<TFloat>(rhs_val->val_integer));
+            std::fmod(lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           lhs_val->val_floating_point =
@@ -564,7 +564,7 @@ dispatch:
       operand_t int_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TInteger imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = reinterpret_u16_as_i32(int_high, int_low);
 
 
 
@@ -583,7 +583,7 @@ dispatch:
       operand_t flt_low = pc->operand2;
 
       value_obj* lhs_val = __get_register(this, lhs);
-      TFloat imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer = std::fmod(lhs_val->val_integer, imm);
@@ -638,7 +638,7 @@ dispatch:
 
     VM_CASE(LOADI) {
       operand_t dst = pc->operand0;
-      TInteger imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
+      int imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
 
       __set_register(this, dst, value_obj(imm));
       VM_NEXT();
@@ -646,7 +646,7 @@ dispatch:
 
     VM_CASE(LOADF) {
       operand_t dst = pc->operand0;
-      TFloat imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
+      float imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
 
       __set_register(this, dst, value_obj(imm));
       VM_NEXT();
@@ -725,13 +725,13 @@ dispatch:
     }
 
     VM_CASE(PUSHI) {
-      TInteger imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
+      int imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
       __push(this, value_obj(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHF) {
-      TFloat imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
+      float imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
       __push(this, value_obj(imm));
       VM_NEXT();
     }
@@ -794,7 +794,7 @@ dispatch:
       operand_t key = pc->operand1;
 
       value_obj* key_obj = __get_register(this, key);
-      string_obj* key_str = key_obj->cast_ptr<string_obj>();
+      string_obj* key_str = key_obj->val_string;
       const value_obj& global = glb->gtable.get(key_str->data);
 
       __set_register(this, dst, global.clone());
@@ -806,7 +806,7 @@ dispatch:
       operand_t key = pc->operand1;
 
       value_obj* key_obj = __get_register(this, key);
-      string_obj* key_str = key_obj->cast_ptr<string_obj>();
+      string_obj* key_str = key_obj->val_string;
       value_obj* global = __get_register(this, src);
 
       glb->gtable.set(key_str->data, *global);
@@ -914,7 +914,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point)
+            value_obj(static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point)
           );
         }
       }
@@ -923,7 +923,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer))
+            value_obj(lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer))
           );
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
@@ -952,7 +952,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point)
+            value_obj(static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point)
           );
         }
       }
@@ -961,7 +961,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer))
+            value_obj(lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer))
           );
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
@@ -990,7 +990,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point)
+            value_obj(static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point)
           );
         }
       }
@@ -999,7 +999,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer))
+            value_obj(lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer))
           );
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
@@ -1028,7 +1028,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point)
+            value_obj(static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point)
           );
         }
       }
@@ -1037,7 +1037,7 @@ dispatch:
           __set_register(
             this,
             dst,
-            value_obj(lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer))
+            value_obj(lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer))
           );
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
@@ -1139,14 +1139,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
             pc += offset;
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
           }
         }
@@ -1175,14 +1175,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
             pc += offset;
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
           }
         }
@@ -1211,14 +1211,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
             pc += offset;
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
           }
         }
@@ -1247,14 +1247,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
             pc += offset;
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
           }
         }
@@ -1355,14 +1355,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) < rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
             pc = __label_get(this, label);
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point < static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
           }
         }
@@ -1391,14 +1391,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) > rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
             pc = __label_get(this, label);
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point > static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
           }
         }
@@ -1427,14 +1427,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point <= static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
           }
         }
@@ -1463,14 +1463,14 @@ dispatch:
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<TFloat>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
           }
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point >= static_cast<TFloat>(rhs_val->val_integer)) {
+          if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
           }
         }
@@ -1507,7 +1507,7 @@ dispatch:
       operand_t argc = pc->operand1;
       value_obj* func = __get_register(this, fn);
 
-      __native_call(this, func->cast_ptr<function_obj>(), argc);
+      __native_call(this, func->val_function, argc);
       VM_NEXT();
     }
 
@@ -1520,7 +1520,7 @@ dispatch:
       value_obj* object = __get_register(this, obj);
 
       __push(this, object->clone());
-      __native_call(this, func->cast_ptr<function_obj>(), argc + 1);
+      __native_call(this, func->val_function, argc + 1);
       VM_NEXT();
     }
 
@@ -1547,7 +1547,7 @@ dispatch:
       value_obj* tbl_val = __get_register(this, tbl);
       value_obj* key_val = __get_register(this, key);
 
-      const value_obj& index = __table_get(tbl_val->cast_ptr<table_obj>(), *key_val);
+      const value_obj& index = __table_get(tbl_val->val_table, *key_val);
 
       __set_register(this, dst, index.clone());
       VM_NEXT();
@@ -1562,7 +1562,7 @@ dispatch:
       value_obj* value = __get_register(this, src);
       value_obj* key = __get_register(this, ky);
 
-      __table_set(table->cast_ptr<table_obj>(), value_obj(key), *value);
+      __table_set(table->val_table, value_obj(key), *value);
       VM_NEXT();
     }
 
@@ -1584,7 +1584,7 @@ dispatch:
         next_table[ptr] = 0;
       }
 
-      const value_obj& field = __table_get(val->cast_ptr<table_obj>(), value_obj(key));
+      const value_obj& field = __table_get(val->val_table, value_obj(key));
       __set_register(this, dst, field.clone());
       VM_NEXT();
     }
@@ -1594,7 +1594,7 @@ dispatch:
       operand_t tbl = pc->operand1;
 
       value_obj* val = __get_register(this, tbl);
-      TInteger size = __table_size(val->cast_ptr<table_obj>());
+      int size = __table_size(val->val_table);
 
       __set_register(this, dst, value_obj(size));
       VM_NEXT();
@@ -1605,7 +1605,7 @@ dispatch:
       operand_t objr = pc->operand1;
 
       value_obj* val = __get_register(this, objr);
-      TInteger len = val->cast_ptr<string_obj>()->len;
+      int len = val->val_string->len;
 
       __set_register(this, rdst, value_obj(len));
       VM_NEXT();
@@ -1618,8 +1618,8 @@ dispatch:
       value_obj* left_val = __get_register(this, left);
       value_obj* right_val = __get_register(this, right);
 
-      string_obj* left_str = left_val->cast_ptr<string_obj>();
-      string_obj* right_str = right_val->cast_ptr<string_obj>();
+      string_obj* left_str = left_val->val_string;
+      string_obj* right_str = right_val->val_string;
 
       size_t new_length = left_str->len + right_str->len;
       char* new_string = new char[new_length + 1];
@@ -1640,7 +1640,7 @@ dispatch:
       operand_t idx = pc->operand2;
 
       value_obj* str_val = __get_register(this, str);
-      string_obj* tstr = str_val->cast_ptr<string_obj>();
+      string_obj* tstr = str_val->val_string;
       char chr = tstr->data[idx];
 
       __set_register(this, dst, value_obj(&chr));
@@ -1653,7 +1653,7 @@ dispatch:
       operand_t idx = pc->operand2;
 
       value_obj* str_val = __get_register(this, str);
-      string_obj* tstr = str_val->cast_ptr<string_obj>();
+      string_obj* tstr = str_val->val_string;
 
       char chr = static_cast<char>(src);
       char* str_cpy = duplicate_string(tstr->data);

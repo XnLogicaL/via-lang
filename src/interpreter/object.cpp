@@ -1,7 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 #include "api-impl.h"
 #include "string-utility.h"
 #include "object.h"
@@ -29,10 +28,16 @@ value_obj& value_obj::operator=(value_obj&& other) {
       val_boolean = other.val_boolean;
       break;
     case string:
+      val_string = other.val_string;
+      break;
     case table:
+      val_table = other.val_table;
+      break;
     case function:
+      val_function = other.val_function;
+      break;
     case cfunction:
-      val_pointer = other.val_pointer;
+      val_cfunction = other.val_cfunction;
       break;
     default:
       break;
@@ -60,10 +65,16 @@ value_obj::value_obj(value_obj&& other) {
     val_boolean = other.val_boolean;
     break;
   case string:
+    val_string = other.val_string;
+    break;
   case table:
+    val_table = other.val_table;
+    break;
   case function:
+    val_function = other.val_function;
+    break;
   case cfunction:
-    val_pointer = other.val_pointer;
+    val_cfunction = other.val_cfunction;
     break;
   default:
     break;
@@ -88,13 +99,13 @@ value_obj value_obj::clone() const {
   case boolean:
     return value_obj(val_boolean);
   case string:
-    return value_obj(cast_ptr<string_obj>()->data);
+    return value_obj(val_string->data);
   case table:
-    return value_obj(table, new table_obj(*cast_ptr<table_obj>()));
+    return value_obj(new table_obj(*val_table));
   case function:
-    return value_obj(function, new function_obj(*cast_ptr<function_obj>()));
+    return value_obj(new function_obj(*val_function));
   case cfunction:
-    return value_obj(cfunction, val_pointer);
+    return value_obj(val_cfunction);
   default:
     break;
   }
@@ -104,25 +115,23 @@ value_obj value_obj::clone() const {
 
 void value_obj::reset() {
   if (static_cast<uint8_t>(type) >= static_cast<uint8_t>(value_type::string)) {
-    if (!val_pointer) {
-      return;
-    }
-
     switch (type) {
     case string:
-      delete cast_ptr<string_obj>();
+      delete val_string;
+      val_string = nullptr;
       break;
     case table:
-      delete cast_ptr<table_obj>();
+      delete val_table;
+      val_table = nullptr;
       break;
     case function:
-      delete cast_ptr<function_obj>();
+      delete val_function;
+      val_cfunction = nullptr;
       break;
     default:
       break;
     }
 
-    val_pointer = nullptr;
     type = nil;
   }
 }
@@ -145,7 +154,7 @@ std::string value_obj::to_literal_cxx_string() const {
 
 value_obj::value_obj(const char* str)
   : type(string),
-    val_pointer(new string_obj(str)) {}
+    val_string(new string_obj(str)) {}
 
 string_obj::~string_obj() {
   delete[] data;
@@ -159,11 +168,11 @@ void string_obj::set(size_t position, const value_obj& value) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
 
-  const string_obj* val = value.cast_ptr<string_obj>();
+  const string_obj* val = value.val_string;
 
   VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
 
-  data[position] = value.cast_ptr<string_obj>()->data[0];
+  data[position] = value.val_string->data[0];
 }
 
 value_obj string_obj::get(size_t position) {
@@ -219,7 +228,7 @@ void table_obj::set(const char* key, const value_obj& value) {
 }
 
 void table_obj::set(size_t position, const value_obj& value) {
-  value_obj index(static_cast<TInteger>(position));
+  value_obj index(static_cast<int>(position));
   impl::__table_set(this, index, value);
 }
 
@@ -229,7 +238,7 @@ value_obj table_obj::get(const char* key) {
 }
 
 value_obj table_obj::get(size_t position) {
-  value_obj index(static_cast<TInteger>(position));
+  value_obj index(static_cast<int>(position));
   return impl::__table_get(this, index);
 }
 
