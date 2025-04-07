@@ -118,7 +118,7 @@ token lexer::read_ident(size_t position) {
   }
 
   static const std::unordered_map<std::string, token_type> keyword_map = {
-    {"do", KW_DO},           {"in", KW_IN},         {"let", KW_LOCAL},
+    {"do", KW_DO},           {"in", KW_IN},         {"var", KW_LOCAL},
     {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
     {"if", KW_IF},           {"else", KW_ELSE},     {"elif", KW_ELIF},
     {"while", KW_WHILE},     {"for", KW_FOR},       {"return", KW_RETURN},
