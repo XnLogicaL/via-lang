@@ -282,12 +282,22 @@ token lexer::get_token() {
 
   switch (chr) {
   case '+':
+    if (pos < source_size() && peek() == '+') {
+      pos++;
+      offset++;
+      return token(OP_INCREMENT, "++", line, start_offset, position);
+    }
     return token(OP_ADD, "+", line, start_offset, position);
   case '-':
     if (pos < source_size() && peek() == '>') {
       pos++;
       offset++;
       return token(RETURNS, "->", line, start_offset, position);
+    }
+    else if (pos < source_size() && peek() == '-') {
+      pos++;
+      offset++;
+      return token(OP_DECREMENT, "--", line, start_offset, position);
     }
     return token(OP_SUB, "-", line, start_offset, position);
   case '*':

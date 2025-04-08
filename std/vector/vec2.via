@@ -10,16 +10,19 @@
 ## ==================================================
 ##
 
-## Forcefully optimize the module.
+## Force O2
 pragma optimize(2)
-pragma warning(disable, push, private_member_access)
+
+## Disable private member access warning
+pragma warning(push)
+pragma warning(disable "private-member-access")
 
 import "../common/type_traits.via" as type_traits
 import "./vec_traits.via" as vec_traits
 
-export struct {
-  let x: float = 0.0
-  let y: float = 0.0
+struct vector2 {
+  var x: float = 0.0
+  var y: float = 0.0
 
   impl vec_traits.__has_method_magnitude {
     fn magnitude() -> float {
@@ -30,7 +33,7 @@ export struct {
   impl vec_traits.__has_method_normalize {
     @inline
     fn normalize() -> float {
-      let mag = self.magnitude()
+      var mag = self.magnitude()
       if mag == 0:
         return vector2.new()
       return vector2.new(self.x / mag, self.y / mag)
@@ -77,3 +80,6 @@ export struct {
     self.x, self.y = x, y
   }
 }
+
+pragma warning(pop)
+export vector2

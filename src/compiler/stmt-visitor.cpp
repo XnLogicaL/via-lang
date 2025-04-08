@@ -256,13 +256,11 @@ void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
   if (sym_expr_node* symbol_node =
         get_derived_instance<expr_node_base, sym_expr_node>(*assign_node.assignee)) {
     token symbol_token = symbol_node->identifier;
-
     std::string symbol = symbol_token.lexeme;
     std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
 
     if (stk_id.has_value()) {
       const auto& test_stack_member = unit_ctx.internal.variable_stack->at(stk_id.value());
-
       if (test_stack_member.has_value() && test_stack_member->is_const) {
         compiler_error(symbol_token, std::format("Assignment to constant variable '{}'", symbol));
         return;
@@ -282,7 +280,8 @@ void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
       }
     }
     else {
-      compiler_error(symbol_token, "Assignment to invalid lvalue, symbol has not been declared");
+      compiler_error(symbol_token, "Assignment to invalid lvalue");
+      compiler_info(std::format("Symbol '{}' not found in scope", symbol_node->identifier.lexeme));
     }
   }
   else {

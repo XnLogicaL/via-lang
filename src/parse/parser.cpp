@@ -386,6 +386,18 @@ result<p_expr_node_t> parser::parse_postfix(p_expr_node_t lhs) {
       lhs = std::make_unique<call_expr_node>(std::move(lhs), std::move(arguments));
       continue;
     }
+    case OP_INCREMENT: {
+      consume();
+
+      lhs = std::make_unique<step_expr_node>(std::move(lhs), true, true);
+      continue;
+    }
+    case OP_DECREMENT: {
+      consume();
+
+      lhs = std::make_unique<step_expr_node>(std::move(lhs), false, true);
+      continue;
+    }
     case KW_AS: { // Type casting: expr as Type
       consume();
 

@@ -199,7 +199,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
         if (bytecode.instruct.op == opcode::LBL) {
           std::cout << std::format(
-            " .L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
+            " L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
           );
           continue;
         }

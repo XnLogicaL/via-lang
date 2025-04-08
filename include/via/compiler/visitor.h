@@ -55,6 +55,7 @@ public:
   virtual void visit(index_expr_node&, operand_t) VIA_INVALID_VISIT;
   virtual void visit(bin_expr_node&, operand_t) VIA_INVALID_VISIT;
   virtual void visit(cast_expr_node&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(step_expr_node&, operand_t) VIA_INVALID_VISIT;
 
   // Type visitors (return type is due to type-decaying)
   virtual p_type_node_t visit(auto_type_node&) VIA_INVALID_VISIT;
@@ -118,6 +119,7 @@ public:
   void visit(index_expr_node&, operand_t) override;
   void visit(bin_expr_node&, operand_t) override;
   void visit(cast_expr_node&, operand_t) override;
+  void visit(step_expr_node&, operand_t) override;
 
 private:
   register_allocator& allocator;

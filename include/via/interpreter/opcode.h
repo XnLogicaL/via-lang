@@ -44,7 +44,7 @@ enum class opcode : uint16_t {
 
   NEG,
 
-  MOVE,
+  MOV,
 
   LOADK,
   LOADNIL,

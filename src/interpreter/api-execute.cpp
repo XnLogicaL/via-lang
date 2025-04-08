@@ -50,7 +50,7 @@
     VM_DISPATCH_OP(SUBF), VM_DISPATCH_OP(MUL), VM_DISPATCH_OP(MULI), VM_DISPATCH_OP(MULF),         \
     VM_DISPATCH_OP(DIV), VM_DISPATCH_OP(DIVI), VM_DISPATCH_OP(DIVF), VM_DISPATCH_OP(MOD),          \
     VM_DISPATCH_OP(MODI), VM_DISPATCH_OP(MODF), VM_DISPATCH_OP(POW), VM_DISPATCH_OP(POWI),         \
-    VM_DISPATCH_OP(POWF), VM_DISPATCH_OP(NEG), VM_DISPATCH_OP(MOVE), VM_DISPATCH_OP(LOADK),        \
+    VM_DISPATCH_OP(POWF), VM_DISPATCH_OP(NEG), VM_DISPATCH_OP(MOV), VM_DISPATCH_OP(LOADK),         \
     VM_DISPATCH_OP(LOADNIL), VM_DISPATCH_OP(LOADI), VM_DISPATCH_OP(LOADF), VM_DISPATCH_OP(LOADBT), \
     VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(NEWTBL), VM_DISPATCH_OP(NEWCLSR), VM_DISPATCH_OP(PUSH), \
     VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF),  \
@@ -190,8 +190,6 @@ dispatch:
   {
     // Handle special/internal opcodes
     VM_CASE(NOP)
-    VM_CASE(INC)
-    VM_CASE(DEC)
     VM_CASE(RAISE)
     VM_CASE(TRY)
     VM_CASE(CATCH)
@@ -610,12 +608,40 @@ dispatch:
       VM_NEXT();
     }
 
-    VM_CASE(MOVE) {
+    VM_CASE(MOV) {
       operand_t rdst = pc->operand0;
       operand_t rsrc = pc->operand1;
       value_obj* src_val = __get_register(this, rsrc);
 
-      __set_register(this, rdst, std::move(*src_val));
+      __set_register(this, rdst, src_val->clone());
+      VM_NEXT();
+    }
+
+    VM_CASE(INC) {
+      operand_t rdst = pc->operand0;
+      value_obj* dst_val = __get_register(this, rdst);
+
+      if VIA_LIKELY (dst_val->is_int()) {
+        dst_val->val_integer++;
+      }
+      else if VIA_UNLIKELY (dst_val->is_float()) {
+        dst_val->val_floating_point++;
+      }
+
+      VM_NEXT();
+    }
+
+    VM_CASE(DEC) {
+      operand_t rdst = pc->operand0;
+      value_obj* dst_val = __get_register(this, rdst);
+
+      if VIA_LIKELY (dst_val->is_int()) {
+        dst_val->val_integer--;
+      }
+      else if VIA_UNLIKELY (dst_val->is_float()) {
+        dst_val->val_floating_point--;
+      }
+
       VM_NEXT();
     }
 
@@ -1067,9 +1093,10 @@ dispatch:
       value_obj* cond_val = __get_register(this, cond);
       if (__to_cxx_bool(*cond_val)) {
         pc += offset;
+        goto dispatch;
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFN) {
@@ -1079,9 +1106,10 @@ dispatch:
       value_obj* cond_val = __get_register(this, cond);
       if (!__to_cxx_bool(*cond_val)) {
         pc += offset;
+        goto dispatch;
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFEQ) {
@@ -1091,6 +1119,7 @@ dispatch:
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
         pc += offset;
+        goto dispatch;
       }
       else {
         value_obj* lhs_val = __get_register(this, cond_lhs);
@@ -1098,10 +1127,11 @@ dispatch:
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
           pc += offset;
+          goto dispatch;
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFNEQ) {
@@ -1111,6 +1141,7 @@ dispatch:
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
         pc += offset;
+        goto dispatch;
       }
       else {
         value_obj* lhs_val = __get_register(this, cond_lhs);
@@ -1118,10 +1149,11 @@ dispatch:
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
           pc += offset;
+          goto dispatch;
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFLT) {
@@ -1136,11 +1168,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer < rhs_val->val_integer) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
@@ -1148,16 +1182,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFGT) {
@@ -1172,11 +1208,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer > rhs_val->val_integer) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
@@ -1184,16 +1222,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFLTEQ) {
@@ -1208,11 +1248,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer <= rhs_val->val_integer) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
@@ -1220,16 +1262,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(JMPIFGTEQ) {
@@ -1244,11 +1288,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer >= rhs_val->val_integer) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
@@ -1256,16 +1302,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
             pc += offset;
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
             pc += offset;
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMP) {
@@ -1283,9 +1331,10 @@ dispatch:
       value_obj* cond_val = __get_register(this, cond);
       if (__to_cxx_bool(*cond_val)) {
         pc = __label_get(this, label);
+        goto dispatch;
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFN) {
@@ -1295,9 +1344,10 @@ dispatch:
       value_obj* cond_val = __get_register(this, cond);
       if (!__to_cxx_bool(*cond_val)) {
         pc = __label_get(this, label);
+        goto dispatch;
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFEQ) {
@@ -1307,6 +1357,7 @@ dispatch:
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
         pc = __label_get(this, label);
+        goto dispatch;
       }
       else {
         value_obj* lhs_val = __get_register(this, cond_lhs);
@@ -1314,10 +1365,11 @@ dispatch:
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
           pc = __label_get(this, label);
+          goto dispatch;
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFNEQ) {
@@ -1327,6 +1379,7 @@ dispatch:
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
         pc = __label_get(this, label);
+        goto dispatch;
       }
       else {
         value_obj* lhs_val = __get_register(this, cond_lhs);
@@ -1334,10 +1387,11 @@ dispatch:
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
           pc = __label_get(this, label);
+          goto dispatch;
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFLT) {
@@ -1352,11 +1406,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer < rhs_val->val_integer) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
@@ -1364,16 +1420,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFGT) {
@@ -1388,11 +1446,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer > rhs_val->val_integer) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
@@ -1400,16 +1460,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFLTEQ) {
@@ -1424,11 +1486,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer <= rhs_val->val_integer) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
@@ -1436,16 +1500,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(LJMPIFGTEQ) {
@@ -1460,11 +1526,13 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_integer >= rhs_val->val_integer) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
@@ -1472,16 +1540,18 @@ dispatch:
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
             pc = __label_get(this, label);
+            goto dispatch;
           }
         }
       }
 
-      goto dispatch;
+      VM_NEXT();
     }
 
     VM_CASE(CALL) {

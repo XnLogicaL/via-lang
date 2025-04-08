@@ -78,7 +78,7 @@
     },
     {
       "name": "keyword.control",
-      "match": "\\b(const|fn|impl|trait|type|with|elif|defined|namespace|define|macro|import|export|struct|do|in|let|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
+      "match": "\\b(const|fn|impl|trait|type|with|elif|defined|namespace|define|macro|import|export|struct|do|in|var|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
     },
     {
       "name": "storage.modifier",

@@ -290,6 +290,28 @@ p_type_node_t cast_expr_node::infer_type(trans_unit_context& unit_ctx) {
   return type->clone();
 }
 
+// step_expr_node
+std::string step_expr_node::to_string(uint32_t& depth) {
+  return std::format(
+    "step_expr_node<{}, {}, ispostfix: {}>",
+    target->to_string(depth),
+    is_increment ? "++" : "--",
+    is_postfix
+  );
+}
+
+p_expr_node_t step_expr_node::clone() {
+  return std::make_unique<step_expr_node>(target->clone(), is_increment, is_postfix);
+}
+
+p_type_node_t step_expr_node::infer_type(trans_unit_context& unit_ctx) {
+  return target->infer_type(unit_ctx);
+}
+
+void step_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
+  visitor.visit(*this, dst);
+}
+
 // ===============================
 // auto_type_node
 std::string auto_type_node::to_string(uint32_t&) {

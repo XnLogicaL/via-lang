@@ -16,7 +16,7 @@ VIA_LIBDECLFN(base_print) {
     std::cout << __to_cxx_string(argx);
   }
 
-  std::cout << std::endl;
+  std::cout << "\n";
 
   VIA_LIBRET(value_obj());
 }

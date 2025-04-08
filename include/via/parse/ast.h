@@ -9,17 +9,19 @@
 #include "token.h"
 #include "ast-base.h"
 
-// ===========================================================================================
-// ast.h
+//  =======
+// [ ast.h ]
+//  =======
 //
 // This file declares the derived abstract syntax tree node classes,
 // see `ast-base.h` for base class definitions.
 //
 namespace via {
 
-// =========================================================================================
-// Expression Nodes
-//
+//  ==================
+// [ Expression Nodes ]
+//  ==================
+
 struct lit_expr_node : public expr_node_base {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
@@ -184,6 +186,33 @@ struct cast_expr_node : public expr_node_base {
       type(std::move(type)) {
     this->begin = this->expression->begin;
     this->end = this->expression->end;
+  }
+};
+
+struct step_expr_node : public expr_node_base {
+  p_expr_node_t target;
+  bool is_increment;
+  bool is_postfix;
+
+  std::string to_string(uint32_t&) override;
+
+  p_expr_node_t clone() override;
+  p_type_node_t infer_type(trans_unit_context&) override;
+
+  void accept(node_visitor_base&, uint32_t) override;
+
+  step_expr_node(p_expr_node_t target, bool is_increment, bool is_postfix)
+    : target(std::move(target)),
+      is_increment(is_increment),
+      is_postfix(is_postfix) {
+    if (is_postfix) {
+      this->begin = this->target->begin;
+      this->end = this->target->end + 2;
+    }
+    else {
+      this->begin = this->target->begin - 2;
+      this->end = this->target->end;
+    }
   }
 };
 

@@ -42,14 +42,15 @@ std::string to_string(const bytecode& bc, bool capitalize_opcodes) {
   // Build operand string
   std::string operand_str;
   if (is_operand_valid(instr.operand0)) {
-    if (op == PUSHI || op == LOADI) {
+    if (op == PUSHI) {
       uint32_t result = reinterpret_u16_as_u32(instr.operand0, instr.operand1);
       operand_str += std::to_string(result);
     }
     else {
       operand_str += std::to_string(instr.operand0);
 
-      if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI) {
+      if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI
+          || op == LOADI) {
         uint32_t result = reinterpret_u16_as_u32(instr.operand1, instr.operand2);
         operand_str += ", " + std::to_string(result);
       }
