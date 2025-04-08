@@ -5,24 +5,24 @@
 
 namespace via {
 
-std::optional<variable_stack_obj> compiler_variable_stack::at(size_t pos) {
+std::optional<StackVariable> CompilerVariableStack::at(size_t pos) {
   if (pos > size()) {
     return std::nullopt;
   }
 
-  variable_stack_obj& obj = m_array[pos];
-  variable_stack_obj new_obj = {
+  StackVariable& obj = m_array[pos];
+  StackVariable new_obj = {
     .is_const = false,
     .is_constexpr = false,
     .symbol = obj.symbol,
-    .type = obj.type->clone(),
-    .value = obj.value->clone(),
+    .type = obj.type,
+    .value = obj.value,
   };
 
   return new_obj;
 }
 
-std::optional<operand_t> compiler_variable_stack::find_symbol(const symbol_t& symbol) {
+std::optional<operand_t> CompilerVariableStack::find_symbol(const symbol_t& symbol) {
   for (int i = m_stack_pointer - 1; i >= 0; --i) {
     if (m_array[i].symbol == symbol) {
       return i;
@@ -31,7 +31,7 @@ std::optional<operand_t> compiler_variable_stack::find_symbol(const symbol_t& sy
   return std::nullopt;
 }
 
-std::optional<operand_t> compiler_variable_stack::find_symbol(const variable_stack_obj& member) {
+std::optional<operand_t> CompilerVariableStack::find_symbol(const StackVariable& member) {
   return find_symbol(member.symbol);
 }
 

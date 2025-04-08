@@ -12,13 +12,13 @@ namespace via {
 
 using register_t = operand_t;
 
-class register_allocator final {
+class RegisterAllocator final {
 public:
   // Type aliases
   using register_map = std::unordered_map<register_t, bool>;
 
   // Constructor
-  register_allocator(size_t size, bool default_value) {
+  RegisterAllocator(size_t size, bool default_value) {
     registers.reserve(size);
     for (register_t reg = 0; reg < size - 1; reg++) {
       registers[reg] = default_value;

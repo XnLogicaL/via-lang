@@ -21,16 +21,16 @@ namespace via {
 using byte_stream_t = std::vector<uint8_t>;
 
 // Context objects forward declarations.
-class token_stream;
-class syntax_tree;
-class bytecode_holder;
-class constant_holder;
-class compiler_variable_stack;
-class compiler_function_stack;
-class global_holder;
+class TokenHolder;
+class SyntaxTree;
+class BytecodeHolder;
+class ConstantHolder;
+class CompilerVariableStack;
+class CompilerFunctionStack;
+class GlobalHolder;
 
 // Per translation unit context.
-class trans_unit_context final {
+class TransUnitContext final {
 public:
   // Resets the translation unit context.
   void clear();
@@ -42,9 +42,9 @@ public:
   const char* get_platform_info();
 
   // Plain text file constructor.
-  trans_unit_context(const std::string& file_path, const std::string& file_source);
+  TransUnitContext(const std::string& file_path, const std::string& file_source);
   // Binary file constructor.
-  trans_unit_context(const byte_stream_t& bytes);
+  TransUnitContext(const byte_stream_t& bytes);
 
 public:
   // Relative path of the target file.
@@ -55,26 +55,26 @@ public:
   // Optimization level: 0-3
   size_t optimization_level = 0;
 
-  std::unique_ptr<token_stream> tokens;
-  std::unique_ptr<syntax_tree> ast;
-  std::unique_ptr<bytecode_holder> bytecode;
-  std::unique_ptr<constant_holder> constants;
+  std::unique_ptr<TokenHolder> tokens;
+  std::unique_ptr<SyntaxTree> ast;
+  std::unique_ptr<BytecodeHolder> bytecode;
+  std::unique_ptr<ConstantHolder> constants;
 
   struct {
     size_t label_count;
 
-    std::unique_ptr<compiler_variable_stack> variable_stack;
-    std::unique_ptr<compiler_function_stack> function_stack;
-    std::unique_ptr<global_holder> globals;
+    std::unique_ptr<CompilerVariableStack> variable_stack;
+    std::unique_ptr<CompilerFunctionStack> function_stack;
+    std::unique_ptr<GlobalHolder> globals;
   } internal;
 };
 
-class compiler_context final {
+class CompilerContext final {
 public:
 public:
   uint32_t flags;
 
-  std::vector<trans_unit_context> units;
+  std::vector<TransUnitContext> units;
 };
 
 } // namespace via

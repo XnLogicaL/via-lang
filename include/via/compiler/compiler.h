@@ -25,9 +25,9 @@
 //  multiple times, but it is not recommended to do so.
 namespace via {
 
-class compiler final {
+class Compiler final {
 public:
-  compiler(trans_unit_context& unit_ctx)
+  Compiler(TransUnitContext& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
   // Compiler entry point.
@@ -41,7 +41,7 @@ private:
   void insert_exit0_instruction();
 
 private:
-  trans_unit_context& unit_ctx;
+  TransUnitContext& unit_ctx;
 };
 
 } // namespace via

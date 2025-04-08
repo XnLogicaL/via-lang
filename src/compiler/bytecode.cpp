@@ -11,37 +11,37 @@
 //
 namespace via {
 
-using comment_type = bytecode_holder::comment_type;
-using bytecode_vector = bytecode_holder::bytecode_vector;
+using comment_type = BytecodeHolder::comment_type;
+using bytecode_vector = BytecodeHolder::bytecode_vector;
 
-size_t bytecode_holder::size() const {
+size_t BytecodeHolder::size() const {
   return instructions.size();
 }
 
-bytecode& bytecode_holder::front() {
+Bytecode& BytecodeHolder::front() {
   return instructions.front();
 }
 
-bytecode& bytecode_holder::back() {
+Bytecode& BytecodeHolder::back() {
   return instructions.back();
 }
 
-bytecode& bytecode_holder::at(size_t pos) {
+Bytecode& BytecodeHolder::at(size_t pos) {
   return instructions.at(pos);
 }
 
-void bytecode_holder::add(const bytecode& bytecode) {
+void BytecodeHolder::add(const Bytecode& bytecode) {
   instructions.push_back(bytecode);
 }
 
-void bytecode_holder::remove(size_t index) {
+void BytecodeHolder::remove(size_t index) {
   instructions.erase(instructions.begin() + index);
 }
 
-void bytecode_holder::insert(
+void BytecodeHolder::insert(
   size_t index,
-  opcode opcode,
-  operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands,
+  IOpCode IOpCode,
+  OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands,
   comment_type& comment
 ) {
   // Insert the instruction at the specified index
@@ -50,7 +50,7 @@ void bytecode_holder::insert(
     {
       .instruct =
         {
-          .op = opcode,
+          .op = IOpCode,
           .operand0 = operands.data.at(0),
           .operand1 = operands.data.at(1),
           .operand2 = operands.data.at(2),
@@ -63,13 +63,15 @@ void bytecode_holder::insert(
   );
 }
 
-void bytecode_holder::emit(
-  opcode opcode, operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands, comment_type& comment
+void BytecodeHolder::emit(
+  IOpCode IOpCode,
+  OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands,
+  comment_type& comment
 ) {
   add({
     .instruct =
       {
-        .op = opcode,
+        .op = IOpCode,
         .operand0 = operands.data.at(0),
         .operand1 = operands.data.at(1),
         .operand2 = operands.data.at(2),
@@ -81,7 +83,7 @@ void bytecode_holder::emit(
   });
 }
 
-const bytecode_vector& bytecode_holder::get() const {
+const bytecode_vector& BytecodeHolder::get() const {
   return instructions;
 }
 

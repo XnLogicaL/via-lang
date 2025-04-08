@@ -8,7 +8,7 @@
 namespace via {
 
 using namespace utils;
-using enum comp_err_lvl;
+using enum CErrorLevel;
 
 struct LocalOffset {
   size_t line;
@@ -59,7 +59,7 @@ LocalOffset localize_offset(const std::string& source, size_t abs_offset) {
 }
 
 // Returns a header string (with ANSI colors) for a given error level.
-std::string get_error_level_header(const comp_err_lvl& lvl) {
+std::string get_error_level_header(const CErrorLevel& lvl) {
   switch (lvl) {
   case INFO:
     return apply_color("info: ", fg_color::cyan, bg_color::black, style::bold);
@@ -73,8 +73,8 @@ std::string get_error_level_header(const comp_err_lvl& lvl) {
 }
 
 // ==========================================================================================
-// compile_error
-std::string compile_error::to_string() const {
+// CError
+std::string CError::to_string() const {
   std::string header = get_error_level_header(level);
 
   if (is_flat) {
@@ -136,13 +136,13 @@ std::string compile_error::to_string() const {
 }
 
 // ==========================================================================================
-// error_bus
-void error_bus::log(const compile_error& err) {
+// CErrorBus
+void CErrorBus::log(const CError& err) {
   buffer.push_back(err);
 }
 
-bool error_bus::has_error() {
-  for (const compile_error& err : buffer) {
+bool CErrorBus::has_error() {
+  for (const CError& err : buffer) {
     if (err.level == ERROR_) {
       return true;
     }
@@ -151,14 +151,14 @@ bool error_bus::has_error() {
   return false;
 }
 
-void error_bus::clear() {
+void CErrorBus::clear() {
   buffer.clear();
 }
 
-void error_bus::emit() {
+void CErrorBus::emit() {
   std::string current_file;
 
-  for (const compile_error& err : buffer) {
+  for (const CError& err : buffer) {
     if (!err.is_flat && current_file != err.ctx.file_path) {
       current_file = err.ctx.file_path;
       std::cout << "in file " << current_file << ":\n";
@@ -172,7 +172,7 @@ void error_bus::emit() {
   clear();
 }
 
-error_bus::~error_bus() {
+CErrorBus::~CErrorBus() {
   emit();
 }
 

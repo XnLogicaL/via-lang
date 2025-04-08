@@ -16,23 +16,23 @@ namespace via {
 
 using symbol_t = std::string;
 
-struct variable_stack_obj {
+struct StackVariable {
   bool is_const = false;
   bool is_constexpr = false;
   symbol_t symbol;
-  p_type_node_t type;
-  p_expr_node_t value;
+  TypeNodeBase* type;
+  ExprNodeBase* value;
 };
 
-struct function_stack_obj {
+struct StackFunction {
   size_t stack_pointer = 0;
-  func_stmt_node* func_stmt;
+  FuncDeclStmtNode* func_stmt;
 };
 
 template<typename T>
-class compiler_stack_base {
+class CompilerStackBase {
 public:
-  virtual ~compiler_stack_base() = default;
+  virtual ~CompilerStackBase() = default;
 
   // Returns the size of the stack.
   VIA_IMPLEMENTATION constexpr size_t size() const {
@@ -63,17 +63,17 @@ protected:
   T m_array[VIA_TSTACKSIZE];
 };
 
-class compiler_variable_stack : public compiler_stack_base<variable_stack_obj> {
+class CompilerVariableStack : public CompilerStackBase<StackVariable> {
 public:
   // Returns the stack object at a given index.
-  std::optional<variable_stack_obj> at(size_t);
+  std::optional<StackVariable> at(size_t);
 
   // Returns the stack id of a given stack object.
-  std::optional<operand_t> find_symbol(const variable_stack_obj&);
+  std::optional<operand_t> find_symbol(const StackVariable&);
   std::optional<operand_t> find_symbol(const symbol_t&);
 };
 
-class compiler_function_stack : public compiler_stack_base<function_stack_obj> {};
+class CompilerFunctionStack : public CompilerStackBase<StackFunction> {};
 
 } // namespace via
 

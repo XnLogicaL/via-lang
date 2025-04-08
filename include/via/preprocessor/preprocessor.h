@@ -15,18 +15,18 @@
 
 namespace via {
 
-class preprocessor final {
+class Preprocessor final {
 public:
-  ~preprocessor() = default;
-  preprocessor(trans_unit_context& unit_ctx)
+  ~Preprocessor() = default;
+  Preprocessor(TransUnitContext& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
   bool preprocess();
   void declare_default();
 
 private:
-  [[maybe_unused]] error_bus err_bus;
-  [[maybe_unused]] trans_unit_context& unit_ctx;
+  [[maybe_unused]] CErrorBus err_bus;
+  [[maybe_unused]] TransUnitContext& unit_ctx;
 };
 
 } // namespace via

@@ -19,7 +19,7 @@
   }
 
 #define VIA_TINFERENCE_FAILURE(type, expr)                                                         \
-  if (!type.get()) {                                                                               \
+  if (!type) {                                                                                     \
     visitor_failed = true;                                                                         \
     compiler_error(expr->begin, expr->end, "Expression type could not be infered");                \
     compiler_info(                                                                                 \
@@ -36,45 +36,45 @@
 namespace via {
 
 using label_t = operand_t;
-using unused_expression_handler_t = std::function<void(const expr_stmt_node&)>;
+using unused_expression_handler_t = std::function<void(const ExprStmtNode&)>;
 
-class node_visitor_base {
+class NodeVisitorBase {
 public:
-  node_visitor_base(trans_unit_context& unit_ctx, error_bus& bus)
+  NodeVisitorBase(TransUnitContext& unit_ctx, CErrorBus& bus)
     : unit_ctx(unit_ctx),
       err_bus(bus) {}
 
-  virtual ~node_visitor_base() = default;
+  virtual ~NodeVisitorBase() = default;
 
   // Expression visitors
-  virtual void visit(lit_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(sym_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(unary_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(grp_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(call_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(index_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(bin_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(cast_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(step_expr_node&, operand_t) VIA_INVALID_VISIT;
-  virtual void visit(array_expr_node&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(LitExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(SymExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(UnaryExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(GroupExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(CallExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(IndexExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(BinExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(CastExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(StepExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(ArrayExprNode&, operand_t) VIA_INVALID_VISIT;
 
   // Type visitors (return type is due to type-decaying)
-  virtual p_type_node_t visit(auto_type_node&) VIA_INVALID_VISIT;
-  virtual p_type_node_t visit(generic_type_node&) VIA_INVALID_VISIT;
-  virtual p_type_node_t visit(union_type_node&) VIA_INVALID_VISIT;
-  virtual p_type_node_t visit(function_type_node&) VIA_INVALID_VISIT;
+  virtual TypeNodeBase* visit(AutoTypeNode&) VIA_INVALID_VISIT;
+  virtual TypeNodeBase* visit(GenericTypeNode&) VIA_INVALID_VISIT;
+  virtual TypeNodeBase* visit(UnionTypeNode&) VIA_INVALID_VISIT;
+  virtual TypeNodeBase* visit(FunctionTypeNode&) VIA_INVALID_VISIT;
 
   // Statement visitors
-  virtual void visit(decl_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(scope_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(func_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(assign_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(if_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(return_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(break_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(continue_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(while_stmt_node&) VIA_INVALID_VISIT;
-  virtual void visit(expr_stmt_node&) VIA_INVALID_VISIT;
+  virtual void visit(DeclStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(ScopeStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(FuncDeclStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(AssignStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(IfStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(ReturnStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(BreakStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(ContinueStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(WhileStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(ExprStmtNode&) VIA_INVALID_VISIT;
 
   virtual inline bool failed() {
     return visitor_failed;
@@ -83,90 +83,90 @@ public:
 protected:
   bool visitor_failed = false;
 
-  trans_unit_context& unit_ctx;
+  TransUnitContext& unit_ctx;
 
-  error_bus& err_bus;
+  CErrorBus& err_bus;
 
 protected:
   void compiler_error(size_t begin, size_t end, const std::string&);
-  void compiler_error(const token&, const std::string&);
+  void compiler_error(const Token&, const std::string&);
   void compiler_error(const std::string&);
 
   void compiler_warning(size_t begin, size_t end, const std::string&);
-  void compiler_warning(const token&, const std::string&);
+  void compiler_warning(const Token&, const std::string&);
   void compiler_warning(const std::string&);
 
   void compiler_info(size_t begin, size_t end, const std::string&);
-  void compiler_info(const token&, const std::string&);
+  void compiler_info(const Token&, const std::string&);
   void compiler_info(const std::string&);
 };
 
 #undef VIA_INVALID_VISIT
 
-class expr_node_visitor : public node_visitor_base {
+class expr_node_visitor : public NodeVisitorBase {
 public:
-  expr_node_visitor(trans_unit_context& unit_ctx, error_bus& bus, register_allocator& allocator)
-    : node_visitor_base(unit_ctx, bus),
+  expr_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
+    : NodeVisitorBase(unit_ctx, bus),
       allocator(allocator) {}
 
-  value_obj construct_constant(lit_expr_node&);
-  lit_expr_node fold_constant(expr_node_base&, size_t fold_depth = 0);
+  IValue construct_constant(LitExprNode&);
+  LitExprNode fold_constant(ExprNodeBase&, size_t fold_depth = 0);
 
-  void visit(lit_expr_node&, operand_t) override;
-  void visit(sym_expr_node&, operand_t) override;
-  void visit(unary_expr_node&, operand_t) override;
-  void visit(grp_expr_node&, operand_t) override;
-  void visit(call_expr_node&, operand_t) override;
-  void visit(index_expr_node&, operand_t) override;
-  void visit(bin_expr_node&, operand_t) override;
-  void visit(cast_expr_node&, operand_t) override;
-  void visit(step_expr_node&, operand_t) override;
-  void visit(array_expr_node&, operand_t) override;
+  void visit(LitExprNode&, operand_t) override;
+  void visit(SymExprNode&, operand_t) override;
+  void visit(UnaryExprNode&, operand_t) override;
+  void visit(GroupExprNode&, operand_t) override;
+  void visit(CallExprNode&, operand_t) override;
+  void visit(IndexExprNode&, operand_t) override;
+  void visit(BinExprNode&, operand_t) override;
+  void visit(CastExprNode&, operand_t) override;
+  void visit(StepExprNode&, operand_t) override;
+  void visit(ArrayExprNode&, operand_t) override;
 
 private:
-  register_allocator& allocator;
+  RegisterAllocator& allocator;
 };
 
-class decay_node_visitor : public node_visitor_base {
+class decay_node_visitor : public NodeVisitorBase {
 public:
-  decay_node_visitor(trans_unit_context& unit_ctx, error_bus& bus)
-    : node_visitor_base(unit_ctx, bus) {}
+  decay_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus)
+    : NodeVisitorBase(unit_ctx, bus) {}
 
-  p_type_node_t visit(auto_type_node&) override;
-  p_type_node_t visit(generic_type_node&) override;
-  p_type_node_t visit(union_type_node&) override;
-  p_type_node_t visit(function_type_node&) override;
+  TypeNodeBase* visit(AutoTypeNode&) override;
+  TypeNodeBase* visit(GenericTypeNode&) override;
+  TypeNodeBase* visit(UnionTypeNode&) override;
+  TypeNodeBase* visit(FunctionTypeNode&) override;
 };
 
-class type_node_visitor : public node_visitor_base {
+class type_node_visitor : public NodeVisitorBase {
 public:
-  type_node_visitor(trans_unit_context& unit_ctx, error_bus& bus)
-    : node_visitor_base(unit_ctx, bus) {}
+  type_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus)
+    : NodeVisitorBase(unit_ctx, bus) {}
 
-  void visit(decl_stmt_node&) override;
-  void visit(assign_stmt_node&) override;
-  void visit(func_stmt_node&) override;
+  void visit(DeclStmtNode&) override;
+  void visit(AssignStmtNode&) override;
+  void visit(FuncDeclStmtNode&) override;
 };
 
-class stmt_node_visitor : public node_visitor_base {
+class stmt_node_visitor : public NodeVisitorBase {
 public:
-  stmt_node_visitor(trans_unit_context& unit_ctx, error_bus& bus, register_allocator& allocator)
-    : node_visitor_base(unit_ctx, bus),
+  stmt_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
+    : NodeVisitorBase(unit_ctx, bus),
       allocator(allocator),
       expression_visitor(unit_ctx, bus, allocator),
       decay_visitor(unit_ctx, bus),
       type_visitor(unit_ctx, bus) {}
 
-  void visit(decl_stmt_node&) override;
-  void visit(scope_stmt_node&) override;
-  void visit(func_stmt_node&) override;
-  void visit(assign_stmt_node&) override;
-  void visit(if_stmt_node&) override;
-  void visit(return_stmt_node&) override;
-  void visit(break_stmt_node&) override;
-  void visit(continue_stmt_node&) override;
-  void visit(while_stmt_node&) override;
-  void visit(expr_stmt_node&) override;
+  void visit(DeclStmtNode&) override;
+  void visit(ScopeStmtNode&) override;
+  void visit(FuncDeclStmtNode&) override;
+  void visit(AssignStmtNode&) override;
+  void visit(IfStmtNode&) override;
+  void visit(ReturnStmtNode&) override;
+  void visit(BreakStmtNode&) override;
+  void visit(ContinueStmtNode&) override;
+  void visit(WhileStmtNode&) override;
+  void visit(ExprStmtNode&) override;
 
   inline bool failed() override {
     return visitor_failed || expression_visitor.failed() || decay_visitor.failed()
@@ -177,7 +177,7 @@ public:
   std::optional<unused_expression_handler_t> unused_expr_handler;
 
 private:
-  register_allocator& allocator;
+  RegisterAllocator& allocator;
 
   expr_node_visitor expression_visitor;
   decay_node_visitor decay_visitor;

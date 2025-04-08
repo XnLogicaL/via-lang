@@ -26,6 +26,7 @@ add_subdirectory(argparse)
 add_subdirectory(magic_enum)
 add_subdirectory(cpp-linenoise)
 add_subdirectory(expected)
+add_subdirectory(ArenaAllocator)
 
 # Detect compiler
 if(MSVC)
@@ -145,7 +146,7 @@ else()
 endif()
 
 # Link dependencies
-target_link_libraries(via PUBLIC sha256 argparse linenoise magic_enum expected)
+target_link_libraries(via PUBLIC sha256 argparse linenoise magic_enum expected ArenaAllocator)
 
 # Backtrace support (non-MSVC only)
 if (NOT MSVC)

@@ -12,34 +12,37 @@
 
 namespace via {
 
-struct global_obj {
-  token tok;
+struct CompilerGlobal {
+  Token tok;
   std::string symbol;
-  p_type_node_t type;
+  TypeNodeBase* type;
 };
 
-class global_holder final {
+class GlobalHolder final {
 public:
   // Type aliases
   using index_query_result = std::optional<size_t>;
-  using global_query_result = std::optional<global_obj>;
-  using global_vector = std::vector<global_obj>;
-  using builtin_vector = std::vector<global_obj>;
+  using global_query_result = std::optional<CompilerGlobal>;
+  using global_vector = std::vector<CompilerGlobal>;
+  using builtin_vector = std::vector<CompilerGlobal>;
+
+  VIA_IMPLEMENTATION GlobalHolder()
+    : allocator(64 * 1024) {}
 
   // Returns the size of the global vector.
   size_t size();
 
   // Declares a new global.
   // Does not perform sanity checks.
-  void declare_global(global_obj);
+  void declare_global(CompilerGlobal);
 
   // Returns whether if a global has been declared.
-  bool was_declared(const global_obj&);
+  bool was_declared(const CompilerGlobal&);
   bool was_declared(const std::string&);
 
   // Returns the index of a given global.
   index_query_result get_index(const std::string&);
-  index_query_result get_index(const global_obj&);
+  index_query_result get_index(const CompilerGlobal&);
 
   // Returns the global at a given key or index.
   global_query_result get_global(const std::string&);
@@ -52,6 +55,7 @@ public:
   void declare_builtins();
 
 private:
+  ArenaAllocator allocator;
   global_vector globals;
 };
 

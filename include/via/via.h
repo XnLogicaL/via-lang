@@ -14,7 +14,7 @@
 #include "lex/token.h"
 #include "lex/lexer.h"
 
-#include "preprocessor/preprocessor.h"
+#include "Preprocessor/Preprocessor.h"
 
 #include "parse/parser.h"
 #include "parse/ast.h"

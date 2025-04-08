@@ -16,9 +16,9 @@ namespace via {
 
 // Lexer class
 // Tokenizes a string into tokens, cannot fail
-class lexer {
+class Lexer {
 public:
-  lexer(trans_unit_context& unit_ctx)
+  Lexer(TransUnitContext& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
   // Reads the source file and returns a source unit_ctx
@@ -31,26 +31,26 @@ private:
   char consume(size_t ahead = 1);
 
   // Starts reading a number literal
-  token read_number(size_t);
+  Token read_number(size_t);
   // Reads an alpha-numeric identifier
   // Cannot start with a numeric character
-  token read_ident(size_t);
+  Token read_ident(size_t);
   // Reads a string literal denoted with quotes
-  token read_string(size_t);
-  // Reads and returns the current token
-  token get_token();
+  Token read_string(size_t);
+  // Reads and returns the current Token
+  Token get_token();
 
 private:
   size_t pos = 0;
   size_t line = 1;
   size_t offset = 0;
-  trans_unit_context& unit_ctx;
+  TransUnitContext& unit_ctx;
 };
 
-VIA_INLINE std::vector<token> fast_tokenize(std::string source) {
-  trans_unit_context unit_ctx("<unknown>", source);
+VIA_INLINE std::vector<Token> fast_tokenize(std::string source) {
+  TransUnitContext unit_ctx("<unknown>", source);
 
-  lexer tokenizer(unit_ctx);
+  Lexer tokenizer(unit_ctx);
   tokenizer.tokenize();
 
   return unit_ctx.tokens->get();

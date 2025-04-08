@@ -11,26 +11,26 @@
 namespace via {
 
 // ==========================================================================================
-// trans_unit_context
-trans_unit_context::trans_unit_context(const std::string& file_path, const std::string& file_source)
+// TransUnitContext
+TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
   : file_path(file_path),
     file_source(file_source),
-    tokens(std::make_unique<token_stream>()),
-    ast(std::make_unique<syntax_tree>()),
-    bytecode(std::make_unique<bytecode_holder>()),
-    constants(std::make_unique<constant_holder>()),
+    tokens(std::make_unique<TokenHolder>()),
+    ast(std::make_unique<SyntaxTree>()),
+    bytecode(std::make_unique<BytecodeHolder>()),
+    constants(std::make_unique<ConstantHolder>()),
     internal({
       0,
-      std::make_unique<compiler_variable_stack>(),
-      std::make_unique<compiler_function_stack>(),
-      std::make_unique<global_holder>(),
+      std::make_unique<CompilerVariableStack>(),
+      std::make_unique<CompilerFunctionStack>(),
+      std::make_unique<GlobalHolder>(),
     }) {}
 
-trans_unit_context::trans_unit_context(const byte_stream_t&) {}
+TransUnitContext::TransUnitContext(const byte_stream_t&) {}
 
-void trans_unit_context::clear() {}
+void TransUnitContext::clear() {}
 
-const char* trans_unit_context::get_platform_info() {
+const char* TransUnitContext::get_platform_info() {
   static char buffer[32];
   static bool fetched = false;
 
@@ -60,11 +60,11 @@ const char* trans_unit_context::get_platform_info() {
   return buffer;
 }
 
-byte_stream_t trans_unit_context::encode() {
+byte_stream_t TransUnitContext::encode() {
   return {};
 }
 
 // ==========================================================================================
-// compiler_context
+// CompilerContext
 
 } // namespace via

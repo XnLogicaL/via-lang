@@ -42,7 +42,7 @@ enum class style {
   underline = 4,
 };
 
-// Function to wrap a string with ANSI escape codes
+// IFunction to wrap a string with ANSI escape codes
 VIA_IMPLEMENTATION std::string apply_color(
   const std::string& text, fg_color fg, bg_color bg = bg_color::black, style style = style::reset
 ) {

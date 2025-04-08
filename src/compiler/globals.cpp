@@ -7,24 +7,24 @@
 
 namespace via {
 
-using index_query_result = global_holder::index_query_result;
-using global_query_result = global_holder::global_query_result;
-using global_vector = global_holder::global_vector;
+using index_query_result = GlobalHolder::index_query_result;
+using global_query_result = GlobalHolder::global_query_result;
+using global_vector = GlobalHolder::global_vector;
 
-size_t global_holder::size() {
+size_t GlobalHolder::size() {
   return globals.size();
 }
 
-void global_holder::declare_global(global_obj global) {
+void GlobalHolder::declare_global(CompilerGlobal global) {
   globals.emplace_back(std::move(global));
 }
 
-bool global_holder::was_declared(const global_obj& global) {
+bool GlobalHolder::was_declared(const CompilerGlobal& global) {
   return was_declared(global.symbol);
 }
 
-bool global_holder::was_declared(const std::string& symbol) {
-  for (const global_obj& global : globals) {
+bool GlobalHolder::was_declared(const std::string& symbol) {
+  for (const CompilerGlobal& global : globals) {
     if (global.symbol == symbol) {
       return true;
     }
@@ -33,13 +33,13 @@ bool global_holder::was_declared(const std::string& symbol) {
   return false;
 }
 
-index_query_result global_holder::get_index(const global_obj& global) {
+index_query_result GlobalHolder::get_index(const CompilerGlobal& global) {
   return get_index(global.symbol);
 }
 
-index_query_result global_holder::get_index(const std::string& symbol) {
+index_query_result GlobalHolder::get_index(const std::string& symbol) {
   uint64_t index = 0;
-  for (const global_obj& global : globals) {
+  for (const CompilerGlobal& global : globals) {
     if (global.symbol == symbol) {
       return index;
     }
@@ -50,51 +50,51 @@ index_query_result global_holder::get_index(const std::string& symbol) {
   return std::nullopt;
 }
 
-global_query_result global_holder::get_global(const std::string& symbol) {
-  for (const global_obj& global : globals) {
+global_query_result GlobalHolder::get_global(const std::string& symbol) {
+  for (const CompilerGlobal& global : globals) {
     if (global.symbol == symbol) {
-      return global_obj{global.tok, global.symbol, global.type->clone()};
+      return CompilerGlobal{global.tok, global.symbol, global.type};
     }
   }
 
   return std::nullopt;
 }
 
-global_query_result global_holder::get_global(size_t index) {
-  global_obj& global = globals.at(index);
-  return global_obj{global.tok, global.symbol, global.type->clone()};
+global_query_result GlobalHolder::get_global(size_t index) {
+  CompilerGlobal& global = globals.at(index);
+  return CompilerGlobal{global.tok, global.symbol, global.type};
 }
 
-const global_vector& global_holder::get() {
+const global_vector& GlobalHolder::get() {
   return globals;
 }
 
-void global_holder::declare_builtins() {
-  token tok = token(token_type::IDENTIFIER, "", 0, 0, 0);
+void GlobalHolder::declare_builtins() {
+  Token tok = Token(TokenType::IDENTIFIER, "", 0, 0, 0);
 
-  p_type_node_t nil_type = std::make_unique<primitive_type_node>(tok, value_type::nil);
-  p_type_node_t str_type = std::make_unique<primitive_type_node>(tok, value_type::string);
+  TypeNodeBase* nil_type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(tok, IValueType::nil);
+  TypeNodeBase* str_type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(tok, IValueType::string);
 
-  auto make_argument = [](const std::string& id, p_type_node_t type) -> param_node {
-    return {token(token_type::IDENTIFIER, id, 0, 0, 0), modifiers{}, std::move(type)};
+  auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamNode {
+    return {Token(TokenType::IDENTIFIER, id, 0, 0, 0), StmtModifiers{}, std::move(type)};
   };
 
-  std::vector<param_node> print_args;
-  print_args.push_back(make_argument("arg0", str_type->clone()));
+  std::vector<ParamNode> print_args;
+  print_args.push_back(make_argument("arg0", str_type));
 
-  global_obj print = {
+  CompilerGlobal print = {
     tok,
     "print",
-    std::make_unique<function_type_node>(std::move(print_args), nil_type->clone()),
+    unit_ctx.ast->allocator.emplace<FunctionTypeNode>(print_args, nil_type),
   };
 
-  std::vector<param_node> println_args;
-  println_args.push_back(make_argument("arg0", str_type->clone()));
+  std::vector<ParamNode> println_args;
+  println_args.push_back(make_argument("arg0", str_type));
 
-  global_obj println = {
+  CompilerGlobal println = {
     tok,
     "println",
-    std::make_unique<function_type_node>(std::move(println_args), nil_type->clone()),
+    unit_ctx.ast->allocator.emplace<FunctionTypeNode>(println_args, nil_type),
   };
 
   globals.emplace_back(std::move(print));

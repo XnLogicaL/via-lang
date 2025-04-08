@@ -21,16 +21,16 @@
 //  - Note: This also implies that `dst` is not owned.
 //
 // Visitor functions compile each type of expression node by first converting it into
-// corresponding opcode(s), and then determining the operands via the built-in node parameters.
+// corresponding IOpCode(s), and then determining the operands via the built-in node parameters.
 //
-// - lit_expr_node compilation:
+// - LitExprNode compilation:
 //  This node only emits `LOAD` opcodes, and is considered a constant expression.
 //  It first checks for primitive data types within the node, and emits corresponding bytecode based
 //  on that. If it finds complex data types like strings, tables, etc., it loads them into the
 //  constant table and emits a `LOADK` instruction with the corresponding constant id.
 //
-// - sym_expr_node compilation:
-//  This node represents a "symbol" that is either a local, global, argument or upv_obj.
+// - SymExprNode compilation:
+//  This node represents a "symbol" that is either a local, global, argument or IUpValue.
 //  It first checks the stack for the symbol, if found, emits a `STKGET` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `UPVGET`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
@@ -39,18 +39,18 @@
 //  `unit_ctx::internal::globals` and if found emits GGET. If all of these queries fail, throws
 //  a "Use of undeclared variable" compilation error.
 //
-// - unary_expr_node compilation:
+// - UnaryExprNode compilation:
 //  This node emits a NEG instruction onto the inner expression.
 //
-// - grp_expr_node compilation:
+// - GroupExprNode compilation:
 //  Compiles the inner expression into dst.
 //
-// - call_expr_node compilation:
+// - CallExprNode compilation:
 //  This node represents a function call expression, which first loads the arguments onto the stack
 //  (LIFO), loads the callee object, and calls it. And finally, emits a POP instruction to retrieve
 //  the return value.
 //
-// - index_expr_node compilation:
+// - IndexExprNode compilation:
 //  This node represents a member access, which could follow either of these patterns:
 //    -> Direct table member access: table.index
 //      This pattern compiles into a TBLGET instruction that uses the hashed version of the index.
@@ -71,10 +71,10 @@
 // ==================================================================================================
 namespace via {
 
-using enum opcode;
+using enum IOpCode;
 
-void expr_node_visitor::visit(lit_expr_node& literal_node, operand_t dst) {
-  using enum value_type;
+void expr_node_visitor::visit(LitExprNode& literal_node, operand_t dst) {
+  using enum IValueType;
 
   if (int* integer_value = std::get_if<int>(&literal_node.value)) {
     uint32_t final_value = *integer_value;
@@ -92,15 +92,15 @@ void expr_node_visitor::visit(lit_expr_node& literal_node, operand_t dst) {
     unit_ctx.bytecode->emit(*bool_value ? LOADBT : LOADBF, {dst});
   }
   else {
-    const value_obj& constant = construct_constant(literal_node);
+    const IValue& constant = construct_constant(literal_node);
     const operand_t constant_id = unit_ctx.constants->push_constant(constant);
 
     unit_ctx.bytecode->emit(LOADK, {dst, constant_id});
   }
 }
 
-void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
-  token var_id = variable_node.identifier;
+void expr_node_visitor::visit(SymExprNode& variable_node, operand_t dst) {
+  Token var_id = variable_node.identifier;
 
   std::string symbol = var_id.lexeme;
   std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(var_id.lexeme);
@@ -119,8 +119,8 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
     return;
   }
   else if (unit_ctx.internal.globals->was_declared(symbol)) {
-    lit_expr_node lit_translation = lit_expr_node(variable_node.identifier, symbol);
-    value_obj const_val = construct_constant(lit_translation);
+    LitExprNode lit_translation = LitExprNode(variable_node.identifier, symbol);
+    IValue const_val = construct_constant(lit_translation);
     operand_t const_id = unit_ctx.constants->push_constant(const_val);
     operand_t tmp_reg = allocator.allocate_temp();
 
@@ -144,32 +144,32 @@ void expr_node_visitor::visit(sym_expr_node& variable_node, operand_t dst) {
   compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
 }
 
-void expr_node_visitor::visit(unary_expr_node& unary_node, operand_t dst) {
+void expr_node_visitor::visit(UnaryExprNode& unary_node, operand_t dst) {
   unary_node.accept(*this, dst);
   unit_ctx.bytecode->emit(NEG, {dst});
 }
 
-void expr_node_visitor::visit(grp_expr_node& group_node, operand_t dst) {
+void expr_node_visitor::visit(GroupExprNode& group_node, operand_t dst) {
   group_node.accept(*this, dst);
 }
 
-void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
+void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
   operand_t argc = call_node.arguments.size();
   operand_t callee_reg = allocator.allocate_register();
 
-  p_expr_node_t& callee = call_node.callee;
-  p_type_node_t callee_type = call_node.callee->infer_type(unit_ctx);
+  ExprNodeBase*& callee = call_node.callee;
+  TypeNodeBase* callee_type = call_node.callee->infer_type(unit_ctx);
 
   VIA_TINFERENCE_FAILURE(callee_type, callee);
 
-  if (function_type_node* fn_ty =
-        get_derived_instance<type_node_base, function_type_node>(*callee_type)) {
+  if (FunctionTypeNode* fn_ty =
+        get_derived_instance<TypeNodeBase, FunctionTypeNode>(*callee_type)) {
     size_t expected_argc = fn_ty->parameters.size();
     if (argc != static_cast<operand_t>(expected_argc)) {
       compiler_error(
         call_node.begin,
         call_node.end,
-        std::format("Function type expects {} arguments, got {}", expected_argc, argc)
+        std::format("IFunction type expects {} arguments, got {}", expected_argc, argc)
       );
     }
   }
@@ -183,11 +183,10 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
 
   call_node.callee->accept(*this, callee_reg);
 
-  for (const p_expr_node_t& argument : call_node.arguments) {
+  for (ExprNodeBase*& argument : call_node.arguments) {
     operand_t argument_reg = allocator.allocate_register();
 
-    if (lit_expr_node* literal_node =
-          get_derived_instance<expr_node_base, lit_expr_node>(*argument)) {
+    if (LitExprNode* literal_node = get_derived_instance<ExprNodeBase, LitExprNode>(*argument)) {
       if (int* integer_value = std::get_if<int>(&literal_node->value)) {
         uint32_t final_value = *integer_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
@@ -204,7 +203,7 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
         unit_ctx.bytecode->emit(*bool_value ? PUSHBT : PUSHBF);
       }
       else {
-        const value_obj& constant = construct_constant(*literal_node);
+        const IValue& constant = construct_constant(*literal_node);
         const operand_t constant_id = unit_ctx.constants->push_constant(constant);
 
         unit_ctx.bytecode->emit(PUSHK, {constant_id});
@@ -222,19 +221,19 @@ void expr_node_visitor::visit(call_expr_node& call_node, operand_t dst) {
   allocator.free_register(callee_reg);
 }
 
-void expr_node_visitor::visit(index_expr_node& index_node, operand_t dst) {
+void expr_node_visitor::visit(IndexExprNode& index_node, operand_t dst) {
   operand_t obj_reg = allocator.allocate_register();
   operand_t index_reg = allocator.allocate_register();
 
   index_node.object->accept(*this, obj_reg);
   index_node.index->accept(*this, index_reg);
 
-  p_type_node_t object_type = index_node.object->infer_type(unit_ctx);
-  p_type_node_t index_type = index_node.index->infer_type(unit_ctx);
+  TypeNodeBase* object_type = index_node.object->infer_type(unit_ctx);
+  TypeNodeBase* index_type = index_node.index->infer_type(unit_ctx);
 
   // Validate index type
-  if (auto* primitive = get_derived_instance<type_node_base, primitive_type_node>(*index_type)) {
-    if (primitive->type != value_type::string && primitive->type != value_type::integer) {
+  if (auto* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*index_type)) {
+    if (primitive->type != IValueType::string && primitive->type != IValueType::integer) {
       compiler_error(
         index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
       );
@@ -243,15 +242,15 @@ void expr_node_visitor::visit(index_expr_node& index_node, operand_t dst) {
   }
 
   // Handle different object types
-  if (auto* primitive = get_derived_instance<type_node_base, primitive_type_node>(*object_type)) {
+  if (auto* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*object_type)) {
     switch (primitive->type) {
-    case value_type::string:
+    case IValueType::string:
       unit_ctx.bytecode->emit(STRGET, {dst, obj_reg, index_reg});
       break;
-    case value_type::array:
+    case IValueType::array:
       unit_ctx.bytecode->emit(ARRGET, {dst, obj_reg, index_reg});
       break;
-    case value_type::dict:
+    case IValueType::dict:
       unit_ctx.bytecode->emit(DICTGET, {dst, obj_reg, index_reg});
       break;
     default:
@@ -262,31 +261,31 @@ void expr_node_visitor::visit(index_expr_node& index_node, operand_t dst) {
   }
 }
 
-void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
-  using enum token_type;
-  using OpCodeId = std::underlying_type_t<opcode>;
+void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
+  using enum TokenType;
+  using OpCodeId = std::underlying_type_t<IOpCode>;
 
-  static const std::unordered_map<token_type, opcode> operator_map = {
-    {OP_ADD, opcode::ADD},
-    {OP_SUB, opcode::SUB},
-    {OP_MUL, opcode::MUL},
-    {OP_DIV, opcode::DIV},
-    {OP_EXP, opcode::POW},
-    {OP_MOD, opcode::MOD},
-    {OP_EQ, opcode::EQ},
-    {OP_NEQ, opcode::NEQ},
-    {OP_LT, opcode::LT},
-    {OP_GT, opcode::GT},
-    {OP_LEQ, opcode::LTEQ},
-    {OP_GEQ, opcode::GTEQ},
-    {KW_AND, opcode::AND},
-    {KW_OR, opcode::OR},
+  static const std::unordered_map<TokenType, IOpCode> operator_map = {
+    {OP_ADD, IOpCode::ADD},
+    {OP_SUB, IOpCode::SUB},
+    {OP_MUL, IOpCode::MUL},
+    {OP_DIV, IOpCode::DIV},
+    {OP_EXP, IOpCode::POW},
+    {OP_MOD, IOpCode::MOD},
+    {OP_EQ, IOpCode::EQ},
+    {OP_NEQ, IOpCode::NEQ},
+    {OP_LT, IOpCode::LT},
+    {OP_GT, IOpCode::GT},
+    {OP_LEQ, IOpCode::LTEQ},
+    {OP_GEQ, IOpCode::GTEQ},
+    {KW_AND, IOpCode::AND},
+    {KW_OR, IOpCode::OR},
   };
 
-  p_expr_node_t& p_lhs = binary_node.lhs_expression;
-  p_expr_node_t& p_rhs = binary_node.rhs_expression;
-  expr_node_base& lhs = *p_lhs;
-  expr_node_base& rhs = *p_rhs;
+  ExprNodeBase*& p_lhs = binary_node.lhs_expression;
+  ExprNodeBase*& p_rhs = binary_node.rhs_expression;
+  ExprNodeBase& lhs = *p_lhs;
+  ExprNodeBase& rhs = *p_rhs;
 
   auto op_it = operator_map.find(binary_node.op.type);
   if (op_it == operator_map.end()) {
@@ -297,8 +296,8 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   }
 
   // Infer types
-  p_type_node_t left_type = p_lhs->infer_type(unit_ctx);
-  p_type_node_t right_type = p_rhs->infer_type(unit_ctx);
+  TypeNodeBase* left_type = p_lhs->infer_type(unit_ctx);
+  TypeNodeBase* right_type = p_rhs->infer_type(unit_ctx);
   VIA_TINFERENCE_FAILURE(left_type, binary_node.lhs_expression);
   VIA_TINFERENCE_FAILURE(right_type, binary_node.rhs_expression);
 
@@ -315,7 +314,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
     return;
   }
 
-  const opcode base_opcode = op_it->second;
+  const IOpCode base_opcode = op_it->second;
   const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
   OpCodeId opcode_id = base_opcode_id;
 
@@ -331,7 +330,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
       goto non_constexpr;
     }
 
-    lit_expr_node folded_constant = fold_constant(binary_node);
+    LitExprNode folded_constant = fold_constant(binary_node);
     folded_constant.accept(*this, dst);
   }
   else if (is_constant_expression(unit_ctx, rhs) && !is_bool_or_relational) {
@@ -339,7 +338,7 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
       goto non_constexpr;
     }
 
-    lit_expr_node literal = fold_constant(rhs);
+    LitExprNode literal = fold_constant(rhs);
 
     // Special handling for DIV: check for division by zero.
     if (base_opcode == DIV) {
@@ -381,13 +380,13 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
 
     // Handle numeric constant: integer or float.
     if (int* int_value = std::get_if<int>(&literal.value)) {
-      opcode opc = static_cast<opcode>(opcode_id + 1); // OPI for integer
+      IOpCode opc = static_cast<IOpCode>(opcode_id + 1); // OPI for integer
       uint32_t final_value = static_cast<uint32_t>(*int_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
       unit_ctx.bytecode->emit(opc, {dst, operands.high, operands.low});
     }
     else if (float* float_value = std::get_if<float>(&literal.value)) {
-      opcode opc = static_cast<opcode>(opcode_id + 2); // OPF for float
+      IOpCode opc = static_cast<IOpCode>(opcode_id + 2); // OPF for float
       uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
       unit_ctx.bytecode->emit(opc, {dst, operands.high, operands.low});
@@ -422,8 +421,8 @@ void expr_node_visitor::visit(bin_expr_node& binary_node, operand_t dst) {
   }
 }
 
-void expr_node_visitor::visit(cast_expr_node& type_cast, operand_t dst) {
-  p_type_node_t left_type = type_cast.expression->infer_type(unit_ctx);
+void expr_node_visitor::visit(CastExprNode& type_cast, operand_t dst) {
+  TypeNodeBase* left_type = type_cast.expression->infer_type(unit_ctx);
 
   VIA_TINFERENCE_FAILURE(left_type, type_cast.expression);
 
@@ -442,18 +441,17 @@ void expr_node_visitor::visit(cast_expr_node& type_cast, operand_t dst) {
   operand_t temp = allocator.allocate_register();
   type_cast.expression->accept(*this, temp);
 
-  if (primitive_type_node* primitive =
-        get_derived_instance<type_node_base, primitive_type_node>(*type_cast.type)) {
-    if (primitive->type == value_type::integer) {
+  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*type_cast.type)) {
+    if (primitive->type == IValueType::integer) {
       unit_ctx.bytecode->emit(CASTI, {dst, temp});
     }
-    else if (primitive->type == value_type::floating_point) {
+    else if (primitive->type == IValueType::floating_point) {
       unit_ctx.bytecode->emit(CASTF, {dst, temp});
     }
-    else if (primitive->type == value_type::string) {
+    else if (primitive->type == IValueType::string) {
       unit_ctx.bytecode->emit(CASTSTR, {dst, temp});
     }
-    else if (primitive->type == value_type::boolean) {
+    else if (primitive->type == IValueType::boolean) {
       unit_ctx.bytecode->emit();
     }
   }
@@ -461,10 +459,10 @@ void expr_node_visitor::visit(cast_expr_node& type_cast, operand_t dst) {
   allocator.free_register(temp);
 }
 
-void expr_node_visitor::visit(step_expr_node& step_expr, operand_t dst) {
-  if (sym_expr_node* symbol_node =
-        get_derived_instance<expr_node_base, sym_expr_node>(*step_expr.target)) {
-    token symbol_token = symbol_node->identifier;
+void expr_node_visitor::visit(StepExprNode& step_expr, operand_t dst) {
+  if (SymExprNode* symbol_node =
+        get_derived_instance<ExprNodeBase, SymExprNode>(*step_expr.target)) {
+    Token symbol_token = symbol_node->identifier;
     std::string symbol = symbol_token.lexeme;
     std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
 
@@ -475,7 +473,7 @@ void expr_node_visitor::visit(step_expr_node& step_expr, operand_t dst) {
         return;
       }
 
-      opcode opc = step_expr.is_increment ? INC : DEC;
+      IOpCode opc = step_expr.is_increment ? INC : DEC;
       operand_t value_reg = allocator.allocate_register();
       step_expr.target->accept(*this, value_reg);
 
@@ -495,6 +493,6 @@ void expr_node_visitor::visit(step_expr_node& step_expr, operand_t dst) {
   }
 }
 
-void expr_node_visitor::visit(array_expr_node&, operand_t) {}
+void expr_node_visitor::visit(ArrayExprNode&, operand_t) {}
 
 } // namespace via

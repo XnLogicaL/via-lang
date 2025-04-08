@@ -15,24 +15,24 @@ namespace via {
 using operand_t = uint16_t;
 using signed_operand_t = int16_t;
 
-struct instruction_data {
+struct InstructionData {
   std::string comment = "";
 };
 
-struct alignas(8) instruction {
-  opcode op = opcode::NOP;
+struct alignas(8) Instruction {
+  IOpCode op = IOpCode::NOP;
 
   operand_t operand0 = VIA_OPERAND_INVALID;
   operand_t operand1 = VIA_OPERAND_INVALID;
   operand_t operand2 = VIA_OPERAND_INVALID;
 };
 
-struct bytecode {
-  instruction instruct;
-  instruction_data meta_data;
+struct Bytecode {
+  Instruction instruct;
+  InstructionData meta_data;
 };
 
-std::string to_string(const bytecode&, bool);
+std::string to_string(const Bytecode&, bool);
 
 } // namespace via
 

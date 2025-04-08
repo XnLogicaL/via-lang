@@ -5,22 +5,22 @@
 
 namespace via {
 
-function_obj::~function_obj() {
+IFunction::~IFunction() {
   delete[] upvs;
   delete[] ibp;
 }
 
-function_obj::function_obj(const function_obj& other)
+IFunction::IFunction(const IFunction& other)
   : ic(other.ic),
     upvc(other.upvc),
     call_data(other.call_data) {
-  ibp = new instruction[ic];
-  upvs = new upv_obj[upvc];
+  ibp = new Instruction[ic];
+  upvs = new IUpValue[upvc];
 
-  std::memcpy(ibp, other.ibp, ic * sizeof(instruction));
+  std::memcpy(ibp, other.ibp, ic * sizeof(Instruction));
 
   for (size_t i = 0; i < other.upvc; i++) {
-    const upv_obj& upv = other.upvs[i];
+    const IUpValue& upv = other.upvs[i];
     if (!upv.is_valid) {
       continue;
     }

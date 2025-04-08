@@ -6,10 +6,12 @@
 #define VIA_HAS_HEADER_TOKEN_H
 
 #include "common-includes.h"
+#include "arena.h"
+#include "common-macros.h"
 
 namespace via {
 
-enum class token_type {
+enum class TokenType {
   // Keywords
   KW_DO,       // do
   KW_IN,       // in
@@ -104,20 +106,20 @@ enum class token_type {
   QUESTION,     // ?
 
   EOF_,   // End of file
-  UNKNOWN // Unknown token
+  UNKNOWN // Unknown Token
 };
 
 using token_lexeme_t = std::string;
 
-struct token {
-  token_type type = token_type::UNKNOWN;
+struct Token {
+  TokenType type = TokenType::UNKNOWN;
   uint64_t line = 0;
   uint64_t offset = 0;
   uint64_t position = 0;
   token_lexeme_t lexeme = "";
 
-  token() = default;
-  token(token_type type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
+  Token() = default;
+  Token(TokenType type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
     : type(type),
       line(line),
       offset(offset),
@@ -135,16 +137,16 @@ struct token {
   int bin_prec() const;
 };
 
-class token_stream {
+class TokenHolder {
 public:
-  using token_vector = std::vector<token>;
-  using at_result = std::optional<token>;
+  using token_vector = std::vector<Token>;
+  using at_result = std::optional<Token>;
 
   size_t size();
 
-  token& at(size_t);
+  Token& at(size_t);
 
-  void push(const token&);
+  void push(const Token&);
 
   token_vector& get();
 

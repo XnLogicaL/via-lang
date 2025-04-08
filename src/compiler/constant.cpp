@@ -9,16 +9,16 @@
 //
 namespace via {
 
-using constant_type = constant_holder::constant_type;
-using constant_vector = constant_holder::constant_vector;
+using constant_type = ConstantHolder::constant_type;
+using constant_vector = ConstantHolder::constant_vector;
 
-size_t constant_holder::size() const {
+size_t ConstantHolder::size() const {
   return constants.size();
 }
 
-operand_t constant_holder::push_constant(constant_type& constant) {
+operand_t ConstantHolder::push_constant(constant_type& constant) {
   for (size_t index = 0; index < constants.size(); index++) {
-    const value_obj& val = constants[index];
+    const IValue& val = constants[index];
     if VIA_UNLIKELY (val.compare(constant)) {
       return index;
     }
@@ -28,12 +28,12 @@ operand_t constant_holder::push_constant(constant_type& constant) {
   return constants.size() - 1;
 }
 
-constant_type& constant_holder::at(size_t index) const {
+constant_type& ConstantHolder::at(size_t index) const {
   return constants.at(index);
 }
 
-constant_type& constant_holder::at_s(size_t index) const {
-  static const value_obj nil;
+constant_type& ConstantHolder::at_s(size_t index) const {
+  static const IValue nil;
   if (index >= size()) {
     return nil;
   }
@@ -41,7 +41,7 @@ constant_type& constant_holder::at_s(size_t index) const {
   return at(index);
 }
 
-const constant_vector& constant_holder::get() const {
+const constant_vector& ConstantHolder::get() const {
   return constants;
 }
 

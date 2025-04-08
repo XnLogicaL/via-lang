@@ -1,23 +1,23 @@
 //  ========================================================================================
 // [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
 //  ========================================================================================
-#include "lexer.h"
+#include "Lexer.h"
 #include "token.h"
 
 namespace via {
 
-using enum token_type;
+using enum TokenType;
 
-// Function that returns whether if a character is allowed within a hexadecimal literal
-bool lexer::is_hex_char(char chr) {
+// IFunction that returns whether if a character is allowed within a hexadecimal literal
+bool Lexer::is_hex_char(char chr) {
   return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
 }
 
-size_t lexer::source_size() {
+size_t Lexer::source_size() {
   return unit_ctx.file_source.size();
 }
 
-char lexer::peek(size_t ahead) {
+char Lexer::peek(size_t ahead) {
   if (pos + ahead >= source_size()) {
     return '\0';
   }
@@ -25,7 +25,7 @@ char lexer::peek(size_t ahead) {
   return unit_ctx.file_source.at(pos + ahead);
 }
 
-char lexer::consume(size_t ahead) {
+char Lexer::consume(size_t ahead) {
   if (pos + ahead >= source_size()) {
     return '\0';
   }
@@ -38,8 +38,8 @@ char lexer::consume(size_t ahead) {
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
-token lexer::read_number(size_t position) {
-  token_type type = LIT_INT;
+Token Lexer::read_number(size_t position) {
+  TokenType type = LIT_INT;
   size_t start_offset = offset;
   std::string value;
   char delimiter;
@@ -84,20 +84,20 @@ token lexer::read_number(size_t position) {
     value = std::format("0{}{}", delimiter, value);
   }
 
-  return token(type, value, line, start_offset, position);
+  return Token(type, value, line, start_offset, position);
 }
 
 #if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic pop
 #endif
 
-token lexer::read_ident(size_t position) {
+Token Lexer::read_ident(size_t position) {
   // List of allowed special characters that can be included in an identifier
   static const std::vector<char> allowed_identifier_spec_chars = {'_', '!'};
 
   // Default type, this is because this might be an identifier, keyword or boolean literal
   // We can't know in advance which.
-  token_type type = IDENTIFIER;
+  TokenType type = IDENTIFIER;
   size_t start_offset = offset;
   std::string identifier;
 
@@ -117,7 +117,7 @@ token lexer::read_ident(size_t position) {
     offset++;
   }
 
-  static const std::unordered_map<std::string, token_type> keyword_map = {
+  static const std::unordered_map<std::string, TokenType> keyword_map = {
     {"do", KW_DO},           {"in", KW_IN},         {"var", KW_LOCAL},
     {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
     {"if", KW_IF},           {"else", KW_ELSE},     {"elif", KW_ELIF},
@@ -147,10 +147,10 @@ token lexer::read_ident(size_t position) {
     type = LIT_NIL;
   }
 
-  return token(type, identifier, line, start_offset, position);
+  return Token(type, identifier, line, start_offset, position);
 }
 
-token lexer::read_string(size_t position) {
+Token Lexer::read_string(size_t position) {
   std::string lexeme;
   size_t start_offset = offset;
 
@@ -192,10 +192,10 @@ token lexer::read_string(size_t position) {
   pos++; // Skip closing quote
   offset++;
 
-  return token(LIT_STRING, lexeme, line, start_offset, position);
+  return Token(LIT_STRING, lexeme, line, start_offset, position);
 }
 
-token lexer::get_token() {
+Token Lexer::get_token() {
   while (pos < source_size()) {
     if (isspace(peek())) {
       if (peek() == '\n') {
@@ -252,12 +252,12 @@ token lexer::get_token() {
   size_t position = pos;
 
   // Check if the position is at the end of the unit_ctx.file_source string
-  // If so, return an EOF token meant as a sentinel
+  // If so, return an EOF Token meant as a sentinel
   if (pos >= source_size()) {
     return {EOF_, "\0", line, offset, position};
   }
 
-  size_t start_offset = offset; // Record starting offset of each token
+  size_t start_offset = offset; // Record starting offset of each Token
 
   // Handle numbers
   if (std::isdigit(peek())) {
@@ -285,90 +285,90 @@ token lexer::get_token() {
     if (pos < source_size() && peek() == '+') {
       pos++;
       offset++;
-      return token(OP_INCREMENT, "++", line, start_offset, position);
+      return Token(OP_INCREMENT, "++", line, start_offset, position);
     }
-    return token(OP_ADD, "+", line, start_offset, position);
+    return Token(OP_ADD, "+", line, start_offset, position);
   case '-':
     if (pos < source_size() && peek() == '>') {
       pos++;
       offset++;
-      return token(RETURNS, "->", line, start_offset, position);
+      return Token(RETURNS, "->", line, start_offset, position);
     }
     else if (pos < source_size() && peek() == '-') {
       pos++;
       offset++;
-      return token(OP_DECREMENT, "--", line, start_offset, position);
+      return Token(OP_DECREMENT, "--", line, start_offset, position);
     }
-    return token(OP_SUB, "-", line, start_offset, position);
+    return Token(OP_SUB, "-", line, start_offset, position);
   case '*':
-    return token(OP_MUL, "*", line, start_offset, position);
+    return Token(OP_MUL, "*", line, start_offset, position);
   case '/':
-    return token(OP_DIV, "/", line, start_offset, position);
+    return Token(OP_DIV, "/", line, start_offset, position);
   case '%':
-    return token(OP_MOD, "%", line, start_offset, position);
+    return Token(OP_MOD, "%", line, start_offset, position);
   case '^':
-    return token(OP_EXP, "^", line, start_offset, position);
+    return Token(OP_EXP, "^", line, start_offset, position);
   case '=':
     if (pos < source_size() && peek() == '=') {
       pos++;
       offset++;
-      return token(OP_EQ, "==", line, start_offset, position);
+      return Token(OP_EQ, "==", line, start_offset, position);
     }
-    return token(EQ, "=", line, start_offset, position);
+    return Token(EQ, "=", line, start_offset, position);
   case '!':
     if (pos < source_size() && peek() == '=') {
       pos++;
       offset++;
-      return token(OP_NEQ, "!=", line, start_offset, position);
+      return Token(OP_NEQ, "!=", line, start_offset, position);
     }
-    return token(EXCLAMATION, "!", line, start_offset, position);
+    return Token(EXCLAMATION, "!", line, start_offset, position);
   case '<':
-    return token(OP_LT, "<", line, start_offset, position);
+    return Token(OP_LT, "<", line, start_offset, position);
   case '>':
-    return token(OP_GT, ">", line, start_offset, position);
+    return Token(OP_GT, ">", line, start_offset, position);
   case '&':
-    return token(AMPERSAND, "&", line, start_offset, position);
+    return Token(AMPERSAND, "&", line, start_offset, position);
   case '|':
-    return token(PIPE, "|", line, start_offset, position);
+    return Token(PIPE, "|", line, start_offset, position);
   case ';':
-    return token(SEMICOLON, ";", line, start_offset, position);
+    return Token(SEMICOLON, ";", line, start_offset, position);
   case ',':
-    return token(COMMA, ",", line, start_offset, position);
+    return Token(COMMA, ",", line, start_offset, position);
   case '(':
-    return token(PAREN_OPEN, "(", line, start_offset, position);
+    return Token(PAREN_OPEN, "(", line, start_offset, position);
   case ')':
-    return token(PAREN_CLOSE, ")", line, start_offset, position);
+    return Token(PAREN_CLOSE, ")", line, start_offset, position);
   case '{':
-    return token(BRACE_OPEN, "{", line, start_offset, position);
+    return Token(BRACE_OPEN, "{", line, start_offset, position);
   case '}':
-    return token(BRACE_CLOSE, "}", line, start_offset, position);
+    return Token(BRACE_CLOSE, "}", line, start_offset, position);
   case '[':
-    return token(BRACKET_OPEN, "[", line, start_offset, position);
+    return Token(BRACKET_OPEN, "[", line, start_offset, position);
   case ']':
-    return token(BRACKET_CLOSE, "]", line, start_offset, position);
+    return Token(BRACKET_CLOSE, "]", line, start_offset, position);
   case '.':
-    return token(DOT, ".", line, start_offset, position);
+    return Token(DOT, ".", line, start_offset, position);
   case ':':
-    return token(COLON, ":", line, start_offset, position);
+    return Token(COLON, ":", line, start_offset, position);
   case '@':
-    return token(AT, "@", line, start_offset, position);
+    return Token(AT, "@", line, start_offset, position);
   case '?':
-    return token(QUESTION, "?", line, start_offset, position);
+    return Token(QUESTION, "?", line, start_offset, position);
   default:
-    return token(UNKNOWN, std::string(1, chr), line, start_offset, position);
+    return Token(UNKNOWN, std::string(1, chr), line, start_offset, position);
   }
 
-  return token(UNKNOWN, "\0", line, start_offset, position);
+  return Token(UNKNOWN, "\0", line, start_offset, position);
 }
 
-void lexer::tokenize() {
+void Lexer::tokenize() {
   auto& tokens = unit_ctx.tokens;
 
   while (true) {
-    token token = get_token();
-    tokens->push(token);
+    Token Token = get_token();
+    tokens->push(Token);
 
-    if (token.type == EOF_) {
+    if (Token.type == EOF_) {
       break;
     }
   }

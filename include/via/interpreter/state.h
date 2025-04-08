@@ -24,7 +24,7 @@
 namespace via {
 
 // Forward declarations
-struct function_obj;
+struct IFunction;
 
 // Calling convention
 enum class call_type {
@@ -34,7 +34,7 @@ enum class call_type {
 };
 
 struct error_state {
-  function_obj* frame = nullptr;
+  IFunction* frame = nullptr;
   std::string message = "";
 };
 
@@ -42,7 +42,7 @@ struct error_state {
 struct global_state {
   std::unordered_map<uint32_t, string_obj*> stable; // String interning table
   std::atomic<uint32_t> threads{0};                 // Thread count
-  dict_obj gtable;                                  // global_obj environment
+  IDict gtable;                                     // CompilerGlobal environment
 
   std::shared_mutex stable_mutex;
 };
@@ -50,7 +50,7 @@ struct global_state {
 // Register array wrapper.
 template<const size_t Size>
 struct alignas(64) register_holder {
-  value_obj registers[Size];
+  IValue registers[Size];
 };
 
 // Type aliases for stack registers and heap registers.
@@ -64,22 +64,22 @@ using spill_registers_t = register_holder<VIA_HEAP_REGISTERS>;
 struct alignas(64) state {
   // Thread and global state
   uint32_t id;       // Thread ID
-  global_state* glb; // global_obj state
+  global_state* glb; // CompilerGlobal state
 
   // instruction pointers
-  instruction* pc = nullptr;   // Current instruction pointer
-  instruction* ibp = nullptr;  // Instruction buffer pointer
-  instruction* sibp = nullptr; // Saved instruction buffer pointer
+  Instruction* pc = nullptr;   // Current instruction pointer
+  Instruction* ibp = nullptr;  // Instruction buffer pointer
+  Instruction* sibp = nullptr; // Saved instruction buffer pointer
 
   // Stack state
-  size_t sp = 0;  // Stack pointer
-  value_obj* sbp; // Stack base pointer
+  size_t sp = 0; // Stack pointer
+  IValue* sbp;   // Stack base pointer
 
   // Labels
-  instruction** labels; // Label array
+  Instruction** labels; // Label array
 
   // Call and frame management
-  function_obj* frame = nullptr; // Call stack pointer
+  IFunction* frame = nullptr; // Call stack pointer
 
   // VM control and debugging
   bool abort = false;
@@ -90,7 +90,7 @@ struct alignas(64) state {
   spill_registers_t* spill_registers;
 
   // Translation unit context reference
-  trans_unit_context& unit_ctx;
+  TransUnitContext& unit_ctx;
 
   //  ==================
   // [ Object semantics ]
@@ -103,7 +103,7 @@ struct alignas(64) state {
 
   // Constructor
   explicit state(
-    global_state* global, stack_registers_t& stk_registers, trans_unit_context& unit_ctx
+    global_state* global, stack_registers_t& stk_registers, TransUnitContext& unit_ctx
   );
 
   // Destructor
@@ -114,7 +114,7 @@ struct alignas(64) state {
   //  ==============
 
   // Loads the given containers data into the instruction buffer.
-  void load(const bytecode_holder& bytecode);
+  void load(const BytecodeHolder&);
 
   //  ================
   // [ Execution flow ]
@@ -128,10 +128,10 @@ struct alignas(64) state {
   //  =======================
 
   // Returns a reference to the value that lives in a given register.
-  value_obj& get_register(operand_t reg);
+  IValue& get_register(operand_t reg);
 
   // Sets a given register to a given value.
-  void set_register(operand_t reg, value_obj value);
+  void set_register(operand_t reg, IValue value);
 
   //  ==========================
   // [ Basic stack manipulation ]
@@ -162,30 +162,30 @@ struct alignas(64) state {
   void push_dict();
 
   // Pushes a value onto the stack.
-  void push(value_obj value);
+  void push(IValue value);
 
   // Drops a value from the stack, frees the resources of the dropped value.
   void drop();
 
   // Pops a value from the stack and returns it.
-  value_obj pop();
+  IValue pop();
 
   // Returns the top value on the stack.
-  const value_obj& top();
+  const IValue& top();
 
   //  =============================
   // [ Advanced stack manipulation ]
   //  =============================
 
   // Sets the value at a given position on the stack to a given value.
-  void set_stack(size_t position, value_obj value);
+  void set_stack(size_t position, IValue value);
 
   // Returns the stack value at a given position.
-  value_obj& get_stack(size_t position);
+  IValue& get_stack(size_t position);
 
   // Returns the stack value at a given offset relative to the current stack-frame's stack
   // pointer.
-  value_obj& get_argument(size_t offset);
+  IValue& get_argument(size_t offset);
 
   // Returns the size of stack.
   size_t stack_size();
@@ -195,26 +195,26 @@ struct alignas(64) state {
   //  =====================
 
   // Returns the global that corresponds to a given hashed identifier.
-  value_obj& get_global(const char* name);
+  IValue& get_global(const char* name);
 
   // Sets the global that corresponds to a given hashed identifier to a given value.
-  void set_global(const char* name, const value_obj& value);
+  void set_global(const char* name, const IValue& value);
 
   //  =======================
-  // [ Function manipulation ]
+  // [ IFunction manipulation ]
   //  =======================
 
   // Standard return. Returns from the current function with an optional value.
-  void native_return(const value_obj& return_value);
+  void native_return(const IValue& return_value);
 
-  // Calls the given function_obj object with a given argument count.
-  void native_call(function_obj& target, size_t argc);
+  // Calls the given IFunction object with a given argument count.
+  void native_call(IFunction& target, size_t argc);
 
   // Calls the method that lives in a given index of a given object with a given argument count.
-  void method_call(object_obj& object, size_t index, size_t argc);
+  void method_call(IObject& object, size_t index, size_t argc);
 
   // Attempts to call the given value object with the given argument count.
-  void call(const value_obj& callee, size_t argc);
+  void call(const IValue& callee, size_t argc);
 
   // ===========================================================================================
   // General operations

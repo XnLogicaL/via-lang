@@ -18,11 +18,11 @@ VIA_LIBDECLFN(base_print) {
 
   std::cout << "\n";
 
-  VIA_LIBRET(value_obj());
+  VIA_LIBRET(IValue());
 }
 
 VIA_LIBDECLFN(open_baselib) {
-  V->glb->gtable.set("print", value_obj(base_print));
+  V->glb->gtable.set("print", IValue(base_print));
 }
 
 } // namespace via::lib

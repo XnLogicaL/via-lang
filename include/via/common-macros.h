@@ -45,7 +45,7 @@
 #define VIA_NOINLINE       __declspec(noinline)
 #define VIA_INLINE         inline
 #define VIA_FORCEINLINE    __forceinline
-#define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' attribute
+#define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' StmtAttribute
 #define VIA_IMPLEMENTATION inline
 #define VIA_UNREACHABLE()  __assume(0)
 #define VIA_FUNCSIG        __FUNCSIG__

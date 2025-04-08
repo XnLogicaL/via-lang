@@ -11,24 +11,24 @@
 //
 namespace via {
 
-void compiler::codegen_prep() {
+void Compiler::codegen_prep() {
   unit_ctx.internal.globals->declare_builtins();
 }
 
-void compiler::insert_exit0_instruction() {
-  unit_ctx.bytecode->emit(opcode::EXIT, {0});
+void Compiler::insert_exit0_instruction() {
+  unit_ctx.bytecode->emit(IOpCode::EXIT, {0});
 }
 
-bool compiler::generate() {
-  error_bus emitter;
-  register_allocator allocator(VIA_ALL_REGISTERS, true);
+bool Compiler::generate() {
+  CErrorBus emitter;
+  RegisterAllocator allocator(VIA_ALL_REGISTERS, true);
   stmt_node_visitor visitor(unit_ctx, emitter, allocator);
 
   bool failed = false;
 
   codegen_prep();
 
-  for (p_stmt_node_t& stmt : unit_ctx.ast->statements) {
+  for (StmtNodeBase*& stmt : unit_ctx.ast->statements) {
     stmt->accept(visitor);
   }
 

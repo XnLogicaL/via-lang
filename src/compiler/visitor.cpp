@@ -7,7 +7,7 @@
 
 namespace via {
 
-using enum comp_err_lvl;
+using enum CErrorLevel;
 
 // Helper function to return line and column number from a character offset
 std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t offset) {
@@ -28,26 +28,26 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
   return {line, column};
 }
 
-value_obj expr_node_visitor::construct_constant(lit_expr_node& literal_node) {
-  using enum value_type;
+IValue expr_node_visitor::construct_constant(LitExprNode& literal_node) {
+  using enum IValueType;
   return std::visit(
-    [](auto&& val) -> value_obj {
+    [](auto&& val) -> IValue {
       using T = std::decay_t<decltype(val)>;
 
       if constexpr (std::is_same_v<T, int>) {
-        return value_obj(val);
+        return IValue(val);
       }
       else if constexpr (std::is_same_v<T, bool>) {
-        return value_obj(val);
+        return IValue(val);
       }
       else if constexpr (std::is_same_v<T, float>) {
-        return value_obj(val);
+        return IValue(val);
       }
       else if constexpr (std::is_same_v<T, std::string>) {
-        return value_obj(val.data());
+        return IValue(val.data());
       }
       else if constexpr (std::is_same_v<T, std::monostate>) {
-        return value_obj();
+        return IValue();
       }
 
       VIA_UNREACHABLE();
@@ -61,13 +61,13 @@ value_obj expr_node_visitor::construct_constant(lit_expr_node& literal_node) {
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
 #endif
 
-lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold_depth) {
-  using enum token_type;
+LitExprNode expr_node_visitor::fold_constant(ExprNodeBase& expr, size_t fold_depth) {
+  using enum TokenType;
   using evaluator_2i_t = std::function<int(int, int)>;
   using evaluator_2f_t = std::function<float(float, float)>;
   using evaluator_fi_t = std::function<float(float, int)>;
 
-  static const std::unordered_map<token_type, evaluator_2i_t> evaluators_2i = {
+  static const std::unordered_map<TokenType, evaluator_2i_t> evaluators_2i = {
     {OP_ADD, [](int a, int b) { return a + b; }},
     {OP_SUB, [](int a, int b) { return a - b; }},
     {OP_MUL, [](int a, int b) { return a * b; }},
@@ -76,7 +76,7 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
     {OP_MOD, [](int a, int b) { return a % b; }},
   };
 
-  static const std::unordered_map<token_type, evaluator_2f_t> evaluators_2f = {
+  static const std::unordered_map<TokenType, evaluator_2f_t> evaluators_2f = {
     {OP_ADD, [](float a, float b) { return a + b; }},
     {OP_SUB, [](float a, float b) { return a - b; }},
     {OP_MUL, [](float a, float b) { return a * b; }},
@@ -85,7 +85,7 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
     {OP_MOD, [](float a, float b) { return std::fmod(a, b); }},
   };
 
-  static const std::unordered_map<token_type, evaluator_fi_t> evaluators_fi = {
+  static const std::unordered_map<TokenType, evaluator_fi_t> evaluators_fi = {
     {OP_ADD, [](float a, int b) { return a + b; }},
     {OP_SUB, [](float a, int b) { return a - b; }},
     {OP_MUL, [](float a, int b) { return a * b; }},
@@ -94,27 +94,27 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
     {OP_MOD, [](float a, int b) { return std::fmod(a, b); }},
   };
 
-  if (lit_expr_node* lit_expr = get_derived_instance<expr_node_base, lit_expr_node>(expr)) {
-    return *get_derived_instance<expr_node_base, lit_expr_node>(*lit_expr->clone());
+  if (LitExprNode* lit_expr = get_derived_instance<ExprNodeBase, LitExprNode>(expr)) {
+    return *get_derived_instance<ExprNodeBase, LitExprNode>(*lit_expr);
   }
-  if (bin_expr_node* bin_expr = get_derived_instance<expr_node_base, bin_expr_node>(expr)) {
-    lit_expr_node left = fold_constant(*bin_expr->lhs_expression, fold_depth + 1);
-    lit_expr_node right = fold_constant(*bin_expr->rhs_expression, fold_depth + 1);
+  if (BinExprNode* bin_expr = get_derived_instance<ExprNodeBase, BinExprNode>(expr)) {
+    LitExprNode left = fold_constant(*bin_expr->lhs_expression, fold_depth + 1);
+    LitExprNode right = fold_constant(*bin_expr->rhs_expression, fold_depth + 1);
 
     if (int* int_left = std::get_if<int>(&left.value)) {
       if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_2i_t evaluator = evaluators_2i.at(bin_expr->op.type);
-        return lit_expr_node(token(), evaluator(*int_left, *int_right));
+        return LitExprNode(Token(), evaluator(*int_left, *int_right));
       }
       else if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
-        return lit_expr_node(token(), evaluator(*float_right, *int_left));
+        return LitExprNode(Token(), evaluator(*float_right, *int_left));
       }
 
-      p_type_node_t left_type = left.infer_type(unit_ctx);
-      p_type_node_t right_type = right.infer_type(unit_ctx);
+      TypeNodeBase* left_type = left.infer_type(unit_ctx);
+      TypeNodeBase* right_type = right.infer_type(unit_ctx);
 
-      VIA_ASSERT(left_type.get() && right_type.get(), "!!tmp!! inference failed");
+      VIA_ASSERT(left_type && right_type, "!!tmp!! inference failed");
 
       compiler_error(
         expr.begin,
@@ -130,17 +130,17 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
     else if (float* float_left = std::get_if<float>(&left.value)) {
       if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_2f_t evaluator = evaluators_2f.at(bin_expr->op.type);
-        return lit_expr_node(token(), evaluator(*float_left, *float_right));
+        return LitExprNode(Token(), evaluator(*float_left, *float_right));
       }
       else if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
-        return lit_expr_node(token(), evaluator(*float_left, *int_right));
+        return LitExprNode(Token(), evaluator(*float_left, *int_right));
       }
 
-      p_type_node_t left_type = left.infer_type(unit_ctx);
-      p_type_node_t right_type = right.infer_type(unit_ctx);
+      TypeNodeBase* left_type = left.infer_type(unit_ctx);
+      TypeNodeBase* right_type = right.infer_type(unit_ctx);
 
-      VIA_ASSERT(left_type.get() && right_type.get(), "!!tmp!! inference failed");
+      VIA_ASSERT(left_type && right_type, "!!tmp!! inference failed");
 
       compiler_error(
         expr.begin,
@@ -154,7 +154,7 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
       goto bad_fold;
     }
   }
-  else if (sym_expr_node* sym_expr = get_derived_instance<expr_node_base, sym_expr_node>(expr)) {
+  else if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(expr)) {
     auto stk_id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
     if (!stk_id.has_value()) {
       goto bad_fold;
@@ -174,53 +174,53 @@ lit_expr_node expr_node_visitor::fold_constant(expr_node_base& expr, size_t fold
   }
 
 bad_fold:
-  return lit_expr_node(token(), std::monostate());
+  return LitExprNode(Token(), std::monostate());
 }
 
 #if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic pop
 #endif
 
-void node_visitor_base::compiler_error(size_t begin, size_t end, const std::string& message) {
+void NodeVisitorBase::compiler_error(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
 
   visitor_failed = true;
   err_bus.log({false, message, unit_ctx, ERROR_, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void node_visitor_base::compiler_error(const token& token, const std::string& message) {
+void NodeVisitorBase::compiler_error(const Token& Token, const std::string& message) {
   visitor_failed = true;
-  err_bus.log({false, message, unit_ctx, ERROR_, token});
+  err_bus.log({false, message, unit_ctx, ERROR_, Token});
 }
 
-void node_visitor_base::compiler_error(const std::string& message) {
+void NodeVisitorBase::compiler_error(const std::string& message) {
   visitor_failed = true;
   err_bus.log({true, message, unit_ctx, ERROR_, {}});
 }
 
-void node_visitor_base::compiler_warning(size_t begin, size_t end, const std::string& message) {
+void NodeVisitorBase::compiler_warning(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
   err_bus.log({false, message, unit_ctx, WARNING, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void node_visitor_base::compiler_warning(const token& token, const std::string& message) {
-  err_bus.log({false, message, unit_ctx, WARNING, token});
+void NodeVisitorBase::compiler_warning(const Token& Token, const std::string& message) {
+  err_bus.log({false, message, unit_ctx, WARNING, Token});
 }
 
-void node_visitor_base::compiler_warning(const std::string& message) {
+void NodeVisitorBase::compiler_warning(const std::string& message) {
   err_bus.log({true, message, unit_ctx, WARNING, {}});
 }
 
-void node_visitor_base::compiler_info(size_t begin, size_t end, const std::string& message) {
+void NodeVisitorBase::compiler_info(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
   err_bus.log({false, message, unit_ctx, INFO, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void node_visitor_base::compiler_info(const token& token, const std::string& message) {
-  err_bus.log({false, message, unit_ctx, INFO, token});
+void NodeVisitorBase::compiler_info(const Token& Token, const std::string& message) {
+  err_bus.log({false, message, unit_ctx, INFO, Token});
 }
 
-void node_visitor_base::compiler_info(const std::string& message) {
+void NodeVisitorBase::compiler_info(const std::string& message) {
   err_bus.log({true, message, unit_ctx, INFO, {}});
 }
 

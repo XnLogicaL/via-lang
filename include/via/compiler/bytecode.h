@@ -10,9 +10,9 @@
 // ==========================================================================================
 // bytecode.h
 //
-// This file declares the bytecode_holder class.
+// This file declares the BytecodeHolder class.
 //
-// The bytecode_holder class serves as an abstraction over a container
+// The BytecodeHolder class serves as an abstraction over a container
 //  (such as std::vector), providing methods like `add`,
 //  `remove` and `emit`. The main reason behind it's
 //  existence is to provide a more "fit-for-duty" interface for
@@ -29,14 +29,14 @@ namespace via {
 
 // std::array wrapper with custom initialization support
 template<typename T, const size_t Size, const T Default>
-struct operands_array {
+struct OperandsArray {
   std::array<T, Size> data;
 
-  constexpr operands_array() {
+  constexpr OperandsArray() {
     data.fill(Default);
   }
 
-  constexpr operands_array(std::initializer_list<T> init) {
+  constexpr OperandsArray(std::initializer_list<T> init) {
     data.fill(Default);
     std::copy(init.begin(), init.end(), data.begin());
   }
@@ -50,21 +50,21 @@ struct operands_array {
   }
 };
 
-class bytecode_holder final {
+class BytecodeHolder final {
 public:
   // Type aliases
   using comment_type = const std::string;
-  using bytecode_vector = std::vector<bytecode>;
+  using bytecode_vector = std::vector<Bytecode>;
 
   // Returns the current size of the bytecode pair vector.
   size_t size() const;
 
   // Inserts a given bytecode pair to the bytecode vectors back.
-  void add(const bytecode&);
+  void add(const Bytecode&);
 
-  bytecode& front();
-  bytecode& back();
-  bytecode& at(size_t);
+  Bytecode& front();
+  Bytecode& back();
+  Bytecode& at(size_t);
 
   // Removes the bytecode pair located in a given index.
   void remove(size_t);
@@ -72,15 +72,15 @@ public:
   // Inserts a locally constructed instruction to a given index.
   void insert(
     size_t index = 0,
-    opcode opcode = opcode::NOP,
-    operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
+    IOpCode IOpCode = IOpCode::NOP,
+    OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
     comment_type& comment = ""
   );
 
   // Emits an instruction at the end of the vector.
   void emit(
-    opcode opcode = opcode::NOP,
-    operands_array<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
+    IOpCode IOpCode = IOpCode::NOP,
+    OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
     comment_type& comment = ""
   );
 

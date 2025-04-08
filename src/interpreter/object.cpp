@@ -9,14 +9,14 @@
 
 namespace via {
 
-using enum value_type;
+using enum IValueType;
 
 //  ==============
 // [ Value object ]
 //  ==============
 
 // Move-assignment operator, moves values from other object
-value_obj& value_obj::operator=(value_obj&& other) {
+IValue& IValue::operator=(IValue&& other) {
   if (this != &other) {
     reset();
 
@@ -51,14 +51,14 @@ value_obj& value_obj::operator=(value_obj&& other) {
     }
 
     this->type = other.type;
-    other.type = value_type::nil;
+    other.type = IValueType::nil;
   }
 
   return *this;
 }
 
 // Move constructor, transfer ownership based on type
-value_obj::value_obj(value_obj&& other) {
+IValue::IValue(IValue&& other) {
   reset();
 
   switch (other.type) {
@@ -94,39 +94,39 @@ value_obj::value_obj(value_obj&& other) {
   other.type = nil;
 }
 
-// Frees the resources of the value_obj depending on type
-value_obj::~value_obj() {
+// Frees the resources of the IValue depending on type
+IValue::~IValue() {
   reset();
 }
 
-// Return a clone of the value_obj based on its type
-value_obj value_obj::clone() const {
+// Return a clone of the IValue based on its type
+IValue IValue::clone() const {
   switch (type) {
   case integer:
-    return value_obj(val_integer);
+    return IValue(val_integer);
   case floating_point:
-    return value_obj(val_floating_point);
+    return IValue(val_floating_point);
   case boolean:
-    return value_obj(val_boolean);
+    return IValue(val_boolean);
   case string:
-    return value_obj(val_string->data);
+    return IValue(val_string->data);
   case array:
-    return value_obj(new array_obj(*val_array));
+    return IValue(new IArray(*val_array));
   case dict:
-    return value_obj(new dict_obj(*val_dict));
+    return IValue(new IDict(*val_dict));
   case function:
-    return value_obj(new function_obj(*val_function));
+    return IValue(new IFunction(*val_function));
   case cfunction:
-    return value_obj(val_cfunction);
+    return IValue(val_cfunction);
   default:
     break;
   }
 
-  return value_obj();
+  return IValue();
 }
 
-void value_obj::reset() {
-  if (static_cast<uint8_t>(type) >= static_cast<uint8_t>(value_type::string)) {
+void IValue::reset() {
+  if (static_cast<uint8_t>(type) >= static_cast<uint8_t>(IValueType::string)) {
     switch (type) {
     case string:
       delete val_string;
@@ -152,30 +152,30 @@ void value_obj::reset() {
   }
 }
 
-bool value_obj::compare(const value_obj&) const {
+bool IValue::compare(const IValue&) const {
   return false;
 }
 
-value_obj value_obj::to_string() const {
+IValue IValue::to_string() const {
   return impl::__to_string(*this);
 }
 
-std::string value_obj::to_cxx_string() const {
+std::string IValue::to_cxx_string() const {
   return impl::__to_cxx_string(*this);
 }
 
-std::string value_obj::to_literal_cxx_string() const {
+std::string IValue::to_literal_cxx_string() const {
   return impl::__to_literal_cxx_string(*this);
 }
 
-value_obj::value_obj(const char* str)
+IValue::IValue(const char* str)
   : type(string),
     val_string(new string_obj(str)) {}
 
 //  ===============
 // [ String object ]
 //  ===============
-void string_obj::set(size_t position, const value_obj& value) {
+void string_obj::set(size_t position, const IValue& value) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
 
@@ -186,27 +186,27 @@ void string_obj::set(size_t position, const value_obj& value) {
   data[position] = value.val_string->data[0];
 }
 
-value_obj string_obj::get(size_t position) {
+IValue string_obj::get(size_t position) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   char chr = data[position];
   string_obj* tstr = new string_obj(&chr);
-  return value_obj(tstr);
+  return IValue(tstr);
 }
 
 //  ==============
 // [ Array object ]
 //  ==============
-array_obj::array_obj(const array_obj& other)
+IArray::IArray(const IArray& other)
   : capacity(other.capacity),
     size_cache(other.size_cache),
     size_cache_valid(other.size_cache_valid),
-    data(new value_obj[capacity]) {
+    data(new IValue[capacity]) {
   for (size_t i = 0; i < capacity; i++) {
     data[i] = other.data[i].move();
   }
 }
 
-array_obj::array_obj(array_obj&& other)
+IArray::IArray(IArray&& other)
   : capacity(other.capacity),
     size_cache(other.size_cache),
     size_cache_valid(other.size_cache_valid),
@@ -217,12 +217,12 @@ array_obj::array_obj(array_obj&& other)
   other.data = nullptr;
 }
 
-array_obj& array_obj::operator=(const array_obj& other) {
+IArray& IArray::operator=(const IArray& other) {
   if (this != &other) {
     capacity = other.capacity;
     size_cache = other.size_cache;
     size_cache_valid = other.size_cache_valid;
-    data = new value_obj[capacity];
+    data = new IValue[capacity];
     for (size_t i = 0; i < capacity; i++) {
       data[i] = other.data[i].move();
     }
@@ -231,7 +231,7 @@ array_obj& array_obj::operator=(const array_obj& other) {
   return *this;
 }
 
-array_obj& array_obj::operator=(array_obj&& other) {
+IArray& IArray::operator=(IArray&& other) {
   if (this != &other) {
     capacity = other.capacity;
     size_cache = other.size_cache;
@@ -247,35 +247,35 @@ array_obj& array_obj::operator=(array_obj&& other) {
   return *this;
 }
 
-size_t array_obj::size() const {
+size_t IArray::size() const {
   return impl::__array_size(this);
 }
 
-value_obj& array_obj::get(size_t position) {
+IValue& IArray::get(size_t position) {
   return *impl::__array_get(this, position);
 }
 
-void array_obj::set(size_t position, value_obj value) {
+void IArray::set(size_t position, IValue value) {
   impl::__array_set(this, position, value.move());
 }
 
 //  ===================
 // [ Dictionary object ]
 //  ===================
-dict_obj::dict_obj(const dict_obj& other)
+IDict::IDict(const IDict& other)
   : capacity(other.capacity),
     size_cache(other.size_cache),
     size_cache_valid(other.size_cache_valid),
-    data(new hash_node[capacity]) {
+    data(new IHashNode[capacity]) {
   for (size_t i = 0; i < capacity; ++i) {
-    hash_node& src = other.data[i];
-    hash_node* dst = &data[i];
+    IHashNode& src = other.data[i];
+    IHashNode* dst = &data[i];
     dst->key = src.key;
     dst->value = src.value.clone();
   }
 }
 
-dict_obj::dict_obj(dict_obj&& other)
+IDict::IDict(IDict&& other)
   : capacity(other.capacity),
     size_cache(other.size_cache),
     size_cache_valid(other.size_cache_valid),
@@ -286,16 +286,16 @@ dict_obj::dict_obj(dict_obj&& other)
   other.data = nullptr;
 }
 
-dict_obj& dict_obj::operator=(const dict_obj& other) {
+IDict& IDict::operator=(const IDict& other) {
   if (this != &other) {
     capacity = other.capacity;
     size_cache = other.size_cache;
     size_cache_valid = other.size_cache_valid;
-    data = new hash_node[capacity];
+    data = new IHashNode[capacity];
 
     for (size_t i = 0; i < capacity; ++i) {
-      hash_node& src = other.data[i];
-      hash_node* dst = &data[i];
+      IHashNode& src = other.data[i];
+      IHashNode* dst = &data[i];
       dst->key = src.key;
       dst->value = src.value.clone();
     }
@@ -304,7 +304,7 @@ dict_obj& dict_obj::operator=(const dict_obj& other) {
   return *this;
 }
 
-dict_obj& dict_obj::operator=(dict_obj&& other) {
+IDict& IDict::operator=(IDict&& other) {
   if (this != &other) {
     capacity = other.capacity;
     size_cache = other.size_cache;
@@ -320,22 +320,22 @@ dict_obj& dict_obj::operator=(dict_obj&& other) {
   return *this;
 }
 
-size_t dict_obj::size() const {
+size_t IDict::size() const {
   return impl::__dict_size(this);
 }
 
-value_obj& dict_obj::get(const char* key) {
+IValue& IDict::get(const char* key) {
   return *impl::__dict_get(this, key);
 }
 
-void dict_obj::set(const char* key, value_obj value) {
+void IDict::set(const char* key, IValue value) {
   impl::__dict_set(this, key, value.move());
 }
 
 //  ===============
 // [ Object object ]
 //  ===============
-object_obj::~object_obj() {
+IObject::~IObject() {
   if (fields) {
     delete[] fields;
     fields = nullptr;

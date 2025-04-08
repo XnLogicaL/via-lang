@@ -11,32 +11,32 @@
 
 namespace via {
 
-struct upv_obj {
+struct IUpValue {
   bool is_open = true;
   bool is_valid = false;
 
-  value_obj* value = nullptr;
-  value_obj heap_value = value_obj();
+  IValue* value = nullptr;
+  IValue heap_value = IValue();
 };
 
-struct call_info {
+struct ICallInfo {
   size_t sp;
   size_t argc;
-  function_obj* caller;
-  instruction* pc;
-  instruction* ibp;
+  IFunction* caller;
+  Instruction* pc;
+  Instruction* ibp;
 };
 
-struct function_obj {
+struct IFunction {
   size_t ic;
   size_t upvc = 0;
-  upv_obj* upvs;
-  instruction* ibp;
-  call_info call_data;
+  IUpValue* upvs;
+  Instruction* ibp;
+  ICallInfo call_data;
 
-  function_obj() = default;
-  function_obj(const function_obj& other);
-  ~function_obj();
+  IFunction() = default;
+  IFunction(const IFunction& other);
+  ~IFunction();
 };
 
 } // namespace via

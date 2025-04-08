@@ -10,20 +10,21 @@
 
 namespace via {
 
-using enum opcode;
+using enum IOpCode;
 
-void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
+void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
   bool is_global = declaration_node.is_global;
   bool is_const = declaration_node.modifs.is_const;
 
-  expr_node_base& val = *declaration_node.value_expression;
-  p_type_node_t val_ty = val.infer_type(unit_ctx);
-  token ident = declaration_node.identifier;
+  ExprNodeBase& val = *declaration_node.value_expression;
+  TypeNodeBase* val_ty = val.infer_type(unit_ctx);
+  Token ident = declaration_node.identifier;
   symbol_t symbol = ident.lexeme;
 
   if (is_global) {
     std::string comment = symbol;
-    std::optional<global_obj> previously_declared = unit_ctx.internal.globals->get_global(symbol);
+    std::optional<CompilerGlobal> previously_declared =
+      unit_ctx.internal.globals->get_global(symbol);
 
     if (previously_declared.has_value()) {
       compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
@@ -33,7 +34,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
       operand_t value_reg = allocator.allocate_register();
       operand_t symbol_hash = hash_string_custom(symbol.c_str());
 
-      global_obj global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
+      CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
       unit_ctx.internal.globals->declare_global(std::move(global));
       declaration_node.value_expression->accept(expression_visitor, value_reg);
       unit_ctx.bytecode->emit(GSET, {value_reg, symbol_hash}, comment);
@@ -49,7 +50,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         goto non_constexpr;
       }
 
-      lit_expr_node literal = expression_visitor.fold_constant(val);
+      LitExprNode literal = expression_visitor.fold_constant(val);
 
       // Check for nil
       if (std::get_if<std::monostate>(&literal.value)) {
@@ -58,8 +59,9 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::nil),
-          .value = literal.clone(),
+          .type =
+            unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::nil),
+          .value = &literal,
         });
       }
       // Check for integer
@@ -72,8 +74,9 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::integer),
-          .value = literal.clone(),
+          .type =
+            unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::integer),
+          .value = &literal,
         });
       }
       // Check for float
@@ -86,9 +89,10 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type =
-            std::make_unique<primitive_type_node>(literal.value_token, value_type::floating_point),
-          .value = literal.clone(),
+          .type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
+            literal.value_token, IValueType::floating_point
+          ),
+          .value = &literal,
         });
       }
       // Check for boolean
@@ -98,14 +102,15 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<primitive_type_node>(literal.value_token, value_type::boolean),
-          .value = literal.clone(),
+          .type =
+            unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::boolean),
+          .value = &literal,
         });
       }
       // Other constant
       else {
-        const value_obj& constant =
-          expression_visitor.construct_constant(dynamic_cast<lit_expr_node&>(val));
+        const IValue& constant =
+          expression_visitor.construct_constant(dynamic_cast<LitExprNode&>(val));
         const operand_t const_id = unit_ctx.constants->push_constant(constant);
 
         unit_ctx.bytecode->emit(PUSHK, {const_id}, comment);
@@ -113,8 +118,8 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
-          .type = std::make_unique<primitive_type_node>(literal.value_token, constant.type),
-          .value = literal.clone(),
+          .type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, constant.type),
+          .value = &literal,
         });
       }
     }
@@ -129,7 +134,7 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
         .is_constexpr = false,
         .symbol = symbol,
         .type = std::move(val_ty),
-        .value = declaration_node.value_expression->clone(),
+        .value = declaration_node.value_expression,
       });
 
       allocator.free_register(dst);
@@ -145,10 +150,10 @@ void stmt_node_visitor::visit(decl_stmt_node& declaration_node) {
   }
 }
 
-void stmt_node_visitor::visit(scope_stmt_node& scope_node) {
+void stmt_node_visitor::visit(ScopeStmtNode& scope_node) {
   operand_t stack_pointer = unit_ctx.internal.variable_stack->size();
 
-  for (const p_stmt_node_t& pstmt : scope_node.statements) {
+  for (StmtNodeBase*& pstmt : scope_node.statements) {
     pstmt->accept(*this);
   }
 
@@ -158,23 +163,23 @@ void stmt_node_visitor::visit(scope_stmt_node& scope_node) {
   }
 }
 
-void stmt_node_visitor::visit(func_stmt_node& function_node) {
-  using parameters_t = func_stmt_node::parameters_t;
+void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
+  using parameters_t = FuncDeclStmtNode::parameters_t;
 
   operand_t function_reg = allocator.allocate_register();
   // Fucking move semantics forcing me into doing this
   parameters_t parameters_0;
   parameters_t parameters_1;
 
-  for (const param_node& param : function_node.parameters) {
-    p_type_node_t type_0 = param.type->clone();
-    p_type_node_t type_1 = param.type->clone();
+  for (const ParamNode& param : function_node.parameters) {
+    TypeNodeBase* type_0 = param.type;
+    TypeNodeBase* type_1 = param.type;
 
     type_0->decay(decay_visitor, type_0);
     type_1->decay(decay_visitor, type_1);
 
-    parameters_0.emplace_back(param.identifier, param.modifs, std::move(type_0));
-    parameters_1.emplace_back(param.identifier, param.modifs, std::move(type_1));
+    parameters_0.emplace_back(param.identifier, param.modifs, type_0);
+    parameters_1.emplace_back(param.identifier, param.modifs, type_1);
   }
 
   unit_ctx.internal.function_stack->push({
@@ -186,8 +191,7 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
     .is_const = function_node.modifs.is_const,
     .is_constexpr = false,
     .symbol = function_node.identifier.lexeme,
-    .type =
-      std::make_unique<function_type_node>(std::move(parameters_0), function_node.returns->clone()),
+    .type = unit_ctx.ast->allocator.emplace<FunctionTypeNode>(parameters_0, function_node.returns),
     .value = nullptr,
   });
 
@@ -196,22 +200,22 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   unit_ctx.bytecode->emit(NEWCLSR, {function_reg}, function_node.identifier.lexeme);
 
   size_t new_closure_point = unit_ctx.bytecode->size();
-  scope_stmt_node& scope = dynamic_cast<scope_stmt_node&>(*function_node.body);
-  for (const p_stmt_node_t& pstmt : scope.statements) {
-    const stmt_node_base& stmt = *pstmt;
+  ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
+  for (StmtNodeBase*& pstmt : scope.statements) {
+    const StmtNodeBase& stmt = *pstmt;
 
-    const decl_stmt_node* declaration_node = dynamic_cast<const decl_stmt_node*>(&stmt);
-    const func_stmt_node* function_node = dynamic_cast<const func_stmt_node*>(&stmt);
+    const DeclStmtNode* declaration_node = dynamic_cast<const DeclStmtNode*>(&stmt);
+    const FuncDeclStmtNode* function_node = dynamic_cast<const FuncDeclStmtNode*>(&stmt);
 
     if (declaration_node || function_node) {
       bool is_global = declaration_node ? declaration_node->is_global : function_node->is_global;
-      token identifier =
+      Token identifier =
         declaration_node ? declaration_node->identifier : function_node->identifier;
 
       if (is_global) {
-        compiler_error(identifier, "Function scopes cannot declare globals");
+        compiler_error(identifier, "IFunction scopes cannot declare globals");
         compiler_info(
-          "Function scopes containing global declarations may cause previously declared "
+          "IFunction scopes containing global declarations may cause previously declared "
           "globals to be re-declared, therefore are not allowed."
         );
         break;
@@ -221,17 +225,17 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
     pstmt->accept(*this);
   }
 
-  bytecode last_bytecode = unit_ctx.bytecode->back();
-  opcode last_opcode = last_bytecode.instruct.op;
+  Bytecode& last_bytecode = unit_ctx.bytecode->back();
+  IOpCode last_opcode = last_bytecode.instruct.op;
 
   if (last_opcode != RET && last_opcode != RETNIL) {
     unit_ctx.bytecode->emit(RETNIL);
   }
 
-  bytecode& new_closure = unit_ctx.bytecode->at(new_closure_point - 1);
+  Bytecode& new_closure = unit_ctx.bytecode->at(new_closure_point - 1);
   new_closure.instruct.operand1 = unit_ctx.bytecode->size() - new_closure_point;
 
-  token symbol_token = function_node.identifier;
+  Token symbol_token = function_node.identifier;
   symbol_t symbol = symbol_token.lexeme;
   uint32_t symbol_hash = hash_string_custom(symbol.c_str());
 
@@ -252,10 +256,10 @@ void stmt_node_visitor::visit(func_stmt_node& function_node) {
   unit_ctx.internal.function_stack->pop();
 }
 
-void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
-  if (sym_expr_node* symbol_node =
-        get_derived_instance<expr_node_base, sym_expr_node>(*assign_node.assignee)) {
-    token symbol_token = symbol_node->identifier;
+void stmt_node_visitor::visit(AssignStmtNode& assign_node) {
+  if (SymExprNode* symbol_node =
+        get_derived_instance<ExprNodeBase, SymExprNode>(*assign_node.assignee)) {
+    Token symbol_token = symbol_node->identifier;
     std::string symbol = symbol_token.lexeme;
     std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
 
@@ -295,9 +299,9 @@ void stmt_node_visitor::visit(assign_stmt_node& assign_node) {
   }
 }
 
-void stmt_node_visitor::visit(return_stmt_node& return_node) {
+void stmt_node_visitor::visit(ReturnStmtNode& return_node) {
   auto& this_function = unit_ctx.internal.function_stack->top();
-  if (return_node.expression.get()) {
+  if (return_node.expression) {
     operand_t expr_reg = allocator.allocate_register();
 
     return_node.expression->accept(expression_visitor, expr_reg);
@@ -309,7 +313,7 @@ void stmt_node_visitor::visit(return_stmt_node& return_node) {
   }
 }
 
-void stmt_node_visitor::visit(break_stmt_node& break_node) {
+void stmt_node_visitor::visit(BreakStmtNode& break_node) {
   if (!escape_label.has_value()) {
     compiler_error(break_node.tok, "'break' statement not within loop or switch");
   }
@@ -318,7 +322,7 @@ void stmt_node_visitor::visit(break_stmt_node& break_node) {
   }
 }
 
-void stmt_node_visitor::visit(continue_stmt_node& continue_node) {
+void stmt_node_visitor::visit(ContinueStmtNode& continue_node) {
   if (!repeat_label.has_value()) {
     compiler_error(continue_node.tok, "'continue' statement not within loop");
   }
@@ -327,7 +331,7 @@ void stmt_node_visitor::visit(continue_stmt_node& continue_node) {
   }
 }
 
-void stmt_node_visitor::visit(if_stmt_node& if_node) {
+void stmt_node_visitor::visit(IfStmtNode& if_node) {
   /*
 
   0000 jumplabelif    0, 0    ; if
@@ -378,12 +382,12 @@ void stmt_node_visitor::visit(if_stmt_node& if_node) {
 
   unit_ctx.bytecode->emit(LBL, {escape_label});
 
-  if (if_node.else_node.get()) {
+  if (if_node.else_node) {
     if_node.else_node->accept(*this);
   }
 }
 
-void stmt_node_visitor::visit(while_stmt_node& while_node) {
+void stmt_node_visitor::visit(WhileStmtNode& while_node) {
   /*
 
   0000 label          0
@@ -413,33 +417,32 @@ void stmt_node_visitor::visit(while_stmt_node& while_node) {
   escape_label = std::nullopt;
 }
 
-void stmt_node_visitor::visit(expr_stmt_node& expr_stmt) {
-  p_expr_node_t& expr = expr_stmt.expression;
+void stmt_node_visitor::visit(ExprStmtNode& expr_stmt) {
+  ExprNodeBase*& expr = expr_stmt.expression;
   expr->accept(expression_visitor, 0);
 
-  if (call_expr_node* call_node = get_derived_instance<expr_node_base, call_expr_node>(*expr)) {
-    p_type_node_t callee_ty = call_node->callee->infer_type(unit_ctx);
-    p_type_node_t ret_ty = call_node->infer_type(unit_ctx);
+  if (CallExprNode* call_node = get_derived_instance<ExprNodeBase, CallExprNode>(*expr)) {
+    TypeNodeBase* callee_ty = call_node->callee->infer_type(unit_ctx);
+    TypeNodeBase* ret_ty = call_node->infer_type(unit_ctx);
 
     VIA_TINFERENCE_FAILURE(callee_ty, expr);
     VIA_TINFERENCE_FAILURE(ret_ty, expr);
 
-    if (primitive_type_node* prim_ty =
-          get_derived_instance<type_node_base, primitive_type_node>(*ret_ty)) {
-      if (prim_ty->type != value_type::nil) {
+    if (PrimTypeNode* prim_ty = get_derived_instance<TypeNodeBase, PrimTypeNode>(*ret_ty)) {
+      if (prim_ty->type != IValueType::nil) {
         goto return_value_ignored;
       }
     }
     else {
     return_value_ignored:
-      compiler_warning(call_node->begin, call_node->end, "Function return value ignored");
-      compiler_info(std::format("Function returns non-nil type '{}'", ret_ty->to_output_string()));
+      compiler_warning(call_node->begin, call_node->end, "IFunction return value ignored");
+      compiler_info(std::format("IFunction returns non-nil type '{}'", ret_ty->to_output_string()));
     }
 
     // Edit last instruction to drop the return value rather than popping it. This is because if a
     // function call is present under an expression statement, then the result is guaranteed to be
     // ignored.
-    bytecode& last = unit_ctx.bytecode->back();
+    Bytecode& last = unit_ctx.bytecode->back();
     last.instruct.op = DROP;
     // Reset operand values to eliminate deceptive values
     last.instruct.operand0 = VIA_OPERAND_INVALID;

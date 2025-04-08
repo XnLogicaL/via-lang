@@ -11,70 +11,59 @@
 
 namespace via {
 
-class trans_unit_context;
+class TransUnitContext;
 
-class node_visitor_base;
-struct expr_node_base;
-struct stmt_node_base;
-struct type_node_base;
+class NodeVisitorBase;
+struct ExprNodeBase;
+struct StmtNodeBase;
+struct TypeNodeBase;
 
-using p_expr_node_t = std::unique_ptr<expr_node_base>;
-using p_stmt_node_t = std::unique_ptr<stmt_node_base>;
-using p_type_node_t = std::unique_ptr<type_node_base>;
-
-struct modifiers {
+struct StmtModifiers {
   bool is_const;
 
   std::string to_string() const;
 };
 
-struct attribute {
-  token identifier;
-  std::vector<token> arguments;
+struct StmtAttribute {
+  Token identifier;
+  std::vector<Token> arguments;
 
   std::string to_string() const;
 };
 
-struct expr_node_base {
+struct ExprNodeBase {
   size_t begin;
   size_t end;
 
-  virtual ~expr_node_base() = default;
+  virtual ~ExprNodeBase() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
-  virtual p_expr_node_t clone() = 0;
-
-  virtual void accept(node_visitor_base&, uint32_t) = 0;
-
-  virtual p_type_node_t infer_type(trans_unit_context&) = 0;
+  virtual void accept(NodeVisitorBase&, uint32_t) = 0;
+  virtual TypeNodeBase* infer_type(TransUnitContext&) = 0;
   virtual int precedence() const {
     return 0;
   }
 };
 
-struct stmt_node_base {
-  std::vector<attribute> attributes{};
+struct StmtNodeBase {
+  std::vector<StmtAttribute> attributes{};
 
-  virtual ~stmt_node_base() = default;
+  virtual ~StmtNodeBase() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
-  virtual p_stmt_node_t clone() = 0;
-
-  virtual void accept(node_visitor_base&) = 0;
+  virtual void accept(NodeVisitorBase&) = 0;
 };
 
-struct type_node_base {
+struct TypeNodeBase {
   size_t begin;
   size_t end;
-  expr_node_base* expression = nullptr;
+  ExprNodeBase* expression = nullptr;
 
-  virtual ~type_node_base() = default;
+  virtual ~TypeNodeBase() = default;
 
   virtual std::string to_string(uint32_t&) = 0;
   virtual std::string to_output_string() = 0;
-  virtual p_type_node_t clone() = 0;
-
-  virtual void decay(node_visitor_base&, p_type_node_t&) {};
+  virtual void decay(NodeVisitorBase&, TypeNodeBase*&) {};
 };
 
 } // namespace via

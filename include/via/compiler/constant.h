@@ -14,11 +14,11 @@
 //
 namespace via {
 
-class constant_holder final {
+class ConstantHolder final {
 public:
   // Type aliases
-  using constant_type = const value_obj;
-  using constant_vector = std::vector<value_obj>;
+  using constant_type = const IValue;
+  using constant_vector = std::vector<IValue>;
 
   // Returns the size_t or next index of the constant table.
   size_t size() const;
@@ -34,7 +34,7 @@ public:
   const constant_vector& get() const;
 
 private:
-  std::vector<value_obj> constants;
+  std::vector<IValue> constants;
 };
 
 } // namespace via

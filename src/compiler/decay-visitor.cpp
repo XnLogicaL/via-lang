@@ -9,19 +9,19 @@
 
 namespace via {
 
-p_type_node_t decay_node_visitor::visit(auto_type_node& auto_node) {
+TypeNodeBase* decay_node_visitor::visit(AutoTypeNode& auto_node) {
   return auto_node.expression->infer_type(unit_ctx);
 }
 
-p_type_node_t decay_node_visitor::visit(generic_type_node&) {
+TypeNodeBase* decay_node_visitor::visit(GenericTypeNode&) {
   return nullptr;
 }
 
-p_type_node_t decay_node_visitor::visit(union_type_node&) {
+TypeNodeBase* decay_node_visitor::visit(UnionTypeNode&) {
   return nullptr;
 }
 
-p_type_node_t decay_node_visitor::visit(function_type_node&) {
+TypeNodeBase* decay_node_visitor::visit(FunctionTypeNode&) {
   return nullptr;
 }
 

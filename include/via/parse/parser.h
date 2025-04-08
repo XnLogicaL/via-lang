@@ -16,63 +16,63 @@
 namespace via {
 
 // Parse error object that holds error location and error message.
-struct parse_error {
+struct ParseError {
   size_t where;
   std::string what;
 };
 
 // Parser class. Iterates over tokens and builds an AST.
-class parser final {
+class Parser final {
 public:
   template<typename T>
-  using result = tl::expected<T, parse_error>;
+  using result = tl::expected<T, ParseError>;
 
   // Constructor
-  parser(trans_unit_context& unit_ctx)
+  Parser(TransUnitContext& unit_ctx)
     : unit_ctx(unit_ctx) {}
 
   // Parser entry point. Returns a fail status.
   bool parse();
 
 private:
-  // Position in the token buffer.
+  // Position in the Token buffer.
   size_t position = 0;
-  error_bus err_bus;
-  trans_unit_context& unit_ctx;
+  CErrorBus err_bus;
+  TransUnitContext& unit_ctx;
   // Attribute buffer, holds attributes of statements and gets cleared every time a new statement is
   // parsed.
-  std::vector<attribute> attrib_buffer;
+  std::vector<StmtAttribute> attrib_buffer;
 
 private:
-  // Returns the current token in the token buffer.
-  result<token> current();
+  // Returns the current Token in the Token buffer.
+  result<Token> current();
   //
-  result<token> peek(int32_t ahead = 1);
-  result<token> consume(uint32_t ahead = 1);
-  result<token> expect_consume(token_type type, const std::string& what);
+  result<Token> peek(int32_t ahead = 1);
+  result<Token> consume(uint32_t ahead = 1);
+  result<Token> expect_consume(TokenType type, const std::string& what);
 
   // Meta parsing.
-  result<modifiers> parse_modifiers();
-  result<attribute> parse_attribute();
+  result<StmtModifiers> parse_modifiers();
+  result<StmtAttribute> parse_attribute();
 
   // Type parsing.
-  result<p_type_node_t> parse_generic();
-  result<p_type_node_t> parse_type_primary();
-  result<p_type_node_t> parse_type();
+  result<TypeNodeBase*> parse_generic();
+  result<TypeNodeBase*> parse_type_primary();
+  result<TypeNodeBase*> parse_type();
 
   // Expression parsing.
-  result<p_expr_node_t> parse_primary();
-  result<p_expr_node_t> parse_postfix(p_expr_node_t);
-  result<p_expr_node_t> parse_binary(int);
-  result<p_expr_node_t> parse_expr();
+  result<ExprNodeBase*> parse_primary();
+  result<ExprNodeBase*> parse_postfix(ExprNodeBase*);
+  result<ExprNodeBase*> parse_binary(int);
+  result<ExprNodeBase*> parse_expr();
 
   // Statement parsing.
-  result<p_stmt_node_t> parse_declaration();
-  result<p_stmt_node_t> parse_scope();
-  result<p_stmt_node_t> parse_if();
-  result<p_stmt_node_t> parse_return();
-  result<p_stmt_node_t> parse_while();
-  result<p_stmt_node_t> parse_stmt();
+  result<StmtNodeBase*> parse_declaration();
+  result<StmtNodeBase*> parse_scope();
+  result<StmtNodeBase*> parse_if();
+  result<StmtNodeBase*> parse_return();
+  result<StmtNodeBase*> parse_while();
+  result<StmtNodeBase*> parse_stmt();
 };
 
 } // namespace via

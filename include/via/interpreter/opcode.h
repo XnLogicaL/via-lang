@@ -9,7 +9,7 @@
 
 namespace via {
 
-enum class opcode : uint16_t {
+enum class IOpCode : uint16_t {
   NOP,
   LBL,
   EXIT,

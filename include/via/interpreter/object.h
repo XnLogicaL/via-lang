@@ -19,41 +19,41 @@ namespace via {
 // Forward declarations
 struct state;
 struct string_obj;
-struct array_obj;
-struct dict_obj;
-struct object_obj;
-struct function_obj;
+struct IArray;
+struct IDict;
+struct IObject;
+struct IFunction;
 
 // C function pointer type alias.
 using cfunction_t = void (*)(state*);
 
 // Value object type.
-enum class value_type : uint8_t {
+enum class IValueType : uint8_t {
   nil,            // Empty type, null
   integer,        // Integer type
   floating_point, // Floating point type
   boolean,        // Boolean type
   string,         // String type, pointer to string_obj
-  function,       // Function type, pointer to function_obj
+  function,       // IFunction type, pointer to IFunction
   cfunction,      // CFunction type, function pointer
   array,
   dict,
-  object, // Object type, pointer to object_obj
+  object, // Object type, pointer to IObject
 };
 
 // Optimized tagged union that acts as a "value object".
-struct alignas(8) value_obj {
-  value_type type;
+struct alignas(8) IValue {
+  IValueType type;
   union {
     int val_integer;          // Integer value
     float val_floating_point; // Floating point value
     bool val_boolean;         // Boolean value
     string_obj* val_string;
-    array_obj* val_array;
-    dict_obj* val_dict;
-    function_obj* val_function;
+    IArray* val_array;
+    IDict* val_dict;
+    IFunction* val_function;
     cfunction_t val_cfunction;
-    object_obj* val_object;
+    IObject* val_object;
   };
 
   //  ==================
@@ -61,60 +61,60 @@ struct alignas(8) value_obj {
   //  ==================
 
   // Make uncopyable
-  VIA_NOCOPY(value_obj);
+  VIA_NOCOPY(IValue);
   // Implement custom move semantics
-  VIA_IMPLMOVE(value_obj);
+  VIA_IMPLMOVE(IValue);
 
   // Destructor
-  ~value_obj();
+  ~IValue();
 
-  explicit value_obj()
-    : type(value_type::nil) {}
+  explicit IValue()
+    : type(IValueType::nil) {}
 
-  explicit value_obj(bool b)
-    : type(value_type::boolean),
+  explicit IValue(bool b)
+    : type(IValueType::boolean),
       val_boolean(b) {}
 
-  explicit value_obj(int x)
-    : type(value_type::integer),
+  explicit IValue(int x)
+    : type(IValueType::integer),
       val_integer(x) {}
 
-  explicit value_obj(float x)
-    : type(value_type::floating_point),
+  explicit IValue(float x)
+    : type(IValueType::floating_point),
       val_floating_point(x) {}
 
-  explicit value_obj(string_obj* ptr)
-    : type(value_type::string),
+  explicit IValue(string_obj* ptr)
+    : type(IValueType::string),
       val_string(ptr) {}
 
-  explicit value_obj(array_obj* ptr)
-    : type(value_type::array),
+  explicit IValue(IArray* ptr)
+    : type(IValueType::array),
       val_array(ptr) {}
 
-  explicit value_obj(dict_obj* ptr)
-    : type(value_type::dict),
+  explicit IValue(IDict* ptr)
+    : type(IValueType::dict),
       val_dict(ptr) {}
 
-  explicit value_obj(function_obj* ptr)
-    : type(value_type::function),
+  explicit IValue(IFunction* ptr)
+    : type(IValueType::function),
       val_function(ptr) {}
 
-  explicit value_obj(cfunction_t ptr)
-    : type(value_type::cfunction),
+  explicit IValue(cfunction_t ptr)
+    : type(IValueType::cfunction),
       val_cfunction(ptr) {}
 
-  explicit value_obj(object_obj* ptr)
-    : type(value_type::object),
+  explicit IValue(IObject* ptr)
+    : type(IValueType::object),
       val_object(ptr) {}
 
-  explicit value_obj(const char* str);
+  explicit IValue(const char* str);
 
   //  ==============
   // [ Core methods ]
   //  ==============
 
   // Returns a deep clone of the object.
-  VIA_NODISCARD value_obj clone() const;
+  VIA_NODISCARD IValue clone() const;
 
   // Frees the internal resources of the object and resets union tag to nil.
   void reset();
@@ -125,18 +125,18 @@ struct alignas(8) value_obj {
 
   // clang-format off
   // Returns whether if the object holds a given type.
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is(value_type other) const { return type == other; }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_nil() const { return is(value_type::nil); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_bool() const { return is(value_type::boolean); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_int() const { return is(value_type::integer); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_float() const { return is(value_type::floating_point); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is(IValueType other) const { return type == other; }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_nil() const { return is(IValueType::nil); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_bool() const { return is(IValueType::boolean); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_int() const { return is(IValueType::integer); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_float() const { return is(IValueType::floating_point); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_number() const { return is_int() || is_float(); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_string() const { return is(value_type::string); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_array() const { return is(value_type::array); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_dict() const { return is(value_type::dict); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_string() const { return is(IValueType::string); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_array() const { return is(IValueType::array); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_dict() const { return is(IValueType::dict); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_array() || is_dict(); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_function() const { return is(value_type::function); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(value_type::cfunction); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_function() const { return is(IValueType::function); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(IValueType::cfunction); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_callable() const { return is_function() || is_cfunction(); }
   // clang-format on
 
@@ -145,21 +145,21 @@ struct alignas(8) value_obj {
   //  ================
 
   // Returns the int interpretation of the value or nil if impossible.
-  VIA_NODISCARD value_obj to_integer() const;
+  VIA_NODISCARD IValue to_integer() const;
 
   // Returns the fp interpretation of the value or nil if impossible.
-  VIA_NODISCARD value_obj to_float() const;
+  VIA_NODISCARD IValue to_float() const;
 
   // Returns the boolean interpretation of the value.
-  VIA_NODISCARD value_obj to_boolean() const;
+  VIA_NODISCARD IValue to_boolean() const;
 
   // Returns the string of the value.
-  VIA_NODISCARD value_obj to_string() const;
+  VIA_NODISCARD IValue to_string() const;
   VIA_NODISCARD std::string to_cxx_string() const;
   VIA_NODISCARD std::string to_literal_cxx_string() const;
 
   // Returns the type of the value as a string.
-  VIA_NODISCARD value_obj type_string() const;
+  VIA_NODISCARD IValue type_string() const;
   VIA_NODISCARD std::string type_cxx_string() const;
 
   /**
@@ -169,20 +169,20 @@ struct alignas(8) value_obj {
   VIA_NODISCARD void* to_pointer() const;
 
   // Returns the length of the underlying type of the value or nil if impossible.
-  VIA_NODISCARD value_obj length() const;
+  VIA_NODISCARD IValue length() const;
   VIA_NODISCARD size_t cxx_length() const;
 
-  // Compares equality between self and a given value_obj.
-  VIA_NODISCARD bool compare(const value_obj& other) const;
+  // Compares equality between self and a given IValue.
+  VIA_NODISCARD bool compare(const IValue& other) const;
 
   // Moves the value and returns it as an rvalue reference.
-  VIA_NODISCARD VIA_FORCEINLINE value_obj&& move() {
-    return static_cast<value_obj&&>(*this);
+  VIA_NODISCARD VIA_FORCEINLINE IValue&& move() {
+    return static_cast<IValue&&>(*this);
   }
 
   // Moves the value and returns it as a constant rvalue reference.
-  VIA_NODISCARD VIA_FORCEINLINE const value_obj&& move() const {
-    return static_cast<const value_obj&&>(*this);
+  VIA_NODISCARD VIA_FORCEINLINE const IValue&& move() const {
+    return static_cast<const IValue&&>(*this);
   }
 };
 
@@ -205,11 +205,11 @@ struct string_obj {
     delete[] data;
   }
 
-  value_obj get(size_t position);
-  void set(size_t position, const value_obj& value);
+  IValue get(size_t position);
+  void set(size_t position, const IValue& value);
 };
 
-struct array_obj {
+struct IArray {
   // Capacity of the array. Corresponds to the size of the data array.
   size_t capacity = 64;
 
@@ -218,37 +218,37 @@ struct array_obj {
   mutable bool size_cache_valid = true;
 
   // Internal data pointer.
-  value_obj* data = nullptr;
+  IValue* data = nullptr;
 
   // Copyable
-  VIA_IMPLCOPY(array_obj);
-  VIA_IMPLMOVE(array_obj);
+  VIA_IMPLCOPY(IArray);
+  VIA_IMPLMOVE(IArray);
 
   // Constructor
-  VIA_IMPLEMENTATION array_obj()
-    : data(new value_obj[capacity]) {}
+  VIA_IMPLEMENTATION IArray()
+    : data(new IValue[capacity]) {}
 
-  VIA_IMPLEMENTATION ~array_obj() {
+  VIA_IMPLEMENTATION ~IArray() {
     delete[] data;
   }
 
   size_t size() const;
 
   // Returns the element that lives in the given index or nil.
-  value_obj& get(size_t position);
+  IValue& get(size_t position);
 
   // Sets the element at the given index to the given value. Resizes the array if necessary.
-  void set(size_t position, value_obj value);
+  void set(size_t position, IValue value);
 };
 
-struct hash_node {
+struct IHashNode {
   const char* key;
-  value_obj value;
+  IValue value;
 
-  inline ~hash_node() = default;
+  inline ~IHashNode() = default;
 };
 
-struct dict_obj {
+struct IDict {
   // Capacity of the dictionary. Corresponds to the size of the data array.
   size_t capacity = 1024;
 
@@ -256,45 +256,45 @@ struct dict_obj {
   mutable size_t size_cache = 0;
   mutable bool size_cache_valid = true;
 
-  hash_node* data = nullptr;
+  IHashNode* data = nullptr;
 
   // Constructor
-  VIA_IMPLEMENTATION dict_obj()
-    : data(new hash_node[capacity]) {}
+  VIA_IMPLEMENTATION IDict()
+    : data(new IHashNode[capacity]) {}
 
   // Destructor
-  VIA_IMPLEMENTATION ~dict_obj() {
+  VIA_IMPLEMENTATION ~IDict() {
     delete[] data;
   }
 
   // Copyable
-  VIA_IMPLCOPY(dict_obj);
-  VIA_IMPLMOVE(dict_obj);
+  VIA_IMPLCOPY(IDict);
+  VIA_IMPLMOVE(IDict);
 
   // Returns the real size of the dictionary.
   size_t size() const;
 
   // Returns the element that lives in the given index or nil.
-  value_obj& get(const char* key);
+  IValue& get(const char* key);
 
   // Sets the element that lives in the given index to the given value.
-  void set(const char* key, value_obj value);
+  void set(const char* key, IValue value);
 };
 
-struct object_obj {
+struct IObject {
   size_t field_count;
 
-  value_obj constructor;
-  value_obj destructor;
-  value_obj operator_overloads[16];
+  IValue constructor;
+  IValue destructor;
+  IValue operator_overloads[16];
 
-  value_obj* fields;
+  IValue* fields;
 
-  inline object_obj() = default;
-  inline ~object_obj();
-  inline object_obj(size_t field_count)
+  inline IObject() = default;
+  inline ~IObject();
+  inline IObject(size_t field_count)
     : field_count(field_count),
-      fields(new value_obj[field_count]) {}
+      fields(new IValue[field_count]) {}
 };
 
 } // namespace via

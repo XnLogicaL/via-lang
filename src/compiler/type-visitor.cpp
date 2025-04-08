@@ -10,9 +10,9 @@ namespace via {
 
 using namespace utils;
 
-void type_node_visitor::visit(decl_stmt_node& declaration_node) {
-  p_type_node_t infered_type = declaration_node.value_expression->infer_type(unit_ctx);
-  p_type_node_t& annotated_type = declaration_node.type;
+void type_node_visitor::visit(DeclStmtNode& declaration_node) {
+  TypeNodeBase* infered_type = declaration_node.value_expression->infer_type(unit_ctx);
+  TypeNodeBase*& annotated_type = declaration_node.type;
 
   VIA_TINFERENCE_FAILURE(infered_type, declaration_node.value_expression);
   VIA_TINFERENCE_FAILURE(annotated_type, declaration_node.value_expression);
@@ -43,9 +43,9 @@ void type_node_visitor::visit(decl_stmt_node& declaration_node) {
   }
 }
 
-void type_node_visitor::visit(assign_stmt_node& assign_node) {
-  p_type_node_t infered_type = assign_node.assignee->infer_type(unit_ctx);
-  p_type_node_t assigned_type = assign_node.value->infer_type(unit_ctx);
+void type_node_visitor::visit(AssignStmtNode& assign_node) {
+  TypeNodeBase* infered_type = assign_node.assignee->infer_type(unit_ctx);
+  TypeNodeBase* assigned_type = assign_node.value->infer_type(unit_ctx);
 
   VIA_TINFERENCE_FAILURE(infered_type, assign_node.assignee);
   VIA_TINFERENCE_FAILURE(assigned_type, assign_node.value);
@@ -63,6 +63,6 @@ void type_node_visitor::visit(assign_stmt_node& assign_node) {
   }
 }
 
-void type_node_visitor::visit(func_stmt_node&) {}
+void type_node_visitor::visit(FuncDeclStmtNode&) {}
 
 } // namespace via

@@ -22,103 +22,89 @@ namespace via {
 // [ Expression Nodes ]
 //  ==================
 
-struct lit_expr_node : public expr_node_base {
+struct LitExprNode : public ExprNodeBase {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
-  token value_token;
+  Token value_token;
   variant value;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  lit_expr_node(token value_token, variant value)
+  LitExprNode(Token value_token, variant value)
     : value_token(value_token),
       value(value) {
     this->begin = this->value_token.position;
     this->end = this->value_token.position + value_token.lexeme.length();
 
-    if (value_token.type == token_type::LIT_STRING) {
+    if (value_token.type == TokenType::LIT_STRING) {
       // Shift end position by 2 to account for quotes
       this->end += 2;
     }
   }
 };
 
-struct sym_expr_node : public expr_node_base {
-  token identifier;
+struct SymExprNode : public ExprNodeBase {
+  Token identifier;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  sym_expr_node(token identifier)
+  SymExprNode(Token identifier)
     : identifier(identifier) {
     this->begin = this->identifier.position;
     this->end = this->identifier.position + identifier.lexeme.length();
   }
 };
 
-struct unary_expr_node : public expr_node_base {
-  p_expr_node_t expression;
+struct UnaryExprNode : public ExprNodeBase {
+  ExprNodeBase* expression;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  void accept(node_visitor_base&, uint32_t) override;
-
-  unary_expr_node(p_expr_node_t expression)
+  UnaryExprNode(ExprNodeBase* expression)
     : expression(std::move(expression)) {
     this->begin = this->expression->begin - 1; // Account for '-'
     this->end = this->expression->end;
   }
 };
 
-struct grp_expr_node : public expr_node_base {
-  p_expr_node_t expression;
+struct GroupExprNode : public ExprNodeBase {
+  ExprNodeBase* expression;
 
   std::string to_string(uint32_t&) override;
-
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
   int precedence() const override;
 
-  grp_expr_node(p_expr_node_t expression)
+  GroupExprNode(ExprNodeBase* expression)
     : expression(std::move(expression)) {
     this->begin = this->expression->begin - 1; // Account for '('
     this->end = this->expression->end + 1;     // Account for ')'
   }
 };
 
-struct call_expr_node : public expr_node_base {
-  using argument_vector = std::vector<p_expr_node_t>;
+struct CallExprNode : public ExprNodeBase {
+  using argument_vector = std::vector<ExprNodeBase*>;
 
-  p_expr_node_t callee;
+  ExprNodeBase* callee;
   argument_vector arguments;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  call_expr_node(p_expr_node_t callee, argument_vector arguments)
+  CallExprNode(ExprNodeBase* callee, argument_vector arguments)
     : callee(std::move(callee)),
       arguments(std::move(arguments)) {
 
     if (!this->arguments.empty()) {
-      p_expr_node_t& last_arg = this->arguments.back();
+      ExprNodeBase*& last_arg = this->arguments.back();
 
       this->begin = this->callee->begin;
       this->end = last_arg->end + 1; // Account for ')'
@@ -130,18 +116,15 @@ struct call_expr_node : public expr_node_base {
   }
 };
 
-struct index_expr_node : public expr_node_base {
-  p_expr_node_t object;
-  p_expr_node_t index;
+struct IndexExprNode : public ExprNodeBase {
+  ExprNodeBase* object;
+  ExprNodeBase* index;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  index_expr_node(p_expr_node_t object, p_expr_node_t index)
+  IndexExprNode(ExprNodeBase* object, ExprNodeBase* index)
     : object(std::move(object)),
       index(std::move(index)) {
     this->begin = this->object->begin;
@@ -149,19 +132,16 @@ struct index_expr_node : public expr_node_base {
   }
 };
 
-struct bin_expr_node : public expr_node_base {
-  token op;
-  p_expr_node_t lhs_expression;
-  p_expr_node_t rhs_expression;
+struct BinExprNode : public ExprNodeBase {
+  Token op;
+  ExprNodeBase* lhs_expression;
+  ExprNodeBase* rhs_expression;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  bin_expr_node(token op, p_expr_node_t lhs, p_expr_node_t rhs)
+  BinExprNode(Token op, ExprNodeBase* lhs, ExprNodeBase* rhs)
     : op(op),
       lhs_expression(std::move(lhs)),
       rhs_expression(std::move(rhs)) {
@@ -170,18 +150,15 @@ struct bin_expr_node : public expr_node_base {
   }
 };
 
-struct cast_expr_node : public expr_node_base {
-  p_expr_node_t expression;
-  p_type_node_t type;
+struct CastExprNode : public ExprNodeBase {
+  ExprNodeBase* expression;
+  TypeNodeBase* type;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
-
-  void accept(node_visitor_base&, uint32_t) override;
-
-  cast_expr_node(p_expr_node_t expression, p_type_node_t type)
+  CastExprNode(ExprNodeBase* expression, TypeNodeBase* type)
     : expression(std::move(expression)),
       type(std::move(type)) {
     this->begin = this->expression->begin;
@@ -189,19 +166,17 @@ struct cast_expr_node : public expr_node_base {
   }
 };
 
-struct step_expr_node : public expr_node_base {
-  p_expr_node_t target;
+struct StepExprNode : public ExprNodeBase {
+  ExprNodeBase* target;
   bool is_increment;
   bool is_postfix;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  void accept(node_visitor_base&, uint32_t) override;
-
-  step_expr_node(p_expr_node_t target, bool is_increment, bool is_postfix)
+  StepExprNode(ExprNodeBase* target, bool is_increment, bool is_postfix)
     : target(std::move(target)),
       is_increment(is_increment),
       is_postfix(is_postfix) {
@@ -216,21 +191,19 @@ struct step_expr_node : public expr_node_base {
   }
 };
 
-struct array_expr_node : public expr_node_base {
-  using values_t = std::vector<p_expr_node_t>;
+struct ArrayExprNode : public ExprNodeBase {
+  using values_t = std::vector<ExprNodeBase*>;
 
-  token open_brace;
-  token close_brace;
+  Token open_brace;
+  Token close_brace;
   values_t values;
 
   std::string to_string(uint32_t&) override;
+  TypeNodeBase* infer_type(TransUnitContext&) override;
 
-  p_expr_node_t clone() override;
-  p_type_node_t infer_type(trans_unit_context&) override;
+  void accept(NodeVisitorBase&, uint32_t) override;
 
-  void accept(node_visitor_base&, uint32_t) override;
-
-  array_expr_node(token open_brace, token close_brace, values_t values)
+  ArrayExprNode(Token open_brace, Token close_brace, values_t values)
     : open_brace(open_brace),
       close_brace(close_brace),
       values(std::move(values)) {}
@@ -239,30 +212,25 @@ struct array_expr_node : public expr_node_base {
 // =========================================================================================
 // Type Nodes
 //
-struct auto_type_node : public type_node_base {
+struct AutoTypeNode : public TypeNodeBase {
   std::string to_string(uint32_t&) override;
   std::string to_output_string() override;
+  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
 
-  p_type_node_t clone() override;
-
-  void decay(node_visitor_base&, p_type_node_t&) override;
-
-  auto_type_node(size_t begin, size_t end) {
+  AutoTypeNode(size_t begin, size_t end) {
     this->begin = begin;
     this->end = end;
   }
 };
 
-struct primitive_type_node : public type_node_base {
-  token identifier;
-  value_type type;
+struct PrimTypeNode : public TypeNodeBase {
+  Token identifier;
+  IValueType type;
 
   std::string to_string(uint32_t&) override;
   std::string to_output_string() override;
 
-  p_type_node_t clone() override;
-
-  primitive_type_node(token id, value_type valty)
+  PrimTypeNode(Token id, IValueType valty)
     : identifier(id),
       type(valty) {
     this->begin = id.position;
@@ -270,21 +238,18 @@ struct primitive_type_node : public type_node_base {
   }
 };
 
-struct generic_type_node : public type_node_base {
-  using generics_t = std::vector<p_type_node_t>;
+struct GenericTypeNode : public TypeNodeBase {
+  using generics_t = std::vector<TypeNodeBase*>;
 
-  token identifier;
+  Token identifier;
   generics_t generics;
-  modifiers modifs;
+  StmtModifiers modifs;
 
   std::string to_string(uint32_t&) override;
   std::string to_output_string() override;
+  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
 
-  p_type_node_t clone() override;
-
-  void decay(node_visitor_base&, p_type_node_t&) override;
-
-  generic_type_node(token id, generics_t gens, modifiers modifs)
+  GenericTypeNode(Token id, generics_t gens, StmtModifiers modifs)
     : identifier(id),
       generics(std::move(gens)),
       modifs(modifs) {
@@ -293,18 +258,15 @@ struct generic_type_node : public type_node_base {
   }
 };
 
-struct union_type_node : public type_node_base {
-  p_type_node_t lhs;
-  p_type_node_t rhs;
+struct UnionTypeNode : public TypeNodeBase {
+  TypeNodeBase* lhs;
+  TypeNodeBase* rhs;
 
   std::string to_string(uint32_t&) override;
   std::string to_output_string() override;
+  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
 
-  p_type_node_t clone() override;
-
-  void decay(node_visitor_base&, p_type_node_t&) override;
-
-  union_type_node(p_type_node_t lhs, p_type_node_t rhs)
+  UnionTypeNode(TypeNodeBase* lhs, TypeNodeBase* rhs)
     : lhs(std::move(lhs)),
       rhs(std::move(rhs)) {
     this->begin = this->lhs->begin;
@@ -312,31 +274,28 @@ struct union_type_node : public type_node_base {
   }
 };
 
-struct param_node {
-  token identifier;
-  modifiers modifs;
-  p_type_node_t type;
+struct ParamNode {
+  Token identifier;
+  StmtModifiers modifs;
+  TypeNodeBase* type;
 
-  param_node(token identifier, modifiers modifs, p_type_node_t type)
+  ParamNode(Token identifier, StmtModifiers modifs, TypeNodeBase* type)
     : identifier(identifier),
       modifs(modifs),
       type(std::move(type)) {}
 };
 
-struct function_type_node : public type_node_base {
-  using parameter_vector = std::vector<param_node>;
+struct FunctionTypeNode : public TypeNodeBase {
+  using parameter_vector = std::vector<ParamNode>;
 
   parameter_vector parameters;
-  p_type_node_t returns;
+  TypeNodeBase* returns;
 
   std::string to_string(uint32_t&) override;
   std::string to_output_string() override;
+  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
 
-  p_type_node_t clone() override;
-
-  void decay(node_visitor_base&, p_type_node_t&) override;
-
-  function_type_node(parameter_vector args, p_type_node_t rets)
+  FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
     : parameters(std::move(args)),
       returns(std::move(rets)) {
     this->begin = this->returns->begin;
@@ -347,21 +306,18 @@ struct function_type_node : public type_node_base {
 // =========================================================================================
 // Statement Nodes
 //
-struct decl_stmt_node : public stmt_node_base {
+struct DeclStmtNode : public StmtNodeBase {
   bool is_global;
-  modifiers modifs;
-  token identifier;
-  p_expr_node_t value_expression;
-  p_type_node_t type;
+  StmtModifiers modifs;
+  Token identifier;
+  ExprNodeBase* value_expression;
+  TypeNodeBase* type;
 
   std::string to_string(uint32_t&) override;
+  void accept(NodeVisitorBase&) override;
 
-  p_stmt_node_t clone() override;
-
-  void accept(node_visitor_base&) override;
-
-  decl_stmt_node(
-    bool is_global, modifiers modifs, token identifier, p_expr_node_t value, p_type_node_t type
+  DeclStmtNode(
+    bool is_global, StmtModifiers modifs, Token identifier, ExprNodeBase* value, TypeNodeBase* type
   )
     : is_global(is_global),
       modifs(modifs),
@@ -370,42 +326,36 @@ struct decl_stmt_node : public stmt_node_base {
       type(std::move(type)) {}
 };
 
-struct scope_stmt_node : public stmt_node_base {
-  using Statements = std::vector<p_stmt_node_t>;
+struct ScopeStmtNode : public StmtNodeBase {
+  using Statements = std::vector<StmtNodeBase*>;
   Statements statements;
 
   std::string to_string(uint32_t&) override;
+  void accept(NodeVisitorBase&) override;
 
-  p_stmt_node_t clone() override;
-
-  void accept(node_visitor_base&) override;
-
-  scope_stmt_node(Statements statements)
+  ScopeStmtNode(Statements statements)
     : statements(std::move(statements)) {}
 };
 
-struct func_stmt_node : public stmt_node_base {
-  using parameters_t = std::vector<param_node>;
+struct FuncDeclStmtNode : public StmtNodeBase {
+  using parameters_t = std::vector<ParamNode>;
 
   bool is_global;
-  modifiers modifs;
-  token identifier;
-  p_stmt_node_t body;
-  p_type_node_t returns;
+  StmtModifiers modifs;
+  Token identifier;
+  StmtNodeBase* body;
+  TypeNodeBase* returns;
   parameters_t parameters;
 
   std::string to_string(uint32_t&) override;
+  void accept(NodeVisitorBase&) override;
 
-  p_stmt_node_t clone() override;
-
-  void accept(node_visitor_base&) override;
-
-  func_stmt_node(
+  FuncDeclStmtNode(
     bool is_global,
-    modifiers modifs,
-    token identifier,
-    p_stmt_node_t body,
-    p_type_node_t returns,
+    StmtModifiers modifs,
+    Token identifier,
+    StmtNodeBase* body,
+    TypeNodeBase* returns,
     parameters_t parameters
   )
     : is_global(is_global),
@@ -416,48 +366,44 @@ struct func_stmt_node : public stmt_node_base {
       parameters(std::move(parameters)) {}
 };
 
-struct assign_stmt_node : public stmt_node_base {
-  p_expr_node_t assignee;
-  token augmentation_operator;
-  p_expr_node_t value;
+struct AssignStmtNode : public StmtNodeBase {
+  ExprNodeBase* assignee;
+  Token augmentation_operator;
+  ExprNodeBase* value;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  assign_stmt_node(p_expr_node_t assignee, token augment, p_expr_node_t value)
+  AssignStmtNode(ExprNodeBase* assignee, Token augment, ExprNodeBase* value)
     : assignee(std::move(assignee)),
       augmentation_operator(augment),
       value(std::move(value)) {}
 };
 
-struct if_stmt_node : public stmt_node_base {
+struct IfStmtNode : public StmtNodeBase {
   struct elseif_node {
-    p_expr_node_t condition;
-    p_stmt_node_t scope;
+    ExprNodeBase* condition;
+    StmtNodeBase* scope;
 
-    elseif_node(p_expr_node_t condition, p_stmt_node_t scope)
+    elseif_node(ExprNodeBase* condition, StmtNodeBase* scope)
       : condition(std::move(condition)),
         scope(std::move(scope)) {}
   };
 
   using elseif_nodes_t = std::vector<elseif_node>;
 
-  p_expr_node_t condition;
-  p_stmt_node_t scope;
-  p_stmt_node_t else_node;
+  ExprNodeBase* condition;
+  StmtNodeBase* scope;
+  StmtNodeBase* else_node;
   elseif_nodes_t elseif_nodes;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  if_stmt_node(
-    p_expr_node_t condition,
-    p_stmt_node_t scope,
-    p_stmt_node_t else_node,
+  IfStmtNode(
+    ExprNodeBase* condition,
+    StmtNodeBase* scope,
+    StmtNodeBase* else_node,
     elseif_nodes_t elseif_nodes
   )
     : condition(std::move(condition)),
@@ -466,72 +412,65 @@ struct if_stmt_node : public stmt_node_base {
       elseif_nodes(std::move(elseif_nodes)) {}
 };
 
-struct return_stmt_node : public stmt_node_base {
-  p_expr_node_t expression;
+struct ReturnStmtNode : public StmtNodeBase {
+  ExprNodeBase* expression;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  return_stmt_node(p_expr_node_t expression)
+  ReturnStmtNode(ExprNodeBase* expression)
     : expression(std::move(expression)) {}
 };
 
-struct break_stmt_node : public stmt_node_base {
-  token tok;
+struct BreakStmtNode : public StmtNodeBase {
+  Token tok;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  break_stmt_node(token tok)
+  BreakStmtNode(Token tok)
     : tok(tok) {}
 };
 
-struct continue_stmt_node : public stmt_node_base {
-  token tok;
+struct ContinueStmtNode : public StmtNodeBase {
+  Token tok;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  continue_stmt_node(token tok)
+  ContinueStmtNode(Token tok)
     : tok(tok) {}
 };
 
-struct while_stmt_node : public stmt_node_base {
-  p_expr_node_t condition;
-  p_stmt_node_t body;
+struct WhileStmtNode : public StmtNodeBase {
+  ExprNodeBase* condition;
+  StmtNodeBase* body;
 
   std::string to_string(uint32_t&) override;
-  p_stmt_node_t clone() override;
+  void accept(NodeVisitorBase&) override;
 
-  void accept(node_visitor_base&) override;
-
-  while_stmt_node(p_expr_node_t condition, p_stmt_node_t body)
+  WhileStmtNode(ExprNodeBase* condition, StmtNodeBase* body)
     : condition(std::move(condition)),
       body(std::move(body)) {}
 };
 
-struct expr_stmt_node : public stmt_node_base {
-  p_expr_node_t expression;
+struct ExprStmtNode : public StmtNodeBase {
+  ExprNodeBase* expression;
 
   std::string to_string(uint32_t&) override;
+  void accept(NodeVisitorBase&) override;
 
-  p_stmt_node_t clone() override;
-
-  void accept(node_visitor_base&) override;
-
-  expr_stmt_node(p_expr_node_t expression)
+  ExprStmtNode(ExprNodeBase* expression)
     : expression(std::move(expression)) {}
 };
 
-class syntax_tree {
+class SyntaxTree {
 public:
-  std::vector<p_stmt_node_t> statements;
+  VIA_IMPLEMENTATION SyntaxTree()
+    : allocator(64 * 1024 * 1024) {}
+
+  ArenaAllocator allocator;
+  std::vector<StmtNodeBase*> statements;
 };
 
 } // namespace via

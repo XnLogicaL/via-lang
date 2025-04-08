@@ -1,16 +1,16 @@
 //  ========================================================================================
 // [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
 //  ========================================================================================
-#include "preprocessor.h"
-#include "lexer.h"
+#include "Preprocessor.h"
+#include "Lexer.h"
 
 namespace via {
 
-using enum token_type;
+using enum TokenType;
 
-void preprocessor::declare_default() {}
+void Preprocessor::declare_default() {}
 
-bool preprocessor::preprocess() {
+bool Preprocessor::preprocess() {
   return false;
 }
 

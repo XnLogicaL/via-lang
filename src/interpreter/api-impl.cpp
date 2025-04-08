@@ -28,8 +28,8 @@ bool __has_error(state* state) {
 }
 
 bool __handle_error(state* state) {
-  function_obj* current_frame = state->frame;
-  function_obj* error_frame = state->frame;
+  IFunction* current_frame = state->frame;
+  IFunction* error_frame = state->frame;
 
   while (current_frame) {
     if (/* TODO */ false) {
@@ -49,7 +49,7 @@ bool __handle_error(state* state) {
       std::cerr << _Error;
     }
 
-    std::unordered_set<function_obj*> visited;
+    std::unordered_set<IFunction*> visited;
 
     size_t index = 0;
     while (error_frame && !visited.count(error_frame)) {
@@ -64,32 +64,32 @@ bool __handle_error(state* state) {
   return static_cast<bool>(current_frame);
 }
 
-value_obj __get_constant(state* state, size_t index) {
+IValue __get_constant(state* state, size_t index) {
   if (index >= state->unit_ctx.constants->size()) {
-    return value_obj();
+    return IValue();
   }
 
   return state->unit_ctx.constants->at(index).clone();
 }
 
-value_obj __type(const value_obj& val) {
+IValue __type(const IValue& val) {
   std::string _Temp = std::string(magic_enum::enum_name(val.type));
   const char* str = _Temp.c_str();
-  return value_obj(new string_obj(str));
+  return IValue(new string_obj(str));
 }
 
-std::string __type_cxx_string(const value_obj& val) {
-  value_obj _Type = __type(val);
+std::string __type_cxx_string(const IValue& val) {
+  IValue _Type = __type(val);
   return std::string(_Type.val_string->data);
 }
 
-void* __to_pointer(const value_obj& val) {
+void* __to_pointer(const IValue& val) {
   switch (val.type) {
-  case value_type::cfunction:
-  case value_type::function:
-  case value_type::array:
-  case value_type::dict:
-  case value_type::string:
+  case IValueType::cfunction:
+  case IValueType::function:
+  case IValueType::array:
+  case IValueType::dict:
+  case IValueType::string:
     // This is technically UB... too bad!
     return reinterpret_cast<void*>(val.val_string);
   default:
@@ -97,7 +97,7 @@ void* __to_pointer(const value_obj& val) {
   }
 }
 
-void __native_call(state* state, function_obj* _Callee, size_t _Argc) {
+void __native_call(state* state, IFunction* _Callee, size_t _Argc) {
   _Callee->call_data.caller = state->frame;
   _Callee->call_data.ibp = state->ibp;
   _Callee->call_data.pc = state->pc;
@@ -109,8 +109,8 @@ void __native_call(state* state, function_obj* _Callee, size_t _Argc) {
   state->ibp = _Callee->ibp;
 }
 
-void __extern_call(state* state, const value_obj& _Callee, size_t _Argc) {
-  function_obj func;
+void __extern_call(state* state, const IValue& _Callee, size_t _Argc) {
+  IFunction func;
   func.call_data.caller = state->frame;
   func.call_data.ibp = state->ibp;
   func.call_data.pc = state->pc;
@@ -123,7 +123,7 @@ void __extern_call(state* state, const value_obj& _Callee, size_t _Argc) {
   _Callee.val_cfunction(state);
 }
 
-void __call(state* state, value_obj& _Callee, size_t _Argc) {
+void __call(state* state, IValue& _Callee, size_t _Argc) {
   if (_Callee.is_function()) {
     __native_call(state, _Callee.val_function, _Argc);
   }
@@ -135,27 +135,27 @@ void __call(state* state, value_obj& _Callee, size_t _Argc) {
   }
 }
 
-value_obj __length(value_obj& val) {
+IValue __length(IValue& val) {
   if (val.is_string()) {
-    return value_obj(static_cast<int>(val.val_string->len));
+    return IValue(static_cast<int>(val.val_string->len));
   }
   else if (val.is_array() || val.is_dict()) {
     size_t len = val.is_array() ? __array_size(val.val_array) : __dict_size(val.val_dict);
-    return value_obj(static_cast<int>(len));
+    return IValue(static_cast<int>(len));
   }
 
-  return value_obj();
+  return IValue();
 }
 
-int __length_cxx(value_obj& val) {
-  value_obj len = __length(val);
+int __length_cxx(IValue& val) {
+  IValue len = __length(val);
   return len.is_nil() ? -1 : len.val_integer;
 }
 
-void __native_return(state* VIA_RESTRICT state, value_obj _Ret_value) {
+void __native_return(state* VIA_RESTRICT state, IValue _Ret_value) {
   __closure_close_upvalues(state->frame);
 
-  call_info _Call_info = state->frame->call_data;
+  ICallInfo _Call_info = state->frame->call_data;
 
   state->ibp = _Call_info.ibp;
   state->pc = _Call_info.pc + 1; // Required to prevent infinite loop
@@ -167,8 +167,8 @@ void __native_return(state* VIA_RESTRICT state, value_obj _Ret_value) {
   __push(state, std::move(_Ret_value));
 }
 
-value_obj __to_string(const value_obj& val) {
-  using enum value_type;
+IValue __to_string(const IValue& val) {
+  using enum IValueType;
 
   if (val.is_string()) {
     return val.clone();
@@ -177,14 +177,14 @@ value_obj __to_string(const value_obj& val) {
   switch (val.type) {
   case integer: {
     std::string str = std::to_string(val.val_integer);
-    return value_obj(str.c_str());
+    return IValue(str.c_str());
   }
   case floating_point: {
     std::string str = std::to_string(val.val_floating_point);
-    return value_obj(str.c_str());
+    return IValue(str.c_str());
   }
   case boolean:
-    return value_obj(val.val_boolean ? "true" : "false");
+    return IValue(val.val_boolean ? "true" : "false");
   case array:
   case dict:
   case function:
@@ -192,44 +192,44 @@ value_obj __to_string(const value_obj& val) {
     auto type_str = magic_enum::enum_name(val.type);
     auto final_str = std::format("<{}@0x{:x}>", type_str, (uintptr_t)__to_pointer(val));
 
-    return value_obj(final_str.c_str());
+    return IValue(final_str.c_str());
   }
   default:
-    return value_obj("nil");
+    return IValue("nil");
   }
 
   VIA_UNREACHABLE();
-  return value_obj();
+  return IValue();
 }
 
-std::string __to_cxx_string(const value_obj& val) {
-  value_obj str = __to_string(val);
+std::string __to_cxx_string(const IValue& val) {
+  IValue str = __to_string(val);
   return std::string(str.val_string->data);
 }
 
-std::string __to_literal_cxx_string(const value_obj& val) {
-  value_obj str = __to_string(val);
+std::string __to_literal_cxx_string(const IValue& val) {
+  IValue str = __to_string(val);
   std::string str_cpy = str.val_string->data;
   return escape_string(str_cpy);
 }
 
-value_obj __to_bool(const value_obj& val) {
+IValue __to_bool(const IValue& val) {
   if (val.is_bool()) {
     return val.clone();
   }
 
-  return value_obj(val.type != value_type::nil);
+  return IValue(val.type != IValueType::nil);
 
   VIA_UNREACHABLE();
-  return value_obj();
+  return IValue();
 }
 
-bool __to_cxx_bool(const value_obj& val) {
+bool __to_cxx_bool(const IValue& val) {
   return __to_bool(val).val_boolean;
 }
 
-value_obj __to_int(state* V, const value_obj& val) {
-  using enum value_type;
+IValue __to_int(state* V, const IValue& val) {
+  using enum IValueType;
 
   if (val.is_number()) {
     return val.clone();
@@ -239,29 +239,29 @@ value_obj __to_int(state* V, const value_obj& val) {
   case string: {
     const std::string& str = val.val_string->data;
     if (str.empty()) {
-      return value_obj();
+      return IValue();
     }
 
     int int_result;
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), int_result);
     if (ec == std::errc() && ptr == str.data() + str.size()) {
-      return value_obj(static_cast<float>(int_result)); // Convert to float for consistency
+      return IValue(static_cast<float>(int_result)); // Convert to float for consistency
     }
 
     __set_error_state(V, "string -> integer cast failed");
-    return value_obj();
+    return IValue();
   }
   case boolean:
-    return value_obj(static_cast<int>(val.val_boolean));
+    return IValue(static_cast<int>(val.val_boolean));
   default:
     break;
   }
 
-  return value_obj();
+  return IValue();
 }
 
-value_obj __to_float(state* V, const value_obj& val) {
-  using enum value_type;
+IValue __to_float(state* V, const IValue& val) {
+  using enum IValueType;
 
   if (val.is_number()) {
     return val.clone();
@@ -271,29 +271,29 @@ value_obj __to_float(state* V, const value_obj& val) {
   case string: {
     const std::string& str = val.val_string->data;
     if (str.empty()) {
-      return value_obj();
+      return IValue();
     }
 
     float float_result;
     auto [ptr_f, ec_f] = std::from_chars(str.data(), str.data() + str.size(), float_result);
     if (ec_f == std::errc() && ptr_f == str.data() + str.size()) {
-      return value_obj(float_result);
+      return IValue(float_result);
     }
 
     __set_error_state(V, "string -> float cast failed");
-    return value_obj();
+    return IValue();
   }
   case boolean:
-    return value_obj(static_cast<float>(val.val_boolean));
+    return IValue(static_cast<float>(val.val_boolean));
   default:
     break;
   }
 
-  return value_obj();
+  return IValue();
 }
 
-bool __compare(const value_obj& val0, const value_obj& val1) {
-  using enum value_type;
+bool __compare(const IValue& val0, const IValue& val1) {
+  using enum IValueType;
 
   if (val0.type != val1.type) {
     return false;

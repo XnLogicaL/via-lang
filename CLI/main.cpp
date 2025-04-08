@@ -15,16 +15,16 @@ using namespace via;
 
 struct comp_result {
   bool failed;
-  trans_unit_context unit;
+  TransUnitContext unit;
 
-  comp_result(bool failed, trans_unit_context unit)
+  comp_result(bool failed, TransUnitContext unit)
     : failed(failed),
       unit(std::move(unit)) {}
 };
 
-compiler_context ctx;
-error_bus err_bus;
-trans_unit_context dummy_unit_ctx("<unavailable>", "");
+CompilerContext ctx;
+CErrorBus err_bus;
+TransUnitContext dummy_unit_ctx("<unavailable>", "");
 
 std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   auto command = std::make_unique<ArgumentParser>(name);
@@ -60,8 +60,8 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
 }
 
 comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
-  using enum token_type;
-  using enum comp_err_lvl;
+  using enum TokenType;
+  using enum CErrorLevel;
   using namespace utils;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
@@ -77,7 +77,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   std::string file = subcommand_parser.get<std::string>("target");
 
   rd_result_t source_result = read_from_file(file);
-  trans_unit_context unit_ctx(file, *source_result);
+  TransUnitContext unit_ctx(file, *source_result);
   unit_ctx.optimization_level = subcommand_parser.get<size_t>("--optimize");
 
   // Record compilation start time
@@ -88,13 +88,13 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
     return {true, std::move(dummy_unit_ctx)};
   }
 
-  lexer lexer(unit_ctx);
-  preprocessor preprocessor(unit_ctx);
-  parser parser(unit_ctx);
-  compiler compiler(unit_ctx);
+  Lexer Lexer(unit_ctx);
+  Preprocessor Preprocessor(unit_ctx);
+  Parser Parser(unit_ctx);
+  Compiler Compiler(unit_ctx);
 
   SET_PROFILER_POINT(lex_start);
-  lexer.tokenize();
+  Lexer.tokenize();
 
   if (verbosity_flag) {
     SET_PROFILER_POINT(lex_end);
@@ -107,8 +107,8 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   }
 
   SET_PROFILER_POINT(preproc_start);
-  preprocessor.declare_default();
-  bool preproc_failed = preprocessor.preprocess();
+  Preprocessor.declare_default();
+  bool preproc_failed = Preprocessor.preprocess();
 
   if (verbosity_flag) {
     if (preproc_failed) {
@@ -126,7 +126,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   }
 
   SET_PROFILER_POINT(parser_start);
-  bool parser_failed = parser.parse();
+  bool parser_failed = Parser.parse();
 
   if (verbosity_flag) {
     if (parser_failed) {
@@ -144,7 +144,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   }
 
   SET_PROFILER_POINT(codegen_start);
-  bool compiler_failed = compiler.generate();
+  bool compiler_failed = Compiler.generate();
 
   if (verbosity_flag) {
     if (compiler_failed) {
@@ -168,8 +168,8 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-tokens")) {
       print_flag_label("--dump-tokens");
 
-      for (const token& token : unit_ctx.tokens->get()) {
-        std::cout << token.to_string() << "\n";
+      for (const Token& Token : unit_ctx.tokens->get()) {
+        std::cout << Token.to_string() << "\n";
       }
     }
 
@@ -177,7 +177,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-ast");
       uint32_t depth = 0;
 
-      for (const p_stmt_node_t& pstmt : unit_ctx.ast->statements) {
+      for (StmtNodeBase* pstmt : unit_ctx.ast->statements) {
         std::cout << pstmt->to_string(depth) << "\n";
       }
     }
@@ -194,16 +194,16 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
       ) << "\n";
 
       for (size_t i = 0; i < unit_ctx.bytecode->get().size(); ++i) {
-        const bytecode& bytecode = unit_ctx.bytecode->get()[i];
+        const Bytecode& bytecode = unit_ctx.bytecode->get()[i];
         std::string current_disassembly;
 
-        if (bytecode.instruct.op == opcode::LBL) {
+        if (bytecode.instruct.op == IOpCode::LBL) {
           std::cout << std::format(
             " L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
           );
           continue;
         }
-        else if (bytecode.instruct.op == opcode::NEWCLSR) {
+        else if (bytecode.instruct.op == IOpCode::NEWCLSR) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
@@ -219,8 +219,8 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
         // Print disassembly of the bytecode instruction
         std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
 
-        if (bytecode.instruct.op == opcode::RET || bytecode.instruct.op == opcode::RETNIL) {
-          // Check if we are at the last RET opcode for the current closure
+        if (bytecode.instruct.op == IOpCode::RET || bytecode.instruct.op == IOpCode::RETNIL) {
+          // Check if we are at the last RET IOpCode for the current closure
           if (!closure_disassembly_stack.empty() && i >= closure_bytecode_count_stack.top()) {
             // Pop the function from the stack
             std::string disassembly_of = closure_disassembly_stack.top();
@@ -241,7 +241,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
                 << unit_ctx.get_platform_info() << "\n";
 
       size_t const_position = 0;
-      for (const value_obj& constant : unit_ctx.constants->get()) {
+      for (const IValue& constant : unit_ctx.constants->get()) {
         std::cout << apply_color("  constant", fg_color::magenta, bg_color::black, style::bold)
                   << ' ' << const_position++ << ": '"
                   << apply_color(constant.to_literal_cxx_string(), fg_color::green) << "' "
@@ -255,9 +255,9 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-machine-code")) {
       print_flag_label("--dump-machine-code");
 
-      for (const bytecode& bytecode : unit_ctx.bytecode->get()) {
-        const instruction& instr = bytecode.instruct;
-        const size_t size = sizeof(instruction);
+      for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
+        const Instruction& instr = bytecode.instruct;
+        const size_t size = sizeof(Instruction);
         const uint8_t* data = reinterpret_cast<const uint8_t*>(&instr);
 
         for (size_t i = 0; i < size; i++) {
@@ -292,7 +292,7 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
 comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
   using namespace utils;
-  using enum comp_err_lvl;
+  using enum CErrorLevel;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
     return subcommand_parser.get<bool>(flag);
@@ -303,7 +303,7 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
 
   // Binary file check
   if (source_result->starts_with("%viac%")) {
-    trans_unit_context unit_ctx({});
+    TransUnitContext unit_ctx({});
 
     if (!get_flag("--allow-direct-bin-execution")) {
       err_bus.log({
@@ -321,7 +321,7 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   }
 
   comp_result result = handle_compile(subcommand_parser);
-  trans_unit_context& unit_ctx = result.unit;
+  TransUnitContext& unit_ctx = result.unit;
 
   bool verbosity_flag = get_flag("--verbose");
 
@@ -407,7 +407,7 @@ comp_result handle_repl(argparse::ArgumentParser&) {
 
   constexpr const char REPL_HEAD[] = "$> ";
 
-  trans_unit_context unit_ctx("<repl>", "");
+  TransUnitContext unit_ctx("<repl>", "");
 
   std::cout << REPL_WELCOME;
 
@@ -457,7 +457,7 @@ void linux_ub_sig_handler(int signum) {
     true,
     std::format("Program recieved signal {} ({})", signum, sig_id),
     dummy_unit_ctx,
-    comp_err_lvl::ERROR_,
+    CErrorLevel::ERROR_,
     {},
   });
 
@@ -468,7 +468,7 @@ void linux_ub_sig_handler(int signum) {
 #endif // __linux__
 
 int main(int argc, char* argv[]) {
-  using enum comp_err_lvl;
+  using enum CErrorLevel;
 
 #ifdef __linux__
   std::signal(SIGSEGV, linux_ub_sig_handler);
@@ -476,7 +476,7 @@ int main(int argc, char* argv[]) {
   std::signal(SIGABRT, linux_ub_sig_handler);
 #endif
 
-  // Argument parser entry point
+  // Argument Parser entry point
   ArgumentParser argument_parser("via", VIA_VERSION);
 
   auto compile_parser = get_standard_parser("compile");
