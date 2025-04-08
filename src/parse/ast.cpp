@@ -312,6 +312,34 @@ void step_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
+// array_expr_node
+std::string array_expr_node::to_string(uint32_t& depth) {
+  return std::format(
+    "array_expr_node<{}>",
+    format_vector<p_expr_node_t>(
+      values, [&depth](const p_expr_node_t& pexpr) { return pexpr->to_string(depth); }
+    )
+  );
+}
+
+p_expr_node_t array_expr_node::clone() {
+  values_t new_values;
+
+  for (const p_expr_node_t& pexpr : values) {
+    new_values.emplace_back(pexpr->clone());
+  }
+
+  return std::make_unique<array_expr_node>(open_brace, close_brace, std::move(new_values));
+}
+
+p_type_node_t array_expr_node::infer_type(trans_unit_context&) {
+  return std::make_unique<primitive_type_node>(token(), nil);
+}
+
+void array_expr_node::accept(node_visitor_base& visitor, uint32_t dst) {
+  visitor.visit(*this, dst);
+}
+
 // ===============================
 // auto_type_node
 std::string auto_type_node::to_string(uint32_t&) {

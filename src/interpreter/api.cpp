@@ -22,18 +22,6 @@ void state::set_register(operand_t reg, value_obj val) {
   impl::__set_register(this, reg, std::move(val));
 }
 
-bool state::is_heap(const value_obj& value) {
-  return static_cast<uint32_t>(value.type) >= static_cast<uint32_t>(value_type::string);
-}
-
-bool state::compare(const value_obj& left, const value_obj& right) {
-  if (left.type != right.type) {
-    return false;
-  }
-
-  return true;
-}
-
 void state::push_nil() {
   push(value_obj());
 }
@@ -58,8 +46,12 @@ void state::push_string(const char* str) {
   push(value_obj(str));
 }
 
-void state::push_table() {
-  push(value_obj(new table_obj()));
+void state::push_array() {
+  push(value_obj(new array_obj()));
+}
+
+void state::push_dict() {
+  push(value_obj(new dict_obj()));
 }
 
 void state::push(value_obj val) {
@@ -87,7 +79,7 @@ void state::set_stack(size_t position, value_obj value) {
   impl::__set_stack(this, position, std::move(value));
 }
 
-const value_obj& state::get_stack(size_t position) {
+value_obj& state::get_stack(size_t position) {
   VIA_ASSERT(sp >= position, "stack overflow");
   return impl::__get_stack(this, position);
 }
@@ -96,7 +88,7 @@ size_t state::stack_size() {
   return sp;
 }
 
-value_obj state::get_global(const char* name) {
+value_obj& state::get_global(const char* name) {
   return glb->gtable.get(name);
 }
 

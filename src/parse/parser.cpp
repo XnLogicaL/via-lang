@@ -183,6 +183,11 @@ result<p_type_node_t> parser::parse_type_primary() {
   VIA_CHECKRESULT(tok);
 
   switch (tok->type) {
+  case KW_AUTO:
+    if (tok->lexeme == "auto") {
+      return std::make_unique<auto_type_node>(tok->position, tok->position + tok->lexeme.length());
+    }
+    [[fallthrough]];
   case IDENTIFIER:
   case LIT_NIL: {
     auto it = primitive_map.find(tok->lexeme);
@@ -212,7 +217,7 @@ result<p_type_node_t> parser::parse_type_primary() {
       VIA_CHECKRESULT(type_result);
 
       params.emplace_back(
-        token(token_type::IDENTIFIER, "FUCK", 0, 0, 0), modifiers{}, type_result.value()->clone()
+        token(token_type::IDENTIFIER, "", 0, 0, 0), modifiers{}, type_result.value()->clone()
       );
 
       if (tok->type != PAREN_CLOSE) {
@@ -296,6 +301,7 @@ result<p_expr_node_t> parser::parse_primary() {
   }
   case BRACKET_OPEN: {
     result<token> br_open = consume();
+    array_expr_node::values_t values;
 
     while (true) {
       result<token> curr = current();
@@ -304,7 +310,20 @@ result<p_expr_node_t> parser::parse_primary() {
       if (curr->type == BRACKET_CLOSE) {
         break;
       }
+
+      result<p_expr_node_t> expr = parse_expr();
+      VIA_CHECKRESULT(expr);
+
+      values.emplace_back(std::move(*expr));
+
+      curr = expect_consume(COMMA, "Expected ',' to seperate list elements");
+      VIA_CHECKRESULT(curr);
     }
+
+    result<token> br_close = consume();
+    VIA_CHECKRESULT(br_close);
+
+    return std::make_unique<array_expr_node>(*br_open, *br_close, std::move(values));
   }
   default:
     break;

@@ -216,17 +216,12 @@ struct step_expr_node : public expr_node_base {
   }
 };
 
-struct table_expr_node : public expr_node_base {
-  struct KvPair {
-    p_expr_node_t key;
-    p_expr_node_t val;
-  };
-
-  using kvpair_vector = std::vector<KvPair>;
+struct array_expr_node : public expr_node_base {
+  using values_t = std::vector<p_expr_node_t>;
 
   token open_brace;
   token close_brace;
-  kvpair_vector pairs;
+  values_t values;
 
   std::string to_string(uint32_t&) override;
 
@@ -235,11 +230,10 @@ struct table_expr_node : public expr_node_base {
 
   void accept(node_visitor_base&, uint32_t) override;
 
-  table_expr_node(token open_brace, token close_brace, kvpair_vector pairs)
-    : pairs(std::move(pairs)) {
-    this->begin = open_brace.position;
-    this->end = close_brace.position;
-  }
+  array_expr_node(token open_brace, token close_brace, values_t values)
+    : open_brace(open_brace),
+      close_brace(close_brace),
+      values(std::move(values)) {}
 };
 
 // =========================================================================================

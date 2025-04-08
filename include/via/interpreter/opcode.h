@@ -52,7 +52,8 @@ enum class opcode : uint16_t {
   LOADF,
   LOADBT,
   LOADBF,
-  NEWTBL,
+  NEWARR,
+  NEWDICT,
   NEWCLSR,
 
   PUSH,
@@ -117,12 +118,17 @@ enum class opcode : uint16_t {
   TRY,
   CATCH,
 
-  TBLGET,
-  TBLSET,
-  TBLNEXT,
-  TBLLEN,
+  ARRGET,
+  ARRSET,
+  ARRNEXT,
+  ARRLEN,
 
-  STRCONCAT,
+  DICTGET,
+  DICTSET,
+  DICTNEXT,
+  DICTLEN,
+
+  STRCON,
   STRGET,
   STRSET,
   STRLEN,

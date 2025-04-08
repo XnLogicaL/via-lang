@@ -42,7 +42,7 @@ struct error_state {
 struct global_state {
   std::unordered_map<uint32_t, string_obj*> stable; // String interning table
   std::atomic<uint32_t> threads{0};                 // Thread count
-  table_obj gtable;                                 // global_obj environment
+  dict_obj gtable;                                  // global_obj environment
 
   std::shared_mutex stable_mutex;
 };
@@ -133,16 +133,6 @@ struct alignas(64) state {
   // Sets a given register to a given value.
   void set_register(operand_t reg, value_obj value);
 
-  //  =========================
-  // [ Comparison and metadata ]
-  //  =========================
-
-  // Returns whether if a given value has a heap-allocated component.
-  bool is_heap(const value_obj& value);
-
-  // Compares two given values.
-  bool compare(const value_obj& left, const value_obj& right);
-
   //  ==========================
   // [ Basic stack manipulation ]
   //  ==========================
@@ -165,8 +155,11 @@ struct alignas(64) state {
   // Pushes a string onto the stack.
   void push_string(const char* str);
 
-  // Pushes an empty table onto the stack.
-  void push_table();
+  // Pushes an empty array onto the stack.
+  void push_array();
+
+  // Pushes an empty dictionary onto the stack.
+  void push_dict();
 
   // Pushes a value onto the stack.
   void push(value_obj value);
@@ -188,11 +181,11 @@ struct alignas(64) state {
   void set_stack(size_t position, value_obj value);
 
   // Returns the stack value at a given position.
-  const value_obj& get_stack(size_t position);
+  value_obj& get_stack(size_t position);
 
   // Returns the stack value at a given offset relative to the current stack-frame's stack
   // pointer.
-  const value_obj& get_argument(size_t offset);
+  value_obj& get_argument(size_t offset);
 
   // Returns the size of stack.
   size_t stack_size();
@@ -202,7 +195,7 @@ struct alignas(64) state {
   //  =====================
 
   // Returns the global that corresponds to a given hashed identifier.
-  value_obj get_global(const char* name);
+  value_obj& get_global(const char* name);
 
   // Sets the global that corresponds to a given hashed identifier to a given value.
   void set_global(const char* name, const value_obj& value);
@@ -222,19 +215,6 @@ struct alignas(64) state {
 
   // Attempts to call the given value object with the given argument count.
   void call(const value_obj& callee, size_t argc);
-
-  // Attempts to return the upv_obj that lives in the given index of the given closure.
-  const value_obj& get_upvalue(function_obj& closure, size_t index);
-
-  // Attempts to set the upv_obj that lives in the given index of the given closure to a given
-  // value.
-  void set_upvalue(function_obj& closure, size_t index, const value_obj& value);
-
-  // Returns the upv_obj count of the given closure.
-  size_t get_upvalue_count(function_obj& closure);
-
-  // Returns the local count of the given closure.
-  size_t get_local_count_closure(function_obj& closure);
 
   // ===========================================================================================
   // General operations

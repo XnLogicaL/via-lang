@@ -15,7 +15,7 @@ namespace via::impl {
 
 void __set_error_state(state* state, const std::string& message) {
   state->err->frame = state->frame;
-  state->err->message = std::string(message);
+  state->err->message = std::move(message);
 }
 
 void __clear_error_state(state* state) {
@@ -87,7 +87,8 @@ void* __to_pointer(const value_obj& val) {
   switch (val.type) {
   case value_type::cfunction:
   case value_type::function:
-  case value_type::table:
+  case value_type::array:
+  case value_type::dict:
   case value_type::string:
     // This is technically UB... too bad!
     return reinterpret_cast<void*>(val.val_string);
@@ -138,8 +139,8 @@ value_obj __length(value_obj& val) {
   if (val.is_string()) {
     return value_obj(static_cast<int>(val.val_string->len));
   }
-  else if (val.is_table()) {
-    size_t len = __table_size(val.val_table);
+  else if (val.is_array() || val.is_dict()) {
+    size_t len = val.is_array() ? __array_size(val.val_array) : __dict_size(val.val_dict);
     return value_obj(static_cast<int>(len));
   }
 
@@ -184,7 +185,8 @@ value_obj __to_string(const value_obj& val) {
   }
   case boolean:
     return value_obj(val.val_boolean ? "true" : "false");
-  case table:
+  case array:
+  case dict:
   case function:
   case cfunction: {
     auto type_str = magic_enum::enum_name(val.type);

@@ -248,8 +248,11 @@ void expr_node_visitor::visit(index_expr_node& index_node, operand_t dst) {
     case value_type::string:
       unit_ctx.bytecode->emit(STRGET, {dst, obj_reg, index_reg});
       break;
-    case value_type::table:
-      unit_ctx.bytecode->emit(TBLGET, {dst, obj_reg, index_reg});
+    case value_type::array:
+      unit_ctx.bytecode->emit(ARRGET, {dst, obj_reg, index_reg});
+      break;
+    case value_type::dict:
+      unit_ctx.bytecode->emit(DICTGET, {dst, obj_reg, index_reg});
       break;
     default:
       compiler_error(
@@ -491,5 +494,7 @@ void expr_node_visitor::visit(step_expr_node& step_expr, operand_t dst) {
     compiler_error(step_expr.target->begin, step_expr.target->end, "Stepping invalid lvalue");
   }
 }
+
+void expr_node_visitor::visit(array_expr_node&, operand_t) {}
 
 } // namespace via

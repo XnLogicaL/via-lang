@@ -52,26 +52,27 @@
     VM_DISPATCH_OP(MODI), VM_DISPATCH_OP(MODF), VM_DISPATCH_OP(POW), VM_DISPATCH_OP(POWI),         \
     VM_DISPATCH_OP(POWF), VM_DISPATCH_OP(NEG), VM_DISPATCH_OP(MOV), VM_DISPATCH_OP(LOADK),         \
     VM_DISPATCH_OP(LOADNIL), VM_DISPATCH_OP(LOADI), VM_DISPATCH_OP(LOADF), VM_DISPATCH_OP(LOADBT), \
-    VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(NEWTBL), VM_DISPATCH_OP(NEWCLSR), VM_DISPATCH_OP(PUSH), \
-    VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF),  \
-    VM_DISPATCH_OP(PUSHBT), VM_DISPATCH_OP(PUSHBF), VM_DISPATCH_OP(POP), VM_DISPATCH_OP(DROP),     \
-    VM_DISPATCH_OP(STKGET), VM_DISPATCH_OP(STKSET), VM_DISPATCH_OP(ARGGET), VM_DISPATCH_OP(GGET),  \
-    VM_DISPATCH_OP(GSET), VM_DISPATCH_OP(UPVSET), VM_DISPATCH_OP(UPVGET), VM_DISPATCH_OP(INC),     \
-    VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND),             \
-    VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT),               \
-    VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF),        \
-    VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ), VM_DISPATCH_OP(JMPIFNEQ),                     \
-    VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT), VM_DISPATCH_OP(JMPIFLTEQ),                   \
-    VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF),                       \
-    VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ),                  \
-    VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ),                \
-    VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(CCALL),                       \
-    VM_DISPATCH_OP(NTVCALL), VM_DISPATCH_OP(MTDCALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETNIL), \
-    VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH), VM_DISPATCH_OP(TBLGET),     \
-    VM_DISPATCH_OP(TBLSET), VM_DISPATCH_OP(TBLNEXT), VM_DISPATCH_OP(TBLLEN),                       \
-    VM_DISPATCH_OP(STRCONCAT), VM_DISPATCH_OP(STRGET), VM_DISPATCH_OP(STRSET),                     \
-    VM_DISPATCH_OP(STRLEN), VM_DISPATCH_OP(CASTI), VM_DISPATCH_OP(CASTF), VM_DISPATCH_OP(CASTSTR), \
-    VM_DISPATCH_OP(CASTB)
+    VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(NEWARR), VM_DISPATCH_OP(NEWDICT),                       \
+    VM_DISPATCH_OP(NEWCLSR), VM_DISPATCH_OP(PUSH), VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), \
+    VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF), VM_DISPATCH_OP(PUSHBT), VM_DISPATCH_OP(PUSHBF),  \
+    VM_DISPATCH_OP(POP), VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(STKGET), VM_DISPATCH_OP(STKSET),     \
+    VM_DISPATCH_OP(ARGGET), VM_DISPATCH_OP(GGET), VM_DISPATCH_OP(GSET), VM_DISPATCH_OP(UPVSET),    \
+    VM_DISPATCH_OP(UPVGET), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ),          \
+    VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT),             \
+    VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ),            \
+    VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),   \
+    VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT),                    \
+    VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP),                    \
+    VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ),                     \
+    VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT),                 \
+    VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL),                  \
+    VM_DISPATCH_OP(CCALL), VM_DISPATCH_OP(NTVCALL), VM_DISPATCH_OP(MTDCALL), VM_DISPATCH_OP(RET),  \
+    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH),     \
+    VM_DISPATCH_OP(ARRGET), VM_DISPATCH_OP(ARRSET), VM_DISPATCH_OP(ARRNEXT),                       \
+    VM_DISPATCH_OP(ARRLEN), VM_DISPATCH_OP(DICTGET), VM_DISPATCH_OP(DICTSET),                      \
+    VM_DISPATCH_OP(DICTLEN), VM_DISPATCH_OP(DICTNEXT), VM_DISPATCH_OP(STRCONCAT),                  \
+    VM_DISPATCH_OP(STRGET), VM_DISPATCH_OP(STRSET), VM_DISPATCH_OP(STRLEN), VM_DISPATCH_OP(CASTI), \
+    VM_DISPATCH_OP(CASTF), VM_DISPATCH_OP(CASTSTR), VM_DISPATCH_OP(CASTB)
 
 // Macro for checking divison by zero.
 #define VM_DIVBY0I(divisor)                                                                        \
@@ -193,6 +194,10 @@ dispatch:
     VM_CASE(RAISE)
     VM_CASE(TRY)
     VM_CASE(CATCH)
+    VM_CASE(DICTGET)
+    VM_CASE(DICTSET)
+    VM_CASE(DICTLEN)
+    VM_CASE(DICTNEXT)
     VM_CASE(LBL) {
       VM_NEXT();
     }
@@ -690,11 +695,19 @@ dispatch:
       VM_NEXT();
     }
 
-    VM_CASE(NEWTBL) {
+    VM_CASE(NEWARR) {
       operand_t dst = pc->operand0;
-      value_obj ttable(new table_obj());
+      value_obj arr(new array_obj());
 
-      __set_register(this, dst, std::move(ttable));
+      __set_register(this, dst, arr.move());
+      VM_NEXT();
+    }
+
+    VM_CASE(NEWDICT) {
+      operand_t dst = pc->operand0;
+      value_obj dict(new dict_obj());
+
+      __set_register(this, dst, dict.move());
       VM_NEXT();
     }
 
@@ -835,7 +848,7 @@ dispatch:
       string_obj* key_str = key_obj->val_string;
       value_obj* global = __get_register(this, src);
 
-      glb->gtable.set(key_str->data, *global);
+      glb->gtable.set(key_str->data, global->move());
       VM_NEXT();
     }
 
@@ -1609,34 +1622,33 @@ dispatch:
       VM_NEXT();
     }
 
-    VM_CASE(TBLGET) {
+    VM_CASE(ARRGET) {
       operand_t dst = pc->operand0;
       operand_t tbl = pc->operand1;
       operand_t key = pc->operand2;
 
-      value_obj* tbl_val = __get_register(this, tbl);
+      value_obj* arr_val = __get_register(this, tbl);
       value_obj* key_val = __get_register(this, key);
+      value_obj* index = __array_get(arr_val->val_array, key_val->val_integer);
 
-      const value_obj& index = __table_get(tbl_val->val_table, *key_val);
-
-      __set_register(this, dst, index.clone());
+      __set_register(this, dst, index->clone());
       VM_NEXT();
     }
 
-    VM_CASE(TBLSET) {
+    VM_CASE(ARRSET) {
       operand_t src = pc->operand0;
       operand_t tbl = pc->operand1;
       operand_t ky = pc->operand2;
 
-      value_obj* table = __get_register(this, tbl);
+      value_obj* array = __get_register(this, tbl);
       value_obj* value = __get_register(this, src);
       value_obj* key = __get_register(this, ky);
 
-      __table_set(table->val_table, value_obj(key), *value);
+      __array_set(array->val_array, key->val_integer, value->move());
       VM_NEXT();
     }
 
-    VM_CASE(TBLNEXT) {
+    VM_CASE(ARRNEXT) {
       static std::unordered_map<void*, operand_t> next_table;
 
       operand_t dst = pc->operand0;
@@ -1654,17 +1666,17 @@ dispatch:
         next_table[ptr] = 0;
       }
 
-      const value_obj& field = __table_get(val->val_table, value_obj(key));
-      __set_register(this, dst, field.clone());
+      value_obj* field = __array_get(val->val_array, key);
+      __set_register(this, dst, field->clone());
       VM_NEXT();
     }
 
-    VM_CASE(TBLLEN) {
+    VM_CASE(ARRLEN) {
       operand_t dst = pc->operand0;
       operand_t tbl = pc->operand1;
 
       value_obj* val = __get_register(this, tbl);
-      int size = __table_size(val->val_table);
+      int size = __array_size(val->val_array);
 
       __set_register(this, dst, value_obj(size));
       VM_NEXT();

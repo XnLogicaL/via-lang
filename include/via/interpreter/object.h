@@ -19,7 +19,8 @@ namespace via {
 // Forward declarations
 struct state;
 struct string_obj;
-struct table_obj;
+struct array_obj;
+struct dict_obj;
 struct object_obj;
 struct function_obj;
 
@@ -35,8 +36,9 @@ enum class value_type : uint8_t {
   string,         // String type, pointer to string_obj
   function,       // Function type, pointer to function_obj
   cfunction,      // CFunction type, function pointer
-  table,          // Table type, pointer to table_obj
-  object,         // Object type, pointer to object_obj
+  array,
+  dict,
+  object, // Object type, pointer to object_obj
 };
 
 // Optimized tagged union that acts as a "value object".
@@ -47,7 +49,8 @@ struct alignas(8) value_obj {
     float val_floating_point; // Floating point value
     bool val_boolean;         // Boolean value
     string_obj* val_string;
-    table_obj* val_table;
+    array_obj* val_array;
+    dict_obj* val_dict;
     function_obj* val_function;
     cfunction_t val_cfunction;
     object_obj* val_object;
@@ -84,9 +87,13 @@ struct alignas(8) value_obj {
     : type(value_type::string),
       val_string(ptr) {}
 
-  explicit value_obj(table_obj* ptr)
-    : type(value_type::table),
-      val_table(ptr) {}
+  explicit value_obj(array_obj* ptr)
+    : type(value_type::array),
+      val_array(ptr) {}
+
+  explicit value_obj(dict_obj* ptr)
+    : type(value_type::dict),
+      val_dict(ptr) {}
 
   explicit value_obj(function_obj* ptr)
     : type(value_type::function),
@@ -125,8 +132,9 @@ struct alignas(8) value_obj {
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_float() const { return is(value_type::floating_point); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_number() const { return is_int() || is_float(); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_string() const { return is(value_type::string); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_table() const { return is(value_type::table); }
-  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_table(); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_array() const { return is(value_type::array); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_dict() const { return is(value_type::dict); }
+  VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_subscriptable() const { return is_string() || is_array() || is_dict(); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_function() const { return is(value_type::function); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_cfunction() const { return is(value_type::cfunction); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_callable() const { return is_function() || is_cfunction(); }
@@ -183,57 +191,94 @@ struct string_obj {
   uint32_t hash;
   char* data;
 
-  explicit string_obj(const char* str)
+  VIA_IMPLEMENTATION explicit string_obj(const char* str)
     : len(std::strlen(str)),
       hash(hash_string_custom(str)),
       data(duplicate_string(str)) {}
 
-  explicit string_obj(const string_obj& other)
+  VIA_IMPLEMENTATION explicit string_obj(const string_obj& other)
     : len(other.len),
       hash(other.hash),
       data(duplicate_string(other.data)) {}
 
-  ~string_obj();
+  VIA_IMPLEMENTATION ~string_obj() {
+    delete[] data;
+  }
 
-  size_t size();
   value_obj get(size_t position);
   void set(size_t position, const value_obj& value);
 };
 
-struct hash_node_obj {
+struct array_obj {
+  // Capacity of the array. Corresponds to the size of the data array.
+  size_t capacity = 64;
+
+  // Size caching
+  mutable size_t size_cache = 0;
+  mutable bool size_cache_valid = true;
+
+  // Internal data pointer.
+  value_obj* data = nullptr;
+
+  // Copyable
+  VIA_IMPLCOPY(array_obj);
+  VIA_IMPLMOVE(array_obj);
+
+  // Constructor
+  VIA_IMPLEMENTATION array_obj()
+    : data(new value_obj[capacity]) {}
+
+  VIA_IMPLEMENTATION ~array_obj() {
+    delete[] data;
+  }
+
+  size_t size() const;
+
+  // Returns the element that lives in the given index or nil.
+  value_obj& get(size_t position);
+
+  // Sets the element at the given index to the given value. Resizes the array if necessary.
+  void set(size_t position, value_obj value);
+};
+
+struct hash_node {
   const char* key;
   value_obj value;
 
-  ~hash_node_obj();
+  inline ~hash_node() = default;
 };
 
-struct table_obj {
-  size_t arr_capacity = 64;
-  size_t ht_capacity = 1024;
-  size_t arr_size_cache = 0;
-  size_t ht_size_cache = 0;
+struct dict_obj {
+  // Capacity of the dictionary. Corresponds to the size of the data array.
+  size_t capacity = 1024;
 
-  bool arr_size_cache_valid = true;
-  bool ht_size_cache_valid = true;
+  // Size caching
+  mutable size_t size_cache = 0;
+  mutable bool size_cache_valid = true;
 
-  value_obj* arr_array = new value_obj[arr_capacity];
-  hash_node_obj* ht_buckets = new hash_node_obj[ht_capacity];
+  hash_node* data = nullptr;
 
-  table_obj() = default;
-  table_obj(const table_obj&);
-  ~table_obj();
+  // Constructor
+  VIA_IMPLEMENTATION dict_obj()
+    : data(new hash_node[capacity]) {}
 
-  // Returns the real size of the table.
-  size_t size();
+  // Destructor
+  VIA_IMPLEMENTATION ~dict_obj() {
+    delete[] data;
+  }
 
-  // Returns the element that lives in the given index.
-  // Returns nil upon failure.
-  value_obj get(size_t position);
-  value_obj get(const char* key);
+  // Copyable
+  VIA_IMPLCOPY(dict_obj);
+  VIA_IMPLMOVE(dict_obj);
+
+  // Returns the real size of the dictionary.
+  size_t size() const;
+
+  // Returns the element that lives in the given index or nil.
+  value_obj& get(const char* key);
 
   // Sets the element that lives in the given index to the given value.
-  void set(size_t position, const value_obj& value);
-  void set(const char* key, const value_obj& value);
+  void set(const char* key, value_obj value);
 };
 
 struct object_obj {
@@ -245,9 +290,9 @@ struct object_obj {
 
   value_obj* fields;
 
-  object_obj() = default;
-  ~object_obj();
-  object_obj(size_t field_count)
+  inline object_obj() = default;
+  inline ~object_obj();
+  inline object_obj(size_t field_count)
     : field_count(field_count),
       fields(new value_obj[field_count]) {}
 };

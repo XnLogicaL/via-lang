@@ -11,6 +11,10 @@ namespace via {
 
 using enum value_type;
 
+//  ==============
+// [ Value object ]
+//  ==============
+
 // Move-assignment operator, moves values from other object
 value_obj& value_obj::operator=(value_obj&& other) {
   if (this != &other) {
@@ -30,8 +34,11 @@ value_obj& value_obj::operator=(value_obj&& other) {
     case string:
       val_string = other.val_string;
       break;
-    case table:
-      val_table = other.val_table;
+    case array:
+      val_array = other.val_array;
+      break;
+    case dict:
+      val_dict = other.val_dict;
       break;
     case function:
       val_function = other.val_function;
@@ -67,8 +74,11 @@ value_obj::value_obj(value_obj&& other) {
   case string:
     val_string = other.val_string;
     break;
-  case table:
-    val_table = other.val_table;
+  case array:
+    val_array = other.val_array;
+    break;
+  case dict:
+    val_dict = other.val_dict;
     break;
   case function:
     val_function = other.val_function;
@@ -100,8 +110,10 @@ value_obj value_obj::clone() const {
     return value_obj(val_boolean);
   case string:
     return value_obj(val_string->data);
-  case table:
-    return value_obj(new table_obj(*val_table));
+  case array:
+    return value_obj(new array_obj(*val_array));
+  case dict:
+    return value_obj(new dict_obj(*val_dict));
   case function:
     return value_obj(new function_obj(*val_function));
   case cfunction:
@@ -120,9 +132,13 @@ void value_obj::reset() {
       delete val_string;
       val_string = nullptr;
       break;
-    case table:
-      delete val_table;
-      val_table = nullptr;
+    case array:
+      delete val_array;
+      val_array = nullptr;
+      break;
+    case dict:
+      delete val_dict;
+      val_dict = nullptr;
       break;
     case function:
       delete val_function;
@@ -156,14 +172,9 @@ value_obj::value_obj(const char* str)
   : type(string),
     val_string(new string_obj(str)) {}
 
-string_obj::~string_obj() {
-  delete[] data;
-}
-
-size_t string_obj::size() {
-  return len;
-}
-
+//  ===============
+// [ String object ]
+//  ===============
 void string_obj::set(size_t position, const value_obj& value) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
@@ -182,66 +193,148 @@ value_obj string_obj::get(size_t position) {
   return value_obj(tstr);
 }
 
-hash_node_obj::~hash_node_obj() = default;
-
-table_obj::~table_obj() {
-  delete[] arr_array;
-  delete[] ht_buckets;
+//  ==============
+// [ Array object ]
+//  ==============
+array_obj::array_obj(const array_obj& other)
+  : capacity(other.capacity),
+    size_cache(other.size_cache),
+    size_cache_valid(other.size_cache_valid),
+    data(new value_obj[capacity]) {
+  for (size_t i = 0; i < capacity; i++) {
+    data[i] = other.data[i].move();
+  }
 }
 
-table_obj::table_obj(const table_obj& other)
-  : arr_capacity(other.arr_capacity),
-    ht_capacity(other.ht_capacity),
-    arr_size_cache_valid(other.arr_size_cache_valid),
-    ht_size_cache_valid(other.ht_size_cache_valid) {
+array_obj::array_obj(array_obj&& other)
+  : capacity(other.capacity),
+    size_cache(other.size_cache),
+    size_cache_valid(other.size_cache_valid),
+    data(other.data) {
+  other.capacity = 0;
+  other.size_cache = 0;
+  other.size_cache_valid = false;
+  other.data = nullptr;
+}
 
-  if (other.arr_array) {
-    arr_array = new value_obj[arr_capacity];
-    for (size_t i = 0; i < arr_capacity; ++i) {
-      arr_array[i] = other.arr_array[i].clone();
+array_obj& array_obj::operator=(const array_obj& other) {
+  if (this != &other) {
+    capacity = other.capacity;
+    size_cache = other.size_cache;
+    size_cache_valid = other.size_cache_valid;
+    data = new value_obj[capacity];
+    for (size_t i = 0; i < capacity; i++) {
+      data[i] = other.data[i].move();
     }
   }
-  else {
-    arr_array = nullptr;
+
+  return *this;
+}
+
+array_obj& array_obj::operator=(array_obj&& other) {
+  if (this != &other) {
+    capacity = other.capacity;
+    size_cache = other.size_cache;
+    size_cache_valid = other.size_cache_valid;
+    data = other.data;
+
+    other.capacity = 0;
+    other.size_cache = 0;
+    other.size_cache_valid = false;
+    other.data = nullptr;
   }
 
-  if (other.ht_buckets) {
-    for (size_t i = 0; i < ht_capacity; ++i) {
-      hash_node_obj& src = other.ht_buckets[i];
-      hash_node_obj* dst = &ht_buckets[i];
+  return *this;
+}
+
+size_t array_obj::size() const {
+  return impl::__array_size(this);
+}
+
+value_obj& array_obj::get(size_t position) {
+  return *impl::__array_get(this, position);
+}
+
+void array_obj::set(size_t position, value_obj value) {
+  impl::__array_set(this, position, value.move());
+}
+
+//  ===================
+// [ Dictionary object ]
+//  ===================
+dict_obj::dict_obj(const dict_obj& other)
+  : capacity(other.capacity),
+    size_cache(other.size_cache),
+    size_cache_valid(other.size_cache_valid),
+    data(new hash_node[capacity]) {
+  for (size_t i = 0; i < capacity; ++i) {
+    hash_node& src = other.data[i];
+    hash_node* dst = &data[i];
+    dst->key = src.key;
+    dst->value = src.value.clone();
+  }
+}
+
+dict_obj::dict_obj(dict_obj&& other)
+  : capacity(other.capacity),
+    size_cache(other.size_cache),
+    size_cache_valid(other.size_cache_valid),
+    data(other.data) {
+  other.capacity = 0;
+  other.size_cache = 0;
+  other.size_cache_valid = false;
+  other.data = nullptr;
+}
+
+dict_obj& dict_obj::operator=(const dict_obj& other) {
+  if (this != &other) {
+    capacity = other.capacity;
+    size_cache = other.size_cache;
+    size_cache_valid = other.size_cache_valid;
+    data = new hash_node[capacity];
+
+    for (size_t i = 0; i < capacity; ++i) {
+      hash_node& src = other.data[i];
+      hash_node* dst = &data[i];
       dst->key = src.key;
       dst->value = src.value.clone();
     }
   }
-  else {
-    ht_buckets = nullptr;
+
+  return *this;
+}
+
+dict_obj& dict_obj::operator=(dict_obj&& other) {
+  if (this != &other) {
+    capacity = other.capacity;
+    size_cache = other.size_cache;
+    size_cache_valid = other.size_cache_valid;
+    data = other.data;
+
+    other.capacity = 0;
+    other.size_cache = 0;
+    other.size_cache_valid = false;
+    other.data = nullptr;
   }
+
+  return *this;
 }
 
-size_t table_obj::size() {
-  return impl::__table_size(this);
+size_t dict_obj::size() const {
+  return impl::__dict_size(this);
 }
 
-void table_obj::set(const char* key, const value_obj& value) {
-  value_obj index(key);
-  impl::__table_set(this, index, value);
+value_obj& dict_obj::get(const char* key) {
+  return *impl::__dict_get(this, key);
 }
 
-void table_obj::set(size_t position, const value_obj& value) {
-  value_obj index(static_cast<int>(position));
-  impl::__table_set(this, index, value);
+void dict_obj::set(const char* key, value_obj value) {
+  impl::__dict_set(this, key, value.move());
 }
 
-value_obj table_obj::get(const char* key) {
-  value_obj index(key);
-  return impl::__table_get(this, index);
-}
-
-value_obj table_obj::get(size_t position) {
-  value_obj index(static_cast<int>(position));
-  return impl::__table_get(this, index);
-}
-
+//  ===============
+// [ Object object ]
+//  ===============
 object_obj::~object_obj() {
   if (fields) {
     delete[] fields;

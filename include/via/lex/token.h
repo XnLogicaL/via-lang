@@ -46,6 +46,7 @@ enum class token_type {
   KW_TRY,      // try
   KW_CATCH,    // catch
   KW_RAISE,    // raise
+  KW_AUTO,     // auto
 
   // Operators
   OP_ADD,       // +
