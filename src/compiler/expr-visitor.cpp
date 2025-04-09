@@ -40,7 +40,7 @@
 //  a "Use of undeclared variable" compilation error.
 //
 // - UnaryExprNode compilation:
-//  This node emits a NEG instruction onto the inner expression.
+//
 //
 // - GroupExprNode compilation:
 //  Compiles the inner expression into dst.
@@ -73,7 +73,7 @@ namespace via {
 
 using enum IOpCode;
 
-void expr_node_visitor::visit(LitExprNode& literal_node, operand_t dst) {
+void ExprNodeVisitor::visit(LitExprNode& literal_node, operand_t dst) {
   using enum IValueType;
 
   if (int* integer_value = std::get_if<int>(&literal_node.value)) {
@@ -99,7 +99,7 @@ void expr_node_visitor::visit(LitExprNode& literal_node, operand_t dst) {
   }
 }
 
-void expr_node_visitor::visit(SymExprNode& variable_node, operand_t dst) {
+void ExprNodeVisitor::visit(SymExprNode& variable_node, operand_t dst) {
   Token var_id = variable_node.identifier;
 
   std::string symbol = var_id.lexeme;
@@ -132,7 +132,7 @@ void expr_node_visitor::visit(SymExprNode& variable_node, operand_t dst) {
     uint16_t index = 0;
     auto& top = unit_ctx.internal.function_stack->top();
 
-    for (const auto& parameter : top.func_stmt->parameters) {
+    for (const auto& parameter : top.decl->parameters) {
       if (parameter.identifier.lexeme == symbol) {
         unit_ctx.bytecode->emit(ARGGET, {dst, index});
         return;
@@ -141,19 +141,61 @@ void expr_node_visitor::visit(SymExprNode& variable_node, operand_t dst) {
       ++index;
     }
   }
+
   compiler_error(var_id, std::format("Use of undeclared identifier '{}'", var_id.lexeme));
+  compiler_output_end();
 }
 
-void expr_node_visitor::visit(UnaryExprNode& unary_node, operand_t dst) {
-  unary_node.accept(*this, dst);
-  unit_ctx.bytecode->emit(NEG, {dst});
+void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
+  TypeNodeBase* type = unary_node.expression->infer_type(unit_ctx);
+  unary_node.expression->accept(*this, dst);
+
+  if (unary_node.op.type == TokenType::OP_SUB) {
+    if (is_arithmetic(type)) {
+      unit_ctx.bytecode->emit(NEG, {dst});
+    }
+    else {
+      compiler_error(
+        unary_node.begin,
+        unary_node.end,
+        std::format("Negating non-negatable type {}", type->to_output_string())
+      );
+      compiler_output_end();
+    }
+  }
+  else if (unary_node.op.type == TokenType::OP_LEN) {
+    if (is_derived_instance<TypeNodeBase, ArrayTypeNode>(type)) {
+      register_t reg = allocator.allocate_register();
+      unit_ctx.bytecode->emit(MOV, {reg, dst});
+      unit_ctx.bytecode->emit(ARRLEN, {dst, reg});
+      return;
+    }
+
+    compiler_error(
+      unary_node.begin,
+      unary_node.end,
+      std::format("Taking length of unbounded type {}", type->to_output_string())
+    );
+    compiler_output_end();
+  }
+  else if (unary_node.op.type == TokenType::OP_INC || unary_node.op.type == TokenType::OP_DEC) {
+    IOpCode opcode = unary_node.op.type == TokenType::OP_INC ? INC : DEC;
+
+    if (!is_arithmetic(type)) {
+      compiler_error(unary_node.begin, unary_node.end, "Stepping non-arithmetic data type");
+      compiler_output_end();
+      return;
+    }
+
+    unit_ctx.bytecode->emit(opcode, {dst});
+  }
 }
 
-void expr_node_visitor::visit(GroupExprNode& group_node, operand_t dst) {
+void ExprNodeVisitor::visit(GroupExprNode& group_node, operand_t dst) {
   group_node.accept(*this, dst);
 }
 
-void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
+void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
   operand_t argc = call_node.arguments.size();
   operand_t callee_reg = allocator.allocate_register();
 
@@ -162,15 +204,15 @@ void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
 
   VIA_TINFERENCE_FAILURE(callee_type, callee);
 
-  if (FunctionTypeNode* fn_ty =
-        get_derived_instance<TypeNodeBase, FunctionTypeNode>(*callee_type)) {
+  if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNodeBase, FunctionTypeNode>(callee_type)) {
     size_t expected_argc = fn_ty->parameters.size();
     if (argc != static_cast<operand_t>(expected_argc)) {
       compiler_error(
         call_node.begin,
         call_node.end,
-        std::format("IFunction type expects {} arguments, got {}", expected_argc, argc)
+        std::format("Function type expects {} arguments, got {}", expected_argc, argc)
       );
+      compiler_output_end();
     }
   }
   else {
@@ -179,6 +221,7 @@ void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
       callee->end,
       std::format("Value of type '{}' is not callable", callee_type->to_output_string())
     );
+    compiler_output_end();
   }
 
   call_node.callee->accept(*this, callee_reg);
@@ -186,7 +229,7 @@ void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
   for (ExprNodeBase*& argument : call_node.arguments) {
     operand_t argument_reg = allocator.allocate_register();
 
-    if (LitExprNode* literal_node = get_derived_instance<ExprNodeBase, LitExprNode>(*argument)) {
+    if (LitExprNode* literal_node = get_derived_instance<ExprNodeBase, LitExprNode>(argument)) {
       if (int* integer_value = std::get_if<int>(&literal_node->value)) {
         uint32_t final_value = *integer_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
@@ -221,47 +264,60 @@ void expr_node_visitor::visit(CallExprNode& call_node, operand_t dst) {
   allocator.free_register(callee_reg);
 }
 
-void expr_node_visitor::visit(IndexExprNode& index_node, operand_t dst) {
+void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
+  size_t begin = 0, end = 0;
   operand_t obj_reg = allocator.allocate_register();
-  operand_t index_reg = allocator.allocate_register();
 
   index_node.object->accept(*this, obj_reg);
-  index_node.index->accept(*this, index_reg);
+
+  if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(index_node.object)) {
+    auto id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
+    if (id.has_value()) {
+      auto obj = unit_ctx.internal.variable_stack->at(*id);
+      begin = obj->decl->begin;
+      end = obj->decl->end;
+    }
+  }
 
   TypeNodeBase* object_type = index_node.object->infer_type(unit_ctx);
   TypeNodeBase* index_type = index_node.index->infer_type(unit_ctx);
 
-  // Validate index type
-  if (auto* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*index_type)) {
-    if (primitive->type != IValueType::string && primitive->type != IValueType::integer) {
-      compiler_error(
-        index_node.index->begin, index_node.index->end, "Index type must be a string or integer"
-      );
-      return;
+  if (is_derived_instance<TypeNodeBase, ArrayTypeNode>(object_type)) {
+    if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(index_type)) {
+      if (primitive->type == IValueType::integer) {
+        register_t reg = allocator.allocate_register();
+        index_node.index->accept(*this, reg);
+        unit_ctx.bytecode->emit(ARRGET, {dst, obj_reg, reg});
+        allocator.free_register(reg);
+        return;
+      }
     }
-  }
 
-  // Handle different object types
-  if (auto* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*object_type)) {
-    switch (primitive->type) {
-    case IValueType::string:
-      unit_ctx.bytecode->emit(STRGET, {dst, obj_reg, index_reg});
-      break;
-    case IValueType::array:
-      unit_ctx.bytecode->emit(ARRGET, {dst, obj_reg, index_reg});
-      break;
-    case IValueType::dict:
-      unit_ctx.bytecode->emit(DICTGET, {dst, obj_reg, index_reg});
-      break;
-    default:
-      compiler_error(
-        index_node.object->begin, index_node.object->end, "Expression type is not subscriptable"
+    compiler_error(
+      index_node.index->begin,
+      index_node.index->end,
+      std::format("Subscripting array with type {}", index_type->to_output_string())
+    );
+    compiler_output_end();
+  }
+  else {
+    compiler_error(
+      index_node.object->begin,
+      index_node.object->end,
+      std::format("lvalue of type {} is not subscriptable", object_type->to_output_string())
+    );
+
+    if (begin != 0 && end != 0) {
+      compiler_info(
+        begin, end, std::format("Declared as {} here", object_type->to_output_string())
       );
     }
+
+    compiler_output_end();
   }
 }
 
-void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
+void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   using enum TokenType;
   using OpCodeId = std::underlying_type_t<IOpCode>;
 
@@ -282,16 +338,15 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
     {KW_OR, IOpCode::OR},
   };
 
-  ExprNodeBase*& p_lhs = binary_node.lhs_expression;
-  ExprNodeBase*& p_rhs = binary_node.rhs_expression;
-  ExprNodeBase& lhs = *p_lhs;
-  ExprNodeBase& rhs = *p_rhs;
+  ExprNodeBase* p_lhs = binary_node.lhs_expression;
+  ExprNodeBase* p_rhs = binary_node.rhs_expression;
 
   auto op_it = operator_map.find(binary_node.op.type);
   if (op_it == operator_map.end()) {
     compiler_error(
       binary_node.op, std::format("Unknown binary operator '{}'", binary_node.op.lexeme)
     );
+    compiler_output_end();
     return;
   }
 
@@ -311,6 +366,7 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
         right_type->to_output_string()
       )
     );
+    compiler_output_end();
     return;
   }
 
@@ -323,7 +379,7 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
     (base_opcode == AND || base_opcode == OR || base_opcode == LT || base_opcode == GT
      || base_opcode == LTEQ || base_opcode == GTEQ);
 
-  if (is_constant_expression(unit_ctx, rhs) && is_constant_expression(unit_ctx, lhs)
+  if (is_constant_expression(unit_ctx, p_rhs) && is_constant_expression(unit_ctx, p_lhs)
       && !is_bool_or_relational) {
     // Constant folding is an O1 optimization.
     if (unit_ctx.optimization_level < 1) {
@@ -333,31 +389,33 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
     LitExprNode folded_constant = fold_constant(binary_node);
     folded_constant.accept(*this, dst);
   }
-  else if (is_constant_expression(unit_ctx, rhs) && !is_bool_or_relational) {
+  else if (is_constant_expression(unit_ctx, p_rhs) && !is_bool_or_relational) {
     if (unit_ctx.optimization_level < 1) {
       goto non_constexpr;
     }
 
-    LitExprNode literal = fold_constant(rhs);
+    LitExprNode literal = fold_constant(*p_rhs);
 
     // Special handling for DIV: check for division by zero.
     if (base_opcode == DIV) {
       if (int* int_val = std::get_if<int>(&literal.value)) {
         if (*int_val == 0) {
           compiler_error(literal.value_token, "Explicit division by zero");
+          compiler_output_end();
           return;
         }
       }
       if (float* float_val = std::get_if<float>(&literal.value)) {
         if (*float_val == 0.0f) {
           compiler_error(literal.value_token, "Explicit division by zero");
+          compiler_output_end();
           return;
         }
       }
     }
 
     // Emit code for the constant-case.
-    lhs.accept(*this, dst);
+    p_lhs->accept(*this, dst);
 
     // Special handling for boolean operations.
     if (base_opcode == AND || base_opcode == OR) {
@@ -398,13 +456,13 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
     operand_t reg = allocator.allocate_register();
 
     // Evaluate expressions based on operator precedence.
-    if (rhs.precedence() > lhs.precedence()) {
-      rhs.accept(*this, dst);
-      lhs.accept(*this, reg);
+    if (p_rhs->precedence() > p_lhs->precedence()) {
+      p_rhs->accept(*this, dst);
+      p_lhs->accept(*this, reg);
     }
     else {
-      lhs.accept(*this, dst);
-      rhs.accept(*this, reg);
+      p_lhs->accept(*this, dst);
+      p_rhs->accept(*this, reg);
     }
 
     if (is_bool_or_relational) {
@@ -421,7 +479,7 @@ void expr_node_visitor::visit(BinExprNode& binary_node, operand_t dst) {
   }
 }
 
-void expr_node_visitor::visit(CastExprNode& type_cast, operand_t dst) {
+void ExprNodeVisitor::visit(CastExprNode& type_cast, operand_t dst) {
   TypeNodeBase* left_type = type_cast.expression->infer_type(unit_ctx);
 
   VIA_TINFERENCE_FAILURE(left_type, type_cast.expression);
@@ -431,17 +489,18 @@ void expr_node_visitor::visit(CastExprNode& type_cast, operand_t dst) {
       type_cast.expression->begin,
       type_cast.expression->end,
       std::format(
-        "Expression of type '{}' can not be casted into type '{}'",
+        "Expression of type {} is not castable into type {}",
         left_type->to_output_string(),
         type_cast.type->to_output_string()
       )
     );
+    compiler_output_end();
   }
 
   operand_t temp = allocator.allocate_register();
   type_cast.expression->accept(*this, temp);
 
-  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*type_cast.type)) {
+  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type_cast.type)) {
     if (primitive->type == IValueType::integer) {
       unit_ctx.bytecode->emit(CASTI, {dst, temp});
     }
@@ -452,16 +511,16 @@ void expr_node_visitor::visit(CastExprNode& type_cast, operand_t dst) {
       unit_ctx.bytecode->emit(CASTSTR, {dst, temp});
     }
     else if (primitive->type == IValueType::boolean) {
-      unit_ctx.bytecode->emit();
+      unit_ctx.bytecode->emit(CASTB, {dst, temp});
     }
   }
 
   allocator.free_register(temp);
 }
 
-void expr_node_visitor::visit(StepExprNode& step_expr, operand_t dst) {
+void ExprNodeVisitor::visit(StepExprNode& step_expr, operand_t dst) {
   if (SymExprNode* symbol_node =
-        get_derived_instance<ExprNodeBase, SymExprNode>(*step_expr.target)) {
+        get_derived_instance<ExprNodeBase, SymExprNode>(step_expr.target)) {
     Token symbol_token = symbol_node->identifier;
     std::string symbol = symbol_token.lexeme;
     std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
@@ -470,6 +529,13 @@ void expr_node_visitor::visit(StepExprNode& step_expr, operand_t dst) {
       const auto& test_stack_member = unit_ctx.internal.variable_stack->at(stk_id.value());
       if (test_stack_member.has_value() && test_stack_member->is_const) {
         compiler_error(symbol_token, std::format("Assignment to constant variable '{}'", symbol));
+        compiler_output_end();
+        return;
+      }
+
+      if (!is_arithmetic(test_stack_member->type)) {
+        compiler_error(step_expr.begin, step_expr.end, "Stepping non-arithmetic datatype");
+        compiler_output_end();
         return;
       }
 
@@ -477,22 +543,38 @@ void expr_node_visitor::visit(StepExprNode& step_expr, operand_t dst) {
       operand_t value_reg = allocator.allocate_register();
       step_expr.target->accept(*this, value_reg);
 
-      if (step_expr.is_postfix) {
-        unit_ctx.bytecode->emit(MOV, {dst, value_reg});
-        unit_ctx.bytecode->emit(opc, {value_reg});
-        unit_ctx.bytecode->emit(STKSET, {value_reg, *stk_id});
-      }
+      unit_ctx.bytecode->emit(MOV, {dst, value_reg});
+      unit_ctx.bytecode->emit(opc, {value_reg});
+      unit_ctx.bytecode->emit(STKSET, {value_reg, *stk_id});
     }
     else {
-      compiler_error(symbol_token, "Assignment to invalid lvalue");
+      compiler_error(symbol_token, "Stepping invalid lvalue");
       compiler_info(std::format("Symbol '{}' not found in scope", symbol_node->identifier.lexeme));
+      compiler_output_end();
     }
   }
   else {
     compiler_error(step_expr.target->begin, step_expr.target->end, "Stepping invalid lvalue");
+    compiler_output_end();
   }
 }
 
-void expr_node_visitor::visit(ArrayExprNode&, operand_t) {}
+void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
+  unit_ctx.bytecode->emit(NEWARR, {dst});
+
+  uint32_t i = 0;
+  register_t key_reg = allocator.allocate_register();
+  register_t val_reg = allocator.allocate_register();
+
+  for (ExprNodeBase* expr : array_expr.values) {
+    u16_result result = reinterpret_u32_as_2u16(i++);
+    expr->accept(*this, val_reg);
+    unit_ctx.bytecode->emit(LOADI, {key_reg, result.high, result.low});
+    unit_ctx.bytecode->emit(ARRSET, {val_reg, dst, key_reg});
+  }
+
+  allocator.free_register(val_reg);
+  allocator.free_register(key_reg);
+}
 
 } // namespace via

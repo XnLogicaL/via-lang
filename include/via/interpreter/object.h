@@ -18,7 +18,7 @@ namespace via {
 
 // Forward declarations
 struct state;
-struct string_obj;
+struct IString;
 struct IArray;
 struct IDict;
 struct IObject;
@@ -33,7 +33,7 @@ enum class IValueType : uint8_t {
   integer,        // Integer type
   floating_point, // Floating point type
   boolean,        // Boolean type
-  string,         // String type, pointer to string_obj
+  string,         // String type, pointer to IString
   function,       // IFunction type, pointer to IFunction
   cfunction,      // CFunction type, function pointer
   array,
@@ -48,7 +48,7 @@ struct alignas(8) IValue {
     int val_integer;          // Integer value
     float val_floating_point; // Floating point value
     bool val_boolean;         // Boolean value
-    string_obj* val_string;
+    IString* val_string;
     IArray* val_array;
     IDict* val_dict;
     IFunction* val_function;
@@ -66,44 +66,46 @@ struct alignas(8) IValue {
   VIA_IMPLMOVE(IValue);
 
   // Destructor
-  ~IValue();
+  VIA_IMPLEMENTATION ~IValue() {
+    reset();
+  }
 
-  explicit IValue()
+  VIA_IMPLEMENTATION explicit IValue()
     : type(IValueType::nil) {}
 
-  explicit IValue(bool b)
+  VIA_IMPLEMENTATION explicit IValue(bool b)
     : type(IValueType::boolean),
       val_boolean(b) {}
 
-  explicit IValue(int x)
+  VIA_IMPLEMENTATION explicit IValue(int x)
     : type(IValueType::integer),
       val_integer(x) {}
 
-  explicit IValue(float x)
+  VIA_IMPLEMENTATION explicit IValue(float x)
     : type(IValueType::floating_point),
       val_floating_point(x) {}
 
-  explicit IValue(string_obj* ptr)
+  VIA_IMPLEMENTATION explicit IValue(IString* ptr)
     : type(IValueType::string),
       val_string(ptr) {}
 
-  explicit IValue(IArray* ptr)
+  VIA_IMPLEMENTATION explicit IValue(IArray* ptr)
     : type(IValueType::array),
       val_array(ptr) {}
 
-  explicit IValue(IDict* ptr)
+  VIA_IMPLEMENTATION explicit IValue(IDict* ptr)
     : type(IValueType::dict),
       val_dict(ptr) {}
 
-  explicit IValue(IFunction* ptr)
+  VIA_IMPLEMENTATION explicit IValue(IFunction* ptr)
     : type(IValueType::function),
       val_function(ptr) {}
 
-  explicit IValue(cfunction_t ptr)
+  VIA_IMPLEMENTATION explicit IValue(cfunction_t ptr)
     : type(IValueType::cfunction),
       val_cfunction(ptr) {}
 
-  explicit IValue(IObject* ptr)
+  VIA_IMPLEMENTATION explicit IValue(IObject* ptr)
     : type(IValueType::object),
       val_object(ptr) {}
 
@@ -174,34 +176,24 @@ struct alignas(8) IValue {
 
   // Compares equality between self and a given IValue.
   VIA_NODISCARD bool compare(const IValue& other) const;
-
-  // Moves the value and returns it as an rvalue reference.
-  VIA_NODISCARD VIA_FORCEINLINE IValue&& move() {
-    return static_cast<IValue&&>(*this);
-  }
-
-  // Moves the value and returns it as a constant rvalue reference.
-  VIA_NODISCARD VIA_FORCEINLINE const IValue&& move() const {
-    return static_cast<const IValue&&>(*this);
-  }
 };
 
-struct string_obj {
+struct IString {
   size_t len;
   uint32_t hash;
   char* data;
 
-  VIA_IMPLEMENTATION explicit string_obj(const char* str)
+  VIA_IMPLEMENTATION explicit IString(const char* str)
     : len(std::strlen(str)),
       hash(hash_string_custom(str)),
       data(duplicate_string(str)) {}
 
-  VIA_IMPLEMENTATION explicit string_obj(const string_obj& other)
+  VIA_IMPLEMENTATION explicit IString(const IString& other)
     : len(other.len),
       hash(other.hash),
       data(duplicate_string(other.data)) {}
 
-  VIA_IMPLEMENTATION ~string_obj() {
+  VIA_IMPLEMENTATION ~IString() {
     delete[] data;
   }
 

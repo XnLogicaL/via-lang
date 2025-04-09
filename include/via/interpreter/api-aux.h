@@ -152,7 +152,7 @@ VIA_IMPLEMENTATION void __dict_set(IDict* dict, const char* key, IValue val) {
 
   IHashNode& node = dict->data[index];
   node.key = key;
-  node.value = val.move();
+  node.value = std::move(val);
 
   dict->size_cache_valid = false;
 }
@@ -219,7 +219,7 @@ VIA_IMPLEMENTATION void __array_set(IArray* array, size_t index, IValue val) {
   }
 
   array->size_cache_valid = false;
-  array->data[index] = val.move();
+  array->data[index] = std::move(val);
 }
 
 // Attempts to get the value at the given index of the array component of the table. Returns nullptr
@@ -295,7 +295,7 @@ VIA_IMPLEMENTATION void __push(state* state, IValue val) {
 }
 
 VIA_IMPLEMENTATION IValue __pop(state* state) {
-  return state->sbp[state->sp--].move();
+  return std::move(state->sbp[state->sp--]);
 }
 
 VIA_IMPLEMENTATION void __drop(state* state) {
@@ -308,7 +308,7 @@ VIA_IMPLEMENTATION IValue& __get_stack(state* state, size_t offset) {
 }
 
 VIA_IMPLEMENTATION void __set_stack(state* state, size_t offset, IValue val) {
-  state->sbp[offset] = val.move();
+  state->sbp[offset] = std::move(val);
 }
 
 VIA_IMPLEMENTATION IValue __get_argument(state* VIA_RESTRICT state, size_t offset) {
@@ -335,11 +335,11 @@ VIA_IMPLEMENTATION void __register_deallocate(state* state) {
 
 VIA_OPTIMIZE void __set_register(state* state, operand_t reg, IValue val) {
   if VIA_LIKELY (reg < VIA_STK_REGISTERS) {
-    state->stack_registers.registers[reg] = val.move();
+    state->stack_registers.registers[reg] = std::move(val);
   }
   else {
     const operand_t offset = reg - VIA_STK_REGISTERS;
-    state->spill_registers->registers[offset] = val.move();
+    state->spill_registers->registers[offset] = std::move(val);
   }
 }
 

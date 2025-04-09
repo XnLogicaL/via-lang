@@ -63,6 +63,7 @@ public:
   virtual TypeNodeBase* visit(GenericTypeNode&) VIA_INVALID_VISIT;
   virtual TypeNodeBase* visit(UnionTypeNode&) VIA_INVALID_VISIT;
   virtual TypeNodeBase* visit(FunctionTypeNode&) VIA_INVALID_VISIT;
+  virtual TypeNodeBase* visit(ArrayTypeNode&) VIA_INVALID_VISIT;
 
   // Statement visitors
   virtual void visit(DeclStmtNode&) VIA_INVALID_VISIT;
@@ -74,20 +75,13 @@ public:
   virtual void visit(BreakStmtNode&) VIA_INVALID_VISIT;
   virtual void visit(ContinueStmtNode&) VIA_INVALID_VISIT;
   virtual void visit(WhileStmtNode&) VIA_INVALID_VISIT;
+  virtual void visit(DeferStmtNode&) VIA_INVALID_VISIT;
   virtual void visit(ExprStmtNode&) VIA_INVALID_VISIT;
 
   virtual inline bool failed() {
     return visitor_failed;
   }
 
-protected:
-  bool visitor_failed = false;
-
-  TransUnitContext& unit_ctx;
-
-  CErrorBus& err_bus;
-
-protected:
   void compiler_error(size_t begin, size_t end, const std::string&);
   void compiler_error(const Token&, const std::string&);
   void compiler_error(const std::string&);
@@ -99,13 +93,23 @@ protected:
   void compiler_info(size_t begin, size_t end, const std::string&);
   void compiler_info(const Token&, const std::string&);
   void compiler_info(const std::string&);
+
+  void compiler_output_end();
+  size_t get_compiler_error_count();
+
+protected:
+  bool visitor_failed = false;
+  size_t errors_generated = 0;
+
+  TransUnitContext& unit_ctx;
+  CErrorBus& err_bus;
 };
 
 #undef VIA_INVALID_VISIT
 
-class expr_node_visitor : public NodeVisitorBase {
+class ExprNodeVisitor : public NodeVisitorBase {
 public:
-  expr_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
+  ExprNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
     : NodeVisitorBase(unit_ctx, bus),
       allocator(allocator) {}
 
@@ -127,15 +131,16 @@ private:
   RegisterAllocator& allocator;
 };
 
-class decay_node_visitor : public NodeVisitorBase {
+class DecayNodeVisitor : public NodeVisitorBase {
 public:
-  decay_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus)
+  DecayNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus)
     : NodeVisitorBase(unit_ctx, bus) {}
 
   TypeNodeBase* visit(AutoTypeNode&) override;
   TypeNodeBase* visit(GenericTypeNode&) override;
   TypeNodeBase* visit(UnionTypeNode&) override;
   TypeNodeBase* visit(FunctionTypeNode&) override;
+  TypeNodeBase* visit(ArrayTypeNode&) override;
 };
 
 class type_node_visitor : public NodeVisitorBase {
@@ -148,9 +153,9 @@ public:
   void visit(FuncDeclStmtNode&) override;
 };
 
-class stmt_node_visitor : public NodeVisitorBase {
+class StmtNodeVisitor : public NodeVisitorBase {
 public:
-  stmt_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
+  StmtNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
     : NodeVisitorBase(unit_ctx, bus),
       allocator(allocator),
       expression_visitor(unit_ctx, bus, allocator),
@@ -166,6 +171,7 @@ public:
   void visit(BreakStmtNode&) override;
   void visit(ContinueStmtNode&) override;
   void visit(WhileStmtNode&) override;
+  void visit(DeferStmtNode&) override;
   void visit(ExprStmtNode&) override;
 
   inline bool failed() override {
@@ -179,8 +185,8 @@ public:
 private:
   RegisterAllocator& allocator;
 
-  expr_node_visitor expression_visitor;
-  decay_node_visitor decay_visitor;
+  ExprNodeVisitor expression_visitor;
+  DecayNodeVisitor decay_visitor;
   type_node_visitor type_visitor;
 
   std::optional<label_t> escape_label = std::nullopt;

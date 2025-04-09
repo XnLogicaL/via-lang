@@ -20,13 +20,14 @@ struct StackVariable {
   bool is_const = false;
   bool is_constexpr = false;
   symbol_t symbol;
+  StmtNodeBase* decl;
   TypeNodeBase* type;
   ExprNodeBase* value;
 };
 
 struct StackFunction {
   size_t stack_pointer = 0;
-  FuncDeclStmtNode* func_stmt;
+  FuncDeclStmtNode* decl;
 };
 
 template<typename T>

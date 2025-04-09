@@ -65,6 +65,7 @@ public:
 
     std::unique_ptr<CompilerVariableStack> variable_stack;
     std::unique_ptr<CompilerFunctionStack> function_stack;
+    std::vector<StmtNodeBase*> defered_stmts;
     std::unique_ptr<GlobalHolder> globals;
   } internal;
 };

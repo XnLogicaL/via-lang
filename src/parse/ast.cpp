@@ -83,8 +83,8 @@ TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
 
   if (unit_ctx.internal.function_stack->size() > 0) {
     auto& top_function = unit_ctx.internal.function_stack->top();
-    for (size_t i = 0; i < top_function.func_stmt->parameters.size(); i++) {
-      const ParamNode& param = top_function.func_stmt->parameters[i];
+    for (size_t i = 0; i < top_function.decl->parameters.size(); i++) {
+      const ParamNode& param = top_function.decl->parameters[i];
       if (param.identifier.lexeme == identifier.lexeme) {
         return param.type;
       }
@@ -110,7 +110,15 @@ TypeNodeBase* UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
     return nullptr;
   }
 
-  return is_arithmetic(inner) ? inner : nullptr;
+  if (op.type == TokenType::OP_LEN) {
+    return unit_ctx.ast->allocator.emplace<PrimTypeNode>(Token(), integer);
+  }
+  else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC
+           || op.type == TokenType::OP_SUB) {
+    return inner;
+  }
+
+  return nullptr;
 }
 
 // ===============================
@@ -148,9 +156,9 @@ void CallExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* CallExprNode::infer_type(TransUnitContext& unit_ctx) {
-  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(*callee)) {
+  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(callee)) {
     TypeNodeBase* ty = symbol->infer_type(unit_ctx);
-    if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNodeBase, FunctionTypeNode>(*ty)) {
+    if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNodeBase, FunctionTypeNode>(ty)) {
       return fn_ty->returns;
     }
   }
@@ -171,7 +179,7 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
-  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(*object)) {
+  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(object)) {
     auto stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
@@ -213,8 +221,8 @@ TypeNodeBase* BinExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 
   // Check for valid primitive types in both lhs and rhs
-  if (PrimTypeNode* lhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*lhs)) {
-    if (PrimTypeNode* rhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*rhs)) {
+  if (PrimTypeNode* lhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(lhs)) {
+    if (PrimTypeNode* rhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(rhs)) {
       // Check for floating-point types
       if (lhs_primitive->type == floating_point || rhs_primitive->type == floating_point) {
         return unit_ctx.ast->allocator.emplace<PrimTypeNode>(
@@ -255,12 +263,7 @@ TypeNodeBase* CastExprNode::infer_type(TransUnitContext& unit_ctx) {
 
 // StepExprNode
 std::string StepExprNode::to_string(uint32_t& depth) {
-  return std::format(
-    "StepExprNode<{}, {}, ispostfix: {}>",
-    target->to_string(depth),
-    is_increment ? "++" : "--",
-    is_postfix
-  );
+  return std::format("StepExprNode<{}, {}>", target->to_string(depth), is_increment ? "++" : "--");
 }
 
 TypeNodeBase* StepExprNode::infer_type(TransUnitContext& unit_ctx) {
@@ -282,7 +285,20 @@ std::string ArrayExprNode::to_string(uint32_t& depth) {
 }
 
 TypeNodeBase* ArrayExprNode::infer_type(TransUnitContext& unit_ctx) {
-  return unit_ctx.ast->allocator.emplace<PrimTypeNode>(Token(), nil);
+  if (values.empty()) {
+    return nullptr;
+  }
+
+  ExprNodeBase* first_expr = values.front();
+  TypeNodeBase* first_type = first_expr->infer_type(unit_ctx);
+
+  for (ExprNodeBase* expr : values) {
+    if (!is_same(first_type, expr->infer_type(unit_ctx))) {
+      return nullptr;
+    }
+  }
+
+  return unit_ctx.ast->allocator.emplace<ArrayTypeNode>(first_type);
 }
 
 void ArrayExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
@@ -349,6 +365,21 @@ void UnionTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
 }
 
 // ===============================
+// ArrayTypeNode
+std::string ArrayTypeNode::to_string(uint32_t& depth) {
+  return std::format("ArrayTypeNode<{}>", type->to_string(depth));
+}
+
+std::string ArrayTypeNode::to_output_string() {
+  return apply_color("[", fg_color::cyan) + type->to_output_string()
+    + apply_color("]", fg_color::cyan);
+}
+
+void ArrayTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
+  self = visitor.visit(*this);
+}
+
+// ===============================
 // FuncDeclStmtNode
 std::string FunctionTypeNode::to_string(uint32_t& depth) {
   return std::format(
@@ -378,7 +409,7 @@ std::string DeclStmtNode::to_string(uint32_t& depth) {
     modifs.to_string(),
     identifier.lexeme,
     type->to_string(depth),
-    value_expression->to_string(depth)
+    rvalue->to_string(depth)
   );
 }
 
@@ -447,8 +478,8 @@ std::string AssignStmtNode::to_string(uint32_t& depth) {
     "{}Assign<{} {}= {}>",
     depth_tab_space,
     augmentation_operator.lexeme,
-    assignee->to_string(depth),
-    value->to_string(depth)
+    lvalue->to_string(depth),
+    rvalue->to_string(depth)
   );
 }
 
@@ -466,13 +497,13 @@ std::string IfStmtNode::to_string(uint32_t& depth) {
 
   oss << scope->to_string(depth) << "\n";
 
-  for (const elseif_node& elseif_node : elseif_nodes) {
-    oss << depth_tab_space << std::format("ElseIf<{}>", elseif_node.condition->to_string(depth))
+  for (const ElseIfNode* else_if : elseif_nodes) {
+    oss << depth_tab_space << std::format("ElseIf<{}>", else_if->condition->to_string(depth))
         << "\n";
 
     depth++;
 
-    oss << elseif_node.scope->to_string(depth) << "\n";
+    oss << else_if->scope->to_string(depth) << "\n";
 
     depth--;
     oss << depth_tab_space << "EndElseIf<>\n";
@@ -550,6 +581,17 @@ std::string WhileStmtNode::to_string(uint32_t& depth) {
 }
 
 void WhileStmtNode::accept(NodeVisitorBase& visitor) {
+  visitor.visit(*this);
+}
+
+// ===============================
+// DeferStmtNode
+std::string DeferStmtNode::to_string(uint32_t& depth) {
+  uint32_t zero_depth = 0;
+  return std::format("{}DeferStmtNode<{}>", depth_tab_space, stmt->to_string(zero_depth));
+}
+
+void DeferStmtNode::accept(NodeVisitorBase& visitor) {
   visitor.visit(*this);
 }
 

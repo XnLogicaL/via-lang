@@ -49,22 +49,24 @@ enum class TokenType {
   KW_CATCH,    // catch
   KW_RAISE,    // raise
   KW_AUTO,     // auto
+  KW_DEFER,    // defer
 
   // Operators
-  OP_ADD,       // +
-  OP_SUB,       // -
-  OP_MUL,       // *
-  OP_DIV,       // /
-  OP_EXP,       // ^
-  OP_MOD,       // %
-  OP_EQ,        // ==
-  OP_NEQ,       // !=
-  OP_LT,        // <
-  OP_GT,        // >
-  OP_LEQ,       // <=
-  OP_GEQ,       // >=
-  OP_INCREMENT, // ++
-  OP_DECREMENT, // --
+  OP_ADD, // +
+  OP_SUB, // -
+  OP_MUL, // *
+  OP_DIV, // /
+  OP_EXP, // ^
+  OP_MOD, // %
+  OP_EQ,  // ==
+  OP_NEQ, // !=
+  OP_LT,  // <
+  OP_GT,  // >
+  OP_LEQ, // <=
+  OP_GEQ, // >=
+  OP_INC, // ++
+  OP_DEC, // --
+  OP_LEN,
   // Pseudo-operators
   EQ,      // =
   RETURNS, // ->

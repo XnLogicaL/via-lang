@@ -12,11 +12,11 @@ namespace via {
 
 using enum IOpCode;
 
-void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
+void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   bool is_global = declaration_node.is_global;
   bool is_const = declaration_node.modifs.is_const;
 
-  ExprNodeBase& val = *declaration_node.value_expression;
+  ExprNodeBase& val = *declaration_node.rvalue;
   TypeNodeBase* val_ty = val.infer_type(unit_ctx);
   Token ident = declaration_node.identifier;
   symbol_t symbol = ident.lexeme;
@@ -29,6 +29,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
     if (previously_declared.has_value()) {
       compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
       compiler_info(previously_declared->tok, "Previously declared here");
+      compiler_output_end();
     }
     else {
       operand_t value_reg = allocator.allocate_register();
@@ -36,7 +37,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
 
       CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
       unit_ctx.internal.globals->declare_global(std::move(global));
-      declaration_node.value_expression->accept(expression_visitor, value_reg);
+      declaration_node.rvalue->accept(expression_visitor, value_reg);
       unit_ctx.bytecode->emit(GSET, {value_reg, symbol_hash}, comment);
       allocator.free_register(value_reg);
     }
@@ -44,7 +45,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
   else {
     std::string comment = std::format("{}", symbol);
 
-    if (is_constant_expression(unit_ctx, val)) {
+    if (is_constant_expression(unit_ctx, &val)) {
       // Constant folding is an O1 optimization.
       if (unit_ctx.optimization_level < 1) {
         goto non_constexpr;
@@ -59,6 +60,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
+          .decl = &declaration_node,
           .type =
             unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::nil),
           .value = &literal,
@@ -74,6 +76,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
+          .decl = &declaration_node,
           .type =
             unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::integer),
           .value = &literal,
@@ -89,6 +92,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
+          .decl = &declaration_node,
           .type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
             literal.value_token, IValueType::floating_point
           ),
@@ -102,6 +106,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
+          .decl = &declaration_node,
           .type =
             unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::boolean),
           .value = &literal,
@@ -118,6 +123,7 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
+          .decl = &declaration_node,
           .type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, constant.type),
           .value = &literal,
         });
@@ -127,14 +133,15 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
     non_constexpr:
       operand_t dst = allocator.allocate_register();
 
-      declaration_node.value_expression->accept(expression_visitor, dst);
+      declaration_node.rvalue->accept(expression_visitor, dst);
       unit_ctx.bytecode->emit(PUSH, {dst}, comment);
       unit_ctx.internal.variable_stack->push({
         .is_const = is_const,
         .is_constexpr = false,
         .symbol = symbol,
+        .decl = &declaration_node,
         .type = std::move(val_ty),
-        .value = declaration_node.value_expression,
+        .value = declaration_node.rvalue,
       });
 
       allocator.free_register(dst);
@@ -150,12 +157,19 @@ void stmt_node_visitor::visit(DeclStmtNode& declaration_node) {
   }
 }
 
-void stmt_node_visitor::visit(ScopeStmtNode& scope_node) {
+void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   operand_t stack_pointer = unit_ctx.internal.variable_stack->size();
 
   for (StmtNodeBase*& pstmt : scope_node.statements) {
     pstmt->accept(*this);
   }
+
+  // Emit defered statements
+  for (StmtNodeBase* stmt : unit_ctx.internal.defered_stmts) {
+    stmt->accept(*this);
+  }
+
+  unit_ctx.internal.defered_stmts.clear();
 
   operand_t stack_allocations = unit_ctx.internal.variable_stack->size() - stack_pointer;
   for (; stack_allocations > 0; stack_allocations--) {
@@ -163,7 +177,7 @@ void stmt_node_visitor::visit(ScopeStmtNode& scope_node) {
   }
 }
 
-void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
+void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   using parameters_t = FuncDeclStmtNode::parameters_t;
 
   operand_t function_reg = allocator.allocate_register();
@@ -184,13 +198,14 @@ void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
 
   unit_ctx.internal.function_stack->push({
     .stack_pointer = unit_ctx.internal.variable_stack->size(),
-    .func_stmt = &function_node,
+    .decl = &function_node,
   });
 
   unit_ctx.internal.variable_stack->push({
     .is_const = function_node.modifs.is_const,
     .is_constexpr = false,
     .symbol = function_node.identifier.lexeme,
+    .decl = &function_node,
     .type = unit_ctx.ast->allocator.emplace<FunctionTypeNode>(parameters_0, function_node.returns),
     .value = nullptr,
   });
@@ -201,9 +216,9 @@ void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
 
   size_t new_closure_point = unit_ctx.bytecode->size();
   ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
+
   for (StmtNodeBase*& pstmt : scope.statements) {
     const StmtNodeBase& stmt = *pstmt;
-
     const DeclStmtNode* declaration_node = dynamic_cast<const DeclStmtNode*>(&stmt);
     const FuncDeclStmtNode* function_node = dynamic_cast<const FuncDeclStmtNode*>(&stmt);
 
@@ -213,17 +228,25 @@ void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
         declaration_node ? declaration_node->identifier : function_node->identifier;
 
       if (is_global) {
-        compiler_error(identifier, "IFunction scopes cannot declare globals");
+        compiler_error(identifier, "Function scopes cannot declare globals");
         compiler_info(
-          "IFunction scopes containing global declarations may cause previously declared "
+          "Function scopes containing global declarations may cause previously declared "
           "globals to be re-declared, therefore are not allowed."
         );
+        compiler_output_end();
         break;
       }
     }
 
     pstmt->accept(*this);
   }
+
+  // Emit defered statements
+  for (StmtNodeBase* stmt : unit_ctx.internal.defered_stmts) {
+    stmt->accept(*this);
+  }
+
+  unit_ctx.internal.defered_stmts.clear();
 
   Bytecode& last_bytecode = unit_ctx.bytecode->back();
   IOpCode last_opcode = last_bytecode.instruct.op;
@@ -242,6 +265,7 @@ void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
   if (function_node.is_global) {
     if (unit_ctx.internal.globals->was_declared(symbol)) {
       compiler_error(symbol_token, std::format("Attempt to re-declare global '{}'", symbol));
+      compiler_output_end();
       return;
     }
 
@@ -256,9 +280,9 @@ void stmt_node_visitor::visit(FuncDeclStmtNode& function_node) {
   unit_ctx.internal.function_stack->pop();
 }
 
-void stmt_node_visitor::visit(AssignStmtNode& assign_node) {
+void StmtNodeVisitor::visit(AssignStmtNode& assign_node) {
   if (SymExprNode* symbol_node =
-        get_derived_instance<ExprNodeBase, SymExprNode>(*assign_node.assignee)) {
+        get_derived_instance<ExprNodeBase, SymExprNode>(assign_node.lvalue)) {
     Token symbol_token = symbol_node->identifier;
     std::string symbol = symbol_token.lexeme;
     std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
@@ -266,12 +290,15 @@ void stmt_node_visitor::visit(AssignStmtNode& assign_node) {
     if (stk_id.has_value()) {
       const auto& test_stack_member = unit_ctx.internal.variable_stack->at(stk_id.value());
       if (test_stack_member.has_value() && test_stack_member->is_const) {
-        compiler_error(symbol_token, std::format("Assignment to constant variable '{}'", symbol));
+        compiler_error(
+          symbol_token, std::format("Assignment to constant lvalue (variable) '{}'", symbol)
+        );
+        compiler_output_end();
         return;
       }
 
       operand_t value_reg = allocator.allocate_register();
-      assign_node.value->accept(expression_visitor, value_reg);
+      assign_node.rvalue->accept(expression_visitor, value_reg);
 
       if (unit_ctx.internal.function_stack->size() > 0) {
         const auto& current_closure = unit_ctx.internal.function_stack->top();
@@ -286,12 +313,14 @@ void stmt_node_visitor::visit(AssignStmtNode& assign_node) {
     else {
       compiler_error(symbol_token, "Assignment to invalid lvalue");
       compiler_info(std::format("Symbol '{}' not found in scope", symbol_node->identifier.lexeme));
+      compiler_output_end();
     }
   }
   else {
     compiler_error(
-      assign_node.assignee->begin, assign_node.assignee->end, "Assignment to invalid lvalue"
+      assign_node.lvalue->begin, assign_node.lvalue->end, "Assignment to invalid lvalue"
     );
+    compiler_output_end();
   }
 
   if (!failed()) {
@@ -299,39 +328,41 @@ void stmt_node_visitor::visit(AssignStmtNode& assign_node) {
   }
 }
 
-void stmt_node_visitor::visit(ReturnStmtNode& return_node) {
+void StmtNodeVisitor::visit(ReturnStmtNode& return_node) {
   auto& this_function = unit_ctx.internal.function_stack->top();
   if (return_node.expression) {
     operand_t expr_reg = allocator.allocate_register();
 
     return_node.expression->accept(expression_visitor, expr_reg);
-    unit_ctx.bytecode->emit(RET, {expr_reg}, this_function.func_stmt->identifier.lexeme);
+    unit_ctx.bytecode->emit(RET, {expr_reg}, this_function.decl->identifier.lexeme);
     allocator.free_register(expr_reg);
   }
   else {
-    unit_ctx.bytecode->emit(RETNIL, {}, this_function.func_stmt->identifier.lexeme);
+    unit_ctx.bytecode->emit(RETNIL, {}, this_function.decl->identifier.lexeme);
   }
 }
 
-void stmt_node_visitor::visit(BreakStmtNode& break_node) {
+void StmtNodeVisitor::visit(BreakStmtNode& break_node) {
   if (!escape_label.has_value()) {
-    compiler_error(break_node.tok, "'break' statement not within loop or switch");
+    compiler_error(break_node.begin, break_node.end, "'break' statement not within loop or switch");
+    compiler_output_end();
   }
   else {
     unit_ctx.bytecode->emit(LJMP, {escape_label.value()}, "break");
   }
 }
 
-void stmt_node_visitor::visit(ContinueStmtNode& continue_node) {
+void StmtNodeVisitor::visit(ContinueStmtNode& continue_node) {
   if (!repeat_label.has_value()) {
-    compiler_error(continue_node.tok, "'continue' statement not within loop");
+    compiler_error(continue_node.begin, continue_node.end, "'continue' statement not within loop");
+    compiler_output_end();
   }
   else {
     unit_ctx.bytecode->emit(LJMP, {repeat_label.value()}, "continue");
   }
 }
 
-void stmt_node_visitor::visit(IfStmtNode& if_node) {
+void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   /*
 
   0000 jumplabelif    0, 0    ; if
@@ -355,10 +386,9 @@ void stmt_node_visitor::visit(IfStmtNode& if_node) {
   if_node.condition->accept(expression_visitor, cond_reg);
   unit_ctx.bytecode->emit(LJMPIF, {cond_reg, if_label}, "if");
 
-  for (const auto& elseif_node : if_node.elseif_nodes) {
+  for (const ElseIfNode* else_if : if_node.elseif_nodes) {
     operand_t label = unit_ctx.internal.label_count++;
-
-    elseif_node.condition->accept(expression_visitor, cond_reg);
+    else_if->condition->accept(expression_visitor, cond_reg);
     unit_ctx.bytecode->emit(LJMPIF, {cond_reg, label}, std::format("elseif #{}", label - if_label));
   }
 
@@ -372,11 +402,10 @@ void stmt_node_visitor::visit(IfStmtNode& if_node) {
   unit_ctx.bytecode->emit(LJMP, {escape_label});
 
   size_t label_id = 0;
-  for (const auto& elseif_node : if_node.elseif_nodes) {
+  for (const ElseIfNode* else_if : if_node.elseif_nodes) {
     operand_t label = if_label + ++label_id;
-
     unit_ctx.bytecode->emit(LBL, {label});
-    elseif_node.scope->accept(*this);
+    else_if->scope->accept(*this);
     unit_ctx.bytecode->emit(LJMP, {escape_label});
   }
 
@@ -387,7 +416,7 @@ void stmt_node_visitor::visit(IfStmtNode& if_node) {
   }
 }
 
-void stmt_node_visitor::visit(WhileStmtNode& while_node) {
+void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
   /*
 
   0000 label          0
@@ -417,26 +446,31 @@ void stmt_node_visitor::visit(WhileStmtNode& while_node) {
   escape_label = std::nullopt;
 }
 
-void stmt_node_visitor::visit(ExprStmtNode& expr_stmt) {
+void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
+  unit_ctx.internal.defered_stmts.push_back(defer_stmt.stmt);
+}
+
+void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
   ExprNodeBase*& expr = expr_stmt.expression;
   expr->accept(expression_visitor, 0);
 
-  if (CallExprNode* call_node = get_derived_instance<ExprNodeBase, CallExprNode>(*expr)) {
+  if (CallExprNode* call_node = get_derived_instance<ExprNodeBase, CallExprNode>(expr)) {
     TypeNodeBase* callee_ty = call_node->callee->infer_type(unit_ctx);
     TypeNodeBase* ret_ty = call_node->infer_type(unit_ctx);
 
     VIA_TINFERENCE_FAILURE(callee_ty, expr);
     VIA_TINFERENCE_FAILURE(ret_ty, expr);
 
-    if (PrimTypeNode* prim_ty = get_derived_instance<TypeNodeBase, PrimTypeNode>(*ret_ty)) {
+    if (PrimTypeNode* prim_ty = get_derived_instance<TypeNodeBase, PrimTypeNode>(ret_ty)) {
       if (prim_ty->type != IValueType::nil) {
         goto return_value_ignored;
       }
     }
     else {
     return_value_ignored:
-      compiler_warning(call_node->begin, call_node->end, "IFunction return value ignored");
-      compiler_info(std::format("IFunction returns non-nil type '{}'", ret_ty->to_output_string()));
+      compiler_warning(call_node->begin, call_node->end, "Function return value ignored");
+      compiler_info(std::format("Function returns non-nil type '{}'", ret_ty->to_output_string()));
+      compiler_output_end();
     }
 
     // Edit last instruction to drop the return value rather than popping it. This is because if a
@@ -456,6 +490,7 @@ void stmt_node_visitor::visit(ExprStmtNode& expr_stmt) {
     }
     else {
       compiler_warning(expr->begin, expr->end, "Expression result unused");
+      compiler_output_end();
     }
   }
 }

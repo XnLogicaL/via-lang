@@ -94,11 +94,6 @@ IValue::IValue(IValue&& other) {
   other.type = nil;
 }
 
-// Frees the resources of the IValue depending on type
-IValue::~IValue() {
-  reset();
-}
-
 // Return a clone of the IValue based on its type
 IValue IValue::clone() const {
   switch (type) {
@@ -152,7 +147,26 @@ void IValue::reset() {
   }
 }
 
-bool IValue::compare(const IValue&) const {
+bool IValue::compare(const IValue& other) const {
+  if (type != other.type) {
+    return false;
+  }
+
+  switch (type) {
+  case nil: // nil values are always equal
+    return true;
+  case integer:
+    return val_integer == other.val_integer;
+  case floating_point:
+    return val_floating_point == other.val_floating_point;
+  case boolean:
+    return val_boolean == other.val_boolean;
+  case string:
+    return !std::strcmp(val_string->data, other.val_string->data);
+  default: // Objects are never equal with the exception of strings
+    break;
+  }
+
   return false;
 }
 
@@ -170,26 +184,26 @@ std::string IValue::to_literal_cxx_string() const {
 
 IValue::IValue(const char* str)
   : type(string),
-    val_string(new string_obj(str)) {}
+    val_string(new IString(str)) {}
 
 //  ===============
 // [ String object ]
 //  ===============
-void string_obj::set(size_t position, const IValue& value) {
+void IString::set(size_t position, const IValue& value) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   VIA_ASSERT(value.is_string(), "Setting string index to non-string value");
 
-  const string_obj* val = value.val_string;
+  const IString* val = value.val_string;
 
   VIA_ASSERT(val->len == 1, "Setting string index to non-character string");
 
   data[position] = value.val_string->data[0];
 }
 
-IValue string_obj::get(size_t position) {
+IValue IString::get(size_t position) {
   VIA_ASSERT(position < len, "String index position out of bounds");
   char chr = data[position];
-  string_obj* tstr = new string_obj(&chr);
+  IString* tstr = new IString(&chr);
   return IValue(tstr);
 }
 
@@ -202,7 +216,7 @@ IArray::IArray(const IArray& other)
     size_cache_valid(other.size_cache_valid),
     data(new IValue[capacity]) {
   for (size_t i = 0; i < capacity; i++) {
-    data[i] = other.data[i].move();
+    data[i] = other.data[i].clone();
   }
 }
 
@@ -219,12 +233,15 @@ IArray::IArray(IArray&& other)
 
 IArray& IArray::operator=(const IArray& other) {
   if (this != &other) {
+    delete[] data;
+
     capacity = other.capacity;
     size_cache = other.size_cache;
     size_cache_valid = other.size_cache_valid;
     data = new IValue[capacity];
+
     for (size_t i = 0; i < capacity; i++) {
-      data[i] = other.data[i].move();
+      data[i] = other.data[i].clone();
     }
   }
 
@@ -233,6 +250,8 @@ IArray& IArray::operator=(const IArray& other) {
 
 IArray& IArray::operator=(IArray&& other) {
   if (this != &other) {
+    delete[] data;
+
     capacity = other.capacity;
     size_cache = other.size_cache;
     size_cache_valid = other.size_cache_valid;
@@ -256,7 +275,7 @@ IValue& IArray::get(size_t position) {
 }
 
 void IArray::set(size_t position, IValue value) {
-  impl::__array_set(this, position, value.move());
+  impl::__array_set(this, position, std::move(value));
 }
 
 //  ===================
@@ -329,7 +348,7 @@ IValue& IDict::get(const char* key) {
 }
 
 void IDict::set(const char* key, IValue value) {
-  impl::__dict_set(this, key, value.move());
+  impl::__dict_set(this, key, std::move(value));
 }
 
 //  ===============

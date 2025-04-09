@@ -22,15 +22,29 @@ namespace via {
 // [ Expression Nodes ]
 //  ==================
 
+#define VIA_DECLASTFUNCS()                                                                         \
+  std::string to_string(uint32_t&) override;                                                       \
+  TypeNodeBase* infer_type(TransUnitContext&) override;                                            \
+  void accept(NodeVisitorBase&, uint32_t) override;
+
+/**
+ * Literal Expression Node
+ * Represents a primitive literal value. Can be a nil, integer, floating point, boolean or string
+ * value.
+ *
+ * <literal> ::= <integer> | <float> | <string> | <boolean> | "nil"
+ * <integer> ::= ("0x"|"0b")?[0-9A-Fa-f]+
+ * <float>   ::= [0-9]+.[0-9]+
+ * <string>  ::= "\"" <characters> "\""
+ * <boolean> ::= "true" | "false"
+ */
 struct LitExprNode : public ExprNodeBase {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
 
   Token value_token;
   variant value;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   LitExprNode(Token value_token, variant value)
     : value_token(value_token),
@@ -45,12 +59,17 @@ struct LitExprNode : public ExprNodeBase {
   }
 };
 
+/**
+ * Symbol Expression Node
+ * Represents a symbol that could be a variable, index, property or global.
+ *
+ * <identifier>  ::= [A-Za-z_][A-Za-z0-9_]+
+ * <symbol_expr> ::= <identifier>
+ */
 struct SymExprNode : public ExprNodeBase {
   Token identifier;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   SymExprNode(Token identifier)
     : identifier(identifier) {
@@ -59,49 +78,65 @@ struct SymExprNode : public ExprNodeBase {
   }
 };
 
+/**
+ * Unary Expression Node
+ * Represents a unary expression node that applies an operator on a single expression.
+ *
+ * <operator>   ::= "+" | "-" | "*" | "/" | "++" | "--" | "#" | "^" | "%"
+ * <unary_expr> ::= <operator> <expression>
+ */
 struct UnaryExprNode : public ExprNodeBase {
+  Token op;
   ExprNodeBase* expression;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
+  VIA_DECLASTFUNCS();
 
-  void accept(NodeVisitorBase&, uint32_t) override;
-
-  UnaryExprNode(ExprNodeBase* expression)
-    : expression(std::move(expression)) {
+  UnaryExprNode(Token op, ExprNodeBase* expression)
+    : op(op),
+      expression(expression) {
     this->begin = this->expression->begin - 1; // Account for '-'
     this->end = this->expression->end;
   }
 };
 
+/**
+ * Group Expression Node
+ * Represents a grouping expression that houses a single expression. Mainly used on the parser level
+ * to determine operator precedence.
+ *
+ * <group_expr> ::= "(" <expression> ")"
+ */
 struct GroupExprNode : public ExprNodeBase {
   ExprNodeBase* expression;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
   int precedence() const override;
 
   GroupExprNode(ExprNodeBase* expression)
-    : expression(std::move(expression)) {
+    : expression(expression) {
     this->begin = this->expression->begin - 1; // Account for '('
     this->end = this->expression->end + 1;     // Account for ')'
   }
 };
 
+/**
+ * Call Expression Node
+ * Represents a function call expression with an argument list.
+ *
+ * <call_expr> ::= <expression> "(" <arg_list>? ")"
+ * <arg_list>  ::= <expression> ("," <expression>)*
+ */
 struct CallExprNode : public ExprNodeBase {
   using argument_vector = std::vector<ExprNodeBase*>;
 
   ExprNodeBase* callee;
   argument_vector arguments;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   CallExprNode(ExprNodeBase* callee, argument_vector arguments)
-    : callee(std::move(callee)),
-      arguments(std::move(arguments)) {
+    : callee(callee),
+      arguments(arguments) {
 
     if (!this->arguments.empty()) {
       ExprNodeBase*& last_arg = this->arguments.back();
@@ -116,17 +151,23 @@ struct CallExprNode : public ExprNodeBase {
   }
 };
 
+/**
+ * Index Expression Node
+ * Represents a subscript expression that holds a target and index expression.
+ *
+ * <index_expr>   ::= <primary_expr> <accessor>*
+ * <accessor>     ::= "[" <expression> "]" | "." <identifier>
+ * <primary_expr> ::= <identifier> | <literal> | "(" <expression> ")"
+ */
 struct IndexExprNode : public ExprNodeBase {
   ExprNodeBase* object;
   ExprNodeBase* index;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   IndexExprNode(ExprNodeBase* object, ExprNodeBase* index)
-    : object(std::move(object)),
-      index(std::move(index)) {
+    : object(object),
+      index(index) {
     this->begin = this->object->begin;
     this->end = this->index->end;
   }
@@ -137,14 +178,12 @@ struct BinExprNode : public ExprNodeBase {
   ExprNodeBase* lhs_expression;
   ExprNodeBase* rhs_expression;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   BinExprNode(Token op, ExprNodeBase* lhs, ExprNodeBase* rhs)
     : op(op),
-      lhs_expression(std::move(lhs)),
-      rhs_expression(std::move(rhs)) {
+      lhs_expression(lhs),
+      rhs_expression(rhs) {
     this->begin = this->lhs_expression->begin;
     this->end = this->rhs_expression->end;
   }
@@ -154,68 +193,56 @@ struct CastExprNode : public ExprNodeBase {
   ExprNodeBase* expression;
   TypeNodeBase* type;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
-  void accept(NodeVisitorBase&, uint32_t) override;
+  VIA_DECLASTFUNCS();
 
   CastExprNode(ExprNodeBase* expression, TypeNodeBase* type)
-    : expression(std::move(expression)),
-      type(std::move(type)) {
+    : expression(expression),
+      type(type) {
     this->begin = this->expression->begin;
     this->end = this->expression->end;
   }
 };
 
 struct StepExprNode : public ExprNodeBase {
-  ExprNodeBase* target;
   bool is_increment;
-  bool is_postfix;
+  ExprNodeBase* target;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
+  VIA_DECLASTFUNCS();
 
-  void accept(NodeVisitorBase&, uint32_t) override;
-
-  StepExprNode(ExprNodeBase* target, bool is_increment, bool is_postfix)
-    : target(std::move(target)),
-      is_increment(is_increment),
-      is_postfix(is_postfix) {
-    if (is_postfix) {
-      this->begin = this->target->begin;
-      this->end = this->target->end + 2;
-    }
-    else {
-      this->begin = this->target->begin - 2;
-      this->end = this->target->end;
-    }
+  StepExprNode(ExprNodeBase* target, bool is_increment)
+    : is_increment(is_increment),
+      target(target) {
+    this->begin = this->target->begin;
+    this->end = this->target->end + 2;
   }
 };
 
 struct ArrayExprNode : public ExprNodeBase {
   using values_t = std::vector<ExprNodeBase*>;
-
-  Token open_brace;
-  Token close_brace;
   values_t values;
 
-  std::string to_string(uint32_t&) override;
-  TypeNodeBase* infer_type(TransUnitContext&) override;
+  VIA_DECLASTFUNCS();
 
-  void accept(NodeVisitorBase&, uint32_t) override;
-
-  ArrayExprNode(Token open_brace, Token close_brace, values_t values)
-    : open_brace(open_brace),
-      close_brace(close_brace),
-      values(std::move(values)) {}
+  ArrayExprNode(size_t begin, size_t end, values_t values)
+    : values(values) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 // =========================================================================================
 // Type Nodes
 //
-struct AutoTypeNode : public TypeNodeBase {
-  std::string to_string(uint32_t&) override;
+
+#undef VIA_DECLASTFUNCS
+#define VIA_DECLDECAY() void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+#define VIA_DECLASTFUNCS()                                                                         \
+  std::string to_string(uint32_t&) override;                                                       \
   std::string to_output_string() override;
-  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+
+struct AutoTypeNode : public TypeNodeBase {
+  VIA_DECLASTFUNCS();
+  VIA_DECLDECAY();
 
   AutoTypeNode(size_t begin, size_t end) {
     this->begin = begin;
@@ -227,8 +254,7 @@ struct PrimTypeNode : public TypeNodeBase {
   Token identifier;
   IValueType type;
 
-  std::string to_string(uint32_t&) override;
-  std::string to_output_string() override;
+  VIA_DECLASTFUNCS();
 
   PrimTypeNode(Token id, IValueType valty)
     : identifier(id),
@@ -245,13 +271,12 @@ struct GenericTypeNode : public TypeNodeBase {
   generics_t generics;
   StmtModifiers modifs;
 
-  std::string to_string(uint32_t&) override;
-  std::string to_output_string() override;
-  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+  VIA_DECLASTFUNCS();
+  VIA_DECLDECAY();
 
   GenericTypeNode(Token id, generics_t gens, StmtModifiers modifs)
     : identifier(id),
-      generics(std::move(gens)),
+      generics(gens),
       modifs(modifs) {
     this->begin = id.position;
     this->end = id.position + id.lexeme.length();
@@ -262,13 +287,12 @@ struct UnionTypeNode : public TypeNodeBase {
   TypeNodeBase* lhs;
   TypeNodeBase* rhs;
 
-  std::string to_string(uint32_t&) override;
-  std::string to_output_string() override;
-  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+  VIA_DECLASTFUNCS();
+  VIA_DECLDECAY();
 
   UnionTypeNode(TypeNodeBase* lhs, TypeNodeBase* rhs)
-    : lhs(std::move(lhs)),
-      rhs(std::move(rhs)) {
+    : lhs(lhs),
+      rhs(rhs) {
     this->begin = this->lhs->begin;
     this->end = this->rhs->end;
   }
@@ -282,7 +306,7 @@ struct ParamNode {
   ParamNode(Token identifier, StmtModifiers modifs, TypeNodeBase* type)
     : identifier(identifier),
       modifs(modifs),
-      type(std::move(type)) {}
+      type(type) {}
 };
 
 struct FunctionTypeNode : public TypeNodeBase {
@@ -291,50 +315,79 @@ struct FunctionTypeNode : public TypeNodeBase {
   parameter_vector parameters;
   TypeNodeBase* returns;
 
-  std::string to_string(uint32_t&) override;
-  std::string to_output_string() override;
-  void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+  VIA_DECLASTFUNCS();
+  VIA_DECLDECAY();
 
   FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
-    : parameters(std::move(args)),
-      returns(std::move(rets)) {
+    : parameters(args),
+      returns(rets) {
     this->begin = this->returns->begin;
     this->end = this->returns->end;
+  }
+};
+
+struct ArrayTypeNode : public TypeNodeBase {
+  TypeNodeBase* type;
+
+  VIA_DECLASTFUNCS();
+  VIA_DECLDECAY();
+
+  ArrayTypeNode(TypeNodeBase* type)
+    : type(type) {
+    this->begin = type->begin - 1;
+    this->end = type->end + 1;
   }
 };
 
 // =========================================================================================
 // Statement Nodes
 //
-struct DeclStmtNode : public StmtNodeBase {
-  bool is_global;
-  StmtModifiers modifs;
-  Token identifier;
-  ExprNodeBase* value_expression;
-  TypeNodeBase* type;
 
-  std::string to_string(uint32_t&) override;
+#undef VIA_DECLASTFUNCS
+#undef VIA_DECLDECAY
+#define VIA_DECLASTFUNCS()                                                                         \
+  std::string to_string(uint32_t&) override;                                                       \
   void accept(NodeVisitorBase&) override;
 
+struct DeclStmtNode : public StmtNodeBase {
+  bool is_global;
+  Token identifier;
+  StmtModifiers modifs;
+  ExprNodeBase* rvalue;
+  TypeNodeBase* type;
+
+  VIA_DECLASTFUNCS();
+
   DeclStmtNode(
-    bool is_global, StmtModifiers modifs, Token identifier, ExprNodeBase* value, TypeNodeBase* type
+    size_t begin,
+    size_t end,
+    bool is_global,
+    StmtModifiers modifiers,
+    Token identifier,
+    ExprNodeBase* rvalue,
+    TypeNodeBase* type
   )
     : is_global(is_global),
-      modifs(modifs),
       identifier(identifier),
-      value_expression(std::move(value)),
-      type(std::move(type)) {}
+      modifs(modifiers),
+      rvalue(rvalue),
+      type(type) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct ScopeStmtNode : public StmtNodeBase {
   using Statements = std::vector<StmtNodeBase*>;
   Statements statements;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
-  ScopeStmtNode(Statements statements)
-    : statements(std::move(statements)) {}
+  ScopeStmtNode(size_t begin, size_t end, Statements statements)
+    : statements(statements) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct FuncDeclStmtNode : public StmtNodeBase {
@@ -347,10 +400,11 @@ struct FuncDeclStmtNode : public StmtNodeBase {
   TypeNodeBase* returns;
   parameters_t parameters;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
   FuncDeclStmtNode(
+    size_t begin,
+    size_t end,
     bool is_global,
     StmtModifiers modifs,
     Token identifier,
@@ -361,107 +415,138 @@ struct FuncDeclStmtNode : public StmtNodeBase {
     : is_global(is_global),
       modifs(modifs),
       identifier(identifier),
-      body(std::move(body)),
-      returns(std::move(returns)),
-      parameters(std::move(parameters)) {}
+      body(body),
+      returns(returns),
+      parameters(parameters) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct AssignStmtNode : public StmtNodeBase {
-  ExprNodeBase* assignee;
   Token augmentation_operator;
-  ExprNodeBase* value;
+  ExprNodeBase* lvalue;
+  ExprNodeBase* rvalue;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
-  AssignStmtNode(ExprNodeBase* assignee, Token augment, ExprNodeBase* value)
-    : assignee(std::move(assignee)),
-      augmentation_operator(augment),
-      value(std::move(value)) {}
+  AssignStmtNode(ExprNodeBase* lvalue, Token augmentation_operator, ExprNodeBase* rvalue)
+    : augmentation_operator(augmentation_operator),
+      lvalue(lvalue),
+      rvalue(rvalue) {
+    this->begin = lvalue->begin;
+    this->end = rvalue->end;
+  }
+};
+
+struct ElseIfNode {
+  size_t begin;
+  size_t end;
+
+  ExprNodeBase* condition;
+  StmtNodeBase* scope;
+
+  ElseIfNode(size_t begin, size_t end, ExprNodeBase* condition, StmtNodeBase* scope)
+    : condition(condition),
+      scope(scope) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct IfStmtNode : public StmtNodeBase {
-  struct elseif_node {
-    ExprNodeBase* condition;
-    StmtNodeBase* scope;
-
-    elseif_node(ExprNodeBase* condition, StmtNodeBase* scope)
-      : condition(std::move(condition)),
-        scope(std::move(scope)) {}
-  };
-
-  using elseif_nodes_t = std::vector<elseif_node>;
+  using elseif_nodes_t = std::vector<ElseIfNode*>;
 
   ExprNodeBase* condition;
   StmtNodeBase* scope;
   StmtNodeBase* else_node;
   elseif_nodes_t elseif_nodes;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
   IfStmtNode(
+    size_t begin,
+    size_t end,
     ExprNodeBase* condition,
     StmtNodeBase* scope,
     StmtNodeBase* else_node,
     elseif_nodes_t elseif_nodes
   )
-    : condition(std::move(condition)),
-      scope(std::move(scope)),
-      else_node(std::move(else_node)),
-      elseif_nodes(std::move(elseif_nodes)) {}
+    : condition(condition),
+      scope(scope),
+      else_node(else_node),
+      elseif_nodes(std::move(elseif_nodes)) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct ReturnStmtNode : public StmtNodeBase {
   ExprNodeBase* expression;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
-  ReturnStmtNode(ExprNodeBase* expression)
-    : expression(std::move(expression)) {}
+  ReturnStmtNode(size_t begin, size_t end, ExprNodeBase* expression)
+    : expression(expression) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct BreakStmtNode : public StmtNodeBase {
-  Token tok;
+  VIA_DECLASTFUNCS();
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
-
-  BreakStmtNode(Token tok)
-    : tok(tok) {}
+  BreakStmtNode(size_t begin, size_t end) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct ContinueStmtNode : public StmtNodeBase {
-  Token tok;
+  VIA_DECLASTFUNCS();
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
-
-  ContinueStmtNode(Token tok)
-    : tok(tok) {}
+  ContinueStmtNode(size_t begin, size_t end) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct WhileStmtNode : public StmtNodeBase {
   ExprNodeBase* condition;
   StmtNodeBase* body;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
-  WhileStmtNode(ExprNodeBase* condition, StmtNodeBase* body)
-    : condition(std::move(condition)),
-      body(std::move(body)) {}
+  WhileStmtNode(size_t begin, size_t end, ExprNodeBase* condition, StmtNodeBase* body)
+    : condition(condition),
+      body(body) {
+    this->begin = begin;
+    this->end = end;
+  }
+};
+
+struct DeferStmtNode : public StmtNodeBase {
+  StmtNodeBase* stmt;
+
+  VIA_DECLASTFUNCS();
+
+  DeferStmtNode(size_t begin, size_t end, StmtNodeBase* stmt)
+    : stmt(stmt) {
+    this->begin = begin;
+    this->end = end;
+  }
 };
 
 struct ExprStmtNode : public StmtNodeBase {
   ExprNodeBase* expression;
 
-  std::string to_string(uint32_t&) override;
-  void accept(NodeVisitorBase&) override;
+  VIA_DECLASTFUNCS();
 
   ExprStmtNode(ExprNodeBase* expression)
-    : expression(std::move(expression)) {}
+    : expression(expression) {
+    this->begin = expression->begin;
+    this->end = expression->end;
+  }
 };
 
 class SyntaxTree {

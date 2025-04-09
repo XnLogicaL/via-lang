@@ -120,16 +120,17 @@ Token Lexer::read_ident(size_t position) {
   static const std::unordered_map<std::string, TokenType> keyword_map = {
     {"do", KW_DO},           {"in", KW_IN},         {"var", KW_LOCAL},
     {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
-    {"if", KW_IF},           {"else", KW_ELSE},     {"elif", KW_ELIF},
+    {"if", KW_IF},           {"else", KW_ELSE},     {"elseif", KW_ELIF},
     {"while", KW_WHILE},     {"for", KW_FOR},       {"return", KW_RETURN},
     {"fn", KW_FUNC},         {"break", KW_BREAK},   {"continue", KW_CONTINUE},
-    {"switch", KW_MATCH},    {"case", KW_CASE},     {"default", KW_DEFAULT},
+    {"match", KW_MATCH},     {"case", KW_CASE},     {"default", KW_DEFAULT},
     {"new", KW_NEW},         {"and", KW_AND},       {"not", KW_NOT},
     {"or", KW_OR},           {"struct", KW_STRUCT}, {"import", KW_IMPORT},
     {"export", KW_EXPORT},   {"macro", KW_MACRO},   {"define", KW_DEFINE},
     {"defined", KW_DEFINED}, {"type", KW_TYPE},     {"pragma", KW_PRAGMA},
     {"enum", KW_ENUM},       {"try", KW_TRY},       {"catch", KW_CATCH},
     {"raise", KW_RAISE},     {"trait", KW_TRAIT},   {"auto", KW_AUTO},
+    {"defer", KW_DEFER},
   };
 
   // Checks if the identifier is a keyword or not
@@ -285,7 +286,7 @@ Token Lexer::get_token() {
     if (pos < source_size() && peek() == '+') {
       pos++;
       offset++;
-      return Token(OP_INCREMENT, "++", line, start_offset, position);
+      return Token(OP_INC, "++", line, start_offset, position);
     }
     return Token(OP_ADD, "+", line, start_offset, position);
   case '-':
@@ -297,7 +298,7 @@ Token Lexer::get_token() {
     else if (pos < source_size() && peek() == '-') {
       pos++;
       offset++;
-      return Token(OP_DECREMENT, "--", line, start_offset, position);
+      return Token(OP_DEC, "--", line, start_offset, position);
     }
     return Token(OP_SUB, "-", line, start_offset, position);
   case '*':
@@ -354,6 +355,8 @@ Token Lexer::get_token() {
     return Token(AT, "@", line, start_offset, position);
   case '?':
     return Token(QUESTION, "?", line, start_offset, position);
+  case '#':
+    return Token(OP_LEN, "#", line, start_offset, position);
   default:
     return Token(UNKNOWN, std::string(1, chr), line, start_offset, position);
   }

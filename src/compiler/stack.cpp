@@ -15,6 +15,7 @@ std::optional<StackVariable> CompilerVariableStack::at(size_t pos) {
     .is_const = false,
     .is_constexpr = false,
     .symbol = obj.symbol,
+    .decl = obj.decl,
     .type = obj.type,
     .value = obj.value,
   };

@@ -28,7 +28,7 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
   return {line, column};
 }
 
-IValue expr_node_visitor::construct_constant(LitExprNode& literal_node) {
+IValue ExprNodeVisitor::construct_constant(LitExprNode& literal_node) {
   using enum IValueType;
   return std::visit(
     [](auto&& val) -> IValue {
@@ -61,7 +61,7 @@ IValue expr_node_visitor::construct_constant(LitExprNode& literal_node) {
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
 #endif
 
-LitExprNode expr_node_visitor::fold_constant(ExprNodeBase& expr, size_t fold_depth) {
+LitExprNode ExprNodeVisitor::fold_constant(ExprNodeBase& expr, size_t fold_depth) {
   using enum TokenType;
   using evaluator_2i_t = std::function<int(int, int)>;
   using evaluator_2f_t = std::function<float(float, float)>;
@@ -94,10 +94,10 @@ LitExprNode expr_node_visitor::fold_constant(ExprNodeBase& expr, size_t fold_dep
     {OP_MOD, [](float a, int b) { return std::fmod(a, b); }},
   };
 
-  if (LitExprNode* lit_expr = get_derived_instance<ExprNodeBase, LitExprNode>(expr)) {
-    return *get_derived_instance<ExprNodeBase, LitExprNode>(*lit_expr);
+  if (LitExprNode* lit_expr = get_derived_instance<ExprNodeBase, LitExprNode>(&expr)) {
+    return *get_derived_instance<ExprNodeBase, LitExprNode>(lit_expr);
   }
-  if (BinExprNode* bin_expr = get_derived_instance<ExprNodeBase, BinExprNode>(expr)) {
+  if (BinExprNode* bin_expr = get_derived_instance<ExprNodeBase, BinExprNode>(&expr)) {
     LitExprNode left = fold_constant(*bin_expr->lhs_expression, fold_depth + 1);
     LitExprNode right = fold_constant(*bin_expr->rhs_expression, fold_depth + 1);
 
@@ -125,6 +125,7 @@ LitExprNode expr_node_visitor::fold_constant(ExprNodeBase& expr, size_t fold_dep
           right_type->to_output_string()
         )
       );
+      compiler_output_end();
       goto bad_fold;
     }
     else if (float* float_left = std::get_if<float>(&left.value)) {
@@ -151,10 +152,11 @@ LitExprNode expr_node_visitor::fold_constant(ExprNodeBase& expr, size_t fold_dep
           right_type->to_output_string()
         )
       );
+      compiler_output_end();
       goto bad_fold;
     }
   }
-  else if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(expr)) {
+  else if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(&expr)) {
     auto stk_id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
     if (!stk_id.has_value()) {
       goto bad_fold;
@@ -183,17 +185,19 @@ bad_fold:
 
 void NodeVisitorBase::compiler_error(size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(unit_ctx.file_source, begin);
-
+  errors_generated++;
   visitor_failed = true;
   err_bus.log({false, message, unit_ctx, ERROR_, {lc_info.first, lc_info.second, begin, end}});
 }
 
 void NodeVisitorBase::compiler_error(const Token& Token, const std::string& message) {
+  errors_generated++;
   visitor_failed = true;
   err_bus.log({false, message, unit_ctx, ERROR_, Token});
 }
 
 void NodeVisitorBase::compiler_error(const std::string& message) {
+  errors_generated++;
   visitor_failed = true;
   err_bus.log({true, message, unit_ctx, ERROR_, {}});
 }
@@ -222,6 +226,14 @@ void NodeVisitorBase::compiler_info(const Token& Token, const std::string& messa
 
 void NodeVisitorBase::compiler_info(const std::string& message) {
   err_bus.log({true, message, unit_ctx, INFO, {}});
+}
+
+void NodeVisitorBase::compiler_output_end() {
+  err_bus.new_line();
+}
+
+size_t NodeVisitorBase::get_compiler_error_count() {
+  return errors_generated;
 }
 
 } // namespace via

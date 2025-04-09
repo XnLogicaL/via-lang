@@ -10,15 +10,11 @@ set(CMAKE_CXX_STANDARD 23)
 # Static linking
 set(BUILD_SHARED_LIBS OFF)
 
-# Allow options to define DEBUG_MODE and MAIN_FILE_PATH, with defaults
+# Allow options to define DEBUG_MODE with default
 option(DEBUG_MODE "Set the build mode" OFF)
-option(OPTIMIZE "Enable aggressive optimizations" ON)
-option(MAIN_FILE_PATH "Path to entry point (must include main function)" "CLI/main.cpp")
 
 # Print current configuration
 message(STATUS "Building with DEBUG_MODE: ${DEBUG_MODE}")
-message(STATUS "Building with OPTIMIZE: ${OPTIMIZE}")
-message(STATUS "Using MAIN_FILE_PATH: ${MAIN_FILE_PATH}")
 
 # Add subdirectories
 add_subdirectory(SHA256)
@@ -56,7 +52,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 file(GLOB_RECURSE INCLUDES LIST_DIRECTORIES true include/*.h)
 
 # Define executable
-add_executable(via ${MAIN_FILE_PATH} ${SOURCES})
+add_executable(via "CLI/main.cpp" ${SOURCES})
 
 # Include dirs
 target_include_directories(via PUBLIC
@@ -79,69 +75,48 @@ endif()
 
 # Compiler-specific flags
 if(DEBUG_MODE)
-  target_compile_definitions(via PUBLIC -DVIA_DEBUG)
-  if(NOT MSVC)
-    target_compile_options(via PRIVATE -g)
+  if (NOT MSVC)
+    target_compile_options(via PRIVATE -Og -g -fsanitize=address,undefined)
+    target_link_options(via PRIVATE -fsanitize=address,undefined)
   else()
-    target_compile_options(via PRIVATE /Zi)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG")
-  endif()
-
-  # Fuzzing options (only non-MSVC for now)
-  if (MAIN_FILE_PATH MATCHES "fuzz/.*\\.cpp")
-    if(MSVC)
-      message(FATAL_ERROR "Fuzzing builds are not supported in MSVC")
-    else()
-      message(STATUS "Fuzzing build enabled")
-      target_compile_definitions(via PUBLIC -DFUZZING_ENABLED)
-      target_compile_options(via PRIVATE -fsanitize=address,fuzzer,undefined)
-      target_link_libraries(via PUBLIC -fsanitize=address,fuzzer,undefined)
-    endif()
+    target_compile_options(via PRIVATE /Od /Zi)
   endif()
 else()
-  if(OPTIMIZE)
-    if(MSVC)
-      target_compile_options(via PRIVATE
-        /O2
-        /GL
-        /Gy
-        /fp:fast
-        /GS-
-        /Gw
-      )
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
-    else()
-      target_compile_options(via PRIVATE
-        -flto=auto
-        -march=native
-        -mtune=native
-        -Ofast
-        -ffast-math
-        -funroll-loops
-        -ftree-vectorize
-        -fomit-frame-pointer
-        -fmerge-all-constants
-        -finline-functions
-        -ftree-pre
-        -fprefetch-loop-arrays
-        -falign-functions=32
-        -falign-jumps=32
-        -falign-loops=32
-        -funsafe-math-optimizations
-        -fno-stack-protector
-        -fipa-pta
-        -fdevirtualize-at-ltrans
-        -fgcse-lm
-        -fmerge-all-constants
-        -fno-math-errno
-      )
-    endif()
+  if(MSVC)
+    target_compile_options(via PRIVATE
+      /O2
+      /GL
+      /Gy
+      /fp:fast
+      /GS-
+      /Gw
+    )
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
   else()
-    if (NOT MSVC)
-      target_compile_options(via PRIVATE -Og -g)
-    else()
-      target_compile_options(via PRIVATE /Od /Zi)
-    endif()
+    target_compile_options(via PRIVATE
+      -flto=auto
+      -march=native
+      -mtune=native
+      -Ofast
+      -ffast-math
+      -funroll-loops
+      -ftree-vectorize
+      -fomit-frame-pointer
+      -fmerge-all-constants
+      -finline-functions
+      -ftree-pre
+      -fprefetch-loop-arrays
+      -falign-functions=32
+      -falign-jumps=32
+      -falign-loops=32
+      -funsafe-math-optimizations
+      -fno-stack-protector
+      -fipa-pta
+      -fdevirtualize-at-ltrans
+      -fgcse-lm
+      -fmerge-all-constants
+      -fno-math-errno
+    )
   endif()
 endif()
 

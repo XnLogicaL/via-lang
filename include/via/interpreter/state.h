@@ -40,9 +40,9 @@ struct error_state {
 
 // Global state, should only be instantiated once, and shared across all worker contexts.
 struct global_state {
-  std::unordered_map<uint32_t, string_obj*> stable; // String interning table
-  std::atomic<uint32_t> threads{0};                 // Thread count
-  IDict gtable;                                     // CompilerGlobal environment
+  std::unordered_map<uint32_t, IString*> stable; // String interning table
+  std::atomic<uint32_t> threads{0};              // Thread count
+  IDict gtable;                                  // CompilerGlobal environment
 
   std::shared_mutex stable_mutex;
 };

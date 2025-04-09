@@ -699,7 +699,7 @@ dispatch:
       operand_t dst = pc->operand0;
       IValue arr(new IArray());
 
-      __set_register(this, dst, arr.move());
+      __set_register(this, dst, std::move(arr));
       VM_NEXT();
     }
 
@@ -707,7 +707,7 @@ dispatch:
       operand_t dst = pc->operand0;
       IValue dict(new IDict());
 
-      __set_register(this, dst, dict.move());
+      __set_register(this, dst, std::move(dict));
       VM_NEXT();
     }
 
@@ -833,7 +833,7 @@ dispatch:
       operand_t key = pc->operand1;
 
       IValue* key_obj = __get_register(this, key);
-      string_obj* key_str = key_obj->val_string;
+      IString* key_str = key_obj->val_string;
       const IValue& global = glb->gtable.get(key_str->data);
 
       __set_register(this, dst, global.clone());
@@ -845,10 +845,10 @@ dispatch:
       operand_t key = pc->operand1;
 
       IValue* key_obj = __get_register(this, key);
-      string_obj* key_str = key_obj->val_string;
+      IString* key_str = key_obj->val_string;
       IValue* global = __get_register(this, src);
 
-      glb->gtable.set(key_str->data, global->move());
+      glb->gtable.set(key_str->data, std::move(*global));
       VM_NEXT();
     }
 
@@ -1627,24 +1627,24 @@ dispatch:
       operand_t tbl = pc->operand1;
       operand_t key = pc->operand2;
 
-      IValue* arr_val = __get_register(this, tbl);
-      IValue* key_val = __get_register(this, key);
-      IValue* index = __array_get(arr_val->val_array, key_val->val_integer);
+      IValue* value = __get_register(this, tbl);
+      IValue* index = __get_register(this, key);
+      IValue* result = __array_get(value->val_array, index->val_integer);
 
-      __set_register(this, dst, index->clone());
+      __set_register(this, dst, result->clone());
       VM_NEXT();
     }
 
     VM_CASE(ARRSET) {
       operand_t src = pc->operand0;
       operand_t tbl = pc->operand1;
-      operand_t ky = pc->operand2;
+      operand_t key = pc->operand2;
 
       IValue* array = __get_register(this, tbl);
+      IValue* index = __get_register(this, key);
       IValue* value = __get_register(this, src);
-      IValue* key = __get_register(this, ky);
 
-      __array_set(array->val_array, key->val_integer, value->move());
+      __array_set(array->val_array, index->val_integer, std::move(*value));
       VM_NEXT();
     }
 
@@ -1700,8 +1700,8 @@ dispatch:
       IValue* left_val = __get_register(this, left);
       IValue* right_val = __get_register(this, right);
 
-      string_obj* left_str = left_val->val_string;
-      string_obj* right_str = right_val->val_string;
+      IString* left_str = left_val->val_string;
+      IString* right_str = right_val->val_string;
 
       size_t new_length = left_str->len + right_str->len;
       char* new_string = new char[new_length + 1];
@@ -1722,7 +1722,7 @@ dispatch:
       operand_t idx = pc->operand2;
 
       IValue* str_val = __get_register(this, str);
-      string_obj* tstr = str_val->val_string;
+      IString* tstr = str_val->val_string;
       char chr = tstr->data[idx];
 
       __set_register(this, dst, IValue(&chr));
@@ -1735,7 +1735,7 @@ dispatch:
       operand_t idx = pc->operand2;
 
       IValue* str_val = __get_register(this, str);
-      string_obj* tstr = str_val->val_string;
+      IString* tstr = str_val->val_string;
 
       char chr = static_cast<char>(src);
       char* str_cpy = duplicate_string(tstr->data);

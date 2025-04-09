@@ -470,7 +470,7 @@ void linux_ub_sig_handler(int signum) {
 int main(int argc, char* argv[]) {
   using enum CErrorLevel;
 
-#ifdef __linux__
+#if 0 && defined(__linux__)
   std::signal(SIGSEGV, linux_ub_sig_handler);
   std::signal(SIGILL, linux_ub_sig_handler);
   std::signal(SIGABRT, linux_ub_sig_handler);

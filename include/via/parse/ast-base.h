@@ -46,6 +46,8 @@ struct ExprNodeBase {
 };
 
 struct StmtNodeBase {
+  size_t begin;
+  size_t end;
   std::vector<StmtAttribute> attributes{};
 
   virtual ~StmtNodeBase() = default;

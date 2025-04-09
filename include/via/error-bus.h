@@ -73,7 +73,7 @@ public:
  */
 class CErrorBus final {
 public:
-  // Appends a user-specified level error to the bus.
+  // Appends a user-specified level error to the buffer.
   void log(const CError& err);
 
   // Returns whether if the error bus contains fatal errors.
@@ -85,11 +85,19 @@ public:
   // Emits all accumulated errors into stdout.
   void emit();
 
+  // Appends a newline to the buffer.
+  void new_line();
+
   // Custom destructor to ensure that the errors are emitted before destruction.
   ~CErrorBus();
 
 private:
-  std::vector<CError> buffer;
+  struct Payload {
+    CError error;
+    std::string message;
+  };
+
+  std::vector<Payload> buffer;
 };
 
 } // namespace via

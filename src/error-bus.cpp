@@ -3,6 +3,13 @@
 // =========================================================================================== |
 
 #include "error-bus.h"
+#include "context.h"
+#include "ast.h"
+#include "constant.h"
+#include "bytecode.h"
+#include "token.h"
+#include "globals.h"
+#include "stack.h"
 #include "color.h"
 
 namespace via {
@@ -138,12 +145,12 @@ std::string CError::to_string() const {
 // ==========================================================================================
 // CErrorBus
 void CErrorBus::log(const CError& err) {
-  buffer.push_back(err);
+  buffer.push_back({err, err.to_string()});
 }
 
 bool CErrorBus::has_error() {
-  for (const CError& err : buffer) {
-    if (err.level == ERROR_) {
+  for (const Payload& payload : buffer) {
+    if (payload.error.level == ERROR_) {
       return true;
     }
   }
@@ -158,18 +165,26 @@ void CErrorBus::clear() {
 void CErrorBus::emit() {
   std::string current_file;
 
-  for (const CError& err : buffer) {
-    if (!err.is_flat && current_file != err.ctx.file_path) {
-      current_file = err.ctx.file_path;
+  for (const Payload& payload : buffer) {
+    if (!payload.error.is_flat && current_file != payload.error.ctx.file_path) {
+      current_file = payload.error.ctx.file_path;
       std::cout << "in file " << current_file << ":\n";
     }
 
-    std::cout << err.to_string();
+    std::cout << payload.message;
   }
 
   std::cout << std::flush;
 
   clear();
+}
+
+void CErrorBus::new_line() {
+  static TransUnitContext dummy_ctx({});
+  buffer.push_back({
+    CError(true, "", dummy_ctx, INFO, {0, 0, 0, 0}),
+    "──────────────────────────────────────────────\n",
+  });
 }
 
 CErrorBus::~CErrorBus() {

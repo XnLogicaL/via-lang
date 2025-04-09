@@ -75,7 +75,7 @@ IValue __get_constant(state* state, size_t index) {
 IValue __type(const IValue& val) {
   std::string _Temp = std::string(magic_enum::enum_name(val.type));
   const char* str = _Temp.c_str();
-  return IValue(new string_obj(str));
+  return IValue(new IString(str));
 }
 
 std::string __type_cxx_string(const IValue& val) {

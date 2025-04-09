@@ -72,8 +72,8 @@ const global_vector& GlobalHolder::get() {
 void GlobalHolder::declare_builtins() {
   Token tok = Token(TokenType::IDENTIFIER, "", 0, 0, 0);
 
-  TypeNodeBase* nil_type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(tok, IValueType::nil);
-  TypeNodeBase* str_type = unit_ctx.ast->allocator.emplace<PrimTypeNode>(tok, IValueType::string);
+  TypeNodeBase* nil_type = allocator.emplace<PrimTypeNode>(tok, IValueType::nil);
+  TypeNodeBase* str_type = allocator.emplace<PrimTypeNode>(tok, IValueType::string);
 
   auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamNode {
     return {Token(TokenType::IDENTIFIER, id, 0, 0, 0), StmtModifiers{}, std::move(type)};
@@ -85,7 +85,7 @@ void GlobalHolder::declare_builtins() {
   CompilerGlobal print = {
     tok,
     "print",
-    unit_ctx.ast->allocator.emplace<FunctionTypeNode>(print_args, nil_type),
+    allocator.emplace<FunctionTypeNode>(print_args, nil_type),
   };
 
   std::vector<ParamNode> println_args;
@@ -94,7 +94,7 @@ void GlobalHolder::declare_builtins() {
   CompilerGlobal println = {
     tok,
     "println",
-    unit_ctx.ast->allocator.emplace<FunctionTypeNode>(println_args, nil_type),
+    allocator.emplace<FunctionTypeNode>(println_args, nil_type),
   };
 
   globals.emplace_back(std::move(print));

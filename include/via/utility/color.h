@@ -44,11 +44,11 @@ enum class style {
 
 // IFunction to wrap a string with ANSI escape codes
 VIA_IMPLEMENTATION std::string apply_color(
-  const std::string& text, fg_color fg, bg_color bg = bg_color::black, style style = style::reset
+  const std::string& text, fg_color fg, bg_color bg = bg_color::black, style s = style::reset
 ) {
-  return "\033[" + std::to_string(static_cast<int>(style)) + ";"
-    + std::to_string(static_cast<int>(fg)) + ";" + std::to_string(static_cast<int>(bg)) + "m" + text
-    + "\033[0m";
+  // Construct ANSI escape code and apply the color formatting to the text
+  return "\033[" + std::to_string(static_cast<int>(s)) + ";" + std::to_string(static_cast<int>(fg))
+    + ";" + std::to_string(static_cast<int>(bg)) + "m" + text + "\033[0m";
 }
 
 } // namespace via::utils

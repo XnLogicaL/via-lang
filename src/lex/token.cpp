@@ -24,8 +24,8 @@ bool Token::is_literal() const {
 }
 
 bool Token::is_operator() const {
-  return type == OP_ADD || type == OP_DECREMENT || type == OP_DIV || type == OP_EQ || type == OP_EXP
-    || type == OP_GEQ || type == OP_GT || type == OP_INCREMENT || type == OP_LEQ || type == OP_LT
+  return type == OP_ADD || type == OP_DEC || type == OP_DIV || type == OP_EQ || type == OP_EXP
+    || type == OP_GEQ || type == OP_GT || type == OP_INC || type == OP_LEQ || type == OP_LT
     || type == OP_MOD || type == OP_MUL || type == OP_NEQ || type == OP_SUB || type == KW_AND
     || type == KW_OR;
 }

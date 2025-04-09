@@ -47,27 +47,34 @@ struct DataType<std::string> {
 
 template<typename base, typename derived>
   requires std::is_base_of_v<base, derived>
-derived* get_derived_instance(base& der) {
-  return dynamic_cast<derived*>(&der);
+derived* get_derived_instance(base* der) {
+  return dynamic_cast<derived*>(der);
+}
+
+template<typename base, typename derived>
+const derived* get_derived_instance(const base* der) {
+  return dynamic_cast<const derived*>(der);
 }
 
 template<typename base, typename derived>
   requires std::is_base_of_v<base, derived>
-bool is_derived_instance(base& der) {
+bool is_derived_instance(const base* der) {
   return get_derived_instance<base, derived>(der) != nullptr;
 }
 
 VIA_IMPLEMENTATION bool is_constant_expression(
-  TransUnitContext& unit_ctx, ExprNodeBase& expression, size_t variable_depth = 0
+  TransUnitContext& unit_ctx, const ExprNodeBase* expression, size_t variable_depth = 0
 ) {
   if (is_derived_instance<ExprNodeBase, LitExprNode>(expression)) {
     return true;
   }
-  else if (BinExprNode* bin_expr = get_derived_instance<ExprNodeBase, BinExprNode>(expression)) {
-    return is_constant_expression(unit_ctx, *bin_expr->lhs_expression, variable_depth + 1)
-      && is_constant_expression(unit_ctx, *bin_expr->rhs_expression, variable_depth + 1);
+  else if (const BinExprNode* bin_expr =
+             get_derived_instance<ExprNodeBase, BinExprNode>(expression)) {
+    return is_constant_expression(unit_ctx, bin_expr->lhs_expression, variable_depth + 1)
+      && is_constant_expression(unit_ctx, bin_expr->rhs_expression, variable_depth + 1);
   }
-  else if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
+  else if (const SymExprNode* sym_expr =
+             get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
     auto stk_id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
     if (!stk_id.has_value()) {
       return false;
@@ -80,26 +87,26 @@ VIA_IMPLEMENTATION bool is_constant_expression(
       return false;
     }
 
-    return is_constant_expression(unit_ctx, *var_obj->value, ++variable_depth);
+    return is_constant_expression(unit_ctx, var_obj->value, ++variable_depth);
   }
 
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_nil(TypeNodeBase*& type) {
+VIA_IMPLEMENTATION bool is_nil(const TypeNodeBase* type) {
   using enum IValueType;
 
-  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*type)) {
+  if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
     return primitive->type == nil;
   }
 
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_integral(TypeNodeBase*& type) {
+VIA_IMPLEMENTATION bool is_integral(const TypeNodeBase* type) {
   using enum IValueType;
 
-  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*type)) {
+  if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
     return primitive->type == integer;
   }
 
@@ -107,10 +114,10 @@ VIA_IMPLEMENTATION bool is_integral(TypeNodeBase*& type) {
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_floating_point(TypeNodeBase*& type) {
+VIA_IMPLEMENTATION bool is_floating_point(const TypeNodeBase* type) {
   using enum IValueType;
 
-  if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(*type)) {
+  if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
     return primitive->type == floating_point;
   }
 
@@ -118,32 +125,75 @@ VIA_IMPLEMENTATION bool is_floating_point(TypeNodeBase*& type) {
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_arithmetic(TypeNodeBase*& type) {
+VIA_IMPLEMENTATION bool is_arithmetic(const TypeNodeBase* type) {
   return is_integral(type) || is_floating_point(type);
 }
 
-VIA_IMPLEMENTATION bool is_callable(TypeNodeBase*& type) {
-  if (is_derived_instance<TypeNodeBase, FunctionTypeNode>(*type)) {
+VIA_IMPLEMENTATION bool is_callable(const TypeNodeBase* type) {
+  if (is_derived_instance<TypeNodeBase, FunctionTypeNode>(type)) {
     return true;
   }
 
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_compatible(TypeNodeBase*& left, TypeNodeBase*& right) {
-  if (PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(*left)) {
-    if (PrimTypeNode* primitive_right = get_derived_instance<TypeNodeBase, PrimTypeNode>(*right)) {
-
+VIA_IMPLEMENTATION bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
+  if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
+    if (const PrimTypeNode* primitive_right =
+          get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
       return primitive_left->type == primitive_right->type;
+    }
+  }
+  else if (const GenericTypeNode* generic_left =
+             get_derived_instance<TypeNodeBase, GenericTypeNode>(left)) {
+    if (const GenericTypeNode* generic_right =
+          get_derived_instance<TypeNodeBase, GenericTypeNode>(right)) {
+      if (generic_left->identifier.lexeme != generic_right->identifier.lexeme) {
+        return false;
+      }
+
+      if (generic_left->generics.size() != generic_right->generics.size()) {
+        return false;
+      }
+
+      size_t i = 0;
+      for (TypeNodeBase* type : generic_left->generics) {
+        TypeNodeBase* right = generic_right->generics[i++];
+        if (!is_same(type, right)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  }
+  else if (const ArrayTypeNode* array_left =
+             get_derived_instance<TypeNodeBase, ArrayTypeNode>(left)) {
+    if (const ArrayTypeNode* array_right =
+          get_derived_instance<TypeNodeBase, ArrayTypeNode>(right)) {
+      return is_same(array_left->type, array_right->type);
     }
   }
 
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_castable(TypeNodeBase*& from, TypeNodeBase*& into) {
-  if (PrimTypeNode* primitive_right = get_derived_instance<TypeNodeBase, PrimTypeNode>(*into)) {
-    if (get_derived_instance<TypeNodeBase, PrimTypeNode>(*from)) {
+VIA_IMPLEMENTATION bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
+  if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
+    if (const PrimTypeNode* primitive_right =
+          get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
+
+      return primitive_left->type == primitive_right->type;
+    }
+  }
+
+  return is_same(left, right);
+}
+
+VIA_IMPLEMENTATION bool is_castable(const TypeNodeBase* from, const TypeNodeBase* into) {
+  if (const PrimTypeNode* primitive_right =
+        get_derived_instance<TypeNodeBase, PrimTypeNode>(into)) {
+    if (get_derived_instance<TypeNodeBase, PrimTypeNode>(from)) {
       if (primitive_right->type == IValueType::string) {
         return true;
       }
@@ -156,8 +206,8 @@ VIA_IMPLEMENTATION bool is_castable(TypeNodeBase*& from, TypeNodeBase*& into) {
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_castable(TypeNodeBase*& from, IValueType to) {
-  if (PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(*from)) {
+VIA_IMPLEMENTATION bool is_castable(const TypeNodeBase* from, IValueType to) {
+  if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(from)) {
     if (to == IValueType::string) {
       return true;
     }
