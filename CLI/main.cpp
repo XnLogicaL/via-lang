@@ -435,6 +435,10 @@ static comp_result handle_repl(argparse::ArgumentParser&) {
 }
 
 #ifdef __linux__
+#if VIA_COMPILER == C_GCC || VIA_COMPILER == C_CLANG
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 static void linux_ub_sig_handler(int signum) {
   static std::unordered_map<int, const char*> sig_id_map = {
@@ -465,6 +469,9 @@ static void linux_ub_sig_handler(int signum) {
   std::_Exit(1);
 }
 
+#if VIA_COMPILER == C_GCC || VIA_COMPILER == C_CLANG
+#pragma GCC diagnostic pop
+#endif
 #endif // __linux__
 
 int main(int argc, char* argv[]) {

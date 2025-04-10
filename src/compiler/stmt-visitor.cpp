@@ -159,17 +159,19 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 
 void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   operand_t stack_pointer = unit_ctx.internal.variable_stack->size();
+  unit_ctx.internal.defered_stmts.push({});
 
-  for (StmtNodeBase*& pstmt : scope_node.statements) {
-    pstmt->accept(*this);
-  }
-
-  // Emit defered statements
-  for (StmtNodeBase* stmt : unit_ctx.internal.defered_stmts) {
+  for (StmtNodeBase* stmt : scope_node.statements) {
     stmt->accept(*this);
   }
 
-  unit_ctx.internal.defered_stmts.clear();
+  std::vector<StmtNodeBase*> defered_stmts = unit_ctx.internal.defered_stmts.top();
+  unit_ctx.internal.defered_stmts.pop();
+
+  // Emit defered statements
+  for (StmtNodeBase* stmt : defered_stmts) {
+    stmt->accept(*this);
+  }
 
   operand_t stack_allocations = unit_ctx.internal.variable_stack->size() - stack_pointer;
   for (; stack_allocations > 0; stack_allocations--) {
@@ -212,6 +214,8 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
 
   function_node.returns->decay(decay_visitor, function_node.returns);
   function_node.accept(type_visitor);
+
+  unit_ctx.internal.defered_stmts.push({});
   unit_ctx.bytecode->emit(NEWCLSR, {function_reg}, function_node.identifier.lexeme);
 
   size_t new_closure_point = unit_ctx.bytecode->size();
@@ -241,12 +245,13 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     pstmt->accept(*this);
   }
 
+  std::vector<StmtNodeBase*> defered_stmts = unit_ctx.internal.defered_stmts.top();
+  unit_ctx.internal.defered_stmts.pop();
+
   // Emit defered statements
-  for (StmtNodeBase* stmt : unit_ctx.internal.defered_stmts) {
+  for (StmtNodeBase* stmt : defered_stmts) {
     stmt->accept(*this);
   }
-
-  unit_ctx.internal.defered_stmts.clear();
 
   Bytecode& last_bytecode = unit_ctx.bytecode->back();
   IOpCode last_opcode = last_bytecode.instruct.op;
@@ -447,7 +452,10 @@ void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
 }
 
 void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
-  unit_ctx.internal.defered_stmts.push_back(defer_stmt.stmt);
+  if (!unit_ctx.internal.defered_stmts.empty()) {
+    auto& top = unit_ctx.internal.defered_stmts.top();
+    top.push_back(defer_stmt.stmt);
+  }
 }
 
 void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {

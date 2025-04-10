@@ -179,13 +179,8 @@ void CErrorBus::emit() {
   clear();
 }
 
-void CErrorBus::new_line() {
-  static TransUnitContext dummy_ctx({});
-  buffer.push_back({
-    CError(true, "", dummy_ctx, INFO, {0, 0, 0, 0}),
-    "──────────────────────────────────────────────\n",
-  });
-}
+// Does nothing for now.
+void CErrorBus::new_line() {}
 
 CErrorBus::~CErrorBus() {
   emit();
