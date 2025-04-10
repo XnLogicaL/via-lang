@@ -38,37 +38,43 @@ if(DEBUG_MODE)
   message(STATUS "Compiling in DEBUG mode")
 else()
   message(STATUS "Compiling with ${PROD_COMPILER} in PROD mode")
+
   if(PROD_COMPILER STREQUAL "GCC")
     set(CMAKE_CXX_COMPILER /usr/bin/g++)
-    set(CMAKE_EXE_LINKER_FLAGS "-static")
   elseif(PROD_COMPILER STREQUAL "CLANG")
     set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-    set(CMAKE_EXE_LINKER_FLAGS "-static")
   endif()
+
+  # Enable static linkage
+  set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
-# Find sources
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
-file(GLOB_RECURSE INCLUDES LIST_DIRECTORIES true include/*.h)
+file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h" "src/*.hpp" "src/*.h")
 
 # Define executable
 add_executable(via "CLI/main.cpp" ${SOURCES})
 
 # Include dirs
 target_include_directories(via PUBLIC
-  include/
-  include/via
-  include/via/lex
-  include/via/parse
-  include/via/compiler
-  include/via/preprocessor
-  include/via/interpreter
-  include/via/utility
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/via
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/src/compiler
+  ${CMAKE_SOURCE_DIR}/src/interpreter
+  ${CMAKE_SOURCE_DIR}/src/lex
+  ${CMAKE_SOURCE_DIR}/src/parse
+  ${CMAKE_SOURCE_DIR}/src/preprocessor
+  ${CMAKE_SOURCE_DIR}/src/utility
 )
 
 # Global warnings and standards
 if (NOT MSVC)
-  target_compile_options(via PRIVATE -Wall -Wextra -Werror)
+  target_compile_options(via PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+  )
 endif()
 
 # Compiler-specific flags
