@@ -26,7 +26,7 @@ CompilerContext ctx;
 CErrorBus err_bus;
 TransUnitContext dummy_unit_ctx("<unavailable>", "");
 
-std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
+static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   auto command = std::make_unique<ArgumentParser>(name);
   command->add_argument("target");
   command->add_argument("--dump-ast", "-Da")
@@ -59,16 +59,16 @@ std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
   return command;
 }
 
-comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
+static comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   using enum TokenType;
   using enum CErrorLevel;
   using namespace utils;
 
-  const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
+  const auto get_flag = [&subcommand_parser](const std::string& flag) -> bool {
     return subcommand_parser.get<bool>(flag);
   };
 
-  const auto print_flag_label = [](const std::string& flag) constexpr -> void {
+  const auto print_flag_label = [](const std::string& flag) -> void {
     std::cout << std::format("flag [{}]:\n", flag);
   };
 
@@ -289,12 +289,12 @@ comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   return {failed, std::move(unit_ctx)};
 }
 
-comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
+static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
   using namespace utils;
   using enum CErrorLevel;
 
-  const auto get_flag = [&subcommand_parser](const std::string& flag) constexpr -> bool {
+  const auto get_flag = [&subcommand_parser](const std::string& flag) -> bool {
     return subcommand_parser.get<bool>(flag);
   };
 
@@ -385,7 +385,7 @@ comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   return result;
 }
 
-comp_result handle_repl(argparse::ArgumentParser&) {
+static comp_result handle_repl(argparse::ArgumentParser&) {
   using namespace via;
   using namespace utils;
 
@@ -436,7 +436,7 @@ comp_result handle_repl(argparse::ArgumentParser&) {
 
 #ifdef __linux__
 
-void linux_ub_sig_handler(int signum) {
+static void linux_ub_sig_handler(int signum) {
   static std::unordered_map<int, const char*> sig_id_map = {
     {1, "SIGHUP"},     {2, "SIGINT"},   {3, "SIGQUIT"},   {4, "SIGILL"},   {5, "SIGTRAP"},
     {6, "SIGABRT"},    {7, "SIGBUS"},   {8, "SIGFPE"},    {9, "SIGKILL"},  {10, "SIGUSR1"},
@@ -476,34 +476,39 @@ int main(int argc, char* argv[]) {
   std::signal(SIGABRT, linux_ub_sig_handler);
 #endif
 
-  // Argument Parser entry point
-  ArgumentParser argument_parser("via", VIA_VERSION);
+  try {
+    // Argument Parser entry point
+    ArgumentParser argument_parser("via", VIA_VERSION);
 
-  auto compile_parser = get_standard_parser("compile");
-  compile_parser->add_description("Compiles the given source file.");
+    auto compile_parser = get_standard_parser("compile");
+    compile_parser->add_description("Compiles the given source file.");
 
-  auto run_parser = get_standard_parser("run");
-  run_parser->add_description("Compiles and runs the given source file.");
+    auto run_parser = get_standard_parser("run");
+    run_parser->add_description("Compiles and runs the given source file.");
 
-  ArgumentParser repl_parser("repl");
+    ArgumentParser repl_parser("repl");
 
-  // Add subparsers
-  argument_parser.add_subparser(*compile_parser);
-  argument_parser.add_subparser(*run_parser);
-  argument_parser.add_subparser(repl_parser);
-  argument_parser.parse_args(argc, argv);
+    // Add subparsers
+    argument_parser.add_subparser(*compile_parser);
+    argument_parser.add_subparser(*run_parser);
+    argument_parser.add_subparser(repl_parser);
+    argument_parser.parse_args(argc, argv);
 
-  if (argument_parser.is_subcommand_used(*compile_parser)) {
-    handle_compile(*compile_parser);
+    if (argument_parser.is_subcommand_used(*compile_parser)) {
+      handle_compile(*compile_parser);
+    }
+    else if (argument_parser.is_subcommand_used(*run_parser)) {
+      handle_run(*run_parser);
+    }
+    else if (argument_parser.is_subcommand_used(repl_parser)) {
+      handle_repl(repl_parser);
+    }
+    else {
+      throw std::runtime_error("Subcommand expected");
+    }
   }
-  else if (argument_parser.is_subcommand_used(*run_parser)) {
-    handle_run(*run_parser);
-  }
-  else if (argument_parser.is_subcommand_used(repl_parser)) {
-    handle_repl(repl_parser);
-  }
-  else {
-    throw std::logic_error("Subcommand expected");
+  catch (const std::runtime_error& e) {
+    err_bus.log({true, e.what(), dummy_unit_ctx, ERROR_, {}});
   }
 
   return 0;

@@ -9,6 +9,12 @@
 #include "common-macros.h"
 #include "token.h"
 
+// MSVC is annoying with uninitialized members
+#if VIA_COMPILER == C_MSVC
+#pragma warning(push)
+#pragma warning(disable : 26495)
+#endif
+
 namespace via {
 
 class TransUnitContext;
@@ -69,5 +75,9 @@ struct TypeNodeBase {
 };
 
 } // namespace via
+
+#if VIA_COMPILER == C_MSVC
+#pragma warning(pop)
+#endif
 
 #endif

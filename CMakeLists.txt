@@ -67,9 +67,7 @@ target_include_directories(via PUBLIC
 )
 
 # Global warnings and standards
-if (MSVC)
-  target_compile_options(via PRIVATE /W4 /WX /std:c++latest)
-else()
+if (NOT MSVC)
   target_compile_options(via PRIVATE -Wall -Wextra -Werror)
 endif()
 
@@ -78,21 +76,9 @@ if(DEBUG_MODE)
   if (NOT MSVC)
     target_compile_options(via PRIVATE -Og -g -fsanitize=address,undefined)
     target_link_options(via PRIVATE -fsanitize=address,undefined)
-  else()
-    target_compile_options(via PRIVATE /Od /Zi)
   endif()
 else()
-  if(MSVC)
-    target_compile_options(via PRIVATE
-      /O2
-      /GL
-      /Gy
-      /fp:fast
-      /GS-
-      /Gw
-    )
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
-  else()
+  if(NOT MSVC)
     target_compile_options(via PRIVATE
       -flto=auto
       -march=native

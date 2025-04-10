@@ -71,19 +71,19 @@ result<Token> Parser::expect_consume(TokenType type, const std::string& what) {
 }
 
 result<StmtModifiers> Parser::parse_modifiers() {
-  StmtModifiers StmtModifiers;
+  StmtModifiers modifiers{};
 
   while (true) {
     result<Token> curr = current();
     VIA_CHECKRESULT(curr);
 
     if (curr->type == KW_CONST) {
-      if (StmtModifiers.is_const) {
+      if (modifiers.is_const) {
         err_bus.log({false, "Modifier 'const' encountered multiple times", unit_ctx, WARNING, *curr}
         );
       }
 
-      StmtModifiers.is_const = true;
+      modifiers.is_const = true;
       consume();
     }
     else {
@@ -91,7 +91,7 @@ result<StmtModifiers> Parser::parse_modifiers() {
     }
   }
 
-  return StmtModifiers;
+  return modifiers;
 }
 
 result<StmtAttribute> Parser::parse_attribute() {

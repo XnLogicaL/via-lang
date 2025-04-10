@@ -11,6 +11,12 @@
 #include "string-utility.h"
 #include <cstring>
 
+// MSVC is annoying with uninitialized members
+#if VIA_COMPILER == C_MSVC
+#pragma warning(push)
+#pragma warning(disable : 26495)
+#endif
+
 //  ==========
 // [ object.h ]
 //  ==========
@@ -290,5 +296,9 @@ struct IObject {
 };
 
 } // namespace via
+
+#if VIA_COMPILER == C_MSVC
+#pragma warning(pop)
+#endif
 
 #endif

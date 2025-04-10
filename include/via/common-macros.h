@@ -35,7 +35,7 @@
 #endif
 
 // Version information. Should match with git commit version.
-#define VIA_VERSION "0.28.7"
+#define VIA_VERSION "1.0.1"
 
 #if VIA_COMPILER == C_MSVC
 #define VIA_RESTRICT       __restrict

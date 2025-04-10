@@ -1,10 +1,6 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
-
-// !========================================================================================== |
-// ! DO NOT FUZZ THIS FILE! ONLY UNIT TEST AFTER CHECKING FOR THE VIA_DEBUG MACRO!              |
-// !========================================================================================== |
+//  ========================================================================================
+// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
+//  ========================================================================================
 
 #include "bit-utility.h"
 #include "file-io.h"
@@ -37,10 +33,13 @@
   } while (0)
 
 // Stolen from Luau :)
+// Whether to use a dispatch table for instruction loading.
 #define VM_USE_CGOTO VIA_COMPILER == C_GCC || VIA_COMPILER == C_CLANG
 
 #if VM_USE_CGOTO
 #define VM_CASE(op) CASE_##op:
+#else
+#define VM_CASE(op) case op:
 #endif
 
 #define VM_DISPATCH_OP(op) &&CASE_##op
@@ -70,29 +69,19 @@
     VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH),     \
     VM_DISPATCH_OP(ARRGET), VM_DISPATCH_OP(ARRSET), VM_DISPATCH_OP(ARRNEXT),                       \
     VM_DISPATCH_OP(ARRLEN), VM_DISPATCH_OP(DICTGET), VM_DISPATCH_OP(DICTSET),                      \
-    VM_DISPATCH_OP(DICTLEN), VM_DISPATCH_OP(DICTNEXT), VM_DISPATCH_OP(STRCONCAT),                  \
+    VM_DISPATCH_OP(DICTLEN), VM_DISPATCH_OP(DICTNEXT), VM_DISPATCH_OP(STRCON),                     \
     VM_DISPATCH_OP(STRGET), VM_DISPATCH_OP(STRSET), VM_DISPATCH_OP(STRLEN), VM_DISPATCH_OP(CASTI), \
     VM_DISPATCH_OP(CASTF), VM_DISPATCH_OP(CASTSTR), VM_DISPATCH_OP(CASTB)
 
-// Macro for checking divison by zero.
-#define VM_DIVBY0I(divisor)                                                                        \
-  if (divisor == 0) {                                                                              \
-    VM_ERROR("Division by zero");                                                                  \
-  }
-
-#define VM_DIVBY0F(divisor)                                                                        \
-  if (divisor == 0.0f) {                                                                           \
-    VM_ERROR("Division by zero");                                                                  \
-  }
-
-// ==================================================================================================
-// execute.cpp
-//
+//  =============
+// [ execute.cpp ]
+// =============
 namespace via {
 
 using enum IValueType;
 using enum IOpCode;
 
+// We use implementation functions only in this file.
 using namespace impl;
 
 void vm_save_snapshot(state* VIA_RESTRICT V) {
@@ -400,12 +389,16 @@ dispatch:
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          VM_DIVBY0I(rhs_val);
+          if (rhs_val->val_integer == 0) {
+            VM_ERROR("Division by zero");
+          }
 
           lhs_val->val_integer /= rhs_val->val_integer;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          VM_DIVBY0F(rhs_val->val_floating_point);
+          if (rhs_val->val_floating_point == 0.0f) {
+            VM_ERROR("Division by zero");
+          }
 
           lhs_val->val_floating_point =
             static_cast<float>(lhs_val->val_integer) / rhs_val->val_floating_point;
@@ -414,12 +407,16 @@ dispatch:
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          VM_DIVBY0I(rhs_val);
+          if (rhs_val->val_integer == 0) {
+            VM_ERROR("Division by zero");
+          }
 
           lhs_val->val_floating_point /= static_cast<float>(rhs_val->val_integer);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          VM_DIVBY0F(rhs_val->val_floating_point);
+          if (rhs_val->val_floating_point == 0.0f) {
+            VM_ERROR("Division by zero");
+          }
 
           lhs_val->val_floating_point /= rhs_val->val_floating_point;
         }
@@ -434,8 +431,9 @@ dispatch:
 
       IValue* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
-
-      VM_DIVBY0I(imm);
+      if (imm == 0) {
+        VM_ERROR("Division by zero");
+      }
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer /= imm;
@@ -453,8 +451,9 @@ dispatch:
 
       IValue* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
-
-      VM_DIVBY0F(imm);
+      if (imm == 0.0f) {
+        VM_ERROR("Division by zero");
+      }
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->val_integer /= imm;
@@ -1693,7 +1692,7 @@ dispatch:
       VM_NEXT();
     }
 
-    VM_CASE(STRCONCAT) {
+    VM_CASE(STRCON) {
       operand_t left = pc->operand0;
       operand_t right = pc->operand1;
 

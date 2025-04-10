@@ -84,7 +84,12 @@ VIA_IMPLEMENTATION void __closure_bytecode_load(state* state, IFunction* closure
   state->pc++;
 
   // Copy instructions from PC
+#if VIA_COMPILER == C_MSVC // MSVC does not support VLA's
+  #include <malloc.h> // For _alloca
+  Instruction* buffer = static_cast<Instruction*>(_alloca(len * sizeof(Instruction)));
+#else
   Instruction buffer[len];
+#endif
   for (size_t i = 0; i < len; ++i) {
     buffer[i] = *(state->pc++);
   }
