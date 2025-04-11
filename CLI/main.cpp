@@ -13,13 +13,9 @@
 using namespace argparse;
 using namespace via;
 
-struct comp_result {
+struct CompileResult {
   bool failed;
   TransUnitContext unit;
-
-  comp_result(bool failed, TransUnitContext unit)
-    : failed(failed),
-      unit(std::move(unit)) {}
 };
 
 CompilerContext ctx;
@@ -59,7 +55,7 @@ static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& na
   return command;
 }
 
-static comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
+static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
   using enum TokenType;
   using enum CErrorLevel;
   using namespace utils;
@@ -289,7 +285,7 @@ static comp_result handle_compile(argparse::ArgumentParser& subcommand_parser) {
   return {failed, std::move(unit_ctx)};
 }
 
-static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
+static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
   using namespace utils;
   using enum CErrorLevel;
@@ -320,7 +316,7 @@ static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
     return {false, std::move(unit_ctx)};
   }
 
-  comp_result result = handle_compile(subcommand_parser);
+  CompileResult result = handle_compile(subcommand_parser);
   TransUnitContext& unit_ctx = result.unit;
 
   bool verbosity_flag = get_flag("--verbose");
@@ -329,9 +325,9 @@ static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(runtime_begin);
     SET_PROFILER_POINT(state_init_begin);
 
-    GlobalState gstate;
     stack_registers_t stk_registers;
-    state state(&gstate, stk_registers, result.unit);
+    GlobalState gstate;
+    IState state(&gstate, stk_registers, result.unit);
 
     if (verbosity_flag) {
       SET_PROFILER_POINT(state_init_end);
@@ -385,7 +381,7 @@ static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
   return result;
 }
 
-static comp_result handle_repl(argparse::ArgumentParser&) {
+static CompileResult handle_repl(argparse::ArgumentParser&) {
   using namespace via;
   using namespace utils;
 

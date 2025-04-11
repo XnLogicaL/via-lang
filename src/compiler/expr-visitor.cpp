@@ -110,12 +110,11 @@ void ExprNodeVisitor::visit(SymExprNode& variable_node, operand_t dst) {
       auto& current_closure = unit_ctx.internal.function_stack->top();
       if (current_closure.stack_pointer > stk_id.value()) {
         unit_ctx.bytecode->emit(UPVGET, {dst, stk_id.value()}, symbol);
+        return;
       }
     }
-    else {
-      unit_ctx.bytecode->emit(STKGET, {dst, stk_id.value()}, symbol);
-    }
 
+    unit_ctx.bytecode->emit(STKGET, {dst, stk_id.value()}, symbol);
     return;
   }
   else if (unit_ctx.internal.globals->was_declared(symbol)) {
@@ -192,7 +191,7 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(GroupExprNode& group_node, operand_t dst) {
-  group_node.accept(*this, dst);
+  group_node.expression->accept(*this, dst);
 }
 
 void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {

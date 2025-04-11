@@ -5,22 +5,26 @@
 #ifndef VIA_HAS_HEADER_H
 #define VIA_HAS_HEADER_H
 
+// Common
 #include "common-macros.h"
 #include "common-defs.h"
 #include "common.h"
 #include "context.h"
-#include "error-bus.h"
 
-#include "lex/token.h"
+// Lexer
 #include "lex/lexer.h"
 
-#include "Preprocessor/Preprocessor.h"
+// Preprocessor
+#include "preprocessor/preprocessor.h"
 
+// Parser
 #include "parse/parser.h"
 #include "parse/ast.h"
 
+// Compiler
 #include "compiler/compiler.h"
 
+// Interpreter
 #include "interpreter/state.h"
 #include "interpreter/lib-base.h"
 

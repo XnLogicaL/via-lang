@@ -57,6 +57,7 @@ add_executable(via "CLI/main.cpp" ${SOURCES})
 
 # Include dirs
 target_include_directories(via PUBLIC
+  ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include/via
   ${CMAKE_SOURCE_DIR}/src

@@ -2,6 +2,7 @@
 -std=c++23
 -Wall
 -Wextra
+-I.
 -I./src
 -I./src/compiler
 -I./src/interpreter

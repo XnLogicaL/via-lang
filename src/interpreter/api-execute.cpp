@@ -1616,7 +1616,6 @@ dispatch:
       operand_t src = pc->operand0;
       IValue* val = __get_register(this, src);
 
-      __closure_close_upvalues(frame);
       __native_return(this, std::move(*val));
       VM_NEXT();
     }

@@ -298,7 +298,7 @@ VIA_IMPLEMENTATION void __stack_deallocate(const IState* state) {
   delete[] state->sbp;
 }
 
-VIA_IMPLEMENTATION void __push(IState* state, IValue val) {
+VIA_IMPLEMENTATION void __push(IState* state, IValue&& val) {
   state->sbp[state->sp++] = std::move(val);
 }
 

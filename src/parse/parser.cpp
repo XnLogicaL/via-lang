@@ -341,6 +341,18 @@ result<ExprNodeBase*> Parser::parse_primary() {
       br_open->position, br_close->position, values
     );
   }
+  case PAREN_OPEN: {
+    consume();
+
+    result<ExprNodeBase*> expr = parse_expr();
+    result<Token> expect_par =
+      expect_consume(PAREN_CLOSE, "Expected ')' to close grouping expression");
+
+    VIA_CHECKRESULT(expr);
+    VIA_CHECKRESULT(expect_par);
+
+    return unit_ctx.ast->allocator.emplace<GroupExprNode>(*expr);
+  }
   default:
     break;
   }
@@ -453,10 +465,10 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
 result<ExprNodeBase*> Parser::parse_binary(int precedence) {
   // Parse the primary expression first.
   result<ExprNodeBase*> prim = parse_primary();
+  VIA_CHECKRESULT(prim);
+
   // Parse any postfix operations that apply to the primary expression.
   result<ExprNodeBase*> lhs = parse_postfix(*prim);
-
-  VIA_CHECKRESULT(prim);
   VIA_CHECKRESULT(lhs);
 
   // Parse binary operators according to precedence.
