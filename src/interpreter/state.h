@@ -26,20 +26,13 @@ namespace via {
 // Forward declarations
 struct IFunction;
 
-// Calling convention
-enum class call_type {
-  NOCALL,
-  CALL,
-  FASTCALL,
-};
-
-struct error_state {
+struct ErrorState {
   IFunction* frame = nullptr;
   std::string message = "";
 };
 
 // Global state, should only be instantiated once, and shared across all worker contexts.
-struct global_state {
+struct GlobalState {
   std::unordered_map<uint32_t, IString*> stable; // String interning table
   std::atomic<uint32_t> threads{0};              // Thread count
   IDict gtable;                                  // CompilerGlobal environment
@@ -49,22 +42,22 @@ struct global_state {
 
 // Register array wrapper.
 template<const size_t Size>
-struct alignas(64) register_holder {
+struct alignas(64) RegisterHolder {
   IValue registers[Size];
 };
 
 // Type aliases for stack registers and heap registers.
-using stack_registers_t = register_holder<VIA_STK_REGISTERS>;
-using spill_registers_t = register_holder<VIA_HEAP_REGISTERS>;
+using stack_registers_t = RegisterHolder<VIA_STK_REGISTERS>;
+using spill_registers_t = RegisterHolder<VIA_HEAP_REGISTERS>;
 
 /**
  * "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
  * 64-byte aligned for maximum cache friendliness.
  */
-struct alignas(64) state {
+struct alignas(64) IState {
   // Thread and global state
-  uint32_t id;       // Thread ID
-  global_state* glb; // CompilerGlobal state
+  uint32_t id;      // Thread ID
+  GlobalState* glb; // CompilerGlobal state
 
   // instruction pointers
   Instruction* pc = nullptr;   // Current instruction pointer
@@ -83,7 +76,7 @@ struct alignas(64) state {
 
   // VM control and debugging
   bool abort = false;
-  error_state* err;
+  ErrorState* err;
 
   // Register holders
   stack_registers_t& stack_registers;
@@ -97,17 +90,15 @@ struct alignas(64) state {
   //  ==================
 
   // Make uncopyable
-  VIA_NOCOPY(state);
+  VIA_NOCOPY(IState);
   // Make movable
-  VIA_IMPLMOVE(state);
+  VIA_IMPLMOVE(IState);
 
   // Constructor
-  explicit state(
-    global_state* global, stack_registers_t& stk_registers, TransUnitContext& unit_ctx
-  );
+  explicit IState(GlobalState*, stack_registers_t&, TransUnitContext&);
 
   // Destructor
-  ~state();
+  ~IState();
 
   //  ==============
   // [ Core methods ]

@@ -15,81 +15,81 @@ namespace via {
 
 using enum IValueType;
 
-IValue& state::get_register(operand_t reg) {
+IValue& IState::get_register(operand_t reg) {
   return *impl::__get_register(this, reg);
 }
 
-void state::set_register(operand_t reg, IValue val) {
+void IState::set_register(operand_t reg, IValue val) {
   impl::__set_register(this, reg, std::move(val));
 }
 
-void state::push_nil() {
+void IState::push_nil() {
   push(IValue());
 }
 
-void state::push_int(int value) {
+void IState::push_int(int value) {
   push(IValue(value));
 }
 
-void state::push_float(float value) {
+void IState::push_float(float value) {
   push(IValue(value));
 }
 
-void state::push_true() {
+void IState::push_true() {
   push(IValue(true));
 }
 
-void state::push_false() {
+void IState::push_false() {
   push(IValue(false));
 }
 
-void state::push_string(const char* str) {
+void IState::push_string(const char* str) {
   push(IValue(str));
 }
 
-void state::push_array() {
+void IState::push_array() {
   push(IValue(new IArray()));
 }
 
-void state::push_dict() {
+void IState::push_dict() {
   push(IValue(new IDict()));
 }
 
-void state::push(IValue val) {
+void IState::push(IValue val) {
   VIA_ASSERT(sp < VIA_VMSTACKSIZE, "stack overflow");
   impl::__push(this, std::move(val));
 }
 
-void state::drop() {
+void IState::drop() {
   VIA_ASSERT(sp > 0, "stack underflow");
   impl::__drop(this);
 }
 
-IValue state::pop() {
+IValue IState::pop() {
   VIA_ASSERT(sp > 0, "stack underflow");
   return impl::__pop(this);
 }
 
-const IValue& state::top() {
+const IValue& IState::top() {
   VIA_ASSERT(sp > 0, "stack underflow");
   return sbp[sp];
 }
 
-void state::set_stack(size_t position, IValue value) {
+void IState::set_stack(size_t position, IValue value) {
   VIA_ASSERT(sp >= position, "stack overflow");
   impl::__set_stack(this, position, std::move(value));
 }
 
-IValue& state::get_stack(size_t position) {
+IValue& IState::get_stack(size_t position) {
   VIA_ASSERT(sp >= position, "stack overflow");
   return impl::__get_stack(this, position);
 }
 
-size_t state::stack_size() {
+size_t IState::stack_size() {
   return sp;
 }
 
-IValue& state::get_global(const char* name) {
+IValue& IState::get_global(const char* name) {
   return glb->gtable.get(name);
 }
 

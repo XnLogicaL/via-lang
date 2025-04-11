@@ -329,7 +329,7 @@ static comp_result handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(runtime_begin);
     SET_PROFILER_POINT(state_init_begin);
 
-    global_state gstate;
+    GlobalState gstate;
     stack_registers_t stk_registers;
     state state(&gstate, stk_registers, result.unit);
 

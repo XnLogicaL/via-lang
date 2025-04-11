@@ -13,7 +13,7 @@
     return;                                                                                        \
   }
 
-#define VIA_LIBDECLFN(id)         void id(state* V)
+#define VIA_LIBDECLFN(id)         void id(IState* V)
 #define VIA_LIBDECLPARAM(id, idx) const IValue& id = impl::__get_argument(V, idx);
 #define VIA_LIBRET(val)           impl::__native_return(V, val);
 

@@ -11,10 +11,10 @@ namespace via {
 using namespace impl;
 
 // Initializes and returns a new state object
-state::state(global_state* glb, stack_registers_t& stk_registers, TransUnitContext& unit_ctx)
+IState::IState(GlobalState* glb, stack_registers_t& stk_registers, TransUnitContext& unit_ctx)
   : id(glb->threads++),
     glb(glb),
-    err(new error_state()),
+    err(new ErrorState()),
     stack_registers(stk_registers),
     unit_ctx(unit_ctx) {
   // Load initial bytecode into the Instruction buffer.
@@ -26,7 +26,7 @@ state::state(global_state* glb, stack_registers_t& stk_registers, TransUnitConte
   __label_load(this);
 }
 
-state::~state() {
+IState::~IState() {
   delete err;
   delete[] sibp;
 
@@ -35,7 +35,7 @@ state::~state() {
   __label_deallocate(this);
 }
 
-void state::load(const BytecodeHolder& BytecodeHolder) {
+void IState::load(const BytecodeHolder& BytecodeHolder) {
   delete[] sibp;
 
   auto& pipeline = BytecodeHolder.get();

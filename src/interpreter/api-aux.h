@@ -14,6 +14,9 @@
 // [ api-aux.h ]
 //  ===========
 namespace via::impl {
+
+static IValue nil;
+
 //  ==================
 // [ Closure handling ]
 //  ==================
@@ -79,13 +82,13 @@ VIA_IMPLEMENTATION void __closure_upv_set(IFunction* closure, size_t upv_id, IVa
 
 // Loads closure bytecode by iterating over the Instruction pipeline.
 // Handles sentinel/special opcodes like RET or CAPTURE while assembling closure.
-VIA_IMPLEMENTATION void __closure_bytecode_load(state* state, IFunction* closure, size_t len) {
+VIA_IMPLEMENTATION void __closure_bytecode_load(IState* state, IFunction* closure, size_t len) {
   // Skip NEWCLSR instruction
   state->pc++;
 
   // Copy instructions from PC
 #if VIA_COMPILER == C_MSVC // MSVC does not support VLA's
-  #include <malloc.h> // For _alloca
+#include <malloc.h>        // For _alloca
   Instruction* buffer = static_cast<Instruction*>(_alloca(len * sizeof(Instruction)));
 #else
   Instruction buffer[len];
@@ -119,7 +122,7 @@ VIA_IMPLEMENTATION void __closure_bytecode_load(state* state, IFunction* closure
 #endif
 
 // Moves upvalues of the current closure into the heap, "closing" them.
-VIA_IMPLEMENTATION void __closure_close_upvalues(IFunction* closure) {
+VIA_IMPLEMENTATION void __closure_close_upvalues(const IFunction* closure) {
   // C IFunction replica compliance
   if (closure->upvs == nullptr) {
     return;
@@ -149,7 +152,7 @@ VIA_IMPLEMENTATION size_t __dict_hash_key(const IDict* dict, const char* key) {
 }
 
 // Inserts a key-value pair into the hash table component of a given table_obj object.
-VIA_IMPLEMENTATION void __dict_set(IDict* dict, const char* key, IValue val) {
+VIA_IMPLEMENTATION void __dict_set(const IDict* dict, const char* key, IValue val) {
   size_t index = __dict_hash_key(dict, key);
   if (index > dict->capacity) {
     // Handle relocation
@@ -166,7 +169,7 @@ VIA_IMPLEMENTATION void __dict_set(IDict* dict, const char* key, IValue val) {
 VIA_IMPLEMENTATION IValue* __dict_get(const IDict* dict, const char* key) {
   size_t index = __dict_hash_key(dict, key);
   if (index > dict->capacity) {
-    return nullptr;
+    return &nil;
   }
 
   return &dict->data[index].value;
@@ -231,7 +234,7 @@ VIA_IMPLEMENTATION void __array_set(IArray* array, size_t index, IValue val) {
 // if the index is out of array capacity range.
 VIA_IMPLEMENTATION IValue* __array_get(const IArray* array, size_t index) {
   if (!__array_range_check(array, index)) {
-    return nullptr;
+    return &nil;
   }
 
   return &array->data[index];
@@ -258,22 +261,22 @@ VIA_IMPLEMENTATION size_t __array_size(const IArray* array) {
 
 // ==========================================================
 // Label handling
-VIA_IMPLEMENTATION void __label_allocate(state* state, size_t count) {
+VIA_IMPLEMENTATION void __label_allocate(IState* state, size_t count) {
   state->labels = new Instruction*[count];
 }
 
-VIA_IMPLEMENTATION void __label_deallocate(state* state) {
+VIA_IMPLEMENTATION void __label_deallocate(IState* state) {
   if (state->labels) {
     delete[] state->labels;
     state->labels = nullptr;
   }
 }
 
-VIA_IMPLEMENTATION Instruction* __label_get(state* state, size_t index) {
+VIA_IMPLEMENTATION Instruction* __label_get(const IState* state, size_t index) {
   return state->labels[index];
 }
 
-VIA_IMPLEMENTATION void __label_load(state* state) {
+VIA_IMPLEMENTATION void __label_load(const IState* state) {
   size_t index = 0;
   for (Instruction* pc = state->ibp; 1; pc++) {
     if (pc->op == IOpCode::LBL) {
@@ -287,36 +290,36 @@ VIA_IMPLEMENTATION void __label_load(state* state) {
 
 // ==========================================================
 // Stack handling
-VIA_IMPLEMENTATION void __stack_allocate(state* state) {
+VIA_IMPLEMENTATION void __stack_allocate(IState* state) {
   state->sbp = new IValue[VIA_VMSTACKSIZE];
 }
 
-VIA_IMPLEMENTATION void __stack_deallocate(state* state) {
+VIA_IMPLEMENTATION void __stack_deallocate(const IState* state) {
   delete[] state->sbp;
 }
 
-VIA_IMPLEMENTATION void __push(state* state, IValue val) {
+VIA_IMPLEMENTATION void __push(IState* state, IValue val) {
   state->sbp[state->sp++] = std::move(val);
 }
 
-VIA_IMPLEMENTATION IValue __pop(state* state) {
+VIA_IMPLEMENTATION IValue __pop(IState* state) {
   return std::move(state->sbp[state->sp--]);
 }
 
-VIA_IMPLEMENTATION void __drop(state* state) {
+VIA_IMPLEMENTATION void __drop(IState* state) {
   IValue& dropped = state->sbp[state->sp--];
   dropped.reset();
 }
 
-VIA_IMPLEMENTATION IValue& __get_stack(state* state, size_t offset) {
+VIA_IMPLEMENTATION IValue& __get_stack(const IState* state, size_t offset) {
   return state->sbp[offset];
 }
 
-VIA_IMPLEMENTATION void __set_stack(state* state, size_t offset, IValue val) {
+VIA_IMPLEMENTATION void __set_stack(const IState* state, size_t offset, IValue val) {
   state->sbp[offset] = std::move(val);
 }
 
-VIA_IMPLEMENTATION IValue __get_argument(state* VIA_RESTRICT state, size_t offset) {
+VIA_IMPLEMENTATION IValue __get_argument(const IState* VIA_RESTRICT state, size_t offset) {
   if (offset >= state->frame->call_data.argc) {
     return IValue();
   }
@@ -330,15 +333,15 @@ VIA_IMPLEMENTATION IValue __get_argument(state* VIA_RESTRICT state, size_t offse
 
 // ==========================================================
 // Register handling
-VIA_IMPLEMENTATION void __register_allocate(state* state) {
+VIA_IMPLEMENTATION void __register_allocate(IState* state) {
   state->spill_registers = new spill_registers_t();
 }
 
-VIA_IMPLEMENTATION void __register_deallocate(state* state) {
+VIA_IMPLEMENTATION void __register_deallocate(const IState* state) {
   delete state->spill_registers;
 }
 
-VIA_OPTIMIZE void __set_register(state* state, operand_t reg, IValue val) {
+VIA_OPTIMIZE void __set_register(const IState* state, operand_t reg, IValue val) {
   if VIA_LIKELY (reg < VIA_STK_REGISTERS) {
     state->stack_registers.registers[reg] = std::move(val);
   }
@@ -348,7 +351,7 @@ VIA_OPTIMIZE void __set_register(state* state, operand_t reg, IValue val) {
   }
 }
 
-VIA_OPTIMIZE IValue* __get_register(state* state, operand_t reg) {
+VIA_OPTIMIZE IValue* __get_register(const IState* state, operand_t reg) {
   if VIA_LIKELY ((reg & 0xFF) == reg) {
     return &state->stack_registers.registers[reg];
   }

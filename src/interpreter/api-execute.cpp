@@ -15,7 +15,7 @@
 #define VM_ERROR(message)                                                                          \
   do {                                                                                             \
     __set_error_state(this, message);                                                              \
-    goto dispatch;                                                                                 \
+    VM_NEXT();                                                                                     \
   } while (0)
 
 // Macro that throws a fatal error
@@ -84,7 +84,7 @@ using enum IOpCode;
 // We use implementation functions only in this file.
 using namespace impl;
 
-void vm_save_snapshot(state* VIA_RESTRICT V) {
+void vm_save_snapshot(IState* VIA_RESTRICT V) {
   // Calculate the current program counter position relative to the Instruction base.
   uint64_t pos = V->pc - V->ibp;
   std::string filename = std::format("vm_snapshot.{}.log", pos);
@@ -146,7 +146,7 @@ void vm_save_snapshot(state* VIA_RESTRICT V) {
 
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
-void state::execute() {
+void IState::execute() {
 #if VM_USE_CGOTO
   static const void* dispatch_table[0xFF] = {VM_DISPATCH_TABLE()};
 #endif

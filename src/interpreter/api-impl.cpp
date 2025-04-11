@@ -13,21 +13,21 @@
 
 namespace via::impl {
 
-void __set_error_state(state* state, const std::string& message) {
+void __set_error_state(const IState* state, const std::string& message) {
   state->err->frame = state->frame;
   state->err->message = std::move(message);
 }
 
-void __clear_error_state(state* state) {
+void __clear_error_state(const IState* state) {
   state->err->frame = nullptr;
   state->err->message = "";
 }
 
-bool __has_error(state* state) {
+bool __has_error(const IState* state) {
   return state->err->frame != nullptr;
 }
 
-bool __handle_error(state* state) {
+bool __handle_error(const IState* state) {
   IFunction* current_frame = state->frame;
   IFunction* error_frame = state->frame;
 
@@ -64,7 +64,7 @@ bool __handle_error(state* state) {
   return static_cast<bool>(current_frame);
 }
 
-IValue __get_constant(state* state, size_t index) {
+IValue __get_constant(const IState* state, size_t index) {
   if (index >= state->unit_ctx.constants->size()) {
     return IValue();
   }
@@ -97,7 +97,7 @@ void* __to_pointer(const IValue& val) {
   }
 }
 
-void __native_call(state* state, IFunction* _Callee, size_t _Argc) {
+void __native_call(IState* state, IFunction* _Callee, size_t _Argc) {
   _Callee->call_data.caller = state->frame;
   _Callee->call_data.ibp = state->ibp;
   _Callee->call_data.pc = state->pc;
@@ -109,7 +109,7 @@ void __native_call(state* state, IFunction* _Callee, size_t _Argc) {
   state->ibp = _Callee->ibp;
 }
 
-void __extern_call(state* state, const IValue& _Callee, size_t _Argc) {
+void __extern_call(IState* state, const IValue& _Callee, size_t _Argc) {
   IFunction func;
   func.call_data.caller = state->frame;
   func.call_data.ibp = state->ibp;
@@ -123,7 +123,7 @@ void __extern_call(state* state, const IValue& _Callee, size_t _Argc) {
   _Callee.val_cfunction(state);
 }
 
-void __call(state* state, IValue& _Callee, size_t _Argc) {
+void __call(IState* state, IValue& _Callee, size_t _Argc) {
   if (_Callee.is_function()) {
     __native_call(state, _Callee.val_function, _Argc);
   }
@@ -152,7 +152,7 @@ int __length_cxx(IValue& val) {
   return len.is_nil() ? -1 : len.val_integer;
 }
 
-void __native_return(state* VIA_RESTRICT state, IValue _Ret_value) {
+void __native_return(IState* VIA_RESTRICT state, IValue _Ret_value) {
   __closure_close_upvalues(state->frame);
 
   ICallInfo _Call_info = state->frame->call_data;
@@ -228,7 +228,7 @@ bool __to_cxx_bool(const IValue& val) {
   return __to_bool(val).val_boolean;
 }
 
-IValue __to_int(state* V, const IValue& val) {
+IValue __to_int(const IState* V, const IValue& val) {
   using enum IValueType;
 
   if (val.is_number()) {
@@ -245,7 +245,7 @@ IValue __to_int(state* V, const IValue& val) {
     int int_result;
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), int_result);
     if (ec == std::errc() && ptr == str.data() + str.size()) {
-      return IValue(static_cast<float>(int_result)); // Convert to float for consistency
+      return IValue(int_result);
     }
 
     __set_error_state(V, "string -> integer cast failed");
@@ -260,7 +260,7 @@ IValue __to_int(state* V, const IValue& val) {
   return IValue();
 }
 
-IValue __to_float(state* V, const IValue& val) {
+IValue __to_float(const IState* V, const IValue& val) {
   using enum IValueType;
 
   if (val.is_number()) {

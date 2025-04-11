@@ -23,7 +23,7 @@
 namespace via {
 
 // Forward declarations
-struct state;
+struct IState;
 struct IString;
 struct IArray;
 struct IDict;
@@ -31,7 +31,7 @@ struct IObject;
 struct IFunction;
 
 // C function pointer type alias.
-using cfunction_t = void (*)(state*);
+using cfunction_t = void (*)(IState*);
 
 // Value object type.
 enum class IValueType : uint8_t {
