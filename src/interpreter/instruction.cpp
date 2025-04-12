@@ -17,7 +17,7 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
   const auto& meta = bc.meta_data;
   const IOpCode op = instr.op;
 
-  constexpr int opcode_column_width = 6;
+  constexpr int opcode_column_width = 12;
   constexpr int operand_column_width = 8;
 
   auto is_operand_valid = [](const operand_t& operand) { return operand != VIA_OPERAND_INVALID; };

@@ -6,6 +6,7 @@
 #include "compiler-types.h"
 #include "state.h"
 #include "string-utility.h"
+#include <cmath>
 
 // ===========================================================================================
 // compiler.cpp
@@ -191,6 +192,10 @@ bad_fold:
   return LitExprNode(Token(), std::monostate());
 }
 
+operand_t push_constant(VisitorContext& ctx, const IValue&& constant) {
+  return ctx.unit_ctx.constants->push_constant(std::move(constant));
+}
+
 #if VIA_COMPILER == C_GCC
 #pragma GCC diagnostic pop
 #endif
@@ -249,10 +254,6 @@ void compiler_output_end(VisitorContext& ctx) {
   ctx.err_bus.new_line();
 }
 
-size_t get_compiler_error_count(VisitorContext& ctx) {
-  return ctx.errc;
-}
-
 StackFunction& get_current_closure(VisitorContext& ctx) {
   return ctx.unit_ctx.internal.function_stack->top();
 }
@@ -268,21 +269,21 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
     if (stk_id.has_value()) {
       for (operand_t i = 0; StackVariable & param : current_closure.locals) {
         if (param.symbol == symbol) {
-          bytecode_emit(ctx, LOCALGET, {dst, i});
-          return true;
+          bytecode_emit(ctx, LOCALGET, {dst, i}, symbol);
+          return false;
         }
         ++i;
       }
     }
     else if (ctx.unit_ctx.internal.globals->was_declared(symbol)) {
       LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
-      IValue const_val = construct_constant(ctx, lit_translation);
+      IValue const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
       operand_t tmp_reg = ctx.reg_alloc.allocate_temp();
 
       bytecode_emit(ctx, LOADK, {tmp_reg, const_id});
       bytecode_emit(ctx, GGET, {dst, tmp_reg}, symbol);
-      return true;
+      return false;
     }
     else if (ctx.unit_ctx.internal.function_stack->size() > 0) {
       operand_t index = 0;
@@ -290,8 +291,8 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
 
       for (const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
-          bytecode_emit(ctx, ARGGET, {dst, index});
-          return true;
+          bytecode_emit(ctx, ARGGET, {dst, index}, symbol);
+          return false;
         }
 
         ++index;
@@ -299,7 +300,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
     }
   }
 
-  return false;
+  return true;
 }
 
 bool resolve_rvalue(NodeVisitorBase* visitor, ExprNodeBase* rvalue, operand_t dst) {
@@ -326,7 +327,7 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
         return true;
       }
 
-      bytecode_emit(ctx, LOCALSET, {src, *stack_id});
+      bytecode_emit(ctx, LOCALSET, {src, *stack_id}, symbol);
       return false;
     }
     else {
@@ -350,6 +351,28 @@ TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
   return expr->infer_type(ctx.unit_ctx);
 }
 
+void bytecode_emit(VisitorContext& ctx, IOpCode opc, operands_init_t&& ops, std::string com) {
+  ctx.unit_ctx.bytecode->add({
+    {
+      opc,
+      ops.data.at(0),
+      ops.data.at(1),
+      ops.data.at(2),
+    },
+    {com},
+  });
+}
+
+void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
+  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.top();
+  ctx.unit_ctx.internal.defered_stmts.pop();
+
+  // Emit defered statements
+  for (StmtNodeBase* stmt : defered_stmts) {
+    stmt->accept(*visitor);
+  }
+}
+
 } // namespace compiler_util
 
 void Compiler::codegen_prep() {
@@ -363,8 +386,6 @@ void Compiler::insert_exit0_instruction() {
 
 bool Compiler::generate() {
   StmtNodeVisitor visitor(ctx);
-
-  bool failed = false;
 
   codegen_prep();
 
@@ -381,13 +402,12 @@ bool Compiler::generate() {
 
   insert_exit0_instruction();
 
-  size_t errors_generated = compiler_util::get_compiler_error_count(ctx);
-  if (errors_generated > 0) {
-    auto message = std::format("{} error(s) generated.", errors_generated);
+  if (ctx.errc > 0) {
+    auto message = std::format("{} error(s) generated.", ctx.errc);
     compiler_util::compiler_error(ctx, message);
   }
 
-  return failed || visitor.failed();
+  return visitor.failed();
 }
 
 } // namespace via

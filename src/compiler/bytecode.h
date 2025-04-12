@@ -47,7 +47,9 @@ public:
   void remove(size_t);
 
   // Returns a reference to the bytecode vector.
-  const bytecode_vector& get() const;
+  inline const bytecode_vector& get() const {
+    return instructions;
+  }
 
 private:
   bytecode_vector instructions;

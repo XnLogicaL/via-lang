@@ -92,7 +92,7 @@ void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
     bytecode_emit(ctx, *bool_value ? LOADBT : LOADBF, {dst});
   }
   else {
-    IValue constant = construct_constant(ctx, lit_expr);
+    IValue constant = construct_constant(lit_expr);
     operand_t constant_id = push_constant(ctx, std::move(constant));
     bytecode_emit(ctx, LOADK, {dst, constant_id});
   }
@@ -103,7 +103,8 @@ void ExprNodeVisitor::visit(SymExprNode& sym_expr, operand_t dst) {
 
   if (resolve_lvalue(ctx, &sym_expr, dst)) {
     // Error: "undeclared-id-use"
-    compiler_error(ctx, id, std::format("Use of undeclared identifier '{}'", id.lexeme));
+    auto message = std::format("Use of undeclared identifier '{}'", id.lexeme);
+    compiler_error(ctx, id, message);
     compiler_output_end(ctx);
   }
 }
@@ -157,7 +158,7 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(GroupExprNode& group_node, operand_t dst) {
-  resolve_rvalue(this, &group_node, dst);
+  resolve_rvalue(this, group_node.expression, dst);
 }
 
 void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
@@ -205,7 +206,7 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
         bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF);
       }
       else {
-        IValue constant = construct_constant(ctx, *lit_expr);
+        IValue constant = construct_constant(*lit_expr);
         operand_t constant_id = push_constant(ctx, std::move(constant));
         bytecode_emit(ctx, PUSHK, {constant_id});
       }

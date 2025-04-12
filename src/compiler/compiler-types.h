@@ -80,19 +80,17 @@ VIA_IMPLEMENTATION bool is_constant_expression(
   else if (const SymExprNode* sym_expr =
              get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
     auto& current_closure = unit_ctx.internal.function_stack->top();
-    auto stk_id = current_closure.locals.find_symbol(sym_expr->identifier.lexeme);
-    if (!stk_id.has_value()) {
+    auto var_obj = current_closure.locals.get_local_by_symbol(sym_expr->identifier.lexeme);
+    if (!var_obj.has_value()) {
       return false;
     }
-
-    auto var_obj = current_closure.locals.at(*stk_id);
 
     // Check if call exceeds variable depth limit
     if (variable_depth > 5) {
       return false;
     }
 
-    return is_constant_expression(unit_ctx, var_obj->value, ++variable_depth);
+    return is_constant_expression(unit_ctx, (*var_obj)->value, ++variable_depth);
   }
 
   return false;

@@ -67,14 +67,9 @@ void SymExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 
 TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
   auto& current_closure = unit_ctx.internal.function_stack->top();
-  auto stk_id = current_closure.locals.find_symbol(identifier.lexeme);
+  auto stk_id = current_closure.locals.get_local_by_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
-    auto stk_obj = current_closure.locals.at(stk_id.value());
-    if (stk_obj.has_value()) {
-      return stk_obj->type;
-    }
-
-    return nullptr;
+    return (*stk_id)->type;
   }
 
   auto global = unit_ctx.internal.globals->get_global(identifier.lexeme);
@@ -182,17 +177,12 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
   auto& current_closure = unit_ctx.internal.function_stack->top();
   if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(object)) {
-    auto stk_id = current_closure.locals.find_symbol(symbol->identifier.lexeme);
+    auto stk_id = current_closure.locals.get_local_by_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
     }
 
-    auto stk_obj = current_closure.locals.at(stk_id.value());
-    if (!stk_obj.has_value()) {
-      return nullptr;
-    }
-
-    return stk_obj->type;
+    return (*stk_id)->type;
   }
 
   return nullptr;

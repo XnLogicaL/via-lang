@@ -64,9 +64,6 @@ void compiler_info(VisitorContext& ctx, const std::string&);
 
 void compiler_output_end(VisitorContext& ctx);
 
-// Returns the amount of errors emitted by the compiler so far.
-size_t get_compiler_error_count(VisitorContext& ctx);
-
 // Returns the top function in the function stack.
 StackFunction& get_current_closure(VisitorContext& ctx);
 
@@ -74,14 +71,12 @@ StackFunction& get_current_closure(VisitorContext& ctx);
 // [ Constant utility ]
 //  ==================
 
-IValue construct_constant(VisitorContext& ctx, LitExprNode& constant);
+IValue construct_constant(LitExprNode& constant);
 LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* constant, size_t fold_depth = 0);
 
 // Shortcut
 // Forwards arguments to std::unit_ctx::constants::push
-inline operand_t push_constant(VisitorContext& ctx, const IValue&& constant) {
-  return ctx.unit_ctx.constants->push_constant(std::move(constant));
-}
+operand_t push_constant(VisitorContext& ctx, const IValue&& constant);
 
 //  =======================
 // [ lvalue/rvalue utility ]
@@ -108,22 +103,19 @@ using operands_init_t = OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>;
 
 // Shortcut
 // Forwards arguments to ctx::unit_ctx::bytecode::add
-inline void bytecode_emit(
+void bytecode_emit(
   VisitorContext& ctx,
   IOpCode opcode = IOpCode::NOP,
   operands_init_t&& operands = {},
   std::string comment = ""
-) {
-  ctx.unit_ctx.bytecode->add({
-    {
-      opcode,
-      operands.data.at(0),
-      operands.data.at(1),
-      operands.data.at(2),
-    },
-    {comment},
-  });
-}
+);
+
+//  ===================
+// [ Statement utility ]
+//  ===================
+
+// Closes accumulated defer statements.
+void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor);
 
 //  ==================
 // [ Register utility ]

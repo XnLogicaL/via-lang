@@ -55,7 +55,7 @@ struct VisitorContext {
 
   inline VisitorContext(TransUnitContext& ctx)
     : unit_ctx(ctx),
-      reg_alloc(VIA_ALL_REGISTERS, false) {}
+      reg_alloc(VIA_ALL_REGISTERS, true) {}
 };
 
 class NodeVisitorBase {
