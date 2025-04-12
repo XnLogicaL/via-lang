@@ -6,63 +6,65 @@
 #include "compiler-types.h"
 #include "visitor.h"
 #include "stack.h"
+#include "compiler.h"
 #include "format-vector.h"
 
 namespace via {
 
 using enum IOpCode;
+using enum IValueType;
+using namespace compiler_util;
 
 void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   bool is_global = declaration_node.is_global;
   bool is_const = declaration_node.modifs.is_const;
 
-  ExprNodeBase& val = *declaration_node.rvalue;
-  TypeNodeBase* val_ty = val.infer_type(unit_ctx);
+  ExprNodeBase* val = declaration_node.rvalue;
+  TypeNodeBase* val_ty = resolve_type(ctx, val);
+  auto& current_closure = get_current_closure(ctx);
   Token ident = declaration_node.identifier;
   symbol_t symbol = ident.lexeme;
 
   if (is_global) {
-    std::string comment = symbol;
-    std::optional<CompilerGlobal> previously_declared =
-      unit_ctx.internal.globals->get_global(symbol);
+    auto comment = symbol;
+    auto previously_declared = ctx.unit_ctx.internal.globals->get_global(symbol);
 
     if (previously_declared.has_value()) {
-      compiler_error(ident, std::format("Attempt to re-declare global '{}'", symbol));
-      compiler_info(previously_declared->tok, "Previously declared here");
-      compiler_output_end();
+      // Error: "global-redeclaration"
+      auto message = std::format("Attempt to redeclare global '{}'", symbol);
+      compiler_error(ctx, ident, message);
+      compiler_output_end(ctx);
     }
     else {
-      operand_t value_reg = allocator.allocate_register();
+      operand_t value_reg = alloc_register(ctx);
       operand_t symbol_hash = hash_string_custom(symbol.c_str());
 
       CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
-      unit_ctx.internal.globals->declare_global(std::move(global));
-      declaration_node.rvalue->accept(expression_visitor, value_reg);
-      unit_ctx.bytecode->emit(GSET, {value_reg, symbol_hash}, comment);
-      allocator.free_register(value_reg);
+      ctx.unit_ctx.internal.globals->declare_global(std::move(global));
+
+      resolve_rvalue(&expression_visitor, declaration_node.rvalue, value_reg);
+      bytecode_emit(ctx, GSET, {value_reg, symbol_hash}, comment);
+      free_register(ctx, value_reg);
     }
   }
   else {
-    std::string comment = std::format("{}", symbol);
-
-    if (is_constant_expression(unit_ctx, &val)) {
+    if (is_constant_expression(ctx.unit_ctx, val)) {
       // Constant folding is an O1 optimization.
-      if (unit_ctx.optimization_level < 1) {
+      if (ctx.unit_ctx.optimization_level < 1) {
         goto non_constexpr;
       }
 
-      LitExprNode literal = expression_visitor.fold_constant(val);
+      LitExprNode literal = fold_constant(ctx, val);
 
       // Check for nil
       if (std::get_if<std::monostate>(&literal.value)) {
-        unit_ctx.bytecode->emit(PUSHNIL, {}, comment);
-        unit_ctx.internal.variable_stack->push({
+        bytecode_emit(ctx, PUSHNIL, {}, symbol);
+        current_closure.locals.push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type =
-            unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, IValueType::nil),
+          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, nil),
           .value = &literal,
         });
       }
@@ -72,7 +74,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         auto operands = reinterpret_u32_as_2u16(final_value);
 
         unit_ctx.bytecode->emit(PUSHI, {operands.high, operands.low}, comment);
-        unit_ctx.internal.variable_stack->push({
+        current_closure.locals.push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -88,7 +90,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         auto operands = reinterpret_u32_as_2u16(final_value);
 
         unit_ctx.bytecode->emit(PUSHF, {operands.high, operands.low}, comment);
-        unit_ctx.internal.variable_stack->push({
+        current_closure.locals.push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -102,7 +104,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       // Check for boolean
       else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
         unit_ctx.bytecode->emit(*bool_value ? PUSHBT : PUSHBF, {}, comment);
-        unit_ctx.internal.variable_stack->push({
+        current_closure.locals.push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -119,7 +121,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         const operand_t const_id = unit_ctx.constants->push_constant(constant);
 
         unit_ctx.bytecode->emit(PUSHK, {const_id}, comment);
-        unit_ctx.internal.variable_stack->push({
+        current_closure.locals.push({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -135,7 +137,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 
       declaration_node.rvalue->accept(expression_visitor, dst);
       unit_ctx.bytecode->emit(PUSH, {dst}, comment);
-      unit_ctx.internal.variable_stack->push({
+      current_closure.locals.push({
         .is_const = is_const,
         .is_constexpr = false,
         .symbol = symbol,
@@ -158,7 +160,8 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 }
 
 void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
-  operand_t stack_pointer = unit_ctx.internal.variable_stack->size();
+  auto& current_closure = get_current_closure();
+  operand_t stack_pointer = current_closure.locals.size();
   unit_ctx.internal.defered_stmts.push({});
 
   for (StmtNodeBase* stmt : scope_node.statements) {
@@ -173,43 +176,21 @@ void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
     stmt->accept(*this);
   }
 
-  operand_t stack_allocations = unit_ctx.internal.variable_stack->size() - stack_pointer;
+  operand_t stack_allocations = current_closure.locals.size() - stack_pointer;
   for (; stack_allocations > 0; stack_allocations--) {
     unit_ctx.bytecode->emit(DROP);
   }
 }
 
 void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
-  using parameters_t = FuncDeclStmtNode::parameters_t;
-
+  auto& current_closure = get_current_closure();
   operand_t function_reg = allocator.allocate_register();
-  // Fucking move semantics forcing me into doing this
-  parameters_t parameters_0;
-  parameters_t parameters_1;
-
-  for (const ParamNode& param : function_node.parameters) {
-    TypeNodeBase* type_0 = param.type;
-    TypeNodeBase* type_1 = param.type;
-
-    type_0->decay(decay_visitor, type_0);
-    type_1->decay(decay_visitor, type_1);
-
-    parameters_0.emplace_back(param.identifier, param.modifs, type_0);
-    parameters_1.emplace_back(param.identifier, param.modifs, type_1);
-  }
+  size_t stack_ptr = current_closure.locals.size();
 
   unit_ctx.internal.function_stack->push({
-    .stack_pointer = unit_ctx.internal.variable_stack->size(),
+    .stack_pointer = current_closure.locals.size(),
     .decl = &function_node,
-  });
-
-  unit_ctx.internal.variable_stack->push({
-    .is_const = function_node.modifs.is_const,
-    .is_constexpr = false,
-    .symbol = function_node.identifier.lexeme,
-    .decl = &function_node,
-    .type = unit_ctx.ast->allocator.emplace<FunctionTypeNode>(parameters_0, function_node.returns),
-    .value = nullptr,
+    .locals = {},
   });
 
   function_node.returns->decay(decay_visitor, function_node.returns);
@@ -281,19 +262,22 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     unit_ctx.bytecode->emit(PUSH, {function_reg});
   }
 
-  allocator.free_register(function_reg);
+  current_closure.locals.jump_to(stack_ptr);
   unit_ctx.internal.function_stack->pop();
+
+  allocator.free_register(function_reg);
 }
 
 void StmtNodeVisitor::visit(AssignStmtNode& assign_node) {
   if (SymExprNode* symbol_node =
         get_derived_instance<ExprNodeBase, SymExprNode>(assign_node.lvalue)) {
     Token symbol_token = symbol_node->identifier;
-    std::string symbol = symbol_token.lexeme;
-    std::optional<operand_t> stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol);
+    symbol_t symbol = symbol_token.lexeme;
+    auto& current_closure = get_current_closure();
+    auto stk_id = current_closure.locals.find_symbol(symbol);
 
     if (stk_id.has_value()) {
-      const auto& test_stack_member = unit_ctx.internal.variable_stack->at(stk_id.value());
+      const auto& test_stack_member = current_closure.locals.at(stk_id.value());
       if (test_stack_member.has_value() && test_stack_member->is_const) {
         compiler_error(
           symbol_token, std::format("Assignment to constant lvalue (variable) '{}'", symbol)
@@ -466,8 +450,8 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
     TypeNodeBase* callee_ty = call_node->callee->infer_type(unit_ctx);
     TypeNodeBase* ret_ty = call_node->infer_type(unit_ctx);
 
-    VIA_TINFERENCE_FAILURE(callee_ty, expr);
-    VIA_TINFERENCE_FAILURE(ret_ty, expr);
+    CHECK_INFERED_TYPE(callee_ty, expr);
+    CHECK_INFERED_TYPE(ret_ty, expr);
 
     if (PrimTypeNode* prim_ty = get_derived_instance<TypeNodeBase, PrimTypeNode>(ret_ty)) {
       if (prim_ty->type != IValueType::nil) {

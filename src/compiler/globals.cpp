@@ -75,11 +75,11 @@ void GlobalHolder::declare_builtins() {
   TypeNodeBase* nil_type = allocator.emplace<PrimTypeNode>(tok, IValueType::nil);
   TypeNodeBase* str_type = allocator.emplace<PrimTypeNode>(tok, IValueType::string);
 
-  auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamNode {
+  auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamStmtNode {
     return {Token(TokenType::IDENTIFIER, id, 0, 0, 0), StmtModifiers{}, std::move(type)};
   };
 
-  std::vector<ParamNode> print_args;
+  std::vector<ParamStmtNode> print_args;
   print_args.push_back(make_argument("arg0", str_type));
 
   CompilerGlobal print = {
@@ -88,7 +88,7 @@ void GlobalHolder::declare_builtins() {
     allocator.emplace<FunctionTypeNode>(print_args, nil_type),
   };
 
-  std::vector<ParamNode> println_args;
+  std::vector<ParamStmtNode> println_args;
   println_args.push_back(make_argument("arg0", str_type));
 
   CompilerGlobal println = {

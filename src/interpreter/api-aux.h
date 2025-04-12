@@ -311,12 +311,24 @@ VIA_IMPLEMENTATION void __drop(IState* state) {
   dropped.reset();
 }
 
-VIA_IMPLEMENTATION IValue& __get_stack(const IState* state, size_t offset) {
-  return state->sbp[offset];
+VIA_IMPLEMENTATION IValue* __get_stack(const IState* state, size_t offset) {
+  return &state->sbp[offset];
 }
 
-VIA_IMPLEMENTATION void __set_stack(const IState* state, size_t offset, IValue val) {
+VIA_IMPLEMENTATION void __set_stack(const IState* state, size_t offset, IValue&& val) {
   state->sbp[offset] = std::move(val);
+}
+
+VIA_IMPLEMENTATION IValue* __get_local(const IState* VIA_RESTRICT state, size_t offset) {
+  ICallInfo call_info = state->frame->call_data;
+  size_t final_offset = call_info.sp + call_info.argc + offset;
+  return &state->sbp[final_offset];
+}
+
+VIA_IMPLEMENTATION void __set_local(const IState* VIA_RESTRICT state, size_t offset, IValue&& val) {
+  ICallInfo call_info = state->frame->call_data;
+  size_t final_offset = call_info.sp + call_info.argc + offset;
+  state->sbp[final_offset] = std::move(val);
 }
 
 VIA_IMPLEMENTATION IValue __get_argument(const IState* VIA_RESTRICT state, size_t offset) {

@@ -27,29 +27,6 @@
 //  is in turn saved to ProgramData::bytecode_info.
 namespace via {
 
-// std::array wrapper with custom initialization support
-template<typename T, const size_t Size, const T Default>
-struct OperandsArray {
-  std::array<T, Size> data;
-
-  constexpr OperandsArray() {
-    data.fill(Default);
-  }
-
-  constexpr OperandsArray(std::initializer_list<T> init) {
-    data.fill(Default);
-    std::copy(init.begin(), init.end(), data.begin());
-  }
-
-  operator std::array<T, Size>&() {
-    return data;
-  }
-
-  operator const std::array<T, Size>&() const {
-    return data;
-  }
-};
-
 class BytecodeHolder final {
 public:
   // Type aliases
@@ -68,21 +45,6 @@ public:
 
   // Removes the bytecode pair located in a given index.
   void remove(size_t);
-
-  // Inserts a locally constructed instruction to a given index.
-  void insert(
-    size_t index = 0,
-    IOpCode IOpCode = IOpCode::NOP,
-    OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
-    comment_type& comment = ""
-  );
-
-  // Emits an instruction at the end of the vector.
-  void emit(
-    IOpCode IOpCode = IOpCode::NOP,
-    OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>&& operands = {},
-    comment_type& comment = ""
-  );
 
   // Returns a reference to the bytecode vector.
   const bytecode_vector& get() const;

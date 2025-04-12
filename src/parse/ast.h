@@ -298,19 +298,22 @@ struct UnionTypeNode : public TypeNodeBase {
   }
 };
 
-struct ParamNode {
+struct ParamStmtNode : public StmtNodeBase {
   Token identifier;
   StmtModifiers modifs;
   TypeNodeBase* type;
 
-  ParamNode(Token identifier, StmtModifiers modifs, TypeNodeBase* type)
+  std::string to_string(uint32_t& depth) override;
+  void accept(NodeVisitorBase& visitor) override;
+
+  ParamStmtNode(Token identifier, StmtModifiers modifs, TypeNodeBase* type)
     : identifier(identifier),
       modifs(modifs),
       type(type) {}
 };
 
 struct FunctionTypeNode : public TypeNodeBase {
-  using parameter_vector = std::vector<ParamNode>;
+  using parameter_vector = std::vector<ParamStmtNode>;
 
   parameter_vector parameters;
   TypeNodeBase* returns;
@@ -319,7 +322,7 @@ struct FunctionTypeNode : public TypeNodeBase {
   VIA_DECLDECAY();
 
   FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
-    : parameters(args),
+    : parameters(std::move(args)),
       returns(rets) {
     this->begin = this->returns->begin;
     this->end = this->returns->end;
@@ -391,7 +394,7 @@ struct ScopeStmtNode : public StmtNodeBase {
 };
 
 struct FuncDeclStmtNode : public StmtNodeBase {
-  using parameters_t = std::vector<ParamNode>;
+  using parameters_t = std::vector<ParamStmtNode>;
 
   bool is_global;
   StmtModifiers modifs;
@@ -417,7 +420,7 @@ struct FuncDeclStmtNode : public StmtNodeBase {
       identifier(identifier),
       body(body),
       returns(returns),
-      parameters(parameters) {
+      parameters(std::move(parameters)) {
     this->begin = begin;
     this->end = end;
   }

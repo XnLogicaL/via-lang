@@ -55,11 +55,12 @@
     VM_DISPATCH_OP(NEWCLSR), VM_DISPATCH_OP(PUSH), VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), \
     VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF), VM_DISPATCH_OP(PUSHBT), VM_DISPATCH_OP(PUSHBF),  \
     VM_DISPATCH_OP(POP), VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(STKGET), VM_DISPATCH_OP(STKSET),     \
-    VM_DISPATCH_OP(ARGGET), VM_DISPATCH_OP(GGET), VM_DISPATCH_OP(GSET), VM_DISPATCH_OP(UPVSET),    \
-    VM_DISPATCH_OP(UPVGET), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ),          \
-    VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT),             \
-    VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ),            \
-    VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),   \
+    VM_DISPATCH_OP(LOCALGET), VM_DISPATCH_OP(LOCALSET), VM_DISPATCH_OP(ARGGET),                    \
+    VM_DISPATCH_OP(GGET), VM_DISPATCH_OP(GSET), VM_DISPATCH_OP(UPVSET), VM_DISPATCH_OP(UPVGET),    \
+    VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(NEQ),             \
+    VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT),              \
+    VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP),           \
+    VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),                        \
     VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT),                    \
     VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP),                    \
     VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ),                     \
@@ -800,20 +801,36 @@ dispatch:
     VM_CASE(STKGET) {
       operand_t dst = pc->operand0;
       operand_t off = pc->operand1;
+      IValue* val = __get_stack(this, off);
 
-      const IValue& val = __get_stack(this, off);
-
-      __set_register(this, dst, val.clone());
+      __set_register(this, dst, val->clone());
       VM_NEXT();
     }
 
     VM_CASE(STKSET) {
       operand_t src = pc->operand0;
       operand_t off = pc->operand1;
-
       IValue* val = __get_register(this, src);
 
       __set_stack(this, off, std::move(*val));
+      VM_NEXT();
+    }
+
+    VM_CASE(LOCALGET) {
+      operand_t dst = pc->operand0;
+      operand_t off = pc->operand1;
+      IValue* val = __get_local(this, off);
+
+      __set_register(this, dst, val->clone());
+      VM_NEXT();
+    }
+
+    VM_CASE(LOCALSET) {
+      operand_t src = pc->operand0;
+      operand_t off = pc->operand1;
+      IValue* val = __get_register(this, src);
+
+      __set_local(this, off, std::move(*val));
       VM_NEXT();
     }
 

@@ -66,9 +66,10 @@ void SymExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
-  auto stk_id = unit_ctx.internal.variable_stack->find_symbol(identifier.lexeme);
+  auto& current_closure = unit_ctx.internal.function_stack->top();
+  auto stk_id = current_closure.locals.find_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
-    auto stk_obj = unit_ctx.internal.variable_stack->at(stk_id.value());
+    auto stk_obj = current_closure.locals.at(stk_id.value());
     if (stk_obj.has_value()) {
       return stk_obj->type;
     }
@@ -84,7 +85,7 @@ TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
   if (unit_ctx.internal.function_stack->size() > 0) {
     auto& top_function = unit_ctx.internal.function_stack->top();
     for (size_t i = 0; i < top_function.decl->parameters.size(); i++) {
-      const ParamNode& param = top_function.decl->parameters[i];
+      const ParamStmtNode& param = top_function.decl->parameters[i];
       if (param.identifier.lexeme == identifier.lexeme) {
         return param.type;
       }
@@ -179,13 +180,14 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
+  auto& current_closure = unit_ctx.internal.function_stack->top();
   if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(object)) {
-    auto stk_id = unit_ctx.internal.variable_stack->find_symbol(symbol->identifier.lexeme);
+    auto stk_id = current_closure.locals.find_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
     }
 
-    auto stk_obj = unit_ctx.internal.variable_stack->at(stk_id.value());
+    auto stk_obj = current_closure.locals.at(stk_id.value());
     if (!stk_obj.has_value()) {
       return nullptr;
     }
@@ -384,8 +386,8 @@ void ArrayTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
 std::string FunctionTypeNode::to_string(uint32_t& depth) {
   return std::format(
     "FunctionTypeNode<{} -> {}>",
-    utils::format_vector<ParamNode>(
-      parameters, [](const ParamNode& elem) { return elem.type->to_output_string(); }
+    utils::format_vector<ParamStmtNode>(
+      parameters, [](const ParamStmtNode& elem) { return elem.type->to_output_string(); }
     ),
     returns->to_string(depth)
   );
@@ -398,6 +400,17 @@ std::string FunctionTypeNode::to_output_string() {
 void FunctionTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
   self = visitor.visit(*this);
 }
+
+//  ===============
+// [ ParamStmtNode ]
+//  ===============
+std::string ParamStmtNode::to_string(uint32_t& depth) {
+  return std::format(
+    "{}Parameter<{}: {}>", depth_tab_space, identifier.lexeme, type->to_string(depth)
+  );
+}
+
+void ParamStmtNode::accept(NodeVisitorBase&) {}
 
 // ===============================
 // DeclStmtNode
@@ -453,7 +466,7 @@ std::string FuncDeclStmtNode::to_string(uint32_t& depth) {
 
   depth++;
 
-  for (const ParamNode& parameter : parameters) {
+  for (const ParamStmtNode& parameter : parameters) {
     oss << depth_tab_space << std::format("Parameter<{}>", parameter.identifier.lexeme) << "\n";
   }
 

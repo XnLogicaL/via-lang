@@ -43,7 +43,6 @@
 #define VIA_NODISCARD      [[nodiscard]]
 #define VIA_NORETURN       __declspec(noreturn)
 #define VIA_NOINLINE       __declspec(noinline)
-#define VIA_INLINE         inline
 #define VIA_FORCEINLINE    __forceinline
 #define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' attribute
 #define VIA_IMPLEMENTATION inline
@@ -57,7 +56,6 @@
 #define VIA_NODISCARD      [[nodiscard]]
 #define VIA_NORETURN       __attribute__((noreturn))
 #define VIA_NOINLINE       __attribute__((noinline))
-#define VIA_INLINE         inline
 #define VIA_FORCEINLINE    inline __attribute__((always_inline))
 #define VIA_OPTIMIZE       inline __attribute__((always_inline, hot))
 #define VIA_IMPLEMENTATION inline

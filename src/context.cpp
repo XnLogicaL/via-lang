@@ -21,7 +21,6 @@ TransUnitContext::TransUnitContext(const std::string& file_path, const std::stri
     constants(std::make_unique<ConstantHolder>()),
     internal({
       0,
-      std::make_unique<CompilerVariableStack>(),
       std::make_unique<CompilerFunctionStack>(),
       {},
       std::make_unique<GlobalHolder>(),

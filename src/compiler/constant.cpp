@@ -16,7 +16,7 @@ size_t ConstantHolder::size() const {
   return constants.size();
 }
 
-operand_t ConstantHolder::push_constant(constant_type& constant) {
+operand_t ConstantHolder::push_constant(constant_type constant) {
   for (size_t index = 0; index < constants.size(); index++) {
     const IValue& val = constants[index];
     if VIA_UNLIKELY (val.compare(constant)) {

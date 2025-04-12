@@ -10,7 +10,7 @@
 namespace via {
 
 TypeNodeBase* DecayNodeVisitor::visit(AutoTypeNode& auto_node) {
-  return auto_node.expression->infer_type(unit_ctx);
+  return auto_node.expression->infer_type(ctx.unit_ctx);
 }
 
 TypeNodeBase* DecayNodeVisitor::visit(GenericTypeNode&) {

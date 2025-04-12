@@ -47,7 +47,7 @@ private:
   TransUnitContext& unit_ctx;
 };
 
-VIA_INLINE std::vector<Token> fast_tokenize(std::string source) {
+inline std::vector<Token> fast_tokenize(std::string source) {
   TransUnitContext unit_ctx("<unknown>", source);
 
   Lexer tokenizer(unit_ctx);

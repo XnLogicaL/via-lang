@@ -215,9 +215,11 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
       result<TypeNodeBase*> type_result = parse_type();
       VIA_CHECKRESULT(type_result);
 
-      params.emplace_back(
-        Token(TokenType::IDENTIFIER, "", 0, 0, 0), StmtModifiers{}, type_result.value()
+      ParamStmtNode* param = unit_ctx.ast->allocator.emplace<ParamStmtNode>(
+        Token(TokenType::IDENTIFIER, "", 0, 0, 0), StmtModifiers{}, *type_result
       );
+
+      params.push_back(*param);
 
       if (tok->type != PAREN_CLOSE) {
         result<Token> expect_comma =
@@ -544,7 +546,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     VIA_CHECKRESULT(identifier);
     VIA_CHECKRESULT(expect_par);
 
-    std::vector<ParamNode> parameters;
+    std::vector<ParamStmtNode> parameters;
 
     while (true) {
       curr = current();

@@ -63,7 +63,6 @@ public:
   struct {
     size_t label_count;
 
-    std::unique_ptr<CompilerVariableStack> variable_stack;
     std::unique_ptr<CompilerFunctionStack> function_stack;
     std::stack<std::vector<StmtNodeBase*>> defered_stmts;
     std::unique_ptr<GlobalHolder> globals;

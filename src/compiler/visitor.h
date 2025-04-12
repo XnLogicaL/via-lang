@@ -7,6 +7,8 @@
 
 #include "ast.h"
 #include "register-allocator.h"
+#include "stack.h"
+#include "state.h"
 #include "token.h"
 #include "common.h"
 #include "bytecode.h"
@@ -18,11 +20,11 @@
     VIA_ASSERT(false, "invalid visit");                                                            \
   }
 
-#define VIA_TINFERENCE_FAILURE(type, expr)                                                         \
+#define CHECK_INFERED_TYPE(type, expr)                                                             \
   if (!type) {                                                                                     \
-    visitor_failed = true;                                                                         \
-    compiler_error(expr->begin, expr->end, "Expression type could not be infered");                \
+    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");           \
     compiler_info(                                                                                 \
+      ctx,                                                                                         \
       "This error message likely indicates an internal compiler bug. Please create an "            \
       "issue "                                                                                     \
       "at https://github.com/XnLogicaL/via-lang"                                                   \
@@ -38,11 +40,28 @@ namespace via {
 using label_t = operand_t;
 using unused_expression_handler_t = std::function<void(const ExprStmtNode&)>;
 
+struct VisitorContext {
+  using opt_label_t = std::optional<label_t>;
+
+  bool failed = false; // Fail status
+  size_t errc = 0;     // Error count
+
+  opt_label_t lesc = std::nullopt; // Escape label
+  opt_label_t lrep = std::nullopt; // Repeat label
+
+  TransUnitContext& unit_ctx;
+  RegisterAllocator reg_alloc;
+  CErrorBus err_bus;
+
+  inline VisitorContext(TransUnitContext& ctx)
+    : unit_ctx(ctx),
+      reg_alloc(VIA_ALL_REGISTERS, false) {}
+};
+
 class NodeVisitorBase {
 public:
-  NodeVisitorBase(TransUnitContext& unit_ctx, CErrorBus& bus)
-    : unit_ctx(unit_ctx),
-      err_bus(bus) {}
+  NodeVisitorBase(VisitorContext& ctx)
+    : ctx(ctx) {}
 
   virtual ~NodeVisitorBase() = default;
 
@@ -79,42 +98,18 @@ public:
   virtual void visit(ExprStmtNode&) VIA_INVALID_VISIT;
 
   virtual inline bool failed() {
-    return visitor_failed;
+    return ctx.failed;
   }
 
-  void compiler_error(size_t begin, size_t end, const std::string&);
-  void compiler_error(const Token&, const std::string&);
-  void compiler_error(const std::string&);
-
-  void compiler_warning(size_t begin, size_t end, const std::string&);
-  void compiler_warning(const Token&, const std::string&);
-  void compiler_warning(const std::string&);
-
-  void compiler_info(size_t begin, size_t end, const std::string&);
-  void compiler_info(const Token&, const std::string&);
-  void compiler_info(const std::string&);
-
-  void compiler_output_end();
-  size_t get_compiler_error_count();
-
 protected:
-  bool visitor_failed = false;
-  size_t errors_generated = 0;
-
-  TransUnitContext& unit_ctx;
-  CErrorBus& err_bus;
+  VisitorContext& ctx;
 };
 
 #undef VIA_INVALID_VISIT
 
 class ExprNodeVisitor : public NodeVisitorBase {
 public:
-  ExprNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
-    : NodeVisitorBase(unit_ctx, bus),
-      allocator(allocator) {}
-
-  IValue construct_constant(LitExprNode&);
-  LitExprNode fold_constant(ExprNodeBase&, size_t fold_depth = 0);
+  using NodeVisitorBase::NodeVisitorBase;
 
   void visit(LitExprNode&, operand_t) override;
   void visit(SymExprNode&, operand_t) override;
@@ -126,15 +121,11 @@ public:
   void visit(CastExprNode&, operand_t) override;
   void visit(StepExprNode&, operand_t) override;
   void visit(ArrayExprNode&, operand_t) override;
-
-private:
-  RegisterAllocator& allocator;
 };
 
 class DecayNodeVisitor : public NodeVisitorBase {
 public:
-  DecayNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus)
-    : NodeVisitorBase(unit_ctx, bus) {}
+  using NodeVisitorBase::NodeVisitorBase;
 
   TypeNodeBase* visit(AutoTypeNode&) override;
   TypeNodeBase* visit(GenericTypeNode&) override;
@@ -143,10 +134,9 @@ public:
   TypeNodeBase* visit(ArrayTypeNode&) override;
 };
 
-class type_node_visitor : public NodeVisitorBase {
+class TypeNodeVisitor : public NodeVisitorBase {
 public:
-  type_node_visitor(TransUnitContext& unit_ctx, CErrorBus& bus)
-    : NodeVisitorBase(unit_ctx, bus) {}
+  using NodeVisitorBase::NodeVisitorBase;
 
   void visit(DeclStmtNode&) override;
   void visit(AssignStmtNode&) override;
@@ -155,12 +145,11 @@ public:
 
 class StmtNodeVisitor : public NodeVisitorBase {
 public:
-  StmtNodeVisitor(TransUnitContext& unit_ctx, CErrorBus& bus, RegisterAllocator& allocator)
-    : NodeVisitorBase(unit_ctx, bus),
-      allocator(allocator),
-      expression_visitor(unit_ctx, bus, allocator),
-      decay_visitor(unit_ctx, bus),
-      type_visitor(unit_ctx, bus) {}
+  StmtNodeVisitor(VisitorContext& ctx)
+    : NodeVisitorBase(ctx),
+      expression_visitor(ctx),
+      decay_visitor(ctx),
+      type_visitor(ctx) {}
 
   void visit(DeclStmtNode&) override;
   void visit(ScopeStmtNode&) override;
@@ -175,7 +164,7 @@ public:
   void visit(ExprStmtNode&) override;
 
   inline bool failed() override {
-    return visitor_failed || expression_visitor.failed() || decay_visitor.failed()
+    return ctx.failed || expression_visitor.failed() || decay_visitor.failed()
       || type_visitor.failed();
   }
 
@@ -183,14 +172,9 @@ public:
   std::optional<unused_expression_handler_t> unused_expr_handler;
 
 private:
-  RegisterAllocator& allocator;
-
   ExprNodeVisitor expression_visitor;
   DecayNodeVisitor decay_visitor;
-  type_node_visitor type_visitor;
-
-  std::optional<label_t> escape_label = std::nullopt;
-  std::optional<label_t> repeat_label = std::nullopt;
+  TypeNodeVisitor type_visitor;
 };
 
 } // namespace via

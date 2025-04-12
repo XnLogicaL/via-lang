@@ -75,6 +75,9 @@ enum class IOpCode : uint16_t {
   UPVSET,
   UPVGET,
 
+  LOCALGET,
+  LOCALSET,
+
   INC,
   DEC,
   EQ,

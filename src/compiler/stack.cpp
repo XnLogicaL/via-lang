@@ -5,35 +5,32 @@
 
 namespace via {
 
-std::optional<StackVariable> CompilerVariableStack::at(size_t pos) {
+std::optional<StackVariable*> CompilerVariableStack::get_local_by_id(size_t pos) {
   if (pos > size()) {
     return std::nullopt;
   }
 
-  StackVariable& obj = m_array[pos];
-  StackVariable new_obj = {
-    .is_const = false,
-    .is_constexpr = false,
-    .symbol = obj.symbol,
-    .decl = obj.decl,
-    .type = obj.type,
-    .value = obj.value,
-  };
-
-  return new_obj;
+  return &m_array[pos];
 }
 
-std::optional<operand_t> CompilerVariableStack::find_symbol(const symbol_t& symbol) {
+std::optional<StackVariable*> CompilerVariableStack::get_local_by_symbol(const symbol_t& symbol) {
+  for (int i = m_stack_pointer - 1; i >= 0; --i) {
+    if (m_array[i].symbol == symbol) {
+      return &m_array[i];
+    }
+  }
+
+  return std::nullopt;
+}
+
+std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& symbol) {
   for (int i = m_stack_pointer - 1; i >= 0; --i) {
     if (m_array[i].symbol == symbol) {
       return i;
     }
   }
-  return std::nullopt;
-}
 
-std::optional<operand_t> CompilerVariableStack::find_symbol(const StackVariable& member) {
-  return find_symbol(member.symbol);
+  return std::nullopt;
 }
 
 } // namespace via

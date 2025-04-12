@@ -324,6 +324,16 @@ Token Lexer::get_token() {
     }
     return Token(EXCLAMATION, "!", line, start_offset, position);
   case '<':
+    if (pos < source_size() && peek() == '>') {
+      pos++;
+      offset++;
+      return Token(OP_GEQ, ">=", line, start_offset, position);
+    }
+    else if (pos < source_size() && peek() == '<') {
+      pos++;
+      offset++;
+      return Token(OP_LEQ, "<=", line, start_offset, position);
+    }
     return Token(OP_LT, "<", line, start_offset, position);
   case '>':
     return Token(OP_GT, ">", line, start_offset, position);

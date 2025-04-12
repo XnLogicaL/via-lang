@@ -82,7 +82,7 @@ void IState::set_stack(size_t position, IValue value) {
 
 IValue& IState::get_stack(size_t position) {
   VIA_ASSERT(sp >= position, "stack overflow");
-  return impl::__get_stack(this, position);
+  return *impl::__get_stack(this, position);
 }
 
 size_t IState::stack_size() {

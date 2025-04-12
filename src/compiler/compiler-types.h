@@ -62,9 +62,13 @@ bool is_derived_instance(const base* der) {
   return get_derived_instance<base, derived>(der) != nullptr;
 }
 
+// clang-format off
 VIA_IMPLEMENTATION bool is_constant_expression(
-  TransUnitContext& unit_ctx, const ExprNodeBase* expression, size_t variable_depth = 0
-) {
+  TransUnitContext& unit_ctx,
+  const ExprNodeBase* expression,
+  size_t variable_depth = 0
+) 
+{ // clang-format on
   if (is_derived_instance<ExprNodeBase, LitExprNode>(expression)) {
     return true;
   }
@@ -75,12 +79,13 @@ VIA_IMPLEMENTATION bool is_constant_expression(
   }
   else if (const SymExprNode* sym_expr =
              get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
-    auto stk_id = unit_ctx.internal.variable_stack->find_symbol(sym_expr->identifier.lexeme);
+    auto& current_closure = unit_ctx.internal.function_stack->top();
+    auto stk_id = current_closure.locals.find_symbol(sym_expr->identifier.lexeme);
     if (!stk_id.has_value()) {
       return false;
     }
 
-    auto var_obj = unit_ctx.internal.variable_stack->at(*stk_id);
+    auto var_obj = current_closure.locals.at(*stk_id);
 
     // Check if call exceeds variable depth limit
     if (variable_depth > 5) {
