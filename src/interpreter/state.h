@@ -63,6 +63,7 @@ public:
   ~State();
 
   void execute();
+  void execute_step(std::optional<Instruction> insn = std::nullopt);
 
   // Returns a reference to the value that lives in a given register.
   Value& get_register(operand_t reg);
@@ -126,9 +127,8 @@ public:
   uint32_t id;      // Thread ID
   GlobalState& glb; // CompilerGlobal state
 
-  Instruction* pc = nullptr;  // Current instruction pointer
-  Instruction* ibp = nullptr; // Instruction buffer pointer
-  Instruction** labels;       // Label array
+  Instruction* pc = nullptr; // Current instruction pointer
+  Instruction** labels;      // Label array
 
   CallStack* callstack; // Call stack
   ErrorState* err;      // Error state

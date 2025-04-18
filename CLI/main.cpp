@@ -3,6 +3,7 @@
 //  ========================================================================================
 #include "linenoise.hpp"
 #include "argparse/argparse.hpp"
+#include "api-impl.h"
 #include "file-io.h"
 #include "color.h"
 #include "via.h"
@@ -193,13 +194,13 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
         const Bytecode& bytecode = unit_ctx.bytecode->get()[i];
         std::string current_disassembly;
 
-        if (bytecode.instruct.op == IOpCode::LBL) {
+        if (bytecode.instruct.op == Opcode::LBL) {
           std::cout << std::format(
             " L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
           );
           continue;
         }
-        else if (bytecode.instruct.op == IOpCode::CLOSURE) {
+        else if (bytecode.instruct.op == Opcode::CLOSURE) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
@@ -215,8 +216,8 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
         // Print disassembly of the bytecode instruction
         std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
 
-        if (bytecode.instruct.op == IOpCode::RET || bytecode.instruct.op == IOpCode::RETNIL) {
-          // Check if we are at the last RET IOpCode for the current closure
+        if (bytecode.instruct.op == Opcode::RET || bytecode.instruct.op == Opcode::RETNIL) {
+          // Check if we are at the last RET Opcode for the current closure
           if (!closure_disassembly_stack.empty() && i >= closure_bytecode_count_stack.top()) {
             // Pop the function from the stack
             std::string disassembly_of = closure_disassembly_stack.top();
@@ -368,7 +369,7 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   return result;
 }
 
-static CompileResult handle_repl(argparse::ArgumentParser&) {
+static void handle_repl(argparse::ArgumentParser&) {
   using namespace via;
   using namespace utils;
 
@@ -413,8 +414,168 @@ static CompileResult handle_repl(argparse::ArgumentParser&) {
   }
 
   std::cout << REPL_BYE;
+}
 
-  return {false, std::move(unit_ctx)};
+static void handle_debugger(argparse::ArgumentParser& parser) {
+  using enum CErrorLevel;
+
+  static constexpr const char* DBG_HELP = "Commands:\n"
+                                          "  quit            - exit debugger\n"
+                                          "  step            - step next instruction\n"
+                                          "  continue        - run until break\n"
+                                          "  regs            - show all registers\n"
+                                          "  printr %<n>     - print register\n"
+                                          "  locals          - show local variables\n"
+                                          "  upvs            - show upvalues\n"
+                                          "  callstack       - print call stack\n"
+                                          "  exec <instr>    - manually run instruction\n"
+                                          "  help            - show this help\n"
+                                          "  pc              - print program counter\n";
+
+  auto get_callable_string = [](const Callable& callee) -> std::string {
+    return callee.type == Callable::Tag::Function
+      ? std::string(callee.u.fn.id)
+      : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
+  };
+
+  CompileResult result = handle_compile(parser);
+  if (result.failed) {
+    err_bus.log({true, "Failed to launch debugger: compilation failed", result.unit, ERROR_, {}});
+    return;
+  }
+
+  StkRegHolder regs;
+  GlobalState gstate;
+  State state(gstate, regs, result.unit);
+
+  while (true) {
+    auto line = linenoise::Readline("(dbg) ");
+    auto tokens = fast_tokenize(line);
+    size_t cursor = 0;
+    if (tokens.empty()) {
+      continue;
+    }
+
+    if (tokens[0].lexeme == "exec") {
+      cursor++;
+
+      bool found_opcode = false;
+      size_t operand_cursor = 0;
+      std::string insn_str;
+      Instruction insn;
+
+      // 5 for:
+      // exec <OPCODE> <A> <B> <C>
+      if (tokens.size() < 5) {
+        goto syntax_error;
+      }
+
+      while (cursor < tokens.size() - 1) {
+        if (tokens[cursor].type == TokenType::IDENTIFIER) {
+          auto op = magic_enum::enum_cast<Opcode>(tokens[cursor].lexeme);
+          if (found_opcode || !op.has_value()) {
+            goto syntax_error;
+          }
+
+          cursor++;
+          found_opcode = true;
+          insn.op = *op;
+        }
+        else if (tokens[cursor].type == TokenType::LIT_INT) {
+          try {
+            operand_t opi = std::stoul(tokens[cursor].lexeme);
+            if (operand_cursor == 0) {
+              insn.operand0 = opi;
+            }
+            else if (operand_cursor == 1) {
+              insn.operand1 = opi;
+            }
+            else if (operand_cursor == 2) {
+              insn.operand2 = opi;
+            }
+            else {
+              goto syntax_error;
+            }
+          }
+          catch (const std::exception& e) {
+            goto syntax_error;
+          }
+
+          cursor++;
+          operand_cursor++;
+        }
+      }
+
+      state.execute_step(insn);
+      continue;
+    syntax_error:
+      std::cout << "syntax error\n";
+      continue;
+    }
+    else if (tokens[0].lexeme == "quit") {
+      break;
+    }
+    else if (tokens[0].lexeme == "step") {
+      state.execute_step();
+    }
+    else if (tokens[0].lexeme == "continue") {
+      state.execute();
+    }
+    else if (tokens[0].lexeme == "help") {
+      std::cout << DBG_HELP;
+    }
+    else if (tokens[0].lexeme == "pc") {
+      if (state.pc == nullptr) {
+        std::cout << "no instruction\n";
+        continue;
+      }
+
+      std::cout << "program counter: " << state.pc << "\n";
+      std::cout << "disassembly    : " << magic_enum::enum_name(state.pc->op) << ' '
+                << (state.pc->operand0 != 0xFFFF ? std::to_string(state.pc->operand0) : "")
+                << (state.pc->operand1 != 0xFFFF ? std::to_string(state.pc->operand1) : "")
+                << (state.pc->operand2 != 0xFFFF ? std::to_string(state.pc->operand2) : "") << "\n";
+    }
+    else if (tokens[0].lexeme == "locals") {
+      if (state.callstack->frames_count == 0) {
+        std::cout << "no callframe\n";
+        continue;
+      }
+
+      const CallFrame* frame = impl::__current_callframe(&state);
+      std::cout << "local count: " << frame->locals_size << "\n";
+      for (size_t i = 0; i < frame->locals_size; i++) {
+        std::cout << 'l' << i << ": " << magic_enum::enum_name(frame->locals[i].type) << ' '
+                  << frame->locals[i].to_literal_cxx_string() << "\n";
+      }
+    }
+    else if (tokens[0].lexeme == "regs") {
+      std::cout << "disassembling 256 stack-allocated registers\n";
+      for (uint16_t reg = 0; reg < 255; reg++) {
+        Value* val = impl::__get_register(&state, reg);
+        std::cout << 'r' << reg << ": " << magic_enum::enum_name(val->type) << ' '
+                  << impl::__to_literal_cxx_string(*val) << "\n";
+        if (val->is_nil()) {
+          std::cout << "<nil-found>\n";
+          break;
+        }
+      }
+    }
+    else if (tokens[0].lexeme == "callstack") {
+      std::cout << "callframe count: " << state.callstack->frames_count << "\n";
+      if (state.callstack->frames_count == 0) {
+        continue;
+      }
+
+      std::cout << "(top) ";
+      for (size_t i = state.callstack->frames_count; i > 0; i--) {
+        const CallFrame& visited_frame = state.callstack->frames[i - 1];
+        const Callable& callee = visited_frame.closure->callee;
+        std::cout << "#" << state.callstack->frames_count - i << " function "
+                  << get_callable_string(callee) << "\n";
+      }
+    }
+  };
 }
 
 #ifdef __linux__
@@ -476,12 +637,16 @@ int main(int argc, char* argv[]) {
     auto run_parser = get_standard_parser("run");
     run_parser->add_description("Compiles and runs the given source file.");
 
+    auto dbg_parser = get_standard_parser("debug");
+    dbg_parser->add_description("Opens interactive debugger");
+
     ArgumentParser repl_parser("repl");
 
     // Add subparsers
     argument_parser.add_subparser(*compile_parser);
     argument_parser.add_subparser(*run_parser);
     argument_parser.add_subparser(repl_parser);
+    argument_parser.add_subparser(*dbg_parser);
     argument_parser.parse_args(argc, argv);
 
     if (argument_parser.is_subcommand_used(*compile_parser)) {
@@ -492,6 +657,9 @@ int main(int argc, char* argv[]) {
     }
     else if (argument_parser.is_subcommand_used(repl_parser)) {
       handle_repl(repl_parser);
+    }
+    else if (argument_parser.is_subcommand_used(*dbg_parser)) {
+      handle_debugger(*dbg_parser);
     }
     else {
       throw std::runtime_error("Subcommand expected");

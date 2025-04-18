@@ -13,6 +13,7 @@ using namespace impl;
 State::State(GlobalState& glb, StkRegHolder& stk_registers, TransUnitContext& unit_ctx)
   : id(glb.threads++),
     glb(glb),
+    callstack(new CallStack),
     err(new ErrorState()),
     main(Value(__create_main_function(*unit_ctx.bytecode))),
     stack_registers(stk_registers),
@@ -25,6 +26,7 @@ State::State(GlobalState& glb, StkRegHolder& stk_registers, TransUnitContext& un
 }
 
 State::~State() {
+  delete callstack;
   delete err;
 
   __register_deallocate(this);

@@ -11,7 +11,7 @@
 
 namespace via {
 
-using enum IOpCode;
+using enum Opcode;
 using enum Value::Tag;
 using namespace compiler_util;
 
@@ -227,7 +227,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   close_defer_statements(ctx, this);
 
   Bytecode& last_bytecode = ctx.unit_ctx.bytecode->back();
-  IOpCode last_opcode = last_bytecode.instruct.op;
+  Opcode last_opcode = last_bytecode.instruct.op;
 
   if (last_opcode != RET && last_opcode != RETNIL) {
     bytecode_emit(ctx, RETNIL);

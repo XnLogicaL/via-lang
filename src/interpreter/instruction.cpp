@@ -10,19 +10,19 @@
 namespace via {
 
 using namespace utils;
-using enum IOpCode;
+using enum Opcode;
 
 std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
   const auto& instr = bc.instruct;
   const auto& meta = bc.meta_data;
-  const IOpCode op = instr.op;
+  const Opcode op = instr.op;
 
   constexpr int opcode_column_width = 12;
   constexpr int operand_column_width = 8;
 
   auto is_operand_valid = [](const operand_t& operand) { return operand != VIA_OPERAND_INVALID; };
 
-  // Generate raw IOpCode String and transform case
+  // Generate raw Opcode String and transform case
   std::string raw_opcode_str = std::string(magic_enum::enum_name(op));
   std::transform(
     raw_opcode_str.begin(),
@@ -33,7 +33,7 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
     }
   );
 
-  // Pad raw IOpCode String before applying color
+  // Pad raw Opcode String before applying color
   std::ostringstream opcode_buf;
   opcode_buf << std::left << std::setw(opcode_column_width) << raw_opcode_str;
   std::string colored_opcode_str =

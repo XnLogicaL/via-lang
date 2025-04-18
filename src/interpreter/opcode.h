@@ -8,7 +8,7 @@
 
 namespace via {
 
-enum class IOpCode : uint16_t {
+enum class Opcode : uint16_t {
   // nop
   // No operation.
   NOP,

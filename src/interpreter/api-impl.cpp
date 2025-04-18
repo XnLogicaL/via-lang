@@ -135,7 +135,10 @@ void __call(State* state, Closure* closure) {
 
   __push_callframe(state, std::move(frame));
 
-  if (closure->callee.type == Callable::Tag::Native) {
+  if (closure->callee.type == Callable::Tag::Function) {
+    state->pc = closure->callee.u.fn.chunk.code;
+  }
+  else {
     closure->callee.u.ntv(state, closure); // Function should return on its own.
   }
 }
@@ -388,7 +391,7 @@ void __closure_bytecode_load(State* state, Closure* closure, size_t len) {
 #endif
   size_t upvalues = 0;
   for (size_t i = 0; i < len; ++i) {
-    if (state->pc->op == IOpCode::CAPTURE) {
+    if (state->pc->op == Opcode::CAPTURE) {
       if (__closure_upvs_range_check(closure, upvalues++)) {
         __closure_upvs_resize(closure);
       }
@@ -587,12 +590,14 @@ Instruction* __label_get(const State* state, size_t index) {
 }
 
 void __label_load(const State* state) {
+  using enum Opcode;
+
   size_t index = 0;
-  for (Instruction* pc = state->ibp; 1; pc++) {
-    if (pc->op == IOpCode::LBL) {
+  for (Instruction* pc = state->pc; 1; pc++) {
+    if (pc->op == Opcode::LBL) {
       state->labels[index++] = pc;
     }
-    else if (pc->op == IOpCode::EXIT) {
+    else if (pc->op == RET || pc->op == RET0 || pc->op == RET1) {
       break;
     }
   }
@@ -662,15 +667,15 @@ Closure* __create_main_function(BytecodeHolder& holder) {
   fn.id = "main";
   fn.line_number = 0;
 
+  for (size_t i = 0; const Bytecode& data : raw) {
+    fn.chunk.code[i++] = data.instruct;
+  }
+
   Closure* main = new Closure;
   main->callee = {Callable::Tag::Function, {.fn = fn}, 0};
   // Main function cannot have upvalues
   main->upvs = nullptr;
   main->upv_count = 0;
-
-  for (size_t i = 0; const Bytecode& data : raw) {
-    fn.chunk.code[i++] = data.instruct;
-  }
 
   return main;
 }

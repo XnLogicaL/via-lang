@@ -19,7 +19,7 @@ struct InstructionData {
 };
 
 struct alignas(8) Instruction {
-  IOpCode op = IOpCode::NOP;
+  Opcode op = Opcode::NOP;
 
   operand_t operand0 = VIA_OPERAND_INVALID;
   operand_t operand1 = VIA_OPERAND_INVALID;

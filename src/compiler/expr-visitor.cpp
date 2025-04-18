@@ -22,7 +22,7 @@
 //  - Note: This also implies that `dst` is not owned.
 //
 // Visitor functions compile each type of expression node by first converting it into
-// corresponding IOpCode(s), and then determining the operands via the built-in node parameters.
+// corresponding Opcode(s), and then determining the operands via the built-in node parameters.
 //
 // - LitExprNode compilation:
 //  This node only emits `LOAD` opcodes, and is considered a constant expression.
@@ -72,10 +72,10 @@
 // ==================================================================================================
 namespace via {
 
-using enum IOpCode;
+using enum Opcode;
 using enum Value::Tag;
 using namespace compiler_util;
-using OpCodeId = std::underlying_type_t<IOpCode>;
+using OpCodeId = std::underlying_type_t<Opcode>;
 
 void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
   if (int* integer_value = std::get_if<int>(&lit_expr.value)) {
@@ -138,7 +138,7 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
     compiler_output_end(ctx);
   }
   else if (unary_node.op.type == TokenType::OP_INC || unary_node.op.type == TokenType::OP_DEC) {
-    IOpCode opcode = unary_node.op.type == TokenType::OP_INC ? INC : DEC;
+    Opcode opcode = unary_node.op.type == TokenType::OP_INC ? INC : DEC;
 
     if (!is_arithmetic(type)) {
       // Error: "ill-step"
@@ -261,21 +261,21 @@ void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
 void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   using enum TokenType;
 
-  static const std::unordered_map<TokenType, IOpCode> operator_map = {
-    {OP_ADD, IOpCode::ADD},
-    {OP_SUB, IOpCode::SUB},
-    {OP_MUL, IOpCode::MUL},
-    {OP_DIV, IOpCode::DIV},
-    {OP_EXP, IOpCode::POW},
-    {OP_MOD, IOpCode::MOD},
-    {OP_EQ, IOpCode::EQ},
-    {OP_NEQ, IOpCode::NEQ},
-    {OP_LT, IOpCode::LT},
-    {OP_GT, IOpCode::GT},
-    {OP_LEQ, IOpCode::LTEQ},
-    {OP_GEQ, IOpCode::GTEQ},
-    {KW_AND, IOpCode::AND},
-    {KW_OR, IOpCode::OR},
+  static const std::unordered_map<TokenType, Opcode> operator_map = {
+    {OP_ADD, Opcode::ADD},
+    {OP_SUB, Opcode::SUB},
+    {OP_MUL, Opcode::MUL},
+    {OP_DIV, Opcode::DIV},
+    {OP_EXP, Opcode::POW},
+    {OP_MOD, Opcode::MOD},
+    {OP_EQ, Opcode::EQ},
+    {OP_NEQ, Opcode::NEQ},
+    {OP_LT, Opcode::LT},
+    {OP_GT, Opcode::GT},
+    {OP_LEQ, Opcode::LTEQ},
+    {OP_GEQ, Opcode::GTEQ},
+    {KW_AND, Opcode::AND},
+    {KW_OR, Opcode::OR},
   };
 
   ExprNodeBase* lhs = binary_node.lhs_expression;
@@ -309,7 +309,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     return;
   }
 
-  const IOpCode base_opcode = op_it->second;
+  const Opcode base_opcode = op_it->second;
   const OpCodeId base_opcode_id = static_cast<OpCodeId>(base_opcode);
   OpCodeId opcode_id = base_opcode_id;
 
@@ -382,13 +382,13 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
 
     // Handle numeric constant: Int or float.
     if (int* int_value = std::get_if<int>(&literal.value)) {
-      IOpCode opc = static_cast<IOpCode>(opcode_id + 1); // OPI for Int
+      Opcode opc = static_cast<Opcode>(opcode_id + 1); // OPI for Int
       uint32_t final_value = static_cast<uint32_t>(*int_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
       bytecode_emit(ctx, opc, {dst, operands.high, operands.low});
     }
     else if (float* float_value = std::get_if<float>(&literal.value)) {
-      IOpCode opc = static_cast<IOpCode>(opcode_id + 2); // OPF for float
+      Opcode opc = static_cast<Opcode>(opcode_id + 2); // OPF for float
       uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
       bytecode_emit(ctx, opc, {dst, operands.high, operands.low});

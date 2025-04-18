@@ -17,7 +17,7 @@
 // Macro that throws a virtual error
 #define VM_ERROR(message)                                                                          \
   do {                                                                                             \
-    __set_error_state(this, message);                                                              \
+    __set_error_state(state, message);                                                             \
     VM_NEXT();                                                                                     \
   } while (0)
 
@@ -31,7 +31,16 @@
 // Macro for completing an execution cycle
 #define VM_NEXT()                                                                                  \
   do {                                                                                             \
-    ++pc;                                                                                          \
+    if constexpr (SingleStep) {                                                                    \
+      if constexpr (ExecuteCustom) {                                                               \
+        state->pc = savedpc;                                                                       \
+      }                                                                                            \
+      else {                                                                                       \
+        state->pc++;                                                                               \
+      }                                                                                            \
+      goto exit;                                                                                   \
+    }                                                                                              \
+    state->pc++;                                                                                   \
     goto dispatch;                                                                                 \
   } while (0)
 
@@ -68,29 +77,31 @@
     VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ),                     \
     VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT),                 \
     VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL),                  \
-    VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(GETARR),   \
-    VM_DISPATCH_OP(SETARR), VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR),                       \
-    VM_DISPATCH_OP(GETDICT), VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(LENDICT),                     \
-    VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR),                      \
-    VM_DISPATCH_OP(SETSTR), VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST),  \
-    VM_DISPATCH_OP(STRCAST), VM_DISPATCH_OP(BCAST)
+    VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RET0), VM_DISPATCH_OP(RET1),       \
+    VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                        \
+    VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
+    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(LENDICT), VM_DISPATCH_OP(NEXTDICT),                    \
+    VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR),                        \
+    VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), \
+    VM_DISPATCH_OP(BCAST)
 
 namespace via {
 
 using enum Value::Tag;
-using enum IOpCode;
+using enum Opcode;
 
 // We use implementation functions only in this file.
 using namespace impl;
 
-// Starts VM execution cycle by altering it's state and "iterating" over
-// the instruction pipeline.
-void State::execute() {
+template<bool SingleStep, bool ExecuteCustom>
+void __execute(State* state, Instruction insn = Instruction()) {
 #if VM_USE_CGOTO
   static const void* dispatch_table[0xFF] = {VM_DISPATCH_TABLE()};
 #endif
 
 dispatch:
+  Instruction* savedpc = state->pc;
+
   // Check for errors and attempt handling them.
   // The __handle_error function works by unwinding the stack until
   // either hitting a stack frame flagged as error handler, or, the root
@@ -98,14 +109,18 @@ dispatch:
   // under any circumstances. Therefore the error will act as a fatal
   // error, being automatically thrown by __handle_error, along with a
   // callstack and debug information.
-  if (__has_error(this) && !__handle_error(this)) {
+  if (__has_error(state) && !__handle_error(state)) {
     goto exit;
   }
 
+  if constexpr (SingleStep && ExecuteCustom) {
+    state->pc = &insn;
+  }
+
 #if VM_USE_CGOTO
-  goto* dispatch_table[static_cast<uint8_t>(pc->op)];
+  goto* dispatch_table[static_cast<uint8_t>(state->pc->op)];
 #else
-  switch (pc->op)
+  switch (state->pc->op)
 #endif
   {
     // Handle special/internal opcodes
@@ -119,11 +134,11 @@ dispatch:
     }
 
     VM_CASE(ADD) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -146,11 +161,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(ADDI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -163,11 +178,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(ADDF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -181,11 +196,11 @@ dispatch:
     }
 
     VM_CASE(SUB) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -208,11 +223,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(SUBI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -225,11 +240,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(SUBF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -243,11 +258,11 @@ dispatch:
     }
 
     VM_CASE(MUL) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -270,11 +285,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MULI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -287,11 +302,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MULF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -305,11 +320,11 @@ dispatch:
     }
 
     VM_CASE(DIV) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -348,11 +363,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(DIVI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
       if (imm == 0) {
         VM_ERROR("Division by zero");
@@ -368,11 +383,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(DIVF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
       if (imm == 0.0f) {
         VM_ERROR("Division by zero");
@@ -389,11 +404,11 @@ dispatch:
     }
 
     VM_CASE(POW) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -416,11 +431,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(POWI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -433,11 +448,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(POWF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -451,11 +466,11 @@ dispatch:
     }
 
     VM_CASE(MOD) {
-      operand_t lhs = pc->operand0;
-      operand_t rhs = pc->operand1;
+      operand_t lhs = state->pc->operand0;
+      operand_t rhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
@@ -478,11 +493,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MODI) {
-      operand_t lhs = pc->operand0;
-      operand_t int_high = pc->operand1;
-      operand_t int_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t int_high = state->pc->operand1;
+      operand_t int_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
 
@@ -497,11 +512,11 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MODF) {
-      operand_t lhs = pc->operand0;
-      operand_t flt_high = pc->operand1;
-      operand_t flt_low = pc->operand2;
+      operand_t lhs = state->pc->operand0;
+      operand_t flt_high = state->pc->operand1;
+      operand_t flt_low = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
@@ -515,8 +530,8 @@ dispatch:
     }
 
     VM_CASE(NEG) {
-      operand_t dst = pc->operand0;
-      Value* val = __get_register(this, dst);
+      operand_t dst = state->pc->operand0;
+      Value* val = __get_register(state, dst);
       Value::Tag type = val->type;
 
       if (type == Int) {
@@ -530,17 +545,17 @@ dispatch:
     }
 
     VM_CASE(MOV) {
-      operand_t rdst = pc->operand0;
-      operand_t rsrc = pc->operand1;
-      Value* src_val = __get_register(this, rsrc);
+      operand_t rdst = state->pc->operand0;
+      operand_t rsrc = state->pc->operand1;
+      Value* src_val = __get_register(state, rsrc);
 
-      __set_register(this, rdst, src_val->clone());
+      __set_register(state, rdst, src_val->clone());
       VM_NEXT();
     }
 
     VM_CASE(INC) {
-      operand_t rdst = pc->operand0;
-      Value* dst_val = __get_register(this, rdst);
+      operand_t rdst = state->pc->operand0;
+      Value* dst_val = __get_register(state, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
         dst_val->u.i++;
@@ -553,8 +568,8 @@ dispatch:
     }
 
     VM_CASE(DEC) {
-      operand_t rdst = pc->operand0;
-      Value* dst_val = __get_register(this, rdst);
+      operand_t rdst = state->pc->operand0;
+      Value* dst_val = __get_register(state, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
         dst_val->u.i--;
@@ -567,70 +582,70 @@ dispatch:
     }
 
     VM_CASE(LOADK) {
-      operand_t dst = pc->operand0;
-      operand_t idx = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t idx = state->pc->operand1;
 
-      const Value& kval = __get_constant(this, idx);
+      const Value& kval = __get_constant(state, idx);
 
-      __set_register(this, dst, kval.clone());
+      __set_register(state, dst, kval.clone());
       VM_NEXT();
     }
 
     VM_CASE(LOADNIL) {
-      operand_t dst = pc->operand0;
+      operand_t dst = state->pc->operand0;
 
-      __set_register(this, dst, Value());
+      __set_register(state, dst, Value());
       VM_NEXT();
     }
 
     VM_CASE(LOADI) {
-      operand_t dst = pc->operand0;
-      int imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
+      operand_t dst = state->pc->operand0;
+      int imm = reinterpret_u16_as_u32(state->pc->operand1, state->pc->operand2);
 
-      __set_register(this, dst, Value(imm));
+      __set_register(state, dst, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(LOADF) {
-      operand_t dst = pc->operand0;
-      float imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
+      operand_t dst = state->pc->operand0;
+      float imm = reinterpret_u16_as_f32(state->pc->operand1, state->pc->operand2);
 
-      __set_register(this, dst, Value(imm));
+      __set_register(state, dst, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(LOADBT) {
-      operand_t dst = pc->operand0;
-      __set_register(this, dst, Value(true, true));
+      operand_t dst = state->pc->operand0;
+      __set_register(state, dst, Value(true, true));
       VM_NEXT();
     }
 
     VM_CASE(LOADBF) {
-      operand_t dst = pc->operand0;
-      __set_register(this, dst, Value(false, true));
+      operand_t dst = state->pc->operand0;
+      __set_register(state, dst, Value(false, true));
       VM_NEXT();
     }
 
     VM_CASE(LOADARR) {
-      operand_t dst = pc->operand0;
+      operand_t dst = state->pc->operand0;
       Value arr(new struct Array());
 
-      __set_register(this, dst, std::move(arr));
+      __set_register(state, dst, std::move(arr));
       VM_NEXT();
     }
 
     VM_CASE(LOADDICT) {
-      operand_t dst = pc->operand0;
+      operand_t dst = state->pc->operand0;
       Value dict(new struct Dict());
 
-      __set_register(this, dst, std::move(dict));
+      __set_register(state, dst, std::move(dict));
       VM_NEXT();
     }
 
     VM_CASE(CLOSURE) {
-      operand_t dst = pc->operand0;
-      operand_t len = pc->operand1;
-      operand_t argc = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t len = state->pc->operand1;
+      operand_t argc = state->pc->operand2;
 
       struct Function func;
       struct Closure* closure = new struct Closure();
@@ -640,8 +655,8 @@ dispatch:
         .arity = argc,
       };
 
-      __closure_bytecode_load(this, closure, len);
-      __set_register(this, dst, Value(closure));
+      __closure_bytecode_load(state, closure, len);
+      __set_register(state, dst, Value(closure));
 
       // Do not increment program counter, as __closure_bytecode_load automatically positions it
       // to the correct instruction.
@@ -649,226 +664,226 @@ dispatch:
     }
 
     VM_CASE(GETUPV) {
-      operand_t dst = pc->operand0;
-      operand_t upv_id = pc->operand1;
-      UpValue* upv = __closure_upv_get(__current_callframe(this)->closure, upv_id);
+      operand_t dst = state->pc->operand0;
+      operand_t upv_id = state->pc->operand1;
+      UpValue* upv = __closure_upv_get(__current_callframe(state)->closure, upv_id);
 
-      __set_register(this, dst, upv->value->clone());
+      __set_register(state, dst, upv->value->clone());
       VM_NEXT();
     }
 
     VM_CASE(SETUPV) {
-      operand_t src = pc->operand0;
-      operand_t upv_id = pc->operand1;
-      Value* val = __get_register(this, src);
+      operand_t src = state->pc->operand0;
+      operand_t upv_id = state->pc->operand1;
+      Value* val = __get_register(state, src);
 
-      __closure_upv_set(__current_callframe(this)->closure, upv_id, *val);
+      __closure_upv_set(__current_callframe(state)->closure, upv_id, *val);
       VM_NEXT();
     }
 
     VM_CASE(RETGET) {
-      operand_t dst = pc->operand0;
-      __set_register(this, dst, ret.clone());
+      operand_t dst = state->pc->operand0;
+      __set_register(state, dst, state->ret.clone());
       VM_NEXT();
     }
 
     VM_CASE(PUSH) {
-      operand_t src = pc->operand0;
-      Value* val = __get_register(this, src);
+      operand_t src = state->pc->operand0;
+      Value* val = __get_register(state, src);
 
-      __push(this, std::move(*val));
+      __push(state, std::move(*val));
       VM_NEXT();
     }
 
     VM_CASE(PUSHK) {
-      operand_t const_idx = pc->operand0;
-      Value constant = __get_constant(this, const_idx);
+      operand_t const_idx = state->pc->operand0;
+      Value constant = __get_constant(state, const_idx);
 
-      __push(this, constant.clone());
+      __push(state, constant.clone());
       VM_NEXT();
     }
 
     VM_CASE(PUSHNIL) {
-      __push(this, Value());
+      __push(state, Value());
       VM_NEXT();
     }
 
     VM_CASE(PUSHI) {
-      int imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
-      __push(this, Value(imm));
+      int imm = reinterpret_u16_as_u32(state->pc->operand0, state->pc->operand1);
+      __push(state, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHF) {
-      float imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
-      __push(this, Value(imm));
+      float imm = reinterpret_u16_as_f32(state->pc->operand0, state->pc->operand1);
+      __push(state, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHBT) {
-      __push(this, Value(true, true));
+      __push(state, Value(true, true));
       VM_NEXT();
     }
 
     VM_CASE(PUSHBF) {
-      __push(this, Value(false, true));
+      __push(state, Value(false, true));
       VM_NEXT();
     }
 
     VM_CASE(DROP) {
-      __drop(this);
+      __drop(state);
       VM_NEXT();
     }
 
     VM_CASE(GETLOCAL) {
-      operand_t dst = pc->operand0;
-      operand_t off = pc->operand1;
-      Value* val = __get_local(this, off);
+      operand_t dst = state->pc->operand0;
+      operand_t off = state->pc->operand1;
+      Value* val = __get_local(state, off);
 
-      __set_register(this, dst, val->clone());
+      __set_register(state, dst, val->clone());
       VM_NEXT();
     }
 
     VM_CASE(SETLOCAL) {
-      operand_t src = pc->operand0;
-      operand_t off = pc->operand1;
-      Value* val = __get_register(this, src);
+      operand_t src = state->pc->operand0;
+      operand_t off = state->pc->operand1;
+      Value* val = __get_register(state, src);
 
-      __set_local(this, off, std::move(*val));
+      __set_local(state, off, std::move(*val));
       VM_NEXT();
     }
 
     VM_CASE(GETGLOBAL) {
-      operand_t dst = pc->operand0;
-      operand_t key = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t key = state->pc->operand1;
 
-      Value* key_obj = __get_register(this, key);
+      Value* key_obj = __get_register(state, key);
       struct String* key_str = key_obj->u.str;
-      const Value& global = glb.gtable->get(key_str->data);
+      const Value& global = state->glb.gtable->get(key_str->data);
 
-      __set_register(this, dst, global.clone());
+      __set_register(state, dst, global.clone());
       VM_NEXT();
     }
 
     VM_CASE(SETGLOBAL) {
-      operand_t src = pc->operand0;
-      operand_t key = pc->operand1;
+      operand_t src = state->pc->operand0;
+      operand_t key = state->pc->operand1;
 
-      Value* key_obj = __get_register(this, key);
+      Value* key_obj = __get_register(state, key);
       struct String* key_str = key_obj->u.str;
-      Value* global = __get_register(this, src);
+      Value* global = __get_register(state, src);
 
-      glb.gtable->set(key_str->data, std::move(*global));
+      state->glb.gtable->set(key_str->data, std::move(*global));
       VM_NEXT();
     }
 
     VM_CASE(EQ) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
       if VIA_UNLIKELY (lhs == rhs) {
-        __set_register(this, dst, Value(true, true));
+        __set_register(state, dst, Value(true, true));
         VM_NEXT();
       }
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_UNLIKELY (lhs_val == rhs_val) {
-        __set_register(this, dst, Value(true, true));
+        __set_register(state, dst, Value(true, true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(this, dst, Value(result, true));
+      __set_register(state, dst, Value(result, true));
 
       VM_NEXT();
     }
 
     VM_CASE(NEQ) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
       if VIA_LIKELY (lhs != rhs) {
-        __set_register(this, dst, Value(true, true));
+        __set_register(state, dst, Value(true, true));
         VM_NEXT();
       }
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val != rhs_val) {
-        __set_register(this, dst, Value(true, true));
+        __set_register(state, dst, Value(true, true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(this, dst, Value(result, true));
+      __set_register(state, dst, Value(result, true));
 
       VM_NEXT();
     }
 
     VM_CASE(AND) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
       bool cond = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
 
-      __set_register(this, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond, true));
       VM_NEXT();
     }
 
     VM_CASE(OR) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
       bool cond = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
 
-      __set_register(this, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond, true));
       VM_NEXT();
     }
 
     VM_CASE(NOT) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
 
-      Value* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(state, lhs);
       bool cond = !__to_cxx_bool(*lhs_val);
 
-      __set_register(this, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond, true));
       VM_NEXT();
     }
 
     VM_CASE(LT) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.i < rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i < rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) < rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) < rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.f < static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f < static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(lhs_val->u.f < rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f < rhs_val->u.f, true));
         }
       }
 
@@ -876,27 +891,27 @@ dispatch:
     }
 
     VM_CASE(GT) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.i > rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i > rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) > rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) > rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.f > static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f > static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(lhs_val->u.f > rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f > rhs_val->u.f, true));
         }
       }
 
@@ -904,27 +919,27 @@ dispatch:
     }
 
     VM_CASE(LTEQ) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.i <= rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i <= rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) <= rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) <= rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.f <= static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f <= static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(lhs_val->u.f <= rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f <= rhs_val->u.f, true));
         }
       }
 
@@ -932,27 +947,27 @@ dispatch:
     }
 
     VM_CASE(GTEQ) {
-      operand_t dst = pc->operand0;
-      operand_t lhs = pc->operand1;
-      operand_t rhs = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t lhs = state->pc->operand1;
+      operand_t rhs = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, lhs);
-      Value* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.i >= rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i >= rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) >= rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) >= rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, Value(lhs_val->u.f >= static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f >= static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(this, dst, Value(lhs_val->u.f >= rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f >= rhs_val->u.f, true));
         }
       }
 
@@ -964,18 +979,18 @@ dispatch:
     }
 
     VM_CASE(JMP) {
-      signed_operand_t offset = pc->operand0;
-      pc += offset;
+      signed_operand_t offset = state->pc->operand0;
+      state->pc += offset;
       goto dispatch;
     }
 
     VM_CASE(JMPIF) {
-      operand_t cond = pc->operand0;
-      signed_operand_t offset = pc->operand1;
+      operand_t cond = state->pc->operand0;
+      signed_operand_t offset = state->pc->operand1;
 
-      Value* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(state, cond);
       if (__to_cxx_bool(*cond_val)) {
-        pc += offset;
+        state->pc += offset;
         goto dispatch;
       }
 
@@ -983,12 +998,12 @@ dispatch:
     }
 
     VM_CASE(JMPIFN) {
-      operand_t cond = pc->operand0;
-      signed_operand_t offset = pc->operand1;
+      operand_t cond = state->pc->operand0;
+      signed_operand_t offset = state->pc->operand1;
 
-      Value* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(state, cond);
       if (!__to_cxx_bool(*cond_val)) {
-        pc += offset;
+        state->pc += offset;
         goto dispatch;
       }
 
@@ -996,20 +1011,20 @@ dispatch:
     }
 
     VM_CASE(JMPIFEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
-        pc += offset;
+        state->pc += offset;
         goto dispatch;
       }
       else {
-        Value* lhs_val = __get_register(this, cond_lhs);
-        Value* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(state, cond_lhs);
+        Value* rhs_val = __get_register(state, cond_rhs);
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
-          pc += offset;
+          state->pc += offset;
           goto dispatch;
         }
       }
@@ -1018,20 +1033,20 @@ dispatch:
     }
 
     VM_CASE(JMPIFNEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
-        pc += offset;
+        state->pc += offset;
         goto dispatch;
       }
       else {
-        Value* lhs_val = __get_register(this, cond_lhs);
-        Value* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(state, cond_lhs);
+        Value* rhs_val = __get_register(state, cond_rhs);
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
-          pc += offset;
+          state->pc += offset;
           goto dispatch;
         }
       }
@@ -1040,23 +1055,23 @@ dispatch:
     }
 
     VM_CASE(JMPIFLT) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i < rhs_val->u.i) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) < rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1064,13 +1079,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f < static_cast<float>(rhs_val->u.i)) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f < rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1080,23 +1095,23 @@ dispatch:
     }
 
     VM_CASE(JMPIFGT) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i > rhs_val->u.i) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) > rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1104,13 +1119,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f > static_cast<float>(rhs_val->u.i)) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f > rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1120,23 +1135,23 @@ dispatch:
     }
 
     VM_CASE(JMPIFLTEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i <= rhs_val->u.i) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) <= rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1144,13 +1159,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f <= static_cast<float>(rhs_val->u.i)) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f <= rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1160,23 +1175,23 @@ dispatch:
     }
 
     VM_CASE(JMPIFGTEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      signed_operand_t offset = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      signed_operand_t offset = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i >= rhs_val->u.i) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) >= rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1184,13 +1199,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f >= static_cast<float>(rhs_val->u.i)) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f >= rhs_val->u.f) {
-            pc += offset;
+            state->pc += offset;
             goto dispatch;
           }
         }
@@ -1200,20 +1215,20 @@ dispatch:
     }
 
     VM_CASE(LJMP) {
-      operand_t label = pc->operand0;
+      operand_t label = state->pc->operand0;
 
-      pc = __label_get(this, label);
+      state->pc = __label_get(state, label);
 
       goto dispatch;
     }
 
     VM_CASE(LJMPIF) {
-      operand_t cond = pc->operand0;
-      operand_t label = pc->operand1;
+      operand_t cond = state->pc->operand0;
+      operand_t label = state->pc->operand1;
 
-      Value* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(state, cond);
       if (__to_cxx_bool(*cond_val)) {
-        pc = __label_get(this, label);
+        state->pc = __label_get(state, label);
         goto dispatch;
       }
 
@@ -1221,12 +1236,12 @@ dispatch:
     }
 
     VM_CASE(LJMPIFN) {
-      operand_t cond = pc->operand0;
-      operand_t label = pc->operand1;
+      operand_t cond = state->pc->operand0;
+      operand_t label = state->pc->operand1;
 
-      Value* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(state, cond);
       if (!__to_cxx_bool(*cond_val)) {
-        pc = __label_get(this, label);
+        state->pc = __label_get(state, label);
         goto dispatch;
       }
 
@@ -1234,20 +1249,20 @@ dispatch:
     }
 
     VM_CASE(LJMPIFEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
-        pc = __label_get(this, label);
+        state->pc = __label_get(state, label);
         goto dispatch;
       }
       else {
-        Value* lhs_val = __get_register(this, cond_lhs);
-        Value* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(state, cond_lhs);
+        Value* rhs_val = __get_register(state, cond_rhs);
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
-          pc = __label_get(this, label);
+          state->pc = __label_get(state, label);
           goto dispatch;
         }
       }
@@ -1256,20 +1271,20 @@ dispatch:
     }
 
     VM_CASE(LJMPIFNEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
-        pc = __label_get(this, label);
+        state->pc = __label_get(state, label);
         goto dispatch;
       }
       else {
-        Value* lhs_val = __get_register(this, cond_lhs);
-        Value* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(state, cond_lhs);
+        Value* rhs_val = __get_register(state, cond_rhs);
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
-          pc = __label_get(this, label);
+          state->pc = __label_get(state, label);
           goto dispatch;
         }
       }
@@ -1278,23 +1293,23 @@ dispatch:
     }
 
     VM_CASE(LJMPIFLT) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i < rhs_val->u.i) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) < rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1302,13 +1317,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f < static_cast<float>(rhs_val->u.i)) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f < rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1318,23 +1333,23 @@ dispatch:
     }
 
     VM_CASE(LJMPIFGT) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i > rhs_val->u.i) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) > rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1342,13 +1357,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f > static_cast<float>(rhs_val->u.i)) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f > rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1358,23 +1373,23 @@ dispatch:
     }
 
     VM_CASE(LJMPIFLTEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i <= rhs_val->u.i) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) <= rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1382,13 +1397,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f <= static_cast<float>(rhs_val->u.i)) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f <= rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1398,23 +1413,23 @@ dispatch:
     }
 
     VM_CASE(LJMPIFGTEQ) {
-      operand_t cond_lhs = pc->operand0;
-      operand_t cond_rhs = pc->operand1;
-      operand_t label = pc->operand2;
+      operand_t cond_lhs = state->pc->operand0;
+      operand_t cond_rhs = state->pc->operand1;
+      operand_t label = state->pc->operand2;
 
-      Value* lhs_val = __get_register(this, cond_lhs);
-      Value* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(state, cond_lhs);
+      Value* rhs_val = __get_register(state, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.i >= rhs_val->u.i) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (static_cast<float>(lhs_val->u.i) >= rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1422,13 +1437,13 @@ dispatch:
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
           if (lhs_val->u.f >= static_cast<float>(rhs_val->u.i)) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
           if (lhs_val->u.f >= rhs_val->u.f) {
-            pc = __label_get(this, label);
+            state->pc = __label_get(state, label);
             goto dispatch;
           }
         }
@@ -1438,48 +1453,55 @@ dispatch:
     }
 
     VM_CASE(CALL) {
-      operand_t fn = pc->operand0;
-      Value* fn_val = __get_register(this, fn);
+      operand_t fn = state->pc->operand0;
+      Value* fn_val = __get_register(state, fn);
 
-      __call(this, fn_val->u.clsr);
+      __call(state, fn_val->u.clsr);
       goto dispatch;
     }
 
     VM_CASE(RETNIL) {
-      __closure_close_upvalues(__current_callframe(this)->closure);
-      __return(this, Value());
+      __closure_close_upvalues(__current_callframe(state)->closure);
+      __return(state, Value());
       VM_NEXT();
     }
 
+    VM_CASE(RET0)
+    VM_CASE(RET1)
     VM_CASE(RET) {
-      operand_t src = pc->operand0;
-      Value* val = __get_register(this, src);
+      operand_t src = state->pc->operand0;
+      Value* val = __get_register(state, src);
 
-      __return(this, std::move(*val));
+      __return(state, std::move(*val));
+
+      if VIA_UNLIKELY (state->callstack->frames_count == 0) {
+        goto exit;
+      }
+
       VM_NEXT();
     }
 
     VM_CASE(GETARR) {
-      operand_t dst = pc->operand0;
-      operand_t tbl = pc->operand1;
-      operand_t key = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t tbl = state->pc->operand1;
+      operand_t key = state->pc->operand2;
 
-      Value* value = __get_register(this, tbl);
-      Value* index = __get_register(this, key);
+      Value* value = __get_register(state, tbl);
+      Value* index = __get_register(state, key);
       Value* result = __array_get(value->u.arr, index->u.i);
 
-      __set_register(this, dst, result->clone());
+      __set_register(state, dst, result->clone());
       VM_NEXT();
     }
 
     VM_CASE(SETARR) {
-      operand_t src = pc->operand0;
-      operand_t tbl = pc->operand1;
-      operand_t key = pc->operand2;
+      operand_t src = state->pc->operand0;
+      operand_t tbl = state->pc->operand1;
+      operand_t key = state->pc->operand2;
 
-      Value* array = __get_register(this, tbl);
-      Value* index = __get_register(this, key);
-      Value* value = __get_register(this, src);
+      Value* array = __get_register(state, tbl);
+      Value* index = __get_register(state, key);
+      Value* value = __get_register(state, src);
 
       __array_set(array->u.arr, index->u.i, std::move(*value));
       VM_NEXT();
@@ -1488,10 +1510,10 @@ dispatch:
     VM_CASE(NEXTARR) {
       static std::unordered_map<void*, operand_t> next_table;
 
-      operand_t dst = pc->operand0;
-      operand_t valr = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t valr = state->pc->operand1;
 
-      Value* val = __get_register(this, valr);
+      Value* val = __get_register(state, valr);
       void* ptr = __to_pointer(*val);
       operand_t key = 0;
 
@@ -1504,38 +1526,38 @@ dispatch:
       }
 
       Value* field = __array_get(val->u.arr, key);
-      __set_register(this, dst, field->clone());
+      __set_register(state, dst, field->clone());
       VM_NEXT();
     }
 
     VM_CASE(LENARR) {
-      operand_t dst = pc->operand0;
-      operand_t tbl = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t tbl = state->pc->operand1;
 
-      Value* val = __get_register(this, tbl);
+      Value* val = __get_register(state, tbl);
       int size = __array_size(val->u.arr);
 
-      __set_register(this, dst, Value(size));
+      __set_register(state, dst, Value(size));
       VM_NEXT();
     }
 
     VM_CASE(LENSTR) {
-      operand_t rdst = pc->operand0;
-      operand_t objr = pc->operand1;
+      operand_t rdst = state->pc->operand0;
+      operand_t objr = state->pc->operand1;
 
-      Value* val = __get_register(this, objr);
+      Value* val = __get_register(state, objr);
       int len = val->u.str->data_size;
 
-      __set_register(this, rdst, Value(len));
+      __set_register(state, rdst, Value(len));
       VM_NEXT();
     }
 
     VM_CASE(CONSTR) {
-      operand_t left = pc->operand0;
-      operand_t right = pc->operand1;
+      operand_t left = state->pc->operand0;
+      operand_t right = state->pc->operand1;
 
-      Value* left_val = __get_register(this, left);
-      Value* right_val = __get_register(this, right);
+      Value* left_val = __get_register(state, left);
+      Value* right_val = __get_register(state, right);
 
       struct String* left_str = left_val->u.str;
       struct String* right_str = right_val->u.str;
@@ -1546,7 +1568,7 @@ dispatch:
       std::memcpy(new_string, left_str->data, left_str->data_size);
       std::memcpy(new_string + left_str->data_size, right_str->data, right_str->data_size);
 
-      __set_register(this, left, Value(new_string));
+      __set_register(state, left, Value(new_string));
 
       delete[] new_string;
 
@@ -1554,81 +1576,94 @@ dispatch:
     }
 
     VM_CASE(GETSTR) {
-      operand_t dst = pc->operand0;
-      operand_t str = pc->operand1;
-      operand_t idx = pc->operand2;
+      operand_t dst = state->pc->operand0;
+      operand_t str = state->pc->operand1;
+      operand_t idx = state->pc->operand2;
 
-      Value* str_val = __get_register(this, str);
+      Value* str_val = __get_register(state, str);
       struct String* tstr = str_val->u.str;
       char chr = tstr->data[idx];
 
-      __set_register(this, dst, Value(&chr));
+      __set_register(state, dst, Value(&chr));
       VM_NEXT();
     }
 
     VM_CASE(SETSTR) {
-      operand_t str = pc->operand0;
-      operand_t src = pc->operand1;
-      operand_t idx = pc->operand2;
+      operand_t str = state->pc->operand0;
+      operand_t src = state->pc->operand1;
+      operand_t idx = state->pc->operand2;
 
-      Value* str_val = __get_register(this, str);
+      Value* str_val = __get_register(state, str);
       struct String* tstr = str_val->u.str;
 
       char chr = static_cast<char>(src);
       char* str_cpy = duplicate_string(tstr->data);
       str_cpy[idx] = chr;
 
-      __set_register(this, str, Value(str_cpy));
+      __set_register(state, str, Value(str_cpy));
       delete[] str_cpy;
       VM_NEXT();
     }
 
     VM_CASE(ICAST) {
-      operand_t dst = pc->operand0;
-      operand_t src = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t src = state->pc->operand1;
 
-      Value* target = __get_register(this, src);
-      Value result = __to_int(this, *target);
+      Value* target = __get_register(state, src);
+      Value result = __to_int(state, *target);
 
-      __set_register(this, dst, std::move(result));
+      __set_register(state, dst, std::move(result));
       VM_NEXT();
     }
 
     VM_CASE(FCAST) {
-      operand_t dst = pc->operand0;
-      operand_t src = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t src = state->pc->operand1;
 
-      Value* target = __get_register(this, src);
-      Value result = __to_float(this, *target);
+      Value* target = __get_register(state, src);
+      Value result = __to_float(state, *target);
 
-      __set_register(this, dst, std::move(result));
+      __set_register(state, dst, std::move(result));
       VM_NEXT();
     }
 
     VM_CASE(STRCAST) {
-      operand_t dst = pc->operand0;
-      operand_t src = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t src = state->pc->operand1;
 
-      Value* target = __get_register(this, src);
+      Value* target = __get_register(state, src);
       Value result = __to_string(*target);
 
-      __set_register(this, dst, std::move(result));
+      __set_register(state, dst, std::move(result));
       VM_NEXT();
     }
 
     VM_CASE(BCAST) {
-      operand_t dst = pc->operand0;
-      operand_t src = pc->operand1;
+      operand_t dst = state->pc->operand0;
+      operand_t src = state->pc->operand1;
 
-      Value* target = __get_register(this, src);
+      Value* target = __get_register(state, src);
       Value result = __to_bool(*target);
 
-      __set_register(this, dst, std::move(result));
+      __set_register(state, dst, std::move(result));
       VM_NEXT();
     }
   }
 
 exit:;
+}
+
+void State::execute() {
+  __execute<false, false>(this);
+}
+
+void State::execute_step(std::optional<Instruction> insn) {
+  if (insn.has_value()) {
+    __execute<true, true>(this, *insn);
+  }
+  else {
+    __execute<true, false>(this, *insn);
+  }
 }
 
 } // namespace via

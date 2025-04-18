@@ -81,7 +81,7 @@ endif()
 # Compiler-specific flags
 if(DEBUG_MODE)
   if (NOT MSVC)
-    target_compile_options(via PRIVATE -Og -g -fsanitize=address,undefined)
+    target_compile_options(via PRIVATE -Og -g -fsanitize=address,undefined -fno-elide-constructors)
     target_link_options(via PRIVATE -fsanitize=address,undefined)
   endif()
 else()

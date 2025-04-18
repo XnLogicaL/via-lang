@@ -104,7 +104,7 @@ using operands_init_t = OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>;
 // Forwards arguments to ctx::unit_ctx::bytecode::add
 void bytecode_emit(
   VisitorContext& ctx,
-  IOpCode opcode = IOpCode::NOP,
+  Opcode opcode = Opcode::NOP,
   operands_init_t&& operands = {},
   std::string comment = ""
 );

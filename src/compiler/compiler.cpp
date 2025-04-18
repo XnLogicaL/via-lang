@@ -12,7 +12,7 @@
 //
 namespace via {
 
-using enum IOpCode;
+using enum Opcode;
 using enum CErrorLevel;
 
 // Helper function to return line and column number from a character offset
@@ -350,7 +350,7 @@ TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
   return expr->infer_type(ctx.unit_ctx);
 }
 
-void bytecode_emit(VisitorContext& ctx, IOpCode opc, operands_init_t&& ops, std::string com) {
+void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::string com) {
   ctx.unit_ctx.bytecode->add({
     {
       opc,
@@ -380,7 +380,7 @@ void Compiler::codegen_prep() {
 }
 
 void Compiler::insert_exit0_instruction() {
-  compiler_util::bytecode_emit(ctx, IOpCode::RET0, {});
+  compiler_util::bytecode_emit(ctx, Opcode::RET0, {});
 }
 
 bool Compiler::generate() {
