@@ -1,14 +1,17 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "bit-utility.h"
 #include "file-io.h"
 #include "api-impl.h"
-#include "api-aux.h"
 #include "common.h"
 #include "state.h"
 #include "constant.h"
+#include "tvalue.h"
+#include "tarray.h"
+#include "tstring.h"
+#include "tdict.h"
+#include "tfunction.h"
 #include <cmath>
 
 // Macro that throws a virtual error
@@ -51,112 +54,43 @@
     VM_DISPATCH_OP(MODI), VM_DISPATCH_OP(MODF), VM_DISPATCH_OP(POW), VM_DISPATCH_OP(POWI),         \
     VM_DISPATCH_OP(POWF), VM_DISPATCH_OP(NEG), VM_DISPATCH_OP(MOV), VM_DISPATCH_OP(LOADK),         \
     VM_DISPATCH_OP(LOADNIL), VM_DISPATCH_OP(LOADI), VM_DISPATCH_OP(LOADF), VM_DISPATCH_OP(LOADBT), \
-    VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(NEWARR), VM_DISPATCH_OP(NEWDICT),                       \
-    VM_DISPATCH_OP(NEWCLSR), VM_DISPATCH_OP(PUSH), VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), \
+    VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(LOADARR), VM_DISPATCH_OP(LOADDICT),                     \
+    VM_DISPATCH_OP(CLOSURE), VM_DISPATCH_OP(PUSH), VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), \
     VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF), VM_DISPATCH_OP(PUSHBT), VM_DISPATCH_OP(PUSHBF),  \
-    VM_DISPATCH_OP(POP), VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(STKGET), VM_DISPATCH_OP(STKSET),     \
-    VM_DISPATCH_OP(LOCALGET), VM_DISPATCH_OP(LOCALSET), VM_DISPATCH_OP(ARGGET),                    \
-    VM_DISPATCH_OP(GGET), VM_DISPATCH_OP(GSET), VM_DISPATCH_OP(UPVSET), VM_DISPATCH_OP(UPVGET),    \
-    VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(NEQ),             \
-    VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT),              \
-    VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP),           \
-    VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),                        \
+    VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(GETLOCAL), VM_DISPATCH_OP(SETLOCAL),                      \
+    VM_DISPATCH_OP(GETGLOBAL), VM_DISPATCH_OP(SETGLOBAL), VM_DISPATCH_OP(SETUPV),                  \
+    VM_DISPATCH_OP(GETUPV), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ),          \
+    VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT),             \
+    VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ),            \
+    VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),   \
     VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT),                    \
     VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP),                    \
     VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ),                     \
     VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT),                 \
     VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL),                  \
-    VM_DISPATCH_OP(CCALL), VM_DISPATCH_OP(NTVCALL), VM_DISPATCH_OP(MTDCALL), VM_DISPATCH_OP(RET),  \
-    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH),     \
-    VM_DISPATCH_OP(ARRGET), VM_DISPATCH_OP(ARRSET), VM_DISPATCH_OP(ARRNEXT),                       \
-    VM_DISPATCH_OP(ARRLEN), VM_DISPATCH_OP(DICTGET), VM_DISPATCH_OP(DICTSET),                      \
-    VM_DISPATCH_OP(DICTLEN), VM_DISPATCH_OP(DICTNEXT), VM_DISPATCH_OP(STRCON),                     \
-    VM_DISPATCH_OP(STRGET), VM_DISPATCH_OP(STRSET), VM_DISPATCH_OP(STRLEN), VM_DISPATCH_OP(CASTI), \
-    VM_DISPATCH_OP(CASTF), VM_DISPATCH_OP(CASTSTR), VM_DISPATCH_OP(CASTB)
+    VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(GETARR),   \
+    VM_DISPATCH_OP(SETARR), VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR),                       \
+    VM_DISPATCH_OP(GETDICT), VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(LENDICT),                     \
+    VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR),                      \
+    VM_DISPATCH_OP(SETSTR), VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST),  \
+    VM_DISPATCH_OP(STRCAST), VM_DISPATCH_OP(BCAST)
 
-//  =============
-// [ execute.cpp ]
-// =============
 namespace via {
 
-using enum IValueType;
+using enum Value::Tag;
 using enum IOpCode;
 
 // We use implementation functions only in this file.
 using namespace impl;
 
-void vm_save_snapshot(IState* VIA_RESTRICT V) {
-  // Calculate the current program counter position relative to the Instruction base.
-  uint64_t pos = V->pc - V->ibp;
-  std::string filename = std::format("vm_snapshot.{}.log", pos);
-  std::string filepath = std::format("./__viacache__/{}", filename);
-
-  // Build state information about the current state.
-  std::ostringstream state_info;
-  state_info << "==== VM State ====\n";
-  state_info << "Program Counter (PC): " << static_cast<const void*>(V->pc) << " -> "
-             << (V->pc - V->ibp) << "\n";
-  state_info << "Stack Pointer (SP): " << static_cast<const void*>(V->sbp + V->sp) << " -> "
-             << V->sp << "\n";
-  state_info << "Stack Base Pointer (SBP): " << static_cast<const void*>(V->sbp) << "\n";
-  state_info << "Instruction Base Pointer (IBP): " << static_cast<const void*>(V->ibp) << "\n";
-  state_info << "==== End of VM State ====\n\n";
-
-  // Build header information about the current Instruction.
-  std::ostringstream headers;
-  headers << "==== Current Instruction ====\n";
-  headers << "Opcode: " << magic_enum::enum_name(V->pc->op) << "\n";
-  headers << "Operand0: " << V->pc->operand0 << ", "
-          << "Operand1: " << V->pc->operand1 << ", "
-          << "Operand2: " << V->pc->operand2 << "\n";
-  headers << "==== End of Instruction ====\n\n";
-
-  // Generate stack map.
-  std::ostringstream stack;
-  stack << "==== Stack ====\n";
-  for (IValue* ptr = V->sbp; ptr < V->sbp + V->sp; ++ptr) {
-    size_t index = ptr - V->sbp;
-    // Format the stack index as two-digit with leading zeros.
-    stack << "Stack[" << std::setw(2) << std::setfill('0') << index
-          << "] = " << impl::__to_cxx_string(*ptr) << "\n";
-  }
-  stack << "==== End of Stack ====\n\n";
-
-  // Generate register map.
-  std::ostringstream registers;
-  registers << "==== Registers ====\n";
-  for (operand_t reg = 0; reg < VIA_ALL_REGISTERS - 1; ++reg) {
-    IValue* val = impl::__get_register(V, reg);
-    if (!val->is_nil()) {
-      registers << "R" << std::setw(2) << std::setfill('0') << reg << " = "
-                << impl::__to_cxx_string(*val) << "\n";
-    }
-  }
-  registers << "==== End of Registers ====\n\n";
-
-  // Combine all parts.
-  std::ostringstream output;
-  output << state_info.str() << headers.str() << stack.str() << registers.str();
-
-  // Write to file.
-  if (!utils::write_to_file(filepath, output.str())) {
-    // Log error or take alternative action.
-    std::cerr << "Failed to write snapshot to file: " << filepath << "\n";
-  }
-}
-
 // Starts VM execution cycle by altering it's state and "iterating" over
 // the instruction pipeline.
-void IState::execute() {
+void State::execute() {
 #if VM_USE_CGOTO
   static const void* dispatch_table[0xFF] = {VM_DISPATCH_TABLE()};
 #endif
 
 dispatch:
-#ifdef VIA_DEBUG
-  vm_save_snapshot(this);
-#endif
-
   // Check for errors and attempt handling them.
   // The __handle_error function works by unwinding the stack until
   // either hitting a stack frame flagged as error handler, or, the root
@@ -168,11 +102,6 @@ dispatch:
     goto exit;
   }
 
-  // Abort is second priority due to verbosity.
-  if (abort) {
-    goto exit;
-  }
-
 #if VM_USE_CGOTO
   goto* dispatch_table[static_cast<uint8_t>(pc->op)];
 #else
@@ -181,13 +110,10 @@ dispatch:
   {
     // Handle special/internal opcodes
     VM_CASE(NOP)
-    VM_CASE(RAISE)
-    VM_CASE(TRY)
-    VM_CASE(CATCH)
-    VM_CASE(DICTGET)
-    VM_CASE(DICTSET)
-    VM_CASE(DICTLEN)
-    VM_CASE(DICTNEXT)
+    VM_CASE(GETDICT)
+    VM_CASE(SETDICT)
+    VM_CASE(LENDICT)
+    VM_CASE(NEXTDICT)
     VM_CASE(LBL) {
       VM_NEXT();
     }
@@ -196,25 +122,24 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_integer += rhs_val->val_integer;
+          lhs_val->u.i += rhs_val->u.i;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            static_cast<float>(lhs_val->val_integer) + rhs_val->val_floating_point;
-          lhs_val->type = floating_point;
+          lhs_val->u.f = static_cast<float>(lhs_val->u.i) + rhs_val->u.f;
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point += static_cast<float>(rhs_val->val_integer);
+          lhs_val->u.f += static_cast<float>(rhs_val->u.i);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point += rhs_val->val_floating_point;
+          lhs_val->u.f += rhs_val->u.f;
         }
       }
 
@@ -225,14 +150,14 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer += imm;
+        lhs_val->u.i += imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point += imm;
+        lhs_val->u.f += imm;
       }
 
       VM_NEXT();
@@ -242,14 +167,14 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer += imm;
+        lhs_val->u.i += imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point += imm;
+        lhs_val->u.f += imm;
       }
 
       VM_NEXT();
@@ -259,25 +184,24 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_integer -= rhs_val->val_integer;
+          lhs_val->u.i -= rhs_val->u.i;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            static_cast<float>(lhs_val->val_integer) - rhs_val->val_floating_point;
-          lhs_val->type = floating_point;
+          lhs_val->u.f = static_cast<float>(lhs_val->u.i) - rhs_val->u.f;
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point -= static_cast<float>(rhs_val->val_integer);
+          lhs_val->u.f -= static_cast<float>(rhs_val->u.i);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point -= rhs_val->val_floating_point;
+          lhs_val->u.f -= rhs_val->u.f;
         }
       }
 
@@ -288,14 +212,14 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer -= imm;
+        lhs_val->u.i -= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point -= imm;
+        lhs_val->u.f -= imm;
       }
 
       VM_NEXT();
@@ -305,14 +229,14 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer -= imm;
+        lhs_val->u.i -= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point -= imm;
+        lhs_val->u.f -= imm;
       }
 
       VM_NEXT();
@@ -322,25 +246,24 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_integer *= rhs_val->val_integer;
+          lhs_val->u.i *= rhs_val->u.i;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            static_cast<float>(lhs_val->val_integer) * rhs_val->val_floating_point;
-          lhs_val->type = floating_point;
+          lhs_val->u.f = static_cast<float>(lhs_val->u.i) * rhs_val->u.f;
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point *= static_cast<float>(rhs_val->val_integer);
+          lhs_val->u.f *= static_cast<float>(rhs_val->u.i);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point *= rhs_val->val_floating_point;
+          lhs_val->u.f *= rhs_val->u.f;
         }
       }
 
@@ -351,14 +274,14 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer *= imm;
+        lhs_val->u.i *= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point *= imm;
+        lhs_val->u.f *= imm;
       }
 
       VM_NEXT();
@@ -368,14 +291,14 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer *= imm;
+        lhs_val->u.i *= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point *= imm;
+        lhs_val->u.f *= imm;
       }
 
       VM_NEXT();
@@ -385,41 +308,40 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (rhs_val->val_integer == 0) {
+          if (rhs_val->u.i == 0) {
             VM_ERROR("Division by zero");
           }
 
-          lhs_val->val_integer /= rhs_val->val_integer;
+          lhs_val->u.i /= rhs_val->u.i;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (rhs_val->val_floating_point == 0.0f) {
+          if (rhs_val->u.f == 0.0f) {
             VM_ERROR("Division by zero");
           }
 
-          lhs_val->val_floating_point =
-            static_cast<float>(lhs_val->val_integer) / rhs_val->val_floating_point;
-          lhs_val->type = floating_point;
+          lhs_val->u.f = static_cast<float>(lhs_val->u.i) / rhs_val->u.f;
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (rhs_val->val_integer == 0) {
+          if (rhs_val->u.i == 0) {
             VM_ERROR("Division by zero");
           }
 
-          lhs_val->val_floating_point /= static_cast<float>(rhs_val->val_integer);
+          lhs_val->u.f /= static_cast<float>(rhs_val->u.i);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (rhs_val->val_floating_point == 0.0f) {
+          if (rhs_val->u.f == 0.0f) {
             VM_ERROR("Division by zero");
           }
 
-          lhs_val->val_floating_point /= rhs_val->val_floating_point;
+          lhs_val->u.f /= rhs_val->u.f;
         }
       }
 
@@ -430,17 +352,17 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
       if (imm == 0) {
         VM_ERROR("Division by zero");
       }
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer /= imm;
+        lhs_val->u.i /= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point /= imm;
+        lhs_val->u.f /= imm;
       }
 
       VM_NEXT();
@@ -450,17 +372,17 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
       if (imm == 0.0f) {
         VM_ERROR("Division by zero");
       }
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer /= imm;
+        lhs_val->u.i /= imm;
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point /= imm;
+        lhs_val->u.f /= imm;
       }
 
       VM_NEXT();
@@ -470,27 +392,24 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_integer = std::pow(lhs_val->val_integer, rhs_val->val_integer);
+          lhs_val->u.i = std::pow(lhs_val->u.i, rhs_val->u.i);
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            std::pow(static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point);
-          lhs_val->type = floating_point;
+          lhs_val->u.f = std::pow(static_cast<float>(lhs_val->u.i), rhs_val->u.f);
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer));
+          lhs_val->u.f = std::pow(lhs_val->u.f, static_cast<float>(rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            std::pow(lhs_val->val_floating_point, rhs_val->val_floating_point);
+          lhs_val->u.f = std::pow(lhs_val->u.f, rhs_val->u.f);
         }
       }
 
@@ -501,14 +420,14 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
+        lhs_val->u.i = std::pow(lhs_val->u.i, imm);
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point = std::pow(lhs_val->val_floating_point, imm);
+        lhs_val->u.f = std::pow(lhs_val->u.f, imm);
       }
 
       VM_NEXT();
@@ -518,14 +437,14 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer = std::pow(lhs_val->val_integer, imm);
+        lhs_val->u.i = std::pow(lhs_val->u.i, imm);
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point = std::pow(lhs_val->val_floating_point, imm);
+        lhs_val->u.f = std::pow(lhs_val->u.f, imm);
       }
 
       VM_NEXT();
@@ -535,27 +454,24 @@ dispatch:
       operand_t lhs = pc->operand0;
       operand_t rhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_integer %= rhs_val->val_integer;
+          lhs_val->u.i %= rhs_val->u.i;
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            std::fmod(static_cast<float>(lhs_val->val_integer), rhs_val->val_floating_point);
-          lhs_val->type = floating_point;
+          lhs_val->u.f = std::fmod(static_cast<float>(lhs_val->u.i), rhs_val->u.f);
+          lhs_val->type = Float;
         }
       }
       else if (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, static_cast<float>(rhs_val->val_integer));
+          lhs_val->u.f = std::fmod(lhs_val->u.f, static_cast<float>(rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          lhs_val->val_floating_point =
-            std::fmod(lhs_val->val_floating_point, rhs_val->val_floating_point);
+          lhs_val->u.f = std::fmod(lhs_val->u.f, rhs_val->u.f);
         }
       }
 
@@ -566,16 +482,16 @@ dispatch:
       operand_t int_high = pc->operand1;
       operand_t int_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       int imm = reinterpret_u16_as_i32(int_high, int_low);
 
 
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer = std::fmod(lhs_val->val_integer, imm);
+        lhs_val->u.i = std::fmod(lhs_val->u.i, imm);
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point = std::fmod(lhs_val->val_floating_point, imm);
+        lhs_val->u.f = std::fmod(lhs_val->u.f, imm);
       }
 
       VM_NEXT();
@@ -585,14 +501,14 @@ dispatch:
       operand_t flt_high = pc->operand1;
       operand_t flt_low = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       float imm = reinterpret_u16_as_f32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
-        lhs_val->val_integer = std::fmod(lhs_val->val_integer, imm);
+        lhs_val->u.i = std::fmod(lhs_val->u.i, imm);
       }
       else if (lhs_val->is_float()) {
-        lhs_val->val_floating_point = std::fmod(lhs_val->val_floating_point, imm);
+        lhs_val->u.f = std::fmod(lhs_val->u.f, imm);
       }
 
       VM_NEXT();
@@ -600,14 +516,14 @@ dispatch:
 
     VM_CASE(NEG) {
       operand_t dst = pc->operand0;
-      IValue* val = __get_register(this, dst);
-      IValueType type = val->type;
+      Value* val = __get_register(this, dst);
+      Value::Tag type = val->type;
 
-      if (type == integer) {
-        val->val_integer = -val->val_integer;
+      if (type == Int) {
+        val->u.i = -val->u.i;
       }
-      else if (type == floating_point) {
-        val->val_floating_point = -val->val_floating_point;
+      else if (type == Float) {
+        val->u.f = -val->u.f;
       }
 
       VM_NEXT();
@@ -616,7 +532,7 @@ dispatch:
     VM_CASE(MOV) {
       operand_t rdst = pc->operand0;
       operand_t rsrc = pc->operand1;
-      IValue* src_val = __get_register(this, rsrc);
+      Value* src_val = __get_register(this, rsrc);
 
       __set_register(this, rdst, src_val->clone());
       VM_NEXT();
@@ -624,13 +540,13 @@ dispatch:
 
     VM_CASE(INC) {
       operand_t rdst = pc->operand0;
-      IValue* dst_val = __get_register(this, rdst);
+      Value* dst_val = __get_register(this, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
-        dst_val->val_integer++;
+        dst_val->u.i++;
       }
       else if VIA_UNLIKELY (dst_val->is_float()) {
-        dst_val->val_floating_point++;
+        dst_val->u.f++;
       }
 
       VM_NEXT();
@@ -638,13 +554,13 @@ dispatch:
 
     VM_CASE(DEC) {
       operand_t rdst = pc->operand0;
-      IValue* dst_val = __get_register(this, rdst);
+      Value* dst_val = __get_register(this, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
-        dst_val->val_integer--;
+        dst_val->u.i--;
       }
       else if VIA_UNLIKELY (dst_val->is_float()) {
-        dst_val->val_floating_point--;
+        dst_val->u.f--;
       }
 
       VM_NEXT();
@@ -654,7 +570,7 @@ dispatch:
       operand_t dst = pc->operand0;
       operand_t idx = pc->operand1;
 
-      const IValue& kval = __get_constant(this, idx);
+      const Value& kval = __get_constant(this, idx);
 
       __set_register(this, dst, kval.clone());
       VM_NEXT();
@@ -663,7 +579,7 @@ dispatch:
     VM_CASE(LOADNIL) {
       operand_t dst = pc->operand0;
 
-      __set_register(this, dst, IValue());
+      __set_register(this, dst, Value());
       VM_NEXT();
     }
 
@@ -671,7 +587,7 @@ dispatch:
       operand_t dst = pc->operand0;
       int imm = reinterpret_u16_as_u32(pc->operand1, pc->operand2);
 
-      __set_register(this, dst, IValue(imm));
+      __set_register(this, dst, Value(imm));
       VM_NEXT();
     }
 
@@ -679,72 +595,86 @@ dispatch:
       operand_t dst = pc->operand0;
       float imm = reinterpret_u16_as_f32(pc->operand1, pc->operand2);
 
-      __set_register(this, dst, IValue(imm));
+      __set_register(this, dst, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(LOADBT) {
       operand_t dst = pc->operand0;
-      __set_register(this, dst, IValue(true));
+      __set_register(this, dst, Value(true, true));
       VM_NEXT();
     }
 
     VM_CASE(LOADBF) {
       operand_t dst = pc->operand0;
-      __set_register(this, dst, IValue(false));
+      __set_register(this, dst, Value(false, true));
       VM_NEXT();
     }
 
-    VM_CASE(NEWARR) {
+    VM_CASE(LOADARR) {
       operand_t dst = pc->operand0;
-      IValue arr(new IArray());
+      Value arr(new struct Array());
 
       __set_register(this, dst, std::move(arr));
       VM_NEXT();
     }
 
-    VM_CASE(NEWDICT) {
+    VM_CASE(LOADDICT) {
       operand_t dst = pc->operand0;
-      IValue dict(new IDict());
+      Value dict(new struct Dict());
 
       __set_register(this, dst, std::move(dict));
       VM_NEXT();
     }
 
-    VM_CASE(NEWCLSR) {
+    VM_CASE(CLOSURE) {
       operand_t dst = pc->operand0;
       operand_t len = pc->operand1;
+      operand_t argc = pc->operand2;
 
-      IFunction* func = new IFunction();
+      struct Function func;
+      struct Closure* closure = new struct Closure();
+      closure->callee = {
+        .type = Callable::Tag::Function,
+        .u = {.fn = func},
+        .arity = argc,
+      };
 
-      __closure_bytecode_load(this, func, len);
-      __set_register(this, dst, IValue(func));
-      // Do not increment program counter, as __closure_bytecode_load automatically positions it to
-      // the correct instruction.
+      __closure_bytecode_load(this, closure, len);
+      __set_register(this, dst, Value(closure));
+
+      // Do not increment program counter, as __closure_bytecode_load automatically positions it
+      // to the correct instruction.
       goto dispatch;
     }
 
-    VM_CASE(UPVGET) {
+    VM_CASE(GETUPV) {
       operand_t dst = pc->operand0;
       operand_t upv_id = pc->operand1;
-      IUpValue* upv = __closure_upv_get(frame, upv_id);
+      UpValue* upv = __closure_upv_get(__current_callframe(this)->closure, upv_id);
 
       __set_register(this, dst, upv->value->clone());
       VM_NEXT();
     }
 
-    VM_CASE(UPVSET) {
+    VM_CASE(SETUPV) {
       operand_t src = pc->operand0;
       operand_t upv_id = pc->operand1;
-      IValue* val = __get_register(this, src);
+      Value* val = __get_register(this, src);
 
-      __closure_upv_set(frame, upv_id, *val);
+      __closure_upv_set(__current_callframe(this)->closure, upv_id, *val);
+      VM_NEXT();
+    }
+
+    VM_CASE(RETGET) {
+      operand_t dst = pc->operand0;
+      __set_register(this, dst, ret.clone());
       VM_NEXT();
     }
 
     VM_CASE(PUSH) {
       operand_t src = pc->operand0;
-      IValue* val = __get_register(this, src);
+      Value* val = __get_register(this, src);
 
       __push(this, std::move(*val));
       VM_NEXT();
@@ -752,119 +682,83 @@ dispatch:
 
     VM_CASE(PUSHK) {
       operand_t const_idx = pc->operand0;
-      IValue constant = __get_constant(this, const_idx);
+      Value constant = __get_constant(this, const_idx);
 
       __push(this, constant.clone());
       VM_NEXT();
     }
 
     VM_CASE(PUSHNIL) {
-      __push(this, IValue());
+      __push(this, Value());
       VM_NEXT();
     }
 
     VM_CASE(PUSHI) {
       int imm = reinterpret_u16_as_u32(pc->operand0, pc->operand1);
-      __push(this, IValue(imm));
+      __push(this, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHF) {
       float imm = reinterpret_u16_as_f32(pc->operand0, pc->operand1);
-      __push(this, IValue(imm));
+      __push(this, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHBT) {
-      __push(this, IValue(true));
+      __push(this, Value(true, true));
       VM_NEXT();
     }
 
     VM_CASE(PUSHBF) {
-      __push(this, IValue(false));
-      VM_NEXT();
-    }
-
-    VM_CASE(POP) {
-      operand_t dst = pc->operand0;
-      IValue val = __pop(this);
-
-      __set_register(this, dst, std::move(val));
+      __push(this, Value(false, true));
       VM_NEXT();
     }
 
     VM_CASE(DROP) {
-      __pop(this);
+      __drop(this);
       VM_NEXT();
     }
 
-    VM_CASE(STKGET) {
+    VM_CASE(GETLOCAL) {
       operand_t dst = pc->operand0;
       operand_t off = pc->operand1;
-      IValue* val = __get_stack(this, off);
+      Value* val = __get_local(this, off);
 
       __set_register(this, dst, val->clone());
       VM_NEXT();
     }
 
-    VM_CASE(STKSET) {
+    VM_CASE(SETLOCAL) {
       operand_t src = pc->operand0;
       operand_t off = pc->operand1;
-      IValue* val = __get_register(this, src);
-
-      __set_stack(this, off, std::move(*val));
-      VM_NEXT();
-    }
-
-    VM_CASE(LOCALGET) {
-      operand_t dst = pc->operand0;
-      operand_t off = pc->operand1;
-      IValue* val = __get_local(this, off);
-
-      __set_register(this, dst, val->clone());
-      VM_NEXT();
-    }
-
-    VM_CASE(LOCALSET) {
-      operand_t src = pc->operand0;
-      operand_t off = pc->operand1;
-      IValue* val = __get_register(this, src);
+      Value* val = __get_register(this, src);
 
       __set_local(this, off, std::move(*val));
       VM_NEXT();
     }
 
-    VM_CASE(ARGGET) {
-      operand_t dst = pc->operand0;
-      operand_t off = pc->operand1;
-
-      const IValue& val = __get_argument(this, off);
-
-      __set_register(this, dst, val.clone());
-      VM_NEXT();
-    }
-
-    VM_CASE(GGET) {
+    VM_CASE(GETGLOBAL) {
       operand_t dst = pc->operand0;
       operand_t key = pc->operand1;
 
-      IValue* key_obj = __get_register(this, key);
-      IString* key_str = key_obj->val_string;
-      const IValue& global = glb->gtable.get(key_str->data);
+      Value* key_obj = __get_register(this, key);
+      struct String* key_str = key_obj->u.str;
+      const Value& global = glb.gtable->get(key_str->data);
 
       __set_register(this, dst, global.clone());
       VM_NEXT();
     }
 
-    VM_CASE(GSET) {
+    VM_CASE(SETGLOBAL) {
       operand_t src = pc->operand0;
       operand_t key = pc->operand1;
 
-      IValue* key_obj = __get_register(this, key);
-      IString* key_str = key_obj->val_string;
-      IValue* global = __get_register(this, src);
+      Value* key_obj = __get_register(this, key);
+      struct String* key_str = key_obj->u.str;
+      Value* global = __get_register(this, src);
 
-      glb->gtable.set(key_str->data, std::move(*global));
+      glb.gtable->set(key_str->data, std::move(*global));
       VM_NEXT();
     }
 
@@ -874,20 +768,20 @@ dispatch:
       operand_t rhs = pc->operand2;
 
       if VIA_UNLIKELY (lhs == rhs) {
-        __set_register(this, dst, IValue(true));
+        __set_register(this, dst, Value(true, true));
         VM_NEXT();
       }
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_UNLIKELY (lhs_val == rhs_val) {
-        __set_register(this, dst, IValue(true));
+        __set_register(this, dst, Value(true, true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(this, dst, IValue(result));
+      __set_register(this, dst, Value(result, true));
 
       VM_NEXT();
     }
@@ -898,20 +792,20 @@ dispatch:
       operand_t rhs = pc->operand2;
 
       if VIA_LIKELY (lhs != rhs) {
-        __set_register(this, dst, IValue(true));
+        __set_register(this, dst, Value(true, true));
         VM_NEXT();
       }
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val != rhs_val) {
-        __set_register(this, dst, IValue(true));
+        __set_register(this, dst, Value(true, true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(this, dst, IValue(result));
+      __set_register(this, dst, Value(result, true));
 
       VM_NEXT();
     }
@@ -921,11 +815,11 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
       bool cond = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
 
-      __set_register(this, dst, IValue(cond));
+      __set_register(this, dst, Value(cond, true));
       VM_NEXT();
     }
 
@@ -934,11 +828,11 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
       bool cond = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
 
-      __set_register(this, dst, IValue(cond));
+      __set_register(this, dst, Value(cond, true));
       VM_NEXT();
     }
 
@@ -946,10 +840,10 @@ dispatch:
       operand_t dst = pc->operand0;
       operand_t lhs = pc->operand1;
 
-      IValue* lhs_val = __get_register(this, lhs);
+      Value* lhs_val = __get_register(this, lhs);
       bool cond = !__to_cxx_bool(*lhs_val);
 
-      __set_register(this, dst, IValue(cond));
+      __set_register(this, dst, Value(cond, true));
       VM_NEXT();
     }
 
@@ -958,33 +852,23 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, IValue(lhs_val->val_integer < rhs_val->val_integer));
+          __set_register(this, dst, Value(lhs_val->u.i < rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this,
-            dst,
-            IValue(static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) < rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(
-            this,
-            dst,
-            IValue(lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer))
-          );
+          __set_register(this, dst, Value(lhs_val->u.f < static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this, dst, IValue(lhs_val->val_floating_point < rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(lhs_val->u.f < rhs_val->u.f, true));
         }
       }
 
@@ -996,33 +880,23 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, IValue(lhs_val->val_integer > rhs_val->val_integer));
+          __set_register(this, dst, Value(lhs_val->u.i > rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this,
-            dst,
-            IValue(static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) > rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(
-            this,
-            dst,
-            IValue(lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer))
-          );
+          __set_register(this, dst, Value(lhs_val->u.f > static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this, dst, IValue(lhs_val->val_floating_point > rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(lhs_val->u.f > rhs_val->u.f, true));
         }
       }
 
@@ -1034,33 +908,23 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, IValue(lhs_val->val_integer <= rhs_val->val_integer));
+          __set_register(this, dst, Value(lhs_val->u.i <= rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this,
-            dst,
-            IValue(static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) <= rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(
-            this,
-            dst,
-            IValue(lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer))
-          );
+          __set_register(this, dst, Value(lhs_val->u.f <= static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this, dst, IValue(lhs_val->val_floating_point <= rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(lhs_val->u.f <= rhs_val->u.f, true));
         }
       }
 
@@ -1072,33 +936,23 @@ dispatch:
       operand_t lhs = pc->operand1;
       operand_t rhs = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, lhs);
-      IValue* rhs_val = __get_register(this, rhs);
+      Value* lhs_val = __get_register(this, lhs);
+      Value* rhs_val = __get_register(this, rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(this, dst, IValue(lhs_val->val_integer >= rhs_val->val_integer));
+          __set_register(this, dst, Value(lhs_val->u.i >= rhs_val->u.i, true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this,
-            dst,
-            IValue(static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(static_cast<float>(lhs_val->u.i) >= rhs_val->u.f, true));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(
-            this,
-            dst,
-            IValue(lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer))
-          );
+          __set_register(this, dst, Value(lhs_val->u.f >= static_cast<float>(rhs_val->u.i), true));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(
-            this, dst, IValue(lhs_val->val_floating_point >= rhs_val->val_floating_point)
-          );
+          __set_register(this, dst, Value(lhs_val->u.f >= rhs_val->u.f, true));
         }
       }
 
@@ -1119,7 +973,7 @@ dispatch:
       operand_t cond = pc->operand0;
       signed_operand_t offset = pc->operand1;
 
-      IValue* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(this, cond);
       if (__to_cxx_bool(*cond_val)) {
         pc += offset;
         goto dispatch;
@@ -1132,7 +986,7 @@ dispatch:
       operand_t cond = pc->operand0;
       signed_operand_t offset = pc->operand1;
 
-      IValue* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(this, cond);
       if (!__to_cxx_bool(*cond_val)) {
         pc += offset;
         goto dispatch;
@@ -1151,8 +1005,8 @@ dispatch:
         goto dispatch;
       }
       else {
-        IValue* lhs_val = __get_register(this, cond_lhs);
-        IValue* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(this, cond_lhs);
+        Value* rhs_val = __get_register(this, cond_rhs);
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
           pc += offset;
@@ -1173,8 +1027,8 @@ dispatch:
         goto dispatch;
       }
       else {
-        IValue* lhs_val = __get_register(this, cond_lhs);
-        IValue* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(this, cond_lhs);
+        Value* rhs_val = __get_register(this, cond_rhs);
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
           pc += offset;
@@ -1190,18 +1044,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       signed_operand_t offset = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer < rhs_val->val_integer) {
+          if (lhs_val->u.i < rhs_val->u.i) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) < rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1209,13 +1063,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f < static_cast<float>(rhs_val->u.i)) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
+          if (lhs_val->u.f < rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1230,18 +1084,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       signed_operand_t offset = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer > rhs_val->val_integer) {
+          if (lhs_val->u.i > rhs_val->u.i) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) > rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1249,13 +1103,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f > static_cast<float>(rhs_val->u.i)) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
+          if (lhs_val->u.f > rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1270,18 +1124,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       signed_operand_t offset = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer <= rhs_val->val_integer) {
+          if (lhs_val->u.i <= rhs_val->u.i) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) <= rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1289,13 +1143,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f <= static_cast<float>(rhs_val->u.i)) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
+          if (lhs_val->u.f <= rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1310,18 +1164,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       signed_operand_t offset = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer >= rhs_val->val_integer) {
+          if (lhs_val->u.i >= rhs_val->u.i) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) >= rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1329,13 +1183,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f >= static_cast<float>(rhs_val->u.i)) {
             pc += offset;
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
+          if (lhs_val->u.f >= rhs_val->u.f) {
             pc += offset;
             goto dispatch;
           }
@@ -1357,7 +1211,7 @@ dispatch:
       operand_t cond = pc->operand0;
       operand_t label = pc->operand1;
 
-      IValue* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(this, cond);
       if (__to_cxx_bool(*cond_val)) {
         pc = __label_get(this, label);
         goto dispatch;
@@ -1370,7 +1224,7 @@ dispatch:
       operand_t cond = pc->operand0;
       operand_t label = pc->operand1;
 
-      IValue* cond_val = __get_register(this, cond);
+      Value* cond_val = __get_register(this, cond);
       if (!__to_cxx_bool(*cond_val)) {
         pc = __label_get(this, label);
         goto dispatch;
@@ -1389,8 +1243,8 @@ dispatch:
         goto dispatch;
       }
       else {
-        IValue* lhs_val = __get_register(this, cond_lhs);
-        IValue* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(this, cond_lhs);
+        Value* rhs_val = __get_register(this, cond_rhs);
 
         if VIA_UNLIKELY (lhs_val == rhs_val || __compare(*lhs_val, *rhs_val)) {
           pc = __label_get(this, label);
@@ -1411,8 +1265,8 @@ dispatch:
         goto dispatch;
       }
       else {
-        IValue* lhs_val = __get_register(this, cond_lhs);
-        IValue* rhs_val = __get_register(this, cond_rhs);
+        Value* lhs_val = __get_register(this, cond_lhs);
+        Value* rhs_val = __get_register(this, cond_rhs);
 
         if VIA_LIKELY (lhs_val != rhs_val || !__compare(*lhs_val, *rhs_val)) {
           pc = __label_get(this, label);
@@ -1428,18 +1282,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       operand_t label = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer < rhs_val->val_integer) {
+          if (lhs_val->u.i < rhs_val->u.i) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) < rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) < rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1447,13 +1301,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point < static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f < static_cast<float>(rhs_val->u.i)) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point < rhs_val->val_floating_point) {
+          if (lhs_val->u.f < rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1468,18 +1322,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       operand_t label = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer > rhs_val->val_integer) {
+          if (lhs_val->u.i > rhs_val->u.i) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) > rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) > rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1487,13 +1341,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point > static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f > static_cast<float>(rhs_val->u.i)) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point > rhs_val->val_floating_point) {
+          if (lhs_val->u.f > rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1508,18 +1362,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       operand_t label = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer <= rhs_val->val_integer) {
+          if (lhs_val->u.i <= rhs_val->u.i) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) <= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) <= rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1527,13 +1381,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point <= static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f <= static_cast<float>(rhs_val->u.i)) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point <= rhs_val->val_floating_point) {
+          if (lhs_val->u.f <= rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1548,18 +1402,18 @@ dispatch:
       operand_t cond_rhs = pc->operand1;
       operand_t label = pc->operand2;
 
-      IValue* lhs_val = __get_register(this, cond_lhs);
-      IValue* rhs_val = __get_register(this, cond_rhs);
+      Value* lhs_val = __get_register(this, cond_lhs);
+      Value* rhs_val = __get_register(this, cond_rhs);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_integer >= rhs_val->val_integer) {
+          if (lhs_val->u.i >= rhs_val->u.i) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (static_cast<float>(lhs_val->val_integer) >= rhs_val->val_floating_point) {
+          if (static_cast<float>(lhs_val->u.i) >= rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1567,13 +1421,13 @@ dispatch:
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          if (lhs_val->val_floating_point >= static_cast<float>(rhs_val->val_integer)) {
+          if (lhs_val->u.f >= static_cast<float>(rhs_val->u.i)) {
             pc = __label_get(this, label);
             goto dispatch;
           }
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          if (lhs_val->val_floating_point >= rhs_val->val_floating_point) {
+          if (lhs_val->u.f >= rhs_val->u.f) {
             pc = __label_get(this, label);
             goto dispatch;
           }
@@ -1585,91 +1439,59 @@ dispatch:
 
     VM_CASE(CALL) {
       operand_t fn = pc->operand0;
-      operand_t argc = pc->operand1;
-      IValue* fn_val = __get_register(this, fn);
+      Value* fn_val = __get_register(this, fn);
 
-      __call(this, *fn_val, argc);
+      __call(this, fn_val->u.clsr);
       goto dispatch;
     }
 
-    VM_CASE(CCALL) {
-      operand_t fn = pc->operand0;
-      operand_t argc = pc->operand1;
-      IValue* cfunc = __get_register(this, fn);
-
-      __extern_call(this, *cfunc, argc);
-      VM_NEXT();
-    }
-
-    VM_CASE(NTVCALL) {
-      operand_t fn = pc->operand0;
-      operand_t argc = pc->operand1;
-      IValue* func = __get_register(this, fn);
-
-      __native_call(this, func->val_function, argc);
-      VM_NEXT();
-    }
-
-    VM_CASE(MTDCALL) {
-      operand_t obj = pc->operand0;
-      operand_t fn = pc->operand1;
-      operand_t argc = pc->operand2;
-
-      IValue* func = __get_register(this, fn);
-      IValue* object = __get_register(this, obj);
-
-      __push(this, object->clone());
-      __native_call(this, func->val_function, argc + 1);
-      VM_NEXT();
-    }
-
     VM_CASE(RETNIL) {
-      __closure_close_upvalues(frame);
-      __native_return(this, IValue());
+      __closure_close_upvalues(__current_callframe(this)->closure);
+      __return(this, Value());
       VM_NEXT();
     }
 
     VM_CASE(RET) {
       operand_t src = pc->operand0;
-      IValue* val = __get_register(this, src);
+      Value* val = __get_register(this, src);
 
-      __native_return(this, std::move(*val));
+      __return(this, std::move(*val));
       VM_NEXT();
     }
 
-    VM_CASE(ARRGET) {
+    VM_CASE(GETARR) {
       operand_t dst = pc->operand0;
       operand_t tbl = pc->operand1;
       operand_t key = pc->operand2;
 
-      IValue* value = __get_register(this, tbl);
-      IValue* index = __get_register(this, key);
-      IValue* result = __array_get(value->val_array, index->val_integer);
+      Value* value = __get_register(this, tbl);
+      Value* index = __get_register(this, key);
+      Value* result = __array_get(value->u.arr, index->u.i);
 
       __set_register(this, dst, result->clone());
       VM_NEXT();
     }
 
-    VM_CASE(ARRSET) {
+    VM_CASE(SETARR) {
       operand_t src = pc->operand0;
       operand_t tbl = pc->operand1;
       operand_t key = pc->operand2;
 
-      IValue* array = __get_register(this, tbl);
-      IValue* index = __get_register(this, key);
-      IValue* value = __get_register(this, src);
+      Value* array = __get_register(this, tbl);
+      Value* index = __get_register(this, key);
+      Value* value = __get_register(this, src);
 
-      __array_set(array->val_array, index->val_integer, std::move(*value));
+      __array_set(array->u.arr, index->u.i, std::move(*value));
       VM_NEXT();
     }
 
-    VM_CASE(ARRNEXT) {
+    VM_CASE(NEXTARR) {
       static std::unordered_map<void*, operand_t> next_table;
 
       operand_t dst = pc->operand0;
       operand_t valr = pc->operand1;
 
-      IValue* val = __get_register(this, valr);
+      Value* val = __get_register(this, valr);
       void* ptr = __to_pointer(*val);
       operand_t key = 0;
 
@@ -1681,125 +1503,125 @@ dispatch:
         next_table[ptr] = 0;
       }
 
-      IValue* field = __array_get(val->val_array, key);
+      Value* field = __array_get(val->u.arr, key);
       __set_register(this, dst, field->clone());
       VM_NEXT();
     }
 
-    VM_CASE(ARRLEN) {
+    VM_CASE(LENARR) {
       operand_t dst = pc->operand0;
       operand_t tbl = pc->operand1;
 
-      IValue* val = __get_register(this, tbl);
-      int size = __array_size(val->val_array);
+      Value* val = __get_register(this, tbl);
+      int size = __array_size(val->u.arr);
 
-      __set_register(this, dst, IValue(size));
+      __set_register(this, dst, Value(size));
       VM_NEXT();
     }
 
-    VM_CASE(STRLEN) {
+    VM_CASE(LENSTR) {
       operand_t rdst = pc->operand0;
       operand_t objr = pc->operand1;
 
-      IValue* val = __get_register(this, objr);
-      int len = val->val_string->len;
+      Value* val = __get_register(this, objr);
+      int len = val->u.str->data_size;
 
-      __set_register(this, rdst, IValue(len));
+      __set_register(this, rdst, Value(len));
       VM_NEXT();
     }
 
-    VM_CASE(STRCON) {
+    VM_CASE(CONSTR) {
       operand_t left = pc->operand0;
       operand_t right = pc->operand1;
 
-      IValue* left_val = __get_register(this, left);
-      IValue* right_val = __get_register(this, right);
+      Value* left_val = __get_register(this, left);
+      Value* right_val = __get_register(this, right);
 
-      IString* left_str = left_val->val_string;
-      IString* right_str = right_val->val_string;
+      struct String* left_str = left_val->u.str;
+      struct String* right_str = right_val->u.str;
 
-      size_t new_length = left_str->len + right_str->len;
+      size_t new_length = left_str->data_size + right_str->data_size;
       char* new_string = new char[new_length + 1];
 
-      std::memcpy(new_string, left_str->data, left_str->len);
-      std::memcpy(new_string + left_str->len, right_str->data, right_str->len);
+      std::memcpy(new_string, left_str->data, left_str->data_size);
+      std::memcpy(new_string + left_str->data_size, right_str->data, right_str->data_size);
 
-      __set_register(this, left, IValue(new_string));
+      __set_register(this, left, Value(new_string));
 
       delete[] new_string;
 
       VM_NEXT();
     }
 
-    VM_CASE(STRGET) {
+    VM_CASE(GETSTR) {
       operand_t dst = pc->operand0;
       operand_t str = pc->operand1;
       operand_t idx = pc->operand2;
 
-      IValue* str_val = __get_register(this, str);
-      IString* tstr = str_val->val_string;
+      Value* str_val = __get_register(this, str);
+      struct String* tstr = str_val->u.str;
       char chr = tstr->data[idx];
 
-      __set_register(this, dst, IValue(&chr));
+      __set_register(this, dst, Value(&chr));
       VM_NEXT();
     }
 
-    VM_CASE(STRSET) {
+    VM_CASE(SETSTR) {
       operand_t str = pc->operand0;
       operand_t src = pc->operand1;
       operand_t idx = pc->operand2;
 
-      IValue* str_val = __get_register(this, str);
-      IString* tstr = str_val->val_string;
+      Value* str_val = __get_register(this, str);
+      struct String* tstr = str_val->u.str;
 
       char chr = static_cast<char>(src);
       char* str_cpy = duplicate_string(tstr->data);
       str_cpy[idx] = chr;
 
-      __set_register(this, str, IValue(str_cpy));
+      __set_register(this, str, Value(str_cpy));
       delete[] str_cpy;
       VM_NEXT();
     }
 
-    VM_CASE(CASTI) {
+    VM_CASE(ICAST) {
       operand_t dst = pc->operand0;
       operand_t src = pc->operand1;
 
-      IValue* target = __get_register(this, src);
-      IValue result = __to_int(this, *target);
+      Value* target = __get_register(this, src);
+      Value result = __to_int(this, *target);
 
       __set_register(this, dst, std::move(result));
       VM_NEXT();
     }
 
-    VM_CASE(CASTF) {
+    VM_CASE(FCAST) {
       operand_t dst = pc->operand0;
       operand_t src = pc->operand1;
 
-      IValue* target = __get_register(this, src);
-      IValue result = __to_float(this, *target);
+      Value* target = __get_register(this, src);
+      Value result = __to_float(this, *target);
 
       __set_register(this, dst, std::move(result));
       VM_NEXT();
     }
 
-    VM_CASE(CASTSTR) {
+    VM_CASE(STRCAST) {
       operand_t dst = pc->operand0;
       operand_t src = pc->operand1;
 
-      IValue* target = __get_register(this, src);
-      IValue result = __to_string(*target);
+      Value* target = __get_register(this, src);
+      Value result = __to_string(*target);
 
       __set_register(this, dst, std::move(result));
       VM_NEXT();
     }
 
-    VM_CASE(CASTB) {
+    VM_CASE(BCAST) {
       operand_t dst = pc->operand0;
       operand_t src = pc->operand1;
 
-      IValue* target = __get_register(this, src);
-      IValue result = __to_bool(*target);
+      Value* target = __get_register(this, src);
+      Value result = __to_bool(*target);
 
       __set_register(this, dst, std::move(result));
       VM_NEXT();

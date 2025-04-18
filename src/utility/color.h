@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_COLOR_H
 #define VIA_HAS_HEADER_COLOR_H
@@ -42,8 +41,8 @@ enum class style {
   underline = 4,
 };
 
-// IFunction to wrap a string with ANSI escape codes
-VIA_IMPLEMENTATION std::string apply_color(
+// Function to wrap a String with ANSI escape codes
+inline std::string apply_color(
   const std::string& text, fg_color fg, bg_color bg = bg_color::black, style s = style::reset
 ) {
   // Construct ANSI escape code and apply the color formatting to the text

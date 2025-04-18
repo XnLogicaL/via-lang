@@ -1,8 +1,8 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
-#include "Preprocessor.h"
-#include "Lexer.h"
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
+#include "preprocessor.h"
+#include "lexer.h"
 
 namespace via {
 

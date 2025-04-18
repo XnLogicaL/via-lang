@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_COMMON_MACROS_H
 #define VIA_HAS_HEADER_COMMON_MACROS_H
@@ -38,31 +37,29 @@
 #define VIA_VERSION "1.0.1"
 
 #if VIA_COMPILER == C_MSVC
-#define VIA_RESTRICT       __restrict
-#define VIA_NOMANGLE       extern "C"
-#define VIA_NODISCARD      [[nodiscard]]
-#define VIA_NORETURN       __declspec(noreturn)
-#define VIA_NOINLINE       __declspec(noinline)
-#define VIA_FORCEINLINE    __forceinline
-#define VIA_OPTIMIZE       __forceinline // MSVC doesn't have 'hot' attribute
-#define VIA_IMPLEMENTATION inline
-#define VIA_UNREACHABLE()  __assume(0)
-#define VIA_FUNCSIG        __FUNCSIG__
-#define VIA_LIKELY(x)      (x) // No branch prediction hints in MSVC
-#define VIA_UNLIKELY(x)    (x)
+#define VIA_RESTRICT      __restrict
+#define VIA_NOMANGLE      extern "C"
+#define VIA_NODISCARD     [[nodiscard]]
+#define VIA_NORETURN      __declspec(noreturn)
+#define VIA_NOINLINE      __declspec(noinline)
+#define VIA_FORCEINLINE   __forceinline
+#define VIA_OPTIMIZE      __forceinline // MSVC doesn't have 'hot' attribute
+#define VIA_UNREACHABLE() __assume(0)
+#define VIA_FUNCSIG       __FUNCSIG__
+#define VIA_LIKELY(x)     (x) // No branch prediction hints in MSVC
+#define VIA_UNLIKELY(x)   (x)
 #else // GCC / Clang
-#define VIA_RESTRICT       __restrict__
-#define VIA_NOMANGLE       extern "C"
-#define VIA_NODISCARD      [[nodiscard]]
-#define VIA_NORETURN       __attribute__((noreturn))
-#define VIA_NOINLINE       __attribute__((noinline))
-#define VIA_FORCEINLINE    inline __attribute__((always_inline))
-#define VIA_OPTIMIZE       inline __attribute__((always_inline, hot))
-#define VIA_IMPLEMENTATION inline
-#define VIA_UNREACHABLE()  __builtin_unreachable()
-#define VIA_FUNCSIG        __PRETTY_FUNCTION__
-#define VIA_LIKELY(a)      (__builtin_expect(!!(a), 1))
-#define VIA_UNLIKELY(a)    (__builtin_expect(!!(a), 0))
+#define VIA_RESTRICT      __restrict__
+#define VIA_NOMANGLE      extern "C"
+#define VIA_NODISCARD     [[nodiscard]]
+#define VIA_NORETURN      __attribute__((noreturn))
+#define VIA_NOINLINE      __attribute__((noinline))
+#define VIA_FORCEINLINE   inline __attribute__((always_inline))
+#define VIA_OPTIMIZE      inline __attribute__((always_inline, hot))
+#define VIA_UNREACHABLE() __builtin_unreachable()
+#define VIA_FUNCSIG       __PRETTY_FUNCTION__
+#define VIA_LIKELY(a)     (__builtin_expect(!!(a), 1))
+#define VIA_UNLIKELY(a)   (__builtin_expect(!!(a), 0))
 #endif
 
 /**

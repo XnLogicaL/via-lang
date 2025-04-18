@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "constant.h"
 
@@ -18,7 +17,7 @@ size_t ConstantHolder::size() const {
 
 operand_t ConstantHolder::push_constant(constant_type constant) {
   for (size_t index = 0; index < constants.size(); index++) {
-    const IValue& val = constants[index];
+    const Value& val = constants[index];
     if VIA_UNLIKELY (val.compare(constant)) {
       return index;
     }
@@ -33,9 +32,9 @@ constant_type& ConstantHolder::at(size_t index) const {
 }
 
 constant_type& ConstantHolder::at_s(size_t index) const {
-  static const IValue nil;
+  static const Value Nil;
   if (index >= size()) {
-    return nil;
+    return Nil;
   }
 
   return at(index);

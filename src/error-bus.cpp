@@ -1,6 +1,5 @@
-// =========================================================================================== |
-// This file is a part of The via Programming Language and is licensed under GNU GPL v3.0      |
-// =========================================================================================== |
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "error-bus.h"
 #include "context.h"
@@ -65,7 +64,7 @@ LocalOffset localize_offset(const std::string& source, size_t abs_offset) {
   return {line_number, localized_offset};
 }
 
-// Returns a header string (with ANSI colors) for a given error level.
+// Returns a header String (with ANSI colors) for a given error level.
 std::string get_error_level_header(const CErrorLevel& lvl) {
   switch (lvl) {
   case INFO:

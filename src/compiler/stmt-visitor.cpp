@@ -1,8 +1,8 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "bit-utility.h"
-#include "string-utility.h"
+#include "String-utility.h"
 #include "compiler-types.h"
 #include "visitor.h"
 #include "stack.h"
@@ -12,7 +12,7 @@
 namespace via {
 
 using enum IOpCode;
-using enum IValueType;
+using enum Value::Tag;
 using namespace compiler_util;
 
 void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
@@ -42,7 +42,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       ctx.unit_ctx.internal.globals->declare_global(std::move(global));
 
       resolve_rvalue(&expression_visitor, declaration_node.rvalue, value_reg);
-      bytecode_emit(ctx, GSET, {value_reg, symbol_hash}, symbol);
+      bytecode_emit(ctx, SETGLOBAL, {value_reg, symbol_hash}, symbol);
       free_register(ctx, value_reg);
     }
   }
@@ -55,7 +55,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 
       LitExprNode literal = fold_constant(ctx, val);
 
-      // Check for nil
+      // Check for Nil
       if (std::get_if<std::monostate>(&literal.value)) {
         bytecode_emit(ctx, PUSHNIL, {}, symbol);
         current_closure.locals.push({
@@ -63,11 +63,11 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, nil),
+          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
           .value = &literal,
         });
       }
-      // Check for integer
+      // Check for Int
       else if (int* int_value = std::get_if<int>(&literal.value)) {
         uint32_t final_value = *int_value;
         auto operands = reinterpret_u32_as_2u16(final_value);
@@ -78,7 +78,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, integer),
+          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Int),
           .value = &literal,
         });
       }
@@ -93,12 +93,11 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, floating_point),
+          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Float),
           .value = &literal,
         });
       }
-      // Check for boolean
+      // Check for Bool
       else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
         bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF, {}, symbol);
         current_closure.locals.push({
@@ -106,13 +105,13 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, boolean),
+          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
           .value = &literal,
         });
       }
       // Other constant
       else {
-        IValue constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
+        Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
         operand_t const_id = push_constant(ctx, std::move(constant));
 
         bytecode_emit(ctx, PUSHK, {const_id}, symbol);
@@ -193,7 +192,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   function_node.accept(type_visitor);
 
   ctx.unit_ctx.internal.defered_stmts.push({});
-  bytecode_emit(ctx, NEWCLSR, {function_reg}, function_node.identifier.lexeme);
+  bytecode_emit(ctx, CLOSURE, {function_reg}, function_node.identifier.lexeme);
 
   size_t new_closure_point = ctx.unit_ctx.bytecode->size();
   ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
@@ -251,7 +250,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     }
 
     auto operands = reinterpret_u32_as_2u16(symbol_hash);
-    bytecode_emit(ctx, GSET, {function_reg, operands.high, operands.low});
+    bytecode_emit(ctx, SETGLOBAL, {function_reg, operands.high, operands.low});
   }
   else {
     bytecode_emit(ctx, PUSH, {function_reg});
@@ -259,6 +258,17 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
 
   current_closure.locals.jump_to(stack_ptr);
   ctx.unit_ctx.internal.function_stack->pop();
+  current_closure.locals.push({
+    .is_const = true,
+    .is_constexpr = false,
+    .symbol = function_node.identifier.lexeme,
+    .decl = &function_node,
+    .type = ctx.unit_ctx.ast->allocator.emplace<FunctionTypeNode>(
+      function_node.parameters, function_node.returns
+    ),
+    .value = nullptr,
+  });
+
   free_register(ctx, function_reg);
 }
 
@@ -404,8 +414,8 @@ void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
 }
 
 void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
-  ExprNodeBase*& expr = expr_stmt.expression;
-  expr->accept(expression_visitor, 0);
+  ExprNodeBase* expr = expr_stmt.expression;
+  resolve_rvalue(&expression_visitor, expr, 0);
 
   if (CallExprNode* call_node = get_derived_instance<ExprNodeBase, CallExprNode>(expr)) {
     TypeNodeBase* callee_ty = resolve_type(ctx, call_node->callee);
@@ -415,7 +425,7 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
     CHECK_INFERED_TYPE(ret_ty, expr);
 
     if (PrimTypeNode* prim_ty = get_derived_instance<TypeNodeBase, PrimTypeNode>(ret_ty)) {
-      if (prim_ty->type != nil) {
+      if (prim_ty->type != Nil) {
         goto return_value_ignored;
       }
     }
@@ -440,11 +450,10 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
   }
   else {
     if (unused_expr_handler.has_value()) {
-      unused_expression_handler_t handler = *unused_expr_handler;
-      handler(expr_stmt);
+      (*unused_expr_handler)(expr_stmt);
     }
     else {
-      // Warning: "expr-result-unusued"
+      // Warning: "expr-result-unused"
       auto message = "Expression result unused";
       compiler_warning(ctx, expr->begin, expr->end, message);
       compiler_output_end(ctx);

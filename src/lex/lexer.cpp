@@ -1,6 +1,6 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "Lexer.h"
 #include "token.h"
 
@@ -8,7 +8,7 @@ namespace via {
 
 using enum TokenType;
 
-// IFunction that returns whether if a character is allowed within a hexadecimal literal
+// Function that returns whether if a character is allowed within a hexadecimal literal
 bool Lexer::is_hex_char(char chr) {
   return (chr >= 'A' && chr <= 'F') || (chr >= 'a' && chr <= 'f');
 }
@@ -95,7 +95,7 @@ Token Lexer::read_ident(size_t position) {
   // List of allowed special characters that can be included in an identifier
   static const std::vector<char> allowed_identifier_spec_chars = {'_', '!'};
 
-  // Default type, this is because this might be an identifier, keyword or boolean literal
+  // Default type, this is because this might be an identifier, keyword or Bool literal
   // We can't know in advance which.
   TokenType type = IDENTIFIER;
   size_t start_offset = offset;
@@ -139,12 +139,12 @@ Token Lexer::read_ident(size_t position) {
     type = it->second;
   }
 
-  // Checks if the identifier is a boolean literal
+  // Checks if the identifier is a Bool literal
   if (identifier == "true" || identifier == "false") {
     type = LIT_BOOL;
   }
 
-  if (identifier == "nil") {
+  if (identifier == "Nil") {
     type = LIT_NIL;
   }
 
@@ -252,7 +252,7 @@ Token Lexer::get_token() {
 
   size_t position = pos;
 
-  // Check if the position is at the end of the unit_ctx.file_source string
+  // Check if the position is at the end of the unit_ctx.file_source String
   // If so, return an EOF Token meant as a sentinel
   if (pos >= source_size()) {
     return {EOF_, "\0", line, offset, position};
@@ -265,7 +265,7 @@ Token Lexer::get_token() {
     return read_number(position);
   }
 
-  // Handle string literals
+  // Handle String literals
   if (peek() == '"') {
     return read_string(position);
   }

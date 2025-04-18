@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_ERROR_BUS_H
 #define VIA_HAS_HEADER_ERROR_BUS_H
@@ -47,7 +46,7 @@ struct CErrorLocation {
  */
 class CError final {
 public:
-  // Returns the error as a string.
+  // Returns the error as a String.
   std::string to_string() const;
 
   CError(

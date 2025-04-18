@@ -1,6 +1,6 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "parser.h"
 #include "compiler-types.h"
 
@@ -168,12 +168,12 @@ result<TypeNodeBase*> Parser::parse_generic() {
 }
 
 result<TypeNodeBase*> Parser::parse_type_primary() {
-  static std::unordered_map<std::string, IValueType> primitive_map = {
-    {"nil", IValueType::nil},
-    {"int", IValueType::integer},
-    {"float", IValueType::floating_point},
-    {"bool", IValueType::boolean},
-    {"string", IValueType::string},
+  static std::unordered_map<std::string, Value::Tag> primitive_map = {
+    {"Nil", Value::Tag::Nil},
+    {"int", Value::Tag::Int},
+    {"float", Value::Tag::Float},
+    {"bool", Value::Tag::Bool},
+    {"String", Value::Tag::String},
   };
 
   result<Token> tok = current();
@@ -209,7 +209,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
 
       if (tok->type == PAREN_CLOSE) {
         consume();
-        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(*tok, IValueType::nil);
+        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(*tok, Value::Tag::Nil);
       }
 
       result<TypeNodeBase*> type_result = parse_type();
@@ -399,7 +399,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       lhs = unit_ctx.ast->allocator.emplace<IndexExprNode>(lhs, *index);
       continue;
     }
-    case PAREN_OPEN: { // IFunction calls: func(arg1, ...)
+    case PAREN_OPEN: { // Function calls: func(arg1, ...)
       consume();
       std::vector<ExprNodeBase*> arguments;
 

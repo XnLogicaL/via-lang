@@ -1,10 +1,10 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "instruction.h"
 #include "bit-utility.h"
 #include "bytecode.h"
-#include "object.h"
+#include "tvalue.h"
 #include "color.h"
 
 namespace via {
@@ -22,7 +22,7 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
 
   auto is_operand_valid = [](const operand_t& operand) { return operand != VIA_OPERAND_INVALID; };
 
-  // Generate raw IOpCode string and transform case
+  // Generate raw IOpCode String and transform case
   std::string raw_opcode_str = std::string(magic_enum::enum_name(op));
   std::transform(
     raw_opcode_str.begin(),
@@ -33,13 +33,13 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
     }
   );
 
-  // Pad raw IOpCode string before applying color
+  // Pad raw IOpCode String before applying color
   std::ostringstream opcode_buf;
   opcode_buf << std::left << std::setw(opcode_column_width) << raw_opcode_str;
   std::string colored_opcode_str =
     apply_color(opcode_buf.str(), fg_color::magenta, bg_color::black, style::bold);
 
-  // Build operand string
+  // Build operand String
   std::string operand_str;
   if (is_operand_valid(instr.operand0)) {
     if (op == PUSHI) {

@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_LEXER_H
 #define VIA_HAS_HEADER_LEXER_H
@@ -15,7 +14,7 @@
 namespace via {
 
 // Lexer class
-// Tokenizes a string into tokens, cannot fail
+// Tokenizes a String into tokens, cannot fail
 class Lexer {
 public:
   Lexer(TransUnitContext& unit_ctx)
@@ -35,7 +34,7 @@ private:
   // Reads an alpha-numeric identifier
   // Cannot start with a numeric character
   Token read_ident(size_t);
-  // Reads a string literal denoted with quotes
+  // Reads a String literal denoted with quotes
   Token read_string(size_t);
   // Reads and returns the current Token
   Token get_token();

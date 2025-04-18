@@ -1,96 +1,79 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "common.h"
 #include "instruction.h"
 #include "opcode.h"
-#include "string-utility.h"
+#include "String-utility.h"
 #include "api-impl.h"
-#include "api-aux.h"
 #include "state.h"
+#include "tarray.h"
+#include "tdict.h"
 #include <cmath>
 
 namespace via {
 
-using enum IValueType;
+using enum Value::Tag;
 
-IValue& IState::get_register(operand_t reg) {
+Value& State::get_register(operand_t reg) {
   return *impl::__get_register(this, reg);
 }
 
-void IState::set_register(operand_t reg, IValue val) {
+void State::set_register(operand_t reg, Value val) {
   impl::__set_register(this, reg, std::move(val));
 }
 
-void IState::push_nil() {
-  push(IValue());
+void State::push_nil() {
+  push(Value());
 }
 
-void IState::push_int(int value) {
-  push(IValue(value));
+void State::push_int(int value) {
+  push(Value(value));
 }
 
-void IState::push_float(float value) {
-  push(IValue(value));
+void State::push_float(float value) {
+  push(Value(value));
 }
 
-void IState::push_true() {
-  push(IValue(true));
+void State::push_true() {
+  push(Value(true, true));
 }
 
-void IState::push_false() {
-  push(IValue(false));
+void State::push_false() {
+  push(Value(false, true));
 }
 
-void IState::push_string(const char* str) {
-  push(IValue(str));
+void State::push_string(const char* str) {
+  push(Value(str));
 }
 
-void IState::push_array() {
-  push(IValue(new IArray()));
+void State::push_array() {
+  push(Value(new struct Array()));
 }
 
-void IState::push_dict() {
-  push(IValue(new IDict()));
+void State::push_dict() {
+  push(Value(new struct Dict()));
 }
 
-void IState::push(IValue val) {
-  VIA_ASSERT(sp < VIA_VMSTACKSIZE, "stack overflow");
+void State::push(Value val) {
+  CallFrame* current_callframe = impl::__current_callframe(this);
+  VIA_ASSERT(current_callframe->locals_size <= CALLFRAME_MAX_LOCALS, "stack overflow");
   impl::__push(this, std::move(val));
 }
 
-void IState::drop() {
-  VIA_ASSERT(sp > 0, "stack underflow");
+void State::drop() {
+  CallFrame* current_callframe = impl::__current_callframe(this);
+  VIA_ASSERT(current_callframe->locals_size > 0, "stack underflow");
   impl::__drop(this);
 }
 
-IValue IState::pop() {
-  VIA_ASSERT(sp > 0, "stack underflow");
-  return impl::__pop(this);
+size_t State::stack_size() {
+  CallFrame* current_callframe = impl::__current_callframe(this);
+  return current_callframe->locals_size;
 }
 
-const IValue& IState::top() {
-  VIA_ASSERT(sp > 0, "stack underflow");
-  return sbp[sp];
-}
-
-void IState::set_stack(size_t position, IValue value) {
-  VIA_ASSERT(sp >= position, "stack overflow");
-  impl::__set_stack(this, position, std::move(value));
-}
-
-IValue& IState::get_stack(size_t position) {
-  VIA_ASSERT(sp >= position, "stack overflow");
-  return *impl::__get_stack(this, position);
-}
-
-size_t IState::stack_size() {
-  return sp;
-}
-
-IValue& IState::get_global(const char* name) {
-  return glb->gtable.get(name);
+Value& State::get_global(const char* name) {
+  return glb.gtable->get(name);
 }
 
 } // namespace via

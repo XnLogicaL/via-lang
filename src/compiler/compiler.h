@@ -1,6 +1,5 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_COMPILER_H
 #define VIA_HAS_HEADER_COMPILER_H
@@ -20,14 +19,14 @@
 //  global tracking, stack tracking, etc.
 //
 // The `generate` method is the main entry point for performing compilation,
-//  it returns a boolean indicating if the program failed or not, of which
+//  it returns a Bool indicating if the program failed or not, of which
 //  a value of `true` represents failure. The method could theoretically be called
 //  multiple times, but it is not recommended to do so.
 namespace via {
 
 namespace compiler_util {
 
-// std::array wrapper with custom initialization support
+// stdArray wrapper with custom initialization support
 template<typename T, const size_t Size, const T Default>
 struct OperandsArray {
   std::array<T, Size> data;
@@ -71,12 +70,12 @@ StackFunction& get_current_closure(VisitorContext& ctx);
 // [ Constant utility ]
 //  ==================
 
-IValue construct_constant(LitExprNode& constant);
+Value construct_constant(LitExprNode& constant);
 LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* constant, size_t fold_depth = 0);
 
 // Shortcut
 // Forwards arguments to std::unit_ctx::constants::push
-operand_t push_constant(VisitorContext& ctx, const IValue&& constant);
+operand_t push_constant(VisitorContext& ctx, const Value&& constant);
 
 //  =======================
 // [ lvalue/rvalue utility ]

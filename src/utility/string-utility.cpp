@@ -1,7 +1,7 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
-#include "string-utility.h"
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
+#include "String-utility.h"
 #include "common.h"
 
 namespace via {

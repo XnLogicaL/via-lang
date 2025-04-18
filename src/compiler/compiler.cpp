@@ -1,11 +1,10 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "compiler.h"
 #include "compiler-types.h"
 #include "state.h"
-#include "string-utility.h"
+#include "String-utility.h"
 #include <cmath>
 
 // ===========================================================================================
@@ -21,7 +20,7 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
   size_t line = 1;
   size_t column = 1;
 
-  // Iterate over the string until we reach the offset
+  // Iterate over the String until we reach the offset
   for (size_t i = 0; i < offset; ++i) {
     if (source[i] == '\n') {
       ++line;
@@ -37,26 +36,26 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
 
 namespace compiler_util {
 
-IValue construct_constant(LitExprNode& literal_node) {
-  using enum IValueType;
+Value construct_constant(LitExprNode& literal_node) {
+  using enum Value::Tag;
   return std::visit(
-    [](auto&& val) -> IValue {
+    [](auto&& val) -> Value {
       using T = std::decay_t<decltype(val)>;
 
       if constexpr (std::is_same_v<T, int>) {
-        return IValue(val);
+        return Value(val);
       }
       else if constexpr (std::is_same_v<T, bool>) {
-        return IValue(val);
+        return Value(val, true);
       }
       else if constexpr (std::is_same_v<T, float>) {
-        return IValue(val);
+        return Value(val);
       }
       else if constexpr (std::is_same_v<T, std::string>) {
-        return IValue(val.data());
+        return Value(val.data());
       }
       else if constexpr (std::is_same_v<T, std::monostate>) {
-        return IValue();
+        return Value();
       }
 
       VIA_UNREACHABLE();
@@ -192,7 +191,7 @@ bad_fold:
   return LitExprNode(Token(), std::monostate());
 }
 
-operand_t push_constant(VisitorContext& ctx, const IValue&& constant) {
+operand_t push_constant(VisitorContext& ctx, const Value&& constant) {
   return ctx.unit_ctx.constants->push_constant(std::move(constant));
 }
 
@@ -269,7 +268,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
     if (stk_id.has_value()) {
       for (operand_t i = 0; StackVariable & param : current_closure.locals) {
         if (param.symbol == symbol) {
-          bytecode_emit(ctx, LOCALGET, {dst, i}, symbol);
+          bytecode_emit(ctx, GETLOCAL, {dst, i}, symbol);
           return false;
         }
         ++i;
@@ -277,12 +276,12 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
     }
     else if (ctx.unit_ctx.internal.globals->was_declared(symbol)) {
       LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
-      IValue const_val = construct_constant(lit_translation);
+      Value const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
       operand_t tmp_reg = ctx.reg_alloc.allocate_temp();
 
       bytecode_emit(ctx, LOADK, {tmp_reg, const_id});
-      bytecode_emit(ctx, GGET, {dst, tmp_reg}, symbol);
+      bytecode_emit(ctx, GETGLOBAL, {dst, tmp_reg}, symbol);
       return false;
     }
     else if (ctx.unit_ctx.internal.function_stack->size() > 0) {
@@ -291,7 +290,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
 
       for (const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
-          bytecode_emit(ctx, ARGGET, {dst, index}, symbol);
+          bytecode_emit(ctx, GETLOCAL, {dst, index}, symbol);
           return false;
         }
 
@@ -327,7 +326,7 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
         return true;
       }
 
-      bytecode_emit(ctx, LOCALSET, {src, *stack_id}, symbol);
+      bytecode_emit(ctx, SETLOCAL, {src, *stack_id}, symbol);
       return false;
     }
     else {
@@ -381,7 +380,7 @@ void Compiler::codegen_prep() {
 }
 
 void Compiler::insert_exit0_instruction() {
-  compiler_util::bytecode_emit(ctx, IOpCode::EXIT, {0});
+  compiler_util::bytecode_emit(ctx, IOpCode::RET0, {});
 }
 
 bool Compiler::generate() {

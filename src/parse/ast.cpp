@@ -1,6 +1,6 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "ast.h"
 #include "compiler-types.h"
 #include "visitor.h"
@@ -12,7 +12,7 @@
 
 namespace via {
 
-using enum IValueType;
+using enum Value::Tag;
 using namespace utils;
 
 std::string StmtModifiers::to_string() const {
@@ -35,7 +35,7 @@ std::string LitExprNode::to_string(uint32_t&) {
     return std::format("Literal<'{}'>", *string_value);
   }
   else {
-    return "Literal<nil>";
+    return "Literal<Nil>";
   }
 }
 
@@ -44,7 +44,7 @@ void LitExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* LitExprNode::infer_type(TransUnitContext& unit_ctx) {
-  IValueType IValueType = std::visit(
+  Value::Tag val_ty = std::visit(
     [](auto&& value) {
       using T = std::decay_t<decltype(value)>;
       return DataType<T>::type;
@@ -52,7 +52,7 @@ TypeNodeBase* LitExprNode::infer_type(TransUnitContext& unit_ctx) {
     value
   );
 
-  return unit_ctx.ast->allocator.emplace<PrimTypeNode>(value_token, IValueType);
+  return unit_ctx.ast->allocator.emplace<PrimTypeNode>(value_token, val_ty);
 }
 
 // ===============================
@@ -107,7 +107,7 @@ TypeNodeBase* UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 
   if (op.type == TokenType::OP_LEN) {
-    return unit_ctx.ast->allocator.emplace<PrimTypeNode>(Token(), integer);
+    return unit_ctx.ast->allocator.emplace<PrimTypeNode>(Token(), Int);
   }
   else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC
            || op.type == TokenType::OP_SUB) {
@@ -216,14 +216,12 @@ TypeNodeBase* BinExprNode::infer_type(TransUnitContext& unit_ctx) {
   if (PrimTypeNode* lhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(lhs)) {
     if (PrimTypeNode* rhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(rhs)) {
       // Check for floating-point types
-      if (lhs_primitive->type == floating_point || rhs_primitive->type == floating_point) {
-        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(
-          lhs_primitive->identifier, floating_point
-        );
+      if (lhs_primitive->type == Float || rhs_primitive->type == Float) {
+        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Float);
       }
-      // Check for integer types
-      else if (lhs_primitive->type == integer && rhs_primitive->type == integer) {
-        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, integer);
+      // Check for Int types
+      else if (lhs_primitive->type == Int && rhs_primitive->type == Int) {
+        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Int);
       }
     }
   }
@@ -448,7 +446,7 @@ std::string FuncDeclStmtNode::to_string(uint32_t& depth) {
   std::ostringstream oss;
   oss << depth_tab_space
       << std::format(
-           "IFunction<{} {} {}>\n",
+           "Function<{} {} {}>\n",
            is_global ? "global" : "local",
            modifs.to_string(),
            identifier.lexeme

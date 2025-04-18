@@ -39,7 +39,7 @@ static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& na
     .help("Dumps tokenized representation of the given source file upon tokenization")
     .flag();
   command->add_argument("--optimize", "-O")
-    .help("Sets optimization level to the given integer")
+    .help("Sets optimization level to the given Int")
     .scan<'u', size_t>()
     .default_value(size_t(1));
   command->add_argument("--verbose", "-v").help("Enables verbosity").flag();
@@ -199,7 +199,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
           );
           continue;
         }
-        else if (bytecode.instruct.op == IOpCode::NEWCLSR) {
+        else if (bytecode.instruct.op == IOpCode::CLOSURE) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
@@ -237,7 +237,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
                 << unit_ctx.get_platform_info() << "\n";
 
       size_t const_position = 0;
-      for (const IValue& constant : unit_ctx.constants->get()) {
+      for (const Value& constant : unit_ctx.constants->get()) {
         std::cout << apply_color("  constant", fg_color::magenta, bg_color::black, style::bold)
                   << ' ' << const_position++ << ": '"
                   << apply_color(constant.to_literal_cxx_string(), fg_color::green) << "' "
@@ -325,9 +325,9 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(runtime_begin);
     SET_PROFILER_POINT(state_init_begin);
 
-    stack_registers_t stk_registers;
+    StkRegHolder stk_registers;
     GlobalState gstate;
-    IState state(&gstate, stk_registers, result.unit);
+    State state(gstate, stk_registers, result.unit);
 
     if (verbosity_flag) {
       SET_PROFILER_POINT(state_init_end);
@@ -335,19 +335,6 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
       std::string message = std::format(
         "State initialized in {:0.9f}s",
         GET_PROFILER_DIFF_MS(state_init_begin, state_init_end) / 1000
-      );
-
-      err_bus.log({true, message, unit_ctx, INFO, {}});
-    }
-
-    SET_PROFILER_POINT(lib_load_begin);
-    lib::open_baselib(&state);
-
-    if (verbosity_flag) {
-      SET_PROFILER_POINT(lib_load_end);
-
-      std::string message = std::format(
-        "C libraries loaded in {:0.9f}s", GET_PROFILER_DIFF_MS(lib_load_begin, lib_load_end) / 1000
       );
 
       err_bus.log({true, message, unit_ctx, INFO, {}});

@@ -1,11 +1,10 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_AST_H
 #define VIA_HAS_HEADER_AST_H
 
-#include "object.h"
+#include "tvalue.h"
 #include "token.h"
 #include "ast-base.h"
 
@@ -29,14 +28,14 @@ namespace via {
 
 /**
  * Literal Expression Node
- * Represents a primitive literal value. Can be a nil, integer, floating point, boolean or string
+ * Represents a primitive literal value. Can be a Nil, Int, floating point, Bool or String
  * value.
  *
- * <literal> ::= <integer> | <float> | <string> | <boolean> | "nil"
- * <integer> ::= ("0x"|"0b")?[0-9A-Fa-f]+
+ * <literal> ::= <Int> | <float> | <String> | <Bool> | "Nil"
+ * <Int> ::= ("0x"|"0b")?[0-9A-Fa-f]+
  * <float>   ::= [0-9]+.[0-9]+
- * <string>  ::= "\"" <characters> "\""
- * <boolean> ::= "true" | "false"
+ * <String>  ::= "\"" <characters> "\""
+ * <Bool> ::= "true" | "false"
  */
 struct LitExprNode : public ExprNodeBase {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
@@ -252,11 +251,11 @@ struct AutoTypeNode : public TypeNodeBase {
 
 struct PrimTypeNode : public TypeNodeBase {
   Token identifier;
-  IValueType type;
+  Value::Tag type;
 
   VIA_DECLASTFUNCS();
 
-  PrimTypeNode(Token id, IValueType valty)
+  PrimTypeNode(Token id, Value::Tag valty)
     : identifier(id),
       type(valty) {
     this->begin = id.position;
@@ -554,7 +553,7 @@ struct ExprStmtNode : public StmtNodeBase {
 
 class SyntaxTree {
 public:
-  VIA_IMPLEMENTATION SyntaxTree()
+  inline SyntaxTree()
     : allocator(64 * 1024 * 1024) {}
 
   ArenaAllocator allocator;

@@ -1,13 +1,12 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_TYPES_H
 #define VIA_HAS_HEADER_TYPES_H
 
 #include "ast.h"
 #include "common.h"
-#include "object.h"
+#include "tvalue.h"
 #include "stack.h"
 
 namespace via {
@@ -17,31 +16,31 @@ struct DataType;
 
 template<>
 struct DataType<std::monostate> {
-  static constexpr IValueType type = IValueType::nil;
+  static constexpr Value::Tag type = Value::Tag::Nil;
   static constexpr int precedence = -1;
 };
 
 template<>
 struct DataType<int> {
-  static constexpr IValueType type = IValueType::integer;
+  static constexpr Value::Tag type = Value::Tag::Int;
   static constexpr int precedence = 1;
 };
 
 template<>
 struct DataType<float> {
-  static constexpr IValueType type = IValueType::floating_point;
+  static constexpr Value::Tag type = Value::Tag::Float;
   static constexpr int precedence = 2;
 };
 
 template<>
 struct DataType<bool> {
-  static constexpr IValueType type = IValueType::boolean;
+  static constexpr Value::Tag type = Value::Tag::Bool;
   static constexpr int precedence = -1;
 };
 
 template<>
 struct DataType<std::string> {
-  static constexpr IValueType type = IValueType::string;
+  static constexpr Value::Tag type = Value::Tag::String;
   static constexpr int precedence = -1;
 };
 
@@ -63,7 +62,7 @@ bool is_derived_instance(const base* der) {
 }
 
 // clang-format off
-VIA_IMPLEMENTATION bool is_constant_expression(
+inline bool is_constant_expression(
   TransUnitContext& unit_ctx,
   const ExprNodeBase* expression,
   size_t variable_depth = 0
@@ -96,43 +95,43 @@ VIA_IMPLEMENTATION bool is_constant_expression(
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_nil(const TypeNodeBase* type) {
-  using enum IValueType;
+inline bool is_nil(const TypeNodeBase* type) {
+  using enum Value::Tag;
 
   if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
-    return primitive->type == nil;
+    return primitive->type == Nil;
   }
 
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_integral(const TypeNodeBase* type) {
-  using enum IValueType;
+inline bool is_integral(const TypeNodeBase* type) {
+  using enum Value::Tag;
 
   if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
-    return primitive->type == integer;
-  }
-
-  // TODO: Add aggregate type support by checking for arithmetic meta-methods
-  return false;
-}
-
-VIA_IMPLEMENTATION bool is_floating_point(const TypeNodeBase* type) {
-  using enum IValueType;
-
-  if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
-    return primitive->type == floating_point;
+    return primitive->type == Int;
   }
 
   // TODO: Add aggregate type support by checking for arithmetic meta-methods
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_arithmetic(const TypeNodeBase* type) {
+inline bool is_floating_point(const TypeNodeBase* type) {
+  using enum Value::Tag;
+
+  if (const PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type)) {
+    return primitive->type == Float;
+  }
+
+  // TODO: Add aggregate type support by checking for arithmetic meta-methods
+  return false;
+}
+
+inline bool is_arithmetic(const TypeNodeBase* type) {
   return is_integral(type) || is_floating_point(type);
 }
 
-VIA_IMPLEMENTATION bool is_callable(const TypeNodeBase* type) {
+inline bool is_callable(const TypeNodeBase* type) {
   if (is_derived_instance<TypeNodeBase, FunctionTypeNode>(type)) {
     return true;
   }
@@ -140,7 +139,7 @@ VIA_IMPLEMENTATION bool is_callable(const TypeNodeBase* type) {
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
+inline bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
   if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
     if (const PrimTypeNode* primitive_right =
           get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
@@ -181,7 +180,7 @@ VIA_IMPLEMENTATION bool is_same(const TypeNodeBase* left, const TypeNodeBase* ri
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
+inline bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
   if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
     if (const PrimTypeNode* primitive_right =
           get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
@@ -193,11 +192,11 @@ VIA_IMPLEMENTATION bool is_compatible(const TypeNodeBase* left, const TypeNodeBa
   return is_same(left, right);
 }
 
-VIA_IMPLEMENTATION bool is_castable(const TypeNodeBase* from, const TypeNodeBase* into) {
+inline bool is_castable(const TypeNodeBase* from, const TypeNodeBase* into) {
   if (const PrimTypeNode* primitive_right =
         get_derived_instance<TypeNodeBase, PrimTypeNode>(into)) {
     if (get_derived_instance<TypeNodeBase, PrimTypeNode>(from)) {
-      if (primitive_right->type == IValueType::string) {
+      if (primitive_right->type == Value::Tag::String) {
         return true;
       }
       else if (is_arithmetic(into)) {
@@ -209,14 +208,14 @@ VIA_IMPLEMENTATION bool is_castable(const TypeNodeBase* from, const TypeNodeBase
   return false;
 }
 
-VIA_IMPLEMENTATION bool is_castable(const TypeNodeBase* from, IValueType to) {
+inline bool is_castable(const TypeNodeBase* from, Value::Tag to) {
   if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(from)) {
-    if (to == IValueType::string) {
+    if (to == Value::Tag::String) {
       return true;
     }
-    else if (to == IValueType::integer) {
-      return primitive_left->type == IValueType::floating_point
-        || primitive_left->type == IValueType::string;
+    else if (to == Value::Tag::Int) {
+      return primitive_left->type == Value::Tag::Float
+        || primitive_left->type == Value::Tag::String;
     }
   }
 

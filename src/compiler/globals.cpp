@@ -1,6 +1,6 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "globals.h"
 #include "ast.h"
 #include "compiler-types.h"
@@ -72,8 +72,8 @@ const global_vector& GlobalHolder::get() {
 void GlobalHolder::declare_builtins() {
   Token tok = Token(TokenType::IDENTIFIER, "", 0, 0, 0);
 
-  TypeNodeBase* nil_type = allocator.emplace<PrimTypeNode>(tok, IValueType::nil);
-  TypeNodeBase* str_type = allocator.emplace<PrimTypeNode>(tok, IValueType::string);
+  TypeNodeBase* nil_type = allocator.emplace<PrimTypeNode>(tok, Value::Tag::Nil);
+  TypeNodeBase* str_type = allocator.emplace<PrimTypeNode>(tok, Value::Tag::String);
 
   auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamStmtNode {
     return {Token(TokenType::IDENTIFIER, id, 0, 0, 0), StmtModifiers{}, std::move(type)};

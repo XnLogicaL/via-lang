@@ -22,42 +22,42 @@ public:
   virtual ~CompilerStackBase() = default;
 
   // Returns the size of the stack.
-  VIA_IMPLEMENTATION constexpr size_t size() const {
+  inline constexpr size_t size() const {
     return m_stack_pointer;
   }
 
   // Pushes a value onto the stack.
-  VIA_IMPLEMENTATION void push(T&& val) {
+  inline void push(T&& val) {
     m_array[m_stack_pointer++] = std::move(val);
   }
 
   // Pops a value from the stack and returns it.
-  VIA_IMPLEMENTATION T pop() {
+  inline T pop() {
     return std::move(m_array[m_stack_pointer--]);
   }
 
   // Returns the top element of the stack.
-  VIA_IMPLEMENTATION T& top() {
+  inline T& top() {
     return m_array[m_stack_pointer - 1];
   }
 
-  VIA_IMPLEMENTATION const T& top() const {
+  inline const T& top() const {
     return m_array[m_stack_pointer - 1];
   }
 
-  VIA_IMPLEMENTATION T& at(size_t sp) {
+  inline T& at(size_t sp) {
     return m_array[sp];
   }
 
-  VIA_IMPLEMENTATION void jump_to(size_t sp) {
+  inline void jump_to(size_t sp) {
     m_stack_pointer = sp;
   }
 
-  VIA_IMPLEMENTATION T* begin() {
+  inline T* begin() {
     return m_array;
   }
 
-  VIA_IMPLEMENTATION T* end() {
+  inline T* end() {
     return m_array + m_stack_pointer + 1;
   }
 
@@ -95,13 +95,13 @@ struct StackFunction {
 
 class CompilerFunctionStack : public CompilerStackBase<StackFunction> {
 public:
-  VIA_IMPLEMENTATION void push_main_function(TransUnitContext& unit_ctx) {
+  inline void push_main_function(TransUnitContext& unit_ctx) {
     ScopeStmtNode* scope = unit_ctx.ast->allocator.emplace<ScopeStmtNode>(
       size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
     );
 
     PrimTypeNode* ret = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
-      Token(TokenType::IDENTIFIER, "nil", 0, 0, 0), IValueType::nil
+      Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
     );
 
     FuncDeclStmtNode* func = unit_ctx.ast->allocator.emplace<FuncDeclStmtNode>(

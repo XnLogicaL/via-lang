@@ -1,13 +1,13 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_STATE_H
 #define VIA_HAS_HEADER_STATE_H
 
+#include "call-stack.h"
 #include "common.h"
 #include "instruction.h"
-#include "object.h"
+#include "tvalue.h"
 
 // Maximum amount of objects on the virtual stack.
 #define VIA_VMSTACKSIZE 2048
@@ -24,18 +24,18 @@
 namespace via {
 
 // Forward declarations
-struct IFunction;
+struct Closure;
 
 struct ErrorState {
-  IFunction* frame = nullptr;
+  CallFrame* frame = nullptr;
   std::string message = "";
 };
 
 // Global state, should only be instantiated once, and shared across all worker contexts.
 struct GlobalState {
-  std::unordered_map<uint32_t, IString*> stable; // String interning table
-  std::atomic<uint32_t> threads{0};              // Thread count
-  IDict gtable;                                  // CompilerGlobal environment
+  std::unordered_map<uint32_t, String*> stable; // String interning table
+  std::atomic<uint32_t> threads{0};             // Thread count
+  Dict* gtable;                                 // CompilerGlobal environment
 
   std::shared_mutex stable_mutex;
 };
@@ -43,107 +43,49 @@ struct GlobalState {
 // Register array wrapper.
 template<const size_t Size>
 struct alignas(64) RegisterHolder {
-  IValue registers[Size];
+  Value registers[Size];
 };
 
 // Type aliases for stack registers and heap registers.
-using stack_registers_t = RegisterHolder<VIA_STK_REGISTERS>;
-using spill_registers_t = RegisterHolder<VIA_HEAP_REGISTERS>;
+using StkRegHolder = RegisterHolder<VIA_STK_REGISTERS>;
+using HeapRegHolder = RegisterHolder<VIA_HEAP_REGISTERS>;
 
 /**
  * "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
  * 64-byte aligned for maximum cache friendliness.
  */
-struct alignas(64) IState {
-  // Thread and global state
-  uint32_t id;      // Thread ID
-  GlobalState* glb; // CompilerGlobal state
+struct alignas(64) State {
+public:
+  VIA_NOCOPY(State);
+  VIA_NOMOVE(State);
 
-  // instruction pointers
-  Instruction* pc = nullptr;   // Current instruction pointer
-  Instruction* ibp = nullptr;  // Instruction buffer pointer
-  Instruction* sibp = nullptr; // Saved instruction buffer pointer
+  explicit State(GlobalState&, StkRegHolder&, TransUnitContext&);
+  ~State();
 
-  // Stack state
-  size_t sp = 0; // Stack pointer
-  IValue* sbp;   // Stack base pointer
-
-  // Labels
-  Instruction** labels; // Label array
-
-  // Call and frame management
-  IFunction* frame = nullptr; // Call stack pointer
-
-  // VM control and debugging
-  bool abort = false;
-  ErrorState* err;
-
-  // Register holders
-  stack_registers_t& stack_registers;
-  spill_registers_t* spill_registers;
-
-  // Translation unit context reference
-  TransUnitContext& unit_ctx;
-
-  //  ==================
-  // [ Object semantics ]
-  //  ==================
-
-  // Make uncopyable
-  VIA_NOCOPY(IState);
-  // Make movable
-  VIA_IMPLMOVE(IState);
-
-  // Constructor
-  explicit IState(GlobalState*, stack_registers_t&, TransUnitContext&);
-
-  // Destructor
-  ~IState();
-
-  //  ==============
-  // [ Core methods ]
-  //  ==============
-
-  // Loads the given containers data into the instruction buffer.
-  void load(const BytecodeHolder&);
-
-  //  ================
-  // [ Execution flow ]
-  //  ================
-
-  // Starts thread execution.
   void execute();
 
-  //  =======================
-  // [ Register manipulation ]
-  //  =======================
-
   // Returns a reference to the value that lives in a given register.
-  IValue& get_register(operand_t reg);
+  Value& get_register(operand_t reg);
 
   // Sets a given register to a given value.
-  void set_register(operand_t reg, IValue value);
+  void set_register(operand_t reg, Value value);
 
-  //  ==========================
-  // [ Basic stack manipulation ]
-  //  ==========================
-
-  // Pushes nil onto the stack.
+  // Pushes Nil onto the stack.
   void push_nil();
 
-  // Pushes an integer onto the stack.
+  // Pushes an Int onto the stack.
   void push_int(int value);
 
   // Pushes a float onto the stack.
   void push_float(float value);
 
-  // Pushes a boolean with value `true` onto the stack.
+  // Pushes a Bool with value `true` onto the stack.
   void push_true();
 
-  // Pushes a boolean with value `false` onto the stack.
+  // Pushes a Bool with value `false` onto the stack.
   void push_false();
 
-  // Pushes a string onto the stack.
+  // Pushes a String onto the stack.
   void push_string(const char* str);
 
   // Pushes an empty array onto the stack.
@@ -153,62 +95,50 @@ struct alignas(64) IState {
   void push_dict();
 
   // Pushes a value onto the stack.
-  void push(IValue value);
+  void push(Value value);
 
   // Drops a value from the stack, frees the resources of the dropped value.
   void drop();
 
-  // Pops a value from the stack and returns it.
-  IValue pop();
-
-  // Returns the top value on the stack.
-  const IValue& top();
-
-  //  =============================
-  // [ Advanced stack manipulation ]
-  //  =============================
-
   // Sets the value at a given position on the stack to a given value.
-  void set_stack(size_t position, IValue value);
+  void set_local(size_t position, Value value);
 
   // Returns the stack value at a given position.
-  IValue& get_stack(size_t position);
+  Value& get_local(size_t position);
 
   // Returns the stack value at a given offset relative to the current stack-frame's stack
   // pointer.
-  IValue& get_argument(size_t offset);
+  Value& get_argument(size_t offset);
 
   // Returns the size of stack.
   size_t stack_size();
 
-  //  =====================
-  // [ Global manipulation ]
-  //  =====================
-
   // Returns the global that corresponds to a given hashed identifier.
-  IValue& get_global(const char* name);
+  Value& get_global(const char* name);
 
   // Sets the global that corresponds to a given hashed identifier to a given value.
-  void set_global(const char* name, const IValue& value);
-
-  //  =======================
-  // [ IFunction manipulation ]
-  //  =======================
-
-  // Standard return. Returns from the current function with an optional value.
-  void native_return(const IValue& return_value);
-
-  // Calls the given IFunction object with a given argument count.
-  void native_call(IFunction& target, size_t argc);
-
-  // Calls the method that lives in a given index of a given object with a given argument count.
-  void method_call(IObject& object, size_t index, size_t argc);
+  void set_global(const char* name, const Value& value);
 
   // Attempts to call the given value object with the given argument count.
-  void call(const IValue& callee, size_t argc);
+  void call(const Closure& callee, size_t argc);
 
-  // ===========================================================================================
-  // General operations
+public:
+  uint32_t id;      // Thread ID
+  GlobalState& glb; // CompilerGlobal state
+
+  Instruction* pc = nullptr;  // Current instruction pointer
+  Instruction* ibp = nullptr; // Instruction buffer pointer
+  Instruction** labels;       // Label array
+
+  CallStack* callstack; // Call stack
+  ErrorState* err;      // Error state
+  Value main;           // Main function
+  Value ret;            // Return value slot
+
+  StkRegHolder& stack_registers;  // Stack register holder
+  HeapRegHolder* spill_registers; // Spill register holder
+
+  TransUnitContext& unit_ctx; // Translation unit context reference
 };
 
 } // namespace via

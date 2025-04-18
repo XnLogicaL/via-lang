@@ -1,12 +1,11 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #ifndef VIA_HAS_HEADER_GLOBALS_H
 #define VIA_HAS_HEADER_GLOBALS_H
 
 #include "ast-base.h"
-#include "object.h"
+#include "tvalue.h"
 #include "common-defs.h"
 #include "token.h"
 
@@ -26,7 +25,7 @@ public:
   using global_vector = std::vector<CompilerGlobal>;
   using builtin_vector = std::vector<CompilerGlobal>;
 
-  VIA_IMPLEMENTATION GlobalHolder()
+  inline GlobalHolder()
     : allocator(64 * 1024) {}
 
   // Returns the size of the global vector.

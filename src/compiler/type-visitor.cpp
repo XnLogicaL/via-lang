@@ -1,6 +1,6 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "visitor.h"
 #include "compiler.h"
 #include "compiler-types.h"
@@ -20,10 +20,10 @@ void TypeNodeVisitor::visit(DeclStmtNode& declaration_node) {
   CHECK_INFERED_TYPE(annotated_type, declaration_node.rvalue);
 
   if (is_nil(annotated_type)) {
-    // Warning: "nil-typed-variable"
-    auto message = std::format("Variable typed as {}", apply_color("nil", fg_color::magenta));
+    // Warning: "Nil-typed-variable"
+    auto message = std::format("Variable typed as {}", apply_color("Nil", fg_color::magenta));
     compiler_warning(ctx, declaration_node.type->begin, declaration_node.type->end, message);
-    compiler_info(ctx, "'nil' typed variables are incapable of holding more than one value");
+    compiler_info(ctx, "'Nil' typed variables are incapable of holding more than one value");
     compiler_output_end(ctx);
   }
 

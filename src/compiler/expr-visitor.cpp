@@ -1,10 +1,10 @@
-//  ========================================================================================
-// [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
-//  ========================================================================================
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
 #include "state.h"
 #include "bit-utility.h"
 #include "stack.h"
-#include "string-utility.h"
+#include "String-utility.h"
 #include "compiler.h"
 #include "compiler-types.h"
 #include "visitor.h"
@@ -31,9 +31,9 @@
 //  constant table and emits a `LOADK` instruction with the corresponding constant id.
 //
 // - SymExprNode compilation:
-//  This node represents a "symbol" that is either a local, global, argument or IUpValue.
+//  This node represents a "symbol" that is either a local, global, argument or UpValue.
 //  It first checks the stack for the symbol, if found, emits a `STKGET` instruction with the
-//  stack id of the symbol. After that, it checks for upvalues, if found emits `UPVGET`. Next,
+//  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPV`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
 //  `unit_ctx::internal.variable_stack::function_stack` and looking for the symbol. If found, emits
 //  `ARGGET`. Finally, looks for the variable in the global scope by querying
@@ -56,7 +56,7 @@
 //    -> Direct table member access: table.index
 //      This pattern compiles into a TBLGET instruction that uses the hashed version of the index.
 //    -> Expressional table access: table[index]
-//      This pattern first compiles the index expression, then casts it into a string, and finally
+//      This pattern first compiles the index expression, then casts it into a String, and finally
 //      uses it as a table index.
 //    -> Object member access: object::index
 //      This pattern is by far the most complex pattern with multiple arbitriary checks in order to
@@ -73,7 +73,7 @@
 namespace via {
 
 using enum IOpCode;
-using enum IValueType;
+using enum Value::Tag;
 using namespace compiler_util;
 using OpCodeId = std::underlying_type_t<IOpCode>;
 
@@ -92,7 +92,7 @@ void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
     bytecode_emit(ctx, *bool_value ? LOADBT : LOADBF, {dst});
   }
   else {
-    IValue constant = construct_constant(lit_expr);
+    Value constant = construct_constant(lit_expr);
     operand_t constant_id = push_constant(ctx, std::move(constant));
     bytecode_emit(ctx, LOADK, {dst, constant_id});
   }
@@ -128,7 +128,7 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
     if (is_derived_instance<TypeNodeBase, ArrayTypeNode>(type)) {
       register_t reg = ctx.reg_alloc.allocate_register();
       bytecode_emit(ctx, MOV, {reg, dst});
-      bytecode_emit(ctx, ARRLEN, {dst, reg});
+      bytecode_emit(ctx, LENARR, {dst, reg});
       return;
     }
 
@@ -206,7 +206,7 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
         bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF);
       }
       else {
-        IValue constant = construct_constant(*lit_expr);
+        Value constant = construct_constant(*lit_expr);
         operand_t constant_id = push_constant(ctx, std::move(constant));
         bytecode_emit(ctx, PUSHK, {constant_id});
       }
@@ -219,7 +219,7 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
   }
 
   bytecode_emit(ctx, CALL, {callee_reg, argc});
-  bytecode_emit(ctx, POP, {dst});
+  bytecode_emit(ctx, RETGET, {dst});
   free_register(ctx, callee_reg);
 }
 
@@ -235,10 +235,10 @@ void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
 
   if (is_derived_instance<TypeNodeBase, ArrayTypeNode>(object_type)) {
     if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(index_type)) {
-      if (primitive->type == integer) {
+      if (primitive->type == Int) {
         register_t reg = alloc_register(ctx);
         resolve_rvalue(this, index_node.index, reg);
-        bytecode_emit(ctx, ARRGET, {dst, obj_reg, reg});
+        bytecode_emit(ctx, GETARR, {dst, obj_reg, reg});
         free_register(ctx, reg);
         return;
       }
@@ -316,7 +316,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   bool is_left_constexpr = is_constant_expression(ctx.unit_ctx, lhs);
   bool is_right_constexpr = is_constant_expression(ctx.unit_ctx, rhs);
 
-  // For boolean/relational operations, always handle as non-constant.
+  // For Bool/relational operations, always handle as non-constant.
   bool is_bool_or_relational = base_opcode == AND || base_opcode == OR || base_opcode == LT
     || base_opcode == GT || base_opcode == LTEQ || base_opcode == GTEQ;
 
@@ -361,7 +361,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     // Emit code for the constant-case.
     resolve_rvalue(this, lhs, dst);
 
-    // Special handling for boolean operations.
+    // Special handling for Bool operations.
     if (base_opcode == AND || base_opcode == OR) {
       bool is_rhs_falsy = false;
       if (bool* rhs_bool = std::get_if<bool>(&literal.value)) {
@@ -380,9 +380,9 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
       return;
     }
 
-    // Handle numeric constant: integer or float.
+    // Handle numeric constant: Int or float.
     if (int* int_value = std::get_if<int>(&literal.value)) {
-      IOpCode opc = static_cast<IOpCode>(opcode_id + 1); // OPI for integer
+      IOpCode opc = static_cast<IOpCode>(opcode_id + 1); // OPI for Int
       uint32_t final_value = static_cast<uint32_t>(*int_value);
       auto operands = reinterpret_u32_as_2u16(final_value);
       bytecode_emit(ctx, opc, {dst, operands.high, operands.low});
@@ -396,7 +396,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   }
   else {
   non_constexpr:
-    // Non-constant expression or boolean/relational operator.
+    // Non-constant expression or Bool/relational operator.
     operand_t reg = alloc_register(ctx);
 
     // Evaluate expressions based on operator precedence.
@@ -442,17 +442,17 @@ void ExprNodeVisitor::visit(CastExprNode& type_cast, operand_t dst) {
   resolve_rvalue(this, type_cast.expression, temp);
 
   if (PrimTypeNode* primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(type_cast.type)) {
-    if (primitive->type == integer) {
-      bytecode_emit(ctx, CASTI, {dst, temp});
+    if (primitive->type == Int) {
+      bytecode_emit(ctx, ICAST, {dst, temp});
     }
-    else if (primitive->type == floating_point) {
-      bytecode_emit(ctx, CASTF, {dst, temp});
+    else if (primitive->type == Float) {
+      bytecode_emit(ctx, FCAST, {dst, temp});
     }
-    else if (primitive->type == string) {
-      bytecode_emit(ctx, CASTSTR, {dst, temp});
+    else if (primitive->type == String) {
+      bytecode_emit(ctx, STRCAST, {dst, temp});
     }
-    else if (primitive->type == boolean) {
-      bytecode_emit(ctx, CASTB, {dst, temp});
+    else if (primitive->type == Bool) {
+      bytecode_emit(ctx, BCAST, {dst, temp});
     }
   }
 
@@ -470,7 +470,7 @@ void ExprNodeVisitor::visit(StepExprNode& step_expr, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
-  bytecode_emit(ctx, NEWARR, {dst});
+  bytecode_emit(ctx, LOADARR, {dst});
 
   register_t key_reg = alloc_register(ctx);
   register_t val_reg = alloc_register(ctx);
@@ -479,7 +479,7 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
     u16_result result = reinterpret_u32_as_2u16(i++);
     resolve_rvalue(this, expr, val_reg);
     bytecode_emit(ctx, LOADI, {key_reg, result.high, result.low});
-    bytecode_emit(ctx, ARRSET, {val_reg, dst, key_reg});
+    bytecode_emit(ctx, SETARR, {val_reg, dst, key_reg});
   }
 
   free_register(ctx, val_reg);
