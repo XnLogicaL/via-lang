@@ -13,6 +13,64 @@ namespace via {
 
 using enum Value::Tag;
 
+Value::Value(bool owns)
+  : owns(owns),
+    type(Tag::Nil) {}
+
+Value::Value(bool b, bool owns)
+  : owns(owns),
+    type(Tag::Bool),
+    u({.b = b}) {}
+
+Value::Value(int x, bool owns)
+  : owns(owns),
+    type(Tag::Int),
+    u({.i = x}) {}
+
+Value::Value(float x, bool owns)
+  : owns(owns),
+    type(Tag::Float),
+    u({.f = x}) {}
+
+Value::Value(struct String* ptr, bool owns)
+  : owns(owns),
+    type(Tag::String),
+    u({.str = ptr}) {}
+
+Value::Value(struct Array* ptr, bool owns)
+  : owns(owns),
+    type(Tag::Array),
+    u({.arr = ptr}) {}
+
+Value::Value(struct Dict* ptr, bool owns)
+  : owns(owns),
+    type(Tag::Dict),
+    u({.dict = ptr}) {}
+
+Value::Value(Closure* ptr, bool owns)
+  : owns(owns),
+    type(Tag::Function),
+    u({.clsr = ptr}) {}
+
+Value::Value(Tag t, Un u, bool owns)
+  : owns(owns),
+    type(t),
+    u(u) {}
+
+Value::Value(const char* str)
+  : type(String),
+    u({.str = new struct String(str)}) {}
+
+// Move constructor, transfer ownership based on type
+Value::Value(Value&& other)
+  : owns(true) {
+  reset();
+
+  this->type = other.type;
+  this->u = other.u;
+  other.type = Nil;
+}
+
 // Move-assignment operator, moves values from other object
 Value& Value::operator=(Value&& other) {
   if (this != &other) {
@@ -24,16 +82,6 @@ Value& Value::operator=(Value&& other) {
   }
 
   return *this;
-}
-
-// Move constructor, transfer ownership based on type
-Value::Value(Value&& other)
-  : owns(true) {
-  reset();
-
-  this->type = other.type;
-  this->u = other.u;
-  other.type = Nil;
 }
 
 // Return a clone of the Value based on its type
@@ -52,8 +100,7 @@ VIA_NODISCARD Value Value::clone() const {
   case Dict:
     return Value(new struct Dict(*u.dict));
   case Function:
-    // Closures are reference only.
-    return Value(u.clsr, false);
+    return Value(new Closure(*u.clsr));
   default:
     break;
   }
@@ -66,7 +113,7 @@ VIA_NODISCARD Value Value::weak_clone() const {
 }
 
 void Value::reset() {
-  if (owns && static_cast<uint8_t>(type) >= static_cast<uint8_t>(Value::Tag::String)) {
+  if (owns && static_cast<uint8_t>(type) >= static_cast<uint8_t>(Tag::String)) {
     switch (type) {
     case String:
       delete u.str;
@@ -134,53 +181,5 @@ VIA_NODISCARD std::string Value::to_cxx_string() const {
 VIA_NODISCARD std::string Value::to_literal_cxx_string() const {
   return impl::__to_literal_cxx_string(*this);
 }
-
-Value::Value(bool owns)
-  : owns(owns),
-    type(Tag::Nil) {}
-
-Value::Value(bool b, bool owns)
-  : owns(owns),
-    type(Tag::Bool),
-    u({.b = b}) {}
-
-Value::Value(int x, bool owns)
-  : owns(owns),
-    type(Tag::Int),
-    u({.i = x}) {}
-
-Value::Value(float x, bool owns)
-  : owns(owns),
-    type(Tag::Float),
-    u({.f = x}) {}
-
-Value::Value(struct String* ptr, bool owns)
-  : owns(owns),
-    type(Tag::String),
-    u({.str = ptr}) {}
-
-Value::Value(struct Array* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Array),
-    u({.arr = ptr}) {}
-
-Value::Value(struct Dict* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Dict),
-    u({.dict = ptr}) {}
-
-Value::Value(Closure* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Function),
-    u({.clsr = ptr}) {}
-
-Value::Value(Tag t, Un u, bool owns)
-  : owns(owns),
-    type(t),
-    u(u) {}
-
-Value::Value(const char* str)
-  : type(String),
-    u({.str = new struct String(str)}) {}
 
 } // namespace via

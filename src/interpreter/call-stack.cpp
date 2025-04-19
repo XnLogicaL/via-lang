@@ -19,6 +19,8 @@ CallFrame::CallFrame(CallFrame&& other)
 
 CallFrame& CallFrame::operator=(CallFrame&& other) {
   if (this != &other) {
+    delete[] this->locals;
+
     this->closure = other.closure;
     this->locals = other.locals;
     this->savedpc = other.savedpc;
@@ -32,7 +34,6 @@ CallFrame& CallFrame::operator=(CallFrame&& other) {
 }
 
 CallFrame::~CallFrame() {
-  delete closure;
   delete[] locals;
 }
 

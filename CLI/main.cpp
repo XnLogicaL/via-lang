@@ -434,7 +434,7 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
 
   auto get_callable_string = [](const Callable& callee) -> std::string {
     return callee.type == Callable::Tag::Function
-      ? std::string(callee.u.fn.id)
+      ? std::string(callee.u.fn->id)
       : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
   };
 
@@ -508,9 +508,6 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
 
       state.execute_step(insn);
       continue;
-    syntax_error:
-      std::cout << "syntax error\n";
-      continue;
     }
     else if (tokens[0].lexeme == "quit") {
       break;
@@ -567,13 +564,33 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
         continue;
       }
 
-      std::cout << "(top) ";
       for (size_t i = state.callstack->frames_count; i > 0; i--) {
         const CallFrame& visited_frame = state.callstack->frames[i - 1];
         const Callable& callee = visited_frame.closure->callee;
         std::cout << "#" << state.callstack->frames_count - i << " function "
                   << get_callable_string(callee) << "\n";
       }
+    }
+    else if (tokens[0].lexeme == "printr") {
+      if (tokens.size() < 2) {
+        goto syntax_error;
+      }
+
+      try {
+        operand_t reg = std::stoul(tokens[1].lexeme);
+        Value* atreg = impl::__get_register(&state, reg);
+
+        std::cout << 'r' << reg << ": " << magic_enum::enum_name(atreg->type) << ' '
+                  << atreg->to_literal_cxx_string() << "\n";
+      }
+      catch (const std::exception&) {
+        goto syntax_error;
+      }
+    }
+    else {
+    syntax_error:
+      std::cout << "syntax error\n";
+      continue;
     }
   };
 }

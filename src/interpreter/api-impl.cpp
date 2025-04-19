@@ -37,7 +37,7 @@ bool __handle_error(const State* state) {
 
   auto get_callable_string = [](const Callable& callee) -> std::string {
     return callee.type == Callable::Tag::Function
-      ? std::string(callee.u.fn.id)
+      ? std::string(callee.u.fn->id)
       : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
   };
 
@@ -136,7 +136,7 @@ void __call(State* state, Closure* closure) {
   __push_callframe(state, std::move(frame));
 
   if (closure->callee.type == Callable::Tag::Function) {
-    state->pc = closure->callee.u.fn.chunk.code;
+    state->pc = closure->callee.u.fn->code;
   }
   else {
     closure->callee.u.ntv(state, closure); // Function should return on its own.
@@ -188,15 +188,27 @@ Value __to_string(const Value& val) {
   case Bool:
     return Value(val.u.b ? "true" : "false");
   case Array:
-  case Dict:
-  case Function: {
+  case Dict: {
     auto type_str = magic_enum::enum_name(val.type);
     auto final_str = std::format("<{}@0x{:x}>", type_str, (uintptr_t)__to_pointer(val));
 
     return Value(final_str.c_str());
   }
+
+  case Function: {
+    std::string fnty = "native";
+    std::string fnn = "";
+
+    if (val.u.clsr->callee.type == Callable::Tag::Function) {
+      fnty = "function ";
+      fnn = val.u.clsr->callee.u.fn->id;
+    }
+
+    std::string final_str = std::format("<{}{}@0x{:x}>", fnty, fnn, (uintptr_t)val.u.clsr);
+    return Value(final_str.c_str());
+  }
   default:
-    return Value("Nil");
+    return Value("nil");
   }
 
   VIA_UNREACHABLE();
@@ -424,11 +436,14 @@ void __closure_bytecode_load(State* state, Closure* closure, size_t len) {
     buffer[i] = *(state->pc++);
   }
 
-  Chunk& chunk = closure->callee.u.fn.chunk;
-  chunk.code = new Instruction[len];
-  chunk.code_size = len;
+  Function* fn = closure->callee.u.fn;
+  // Means the function was default initialized, therefore manual allocation is needed.
+  if (fn->code == nullptr) {
+    fn->code = new Instruction[len];
+    fn->code_size = len;
+  }
 
-  std::memcpy(chunk.code, buffer, len * sizeof(Instruction));
+  std::memcpy(fn->code, buffer, len * sizeof(Instruction));
 }
 
 #if VIA_COMPILER == C_CLANG
@@ -635,7 +650,7 @@ void __register_deallocate(const State* state) {
   delete state->spill_registers;
 }
 
-void __set_register(const State* state, operand_t reg, Value val) {
+void __set_register(const State* state, operand_t reg, Value&& val) {
   if VIA_LIKELY (reg < VIA_STK_REGISTERS) {
     state->stack_registers.registers[reg] = std::move(val);
   }
@@ -661,21 +676,16 @@ Value* __get_register(const State* state, operand_t reg) {
 Closure* __create_main_function(BytecodeHolder& holder) {
   auto& raw = holder.get();
 
-  Function fn;
-  fn.chunk.code = new Instruction[raw.size()];
-  fn.chunk.code_size = raw.size();
-  fn.id = "main";
-  fn.line_number = 0;
+  Function* fn = new Function(raw.size());
+  fn->id = "main";
+  fn->line_number = 0;
 
   for (size_t i = 0; const Bytecode& data : raw) {
-    fn.chunk.code[i++] = data.instruct;
+    fn->code[i++] = data.instruct;
   }
 
   Closure* main = new Closure;
-  main->callee = {Callable::Tag::Function, {.fn = fn}, 0};
-  // Main function cannot have upvalues
-  main->upvs = nullptr;
-  main->upv_count = 0;
+  main->callee = Callable(fn, 0);
 
   return main;
 }

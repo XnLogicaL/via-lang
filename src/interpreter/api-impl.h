@@ -159,7 +159,7 @@ void __register_allocate(State* state);
 
 void __register_deallocate(const State* state);
 
-void __set_register(const State* state, operand_t reg, Value val);
+void __set_register(const State* state, operand_t reg, Value&& val);
 
 Value* __get_register(const State* state, operand_t reg);
 

@@ -10,6 +10,8 @@
 
 namespace via {
 
+inline constexpr size_t CLOSURE_INITIAL_UPV_COUNT = 10;
+
 struct State;
 struct Closure;
 struct CallFrame;
@@ -21,44 +23,54 @@ struct UpValue {
   Value heap_value = Value();
 };
 
-struct Chunk {
-  Instruction* code;
-  size_t code_size;
-};
-
 struct Function {
-  Chunk chunk;
-  size_t line_number;
-  const char* id;
+  Instruction* code = nullptr;
+  size_t code_size = 0;
+  size_t line_number = 0;
+  const char* id = "<anonymous>";
+
+  VIA_IMPLCOPY(Function);
+  VIA_IMPLMOVE(Function);
+
+  Function() = default;
+  Function(size_t code_size);
+  ~Function();
 };
 
 using NativeFn = Value (*)(State* interpreter, Closure* callable);
 
 struct Callable {
   enum class Tag {
+    None,
     Function,
     Native,
-  } type;
+  } type = Tag::Function;
 
   union Un {
-    Function fn;
+    Function* fn = nullptr;
     NativeFn ntv;
   } u;
 
-  size_t arity; // Argc
+  size_t arity = 0; // Argc
+
+  VIA_IMPLCOPY(Callable);
+  VIA_IMPLMOVE(Callable);
+
+  Callable() = default;
+  Callable(Function* fn, size_t arity);
+  Callable(NativeFn fn, size_t arity);
+  ~Callable();
 };
 
 struct Closure {
   Callable callee;
-  UpValue* upvs;
-  size_t upv_count;
+  UpValue* upvs = nullptr;
+  size_t upv_count = CLOSURE_INITIAL_UPV_COUNT;
 
   VIA_IMPLCOPY(Closure);
   VIA_IMPLMOVE(Closure);
 
   Closure();
-  Closure(Function&& fn, size_t arity);
-  Closure(NativeFn fn, size_t arity);
   ~Closure();
 };
 

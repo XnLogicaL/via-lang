@@ -14,7 +14,7 @@ inline constexpr size_t CALLFRAME_MAX_LOCALS = 200;
 
 struct CallFrame {
   Closure* closure;
-  Value* locals;
+  Value* locals = nullptr;
   size_t locals_size = 0;
   Instruction* savedpc;
 

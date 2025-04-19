@@ -192,7 +192,12 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   function_node.accept(type_visitor);
 
   ctx.unit_ctx.internal.defered_stmts.push({});
-  bytecode_emit(ctx, CLOSURE, {function_reg}, function_node.identifier.lexeme);
+  bytecode_emit(
+    ctx,
+    CLOSURE,
+    {function_reg, 0, (operand_t)function_node.parameters.size()},
+    function_node.identifier.lexeme
+  );
 
   size_t new_closure_point = ctx.unit_ctx.bytecode->size();
   ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);

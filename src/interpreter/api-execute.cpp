@@ -66,21 +66,22 @@
     VM_DISPATCH_OP(LOADBF), VM_DISPATCH_OP(LOADARR), VM_DISPATCH_OP(LOADDICT),                     \
     VM_DISPATCH_OP(CLOSURE), VM_DISPATCH_OP(PUSH), VM_DISPATCH_OP(PUSHK), VM_DISPATCH_OP(PUSHNIL), \
     VM_DISPATCH_OP(PUSHI), VM_DISPATCH_OP(PUSHF), VM_DISPATCH_OP(PUSHBT), VM_DISPATCH_OP(PUSHBF),  \
-    VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(GETLOCAL), VM_DISPATCH_OP(SETLOCAL),                      \
-    VM_DISPATCH_OP(GETGLOBAL), VM_DISPATCH_OP(SETGLOBAL), VM_DISPATCH_OP(SETUPV),                  \
-    VM_DISPATCH_OP(GETUPV), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC), VM_DISPATCH_OP(EQ),          \
-    VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT),             \
-    VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ),            \
-    VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ),   \
-    VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT),                    \
-    VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP),                    \
-    VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ),                     \
-    VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT),                 \
-    VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL),                  \
-    VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RET0), VM_DISPATCH_OP(RET1),       \
-    VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                        \
+    VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(GETGLOBAL), VM_DISPATCH_OP(SETGLOBAL),                    \
+    VM_DISPATCH_OP(SETUPV), VM_DISPATCH_OP(GETUPV), VM_DISPATCH_OP(GETLOCAL),                      \
+    VM_DISPATCH_OP(SETLOCAL), VM_DISPATCH_OP(CAPTURE), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC),   \
+    VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR),              \
+    VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ),             \
+    VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN),      \
+    VM_DISPATCH_OP(JMPIFEQ), VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT),                    \
+    VM_DISPATCH_OP(JMPIFGT), VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ),                 \
+    VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN),                         \
+    VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT),                 \
+    VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ),              \
+    VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RET1), VM_DISPATCH_OP(RET0),         \
+    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY),    \
+    VM_DISPATCH_OP(CATCH), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                         \
     VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
-    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(LENDICT), VM_DISPATCH_OP(NEXTDICT),                    \
+    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT),                    \
     VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR),                        \
     VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), \
     VM_DISPATCH_OP(BCAST)
@@ -118,7 +119,7 @@ dispatch:
   }
 
 #if VM_USE_CGOTO
-  goto* dispatch_table[static_cast<uint8_t>(state->pc->op)];
+  goto* dispatch_table[static_cast<uint16_t>(state->pc->op)];
 #else
   switch (state->pc->op)
 #endif
@@ -129,6 +130,10 @@ dispatch:
     VM_CASE(SETDICT)
     VM_CASE(LENDICT)
     VM_CASE(NEXTDICT)
+    VM_CASE(TRY)
+    VM_CASE(CATCH)
+    VM_CASE(RAISE)
+    VM_CASE(CAPTURE)
     VM_CASE(LBL) {
       VM_NEXT();
     }
@@ -647,20 +652,19 @@ dispatch:
       operand_t len = state->pc->operand1;
       operand_t argc = state->pc->operand2;
 
-      struct Function func;
-      struct Closure* closure = new struct Closure();
-      closure->callee = {
-        .type = Callable::Tag::Function,
-        .u = {.fn = func},
-        .arity = argc,
-      };
+      auto* func = new struct Function(len);
+      Closure* closure = new Closure();
+      closure->callee = Callable(func, argc);
 
       __closure_bytecode_load(state, closure, len);
       __set_register(state, dst, Value(closure));
 
       // Do not increment program counter, as __closure_bytecode_load automatically positions it
       // to the correct instruction.
-      goto dispatch;
+      if constexpr (SingleStep)
+        goto exit;
+      else
+        goto dispatch;
     }
 
     VM_CASE(GETUPV) {
@@ -1457,7 +1461,11 @@ dispatch:
       Value* fn_val = __get_register(state, fn);
 
       __call(state, fn_val->u.clsr);
-      goto dispatch;
+
+      if constexpr (SingleStep)
+        goto exit;
+      else
+        goto dispatch;
     }
 
     VM_CASE(RETNIL) {
