@@ -2,7 +2,6 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "state.h"
-#include "bytecode.h"
 #include "api-impl.h"
 
 namespace via {
@@ -10,11 +9,10 @@ namespace via {
 using namespace impl;
 
 // Initializes and returns a new state object
-State::State(GlobalState& glb, StkRegHolder& stk_registers, TransUnitContext& unit_ctx)
-  : id(glb.threads++),
-    glb(glb),
+State::State(StkRegHolder& stk_registers, TransUnitContext& unit_ctx)
+  : globals(new Dict),
     callstack(new CallStack),
-    err(new ErrorState()),
+    err(new ErrorState),
     main(Value(__create_main_function(*unit_ctx.bytecode))),
     stack_registers(stk_registers),
     unit_ctx(unit_ctx) {
@@ -26,6 +24,7 @@ State::State(GlobalState& glb, StkRegHolder& stk_registers, TransUnitContext& un
 }
 
 State::~State() {
+  delete globals;
   delete callstack;
   delete err;
 

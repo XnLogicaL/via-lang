@@ -8,6 +8,9 @@
 #include "token.h"
 #include "ast-base.h"
 
+#include <utility/color.h>
+#include <utility/format-vector.h>
+
 //  =======
 // [ ast.h ]
 //  =======

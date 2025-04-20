@@ -13,9 +13,6 @@
 // Lexer
 #include "lex/lexer.h"
 
-// Preprocessor
-#include "preprocessor/preprocessor.h"
-
 // Parser
 #include "parse/parser.h"
 #include "parse/ast.h"

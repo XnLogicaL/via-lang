@@ -5,8 +5,9 @@
 #define VIA_HAS_HEADER_CONSTANT_H
 
 #include "common.h"
-#include "instruction.h"
-#include "tvalue.h"
+
+#include <interpreter/instruction.h>
+#include <interpreter/tvalue.h>
 
 // ===========================================================================================
 // constant.h

@@ -5,14 +5,19 @@
 #define VIA_HAS_HEADER_VMAPI_H
 
 #include "common.h"
-#include "constant.h"
-#include "tfunction.h"
-#include "instruction.h"
 #include "opcode.h"
 #include "state.h"
-#include "String-utility.h"
+#include "tdict.h"
+#include "tarray.h"
+#include "tfunction.h"
 
-namespace via::impl {
+#include <compiler/bytecode.h>
+#include <compiler/constant.h>
+#include <utility/ustring.h>
+
+namespace via {
+
+namespace impl {
 
 // Internal function for throwing errors.
 void __set_error_state(const State* state, const std::string& message);
@@ -165,6 +170,8 @@ Value* __get_register(const State* state, operand_t reg);
 
 Closure* __create_main_function(BytecodeHolder& holder);
 
-} // namespace via::impl
+} // namespace impl
+
+} // namespace via
 
 #endif

@@ -1,13 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "bit-utility.h"
-#include "String-utility.h"
-#include "compiler-types.h"
 #include "visitor.h"
-#include "stack.h"
 #include "compiler.h"
-#include "format-vector.h"
 
 namespace via {
 
@@ -449,9 +444,9 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
     Bytecode& last = ctx.unit_ctx.bytecode->back();
     last.instruct.op = DROP;
     // Reset operand values to eliminate deceptive values
-    last.instruct.operand0 = VIA_OPERAND_INVALID;
-    last.instruct.operand1 = VIA_OPERAND_INVALID;
-    last.instruct.operand2 = VIA_OPERAND_INVALID;
+    last.instruct.operand0 = OPERAND_INVALID;
+    last.instruct.operand1 = OPERAND_INVALID;
+    last.instruct.operand2 = OPERAND_INVALID;
   }
   else {
     if (unused_expr_handler.has_value()) {

@@ -2,7 +2,6 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "parser.h"
-#include "compiler-types.h"
 
 #define VIA_CHECKRESULT(result)                                                                    \
   if (!result.has_value()) {                                                                       \

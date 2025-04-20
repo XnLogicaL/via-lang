@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-namespace via::utils {
+namespace via {
 
 template<typename T>
 using fmt_vector_t = const std::vector<T>&;
@@ -37,6 +37,6 @@ std::string format_vector(
   return oss.str();
 }
 
-} // namespace via::utils
+} // namespace via
 
 #endif

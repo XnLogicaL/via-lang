@@ -5,14 +5,15 @@
 #ifndef VIA_HAS_HEADER_STACK_H
 #define VIA_HAS_HEADER_STACK_H
 
-#include "ast.h"
-#include "ast-base.h"
-#include "instruction.h"
 #include "common.h"
 
-#define VIA_TSTACKSIZE 2048
+#include <parse/ast-base.h>
+#include <parse/ast.h>
+#include <interpreter/instruction.h>
 
 namespace via {
+
+inline constexpr size_t COMPILER_STACK_SIZE = 2048;
 
 using symbol_t = std::string;
 
@@ -63,7 +64,7 @@ public:
 
 protected:
   size_t m_stack_pointer = 0;
-  T m_array[VIA_TSTACKSIZE];
+  T m_array[COMPILER_STACK_SIZE];
 };
 
 struct StackVariable {
@@ -95,32 +96,7 @@ struct StackFunction {
 
 class CompilerFunctionStack : public CompilerStackBase<StackFunction> {
 public:
-  inline void push_main_function(TransUnitContext& unit_ctx) {
-    ScopeStmtNode* scope = unit_ctx.ast->allocator.emplace<ScopeStmtNode>(
-      size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
-    );
-
-    PrimTypeNode* ret = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
-      Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
-    );
-
-    FuncDeclStmtNode* func = unit_ctx.ast->allocator.emplace<FuncDeclStmtNode>(
-      size_t(0),
-      size_t(0),
-      false,
-      StmtModifiers{},
-      Token(TokenType::IDENTIFIER, "main", 0, 0, 0),
-      scope,
-      ret,
-      std::vector<ParamStmtNode>{}
-    );
-
-    push({
-      .stack_pointer = 0,
-      .decl = func,
-      .locals = {},
-    });
-  }
+  void push_main_function(TransUnitContext& unit_ctx);
 };
 
 } // namespace via

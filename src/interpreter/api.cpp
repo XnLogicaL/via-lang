@@ -1,14 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "common.h"
-#include "instruction.h"
-#include "opcode.h"
-#include "String-utility.h"
-#include "api-impl.h"
 #include "state.h"
-#include "tarray.h"
-#include "tdict.h"
 #include <cmath>
 
 namespace via {
@@ -73,7 +66,7 @@ size_t State::stack_size() {
 }
 
 Value& State::get_global(const char* name) {
-  return glb.gtable->get(name);
+  return globals->get(name);
 }
 
 } // namespace via

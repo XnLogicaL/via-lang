@@ -4,9 +4,7 @@
 #ifndef VIA_HAS_HEADER_ARRAY_H
 #define VIA_HAS_HEADER_ARRAY_H
 
-#include "common-defs.h"
-#include "common-includes.h"
-#include "common-macros.h"
+#include "common.h"
 #include "csize.h"
 #include "tvalue.h"
 

@@ -4,13 +4,10 @@
 #ifndef VIA_HAS_HEADER_PARSER_H
 #define VIA_HAS_HEADER_PARSER_H
 
-#include "stack.h"
-#include "constant.h"
-#include "bytecode.h"
-#include "ast.h"
 #include "common.h"
-#include "ast-base.h"
 #include "error-bus.h"
+#include "ast.h"
+#include "ast-base.h"
 
 namespace via {
 

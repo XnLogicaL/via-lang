@@ -2,9 +2,6 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "compiler.h"
-#include "compiler-types.h"
-#include "state.h"
-#include "String-utility.h"
 #include <cmath>
 
 // ===========================================================================================

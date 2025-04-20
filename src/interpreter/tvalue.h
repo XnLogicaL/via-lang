@@ -4,11 +4,10 @@
 #ifndef VIA_HAS_HEADER_OBJECT_H
 #define VIA_HAS_HEADER_OBJECT_H
 
-#include "common-macros.h"
-#include "common-defs.h"
+#include "common.h"
 #include "tstring.h"
+
 #include <magic_enum/magic_enum.hpp>
-#include <cstring>
 
 // MSVC is annoying with uninitialized members
 #if VIA_COMPILER == C_MSVC

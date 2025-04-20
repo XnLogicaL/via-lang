@@ -5,12 +5,11 @@
 #define VIA_HAS_HEADER_COMMON_H
 
 // External imports
-#include "magic_enum/magic_enum.hpp"
 #include "tl/expected.hpp"
+#include "magic_enum/magic_enum.hpp"
 // Internal imports
 #include "common-defs.h"
 #include "common-macros.h"
 #include "common-includes.h"
-#include "context.h"
 
 #endif

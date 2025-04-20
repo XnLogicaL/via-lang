@@ -1,13 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "state.h"
-#include "bit-utility.h"
-#include "stack.h"
-#include "String-utility.h"
-#include "compiler.h"
-#include "compiler-types.h"
 #include "visitor.h"
+#include "compiler.h"
 #include <cmath>
 
 // ==========================================================================================

@@ -2,18 +2,9 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "error-bus.h"
-#include "context.h"
-#include "ast.h"
-#include "constant.h"
-#include "bytecode.h"
-#include "token.h"
-#include "globals.h"
-#include "stack.h"
-#include "color.h"
 
 namespace via {
 
-using namespace utils;
 using enum CErrorLevel;
 
 struct LocalOffset {

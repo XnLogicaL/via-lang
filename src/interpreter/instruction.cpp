@@ -2,14 +2,9 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "instruction.h"
-#include "bit-utility.h"
-#include "bytecode.h"
-#include "tvalue.h"
-#include "color.h"
 
 namespace via {
 
-using namespace utils;
 using enum Opcode;
 
 std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
@@ -20,7 +15,7 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
   constexpr int opcode_column_width = 12;
   constexpr int operand_column_width = 8;
 
-  auto is_operand_valid = [](const operand_t& operand) { return operand != VIA_OPERAND_INVALID; };
+  auto is_operand_valid = [](const operand_t& operand) { return operand != OPERAND_INVALID; };
 
   // Generate raw Opcode String and transform case
   std::string raw_opcode_str = std::string(magic_enum::enum_name(op));

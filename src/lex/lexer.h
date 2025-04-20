@@ -4,11 +4,8 @@
 #ifndef VIA_HAS_HEADER_LEXER_H
 #define VIA_HAS_HEADER_LEXER_H
 
-#include "stack.h"
-#include "constant.h"
-#include "bytecode.h"
-#include "ast.h"
 #include "common.h"
+#include "context.h"
 #include "token.h"
 
 namespace via {
@@ -43,6 +40,7 @@ private:
   size_t pos = 0;
   size_t line = 1;
   size_t offset = 0;
+  
   TransUnitContext& unit_ctx;
 };
 

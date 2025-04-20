@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-namespace via::utils {
+namespace via {
 
 // ANSI text foreground color codes.
 enum class fg_color {
@@ -50,6 +50,6 @@ inline std::string apply_color(
     + ";" + std::to_string(static_cast<int>(bg)) + "m" + text + "\033[0m";
 }
 
-} // namespace via::utils
+} // namespace via
 
 #endif

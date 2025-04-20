@@ -6,10 +6,12 @@
 
 #include "common-defs.h"
 #include "common-macros.h"
-#include "compiler/globals.h"
-#include "lex/token.h"
 
-#define VIA_CTX_VERBOSE int(1 << 0)
+#include <lex/token.h>
+#include <compiler/globals.h>
+#include <compiler/bytecode.h>
+#include <compiler/constant.h>
+#include <compiler/stack.h>
 
 namespace via {
 
@@ -66,14 +68,6 @@ public:
     std::stack<std::vector<StmtNodeBase*>> defered_stmts;
     std::unique_ptr<GlobalHolder> globals;
   } internal;
-};
-
-class CompilerContext final {
-public:
-public:
-  uint32_t flags;
-
-  std::vector<TransUnitContext> units;
 };
 
 } // namespace via

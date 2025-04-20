@@ -1,17 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "bit-utility.h"
-#include "file-io.h"
-#include "api-impl.h"
-#include "common.h"
 #include "state.h"
-#include "constant.h"
-#include "tvalue.h"
-#include "tarray.h"
-#include "tstring.h"
-#include "tdict.h"
-#include "tfunction.h"
 #include <cmath>
 
 // Macro that throws a virtual error
@@ -763,7 +753,7 @@ dispatch:
 
       Value* key_obj = __get_register(state, key);
       struct String* key_str = key_obj->u.str;
-      const Value& global = state->glb.gtable->get(key_str->data);
+      const Value& global = state->globals->get(key_str->data);
 
       __set_register(state, dst, global.clone());
       VM_NEXT();
@@ -777,7 +767,7 @@ dispatch:
       struct String* key_str = key_obj->u.str;
       Value* global = __get_register(state, src);
 
-      state->glb.gtable->set(key_str->data, std::move(*global));
+      state->globals->set(key_str->data, std::move(*global));
       VM_NEXT();
     }
 

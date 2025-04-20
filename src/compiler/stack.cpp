@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "stack.h"
+#include "context.h"
 
 namespace via {
 
@@ -31,6 +32,33 @@ std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& sy
   }
 
   return std::nullopt;
+}
+
+void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
+  ScopeStmtNode* scope = unit_ctx.ast->allocator.emplace<ScopeStmtNode>(
+    size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
+  );
+
+  PrimTypeNode* ret = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
+    Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
+  );
+
+  FuncDeclStmtNode* func = unit_ctx.ast->allocator.emplace<FuncDeclStmtNode>(
+    size_t(0),
+    size_t(0),
+    false,
+    StmtModifiers{},
+    Token(TokenType::IDENTIFIER, "main", 0, 0, 0),
+    scope,
+    ret,
+    std::vector<ParamStmtNode>{}
+  );
+
+  push({
+    .stack_pointer = 0,
+    .decl = func,
+    .locals = {},
+  });
 }
 
 } // namespace via

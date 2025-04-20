@@ -5,10 +5,13 @@
 #define VIA_HAS_HEADER_COMPILER_H
 
 #include "common.h"
-#include "bytecode.h"
-#include "instruction.h"
-#include "ast.h"
-#include "visitor.h"
+
+#include <parse/ast.h>
+#include <compiler/bytecode.h>
+#include <compiler/visitor.h>
+#include <compiler/types.h>
+#include <interpreter/instruction.h>
+#include <interpreter/state.h>
 
 // ===========================================================================================
 // compiler.h
@@ -98,7 +101,7 @@ TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr);
 //  ==================
 
 // Alias for operands instruction operands initializer list
-using operands_init_t = OperandsArray<operand_t, 3, VIA_OPERAND_INVALID>;
+using operands_init_t = OperandsArray<operand_t, 3, OPERAND_INVALID>;
 
 // Shortcut
 // Forwards arguments to ctx::unit_ctx::bytecode::add

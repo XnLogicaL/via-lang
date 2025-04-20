@@ -1,4 +1,4 @@
-build-linux/
-build-win/
-local/
-build/
+local
+build
+.cache
+compile_commands.json

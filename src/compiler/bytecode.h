@@ -4,7 +4,7 @@
 #ifndef VIA_HAS_HEADER_BYTECODE_H
 #define VIA_HAS_HEADER_BYTECODE_H
 
-#include "instruction.h"
+#include <interpreter/instruction.h>
 
 // ==========================================================================================
 // bytecode.h

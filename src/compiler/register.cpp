@@ -1,13 +1,12 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "register-allocator.h"
-#include "state.h"
+#include "register.h"
 
 namespace via {
 
 register_t RegisterAllocator::allocate_register() {
-  for (register_t reg = 0; reg < VIA_ALL_REGISTERS - 1; reg++) {
+  for (register_t reg = 0; reg < REGISTER_COUNT - 1; reg++) {
     if (registers[reg]) {
       registers[reg] = false;
       return reg;

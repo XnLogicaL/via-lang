@@ -4,9 +4,9 @@
 #ifndef VIA_HAS_HEADER_AST_BASE_H
 #define VIA_HAS_HEADER_AST_BASE_H
 
-#include "common-includes.h"
-#include "common-macros.h"
-#include "token.h"
+#include "common.h"
+
+#include <lex/token.h>
 
 // MSVC is annoying with uninitialized members
 #if VIA_COMPILER == C_MSVC

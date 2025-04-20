@@ -1,16 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "bit-utility.h"
-#include "file-io.h"
 #include "api-impl.h"
-#include "common.h"
-#include "state.h"
-#include "constant.h"
-#include "csize.h"
-#include "tdict.h"
-#include "tarray.h"
-#include "bytecode.h"
 #include <cmath>
 
 namespace via::impl {
@@ -651,11 +642,11 @@ void __register_deallocate(const State* state) {
 }
 
 void __set_register(const State* state, operand_t reg, Value&& val) {
-  if VIA_LIKELY (reg < VIA_STK_REGISTERS) {
+  if VIA_LIKELY (reg < REGISTER_STACK_COUNT) {
     state->stack_registers.registers[reg] = std::move(val);
   }
   else {
-    const operand_t offset = reg - VIA_STK_REGISTERS;
+    const operand_t offset = reg - REGISTER_STACK_COUNT;
     state->spill_registers->registers[offset] = std::move(val);
   }
 }
@@ -665,7 +656,7 @@ Value* __get_register(const State* state, operand_t reg) {
     return &state->stack_registers.registers[reg];
   }
   else {
-    const operand_t offset = reg - VIA_STK_REGISTERS;
+    const operand_t offset = reg - REGISTER_STACK_COUNT;
     return &state->spill_registers->registers[offset];
   }
 }

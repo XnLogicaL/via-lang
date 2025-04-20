@@ -3,13 +3,9 @@
 
 #include "visitor.h"
 #include "compiler.h"
-#include "compiler-types.h"
-#include "color.h"
-#include "ast.h"
 
 namespace via {
 
-using namespace utils;
 using namespace compiler_util;
 
 void TypeNodeVisitor::visit(DeclStmtNode& declaration_node) {

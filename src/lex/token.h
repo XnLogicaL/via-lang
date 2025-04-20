@@ -4,9 +4,9 @@
 #ifndef VIA_HAS_HEADER_TOKEN_H
 #define VIA_HAS_HEADER_TOKEN_H
 
-#include "common-includes.h"
-#include "arena.h"
-#include "common-macros.h"
+#include "common.h"
+
+#include <arena.h>
 
 namespace via {
 

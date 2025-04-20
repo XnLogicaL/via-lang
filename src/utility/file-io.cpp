@@ -3,7 +3,7 @@
 
 #include "file-io.h"
 
-namespace via::utils {
+namespace via {
 
 VIA_NODISCARD bool write_to_file(const std::string& file_path, const std::string& content) {
   std::ofstream file(file_path, std::ios::out | std::ios::trunc); // Open in write mode
@@ -40,4 +40,4 @@ VIA_NODISCARD rd_result_t read_from_file(const std::string& file_path) {
   return content;
 }
 
-} // namespace via::utils
+} // namespace via

@@ -4,10 +4,9 @@
 #ifndef VIA_HAS_HEADER_STRING_H
 #define VIA_HAS_HEADER_STRING_H
 
-#include "common-defs.h"
-#include "common-macros.h"
-#include "common-includes.h"
-#include "String-utility.h"
+#include "common.h"
+
+#include <utility/ustring.h>
 
 namespace via {
 

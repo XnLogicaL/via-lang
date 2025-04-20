@@ -5,6 +5,10 @@
 #define VIA_HAS_HEADER_ERROR_BUS_H
 
 #include "common.h"
+#include "context.h"
+
+#include <lex/token.h>
+#include <utility/color.h>
 
 //  =============
 // [ error-bus.h ]

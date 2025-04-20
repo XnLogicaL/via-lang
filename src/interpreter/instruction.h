@@ -7,9 +7,12 @@
 #include "common.h"
 #include "opcode.h"
 
-#define VIA_OPERAND_INVALID std::numeric_limits<operand_t>::max()
+#include <utility/bits.h>
+#include <utility/color.h>
 
 namespace via {
+
+inline constexpr size_t OPERAND_INVALID = 0xFFFF;
 
 using operand_t = uint16_t;
 using signed_operand_t = int16_t;
@@ -21,9 +24,9 @@ struct InstructionData {
 struct alignas(8) Instruction {
   Opcode op = Opcode::NOP;
 
-  operand_t operand0 = VIA_OPERAND_INVALID;
-  operand_t operand1 = VIA_OPERAND_INVALID;
-  operand_t operand2 = VIA_OPERAND_INVALID;
+  operand_t operand0 = OPERAND_INVALID;
+  operand_t operand1 = OPERAND_INVALID;
+  operand_t operand2 = OPERAND_INVALID;
 };
 
 struct Bytecode {

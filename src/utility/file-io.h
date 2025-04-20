@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-namespace via::utils {
+namespace via {
 
 // Read result.
 using rd_result_t = tl::expected<std::string, std::string>;
@@ -16,6 +16,6 @@ VIA_NODISCARD bool write_to_file(const std::string& file_path, const std::string
 // Reads the content of the specified file path into a String
 VIA_NODISCARD rd_result_t read_from_file(const std::string& file_path);
 
-} // namespace via::utils
+} // namespace via
 
 #endif

@@ -59,7 +59,6 @@ static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& na
 static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
   using enum TokenType;
   using enum CErrorLevel;
-  using namespace utils;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) -> bool {
     return subcommand_parser.get<bool>(flag);
@@ -288,7 +287,6 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
 
 static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
-  using namespace utils;
   using enum CErrorLevel;
 
   const auto get_flag = [&subcommand_parser](const std::string& flag) -> bool {
@@ -371,7 +369,6 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
 
 static void handle_repl(argparse::ArgumentParser&) {
   using namespace via;
-  using namespace utils;
 
   constexpr const char REPL_WELCOME[] =
     "via v" VIA_VERSION " Copyright (C) 2024-2025 XnLogicaL\nLicensed under GNU GPL v3.0 @ "

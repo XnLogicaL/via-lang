@@ -2,8 +2,9 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "globals.h"
-#include "ast.h"
-#include "compiler-types.h"
+
+#include <parse/ast.h>
+#include <compiler/types.h>
 
 namespace via {
 

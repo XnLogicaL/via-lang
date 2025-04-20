@@ -4,24 +4,20 @@
 #ifndef VIA_HAS_HEADER_STATE_H
 #define VIA_HAS_HEADER_STATE_H
 
-#include "call-stack.h"
 #include "common.h"
+#include "context.h"
+#include "call-stack.h"
 #include "instruction.h"
 #include "tvalue.h"
-
-// Maximum amount of objects on the virtual stack.
-#define VIA_VMSTACKSIZE 2048
-// Stack-allocated "hot" register count.
-#define VIA_STK_REGISTERS 256
-// Heap-allocated "spill" register count.
-#define VIA_HEAP_REGISTERS 65536 - VIA_STK_REGISTERS
-// Combined stack + heap allocated register count.
-#define VIA_ALL_REGISTERS VIA_STK_REGISTERS + VIA_HEAP_REGISTERS
 
 //  =========
 // [ state.h ]
 //  =========
 namespace via {
+
+inline constexpr size_t REGISTER_COUNT = 65536;     // 2^16, operand range
+inline constexpr size_t REGISTER_STACK_COUNT = 256; // C stack
+inline constexpr size_t REGISTER_SPILL_COUNT = REGISTER_COUNT - REGISTER_STACK_COUNT; // Heap
 
 // Forward declarations
 struct Closure;
@@ -31,15 +27,6 @@ struct ErrorState {
   std::string message = "";
 };
 
-// Global state, should only be instantiated once, and shared across all worker contexts.
-struct GlobalState {
-  std::unordered_map<uint32_t, String*> stable; // String interning table
-  std::atomic<uint32_t> threads{0};             // Thread count
-  Dict* gtable;                                 // CompilerGlobal environment
-
-  std::shared_mutex stable_mutex;
-};
-
 // Register array wrapper.
 template<const size_t Size>
 struct alignas(64) RegisterHolder {
@@ -47,11 +34,11 @@ struct alignas(64) RegisterHolder {
 };
 
 // Type aliases for stack registers and heap registers.
-using StkRegHolder = RegisterHolder<VIA_STK_REGISTERS>;
-using HeapRegHolder = RegisterHolder<VIA_HEAP_REGISTERS>;
+using StkRegHolder = RegisterHolder<REGISTER_STACK_COUNT>;
+using HeapRegHolder = RegisterHolder<REGISTER_SPILL_COUNT>;
 
 /**
- * "Per worker" execution context. Manages things like registers, stack, heap of the VM thread.
+ * Interpreter state object. Manages things like registers, stack, heap of the VM.
  * 64-byte aligned for maximum cache friendliness.
  */
 struct alignas(64) State {
@@ -59,7 +46,7 @@ public:
   VIA_NOCOPY(State);
   VIA_NOMOVE(State);
 
-  explicit State(GlobalState&, StkRegHolder&, TransUnitContext&);
+  explicit State(StkRegHolder&, TransUnitContext&);
   ~State();
 
   void execute();
@@ -124,16 +111,15 @@ public:
   void call(const Closure& callee, size_t argc);
 
 public:
-  uint32_t id;      // Thread ID
-  GlobalState& glb; // CompilerGlobal state
-
   Instruction* pc = nullptr; // Current instruction pointer
   Instruction** labels;      // Label array
 
+  Dict* globals;        // Global table
   CallStack* callstack; // Call stack
   ErrorState* err;      // Error state
-  Value main;           // Main function
-  Value ret;            // Return value slot
+
+  Value main; // Main function slot
+  Value ret;  // Return value slot
 
   StkRegHolder& stack_registers;  // Stack register holder
   HeapRegHolder* spill_registers; // Spill register holder

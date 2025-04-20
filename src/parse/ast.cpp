@@ -2,18 +2,16 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "ast.h"
-#include "compiler-types.h"
-#include "visitor.h"
-#include "stack.h"
-#include "format-vector.h"
-#include "color.h"
+
+#include <compiler/visitor.h>
+#include <compiler/types.h>
+#include <interpreter/tvalue.h>
 
 #define depth_tab_space std::string(depth, ' ')
 
 namespace via {
 
 using enum Value::Tag;
-using namespace utils;
 
 std::string StmtModifiers::to_string() const {
   return std::format("{}", is_const ? "const" : "");
@@ -141,7 +139,7 @@ std::string CallExprNode::to_string(uint32_t& depth) {
   return std::format(
     "CallExprNode<callee {}, args {}>",
     callee->to_string(depth),
-    utils::format_vector<ExprNodeBase*>(
+    format_vector<ExprNodeBase*>(
       arguments, [&depth](ExprNodeBase* expr) { return expr->to_string(depth); }
     )
   );
@@ -326,7 +324,7 @@ std::string GenericTypeNode::to_string(uint32_t& depth) {
   return std::format(
     "GenericTypeNode<{}, {}>",
     identifier.lexeme,
-    utils::format_vector<TypeNodeBase*>(
+    format_vector<TypeNodeBase*>(
       generics, [&depth](TypeNodeBase* elem) { return elem->to_string(depth); }
     )
   );
@@ -374,7 +372,7 @@ void ArrayTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
 std::string FunctionTypeNode::to_string(uint32_t& depth) {
   return std::format(
     "FunctionTypeNode<{} -> {}>",
-    utils::format_vector<ParamStmtNode>(
+    format_vector<ParamStmtNode>(
       parameters, [](const ParamStmtNode& elem) { return elem.type->to_output_string(); }
     ),
     returns->to_string(depth)

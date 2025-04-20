@@ -4,10 +4,11 @@
 #ifndef VIA_HAS_HEADER_GLOBALS_H
 #define VIA_HAS_HEADER_GLOBALS_H
 
-#include "ast-base.h"
-#include "tvalue.h"
 #include "common-defs.h"
-#include "token.h"
+
+#include <lex/token.h>
+#include <parse/ast-base.h>
+#include <interpreter/tvalue.h>
 
 namespace via {
 

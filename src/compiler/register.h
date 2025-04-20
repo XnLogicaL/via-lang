@@ -5,7 +5,9 @@
 #define VIA_HAS_HEADER_REGISTER_ALLOCATOR_H
 
 #include "common.h"
-#include "instruction.h"
+
+#include <interpreter/state.h>
+#include <interpreter/instruction.h>
 
 namespace via {
 

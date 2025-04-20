@@ -4,15 +4,21 @@
 #ifndef VIA_HAS_HEADER_VISITOR_H
 #define VIA_HAS_HEADER_VISITOR_H
 
-#include "ast.h"
-#include "register-allocator.h"
-#include "stack.h"
-#include "state.h"
-#include "token.h"
 #include "common.h"
+#include "error-bus.h"
+#include "context.h"
+#include "register.h"
+#include "stack.h"
 #include "bytecode.h"
 #include "constant.h"
-#include "error-bus.h"
+
+#include <lex/token.h>
+#include <parse/ast.h>
+#include <interpreter/state.h>
+#include <utility/bits.h>
+#include <utility/memory.h>
+#include <utility/ustring.h>
+#include <utility/color.h>
 
 #define VIA_INVALID_VISIT                                                                          \
   {                                                                                                \
@@ -54,7 +60,7 @@ struct VisitorContext {
 
   inline VisitorContext(TransUnitContext& ctx)
     : unit_ctx(ctx),
-      reg_alloc(VIA_ALL_REGISTERS, true) {}
+      reg_alloc(REGISTER_COUNT, true) {}
 };
 
 class NodeVisitorBase {
