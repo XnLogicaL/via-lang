@@ -13,7 +13,7 @@ State::State(StkRegHolder& stk_registers, TransUnitContext& unit_ctx)
   : globals(new Dict),
     callstack(new CallStack),
     err(new ErrorState),
-    main(Value(__create_main_function(*unit_ctx.bytecode))),
+    main(Value(__create_main_function(unit_ctx))),
     stack_registers(stk_registers),
     unit_ctx(unit_ctx) {
 

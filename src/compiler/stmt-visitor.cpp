@@ -21,7 +21,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   symbol_t symbol = ident.lexeme;
 
   if (is_global) {
-    auto previously_declared = ctx.unit_ctx.internal.globals->get_global(symbol);
+    auto previously_declared = ctx.unit_ctx.internal.globals.get_global(symbol);
 
     if (previously_declared.has_value()) {
       // Error: "global-redeclaration"
@@ -31,10 +31,10 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
     }
     else {
       operand_t value_reg = alloc_register(ctx);
-      operand_t symbol_hash = hash_string_custom(symbol.c_str());
+      operand_t symbol_hash = ustrhash(symbol.c_str());
 
       CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
-      ctx.unit_ctx.internal.globals->declare_global(std::move(global));
+      ctx.unit_ctx.internal.globals.declare_global(std::move(global));
 
       resolve_rvalue(&expression_visitor, declaration_node.rvalue, value_reg);
       bytecode_emit(ctx, SETGLOBAL, {value_reg, symbol_hash}, symbol);
@@ -58,14 +58,15 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
+          .type =
+            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
           .value = &literal,
         });
       }
       // Check for Int
       else if (int* int_value = std::get_if<int>(&literal.value)) {
         uint32_t final_value = *int_value;
-        auto operands = reinterpret_u32_as_2u16(final_value);
+        auto operands = ubit_u32to2u16(final_value);
 
         bytecode_emit(ctx, PUSHI, {operands.high, operands.low}, symbol);
         current_closure.locals.push({
@@ -73,14 +74,15 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Int),
+          .type =
+            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Int),
           .value = &literal,
         });
       }
       // Check for float
       else if (float* float_value = std::get_if<float>(&literal.value)) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-        auto operands = reinterpret_u32_as_2u16(final_value);
+        auto operands = ubit_u32to2u16(final_value);
 
         bytecode_emit(ctx, PUSHF, {operands.high, operands.low}, symbol);
         current_closure.locals.push({
@@ -88,7 +90,8 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Float),
+          .type =
+            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Float),
           .value = &literal,
         });
       }
@@ -100,7 +103,8 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
+          .type =
+            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
           .value = &literal,
         });
       }
@@ -115,8 +119,9 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .is_constexpr = true,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.ast->allocator.emplace<PrimTypeNode>(literal.value_token, constant.type),
+          .type = ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+            literal.value_token, constant.type
+          ),
           .value = &literal,
         });
       }
@@ -177,7 +182,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   operand_t function_reg = alloc_register(ctx);
   size_t stack_ptr = current_closure.locals.size();
 
-  ctx.unit_ctx.internal.function_stack->push({
+  ctx.unit_ctx.internal.function_stack.push({
     .stack_pointer = current_closure.locals.size(),
     .decl = &function_node,
     .locals = {},
@@ -194,7 +199,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     function_node.identifier.lexeme
   );
 
-  size_t new_closure_point = ctx.unit_ctx.bytecode->size();
+  size_t new_closure_point = ctx.unit_ctx.bytecode.size();
   ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
 
   for (StmtNodeBase*& pstmt : scope.statements) {
@@ -226,22 +231,22 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
 
   close_defer_statements(ctx, this);
 
-  Bytecode& last_bytecode = ctx.unit_ctx.bytecode->back();
+  Bytecode& last_bytecode = ctx.unit_ctx.bytecode.back();
   Opcode last_opcode = last_bytecode.instruct.op;
 
   if (last_opcode != RET && last_opcode != RETNIL) {
     bytecode_emit(ctx, RETNIL);
   }
 
-  Bytecode& new_closure = ctx.unit_ctx.bytecode->at(new_closure_point - 1);
-  new_closure.instruct.operand1 = ctx.unit_ctx.bytecode->size() - new_closure_point;
+  Bytecode& new_closure = ctx.unit_ctx.bytecode.at(new_closure_point - 1);
+  new_closure.instruct.b = ctx.unit_ctx.bytecode.size() - new_closure_point;
 
   Token symbol_token = function_node.identifier;
   symbol_t symbol = symbol_token.lexeme;
-  uint32_t symbol_hash = hash_string_custom(symbol.c_str());
+  uint32_t symbol_hash = ustrhash(symbol.c_str());
 
   if (function_node.is_global) {
-    if (ctx.unit_ctx.internal.globals->was_declared(symbol)) {
+    if (ctx.unit_ctx.internal.globals.was_declared(symbol)) {
       // Error: "global-redecl"
       auto message = std::format("Redeclaring global '{}'", symbol);
       compiler_error(ctx, symbol_token, message);
@@ -249,7 +254,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
       return;
     }
 
-    auto operands = reinterpret_u32_as_2u16(symbol_hash);
+    auto operands = ubit_u32to2u16(symbol_hash);
     bytecode_emit(ctx, SETGLOBAL, {function_reg, operands.high, operands.low});
   }
   else {
@@ -257,13 +262,13 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   }
 
   current_closure.locals.jump_to(stack_ptr);
-  ctx.unit_ctx.internal.function_stack->pop();
+  ctx.unit_ctx.internal.function_stack.pop();
   current_closure.locals.push({
     .is_const = true,
     .is_constexpr = false,
     .symbol = function_node.identifier.lexeme,
     .decl = &function_node,
-    .type = ctx.unit_ctx.ast->allocator.emplace<FunctionTypeNode>(
+    .type = ctx.unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(
       function_node.parameters, function_node.returns
     ),
     .value = nullptr,
@@ -441,12 +446,12 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
     // Edit last instruction to drop the return value rather than popping it. This is because if a
     // function call is present under an expression statement, then the result is guaranteed to be
     // ignored.
-    Bytecode& last = ctx.unit_ctx.bytecode->back();
+    Bytecode& last = ctx.unit_ctx.bytecode.back();
     last.instruct.op = DROP;
     // Reset operand values to eliminate deceptive values
-    last.instruct.operand0 = OPERAND_INVALID;
-    last.instruct.operand1 = OPERAND_INVALID;
-    last.instruct.operand2 = OPERAND_INVALID;
+    last.instruct.a = OPERAND_INVALID;
+    last.instruct.b = OPERAND_INVALID;
+    last.instruct.c = OPERAND_INVALID;
   }
   else {
     if (unused_expr_handler.has_value()) {

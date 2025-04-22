@@ -281,8 +281,8 @@ enum class Opcode : uint16_t {
 
   CALL,
   RET,
-  RET1,
-  RET0,
+  RETBT,
+  RETBF,
   RETNIL,
   RETGET,
 

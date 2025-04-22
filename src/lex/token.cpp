@@ -58,23 +58,4 @@ int Token::bin_prec() const {
   }
 }
 
-using token_vector = TokenHolder::token_vector;
-using at_result = TokenHolder::at_result;
-
-size_t TokenHolder::size() {
-  return tokens.size();
-}
-
-Token& TokenHolder::at(size_t position) {
-  return tokens.at(position);
-}
-
-void TokenHolder::push(const Token& Token) {
-  tokens.push_back(Token);
-}
-
-token_vector& TokenHolder::get() {
-  return tokens;
-}
-
 } // namespace via

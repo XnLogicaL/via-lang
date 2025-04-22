@@ -5,6 +5,7 @@
 #define VIA_HAS_HEADER_TYPES_H
 
 #include "common.h"
+#include "context.h"
 #include "stack.h"
 
 #include <parse/ast.h>
@@ -57,8 +58,8 @@ const derived* get_derived_instance(const base* der) {
 }
 
 template<typename base, typename derived>
-  requires std::is_base_of_v<base, derived>
-bool is_derived_instance(const base* der) {
+  requires std::is_base_of_v<base, derived> bool
+is_derived_instance(const base* der) {
   return get_derived_instance<base, derived>(der) != nullptr;
 }
 

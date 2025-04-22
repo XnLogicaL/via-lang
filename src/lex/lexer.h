@@ -40,7 +40,7 @@ private:
   size_t pos = 0;
   size_t line = 1;
   size_t offset = 0;
-  
+
   TransUnitContext& unit_ctx;
 };
 
@@ -50,7 +50,7 @@ inline std::vector<Token> fast_tokenize(std::string source) {
   Lexer tokenizer(unit_ctx);
   tokenizer.tokenize();
 
-  return unit_ctx.tokens->get();
+  return unit_ctx.tokens;
 }
 
 } // namespace via

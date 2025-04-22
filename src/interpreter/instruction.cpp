@@ -36,25 +36,24 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
 
   // Build operand String
   std::string operand_str;
-  if (is_operand_valid(instr.operand0)) {
+  if (is_operand_valid(instr.a)) {
     if (op == PUSHI) {
-      uint32_t result = reinterpret_u16_as_u32(instr.operand0, instr.operand1);
+      uint32_t result = ubit_2u16tou32(instr.a, instr.b);
       operand_str += std::to_string(result);
     }
     else {
-      operand_str += std::to_string(instr.operand0);
+      operand_str += std::to_string(instr.a);
 
-      if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI
-          || op == LOADI) {
-        uint32_t result = reinterpret_u16_as_u32(instr.operand1, instr.operand2);
+      if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI || op == LOADI) {
+        uint32_t result = ubit_2u16tou32(instr.b, instr.c);
         operand_str += ", " + std::to_string(result);
       }
       else {
-        if (is_operand_valid(instr.operand1)) {
-          operand_str += ", " + std::to_string(instr.operand1);
+        if (is_operand_valid(instr.b)) {
+          operand_str += ", " + std::to_string(instr.b);
 
-          if (is_operand_valid(instr.operand2)) {
-            operand_str += ", " + std::to_string(instr.operand2);
+          if (is_operand_valid(instr.c)) {
+            operand_str += ", " + std::to_string(instr.c);
           }
         }
       }

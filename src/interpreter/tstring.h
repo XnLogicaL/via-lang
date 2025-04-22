@@ -20,9 +20,9 @@ struct String {
   VIA_IMPLMOVE(String);
 
   inline explicit String(const char* str)
-    : data(duplicate_string(str)),
+    : data(ustrdup(str)),
       data_size(std::strlen(str)),
-      hash(hash_string_custom(str)) {}
+      hash(ustrhash(str)) {}
 
   inline ~String() {
     delete[] data;

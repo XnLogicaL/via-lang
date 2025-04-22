@@ -35,15 +35,15 @@ std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& sy
 }
 
 void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
-  ScopeStmtNode* scope = unit_ctx.ast->allocator.emplace<ScopeStmtNode>(
+  ScopeStmtNode* scope = unit_ctx.internal.ast_allocator.emplace<ScopeStmtNode>(
     size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
   );
 
-  PrimTypeNode* ret = unit_ctx.ast->allocator.emplace<PrimTypeNode>(
+  PrimTypeNode* ret = unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
     Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
   );
 
-  FuncDeclStmtNode* func = unit_ctx.ast->allocator.emplace<FuncDeclStmtNode>(
+  FuncDeclStmtNode* func = unit_ctx.internal.ast_allocator.emplace<FuncDeclStmtNode>(
     size_t(0),
     size_t(0),
     false,

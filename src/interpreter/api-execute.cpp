@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "state.h"
+#include "api-impl.h"
 #include <cmath>
 
 // Macro that throws a virtual error
@@ -22,7 +23,7 @@
 #define VM_NEXT()                                                                                  \
   do {                                                                                             \
     if constexpr (SingleStep) {                                                                    \
-      if constexpr (ExecuteCustom) {                                                               \
+      if constexpr (OverrideProgramCounter) {                                                      \
         state->pc = savedpc;                                                                       \
       }                                                                                            \
       else {                                                                                       \
@@ -33,6 +34,11 @@
     state->pc++;                                                                                   \
     goto dispatch;                                                                                 \
   } while (0)
+
+#define VM_CHECK_RETURN()                                                                          \
+  if VIA_UNLIKELY (state->callstack->frames_count == 0) {                                          \
+    goto exit;                                                                                     \
+  }
 
 // Stolen from Luau :)
 // Whether to use a dispatch table for instruction loading.
@@ -67,7 +73,7 @@
     VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN),                         \
     VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT),                 \
     VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ),              \
-    VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RET1), VM_DISPATCH_OP(RET0),         \
+    VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETBT), VM_DISPATCH_OP(RETBF),       \
     VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY),    \
     VM_DISPATCH_OP(CATCH), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                         \
     VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
@@ -84,10 +90,10 @@ using enum Opcode;
 // We use implementation functions only in this file.
 using namespace impl;
 
-template<bool SingleStep, bool ExecuteCustom>
+template<const bool SingleStep = false, const bool OverrideProgramCounter = false>
 void __execute(State* state, Instruction insn = Instruction()) {
 #if VM_USE_CGOTO
-  static const void* dispatch_table[0xFF] = {VM_DISPATCH_TABLE()};
+  static constexpr void* dispatch_table[0xFF] = {VM_DISPATCH_TABLE()};
 #endif
 
 dispatch:
@@ -104,7 +110,7 @@ dispatch:
     goto exit;
   }
 
-  if constexpr (SingleStep && ExecuteCustom) {
+  if constexpr (SingleStep && OverrideProgramCounter) {
     state->pc = &insn;
   }
 
@@ -129,8 +135,8 @@ dispatch:
     }
 
     VM_CASE(ADD) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -156,12 +162,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(ADDI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i += imm;
@@ -173,12 +179,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(ADDF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i += imm;
@@ -191,8 +197,8 @@ dispatch:
     }
 
     VM_CASE(SUB) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -218,12 +224,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(SUBI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i -= imm;
@@ -235,12 +241,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(SUBF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i -= imm;
@@ -253,8 +259,8 @@ dispatch:
     }
 
     VM_CASE(MUL) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -280,12 +286,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MULI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i *= imm;
@@ -297,12 +303,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MULF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i *= imm;
@@ -315,8 +321,8 @@ dispatch:
     }
 
     VM_CASE(DIV) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -358,12 +364,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(DIVI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
       if (imm == 0) {
         VM_ERROR("Division by zero");
       }
@@ -378,12 +384,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(DIVF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
       if (imm == 0.0f) {
         VM_ERROR("Division by zero");
       }
@@ -399,8 +405,8 @@ dispatch:
     }
 
     VM_CASE(POW) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -426,12 +432,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(POWI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i = std::pow(lhs_val->u.i, imm);
@@ -443,12 +449,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(POWF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i = std::pow(lhs_val->u.i, imm);
@@ -461,8 +467,8 @@ dispatch:
     }
 
     VM_CASE(MOD) {
-      operand_t lhs = state->pc->operand0;
-      operand_t rhs = state->pc->operand1;
+      operand_t lhs = state->pc->a;
+      operand_t rhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -488,12 +494,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MODI) {
-      operand_t lhs = state->pc->operand0;
-      operand_t int_high = state->pc->operand1;
-      operand_t int_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t int_high = state->pc->b;
+      operand_t int_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      int imm = reinterpret_u16_as_i32(int_high, int_low);
+      int imm = ubit_2u16toi32(int_high, int_low);
 
 
 
@@ -507,12 +513,12 @@ dispatch:
       VM_NEXT();
     }
     VM_CASE(MODF) {
-      operand_t lhs = state->pc->operand0;
-      operand_t flt_high = state->pc->operand1;
-      operand_t flt_low = state->pc->operand2;
+      operand_t lhs = state->pc->a;
+      operand_t flt_high = state->pc->b;
+      operand_t flt_low = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
-      float imm = reinterpret_u16_as_f32(flt_high, flt_low);
+      float imm = ubit_2u16tof32(flt_high, flt_low);
 
       if VIA_LIKELY (lhs_val->is_int()) {
         lhs_val->u.i = std::fmod(lhs_val->u.i, imm);
@@ -525,7 +531,7 @@ dispatch:
     }
 
     VM_CASE(NEG) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       Value* val = __get_register(state, dst);
       Value::Tag type = val->type;
 
@@ -540,8 +546,8 @@ dispatch:
     }
 
     VM_CASE(MOV) {
-      operand_t rdst = state->pc->operand0;
-      operand_t rsrc = state->pc->operand1;
+      operand_t rdst = state->pc->a;
+      operand_t rsrc = state->pc->b;
       Value* src_val = __get_register(state, rsrc);
 
       __set_register(state, rdst, src_val->clone());
@@ -549,7 +555,7 @@ dispatch:
     }
 
     VM_CASE(INC) {
-      operand_t rdst = state->pc->operand0;
+      operand_t rdst = state->pc->a;
       Value* dst_val = __get_register(state, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
@@ -563,7 +569,7 @@ dispatch:
     }
 
     VM_CASE(DEC) {
-      operand_t rdst = state->pc->operand0;
+      operand_t rdst = state->pc->a;
       Value* dst_val = __get_register(state, rdst);
 
       if VIA_LIKELY (dst_val->is_int()) {
@@ -577,8 +583,8 @@ dispatch:
     }
 
     VM_CASE(LOADK) {
-      operand_t dst = state->pc->operand0;
-      operand_t idx = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t idx = state->pc->b;
 
       const Value& kval = __get_constant(state, idx);
 
@@ -587,42 +593,42 @@ dispatch:
     }
 
     VM_CASE(LOADNIL) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
 
       __set_register(state, dst, Value());
       VM_NEXT();
     }
 
     VM_CASE(LOADI) {
-      operand_t dst = state->pc->operand0;
-      int imm = reinterpret_u16_as_u32(state->pc->operand1, state->pc->operand2);
+      operand_t dst = state->pc->a;
+      int imm = ubit_2u16tou32(state->pc->b, state->pc->c);
 
       __set_register(state, dst, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(LOADF) {
-      operand_t dst = state->pc->operand0;
-      float imm = reinterpret_u16_as_f32(state->pc->operand1, state->pc->operand2);
+      operand_t dst = state->pc->a;
+      float imm = ubit_2u16tof32(state->pc->b, state->pc->c);
 
       __set_register(state, dst, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(LOADBT) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       __set_register(state, dst, Value(true, true));
       VM_NEXT();
     }
 
     VM_CASE(LOADBF) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       __set_register(state, dst, Value(false, true));
       VM_NEXT();
     }
 
     VM_CASE(LOADARR) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       Value arr(new struct Array());
 
       __set_register(state, dst, std::move(arr));
@@ -630,7 +636,7 @@ dispatch:
     }
 
     VM_CASE(LOADDICT) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       Value dict(new struct Dict());
 
       __set_register(state, dst, std::move(dict));
@@ -638,9 +644,9 @@ dispatch:
     }
 
     VM_CASE(CLOSURE) {
-      operand_t dst = state->pc->operand0;
-      operand_t len = state->pc->operand1;
-      operand_t argc = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t len = state->pc->b;
+      operand_t argc = state->pc->c;
 
       auto* func = new struct Function(len);
       Closure* closure = new Closure();
@@ -658,8 +664,8 @@ dispatch:
     }
 
     VM_CASE(GETUPV) {
-      operand_t dst = state->pc->operand0;
-      operand_t upv_id = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t upv_id = state->pc->b;
       UpValue* upv = __closure_upv_get(__current_callframe(state)->closure, upv_id);
 
       __set_register(state, dst, upv->value->clone());
@@ -667,8 +673,8 @@ dispatch:
     }
 
     VM_CASE(SETUPV) {
-      operand_t src = state->pc->operand0;
-      operand_t upv_id = state->pc->operand1;
+      operand_t src = state->pc->a;
+      operand_t upv_id = state->pc->b;
       Value* val = __get_register(state, src);
 
       __closure_upv_set(__current_callframe(state)->closure, upv_id, *val);
@@ -676,13 +682,13 @@ dispatch:
     }
 
     VM_CASE(RETGET) {
-      operand_t dst = state->pc->operand0;
+      operand_t dst = state->pc->a;
       __set_register(state, dst, state->ret.clone());
       VM_NEXT();
     }
 
     VM_CASE(PUSH) {
-      operand_t src = state->pc->operand0;
+      operand_t src = state->pc->a;
       Value* val = __get_register(state, src);
 
       __push(state, std::move(*val));
@@ -690,7 +696,7 @@ dispatch:
     }
 
     VM_CASE(PUSHK) {
-      operand_t const_idx = state->pc->operand0;
+      operand_t const_idx = state->pc->a;
       Value constant = __get_constant(state, const_idx);
 
       __push(state, constant.clone());
@@ -703,13 +709,13 @@ dispatch:
     }
 
     VM_CASE(PUSHI) {
-      int imm = reinterpret_u16_as_u32(state->pc->operand0, state->pc->operand1);
+      int imm = ubit_2u16tou32(state->pc->a, state->pc->b);
       __push(state, Value(imm));
       VM_NEXT();
     }
 
     VM_CASE(PUSHF) {
-      float imm = reinterpret_u16_as_f32(state->pc->operand0, state->pc->operand1);
+      float imm = ubit_2u16tof32(state->pc->a, state->pc->b);
       __push(state, Value(imm));
       VM_NEXT();
     }
@@ -730,8 +736,8 @@ dispatch:
     }
 
     VM_CASE(GETLOCAL) {
-      operand_t dst = state->pc->operand0;
-      operand_t off = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t off = state->pc->b;
       Value* val = __get_local(state, off);
 
       __set_register(state, dst, val->clone());
@@ -739,8 +745,8 @@ dispatch:
     }
 
     VM_CASE(SETLOCAL) {
-      operand_t src = state->pc->operand0;
-      operand_t off = state->pc->operand1;
+      operand_t src = state->pc->a;
+      operand_t off = state->pc->b;
       Value* val = __get_register(state, src);
 
       __set_local(state, off, std::move(*val));
@@ -748,8 +754,8 @@ dispatch:
     }
 
     VM_CASE(GETGLOBAL) {
-      operand_t dst = state->pc->operand0;
-      operand_t key = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t key = state->pc->b;
 
       Value* key_obj = __get_register(state, key);
       struct String* key_str = key_obj->u.str;
@@ -760,8 +766,8 @@ dispatch:
     }
 
     VM_CASE(SETGLOBAL) {
-      operand_t src = state->pc->operand0;
-      operand_t key = state->pc->operand1;
+      operand_t src = state->pc->a;
+      operand_t key = state->pc->b;
 
       Value* key_obj = __get_register(state, key);
       struct String* key_str = key_obj->u.str;
@@ -772,9 +778,9 @@ dispatch:
     }
 
     VM_CASE(EQ) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       if VIA_UNLIKELY (lhs == rhs) {
         __set_register(state, dst, Value(true, true));
@@ -796,9 +802,9 @@ dispatch:
     }
 
     VM_CASE(NEQ) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       if VIA_LIKELY (lhs != rhs) {
         __set_register(state, dst, Value(true, true));
@@ -820,9 +826,9 @@ dispatch:
     }
 
     VM_CASE(AND) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -833,9 +839,9 @@ dispatch:
     }
 
     VM_CASE(OR) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -846,8 +852,8 @@ dispatch:
     }
 
     VM_CASE(NOT) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
 
       Value* lhs_val = __get_register(state, lhs);
       bool cond = !__to_cxx_bool(*lhs_val);
@@ -857,9 +863,9 @@ dispatch:
     }
 
     VM_CASE(LT) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -885,9 +891,9 @@ dispatch:
     }
 
     VM_CASE(GT) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -913,9 +919,9 @@ dispatch:
     }
 
     VM_CASE(LTEQ) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -941,9 +947,9 @@ dispatch:
     }
 
     VM_CASE(GTEQ) {
-      operand_t dst = state->pc->operand0;
-      operand_t lhs = state->pc->operand1;
-      operand_t rhs = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
 
       Value* lhs_val = __get_register(state, lhs);
       Value* rhs_val = __get_register(state, rhs);
@@ -973,14 +979,14 @@ dispatch:
     }
 
     VM_CASE(JMP) {
-      signed_operand_t offset = state->pc->operand0;
+      signed_operand_t offset = state->pc->a;
       state->pc += offset;
       goto dispatch;
     }
 
     VM_CASE(JMPIF) {
-      operand_t cond = state->pc->operand0;
-      signed_operand_t offset = state->pc->operand1;
+      operand_t cond = state->pc->a;
+      signed_operand_t offset = state->pc->b;
 
       Value* cond_val = __get_register(state, cond);
       if (__to_cxx_bool(*cond_val)) {
@@ -992,8 +998,8 @@ dispatch:
     }
 
     VM_CASE(JMPIFN) {
-      operand_t cond = state->pc->operand0;
-      signed_operand_t offset = state->pc->operand1;
+      operand_t cond = state->pc->a;
+      signed_operand_t offset = state->pc->b;
 
       Value* cond_val = __get_register(state, cond);
       if (!__to_cxx_bool(*cond_val)) {
@@ -1005,9 +1011,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
         state->pc += offset;
@@ -1027,9 +1033,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFNEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
         state->pc += offset;
@@ -1049,9 +1055,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFLT) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1089,9 +1095,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFGT) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1129,9 +1135,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFLTEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1169,9 +1175,9 @@ dispatch:
     }
 
     VM_CASE(JMPIFGTEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      signed_operand_t offset = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      signed_operand_t offset = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1209,7 +1215,7 @@ dispatch:
     }
 
     VM_CASE(LJMP) {
-      operand_t label = state->pc->operand0;
+      operand_t label = state->pc->a;
 
       state->pc = __label_get(state, label);
 
@@ -1217,8 +1223,8 @@ dispatch:
     }
 
     VM_CASE(LJMPIF) {
-      operand_t cond = state->pc->operand0;
-      operand_t label = state->pc->operand1;
+      operand_t cond = state->pc->a;
+      operand_t label = state->pc->b;
 
       Value* cond_val = __get_register(state, cond);
       if (__to_cxx_bool(*cond_val)) {
@@ -1230,8 +1236,8 @@ dispatch:
     }
 
     VM_CASE(LJMPIFN) {
-      operand_t cond = state->pc->operand0;
-      operand_t label = state->pc->operand1;
+      operand_t cond = state->pc->a;
+      operand_t label = state->pc->b;
 
       Value* cond_val = __get_register(state, cond);
       if (!__to_cxx_bool(*cond_val)) {
@@ -1243,9 +1249,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       if VIA_UNLIKELY (cond_lhs == cond_rhs) {
         state->pc = __label_get(state, label);
@@ -1265,9 +1271,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFNEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       if VIA_LIKELY (cond_lhs != cond_rhs) {
         state->pc = __label_get(state, label);
@@ -1287,9 +1293,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFLT) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1327,9 +1333,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFGT) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1367,9 +1373,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFLTEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1407,9 +1413,9 @@ dispatch:
     }
 
     VM_CASE(LJMPIFGTEQ) {
-      operand_t cond_lhs = state->pc->operand0;
-      operand_t cond_rhs = state->pc->operand1;
-      operand_t label = state->pc->operand2;
+      operand_t cond_lhs = state->pc->a;
+      operand_t cond_rhs = state->pc->b;
+      operand_t label = state->pc->c;
 
       Value* lhs_val = __get_register(state, cond_lhs);
       Value* rhs_val = __get_register(state, cond_rhs);
@@ -1447,7 +1453,7 @@ dispatch:
     }
 
     VM_CASE(CALL) {
-      operand_t fn = state->pc->operand0;
+      operand_t fn = state->pc->a;
       Value* fn_val = __get_register(state, fn);
 
       __call(state, fn_val->u.clsr);
@@ -1461,28 +1467,39 @@ dispatch:
     VM_CASE(RETNIL) {
       __closure_close_upvalues(__current_callframe(state)->closure);
       __return(state, Value());
+
+      VM_CHECK_RETURN();
       VM_NEXT();
     }
 
-    VM_CASE(RET0)
-    VM_CASE(RET1)
+    VM_CASE(RETBT) {
+      __return(state, Value(true, true));
+
+      VM_CHECK_RETURN();
+      VM_NEXT();
+    }
+
+    VM_CASE(RETBF) {
+      __return(state, Value(false, true));
+
+      VM_CHECK_RETURN();
+      VM_NEXT();
+    }
+
     VM_CASE(RET) {
-      operand_t src = state->pc->operand0;
+      operand_t src = state->pc->a;
       Value* val = __get_register(state, src);
 
       __return(state, std::move(*val));
 
-      if VIA_UNLIKELY (state->callstack->frames_count == 0) {
-        goto exit;
-      }
-
+      VM_CHECK_RETURN();
       VM_NEXT();
     }
 
     VM_CASE(GETARR) {
-      operand_t dst = state->pc->operand0;
-      operand_t tbl = state->pc->operand1;
-      operand_t key = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t tbl = state->pc->b;
+      operand_t key = state->pc->c;
 
       Value* value = __get_register(state, tbl);
       Value* index = __get_register(state, key);
@@ -1493,9 +1510,9 @@ dispatch:
     }
 
     VM_CASE(SETARR) {
-      operand_t src = state->pc->operand0;
-      operand_t tbl = state->pc->operand1;
-      operand_t key = state->pc->operand2;
+      operand_t src = state->pc->a;
+      operand_t tbl = state->pc->b;
+      operand_t key = state->pc->c;
 
       Value* array = __get_register(state, tbl);
       Value* index = __get_register(state, key);
@@ -1508,8 +1525,8 @@ dispatch:
     VM_CASE(NEXTARR) {
       static std::unordered_map<void*, operand_t> next_table;
 
-      operand_t dst = state->pc->operand0;
-      operand_t valr = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t valr = state->pc->b;
 
       Value* val = __get_register(state, valr);
       void* ptr = __to_pointer(*val);
@@ -1529,8 +1546,8 @@ dispatch:
     }
 
     VM_CASE(LENARR) {
-      operand_t dst = state->pc->operand0;
-      operand_t tbl = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t tbl = state->pc->b;
 
       Value* val = __get_register(state, tbl);
       int size = __array_size(val->u.arr);
@@ -1540,8 +1557,8 @@ dispatch:
     }
 
     VM_CASE(LENSTR) {
-      operand_t rdst = state->pc->operand0;
-      operand_t objr = state->pc->operand1;
+      operand_t rdst = state->pc->a;
+      operand_t objr = state->pc->b;
 
       Value* val = __get_register(state, objr);
       int len = val->u.str->data_size;
@@ -1551,8 +1568,8 @@ dispatch:
     }
 
     VM_CASE(CONSTR) {
-      operand_t left = state->pc->operand0;
-      operand_t right = state->pc->operand1;
+      operand_t left = state->pc->a;
+      operand_t right = state->pc->b;
 
       Value* left_val = __get_register(state, left);
       Value* right_val = __get_register(state, right);
@@ -1574,9 +1591,9 @@ dispatch:
     }
 
     VM_CASE(GETSTR) {
-      operand_t dst = state->pc->operand0;
-      operand_t str = state->pc->operand1;
-      operand_t idx = state->pc->operand2;
+      operand_t dst = state->pc->a;
+      operand_t str = state->pc->b;
+      operand_t idx = state->pc->c;
 
       Value* str_val = __get_register(state, str);
       struct String* tstr = str_val->u.str;
@@ -1587,15 +1604,15 @@ dispatch:
     }
 
     VM_CASE(SETSTR) {
-      operand_t str = state->pc->operand0;
-      operand_t src = state->pc->operand1;
-      operand_t idx = state->pc->operand2;
+      operand_t str = state->pc->a;
+      operand_t src = state->pc->b;
+      operand_t idx = state->pc->c;
 
       Value* str_val = __get_register(state, str);
       struct String* tstr = str_val->u.str;
 
       char chr = static_cast<char>(src);
-      char* str_cpy = duplicate_string(tstr->data);
+      char* str_cpy = ustrdup(tstr->data);
       str_cpy[idx] = chr;
 
       __set_register(state, str, Value(str_cpy));
@@ -1604,8 +1621,8 @@ dispatch:
     }
 
     VM_CASE(ICAST) {
-      operand_t dst = state->pc->operand0;
-      operand_t src = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t src = state->pc->b;
 
       Value* target = __get_register(state, src);
       Value result = __to_int(state, *target);
@@ -1615,8 +1632,8 @@ dispatch:
     }
 
     VM_CASE(FCAST) {
-      operand_t dst = state->pc->operand0;
-      operand_t src = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t src = state->pc->b;
 
       Value* target = __get_register(state, src);
       Value result = __to_float(state, *target);
@@ -1626,8 +1643,8 @@ dispatch:
     }
 
     VM_CASE(STRCAST) {
-      operand_t dst = state->pc->operand0;
-      operand_t src = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t src = state->pc->b;
 
       Value* target = __get_register(state, src);
       Value result = __to_string(*target);
@@ -1637,8 +1654,8 @@ dispatch:
     }
 
     VM_CASE(BCAST) {
-      operand_t dst = state->pc->operand0;
-      operand_t src = state->pc->operand1;
+      operand_t dst = state->pc->a;
+      operand_t src = state->pc->b;
 
       Value* target = __get_register(state, src);
       Value result = __to_bool(*target);
@@ -1652,7 +1669,7 @@ exit:;
 }
 
 void State::execute() {
-  __execute<false, false>(this);
+  __execute(this);
 }
 
 void State::execute_step(std::optional<Instruction> insn) {

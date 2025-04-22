@@ -7,7 +7,7 @@
 namespace via {
 
 String::String(const String& other)
-  : data(duplicate_string(other.data)),
+  : data(ustrdup(other.data)),
     data_size(other.data_size),
     hash(other.hash) {}
 
@@ -22,7 +22,7 @@ String::String(String&& other)
 
 String& String::operator=(const String& other) {
   if (this != &other) {
-    data = duplicate_string(other.data);
+    data = ustrdup(other.data);
     data_size = other.data_size;
     hash = other.hash;
   }
@@ -32,7 +32,7 @@ String& String::operator=(const String& other) {
 
 String& String::operator=(String&& other) {
   if (this != &other) {
-    data = duplicate_string(other.data);
+    data = other.data;
     data_size = other.data_size;
     hash = other.hash;
     other.data = nullptr;
@@ -53,8 +53,8 @@ void String::set(size_t position, const String& value) {
 String String::get(size_t position) {
   VIA_ASSERT(position < data_size, "String index position out of bounds");
   char chr = data[position];
-  String* tstr = new String(&chr);
-  return *tstr;
+  char str[] = {chr, '\0'};
+  return String(str);
 }
 
 } // namespace via

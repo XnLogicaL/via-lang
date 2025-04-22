@@ -11,14 +11,12 @@ bool is_constant_expression(TransUnitContext& unit_ctx, const ExprNodeBase* expr
   if (is_derived_instance<ExprNodeBase, LitExprNode>(expression)) {
     return true;
   }
-  else if (const BinExprNode* bin_expr =
-             get_derived_instance<ExprNodeBase, BinExprNode>(expression)) {
+  else if (const BinExprNode* bin_expr = get_derived_instance<ExprNodeBase, BinExprNode>(expression)) {
     return is_constant_expression(unit_ctx, bin_expr->lhs_expression, variable_depth + 1)
       && is_constant_expression(unit_ctx, bin_expr->rhs_expression, variable_depth + 1);
   }
-  else if (const SymExprNode* sym_expr =
-             get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
-    auto& current_closure = unit_ctx.internal.function_stack->top();
+  else if (const SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
+    auto& current_closure = unit_ctx.internal.function_stack.top();
     auto var_obj = current_closure.locals.get_local_by_symbol(sym_expr->identifier.lexeme);
     if (!var_obj.has_value()) {
       return false;
@@ -81,15 +79,12 @@ bool is_callable(const TypeNodeBase* type) {
 
 bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
   if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
-    if (const PrimTypeNode* primitive_right =
-          get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
+    if (const PrimTypeNode* primitive_right = get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
       return primitive_left->type == primitive_right->type;
     }
   }
-  else if (const GenericTypeNode* generic_left =
-             get_derived_instance<TypeNodeBase, GenericTypeNode>(left)) {
-    if (const GenericTypeNode* generic_right =
-          get_derived_instance<TypeNodeBase, GenericTypeNode>(right)) {
+  else if (const GenericTypeNode* generic_left = get_derived_instance<TypeNodeBase, GenericTypeNode>(left)) {
+    if (const GenericTypeNode* generic_right = get_derived_instance<TypeNodeBase, GenericTypeNode>(right)) {
       if (generic_left->identifier.lexeme != generic_right->identifier.lexeme) {
         return false;
       }
@@ -109,10 +104,8 @@ bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
       return true;
     }
   }
-  else if (const ArrayTypeNode* array_left =
-             get_derived_instance<TypeNodeBase, ArrayTypeNode>(left)) {
-    if (const ArrayTypeNode* array_right =
-          get_derived_instance<TypeNodeBase, ArrayTypeNode>(right)) {
+  else if (const ArrayTypeNode* array_left = get_derived_instance<TypeNodeBase, ArrayTypeNode>(left)) {
+    if (const ArrayTypeNode* array_right = get_derived_instance<TypeNodeBase, ArrayTypeNode>(right)) {
       return is_same(array_left->type, array_right->type);
     }
   }
@@ -122,8 +115,7 @@ bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
 
 bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
   if (const PrimTypeNode* primitive_left = get_derived_instance<TypeNodeBase, PrimTypeNode>(left)) {
-    if (const PrimTypeNode* primitive_right =
-          get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
+    if (const PrimTypeNode* primitive_right = get_derived_instance<TypeNodeBase, PrimTypeNode>(right)) {
 
       return primitive_left->type == primitive_right->type;
     }
@@ -133,8 +125,7 @@ bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
 }
 
 bool is_castable(const TypeNodeBase* from, const TypeNodeBase* into) {
-  if (const PrimTypeNode* primitive_right =
-        get_derived_instance<TypeNodeBase, PrimTypeNode>(into)) {
+  if (const PrimTypeNode* primitive_right = get_derived_instance<TypeNodeBase, PrimTypeNode>(into)) {
     if (get_derived_instance<TypeNodeBase, PrimTypeNode>(from)) {
       if (primitive_right->type == Value::Tag::String) {
         return true;

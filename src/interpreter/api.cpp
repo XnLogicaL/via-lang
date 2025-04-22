@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "state.h"
+#include "api-impl.h"
 #include <cmath>
 
 namespace via {

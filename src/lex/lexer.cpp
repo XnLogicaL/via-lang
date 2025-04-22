@@ -3,6 +3,14 @@
 
 #include "lexer.h"
 
+#define TOKEN(a, b) Token(a, b, line, start_offset, position)
+#define IN_RANGE()  pos < source_size()
+#define NEXT_CHAR()                                                                                \
+  {                                                                                                \
+    offset++;                                                                                      \
+    pos++;                                                                                         \
+  }
+
 namespace via {
 
 using enum TokenType;
@@ -58,21 +66,19 @@ Token Lexer::read_number(size_t position) {
   }
 
   // Read the number until the current character isn't numeric
-  while (pos < source_size() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))
-  ) {
+  while (IN_RANGE() && (std::isdigit(peek()) || (type == LIT_HEX && is_hex_char(peek())))) {
     value.push_back(peek());
-    pos++;
-    offset++;
+    NEXT_CHAR();
   }
 
   // Check for floating point
-  if (pos < source_size() && peek() == '.') {
+  if (IN_RANGE() && peek() == '.') {
     value.push_back(peek());
     type = LIT_FLOAT;
-    pos++;
-    offset++;
 
-    while (pos < source_size() && std::isdigit(peek())) {
+    NEXT_CHAR();
+
+    while (IN_RANGE() && std::isdigit(peek())) {
       value.push_back(peek());
       pos++;
       offset++;
@@ -83,7 +89,7 @@ Token Lexer::read_number(size_t position) {
     value = std::format("0{}{}", delimiter, value);
   }
 
-  return Token(type, value, line, start_offset, position);
+  return TOKEN(type, value);
 }
 
 #if VIA_COMPILER == C_GCC
@@ -98,7 +104,7 @@ Token Lexer::read_ident(size_t position) {
   // We can't know in advance which.
   TokenType type = IDENTIFIER;
   size_t start_offset = offset;
-  std::string identifier;
+  std::string lexeme;
 
   // Lambda for checking if a character is allowed within an identifier
   auto is_allowed = [this](char chr) -> bool {
@@ -110,10 +116,9 @@ Token Lexer::read_ident(size_t position) {
 
   // Read identifier while position is inside bounds and the current character is allowed within
   // an identifier
-  while (pos < source_size() && is_allowed(peek())) {
-    identifier.push_back(peek());
-    pos++;
-    offset++;
+  while (IN_RANGE() && is_allowed(peek())) {
+    lexeme.push_back(peek());
+    NEXT_CHAR();
   }
 
   static const std::unordered_map<std::string, TokenType> keyword_map = {
@@ -133,36 +138,34 @@ Token Lexer::read_ident(size_t position) {
   };
 
   // Checks if the identifier is a keyword or not
-  auto it = keyword_map.find(identifier);
+  auto it = keyword_map.find(lexeme);
   if (it != keyword_map.end()) {
     type = it->second;
   }
 
   // Checks if the identifier is a Bool literal
-  if (identifier == "true" || identifier == "false") {
+  if (lexeme == "true" || lexeme == "false") {
     type = LIT_BOOL;
   }
 
-  if (identifier == "Nil") {
+  if (lexeme == "Nil") {
     type = LIT_NIL;
   }
 
-  return Token(type, identifier, line, start_offset, position);
+  return TOKEN(type, lexeme);
 }
 
 Token Lexer::read_string(size_t position) {
   std::string lexeme;
   size_t start_offset = offset;
 
-  pos++; // Skip opening quote
-  offset++;
+  NEXT_CHAR(); // Skip opening quote
 
-  while (pos < source_size() && peek() != '"') {
+  while (IN_RANGE() && peek() != '"') {
     if (peek() == '\\') {
-      pos++;
-      offset++;
+      NEXT_CHAR();
 
-      if (pos < source_size()) {
+      if (IN_RANGE()) {
         char escape_char = peek();
         switch (escape_char) {
         case 'n':
@@ -185,18 +188,16 @@ Token Lexer::read_string(size_t position) {
       lexeme.push_back(chr);
     }
 
-    pos++;
-    offset++;
+    NEXT_CHAR();
   }
 
-  pos++; // Skip closing quote
-  offset++;
+  NEXT_CHAR(); // Skip closing quote
 
-  return Token(LIT_STRING, lexeme, line, start_offset, position);
+  return TOKEN(LIT_STRING, lexeme);
 }
 
 Token Lexer::get_token() {
-  while (pos < source_size()) {
+  while (IN_RANGE()) {
     if (isspace(peek())) {
       if (peek() == '\n') {
         line++;
@@ -212,12 +213,11 @@ Token Lexer::get_token() {
 
     // Skip single-line comments
     if (peek() == '#' && pos + 1 < source_size() && peek(1) == '#') {
-      pos += 2;
-      offset += 2;
+      NEXT_CHAR(); // Skip '#'
+      NEXT_CHAR(); // Skip '#'
 
-      while (pos < source_size() && peek() != '\n') {
-        pos++;
-        offset++;
+      while (IN_RANGE() && peek() != '\n') {
+        NEXT_CHAR();
       }
 
       continue;
@@ -225,8 +225,8 @@ Token Lexer::get_token() {
 
     // Skip block comments
     if (peek() == '#' && pos + 1 < source_size() && peek(1) == '[') {
-      pos += 2;
-      offset += 2;
+      NEXT_CHAR(); // Skip '#'
+      NEXT_CHAR(); // Skip '['
 
       while (pos + 1 < source_size() && !(peek() == ']' && peek(1) == '#')) {
         if (peek() == '\n') {
@@ -234,13 +234,12 @@ Token Lexer::get_token() {
           offset = 0;
         }
 
-        pos++;
-        offset++;
+        NEXT_CHAR();
       }
 
       if (pos + 1 < source_size()) {
-        pos += 2; // Skip ']#'
-        offset += 2;
+        NEXT_CHAR(); // Skip ']'
+        NEXT_CHAR(); // Skip '#'
       }
 
       continue;
@@ -254,7 +253,7 @@ Token Lexer::get_token() {
   // Check if the position is at the end of the unit_ctx.file_source String
   // If so, return an EOF Token meant as a sentinel
   if (pos >= source_size()) {
-    return {EOF_, "\0", line, offset, position};
+    return Token(EOF_, "\0", line, offset, position);
   }
 
   size_t start_offset = offset; // Record starting offset of each Token
@@ -277,110 +276,107 @@ Token Lexer::get_token() {
   // Handle special characters (operators, delimiters, etc.)
   char chr = peek();
 
-  pos++;
-  offset++;
+  NEXT_CHAR();
 
   switch (chr) {
   case '+':
-    if (pos < source_size() && peek() == '+') {
-      pos++;
-      offset++;
-      return Token(OP_INC, "++", line, start_offset, position);
+    if (IN_RANGE() && peek() == '+') {
+      NEXT_CHAR();
+      return TOKEN(OP_INC, "++");
     }
-    return Token(OP_ADD, "+", line, start_offset, position);
+
+    return TOKEN(OP_ADD, "+");
   case '-':
-    if (pos < source_size() && peek() == '>') {
+    if (IN_RANGE() && peek() == '>') {
       pos++;
       offset++;
-      return Token(RETURNS, "->", line, start_offset, position);
+      return TOKEN(RETURNS, "->");
     }
-    else if (pos < source_size() && peek() == '-') {
+    else if (IN_RANGE() && peek() == '-') {
       pos++;
       offset++;
-      return Token(OP_DEC, "--", line, start_offset, position);
+      return TOKEN(OP_DEC, "--");
     }
-    return Token(OP_SUB, "-", line, start_offset, position);
+
+    return TOKEN(OP_SUB, "-");
   case '*':
-    return Token(OP_MUL, "*", line, start_offset, position);
+    return TOKEN(OP_MUL, "*");
   case '/':
-    return Token(OP_DIV, "/", line, start_offset, position);
+    return TOKEN(OP_DIV, "/");
   case '%':
-    return Token(OP_MOD, "%", line, start_offset, position);
+    return TOKEN(OP_MOD, "%");
   case '^':
-    return Token(OP_EXP, "^", line, start_offset, position);
+    return TOKEN(OP_EXP, "^");
   case '=':
-    if (pos < source_size() && peek() == '=') {
-      pos++;
-      offset++;
-      return Token(OP_EQ, "==", line, start_offset, position);
+    if (IN_RANGE() && peek() == '=') {
+      NEXT_CHAR();
+      return TOKEN(OP_EQ, "==");
     }
-    return Token(EQ, "=", line, start_offset, position);
+
+    return TOKEN(EQ, "=");
   case '!':
-    if (pos < source_size() && peek() == '=') {
-      pos++;
-      offset++;
-      return Token(OP_NEQ, "!=", line, start_offset, position);
+    if (IN_RANGE() && peek() == '=') {
+      NEXT_CHAR();
+      return TOKEN(OP_NEQ, "!=");
     }
-    return Token(EXCLAMATION, "!", line, start_offset, position);
+
+    return TOKEN(EXCLAMATION, "!");
   case '<':
-    if (pos < source_size() && peek() == '>') {
-      pos++;
-      offset++;
-      return Token(OP_GEQ, ">=", line, start_offset, position);
+    if (IN_RANGE() && peek() == '>') {
+      NEXT_CHAR();
+      return TOKEN(OP_GEQ, ">=");
     }
-    else if (pos < source_size() && peek() == '<') {
-      pos++;
-      offset++;
-      return Token(OP_LEQ, "<=", line, start_offset, position);
+    else if (IN_RANGE() && peek() == '<') {
+      NEXT_CHAR();
+      return TOKEN(OP_LEQ, "<=");
     }
-    return Token(OP_LT, "<", line, start_offset, position);
+
+    return TOKEN(OP_LT, "<");
   case '>':
-    return Token(OP_GT, ">", line, start_offset, position);
+    return TOKEN(OP_GT, ">");
   case '&':
-    return Token(AMPERSAND, "&", line, start_offset, position);
+    return TOKEN(AMPERSAND, "&");
   case '|':
-    return Token(PIPE, "|", line, start_offset, position);
+    return TOKEN(PIPE, "|");
   case ';':
-    return Token(SEMICOLON, ";", line, start_offset, position);
+    return TOKEN(SEMICOLON, ";");
   case ',':
-    return Token(COMMA, ",", line, start_offset, position);
+    return TOKEN(COMMA, ",");
   case '(':
-    return Token(PAREN_OPEN, "(", line, start_offset, position);
+    return TOKEN(PAREN_OPEN, "(");
   case ')':
-    return Token(PAREN_CLOSE, ")", line, start_offset, position);
+    return TOKEN(PAREN_CLOSE, ")");
   case '{':
-    return Token(BRACE_OPEN, "{", line, start_offset, position);
+    return TOKEN(BRACE_OPEN, "{");
   case '}':
-    return Token(BRACE_CLOSE, "}", line, start_offset, position);
+    return TOKEN(BRACE_CLOSE, "}");
   case '[':
-    return Token(BRACKET_OPEN, "[", line, start_offset, position);
+    return TOKEN(BRACKET_OPEN, "[");
   case ']':
-    return Token(BRACKET_CLOSE, "]", line, start_offset, position);
+    return TOKEN(BRACKET_CLOSE, "]");
   case '.':
-    return Token(DOT, ".", line, start_offset, position);
+    return TOKEN(DOT, ".");
   case ':':
-    return Token(COLON, ":", line, start_offset, position);
+    return TOKEN(COLON, ":");
   case '@':
-    return Token(AT, "@", line, start_offset, position);
+    return TOKEN(AT, "@");
   case '?':
-    return Token(QUESTION, "?", line, start_offset, position);
+    return TOKEN(QUESTION, "?");
   case '#':
-    return Token(OP_LEN, "#", line, start_offset, position);
+    return TOKEN(OP_LEN, "#");
   default:
-    return Token(UNKNOWN, std::string(1, chr), line, start_offset, position);
+    return TOKEN(UNKNOWN, std::string(1, chr));
   }
 
-  return Token(UNKNOWN, "\0", line, start_offset, position);
+  return TOKEN(UNKNOWN, "\0");
 }
 
 void Lexer::tokenize() {
-  auto& tokens = unit_ctx.tokens;
-
   while (true) {
-    Token Token = get_token();
-    tokens->push(Token);
+    Token tok = get_token();
+    unit_ctx.tokens.push_back(tok);
 
-    if (Token.type == EOF_) {
+    if (tok.type == EOF_) {
       break;
     }
   }

@@ -7,13 +7,16 @@
 #include "common-defs.h"
 #include "common-macros.h"
 
+#include <arena.h>
 #include <lex/token.h>
+#include <parse/ast-base.h>
 #include <compiler/globals.h>
-#include <compiler/bytecode.h>
-#include <compiler/constant.h>
 #include <compiler/stack.h>
+#include <interpreter/tvalue.h>
 
 namespace via {
+
+inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 8;
 
 /**
  * Dynamic container that holds a sequence of bytes.
@@ -22,10 +25,6 @@ namespace via {
 using byte_stream_t = std::vector<uint8_t>;
 
 // Context objects forward declarations.
-class TokenHolder;
-class SyntaxTree;
-class BytecodeHolder;
-class ConstantHolder;
 class CompilerVariableStack;
 class CompilerFunctionStack;
 class GlobalHolder;
@@ -56,17 +55,20 @@ public:
   // Optimization level: 0-3
   size_t optimization_level = 0;
 
-  std::unique_ptr<TokenHolder> tokens;
-  std::unique_ptr<SyntaxTree> ast;
-  std::unique_ptr<BytecodeHolder> bytecode;
-  std::unique_ptr<ConstantHolder> constants;
+  std::vector<Token> tokens{};
+  std::vector<StmtNodeBase*> ast{};
+  std::vector<Bytecode> bytecode{};
+  std::vector<Value> constants{};
 
   struct {
-    size_t label_count;
+    size_t label_count = 0;
 
-    std::unique_ptr<CompilerFunctionStack> function_stack;
+    // Allocators
+    ArenaAllocator ast_allocator{AST_ALLOCATOR_SIZE};
+
+    GlobalHolder globals;
+    CompilerFunctionStack function_stack;
     std::stack<std::vector<StmtNodeBase*>> defered_stmts;
-    std::unique_ptr<GlobalHolder> globals;
   } internal;
 };
 

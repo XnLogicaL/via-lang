@@ -76,6 +76,9 @@ public:
  */
 class CErrorBus final {
 public:
+  // Custom destructor to ensure that the errors are emitted before destruction.
+  ~CErrorBus();
+
   // Appends a user-specified level error to the buffer.
   void log(const CError& err);
 
@@ -90,9 +93,6 @@ public:
 
   // Appends a newline to the buffer.
   void new_line();
-
-  // Custom destructor to ensure that the errors are emitted before destruction.
-  ~CErrorBus();
 
 private:
   struct Payload {

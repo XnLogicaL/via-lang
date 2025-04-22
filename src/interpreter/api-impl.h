@@ -11,8 +11,6 @@
 #include "tarray.h"
 #include "tfunction.h"
 
-#include <compiler/bytecode.h>
-#include <compiler/constant.h>
 #include <utility/ustring.h>
 
 namespace via {
@@ -168,7 +166,7 @@ void __set_register(const State* state, operand_t reg, Value&& val);
 
 Value* __get_register(const State* state, operand_t reg);
 
-Closure* __create_main_function(BytecodeHolder& holder);
+Closure* __create_main_function(TransUnitContext& unit_ctx);
 
 } // namespace impl
 

@@ -7,7 +7,6 @@
 #include "common.h"
 
 #include <parse/ast.h>
-#include <compiler/bytecode.h>
 #include <compiler/visitor.h>
 #include <compiler/types.h>
 #include <interpreter/instruction.h>

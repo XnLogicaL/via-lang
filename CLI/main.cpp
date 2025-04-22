@@ -1,12 +1,10 @@
 //  ========================================================================================
 // [ This file is a part of The via Programming Language and is licensed under GNU GPL v3.0 ]
 //  ========================================================================================
-#include "linenoise.hpp"
-#include "argparse/argparse.hpp"
-#include "api-impl.h"
-#include "file-io.h"
-#include "color.h"
-#include "via.h"
+#include <linenoise.hpp>
+#include <argparse/argparse.hpp>
+#include <via/via.h>
+#include <utility/file-io.h>
 
 #define SET_PROFILER_POINT(id)     [[maybe_unused]] const auto id = std::chrono::steady_clock::now();
 #define GET_PROFILER_DIFF_MS(l, r) std::chrono::duration<double, std::milli>(r - l).count()
@@ -19,11 +17,10 @@ struct CompileResult {
   TransUnitContext unit;
 };
 
-CompilerContext ctx;
 CErrorBus err_bus;
 TransUnitContext dummy_unit_ctx("<unavailable>", "");
 
-static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& name) {
+[[maybe_unused]] static auto get_standard_parser(std::string name) {
   auto command = std::make_unique<ArgumentParser>(name);
   command->add_argument("target");
   command->add_argument("--dump-ast", "-Da")
@@ -40,11 +37,10 @@ static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& na
     .help("Dumps tokenized representation of the given source file upon tokenization")
     .flag();
   command->add_argument("--optimize", "-O")
-    .help("Sets optimization level to the given Int")
+    .help("Sets optimization level to the given integer")
     .scan<'u', size_t>()
     .default_value(size_t(1));
   command->add_argument("--verbose", "-v").help("Enables verbosity").flag();
-  command->add_argument("--sassy").help("Enables sassy mode 😉").flag();
   command->add_argument("--Bcapitalize-opcodes")
     .help("Whether to capitalize opcodes inside bytecode dumps")
     .flag();
@@ -56,7 +52,7 @@ static std::unique_ptr<ArgumentParser> get_standard_parser(const std::string& na
   return command;
 }
 
-static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
+static CompileResult handle_compile([[maybe_unused]] argparse::ArgumentParser& subcommand_parser) {
   using enum TokenType;
   using enum CErrorLevel;
 
@@ -85,7 +81,6 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
   }
 
   Lexer Lexer(unit_ctx);
-  Preprocessor Preprocessor(unit_ctx);
   Parser Parser(unit_ctx);
   Compiler Compiler(unit_ctx);
 
@@ -97,25 +92,6 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
 
     std::string message = std::format(
       "Tokenization completed in {:0.9f}s", GET_PROFILER_DIFF_MS(lex_start, lex_end) / 1000
-    );
-
-    err_bus.log({true, message, unit_ctx, INFO, {}});
-  }
-
-  SET_PROFILER_POINT(preproc_start);
-  Preprocessor.declare_default();
-  bool preproc_failed = Preprocessor.preprocess();
-
-  if (verbosity_flag) {
-    if (preproc_failed) {
-      err_bus.log({true, "Preprocess failed", unit_ctx, ERROR_, {}});
-      return {true, std::move(unit_ctx)};
-    }
-
-    SET_PROFILER_POINT(preproc_end);
-
-    std::string message = std::format(
-      "Preprocessing completed in {:0.9f}s", GET_PROFILER_DIFF_MS(preproc_start, preproc_end) / 1000
     );
 
     err_bus.log({true, message, unit_ctx, INFO, {}});
@@ -158,13 +134,13 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
     err_bus.log({true, message, unit_ctx, INFO, {}});
   }
 
-  bool failed = preproc_failed || parser_failed || compiler_failed;
+  bool failed = parser_failed || compiler_failed;
 
   if (!failed) {
     if (get_flag("--dump-tokens")) {
       print_flag_label("--dump-tokens");
 
-      for (const Token& Token : unit_ctx.tokens->get()) {
+      for (const Token& Token : unit_ctx.tokens) {
         std::cout << Token.to_string() << "\n";
       }
     }
@@ -173,7 +149,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
       print_flag_label("--dump-ast");
       uint32_t depth = 0;
 
-      for (StmtNodeBase* pstmt : unit_ctx.ast->statements) {
+      for (StmtNodeBase* pstmt : unit_ctx.ast) {
         std::cout << pstmt->to_string(depth) << "\n";
       }
     }
@@ -189,26 +165,24 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
         "[disassembly of section text]", fg_color::yellow, bg_color::black, style::underline
       ) << "\n";
 
-      for (size_t i = 0; i < unit_ctx.bytecode->get().size(); ++i) {
-        const Bytecode& bytecode = unit_ctx.bytecode->get()[i];
+      for (size_t i = 0; i < unit_ctx.bytecode.size(); ++i) {
+        const Bytecode& bytecode = unit_ctx.bytecode[i];
         std::string current_disassembly;
 
         if (bytecode.instruct.op == Opcode::LBL) {
-          std::cout << std::format(
-            " L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.operand0
-          );
+          std::cout << std::format(" L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.a);
           continue;
         }
         else if (bytecode.instruct.op == Opcode::CLOSURE) {
           // Push the closure name and bytecode count to the stack
           closure_disassembly_stack.push(bytecode.meta_data.comment);
           closure_bytecode_count_stack.push(
-            i + bytecode.instruct.operand1
+            i + bytecode.instruct.b
           ); // Operand1 is the bytecode count
 
           std::cout << " [disassembly of function " << bytecode.meta_data.comment << ' '
-                    << std::format("<at register {}>", bytecode.instruct.operand0)
-                    << ", <instruction count " << bytecode.instruct.operand1 << '>' << "]:\n";
+                    << std::format("<at register {}>", bytecode.instruct.a)
+                    << ", <instruction count " << bytecode.instruct.b << '>' << "]:\n";
           continue;
         }
 
@@ -237,7 +211,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
                 << unit_ctx.get_platform_info() << "\n";
 
       size_t const_position = 0;
-      for (const Value& constant : unit_ctx.constants->get()) {
+      for (const Value& constant : unit_ctx.constants) {
         std::cout << apply_color("  constant", fg_color::magenta, bg_color::black, style::bold)
                   << ' ' << const_position++ << ": '"
                   << apply_color(constant.to_literal_cxx_string(), fg_color::green) << "' "
@@ -251,7 +225,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
     if (get_flag("--dump-machine-code")) {
       print_flag_label("--dump-machine-code");
 
-      for (const Bytecode& bytecode : unit_ctx.bytecode->get()) {
+      for (const Bytecode& bytecode : unit_ctx.bytecode) {
         const Instruction& instr = bytecode.instruct;
         const size_t size = sizeof(Instruction);
         const uint8_t* data = reinterpret_cast<const uint8_t*>(&instr);
@@ -285,7 +259,7 @@ static CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser)
   return {failed, std::move(unit_ctx)};
 }
 
-static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
+[[maybe_unused]] static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   using namespace via;
   using enum CErrorLevel;
 
@@ -325,8 +299,7 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(state_init_begin);
 
     StkRegHolder stk_registers;
-    GlobalState gstate;
-    State state(gstate, stk_registers, result.unit);
+    State state(stk_registers, result.unit);
 
     if (verbosity_flag) {
       SET_PROFILER_POINT(state_init_end);
@@ -367,7 +340,7 @@ static CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
   return result;
 }
 
-static void handle_repl(argparse::ArgumentParser&) {
+[[maybe_unused]] static void handle_repl(argparse::ArgumentParser&) {
   using namespace via;
 
   constexpr const char REPL_WELCOME[] =
@@ -413,7 +386,7 @@ static void handle_repl(argparse::ArgumentParser&) {
   std::cout << REPL_BYE;
 }
 
-static void handle_debugger(argparse::ArgumentParser& parser) {
+[[maybe_unused]] static void handle_debugger(argparse::ArgumentParser& parser) {
   using enum CErrorLevel;
 
   static constexpr const char* DBG_HELP = "Commands:\n"
@@ -442,8 +415,7 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
   }
 
   StkRegHolder regs;
-  GlobalState gstate;
-  State state(gstate, regs, result.unit);
+  State state(regs, result.unit);
 
   while (true) {
     auto line = linenoise::Readline("(dbg) ");
@@ -482,13 +454,13 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
           try {
             operand_t opi = std::stoul(tokens[cursor].lexeme);
             if (operand_cursor == 0) {
-              insn.operand0 = opi;
+              insn.a = opi;
             }
             else if (operand_cursor == 1) {
-              insn.operand1 = opi;
+              insn.b = opi;
             }
             else if (operand_cursor == 2) {
-              insn.operand2 = opi;
+              insn.c = opi;
             }
             else {
               goto syntax_error;
@@ -526,9 +498,9 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
 
       std::cout << "program counter: " << state.pc << "\n";
       std::cout << "disassembly    : " << magic_enum::enum_name(state.pc->op) << ' '
-                << (state.pc->operand0 != 0xFFFF ? std::to_string(state.pc->operand0) : "")
-                << (state.pc->operand1 != 0xFFFF ? std::to_string(state.pc->operand1) : "")
-                << (state.pc->operand2 != 0xFFFF ? std::to_string(state.pc->operand2) : "") << "\n";
+                << (state.pc->a != 0xFFFF ? std::to_string(state.pc->a) : "")
+                << (state.pc->b != 0xFFFF ? std::to_string(state.pc->b) : "")
+                << (state.pc->c != 0xFFFF ? std::to_string(state.pc->c) : "") << "\n";
     }
     else if (tokens[0].lexeme == "locals") {
       if (state.callstack->frames_count == 0) {
@@ -536,7 +508,7 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
         continue;
       }
 
-      const CallFrame* frame = impl::__current_callframe(&state);
+      const CallFrame* frame = &state.callstack->frames[state.callstack->frames_count];
       std::cout << "local count: " << frame->locals_size << "\n";
       for (size_t i = 0; i < frame->locals_size; i++) {
         std::cout << 'l' << i << ": " << magic_enum::enum_name(frame->locals[i].type) << ' '
@@ -546,10 +518,10 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
     else if (tokens[0].lexeme == "regs") {
       std::cout << "disassembling 256 stack-allocated registers\n";
       for (uint16_t reg = 0; reg < 255; reg++) {
-        Value* val = impl::__get_register(&state, reg);
-        std::cout << 'r' << reg << ": " << magic_enum::enum_name(val->type) << ' '
-                  << impl::__to_literal_cxx_string(*val) << "\n";
-        if (val->is_nil()) {
+        Value& val = state.get_register(reg);
+        std::cout << 'r' << reg << ": " << magic_enum::enum_name(val.type) << ' '
+                  << val.to_literal_cxx_string() << "\n";
+        if (val.is_nil()) {
           std::cout << "<nil-found>\n";
           break;
         }
@@ -575,10 +547,10 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
 
       try {
         operand_t reg = std::stoul(tokens[1].lexeme);
-        Value* atreg = impl::__get_register(&state, reg);
+        Value& atreg = state.get_register(reg);
 
-        std::cout << 'r' << reg << ": " << magic_enum::enum_name(atreg->type) << ' '
-                  << atreg->to_literal_cxx_string() << "\n";
+        std::cout << 'r' << reg << ": " << magic_enum::enum_name(atreg.type) << ' '
+                  << atreg.to_literal_cxx_string() << "\n";
       }
       catch (const std::exception&) {
         goto syntax_error;
@@ -592,55 +564,7 @@ static void handle_debugger(argparse::ArgumentParser& parser) {
   };
 }
 
-#ifdef __linux__
-#if VIA_COMPILER == C_GCC || VIA_COMPILER == C_CLANG
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
-
-static void linux_ub_sig_handler(int signum) {
-  static std::unordered_map<int, const char*> sig_id_map = {
-    {1, "SIGHUP"},     {2, "SIGINT"},   {3, "SIGQUIT"},   {4, "SIGILL"},   {5, "SIGTRAP"},
-    {6, "SIGABRT"},    {7, "SIGBUS"},   {8, "SIGFPE"},    {9, "SIGKILL"},  {10, "SIGUSR1"},
-    {11, "SIGSEGV"},   {12, "SIGUSR2"}, {13, "SIGPIPE"},  {14, "SIGALRM"}, {15, "SIGTERM"},
-    {16, "SIGSTKFLT"}, {17, "SIGCHLD"}, {18, "SIGCONT"},  {19, "SIGSTOP"}, {20, "SIGTSTP"},
-    {21, "SIGTTIN"},   {22, "SIGTTOU"}, {23, "SIGURG"},   {24, "SIGXCPU"}, {25, "SIGXFSZ"},
-    {26, "SIGVTALRM"}, {27, "SIGPROF"}, {28, "SIGWINCH"}, {29, "SIGIO"},   {30, "SIGPWR"},
-    {31, "SIGSYS"}
-  };
-
-  auto sig_id = "SIGUNKNOWN";
-  auto it = sig_id_map.find(signum);
-  if (it != sig_id_map.end()) {
-    sig_id = it->second;
-  }
-
-  err_bus.log({
-    true,
-    std::format("Program recieved signal {} ({})", signum, sig_id),
-    dummy_unit_ctx,
-    CErrorLevel::ERROR_,
-    {},
-  });
-
-  err_bus.emit();
-  std::_Exit(1);
-}
-
-#if VIA_COMPILER == C_GCC || VIA_COMPILER == C_CLANG
-#pragma GCC diagnostic pop
-#endif
-#endif // __linux__
-
 int main(int argc, char* argv[]) {
-  using enum CErrorLevel;
-
-#if 0 && defined(__linux__)
-  std::signal(SIGSEGV, linux_ub_sig_handler);
-  std::signal(SIGILL, linux_ub_sig_handler);
-  std::signal(SIGABRT, linux_ub_sig_handler);
-#endif
-
   try {
     // Argument Parser entry point
     ArgumentParser argument_parser("via", VIA_VERSION);
@@ -661,6 +585,7 @@ int main(int argc, char* argv[]) {
     argument_parser.add_subparser(*run_parser);
     argument_parser.add_subparser(repl_parser);
     argument_parser.add_subparser(*dbg_parser);
+
     argument_parser.parse_args(argc, argv);
 
     if (argument_parser.is_subcommand_used(*compile_parser)) {
@@ -680,7 +605,7 @@ int main(int argc, char* argv[]) {
     }
   }
   catch (const std::runtime_error& e) {
-    err_bus.log({true, e.what(), dummy_unit_ctx, ERROR_, {}});
+    err_bus.log({true, e.what(), dummy_unit_ctx, CErrorLevel::ERROR_, {}});
   }
 
   return 0;

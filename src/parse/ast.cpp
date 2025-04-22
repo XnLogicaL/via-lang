@@ -50,7 +50,7 @@ TypeNodeBase* LitExprNode::infer_type(TransUnitContext& unit_ctx) {
     value
   );
 
-  return unit_ctx.ast->allocator.emplace<PrimTypeNode>(value_token, val_ty);
+  return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(value_token, val_ty);
 }
 
 // ===============================
@@ -64,19 +64,19 @@ void SymExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
-  auto& current_closure = unit_ctx.internal.function_stack->top();
+  auto& current_closure = unit_ctx.internal.function_stack.top();
   auto stk_id = current_closure.locals.get_local_by_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
     return (*stk_id)->type;
   }
 
-  auto global = unit_ctx.internal.globals->get_global(identifier.lexeme);
+  auto global = unit_ctx.internal.globals.get_global(identifier.lexeme);
   if (global.has_value()) {
     return global->type;
   }
 
-  if (unit_ctx.internal.function_stack->size() > 0) {
-    auto& top_function = unit_ctx.internal.function_stack->top();
+  if (unit_ctx.internal.function_stack.size() > 0) {
+    auto& top_function = unit_ctx.internal.function_stack.top();
     for (size_t i = 0; i < top_function.decl->parameters.size(); i++) {
       const ParamStmtNode& param = top_function.decl->parameters[i];
       if (param.identifier.lexeme == identifier.lexeme) {
@@ -105,10 +105,9 @@ TypeNodeBase* UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 
   if (op.type == TokenType::OP_LEN) {
-    return unit_ctx.ast->allocator.emplace<PrimTypeNode>(Token(), Int);
+    return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(Token(), Int);
   }
-  else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC
-           || op.type == TokenType::OP_SUB) {
+  else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC || op.type == TokenType::OP_SUB) {
     return inner;
   }
 
@@ -173,7 +172,7 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
-  auto& current_closure = unit_ctx.internal.function_stack->top();
+  auto& current_closure = unit_ctx.internal.function_stack.top();
   if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(object)) {
     auto stk_id = current_closure.locals.get_local_by_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
@@ -215,11 +214,15 @@ TypeNodeBase* BinExprNode::infer_type(TransUnitContext& unit_ctx) {
     if (PrimTypeNode* rhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(rhs)) {
       // Check for floating-point types
       if (lhs_primitive->type == Float || rhs_primitive->type == Float) {
-        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Float);
+        return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+          lhs_primitive->identifier, Float
+        );
       }
       // Check for Int types
       else if (lhs_primitive->type == Int && rhs_primitive->type == Int) {
-        return unit_ctx.ast->allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Int);
+        return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+          lhs_primitive->identifier, Int
+        );
       }
     }
   }
@@ -286,7 +289,7 @@ TypeNodeBase* ArrayExprNode::infer_type(TransUnitContext& unit_ctx) {
     }
   }
 
-  return unit_ctx.ast->allocator.emplace<ArrayTypeNode>(first_type);
+  return unit_ctx.internal.ast_allocator.emplace<ArrayTypeNode>(first_type);
 }
 
 void ArrayExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {

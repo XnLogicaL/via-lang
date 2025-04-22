@@ -60,6 +60,7 @@ struct alignas(8) Value {
     reset();
   }
 
+  explicit Value(bool owns, Tag ty, Un un);
   explicit Value(bool owns = true);
   explicit Value(bool b, bool owns = true);
   explicit Value(int x, bool owns = true);

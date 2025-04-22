@@ -12,6 +12,11 @@ namespace via {
 
 using enum Value::Tag;
 
+Value::Value(bool owns, Tag ty, Un un)
+  : owns(owns),
+    type(ty),
+    u(un) {}
+
 Value::Value(bool owns)
   : owns(owns),
     type(Tag::Nil) {}

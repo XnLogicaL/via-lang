@@ -68,11 +68,11 @@ bool __handle_error(const State* state) {
 }
 
 Value __get_constant(const State* state, size_t index) {
-  if (index >= state->unit_ctx.constants->size()) {
+  if (index >= state->unit_ctx.constants.size()) {
     return Value();
   }
 
-  return state->unit_ctx.constants->at(index).clone();
+  return state->unit_ctx.constants.at(index).clone();
 }
 
 Value __type(const Value& val) {
@@ -214,7 +214,7 @@ std::string __to_cxx_string(const Value& val) {
 std::string __to_literal_cxx_string(const Value& val) {
   Value str = __to_string(val);
   std::string str_cpy = str.u.str->data;
-  return escape_string(str_cpy);
+  return ustresc(str_cpy);
 }
 
 Value __to_bool(const Value& val) {
@@ -399,9 +399,9 @@ void __closure_bytecode_load(State* state, Closure* closure, size_t len) {
         __closure_upvs_resize(closure);
       }
 
-      operand_t idx = state->pc->operand1;
+      operand_t idx = state->pc->b;
       Value* value;
-      if (state->pc->operand0 == 0) { // Capture local
+      if (state->pc->a == 0) { // Capture local
         value = &__current_callframe(state)->locals[idx];
       }
       else { // Upvalue is captured twice; automatically close it.
@@ -603,7 +603,7 @@ void __label_load(const State* state) {
     if (pc->op == Opcode::LBL) {
       state->labels[index++] = pc;
     }
-    else if (pc->op == RET || pc->op == RET0 || pc->op == RET1) {
+    else if (pc->op == RET || pc->op == RETBF || pc->op == RETBT) {
       break;
     }
   }
@@ -664,14 +664,12 @@ Value* __get_register(const State* state, operand_t reg) {
 //  ========================
 // [ Main function handling ]
 //  ========================
-Closure* __create_main_function(BytecodeHolder& holder) {
-  auto& raw = holder.get();
-
-  Function* fn = new Function(raw.size());
+Closure* __create_main_function(TransUnitContext& unit_ctx) {
+  Function* fn = new Function(unit_ctx.bytecode.size());
   fn->id = "main";
   fn->line_number = 0;
 
-  for (size_t i = 0; const Bytecode& data : raw) {
+  for (size_t i = 0; const Bytecode& data : unit_ctx.bytecode) {
     fn->code[i++] = data.instruct;
   }
 

@@ -5,7 +5,7 @@
 
 namespace via {
 
-std::string get_raw_memory_dump(const void* ptr, size_t size) {
+std::string uget_memdump(const void* ptr, size_t size) {
   std::ostringstream oss;
 
   const uint8_t* data = static_cast<const uint8_t*>(ptr);
@@ -25,13 +25,13 @@ std::string get_raw_memory_dump(const void* ptr, size_t size) {
   return oss.str();
 }
 
-void dump_raw_memory(const void* ptr, size_t size) {
-  std::cout << get_raw_memory_dump(ptr, size);
+void umemdumpraw(const void* ptr, size_t size) {
+  std::cout << uget_memdump(ptr, size);
 }
 
-void dump_memory(const void* ptr, size_t size, const std::string& label) {
+void umemdump(const void* ptr, size_t size, const std::string& label) {
   std::cout << "Memory dump for: " << label << std::endl;
-  dump_raw_memory(ptr, size);
+  umemdumpraw(ptr, size);
 }
 
 } // namespace via

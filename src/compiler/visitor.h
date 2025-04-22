@@ -9,8 +9,6 @@
 #include "context.h"
 #include "register.h"
 #include "stack.h"
-#include "bytecode.h"
-#include "constant.h"
 
 #include <lex/token.h>
 #include <parse/ast.h>
@@ -21,9 +19,7 @@
 #include <utility/color.h>
 
 #define VIA_INVALID_VISIT                                                                          \
-  {                                                                                                \
-    VIA_ASSERT(false, "invalid visit");                                                            \
-  }
+  { VIA_ASSERT(false, "invalid visit"); }
 
 #define CHECK_INFERED_TYPE(type, expr)                                                             \
   if (!type) {                                                                                     \

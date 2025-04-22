@@ -23,10 +23,9 @@ struct InstructionData {
 
 struct alignas(8) Instruction {
   Opcode op = Opcode::NOP;
-
-  operand_t operand0 = OPERAND_INVALID;
-  operand_t operand1 = OPERAND_INVALID;
-  operand_t operand2 = OPERAND_INVALID;
+  operand_t a = OPERAND_INVALID;
+  operand_t b = OPERAND_INVALID;
+  operand_t c = OPERAND_INVALID;
 };
 
 struct Bytecode {

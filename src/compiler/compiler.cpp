@@ -189,7 +189,8 @@ bad_fold:
 }
 
 operand_t push_constant(VisitorContext& ctx, const Value&& constant) {
-  return ctx.unit_ctx.constants->push_constant(std::move(constant));
+  ctx.unit_ctx.constants.emplace_back(constant.owns, constant.type, constant.u);
+  return ctx.unit_ctx.constants.size();
 }
 
 #if VIA_COMPILER == C_GCC
@@ -251,7 +252,7 @@ void compiler_output_end(VisitorContext& ctx) {
 }
 
 StackFunction& get_current_closure(VisitorContext& ctx) {
-  return ctx.unit_ctx.internal.function_stack->top();
+  return ctx.unit_ctx.internal.function_stack.top();
 }
 
 bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
@@ -271,7 +272,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
         ++i;
       }
     }
-    else if (ctx.unit_ctx.internal.globals->was_declared(symbol)) {
+    else if (ctx.unit_ctx.internal.globals.was_declared(symbol)) {
       LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
       Value const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
@@ -281,9 +282,9 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       bytecode_emit(ctx, GETGLOBAL, {dst, tmp_reg}, symbol);
       return false;
     }
-    else if (ctx.unit_ctx.internal.function_stack->size() > 0) {
+    else if (ctx.unit_ctx.internal.function_stack.size() > 0) {
       operand_t index = 0;
-      auto& top = ctx.unit_ctx.internal.function_stack->top();
+      auto& top = ctx.unit_ctx.internal.function_stack.top();
 
       for (const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
@@ -348,7 +349,7 @@ TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
 }
 
 void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::string com) {
-  ctx.unit_ctx.bytecode->add({
+  ctx.unit_ctx.bytecode.push_back({
     {
       opc,
       ops.data.at(0),
@@ -372,12 +373,12 @@ void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
 } // namespace compiler_util
 
 void Compiler::codegen_prep() {
-  ctx.unit_ctx.internal.globals->declare_builtins();
-  ctx.unit_ctx.internal.function_stack->push_main_function(ctx.unit_ctx);
+  ctx.unit_ctx.internal.globals.declare_builtins();
+  ctx.unit_ctx.internal.function_stack.push_main_function(ctx.unit_ctx);
 }
 
 void Compiler::insert_exit0_instruction() {
-  compiler_util::bytecode_emit(ctx, Opcode::RET0, {});
+  compiler_util::bytecode_emit(ctx, Opcode::RETBF, {});
 }
 
 bool Compiler::generate() {
@@ -385,7 +386,7 @@ bool Compiler::generate() {
 
   codegen_prep();
 
-  for (StmtNodeBase* stmt : ctx.unit_ctx.ast->statements) {
+  for (StmtNodeBase* stmt : ctx.unit_ctx.ast) {
     if (DeferStmtNode* defer_stmt = get_derived_instance<StmtNodeBase, DeferStmtNode>(stmt)) {
       auto message = "Defer statements not allowed in global scope";
       compiler_util::compiler_error(ctx, defer_stmt->begin, defer_stmt->end, message);

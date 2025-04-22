@@ -114,45 +114,31 @@ using token_lexeme_t = std::string;
 
 struct Token {
   TokenType type = TokenType::UNKNOWN;
-  uint64_t line = 0;
-  uint64_t offset = 0;
-  uint64_t position = 0;
   token_lexeme_t lexeme = "";
+  size_t line, offset, position;
 
-  Token() = default;
-  Token(TokenType type, std::string lexeme, uint64_t line, uint64_t offset, uint64_t position)
+  explicit Token() = default;
+  explicit Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)
     : type(type),
+      lexeme(lexeme),
       line(line),
       offset(offset),
-      position(position),
-      lexeme(lexeme) {}
+      position(position) {}
 
+  // Returns the token as a string.
   std::string to_string() const;
 
+  // Returns whether if the tokens lexeme is a value literal.
   bool is_literal() const;
 
+  // Returns whether if the tokens lexeme is an operator.
   bool is_operator() const;
 
+  // Returns whether if the tokens lexeme is a modifier.
   bool is_modifier() const;
 
+  // Returns the operator precedence of the tokens lexeme or -1 if impossible.
   int bin_prec() const;
-};
-
-class TokenHolder {
-public:
-  using token_vector = std::vector<Token>;
-  using at_result = std::optional<Token>;
-
-  size_t size();
-
-  Token& at(size_t);
-
-  void push(const Token&);
-
-  token_vector& get();
-
-private:
-  token_vector tokens;
 };
 
 } // namespace via

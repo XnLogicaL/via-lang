@@ -13,7 +13,7 @@
 
 namespace via {
 
-inline constexpr size_t COMPILER_STACK_SIZE = 2048;
+inline constexpr size_t COMPILER_STACK_SIZE = 200;
 
 using symbol_t = std::string;
 
@@ -64,7 +64,7 @@ public:
 
 protected:
   size_t m_stack_pointer = 0;
-  T m_array[COMPILER_STACK_SIZE];
+  T* m_array = new T[COMPILER_STACK_SIZE];
 };
 
 struct StackVariable {

@@ -75,12 +75,12 @@ using OpCodeId = std::underlying_type_t<Opcode>;
 void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
   if (int* integer_value = std::get_if<int>(&lit_expr.value)) {
     uint32_t final_value = *integer_value;
-    auto operands = reinterpret_u32_as_2u16(final_value);
+    auto operands = ubit_u32to2u16(final_value);
     bytecode_emit(ctx, LOADI, {dst, operands.high, operands.low});
   }
   else if (float* float_value = std::get_if<float>(&lit_expr.value)) {
     uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-    auto operands = reinterpret_u32_as_2u16(final_value);
+    auto operands = ubit_u32to2u16(final_value);
     bytecode_emit(ctx, LOADF, {dst, operands.high, operands.low});
   }
   else if (bool* bool_value = std::get_if<bool>(&lit_expr.value)) {
@@ -189,12 +189,12 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
     if (LitExprNode* lit_expr = get_derived_instance<ExprNodeBase, LitExprNode>(argument)) {
       if (int* integer_value = std::get_if<int>(&lit_expr->value)) {
         uint32_t final_value = *integer_value;
-        auto operands = reinterpret_u32_as_2u16(final_value);
+        auto operands = ubit_u32to2u16(final_value);
         bytecode_emit(ctx, PUSHI, {operands.high, operands.low});
       }
       else if (float* float_value = std::get_if<float>(&lit_expr->value)) {
         uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-        auto operands = reinterpret_u32_as_2u16(final_value);
+        auto operands = ubit_u32to2u16(final_value);
         bytecode_emit(ctx, PUSHF, {operands.high, operands.low});
       }
       else if (bool* bool_value = std::get_if<bool>(&lit_expr->value)) {
@@ -379,13 +379,13 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     if (int* int_value = std::get_if<int>(&literal.value)) {
       Opcode opc = static_cast<Opcode>(opcode_id + 1); // OPI for Int
       uint32_t final_value = static_cast<uint32_t>(*int_value);
-      auto operands = reinterpret_u32_as_2u16(final_value);
+      auto operands = ubit_u32to2u16(final_value);
       bytecode_emit(ctx, opc, {dst, operands.high, operands.low});
     }
     else if (float* float_value = std::get_if<float>(&literal.value)) {
       Opcode opc = static_cast<Opcode>(opcode_id + 2); // OPF for float
       uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-      auto operands = reinterpret_u32_as_2u16(final_value);
+      auto operands = ubit_u32to2u16(final_value);
       bytecode_emit(ctx, opc, {dst, operands.high, operands.low});
     }
   }
@@ -471,7 +471,7 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
   register_t val_reg = alloc_register(ctx);
 
   for (u32 i = 0; ExprNodeBase * expr : array_expr.values) {
-    u16_result result = reinterpret_u32_as_2u16(i++);
+    u16result result = ubit_u32to2u16(i++);
     resolve_rvalue(this, expr, val_reg);
     bytecode_emit(ctx, LOADI, {key_reg, result.high, result.low});
     bytecode_emit(ctx, SETARR, {val_reg, dst, key_reg});

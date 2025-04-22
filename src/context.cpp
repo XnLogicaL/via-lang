@@ -1,12 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "common.h"
-#include "ast.h"
-#include "token.h"
-#include "bytecode.h"
-#include "constant.h"
-#include "stack.h"
+#include "context.h"
 
 namespace via {
 
@@ -14,17 +9,7 @@ namespace via {
 // TransUnitContext
 TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
   : file_path(file_path),
-    file_source(file_source),
-    tokens(std::make_unique<TokenHolder>()),
-    ast(std::make_unique<SyntaxTree>()),
-    bytecode(std::make_unique<BytecodeHolder>()),
-    constants(std::make_unique<ConstantHolder>()),
-    internal({
-      0,
-      std::make_unique<CompilerFunctionStack>(),
-      {},
-      std::make_unique<GlobalHolder>(),
-    }) {}
+    file_source(file_source) {}
 
 TransUnitContext::TransUnitContext(const byte_stream_t&) {}
 
