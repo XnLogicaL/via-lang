@@ -148,7 +148,7 @@ Token Lexer::read_ident(size_t position) {
     type = LIT_BOOL;
   }
 
-  if (lexeme == "Nil") {
+  if (lexeme == "nil") {
     type = LIT_NIL;
   }
 

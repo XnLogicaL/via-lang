@@ -11,13 +11,13 @@ std::optional<StackVariable*> CompilerVariableStack::get_local_by_id(size_t pos)
     return std::nullopt;
   }
 
-  return &m_array[pos];
+  return &this->operator[](pos);
 }
 
 std::optional<StackVariable*> CompilerVariableStack::get_local_by_symbol(const symbol_t& symbol) {
-  for (int i = m_stack_pointer - 1; i >= 0; --i) {
-    if (m_array[i].symbol == symbol) {
-      return &m_array[i];
+  for (int i = this->size() - 1; i >= 0; --i) {
+    if (this->operator[](i).symbol == symbol) {
+      return &this->operator[](i);
     }
   }
 
@@ -25,8 +25,8 @@ std::optional<StackVariable*> CompilerVariableStack::get_local_by_symbol(const s
 }
 
 std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& symbol) {
-  for (int i = m_stack_pointer - 1; i >= 0; --i) {
-    if (m_array[i].symbol == symbol) {
+  for (int i = this->size() - 1; i >= 0; --i) {
+    if (this->operator[](i).symbol == symbol) {
       return i;
     }
   }
@@ -54,7 +54,7 @@ void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
     std::vector<ParamStmtNode>{}
   );
 
-  push({
+  this->push_back({
     .stack_pointer = 0,
     .decl = func,
     .locals = {},

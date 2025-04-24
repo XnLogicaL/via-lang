@@ -617,13 +617,13 @@ dispatch:
 
     VM_CASE(LOADBT) {
       operand_t dst = state->pc->a;
-      __set_register(state, dst, Value(true, true));
+      __set_register(state, dst, Value(true));
       VM_NEXT();
     }
 
     VM_CASE(LOADBF) {
       operand_t dst = state->pc->a;
-      __set_register(state, dst, Value(false, true));
+      __set_register(state, dst, Value(false));
       VM_NEXT();
     }
 
@@ -721,12 +721,12 @@ dispatch:
     }
 
     VM_CASE(PUSHBT) {
-      __push(state, Value(true, true));
+      __push(state, Value(true));
       VM_NEXT();
     }
 
     VM_CASE(PUSHBF) {
-      __push(state, Value(false, true));
+      __push(state, Value(false));
       VM_NEXT();
     }
 
@@ -783,7 +783,7 @@ dispatch:
       operand_t rhs = state->pc->c;
 
       if VIA_UNLIKELY (lhs == rhs) {
-        __set_register(state, dst, Value(true, true));
+        __set_register(state, dst, Value(true));
         VM_NEXT();
       }
 
@@ -791,12 +791,12 @@ dispatch:
       Value* rhs_val = __get_register(state, rhs);
 
       if VIA_UNLIKELY (lhs_val == rhs_val) {
-        __set_register(state, dst, Value(true, true));
+        __set_register(state, dst, Value(true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(state, dst, Value(result, true));
+      __set_register(state, dst, Value(result));
 
       VM_NEXT();
     }
@@ -807,7 +807,7 @@ dispatch:
       operand_t rhs = state->pc->c;
 
       if VIA_LIKELY (lhs != rhs) {
-        __set_register(state, dst, Value(true, true));
+        __set_register(state, dst, Value(true));
         VM_NEXT();
       }
 
@@ -815,12 +815,12 @@ dispatch:
       Value* rhs_val = __get_register(state, rhs);
 
       if VIA_LIKELY (lhs_val != rhs_val) {
-        __set_register(state, dst, Value(true, true));
+        __set_register(state, dst, Value(true));
         VM_NEXT();
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
-      __set_register(state, dst, Value(result, true));
+      __set_register(state, dst, Value(result));
 
       VM_NEXT();
     }
@@ -834,7 +834,7 @@ dispatch:
       Value* rhs_val = __get_register(state, rhs);
       bool cond = __to_cxx_bool(*lhs_val) && __to_cxx_bool(*rhs_val);
 
-      __set_register(state, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond));
       VM_NEXT();
     }
 
@@ -847,7 +847,7 @@ dispatch:
       Value* rhs_val = __get_register(state, rhs);
       bool cond = __to_cxx_bool(*lhs_val) || __to_cxx_bool(*rhs_val);
 
-      __set_register(state, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond));
       VM_NEXT();
     }
 
@@ -858,7 +858,7 @@ dispatch:
       Value* lhs_val = __get_register(state, lhs);
       bool cond = !__to_cxx_bool(*lhs_val);
 
-      __set_register(state, dst, Value(cond, true));
+      __set_register(state, dst, Value(cond));
       VM_NEXT();
     }
 
@@ -872,18 +872,18 @@ dispatch:
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.i < rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i < rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) < rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) < rhs_val->u.f));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.f < static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f < static_cast<float>(rhs_val->u.i)));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(lhs_val->u.f < rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f < rhs_val->u.f));
         }
       }
 
@@ -900,18 +900,18 @@ dispatch:
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.i > rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i > rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) > rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) > rhs_val->u.f));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.f > static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f > static_cast<float>(rhs_val->u.i)));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(lhs_val->u.f > rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f > rhs_val->u.f));
         }
       }
 
@@ -928,18 +928,18 @@ dispatch:
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.i <= rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i <= rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) <= rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) <= rhs_val->u.f));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.f <= static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f <= static_cast<float>(rhs_val->u.i)));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(lhs_val->u.f <= rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f <= rhs_val->u.f));
         }
       }
 
@@ -956,18 +956,18 @@ dispatch:
 
       if VIA_LIKELY (lhs_val->is_int()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.i >= rhs_val->u.i, true));
+          __set_register(state, dst, Value(lhs_val->u.i >= rhs_val->u.i));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) >= rhs_val->u.f, true));
+          __set_register(state, dst, Value(static_cast<float>(lhs_val->u.i) >= rhs_val->u.f));
         }
       }
       else if VIA_UNLIKELY (lhs_val->is_float()) {
         if VIA_LIKELY (rhs_val->is_int()) {
-          __set_register(state, dst, Value(lhs_val->u.f >= static_cast<float>(rhs_val->u.i), true));
+          __set_register(state, dst, Value(lhs_val->u.f >= static_cast<float>(rhs_val->u.i)));
         }
         else if VIA_UNLIKELY (rhs_val->is_float()) {
-          __set_register(state, dst, Value(lhs_val->u.f >= rhs_val->u.f, true));
+          __set_register(state, dst, Value(lhs_val->u.f >= rhs_val->u.f));
         }
       }
 
@@ -1473,14 +1473,14 @@ dispatch:
     }
 
     VM_CASE(RETBT) {
-      __return(state, Value(true, true));
+      __return(state, Value(true));
 
       VM_CHECK_RETURN();
       VM_NEXT();
     }
 
     VM_CASE(RETBF) {
-      __return(state, Value(false, true));
+      __return(state, Value(false));
 
       VM_CHECK_RETURN();
       VM_NEXT();
@@ -1599,7 +1599,7 @@ dispatch:
       struct String* tstr = str_val->u.str;
       char chr = tstr->data[idx];
 
-      __set_register(state, dst, Value(&chr));
+      __set_register(state, dst, Value(new struct String(&chr)));
       VM_NEXT();
     }
 

@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD 23)
 # Static linking
 set(BUILD_SHARED_LIBS OFF)
 
+# Export compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Allow options to define DEBUG_MODE with default
 option(DEBUG_MODE "Set the build mode" OFF)
 

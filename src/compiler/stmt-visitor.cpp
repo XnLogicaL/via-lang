@@ -53,7 +53,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       // Check for Nil
       if (std::get_if<std::monostate>(&literal.value)) {
         bytecode_emit(ctx, PUSHNIL, {}, symbol);
-        current_closure.locals.push({
+        current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -69,7 +69,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         auto operands = ubit_u32to2u16(final_value);
 
         bytecode_emit(ctx, PUSHI, {operands.high, operands.low}, symbol);
-        current_closure.locals.push({
+        current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -85,7 +85,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         auto operands = ubit_u32to2u16(final_value);
 
         bytecode_emit(ctx, PUSHF, {operands.high, operands.low}, symbol);
-        current_closure.locals.push({
+        current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -98,7 +98,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       // Check for Bool
       else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
         bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF, {}, symbol);
-        current_closure.locals.push({
+        current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -114,7 +114,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         operand_t const_id = push_constant(ctx, std::move(constant));
 
         bytecode_emit(ctx, PUSHK, {const_id}, symbol);
-        current_closure.locals.push({
+        current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = true,
           .symbol = symbol,
@@ -134,7 +134,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       bytecode_emit(ctx, PUSH, {dst}, symbol);
       free_register(ctx, dst);
 
-      current_closure.locals.push({
+      current_closure.locals.push_back({
         .is_const = is_const,
         .is_constexpr = false,
         .symbol = symbol,
@@ -157,14 +157,14 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   auto& current_closure = get_current_closure(ctx);
   operand_t stack_pointer = current_closure.locals.size();
-  ctx.unit_ctx.internal.defered_stmts.push({});
+  ctx.unit_ctx.internal.defered_stmts.push_back({});
 
   for (StmtNodeBase* stmt : scope_node.statements) {
     stmt->accept(*this);
   }
 
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.top();
-  ctx.unit_ctx.internal.defered_stmts.pop();
+  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.back();
+  ctx.unit_ctx.internal.defered_stmts.pop_back();
 
   // Emit defered statements
   for (StmtNodeBase* stmt : defered_stmts) {
@@ -180,9 +180,19 @@ void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
 void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   auto& current_closure = get_current_closure(ctx);
   operand_t function_reg = alloc_register(ctx);
-  size_t stack_ptr = current_closure.locals.size();
 
-  ctx.unit_ctx.internal.function_stack.push({
+  // Store the function node information we'll need later
+  bool is_const = true;
+  bool is_constexpr = false;
+  auto symbol = function_node.identifier.lexeme;
+  auto* decl = &function_node;
+
+  // Create the function type node before any potential invalidation
+  auto* function_type = ctx.unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(
+    function_node.parameters, function_node.returns
+  );
+
+  ctx.unit_ctx.internal.function_stack.push_back({
     .stack_pointer = current_closure.locals.size(),
     .decl = &function_node,
     .locals = {},
@@ -191,7 +201,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   function_node.returns->decay(decay_visitor, function_node.returns);
   function_node.accept(type_visitor);
 
-  ctx.unit_ctx.internal.defered_stmts.push({});
+  ctx.unit_ctx.internal.defered_stmts.push_back({});
   bytecode_emit(
     ctx,
     CLOSURE,
@@ -242,7 +252,6 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   new_closure.instruct.b = ctx.unit_ctx.bytecode.size() - new_closure_point;
 
   Token symbol_token = function_node.identifier;
-  symbol_t symbol = symbol_token.lexeme;
   uint32_t symbol_hash = ustrhash(symbol.c_str());
 
   if (function_node.is_global) {
@@ -261,16 +270,14 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     bytecode_emit(ctx, PUSH, {function_reg});
   }
 
-  current_closure.locals.jump_to(stack_ptr);
-  ctx.unit_ctx.internal.function_stack.pop();
-  current_closure.locals.push({
-    .is_const = true,
-    .is_constexpr = false,
-    .symbol = function_node.identifier.lexeme,
-    .decl = &function_node,
-    .type = ctx.unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(
-      function_node.parameters, function_node.returns
-    ),
+  ctx.unit_ctx.internal.function_stack.pop_back();
+  auto& updated_closure = get_current_closure(ctx);
+  updated_closure.locals.push_back({
+    .is_const = is_const,
+    .is_constexpr = is_constexpr,
+    .symbol = symbol,
+    .decl = decl,
+    .type = function_type,
     .value = nullptr,
   });
 
@@ -413,7 +420,7 @@ void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
 
 void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
   if (!ctx.unit_ctx.internal.defered_stmts.empty()) {
-    auto& top = ctx.unit_ctx.internal.defered_stmts.top();
+    auto& top = ctx.unit_ctx.internal.defered_stmts.back();
     top.push_back(defer_stmt.stmt);
   }
 }

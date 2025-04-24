@@ -30,11 +30,11 @@ void State::push_float(float value) {
 }
 
 void State::push_true() {
-  push(Value(true, true));
+  push(Value(true));
 }
 
 void State::push_false() {
-  push(Value(false, true));
+  push(Value(false));
 }
 
 void State::push_string(const char* str) {

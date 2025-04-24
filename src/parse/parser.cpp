@@ -170,11 +170,11 @@ result<TypeNodeBase*> Parser::parse_generic() {
 
 result<TypeNodeBase*> Parser::parse_type_primary() {
   static std::unordered_map<std::string, Value::Tag> primitive_map = {
-    {"Nil", Value::Tag::Nil},
+    {"nil", Value::Tag::Nil},
     {"int", Value::Tag::Int},
     {"float", Value::Tag::Float},
     {"bool", Value::Tag::Bool},
-    {"String", Value::Tag::String},
+    {"string", Value::Tag::String},
   };
 
   result<Token> tok = current();

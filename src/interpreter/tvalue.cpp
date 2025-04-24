@@ -17,22 +17,22 @@ Value::Value(bool owns, Tag ty, Un un)
     type(ty),
     u(un) {}
 
-Value::Value(bool owns)
-  : owns(owns),
+Value::Value()
+  : owns(false),
     type(Tag::Nil) {}
 
-Value::Value(bool b, bool owns)
-  : owns(owns),
+Value::Value(bool b)
+  : owns(false),
     type(Tag::Bool),
     u({.b = b}) {}
 
-Value::Value(int x, bool owns)
-  : owns(owns),
+Value::Value(int x)
+  : owns(false),
     type(Tag::Int),
     u({.i = x}) {}
 
-Value::Value(float x, bool owns)
-  : owns(owns),
+Value::Value(float x)
+  : owns(false),
     type(Tag::Float),
     u({.f = x}) {}
 
@@ -61,17 +61,12 @@ Value::Value(Tag t, Un u, bool owns)
     type(t),
     u(u) {}
 
-Value::Value(const char* str)
-  : type(String),
-    u({.str = new struct String(str)}) {}
-
 // Move constructor, transfer ownership based on type
 Value::Value(Value&& other)
-  : owns(true) {
-  reset();
-
-  this->type = other.type;
-  this->u = other.u;
+  : owns(other.owns),
+    type(other.type),
+    u(other.u) {
+  other.owns = false;
   other.type = Nil;
 }
 
@@ -80,9 +75,12 @@ Value& Value::operator=(Value&& other) {
   if (this != &other) {
     reset();
 
+    this->owns = other.owns;
     this->type = other.type;
     this->u = other.u;
-    other.type = Tag::Nil;
+
+    other.owns = false;
+    other.type = Nil;
   }
 
   return *this;
@@ -96,9 +94,9 @@ VIA_NODISCARD Value Value::clone() const {
   case Float:
     return Value(u.f);
   case Bool:
-    return Value(u.b, true);
+    return Value(u.b);
   case String:
-    return Value(u.str->data);
+    return Value(new struct String(*u.str));
   case Array:
     return Value(new struct Array(*u.arr));
   case Dict:
@@ -117,7 +115,7 @@ VIA_NODISCARD Value Value::weak_clone() const {
 }
 
 void Value::reset() {
-  if (owns && static_cast<uint8_t>(type) >= static_cast<uint8_t>(Tag::String)) {
+  if (owns) {
     switch (type) {
     case String:
       delete u.str;
@@ -140,6 +138,7 @@ void Value::reset() {
     }
   }
 
+  owns = false;
   type = Nil;
 }
 

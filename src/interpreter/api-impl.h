@@ -12,6 +12,7 @@
 #include "tfunction.h"
 
 #include <utility/ustring.h>
+#include <utility/memory.h>
 
 namespace via {
 

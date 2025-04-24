@@ -31,7 +31,7 @@ using cfunction_t = void (*)(State*);
 
 // Optimized tagged union value object.
 struct alignas(8) Value {
-  const bool owns = true; // Does the value own the pointer in it?
+  bool owns = true; // Does the value own the pointer in it?
   enum class Tag : uint8_t {
     Nil,      // Empty type, null
     Int,      // Integer type
@@ -61,16 +61,15 @@ struct alignas(8) Value {
   }
 
   explicit Value(bool owns, Tag ty, Un un);
-  explicit Value(bool owns = true);
-  explicit Value(bool b, bool owns = true);
-  explicit Value(int x, bool owns = true);
-  explicit Value(float x, bool owns = true);
+  explicit Value();
+  explicit Value(bool b);
+  explicit Value(int x);
+  explicit Value(float x);
   explicit Value(String* ptr, bool owns = true);
   explicit Value(Array* ptr, bool owns = true);
   explicit Value(Dict* ptr, bool owns = true);
   explicit Value(Closure* ptr, bool owns = true);
   explicit Value(Tag t, Un u, bool owns = true);
-  explicit Value(const char* str);
 
   // Returns a deep clone of the object.
   VIA_NODISCARD Value clone() const;

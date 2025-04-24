@@ -39,13 +39,7 @@ Value construct_constant(LitExprNode& literal_node) {
     [](auto&& val) -> Value {
       using T = std::decay_t<decltype(val)>;
 
-      if constexpr (std::is_same_v<T, int>) {
-        return Value(val);
-      }
-      else if constexpr (std::is_same_v<T, bool>) {
-        return Value(val, true);
-      }
-      else if constexpr (std::is_same_v<T, float>) {
+      if constexpr (std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>) {
         return Value(val);
       }
       else if constexpr (std::is_same_v<T, std::string>) {
@@ -252,7 +246,7 @@ void compiler_output_end(VisitorContext& ctx) {
 }
 
 StackFunction& get_current_closure(VisitorContext& ctx) {
-  return ctx.unit_ctx.internal.function_stack.top();
+  return ctx.unit_ctx.internal.function_stack.back();
 }
 
 bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
@@ -284,7 +278,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
     }
     else if (ctx.unit_ctx.internal.function_stack.size() > 0) {
       operand_t index = 0;
-      auto& top = ctx.unit_ctx.internal.function_stack.top();
+      auto& top = ctx.unit_ctx.internal.function_stack.back();
 
       for (const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
@@ -361,8 +355,8 @@ void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::
 }
 
 void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.top();
-  ctx.unit_ctx.internal.defered_stmts.pop();
+  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.back();
+  ctx.unit_ctx.internal.defered_stmts.pop_back();
 
   // Emit defered statements
   for (StmtNodeBase* stmt : defered_stmts) {

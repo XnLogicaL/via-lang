@@ -16,7 +16,7 @@ bool is_constant_expression(TransUnitContext& unit_ctx, const ExprNodeBase* expr
       && is_constant_expression(unit_ctx, bin_expr->rhs_expression, variable_depth + 1);
   }
   else if (const SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(expression)) {
-    auto& current_closure = unit_ctx.internal.function_stack.top();
+    auto& current_closure = unit_ctx.internal.function_stack.back();
     auto var_obj = current_closure.locals.get_local_by_symbol(sym_expr->identifier.lexeme);
     if (!var_obj.has_value()) {
       return false;

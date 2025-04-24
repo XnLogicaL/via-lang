@@ -170,20 +170,20 @@ Value __to_string(const Value& val) {
   switch (val.type) {
   case Int: {
     std::string str = std::to_string(val.u.i);
-    return Value(str.c_str());
+    return Value(new struct String(str.c_str()));
   }
   case Float: {
     std::string str = std::to_string(val.u.f);
-    return Value(str.c_str());
+    return Value(new struct String(str.c_str()));
   }
   case Bool:
-    return Value(val.u.b ? "true" : "false");
+    return Value(new struct String(val.u.b ? "true" : "false"));
   case Array:
   case Dict: {
     auto type_str = magic_enum::enum_name(val.type);
     auto final_str = std::format("<{}@0x{:x}>", type_str, (uintptr_t)__to_pointer(val));
 
-    return Value(final_str.c_str());
+    return Value(new struct String(final_str.c_str()));
   }
 
   case Function: {
@@ -196,10 +196,10 @@ Value __to_string(const Value& val) {
     }
 
     std::string final_str = std::format("<{}{}@0x{:x}>", fnty, fnn, (uintptr_t)val.u.clsr);
-    return Value(final_str.c_str());
+    return Value(new struct String(final_str.c_str()));
   }
   default:
-    return Value("nil");
+    return Value(new struct String("nil"));
   }
 
   VIA_UNREACHABLE();
@@ -222,7 +222,7 @@ Value __to_bool(const Value& val) {
     return val.clone();
   }
 
-  return Value(val.type != Value::Tag::Nil, true);
+  return Value(val.type != Value::Tag::Nil);
 }
 
 bool __to_cxx_bool(const Value& val) {

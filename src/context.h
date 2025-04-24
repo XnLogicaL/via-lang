@@ -68,7 +68,7 @@ public:
 
     GlobalHolder globals;
     CompilerFunctionStack function_stack;
-    std::stack<std::vector<StmtNodeBase*>> defered_stmts;
+    std::vector<std::vector<StmtNodeBase*>> defered_stmts;
   } internal;
 };
 
