@@ -39,15 +39,12 @@ Value construct_constant(LitExprNode& literal_node) {
     [](auto&& val) -> Value {
       using T = std::decay_t<decltype(val)>;
 
-      if constexpr (std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>) {
+      if constexpr (std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>)
         return Value(val);
-      }
-      else if constexpr (std::is_same_v<T, std::string>) {
-        return Value(val.data());
-      }
-      else if constexpr (std::is_same_v<T, std::monostate>) {
+      else if constexpr (std::is_same_v<T, std::string>)
+        return Value(new struct String(val.data()));
+      else if constexpr (std::is_same_v<T, std::monostate>)
         return Value();
-      }
 
       VIA_UNREACHABLE();
     },
