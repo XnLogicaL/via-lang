@@ -31,7 +31,6 @@ using cfunction_t = void (*)(State*);
 
 // Optimized tagged union value object.
 struct alignas(8) Value {
-  bool owns = true; // Does the value own the pointer in it?
   enum class Tag : uint8_t {
     Nil,      // Empty type, null
     Int,      // Integer type
@@ -60,21 +59,17 @@ struct alignas(8) Value {
     reset();
   }
 
-  explicit Value(bool owns, Tag ty, Un un);
   explicit Value();
   explicit Value(bool b);
   explicit Value(int x);
   explicit Value(float x);
-  explicit Value(String* ptr, bool owns = true);
-  explicit Value(Array* ptr, bool owns = true);
-  explicit Value(Dict* ptr, bool owns = true);
-  explicit Value(Closure* ptr, bool owns = true);
-  explicit Value(Tag t, Un u, bool owns = true);
+  explicit Value(String* ptr);
+  explicit Value(Array* ptr);
+  explicit Value(Dict* ptr);
+  explicit Value(Closure* ptr);
 
   // Returns a deep clone of the object.
   VIA_NODISCARD Value clone() const;
-  // Returns a clone reference object with the same internal pointer but no ownership.
-  VIA_NODISCARD Value weak_clone() const;
 
   // Frees the internal resources of the object and resets union tag to Nil.
   void reset();
@@ -124,9 +119,6 @@ struct alignas(8) Value {
 
   // Compares equality between self and a given Value.
   VIA_NODISCARD bool compare(const Value& other) const;
-
-  // Returns whether if the given value is a reference to this.
-  VIA_NODISCARD bool is_reference(const Value& other) const;
 };
 
 } // namespace via

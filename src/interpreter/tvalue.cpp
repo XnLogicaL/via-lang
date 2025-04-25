@@ -12,75 +12,57 @@ namespace via {
 
 using enum Value::Tag;
 
-Value::Value(bool owns, Tag ty, Un un)
-  : owns(owns),
-    type(ty),
-    u(un) {}
-
 Value::Value()
-  : owns(false),
-    type(Tag::Nil) {}
+  : type(Tag::Nil) {}
 
 Value::Value(bool b)
-  : owns(false),
-    type(Tag::Bool),
+  : type(Tag::Bool),
     u({.b = b}) {}
 
 Value::Value(int x)
-  : owns(false),
-    type(Tag::Int),
+  : type(Tag::Int),
     u({.i = x}) {}
 
 Value::Value(float x)
-  : owns(false),
-    type(Tag::Float),
+  : type(Tag::Float),
     u({.f = x}) {}
 
-Value::Value(struct String* ptr, bool owns)
-  : owns(owns),
-    type(Tag::String),
+Value::Value(struct String* ptr)
+  : type(Tag::String),
     u({.str = ptr}) {}
 
-Value::Value(struct Array* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Array),
+Value::Value(struct Array* ptr)
+  : type(Tag::Array),
     u({.arr = ptr}) {}
 
-Value::Value(struct Dict* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Dict),
+Value::Value(struct Dict* ptr)
+  : type(Tag::Dict),
     u({.dict = ptr}) {}
 
-Value::Value(Closure* ptr, bool owns)
-  : owns(owns),
-    type(Tag::Function),
+Value::Value(Closure* ptr)
+  : type(Tag::Function),
     u({.clsr = ptr}) {}
-
-Value::Value(Tag t, Un u, bool owns)
-  : owns(owns),
-    type(t),
-    u(u) {}
 
 // Move constructor, transfer ownership based on type
 Value::Value(Value&& other)
-  : owns(other.owns),
-    type(other.type),
+  : type(other.type),
     u(other.u) {
-  other.owns = false;
   other.type = Nil;
+  other.u = {};
 }
 
 // Move-assignment operator, moves values from other object
 Value& Value::operator=(Value&& other) {
   if (this != &other) {
+    std::cout << "move assignment shitter called with " << &other << " to " << this << "\n";
+
     reset();
 
-    this->owns = other.owns;
     this->type = other.type;
     this->u = other.u;
 
-    other.owns = false;
     other.type = Nil;
+    other.u = {};
   }
 
   return *this;
@@ -110,36 +92,30 @@ VIA_NODISCARD Value Value::clone() const {
   return Value();
 }
 
-VIA_NODISCARD Value Value::weak_clone() const {
-  return Value(type, u, false);
-}
-
 void Value::reset() {
-  if (owns) {
-    switch (type) {
-    case String:
-      delete u.str;
-      u.str = nullptr;
-      break;
-    case Array:
-      delete u.arr;
-      u.arr = nullptr;
-      break;
-    case Dict:
-      delete u.dict;
-      u.dict = nullptr;
-      break;
-    case Function:
-      delete u.clsr;
-      u.clsr = nullptr;
-      break;
-    default:
-      break;
-    }
+  switch (type) {
+  case String:
+    delete u.str;
+    u.str = nullptr;
+    break;
+  case Array:
+    delete u.arr;
+    u.arr = nullptr;
+    break;
+  case Dict:
+    delete u.dict;
+    u.dict = nullptr;
+    break;
+  case Function:
+    delete u.clsr;
+    u.clsr = nullptr;
+    break;
+  default:
+    break;
   }
 
-  owns = false;
   type = Nil;
+  u = {};
 }
 
 VIA_NODISCARD bool Value::compare(const Value& other) const {
@@ -163,14 +139,6 @@ VIA_NODISCARD bool Value::compare(const Value& other) const {
   }
 
   return false;
-}
-
-VIA_NODISCARD bool Value::is_reference(const Value& other) const {
-  if (other.owns || other.type != this->type) {
-    return false;
-  }
-
-  return std::memcmp(&this->u, &other.u, sizeof(Un));
 }
 
 VIA_NODISCARD Value Value::to_string() const {

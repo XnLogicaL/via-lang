@@ -22,6 +22,8 @@ String::String(String&& other)
 
 String& String::operator=(const String& other) {
   if (this != &other) {
+    delete[] data;
+
     data = ustrdup(other.data);
     data_size = other.data_size;
     hash = other.hash;
@@ -32,9 +34,12 @@ String& String::operator=(const String& other) {
 
 String& String::operator=(String&& other) {
   if (this != &other) {
+    delete[] data;
+
     data = other.data;
     data_size = other.data_size;
     hash = other.hash;
+
     other.data = nullptr;
     other.data_size = 0;
     other.hash = 0;

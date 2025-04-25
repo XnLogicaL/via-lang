@@ -77,7 +77,7 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* constant, size_t fo
 
 // Shortcut
 // Forwards arguments to std::unit_ctx::constants::push
-operand_t push_constant(VisitorContext& ctx, const Value&& constant);
+operand_t push_constant(VisitorContext& ctx, Value&& constant);
 
 //  =======================
 // [ lvalue/rvalue utility ]

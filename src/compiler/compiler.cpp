@@ -42,7 +42,7 @@ Value construct_constant(LitExprNode& literal_node) {
       if constexpr (std::is_same_v<T, int> || std::is_same_v<T, bool> || std::is_same_v<T, float>)
         return Value(val);
       else if constexpr (std::is_same_v<T, std::string>)
-        return Value(new struct String(val.data()));
+        return Value(new struct String(val.c_str()));
       else if constexpr (std::is_same_v<T, std::monostate>)
         return Value();
 
@@ -179,8 +179,8 @@ bad_fold:
   return LitExprNode(Token(), std::monostate());
 }
 
-operand_t push_constant(VisitorContext& ctx, const Value&& constant) {
-  ctx.unit_ctx.constants.emplace_back(constant.owns, constant.type, constant.u);
+operand_t push_constant(VisitorContext& ctx, Value&& constant) {
+  ctx.unit_ctx.constants.emplace_back(std::move(constant));
   return ctx.unit_ctx.constants.size();
 }
 

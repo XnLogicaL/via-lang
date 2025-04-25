@@ -162,7 +162,10 @@ static CompileResult handle_compile([[maybe_unused]] argparse::ArgumentParser& s
         closure_bytecode_count_stack; // Stack to track the bytecode count of each closure
 
       std::cout << apply_color(
-        "[disassembly of section text]", fg_color::yellow, bg_color::black, style::underline
+        "[disassembly of function main (section<text>)]",
+        fg_color::yellow,
+        bg_color::black,
+        style::underline
       ) << "\n";
 
       for (size_t i = 0; i < unit_ctx.bytecode.size(); ++i) {
@@ -181,8 +184,8 @@ static CompileResult handle_compile([[maybe_unused]] argparse::ArgumentParser& s
           ); // Operand1 is the bytecode count
 
           std::cout << " [disassembly of function " << bytecode.meta_data.comment << ' '
-                    << std::format("<at register {}>", bytecode.instruct.a)
-                    << ", <instruction count " << bytecode.instruct.b << '>' << "]:\n";
+                    << "<r=" << bytecode.instruct.a << ">, <ic=" << bytecode.instruct.b
+                    << ">, <argc=" << bytecode.instruct.c << ">]:\n";
           continue;
         }
 
@@ -203,7 +206,7 @@ static CompileResult handle_compile([[maybe_unused]] argparse::ArgumentParser& s
       }
 
       std::cout << apply_color(
-        "[disassembly of section data]", fg_color::yellow, bg_color::black, style::underline
+        "[disassembly of section<data>]", fg_color::yellow, bg_color::black, style::underline
       ) << "\n";
 
       // Platform info
