@@ -54,8 +54,6 @@ Value::Value(Value&& other)
 // Move-assignment operator, moves values from other object
 Value& Value::operator=(Value&& other) {
   if (this != &other) {
-    std::cout << "move assignment shitter called with " << &other << " to " << this << "\n";
-
     reset();
 
     this->type = other.type;

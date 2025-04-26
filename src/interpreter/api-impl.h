@@ -51,6 +51,10 @@ void* __to_pointer(const Value& val);
 
 CallFrame* __current_callframe(State* state);
 
+void __push_callframe(State* state, CallFrame&& frame);
+
+void __pop_callframe(State* state);
+
 /**
  * Internal function that serves as a generalized call interface. Used to call any type.
  * Invokes `__native_call` for native functions, `__extern_call` for C functions.

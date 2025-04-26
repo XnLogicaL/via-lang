@@ -618,7 +618,8 @@ void __push(State* state, Value&& val) {
 
 void __drop(State* state) {
   CallFrame* frame = __current_callframe(state);
-  [[maybe_unused]] Value dropped = std::move(frame->locals[frame->locals_size--]); // Thanks RAII
+  Value dropped = std::move(frame->locals[frame->locals_size--]); // Thanks RAII
+  dropped.reset();
 }
 
 Value* __get_local(State* VIA_RESTRICT state, size_t offset) {

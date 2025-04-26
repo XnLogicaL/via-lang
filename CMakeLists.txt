@@ -52,7 +52,7 @@ else()
   set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS CLI/*.cpp src/*.cpp)
 file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h" "src/*.hpp" "src/*.h")
 
 # Define executable

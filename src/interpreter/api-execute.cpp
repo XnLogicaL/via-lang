@@ -699,7 +699,7 @@ dispatch:
       operand_t const_idx = state->pc->a;
       Value constant = __get_constant(state, const_idx);
 
-      __push(state, constant.clone());
+      __push(state, std::move(constant));
       VM_NEXT();
     }
 
