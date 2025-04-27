@@ -1,4 +1,4 @@
-name: via-lang CI
+name: CI
 
 on:
   push:
