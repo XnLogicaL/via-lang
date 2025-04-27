@@ -16,6 +16,8 @@ jobs:
       # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: 'true'  # Ensure submodules are fetched
 
       # Set up Python
       - name: Set up Python 3.x
@@ -23,10 +25,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Set up CMake
+      - name: Set up CMake
+        uses: actions/setup-cmake@v1
+
       - name: Build interpreter
         run: |
           mkdir build
-          cmake -S . -B build -D DEBUG_MODE=OFF
+          cmake -S . -B build -D CMAKE_BUILD_TYPE=Release DEBUG_MODE=OFF
           cmake --build build
 
       # Run Python tests
