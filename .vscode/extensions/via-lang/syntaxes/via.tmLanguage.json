@@ -1,15 +1,71 @@
 {
   "schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "via",
+  "scopeName": "source.via",
   "patterns": [
     {
-      "match": "(fn) ([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "keyword.control",
+      "match": "\\b(nameof|typeof|type|defer|const|fn|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
+    },
+    {
+      "name": "storage.modifier",
+      "match": "\\bconst\\b"
+    },
+    {
+      "name": "variable.language.self",
+      "match": "\\bself\\b"
+    },
+    {
+      "name": "support.function.builtin",
+      "match": "\\b(print|println)\\b"
+    },
+    {
+      "name": "constant.language.boolean",
+      "match": "\\b(true|false)\\b"
+    },
+    {
+      "name": "constant.language.nil",
+      "match": "\\bnil\\b"
+    },
+    {
+      "name": "constant.numeric.via",
+      "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+    },
+    {
+      "name": "keyword.operator.arithmetic",
+      "match": "[+\\-*/%]"
+    },
+    {
+      "name": "keyword.operator.comparison",
+      "match": "==|!=|<=|>=|<|>"
+    },
+    {
+      "name": "keyword.operator.assignment",
+      "match": "="
+    },
+    {
+      "name": "keyword.operator.logical",
+      "match": "\\b(and|or|not)\\b"
+    },
+    {
+      "match": "(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.control"
         },
         "2": {
           "name": "entity.name.function"
+        }
+      }
+    },
+    {
+      "match": "(struct)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control"
+        },
+        "2": {
+          "name": "entity.name.class"
         }
       }
     },
@@ -36,7 +92,7 @@
       }
     },
     {
-      "match": "(as) ([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(as)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.control"
@@ -45,52 +101,6 @@
           "name": "entity.name.type"
         }
       }
-    },
-    {
-      "name": "entity.name.class",
-      "match": "struct ([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "0": {
-          "name": "keyword.control"
-        },
-        "1": {
-          "name": "entity.name.class"
-        }
-      }
-    },
-    {
-      "name": "variable.language.self",
-      "match": "\\bself\\b"
-    },
-    {
-      "match": "([A-Za-z_][A-Za-z0-9_]*)[.]([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "1": {
-          "name": "variable.name"
-        },
-        "2": {
-          "name": "keyword.operator"
-        },
-        "3": {
-          "name": "variable.name"
-        }
-      }
-    },
-    {
-      "name": "keyword.control",
-      "match": "\\b(nameof|typeof|type|defer|const|fn|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
-    },
-    {
-      "name": "storage.modifier",
-      "match": "\\b(const)\\b"
-    },
-    {
-      "name": "entity.other.attribute-name",
-      "match": "@[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()|@[A-Za-z_][A-Za-z0-9_]*"
-    },
-    {
-      "name": "variable",
-      "match": "\b[a-zA-Z_]w*\b"
     },
     {
       "name": "string.quoted.double",
@@ -108,7 +118,7 @@
           "patterns": [
             {
               "name": "variable.other",
-              "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+              "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
             }
           ]
         }
@@ -124,45 +134,23 @@
       "end": "\\]#"
     },
     {
-      "name": "support.function.builtin",
-      "match": "\\b(print|println)\\b"
-    },
-    {
-      "name": "constant.language.boolean",
-      "match": "\\b(true|false)\\b"
-    },
-    {
-      "name": "constant.language.nil",
-      "match": "\\b(nil)\\b"
-    },
-    {
-      "name": "constant.numeric.via",
-      "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
-    },
-    {
-      "name": "keyword.operator.arithmetic",
-      "match": "[+\\-*/%]"
-    },
-    {
-      "name": "keyword.operator.comparison",
-      "match": "==|!=|<=|>=|<|>"
-    },
-    {
-      "name": "keyword.operator.assignment",
-      "match": "="
-    },
-    {
-      "name": "keyword.operator.logical",
-      "match": "\\b(and|or|not)\\b"
-    },
-    {
       "name": "entity.name.function",
-      "match": "[a-zA-Z_][a-zA-Z0-9_]*!"
+      "match": "[A-Za-z_][A-Za-z0-9_]*!"
+    },
+    {
+      "match": "([A-Za-z_][A-Za-z0-9_]*)\\.([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "variable.name"
+        },
+        "2": {
+          "name": "variable.property"
+        }
+      }
     },
     {
       "name": "variable.name",
-      "match": "[A-Za-z_][A-Za-z0-9_]*"
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
     }
-  ],
-  "scopeName": "source.via"
+  ]
 }
