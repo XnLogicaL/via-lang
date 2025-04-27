@@ -5,8 +5,6 @@
 #define VIA_HAS_HEADER_OBJECT_H
 
 #include "common.h"
-#include "tstring.h"
-
 #include <magic_enum/magic_enum.hpp>
 
 // MSVC is annoying with uninitialized members
@@ -22,6 +20,7 @@ namespace via {
 
 // Forward declarations
 struct State;
+struct String;
 struct Array;
 struct Dict;
 struct Closure;

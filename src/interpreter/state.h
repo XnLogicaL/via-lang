@@ -4,8 +4,8 @@
 #ifndef VIA_HAS_HEADER_STATE_H
 #define VIA_HAS_HEADER_STATE_H
 
-#include "common.h"
-#include "context.h"
+#include <common.h>
+#include <context.h>
 #include "call-stack.h"
 #include "instruction.h"
 #include "tvalue.h"
@@ -18,9 +18,6 @@ namespace via {
 inline constexpr size_t REGISTER_COUNT = 65536;     // 2^16, operand range
 inline constexpr size_t REGISTER_STACK_COUNT = 256; // C stack
 inline constexpr size_t REGISTER_SPILL_COUNT = REGISTER_COUNT - REGISTER_STACK_COUNT; // Heap
-
-// Forward declarations
-struct Closure;
 
 struct ErrorState {
   CallFrame* frame = nullptr;

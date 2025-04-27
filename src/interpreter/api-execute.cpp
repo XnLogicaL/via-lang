@@ -3,6 +3,7 @@
 
 #include "state.h"
 #include "api-impl.h"
+#include "tstring.h"
 #include <cmath>
 
 // Macro that throws a virtual error
