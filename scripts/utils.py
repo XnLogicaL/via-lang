@@ -15,13 +15,3 @@ def run_command(command):
         log_message(f"  stderr: {e.stderr.decode('utf-8')}")
         sys.exit(1)
         
-def resolve_dependency(package):
-    print("Resolving dependency '%s'" % package)
-    try:
-        pkg_resources.get_distribution(package)
-        print("Dependency '%s' found" % package)
-    except pkg_resources.DistributionNotFound:
-        pip.main(['install', package])
-        print("Dependency '%s' not found, installing..." % package)
-    print("Resolved dependency '%s'" % package)
-    

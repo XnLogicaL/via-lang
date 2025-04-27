@@ -1,9 +1,5 @@
 import subprocess
 import os
-import utils
-
-# Package loguru
-utils.resolve_dependency('loguru')
 from loguru import logger
 
 TESTS_DIR="./test"

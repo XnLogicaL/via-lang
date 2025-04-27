@@ -20,16 +20,21 @@ jobs:
           submodules: 'true'  # Ensure submodules are fetched
 
       # Set up Python
-      - name: Set up Python 3.x
+      - name: Set up Python 3.12
         uses: actions/setup-python@v2
         with:
           python-version: '3.12'
+
+      # Install dependencies
+      - name: Install Python dependencies
+        run: |
+          apt install python3-loguru
 
       - name: Build interpreter
         run: |
           mkdir build
           cmake -S . -B build -D CMAKE_BUILD_TYPE=Release DEBUG_MODE=OFF
-          cmake --build build
+          cmake -j$(nproc) --build build
 
       # Run Python tests
       - name: Run tests
