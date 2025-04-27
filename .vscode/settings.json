@@ -128,5 +128,6 @@
   },
 
   // Disable C/C++ extension stuff, if necessary
-  "C_Cpp.intelliSenseEngine": "disabled"
+"C_Cpp.intelliSenseEngine": "disabled",
+"a-file-icon-vscode.folderTheme": "classic"
 }

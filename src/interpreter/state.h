@@ -117,9 +117,9 @@ public:
   Dict* globals;        // Global table
   CallStack* callstack; // Call stack
   ErrorState* err;      // Error state
-
-  Value main; // Main function slot
-  Value ret;  // Return value slot
+  Value main;           // Main function slot
+  register_t ret;       // Return register
+  register_t args;      // First argument register
 
   StkRegHolder& stack_registers;  // Stack register holder
   HeapRegHolder* spill_registers; // Spill register holder

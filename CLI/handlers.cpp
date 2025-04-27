@@ -466,9 +466,19 @@ void handle_debugger(argparse::ArgumentParser& parser) {
       break;
     }
     else if (tokens[0].lexeme == "step") {
+      if (!state.pc) {
+        std::cout << "no instruction\n";
+        continue;
+      }
+
       state.execute_step();
     }
     else if (tokens[0].lexeme == "continue") {
+      if (!state.pc) {
+        std::cout << "no instruction\n";
+        continue;
+      }
+
       state.execute();
     }
     else if (tokens[0].lexeme == "help") {

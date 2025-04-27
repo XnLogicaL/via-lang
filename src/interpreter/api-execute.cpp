@@ -74,13 +74,12 @@
     VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT),                 \
     VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ),              \
     VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETBT), VM_DISPATCH_OP(RETBF),       \
-    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RETGET), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY),    \
-    VM_DISPATCH_OP(CATCH), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                         \
-    VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
-    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT),                    \
-    VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR),                        \
-    VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), \
-    VM_DISPATCH_OP(BCAST)
+    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH),     \
+    VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR), VM_DISPATCH_OP(NEXTARR),                       \
+    VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT), VM_DISPATCH_OP(SETDICT),                      \
+    VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT), VM_DISPATCH_OP(CONSTR),                     \
+    VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR), VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), \
+    VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), VM_DISPATCH_OP(BCAST)
 
 namespace via {
 
@@ -678,12 +677,6 @@ dispatch:
       Value* val = __get_register(state, src);
 
       __closure_upv_set(__current_callframe(state)->closure, upv_id, *val);
-      VM_NEXT();
-    }
-
-    VM_CASE(RETGET) {
-      operand_t dst = state->pc->a;
-      __set_register(state, dst, state->ret.clone());
       VM_NEXT();
     }
 
@@ -1454,7 +1447,13 @@ dispatch:
 
     VM_CASE(CALL) {
       operand_t fn = state->pc->a;
+      operand_t ap = state->pc->b;
+      operand_t rr = state->pc->c;
+
       Value* fn_val = __get_register(state, fn);
+
+      state->args = ap;
+      state->ret = rr;
 
       __call(state, fn_val->u.clsr);
 

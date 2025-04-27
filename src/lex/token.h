@@ -49,6 +49,8 @@ enum class TokenType {
   KW_RAISE,    // raise
   KW_AUTO,     // auto
   KW_DEFER,    // defer
+  KW_TYPEOF,
+  KW_NAMEOF,
 
   // Operators
   OP_ADD, // +

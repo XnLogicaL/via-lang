@@ -296,6 +296,25 @@ void ArrayExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
   visitor.visit(*this, dst);
 }
 
+std::string IntrinsicExprNode::to_string(uint32_t& depth) {
+  return std::format("IntrinsicExprNode<{}, {}>", intrinsic.lexeme, expr->to_string(depth));
+}
+
+TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
+  if (intrinsic.lexeme == "type" || intrinsic.lexeme == "typeof" || intrinsic.lexeme == "nameof") {
+    return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+      Token(TokenType::IDENTIFIER, "string", 0, 0, 0), Value::Tag::String
+    );
+  }
+  else {
+    return nullptr;
+  }
+}
+
+void IntrinsicExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+  visitor.visit(*this, dst);
+}
+
 // ===============================
 // AutoTypeNode
 std::string AutoTypeNode::to_string(uint32_t&) {

@@ -132,6 +132,9 @@ Callable::~Callable() {
   }
 }
 
+Closure::Closure(Callable&& callable)
+  : callee(std::move(callable)) {}
+
 Closure::Closure(const Closure& other)
   : callee(other.callee),
     upvs(new UpValue[other.upv_count]),
@@ -196,7 +199,8 @@ Closure& Closure::operator=(Closure&& other) {
 }
 
 Closure::Closure()
-  : upvs(new UpValue[CLOSURE_INITIAL_UPV_COUNT]) {}
+  : upvs(new UpValue[CLOSURE_INITIAL_UPV_COUNT]),
+    upv_count(CLOSURE_INITIAL_UPV_COUNT) {}
 
 Closure::~Closure() {
   delete[] upvs;

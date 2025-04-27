@@ -130,16 +130,19 @@ void __call(State* state, Closure* closure) {
     state->pc = closure->callee.u.fn->code;
   }
   else {
-    closure->callee.u.ntv(state, closure); // Function should return on its own.
+    Value val = closure->callee.u.ntv(state);
+    __return(state, std::move(val));
   }
 }
 
 void __return(State* VIA_RESTRICT state, Value&& retv) {
   CallFrame* current_frame = __current_callframe(state);
-  state->pc = current_frame->savedpc;
-  state->ret = std::move(retv);
+  if (current_frame->savedpc != nullptr)
+    state->pc = current_frame->savedpc + 1;
+  else
+    state->pc = nullptr;
 
-  __closure_close_upvalues(current_frame->closure);
+  __set_register(state, state->ret, std::move(retv));
   __pop_callframe(state);
 }
 
@@ -678,6 +681,19 @@ Closure* __create_main_function(TransUnitContext& unit_ctx) {
   main->callee = Callable(fn, 0);
 
   return main;
+}
+
+void __declare_core_lib(State* state) {
+#define MAKE_VALUE(fn, argc) Value(new Closure({core_print, argc}))
+
+  NativeFn core_print = [](State* state) -> Value {
+    Value* arg0 = __get_register(state, state->args);
+    std::cout << arg0->to_cxx_string() << "\n";
+    return Value();
+  };
+
+  __dict_set(state->globals, "print", MAKE_VALUE(core_print, 1));
+#undef MAKE_VALUE
 }
 
 } // namespace via::impl

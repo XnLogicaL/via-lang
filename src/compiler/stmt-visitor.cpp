@@ -449,16 +449,6 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
       compiler_info(ctx, std::format("Function returns type {}", ret_ty->to_output_string()));
       compiler_output_end(ctx);
     }
-
-    // Edit last instruction to drop the return value rather than popping it. This is because if a
-    // function call is present under an expression statement, then the result is guaranteed to be
-    // ignored.
-    Bytecode& last = ctx.unit_ctx.bytecode.back();
-    last.instruct.op = DROP;
-    // Reset operand values to eliminate deceptive values
-    last.instruct.a = OPERAND_INVALID;
-    last.instruct.b = OPERAND_INVALID;
-    last.instruct.c = OPERAND_INVALID;
   }
   else {
     if (unused_expr_handler.has_value()) {

@@ -181,7 +181,7 @@ bad_fold:
 
 operand_t push_constant(VisitorContext& ctx, Value&& constant) {
   ctx.unit_ctx.constants.emplace_back(std::move(constant));
-  return ctx.unit_ctx.constants.size();
+  return ctx.unit_ctx.constants.size() - 1;
 }
 
 #if VIA_COMPILER == C_GCC
@@ -274,12 +274,11 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       return false;
     }
     else if (ctx.unit_ctx.internal.function_stack.size() > 0) {
-      operand_t index = 0;
       auto& top = ctx.unit_ctx.internal.function_stack.back();
 
-      for (const auto& parameter : top.decl->parameters) {
+      for (operand_t index = 0; const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
-          bytecode_emit(ctx, GETLOCAL, {dst, index}, symbol);
+          bytecode_emit(ctx, MOV, {dst, static_cast<operand_t>(ctx.args + index)});
           return false;
         }
 

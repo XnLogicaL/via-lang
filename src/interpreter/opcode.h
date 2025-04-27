@@ -284,7 +284,6 @@ enum class Opcode : uint16_t {
   RETBT,
   RETBF,
   RETNIL,
-  RETGET,
 
   RAISE,
   TRY,

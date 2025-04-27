@@ -344,6 +344,17 @@ result<ExprNodeBase*> Parser::parse_primary() {
       br_open->position, br_close->position, values
     );
   }
+  case KW_TYPE:
+  case KW_TYPEOF:
+  case KW_NAMEOF: {
+    result<Token> intrinsic = consume();
+    result<ExprNodeBase*> expr = parse_expr();
+
+    VIA_CHECKRESULT(intrinsic);
+    VIA_CHECKRESULT(expr);
+
+    return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(*intrinsic, *expr);
+  }
   case PAREN_OPEN: {
     consume();
 

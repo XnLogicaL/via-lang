@@ -232,6 +232,20 @@ struct ArrayExprNode : public ExprNodeBase {
   }
 };
 
+struct IntrinsicExprNode : public ExprNodeBase {
+  Token intrinsic;
+  ExprNodeBase* expr;
+
+  VIA_DECLASTFUNCS();
+
+  IntrinsicExprNode(Token intrinsic, ExprNodeBase* expr)
+    : intrinsic(intrinsic),
+      expr(expr) {
+    this->begin = intrinsic.position;
+    this->end = expr->end + 1; // Account for ')'
+  }
+};
+
 // =========================================================================================
 // Type Nodes
 //

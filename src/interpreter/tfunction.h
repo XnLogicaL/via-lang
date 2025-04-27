@@ -37,7 +37,7 @@ struct Function {
   ~Function();
 };
 
-using NativeFn = Value (*)(State* interpreter, Closure* callable);
+using NativeFn = Value (*)(State* interpreter);
 
 struct Callable {
   enum class Tag {
@@ -65,12 +65,13 @@ struct Callable {
 struct Closure {
   Callable callee;
   UpValue* upvs = nullptr;
-  size_t upv_count = CLOSURE_INITIAL_UPV_COUNT;
+  size_t upv_count = 0;
 
   VIA_IMPLCOPY(Closure);
   VIA_IMPLMOVE(Closure);
 
   Closure();
+  Closure(Callable&& callable);
   ~Closure();
 };
 

@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     }
   }
   catch (const std::runtime_error& e) {
-    handlers::err_bus.log({true, e.what(), handlers::dummy_unit_ctx, via::CErrorLevel::ERROR_, {}});
+    handlers::err_bus.log({true, e.what(), handlers::dummy_unit_ctx, CErrorLevel::ERROR_, {}});
   }
 
   return 0;

@@ -46,7 +46,7 @@ struct VisitorContext {
 
   bool failed = false; // Fail status
   size_t errc = 0;     // Error count
-
+  operand_t args = 0;
   opt_label_t lesc = std::nullopt; // Escape label
   opt_label_t lrep = std::nullopt; // Repeat label
 
@@ -77,6 +77,7 @@ public:
   virtual void visit(CastExprNode&, operand_t) VIA_INVALID_VISIT;
   virtual void visit(StepExprNode&, operand_t) VIA_INVALID_VISIT;
   virtual void visit(ArrayExprNode&, operand_t) VIA_INVALID_VISIT;
+  virtual void visit(IntrinsicExprNode&, operand_t) VIA_INVALID_VISIT;
 
   // Type visitors (return type is due to type-decaying)
   virtual TypeNodeBase* visit(AutoTypeNode&) VIA_INVALID_VISIT;
@@ -122,6 +123,7 @@ public:
   void visit(CastExprNode&, operand_t) override;
   void visit(StepExprNode&, operand_t) override;
   void visit(ArrayExprNode&, operand_t) override;
+  void visit(IntrinsicExprNode&, operand_t) override;
 };
 
 class DecayNodeVisitor : public NodeVisitorBase {

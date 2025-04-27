@@ -134,7 +134,7 @@ Token Lexer::read_ident(size_t position) {
     {"defined", KW_DEFINED}, {"type", KW_TYPE},     {"pragma", KW_PRAGMA},
     {"enum", KW_ENUM},       {"try", KW_TRY},       {"catch", KW_CATCH},
     {"raise", KW_RAISE},     {"trait", KW_TRAIT},   {"auto", KW_AUTO},
-    {"defer", KW_DEFER},
+    {"defer", KW_DEFER},     {"typeof", KW_TYPEOF}, {"nameof", KW_NAMEOF},
   };
 
   // Checks if the identifier is a keyword or not

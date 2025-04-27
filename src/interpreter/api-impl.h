@@ -173,6 +173,8 @@ Value* __get_register(const State* state, operand_t reg);
 
 Closure* __create_main_function(TransUnitContext& unit_ctx);
 
+void __declare_core_lib(State* state);
+
 } // namespace impl
 
 } // namespace via

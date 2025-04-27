@@ -16,11 +16,11 @@ State::State(StkRegHolder& stk_registers, TransUnitContext& unit_ctx)
     main(Value(__create_main_function(unit_ctx))),
     stack_registers(stk_registers),
     unit_ctx(unit_ctx) {
-
   __register_allocate(this);
   __label_allocate(this, unit_ctx.internal.label_count);
   __call(this, main.u.clsr);
   __label_load(this);
+  __declare_core_lib(this);
 }
 
 State::~State() {
