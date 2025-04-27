@@ -25,10 +25,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      # Set up CMake
-      - name: Set up CMake
-        uses: actions/setup-cmake@v3
-
       - name: Build interpreter
         run: |
           mkdir build
