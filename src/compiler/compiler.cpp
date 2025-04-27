@@ -180,6 +180,13 @@ bad_fold:
 }
 
 operand_t push_constant(VisitorContext& ctx, Value&& constant) {
+  for (size_t constant_id = 0; const Value& existing_constant : ctx.unit_ctx.constants) {
+    if (constant.compare(existing_constant)) {
+      return constant_id;
+    }
+    ++constant_id;
+  }
+
   ctx.unit_ctx.constants.emplace_back(std::move(constant));
   return ctx.unit_ctx.constants.size() - 1;
 }

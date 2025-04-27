@@ -331,25 +331,22 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     not_div_by_zero:
     }
 
-    // Emit code for the constant-case.
     resolve_rvalue(this, lhs, dst);
 
     // Special handling for Bool operations.
     if (base_opcode == AND || base_opcode == OR) {
       bool is_rhs_falsy = false;
-      if (bool* rhs_bool = std::get_if<bool>(&literal.value)) {
-        is_rhs_falsy = !(*rhs_bool);
-      }
-      else if (std::get_if<std::monostate>(&literal.value)) {
-        is_rhs_falsy = true;
-      }
 
-      if (base_opcode == AND && is_rhs_falsy) {
+      if (bool* rhs_bool = std::get_if<bool>(&literal.value))
+        is_rhs_falsy = !(*rhs_bool);
+      else if (std::get_if<std::monostate>(&literal.value)) // 'nil' is always falsy
+        is_rhs_falsy = true;
+
+      if (base_opcode == AND && is_rhs_falsy)
         bytecode_emit(ctx, LOADBF, {dst});
-      }
-      else if (base_opcode == OR && !is_rhs_falsy) {
+      else if (base_opcode == OR && !is_rhs_falsy)
         bytecode_emit(ctx, LOADBT, {dst});
-      }
+
       return;
     }
 
@@ -383,9 +380,9 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     }
 
     if (is_bool_or_relational) {
-      operand_t left_reg = alloc_register(ctx);
-      bytecode_emit(ctx, MOV, {left_reg, dst});
-      bytecode_emit(ctx, base_opcode, {dst, left_reg, reg});
+      operand_t right = alloc_register(ctx);
+      bytecode_emit(ctx, MOV, {right, dst});
+      bytecode_emit(ctx, base_opcode, {dst, reg, right});
       free_register(ctx, reg);
     }
     else {
@@ -444,7 +441,7 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
   register_t key_reg = alloc_register(ctx);
   register_t val_reg = alloc_register(ctx);
 
-  for (u32 i = 0; ExprNodeBase * expr : array_expr.values) {
+  for (uint32_t i = 0; ExprNodeBase * expr : array_expr.values) {
     u16result result = ubit_u32to2u16(i++);
     resolve_rvalue(this, expr, val_reg);
     bytecode_emit(ctx, LOADI, {key_reg, result.high, result.low});
@@ -458,10 +455,13 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
 void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
   if (intrinsic_expr.intrinsic.lexeme == "nameof") {
     if (SymExprNode* sym_expr = get_derived_instance<ExprNodeBase, SymExprNode>(intrinsic_expr.expr)) {
-      LitExprNode lit = LitExprNode(Token(), sym_expr->identifier.lexeme);
-      Value constant = construct_constant(lit);
-      operand_t kid = push_constant(ctx, std::move(constant));
-      bytecode_emit(ctx, LOADK, {dst, kid}, std::format("nameof({})", sym_expr->identifier.lexeme));
+      LitExprNode literal_expr = LitExprNode(Token(), sym_expr->identifier.lexeme);
+
+      Value constant = construct_constant(literal_expr);
+      operand_t constant_id = push_constant(ctx, std::move(constant));
+
+      auto comment = std::format("nameof({})", sym_expr->identifier.lexeme);
+      bytecode_emit(ctx, LOADK, {dst, constant_id}, comment);
     }
     else {
       compiler_error(
@@ -475,24 +475,30 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
   }
   else if (intrinsic_expr.intrinsic.lexeme == "type") {
     TypeNodeBase* infered_type = intrinsic_expr.expr->infer_type(ctx.unit_ctx);
-    LitExprNode lit(Token(), {});
+    LitExprNode literal_expr(Token(), {});
 
     CHECK_INFERED_TYPE(infered_type, intrinsic_expr.expr);
 
     if (PrimTypeNode* prim_type = get_derived_instance<TypeNodeBase, PrimTypeNode>(infered_type)) {
-      std::string type = std::string(magic_enum::enum_name(prim_type->type));
-      std::transform(type.begin(), type.end(), type.begin(), [](unsigned char chr) {
+      std::string type_name = std::string(magic_enum::enum_name(prim_type->type));
+      std::transform(type_name.begin(), type_name.end(), type_name.begin(), [](unsigned char chr) {
         return std::tolower(chr);
       });
 
-      lit = LitExprNode(Token(), type);
+      literal_expr = LitExprNode(Token(), type_name);
     }
     else if (is_derived_instance<TypeNodeBase, FunctionTypeNode>(infered_type))
-      lit = LitExprNode(Token(), "function");
+      literal_expr = LitExprNode(Token(), "function");
     else {
       compiler_error(ctx, "TODO: IMPLEMENT REST OF INTRINSIC TYPE()");
       compiler_output_end(ctx);
     }
+
+    Value constant = construct_constant(literal_expr);
+    operand_t constant_id = push_constant(ctx, std::move(constant));
+
+    // TODO: Add expression as raw string when applicable
+    bytecode_emit(ctx, LOADK, {dst, constant_id}, "typeof(...)");
   }
   else {
     compiler_error(
