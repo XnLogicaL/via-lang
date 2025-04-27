@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
 ![Latest commit](https://img.shields.io/github/last-commit/XnLogicaL/via-lang)
 ![Latest release](https://img.shields.io/github/v/release/XnLogicaL/via-lang)
-![CI](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg)
 
 # via
 
