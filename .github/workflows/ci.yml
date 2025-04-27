@@ -27,7 +27,7 @@ jobs:
 
       # Set up CMake
       - name: Set up CMake
-        uses: actions/setup-cmake@v1
+        uses: actions/setup-cmake@v3
 
       - name: Build interpreter
         run: |
