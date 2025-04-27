@@ -34,8 +34,8 @@ jobs:
       - name: Build interpreter
         run: |
           mkdir build
-          cmake -S . -B build -D CMAKE_BUILD_TYPE=Release DEBUG_MODE=OFF
-          cmake -j$(nproc) --build build
+          cmake -S . -B build -D CMAKE_BUILD_TYPE=Release -D DEBUG_MODE=OFF
+          cmake --build build -j$(nproc) 
 
       # Run Python tests
       - name: Run tests
