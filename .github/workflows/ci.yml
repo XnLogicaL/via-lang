@@ -28,7 +28,8 @@ jobs:
       # Install dependencies
       - name: Install Python dependencies
         run: |
-          apt install python3-loguru
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
 
       - name: Build interpreter
         run: |
