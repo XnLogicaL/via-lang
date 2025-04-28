@@ -28,7 +28,8 @@ def run_test(test_file):
     else:
         logger.error(f"Test failed: {test_file}")
         logger.info(f"Expected:\n{expected_output}")
-        logger.info(f"Got:\n{actual_output}")
+        logger.info(f"File stdout:\n{actual_output}")
+        logger.info(f"File stderr:\n{result.stderr.strip()}")
         return False
     return True
 
