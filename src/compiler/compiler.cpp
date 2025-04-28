@@ -275,10 +275,9 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
       Value const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
-      operand_t tmp_reg = ctx.reg_alloc.allocate_temp();
 
-      bytecode_emit(ctx, LOADK, {tmp_reg, const_id});
-      bytecode_emit(ctx, GETGLOBAL, {dst, tmp_reg}, symbol);
+      bytecode_emit(ctx, LOADK, {dst, const_id});
+      bytecode_emit(ctx, GETGLOBAL, {dst, dst}, symbol);
       return false;
     }
     else if (ctx.unit_ctx.internal.function_stack.size() > 0) {

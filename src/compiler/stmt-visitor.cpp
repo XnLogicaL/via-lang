@@ -427,7 +427,9 @@ void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
 
 void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
   ExprNodeBase* expr = expr_stmt.expression;
-  resolve_rvalue(&expression_visitor, expr, 0);
+  operand_t reg = alloc_register(ctx);
+
+  resolve_rvalue(&expression_visitor, expr, reg);
 
   if (CallExprNode* call_node = get_derived_instance<ExprNodeBase, CallExprNode>(expr)) {
     TypeNodeBase* callee_ty = resolve_type(ctx, call_node->callee);
@@ -461,6 +463,8 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
       compiler_output_end(ctx);
     }
   }
+
+  free_register(ctx, reg);
 }
 
 } // namespace via

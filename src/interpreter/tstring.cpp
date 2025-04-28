@@ -6,6 +6,15 @@
 
 namespace via {
 
+String::String(const char* str)
+  : data(ustrdup(str)),
+    data_size(std::strlen(str)),
+    hash(ustrhash(str)) {}
+
+String::~String() {
+  delete[] data;
+}
+
 String::String(const String& other)
   : data(ustrdup(other.data)),
     data_size(other.data_size),

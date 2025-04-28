@@ -16,7 +16,7 @@
 
 namespace via {
 
-inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 8;
+inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 1024 * 8;
 
 /**
  * Dynamic container that holds a sequence of bytes.

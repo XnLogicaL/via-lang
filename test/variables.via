@@ -1,0 +1,42 @@
+## This file is a part of the via Programming Language project
+## Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
+## Variable declaration
+var x = 10
+print(x)
+
+## Variable assignment
+x = 20
+print(x)
+
+## Variable arithmetics
+var y = 5
+var result = x + y
+print(result)
+
+## Scoped variables
+do {
+  var n = 15
+  print(n)
+}
+
+## Variable types
+var intVar: int = 10
+print(type intVar)
+print(intVar)
+
+var floatVar: float = 1.0
+print(type floatVar)
+print(floatVar)
+
+var boolVar: bool = true
+print(type boolVar)
+print(boolVar)
+
+var stringVar: string = "Hello"
+print(type stringVar)
+print(stringVar)
+
+## nameof
+var thisIsACoolName = 10
+print(nameof thisIsACoolName)

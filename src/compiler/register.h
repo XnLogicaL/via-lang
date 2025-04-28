@@ -38,6 +38,9 @@ public:
   // Returns wheter if a given register is used.
   bool is_used(register_t reg);
 
+  // Returns the amount of used registers. Used for debugging.
+  size_t get_used_registers();
+
 private:
   register_map registers;
 };

@@ -71,7 +71,7 @@ Value& Array::get(size_t position) {
   return *impl::__array_get(this, position);
 }
 
-void Array::set(size_t position, Value value) {
+void Array::set(size_t position, Value&& value) {
   impl::__array_set(this, position, std::move(value));
 }
 

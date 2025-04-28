@@ -109,9 +109,8 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
   resolve_rvalue(this, &unary_node, dst);
 
   if (unary_node.op.type == TokenType::OP_SUB) {
-    if (is_arithmetic(type)) {
+    if (is_arithmetic(type))
       bytecode_emit(ctx, NEG, {dst});
-    }
     else {
       // Error: "ill-negation"
       auto message = std::format("Negating non-negatable type {}", type->to_output_string());
@@ -121,9 +120,10 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
   }
   else if (unary_node.op.type == TokenType::OP_LEN) {
     if (is_derived_instance<TypeNodeBase, ArrayTypeNode>(type)) {
-      register_t reg = ctx.reg_alloc.allocate_register();
+      register_t reg = alloc_register(ctx);
       bytecode_emit(ctx, MOV, {reg, dst});
       bytecode_emit(ctx, LENARR, {dst, reg});
+      free_register(ctx, reg);
       return;
     }
 
@@ -183,17 +183,14 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
 
   resolve_rvalue(this, callee, callee_reg);
 
+  ctx.args = alloc_register(ctx);
   for (size_t idx = 0; ExprNodeBase * argument : call_node.arguments) {
-    operand_t arg_reg = alloc_register(ctx);
-    if (idx == 0) {
-      ctx.args = arg_reg;
-    }
-
-    resolve_rvalue(this, argument, arg_reg);
+    resolve_rvalue(this, argument, ctx.args + (idx++));
   }
 
   bytecode_emit(ctx, CALL, {callee_reg, ctx.args, dst});
   free_register(ctx, callee_reg);
+  free_register(ctx, ctx.args);
 }
 
 void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
@@ -213,6 +210,7 @@ void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
         resolve_rvalue(this, index_node.index, reg);
         bytecode_emit(ctx, GETARR, {dst, obj_reg, reg});
         free_register(ctx, reg);
+        free_register(ctx, obj_reg);
         return;
       }
     }

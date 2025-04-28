@@ -29,7 +29,7 @@ struct Array {
   Value& get(size_t position);
 
   // Sets the element at the given index to the given value. Resizes the array if necessary.
-  void set(size_t position, Value value);
+  void set(size_t position, Value&& value);
 };
 
 } // namespace via

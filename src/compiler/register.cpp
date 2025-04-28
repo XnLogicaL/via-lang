@@ -6,10 +6,10 @@
 namespace via {
 
 register_t RegisterAllocator::allocate_register() {
-  for (register_t reg = 0; reg < REGISTER_COUNT - 1; reg++) {
-    if (registers[reg]) {
-      registers[reg] = false;
-      return reg;
+  for (size_t i = 0; i < REGISTER_COUNT; i++) {
+    if (registers[i] == true) {
+      registers[i] = false;
+      return i;
     }
   }
 
@@ -23,11 +23,17 @@ register_t RegisterAllocator::allocate_temp() {
 }
 
 void RegisterAllocator::free_register(register_t reg) {
-  registers.emplace(reg, true);
+  registers[reg] = true;
 }
 
 bool RegisterAllocator::is_used(register_t reg) {
-  return registers[reg];
+  return !registers[reg];
+}
+
+size_t RegisterAllocator::get_used_registers() {
+  return std::count_if(registers.begin(), registers.end(), [](auto& it) {
+    return it.second == false;
+  });
 }
 
 } // namespace via

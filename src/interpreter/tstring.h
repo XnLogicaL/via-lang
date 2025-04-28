@@ -19,14 +19,8 @@ struct String {
   VIA_IMPLCOPY(String);
   VIA_IMPLMOVE(String);
 
-  inline explicit String(const char* str)
-    : data(ustrdup(str)),
-      data_size(std::strlen(str)),
-      hash(ustrhash(str)) {}
-
-  inline ~String() {
-    delete[] data;
-  }
+  String(const char* str);
+  ~String();
 
   // Returns the character that lives in the given position.
   String get(size_t position);
