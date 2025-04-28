@@ -34,6 +34,10 @@ std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& sy
   return std::nullopt;
 }
 
+void CompilerVariableStack::restore_stack_pointer(size_t sp) {
+  this->resize(sp);
+}
+
 void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
   ScopeStmtNode* scope = unit_ctx.internal.ast_allocator.emplace<ScopeStmtNode>(
     size_t(0), size_t(0), std::vector<StmtNodeBase*>{}

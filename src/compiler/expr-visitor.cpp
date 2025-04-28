@@ -488,7 +488,7 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
     else if (is_derived_instance<TypeNodeBase, FunctionTypeNode>(infered_type))
       literal_expr = LitExprNode(Token(), "function");
     else {
-      compiler_error(ctx, "TODO: IMPLEMENT REST OF INTRINSIC TYPE()");
+      compiler_error(ctx, "TODO: Implement rest of intrinsic: type()");
       compiler_output_end(ctx);
     }
 

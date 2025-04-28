@@ -36,6 +36,9 @@ public:
 
   // Returns the stack id of a given stack object.
   std::optional<operand_t> find_local_id(const symbol_t&);
+
+  // Restores the stack pointer to the given position.
+  void restore_stack_pointer(size_t sp);
 };
 
 struct StackFunction {

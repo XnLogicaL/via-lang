@@ -111,6 +111,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       // Other constant
       else {
         Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
+        Value::Tag constant_ty = constant.type;
         operand_t const_id = push_constant(ctx, std::move(constant));
 
         bytecode_emit(ctx, PUSHK, {const_id}, symbol);
@@ -120,7 +121,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           .symbol = symbol,
           .decl = &declaration_node,
           .type = ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-            literal.value_token, constant.type
+            literal.value_token, constant_ty
           ),
           .value = &literal,
         });
@@ -175,6 +176,8 @@ void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   for (; stack_allocations > 0; stack_allocations--) {
     bytecode_emit(ctx, DROP);
   }
+
+  current_closure.locals.restore_stack_pointer(stack_pointer);
 }
 
 void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
