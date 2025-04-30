@@ -1,0 +1,320 @@
+\doxysection{opcode.\+h}
+\hypertarget{opcode_8h_source}{}\label{opcode_8h_source}\index{src/interpreter/opcode.h@{src/interpreter/opcode.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_OPCODE\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_OPCODE\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{enum\ class}\ Opcode\ :\ uint16\_t\ \{}
+\DoxyCodeLine{00012\ \ \ \textcolor{comment}{//\ nop}}
+\DoxyCodeLine{00013\ \ \ \textcolor{comment}{//\ No\ operation.}}
+\DoxyCodeLine{00014\ \ \ NOP,}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \textcolor{comment}{//\ lbl}}
+\DoxyCodeLine{00017\ \ \ \textcolor{comment}{//\ o0:\ <label\_id\ ::\ int>}}
+\DoxyCodeLine{00018\ \ \ \textcolor{comment}{//\ Maps\ the\ current\ program\ counter\ to\ <label\_id>.}}
+\DoxyCodeLine{00019\ \ \ LBL,}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \textcolor{comment}{//\ exit}}
+\DoxyCodeLine{00022\ \ \ \textcolor{comment}{//\ o0:\ <exit\_code\ ::\ int>}}
+\DoxyCodeLine{00023\ \ \ \textcolor{comment}{//\ Safely\ terminates\ the\ VM\ with\ exit\ code\ <exit\_code>.}}
+\DoxyCodeLine{00024\ \ \ EXIT,}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \textcolor{comment}{//\ add}}
+\DoxyCodeLine{00027\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00028\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00029\ \ \ \textcolor{comment}{//\ Adds\ the\ value\ in\ register\ <right>\ to\ register\ <left>.}}
+\DoxyCodeLine{00030\ \ \ ADD,}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \textcolor{comment}{//\ addi}}
+\DoxyCodeLine{00033\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00034\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00035\ \ \ \textcolor{comment}{//\ Adds\ the\ literal\ Int\ value\ <right>\ to\ register\ <left>.}}
+\DoxyCodeLine{00036\ \ \ ADDI,}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \textcolor{comment}{//\ addf}}
+\DoxyCodeLine{00039\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00040\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00041\ \ \ \textcolor{comment}{//\ Adds\ the\ literal\ float\ value\ <right>\ to\ register\ <left>.}}
+\DoxyCodeLine{00042\ \ \ ADDF,}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \textcolor{comment}{//\ sub}}
+\DoxyCodeLine{00045\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00046\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00047\ \ \ \textcolor{comment}{//\ Subtracts\ the\ value\ in\ register\ <right>\ from\ register\ <left>.}}
+\DoxyCodeLine{00048\ \ \ SUB,}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \ \ \textcolor{comment}{//\ subi}}
+\DoxyCodeLine{00051\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00052\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00053\ \ \ \textcolor{comment}{//\ Subtracts\ the\ literal\ Int\ value\ <right>\ from\ register\ <left>.}}
+\DoxyCodeLine{00054\ \ \ SUBI,}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \ \ \textcolor{comment}{//\ subf}}
+\DoxyCodeLine{00057\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00058\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00059\ \ \ \textcolor{comment}{//\ Subtracts\ the\ literal\ float\ value\ <right>\ from\ register\ <left>.}}
+\DoxyCodeLine{00060\ \ \ SUBF,}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \ \ \textcolor{comment}{//\ mul}}
+\DoxyCodeLine{00063\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00064\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00065\ \ \ \textcolor{comment}{//\ Multiplies\ the\ value\ in\ register\ <left>\ with\ the\ value\ in\ register\ <right>.}}
+\DoxyCodeLine{00066\ \ \ MUL,}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \ \ \textcolor{comment}{//\ subi}}
+\DoxyCodeLine{00069\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00070\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00071\ \ \ \textcolor{comment}{//\ Multiplies\ the\ value\ in\ register\ <left>\ with\ the\ literal\ Int\ value\ <right>.}}
+\DoxyCodeLine{00072\ \ \ MULI,}
+\DoxyCodeLine{00073\ }
+\DoxyCodeLine{00074\ \ \ \textcolor{comment}{//\ mulf}}
+\DoxyCodeLine{00075\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00076\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00077\ \ \ \textcolor{comment}{//\ Multiplies\ the\ value\ in\ register\ <left>\ with\ the\ literal\ float\ value\ <right>.}}
+\DoxyCodeLine{00078\ \ \ MULF,}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00080\ \ \ \textcolor{comment}{//\ div}}
+\DoxyCodeLine{00081\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00082\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00083\ \ \ \textcolor{comment}{//\ Divides\ the\ value\ in\ register\ <left>\ with\ the\ value\ in\ register\ <right>.}}
+\DoxyCodeLine{00084\ \ \ DIV,}
+\DoxyCodeLine{00085\ }
+\DoxyCodeLine{00086\ \ \ \textcolor{comment}{//\ divi}}
+\DoxyCodeLine{00087\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00088\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00089\ \ \ \textcolor{comment}{//\ Divides\ the\ value\ in\ register\ <left>\ with\ the\ literal\ Int\ value\ <right>}}
+\DoxyCodeLine{00090\ \ \ DIVI,}
+\DoxyCodeLine{00091\ }
+\DoxyCodeLine{00092\ \ \ \textcolor{comment}{//\ divf}}
+\DoxyCodeLine{00093\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00094\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00095\ \ \ \textcolor{comment}{//\ Divides\ the\ value\ in\ register\ <left>\ with\ the\ literal\ float\ value\ <right>.}}
+\DoxyCodeLine{00096\ \ \ DIVF,}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \textcolor{comment}{//\ mod}}
+\DoxyCodeLine{00099\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00100\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00101\ \ \ \textcolor{comment}{//\ Performs\ a\ modulus\ operation\ on\ the\ values\ in\ register\ <left>\ and\ register\ <right>.}}
+\DoxyCodeLine{00102\ \ \ MOD,}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ \ \ \textcolor{comment}{//\ modi}}
+\DoxyCodeLine{00105\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00106\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00107\ \ \ \textcolor{comment}{//\ Performs\ a\ modulus\ operation\ on\ the\ value\ in\ register\ <left>\ and\ the\ literal\ Int\ value}}
+\DoxyCodeLine{00108\ \ \ \textcolor{comment}{//\ <right>.}}
+\DoxyCodeLine{00109\ \ \ MODI,}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \ \ \textcolor{comment}{//\ modf}}
+\DoxyCodeLine{00112\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00113\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00114\ \ \ \textcolor{comment}{//\ Adds\ the\ literal\ float\ value\ <right>\ to\ register\ <left>.}}
+\DoxyCodeLine{00115\ \ \ MODF,}
+\DoxyCodeLine{00116\ }
+\DoxyCodeLine{00117\ \ \ \textcolor{comment}{//\ pow}}
+\DoxyCodeLine{00118\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00119\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00120\ \ \ \textcolor{comment}{//\ Performs\ an\ exponentiation\ operation\ with\ the\ value\ in\ register\ <left>\ as\ base\ and\ with\ the}}
+\DoxyCodeLine{00121\ \ \ \textcolor{comment}{//\ value\ in\ register\ <right>\ as\ the\ power.}}
+\DoxyCodeLine{00122\ \ \ POW,}
+\DoxyCodeLine{00123\ }
+\DoxyCodeLine{00124\ \ \ \textcolor{comment}{//\ powi}}
+\DoxyCodeLine{00125\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00126\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ int>}}
+\DoxyCodeLine{00127\ \ \ \textcolor{comment}{//\ Performs\ an\ exponentiation\ operation\ with\ the\ value\ in\ register\ <left>\ as\ base\ and\ with\ the}}
+\DoxyCodeLine{00128\ \ \ \textcolor{comment}{//\ literal\ Int\ value\ <right>\ as\ the\ power.}}
+\DoxyCodeLine{00129\ \ \ POWI,}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \ \ \textcolor{comment}{//\ powf}}
+\DoxyCodeLine{00132\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00133\ \ \ \textcolor{comment}{//\ o1:\ <right\ ::\ float>}}
+\DoxyCodeLine{00134\ \ \ \textcolor{comment}{//\ Performs\ an\ exponentiation\ operation\ with\ the\ value\ in\ register\ <left>\ as\ base\ and\ with\ the}}
+\DoxyCodeLine{00135\ \ \ \textcolor{comment}{//\ literal\ float\ value\ <right>\ as\ the\ power.}}
+\DoxyCodeLine{00136\ \ \ POWF,}
+\DoxyCodeLine{00137\ }
+\DoxyCodeLine{00138\ \ \ \textcolor{comment}{//\ neg}}
+\DoxyCodeLine{00139\ \ \ \textcolor{comment}{//\ o0:\ <left\ ::\ reg(int|float)>}}
+\DoxyCodeLine{00140\ \ \ \textcolor{comment}{//\ Negates\ the\ value\ in\ o0.}}
+\DoxyCodeLine{00141\ \ \ NEG,}
+\DoxyCodeLine{00142\ }
+\DoxyCodeLine{00143\ \ \ \textcolor{comment}{//\ mov}}
+\DoxyCodeLine{00144\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00145\ \ \ \textcolor{comment}{//\ o1:\ <src\ ::\ reg(any)>}}
+\DoxyCodeLine{00146\ \ \ \textcolor{comment}{//\ Copies\ the\ value\ in\ register\ <src>\ into\ register\ <dst>.}}
+\DoxyCodeLine{00147\ \ \ MOV,}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00149\ \ \ \textcolor{comment}{//\ loadk}}
+\DoxyCodeLine{00150\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00151\ \ \ \textcolor{comment}{//\ o1:\ <kid\ ::\ int>}}
+\DoxyCodeLine{00152\ \ \ \textcolor{comment}{//\ Loads\ constant\ <kid>\ from\ the\ constant\ table\ into\ register\ <dst>.}}
+\DoxyCodeLine{00153\ \ \ LOADK,}
+\DoxyCodeLine{00154\ }
+\DoxyCodeLine{00155\ \ \ \textcolor{comment}{//\ loadnil}}
+\DoxyCodeLine{00156\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00157\ \ \ \textcolor{comment}{//\ Loads\ a\ Nil\ value\ into\ register\ <dst>.}}
+\DoxyCodeLine{00158\ \ \ LOADNIL,}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \ \ \textcolor{comment}{//\ loadi}}
+\DoxyCodeLine{00161\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00162\ \ \ \textcolor{comment}{//\ o1:\ <high\ ::\ bytes>}}
+\DoxyCodeLine{00163\ \ \ \textcolor{comment}{//\ o2:\ <low\ ::\ bytes>}}
+\DoxyCodeLine{00164\ \ \ \textcolor{comment}{//\ Interprets\ <high>\ and\ <low>\ as\ an\ Int\ and\ loads\ it\ into\ register\ <dst>.}}
+\DoxyCodeLine{00165\ \ \ LOADI,}
+\DoxyCodeLine{00166\ }
+\DoxyCodeLine{00167\ \ \ \textcolor{comment}{//\ loadf}}
+\DoxyCodeLine{00168\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00169\ \ \ \textcolor{comment}{//\ o1:\ <high\ ::\ bytes>}}
+\DoxyCodeLine{00170\ \ \ \textcolor{comment}{//\ o2:\ <low\ ::\ bytes>}}
+\DoxyCodeLine{00171\ \ \ \textcolor{comment}{//\ Interprets\ <high>\ and\ <low>\ as\ a\ float\ and\ loads\ it\ into\ register\ <dst>.}}
+\DoxyCodeLine{00172\ \ \ LOADF,}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00174\ \ \ \textcolor{comment}{//\ loadbt}}
+\DoxyCodeLine{00175\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00176\ \ \ \textcolor{comment}{//\ Loads\ Bool\ true\ into\ register\ <dst>.}}
+\DoxyCodeLine{00177\ \ \ LOADBT,}
+\DoxyCodeLine{00178\ }
+\DoxyCodeLine{00179\ \ \ \textcolor{comment}{//\ loadbf}}
+\DoxyCodeLine{00180\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00181\ \ \ \textcolor{comment}{//\ Loads\ Bool\ false\ into\ register\ <dst>.}}
+\DoxyCodeLine{00182\ \ \ LOADBF,}
+\DoxyCodeLine{00183\ }
+\DoxyCodeLine{00184\ \ \ \textcolor{comment}{//\ loadarr}}
+\DoxyCodeLine{00185\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00186\ \ \ \textcolor{comment}{//\ Loads\ an\ empty\ array\ into\ register\ <dst>.}}
+\DoxyCodeLine{00187\ \ \ LOADARR,}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \ \ \textcolor{comment}{//\ loaddict}}
+\DoxyCodeLine{00190\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00191\ \ \ \textcolor{comment}{//\ Loads\ an\ empty\ dictionary\ into\ register\ <dst>.}}
+\DoxyCodeLine{00192\ \ \ LOADDICT,}
+\DoxyCodeLine{00193\ }
+\DoxyCodeLine{00194\ \ \ \textcolor{comment}{//\ closure}}
+\DoxyCodeLine{00195\ \ \ \textcolor{comment}{//\ o0:\ <dst\ ::\ reg(any)>}}
+\DoxyCodeLine{00196\ \ \ \textcolor{comment}{//\ o1:\ <argc\ ::\ int>}}
+\DoxyCodeLine{00197\ \ \ \textcolor{comment}{//\ o2:\ <insnc\ ::\ int>}}
+\DoxyCodeLine{00198\ \ \ \textcolor{comment}{//\ Captures\ <insnc>\ amount\ of\ instructions\ starting\ from\ itself,\ creates\ a\ closure\ and\ loads\ it}}
+\DoxyCodeLine{00199\ \ \ \textcolor{comment}{//\ into\ <dst>.\ Saves\ the\ argument\ stack\ pointer\ and\ captures\ arguments\ from\ [sp..sp+argc].}}
+\DoxyCodeLine{00200\ \ \ CLOSURE,}
+\DoxyCodeLine{00201\ }
+\DoxyCodeLine{00202\ \ \ \textcolor{comment}{//\ push}}
+\DoxyCodeLine{00203\ \ \ \textcolor{comment}{//\ o0:\ <src\ ::\ reg(any)>}}
+\DoxyCodeLine{00204\ \ \ \textcolor{comment}{//\ Pushes\ the\ value\ in\ register\ <src>\ onto\ the\ local\ stack.}}
+\DoxyCodeLine{00205\ \ \ PUSH,}
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ \ \ \textcolor{comment}{//\ pushk}}
+\DoxyCodeLine{00208\ \ \ \textcolor{comment}{//\ o0:\ <kid\ ::\ int>}}
+\DoxyCodeLine{00209\ \ \ \textcolor{comment}{//\ Pushes\ constant\ <kid>\ from\ the\ constant\ table\ onto\ the\ local\ stack.}}
+\DoxyCodeLine{00210\ \ \ PUSHK,}
+\DoxyCodeLine{00211\ }
+\DoxyCodeLine{00212\ \ \ \textcolor{comment}{//\ pushnil}}
+\DoxyCodeLine{00213\ \ \ \textcolor{comment}{//\ Pushes\ Nil\ onto\ the\ local\ stack.}}
+\DoxyCodeLine{00214\ \ \ PUSHNIL,}
+\DoxyCodeLine{00215\ }
+\DoxyCodeLine{00216\ \ \ \textcolor{comment}{//\ pushi}}
+\DoxyCodeLine{00217\ \ \ \textcolor{comment}{//\ o0:\ <high\ ::\ bytes>}}
+\DoxyCodeLine{00218\ \ \ \textcolor{comment}{//\ o1:\ <low\ ::\ bytes>}}
+\DoxyCodeLine{00219\ \ \ \textcolor{comment}{//\ Interprets\ <high>\ and\ <low>\ as\ an\ Int\ literal\ and\ pushes\ it\ onto\ the\ local\ stack.}}
+\DoxyCodeLine{00220\ \ \ PUSHI,}
+\DoxyCodeLine{00221\ }
+\DoxyCodeLine{00222\ \ \ \textcolor{comment}{//\ pushf}}
+\DoxyCodeLine{00223\ \ \ \textcolor{comment}{//\ o0:\ <high\ ::\ bytes>}}
+\DoxyCodeLine{00224\ \ \ \textcolor{comment}{//\ o1:\ <low\ ::\ bytes>}}
+\DoxyCodeLine{00225\ \ \ \textcolor{comment}{//\ Interprets\ <high>\ and\ <low>\ as\ a\ float\ literal\ and\ pushes\ it\ onto\ the\ local\ stack.}}
+\DoxyCodeLine{00226\ \ \ PUSHF,}
+\DoxyCodeLine{00227\ }
+\DoxyCodeLine{00228\ \ \ \textcolor{comment}{//\ pushbt}}
+\DoxyCodeLine{00229\ \ \ \textcolor{comment}{//\ Pushes\ Bool\ true\ onto\ the\ stack.}}
+\DoxyCodeLine{00230\ \ \ PUSHBT,}
+\DoxyCodeLine{00231\ }
+\DoxyCodeLine{00232\ \ \ \textcolor{comment}{//\ pushbf}}
+\DoxyCodeLine{00233\ \ \ \textcolor{comment}{//\ Pushes\ Bool\ false\ onto\ the\ stack.}}
+\DoxyCodeLine{00234\ \ \ PUSHBF,}
+\DoxyCodeLine{00235\ }
+\DoxyCodeLine{00236\ \ \ \textcolor{comment}{//\ drop}}
+\DoxyCodeLine{00237\ \ \ \textcolor{comment}{//\ Drops\ the\ top-\/most\ value\ from\ the\ local\ stack.}}
+\DoxyCodeLine{00238\ \ \ DROP,}
+\DoxyCodeLine{00239\ }
+\DoxyCodeLine{00240\ \ \ GETGLOBAL,}
+\DoxyCodeLine{00241\ \ \ SETGLOBAL,}
+\DoxyCodeLine{00242\ }
+\DoxyCodeLine{00243\ \ \ SETUPV,}
+\DoxyCodeLine{00244\ \ \ GETUPV,}
+\DoxyCodeLine{00245\ \ \ GETLOCAL,}
+\DoxyCodeLine{00246\ \ \ SETLOCAL,}
+\DoxyCodeLine{00247\ }
+\DoxyCodeLine{00248\ \ \ CAPTURE,}
+\DoxyCodeLine{00249\ }
+\DoxyCodeLine{00250\ \ \ INC,}
+\DoxyCodeLine{00251\ \ \ DEC,}
+\DoxyCodeLine{00252\ \ \ EQ,}
+\DoxyCodeLine{00253\ \ \ NEQ,}
+\DoxyCodeLine{00254\ \ \ AND,}
+\DoxyCodeLine{00255\ \ \ OR,}
+\DoxyCodeLine{00256\ \ \ NOT,}
+\DoxyCodeLine{00257\ \ \ LT,}
+\DoxyCodeLine{00258\ \ \ GT,}
+\DoxyCodeLine{00259\ \ \ LTEQ,}
+\DoxyCodeLine{00260\ \ \ GTEQ,}
+\DoxyCodeLine{00261\ }
+\DoxyCodeLine{00262\ \ \ JMP,}
+\DoxyCodeLine{00263\ \ \ JMPIF,}
+\DoxyCodeLine{00264\ \ \ JMPIFN,}
+\DoxyCodeLine{00265\ \ \ JMPIFEQ,}
+\DoxyCodeLine{00266\ \ \ JMPIFNEQ,}
+\DoxyCodeLine{00267\ \ \ JMPIFLT,}
+\DoxyCodeLine{00268\ \ \ JMPIFGT,}
+\DoxyCodeLine{00269\ \ \ JMPIFLTEQ,}
+\DoxyCodeLine{00270\ \ \ JMPIFGTEQ,}
+\DoxyCodeLine{00271\ }
+\DoxyCodeLine{00272\ \ \ LJMP,}
+\DoxyCodeLine{00273\ \ \ LJMPIF,}
+\DoxyCodeLine{00274\ \ \ LJMPIFN,}
+\DoxyCodeLine{00275\ \ \ LJMPIFEQ,}
+\DoxyCodeLine{00276\ \ \ LJMPIFNEQ,}
+\DoxyCodeLine{00277\ \ \ LJMPIFLT,}
+\DoxyCodeLine{00278\ \ \ LJMPIFGT,}
+\DoxyCodeLine{00279\ \ \ LJMPIFLTEQ,}
+\DoxyCodeLine{00280\ \ \ LJMPIFGTEQ,}
+\DoxyCodeLine{00281\ }
+\DoxyCodeLine{00282\ \ \ CALL,}
+\DoxyCodeLine{00283\ \ \ RET,}
+\DoxyCodeLine{00284\ \ \ RETBT,}
+\DoxyCodeLine{00285\ \ \ RETBF,}
+\DoxyCodeLine{00286\ \ \ RETNIL,}
+\DoxyCodeLine{00287\ }
+\DoxyCodeLine{00288\ \ \ RAISE,}
+\DoxyCodeLine{00289\ \ \ TRY,}
+\DoxyCodeLine{00290\ \ \ CATCH,}
+\DoxyCodeLine{00291\ }
+\DoxyCodeLine{00292\ \ \ GETARR,}
+\DoxyCodeLine{00293\ \ \ SETARR,}
+\DoxyCodeLine{00294\ \ \ NEXTARR,}
+\DoxyCodeLine{00295\ \ \ LENARR,}
+\DoxyCodeLine{00296\ }
+\DoxyCodeLine{00297\ \ \ GETDICT,}
+\DoxyCodeLine{00298\ \ \ SETDICT,}
+\DoxyCodeLine{00299\ \ \ NEXTDICT,}
+\DoxyCodeLine{00300\ \ \ LENDICT,}
+\DoxyCodeLine{00301\ }
+\DoxyCodeLine{00302\ \ \ CONSTR,}
+\DoxyCodeLine{00303\ \ \ GETSTR,}
+\DoxyCodeLine{00304\ \ \ SETSTR,}
+\DoxyCodeLine{00305\ \ \ LENSTR,}
+\DoxyCodeLine{00306\ }
+\DoxyCodeLine{00307\ \ \ ICAST,}
+\DoxyCodeLine{00308\ \ \ FCAST,}
+\DoxyCodeLine{00309\ \ \ STRCAST,}
+\DoxyCodeLine{00310\ \ \ BCAST,}
+\DoxyCodeLine{00311\ \};}
+\DoxyCodeLine{00312\ \}}
+\DoxyCodeLine{00313\ }
+\DoxyCodeLine{00314\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

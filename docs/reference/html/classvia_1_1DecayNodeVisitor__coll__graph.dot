@@ -1,0 +1,24 @@
+digraph "via::DecayNodeVisitor"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  Node1 [id="Node000001",label="via::DecayNodeVisitor",height=0.2,width=0.4,color="gray40", fillcolor="grey60", style="filled", fontcolor="black",tooltip=" "];
+  Node2 -> Node1 [id="edge1_Node000001_Node000002",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 [id="Node000002",label="via::NodeVisitorBase",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",URL="$classvia_1_1NodeVisitorBase.html",tooltip=" "];
+  Node3 -> Node2 [id="edge2_Node000002_Node000003",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" ctx",fontcolor="grey" ];
+  Node3 [id="Node000003",label="via::VisitorContext",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",URL="$structvia_1_1VisitorContext.html",tooltip=" "];
+  Node4 -> Node3 [id="edge3_Node000003_Node000004",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" unit_ctx",fontcolor="grey" ];
+  Node4 [id="Node000004",label="via::TransUnitContext",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",URL="$classvia_1_1TransUnitContext.html",tooltip=" "];
+  Node5 -> Node4 [id="edge4_Node000004_Node000005",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" globals",fontcolor="grey" ];
+  Node5 [id="Node000005",label="via::GlobalHolder",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$classvia_1_1GlobalHolder.html",tooltip="Contains globals."];
+  Node6 -> Node4 [id="edge5_Node000004_Node000006",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" function_stack",fontcolor="grey" ];
+  Node6 [id="Node000006",label="via::CompilerFunctionStack",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$classvia_1_1CompilerFunctionStack.html",tooltip="Stack of active functions used during compilation."];
+  Node7 -> Node6 [id="edge6_Node000006_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node7 [id="Node000007",label="std::vector\< StackFunction \>",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node8 -> Node3 [id="edge7_Node000003_Node000008",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" reg_alloc",fontcolor="grey" ];
+  Node8 [id="Node000008",label="via::RegisterAllocator",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$classvia_1_1RegisterAllocator.html",tooltip="Handles compile-time register allocation and deallocation."];
+  Node9 -> Node3 [id="edge8_Node000003_Node000009",dir="back",color="darkorchid3",style="dashed",tooltip=" ",label=" err_bus",fontcolor="grey" ];
+  Node9 [id="Node000009",label="via::CErrorBus",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$classvia_1_1CErrorBus.html",tooltip=" "];
+}

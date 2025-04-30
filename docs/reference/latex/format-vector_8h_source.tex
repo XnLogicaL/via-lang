@@ -1,0 +1,48 @@
+\doxysection{format-\/vector.h}
+\hypertarget{format-vector_8h_source}{}\label{format-vector_8h_source}\index{src/utility/format-\/vector.h@{src/utility/format-\/vector.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_FORMAT\_VEC\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_FORMAT\_VEC\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00012\ \textcolor{keyword}{using\ }fmt\_vector\_t\ =\ \textcolor{keyword}{const}\ std::vector<T>\&;}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00015\ \textcolor{keyword}{using\ }fmt\_func\_t\ =\ \textcolor{keyword}{const}\ std::function<std::string(\textcolor{keyword}{const}\ T\&)>\&;}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00018\ std::string\ format\_vector(}
+\DoxyCodeLine{00019\ \ \ fmt\_vector\_t<T>\ vec\ =\ \{\},}
+\DoxyCodeLine{00020\ \ \ fmt\_func\_t<T>\ to\_str\ =\ \{\},}
+\DoxyCodeLine{00021\ \ \ \textcolor{keywordtype}{char}\ delimiter\_begin\ =\ \textcolor{charliteral}{'\{'},}
+\DoxyCodeLine{00022\ \ \ \textcolor{keywordtype}{char}\ delimiter\_end\ =\ \textcolor{charliteral}{'\}'}}
+\DoxyCodeLine{00023\ )\ \{}
+\DoxyCodeLine{00024\ \ \ std::ostringstream\ oss;}
+\DoxyCodeLine{00025\ \ \ oss\ <<\ delimiter\_begin;}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \textcolor{keywordtype}{size\_t}\ index\ =\ 0;}
+\DoxyCodeLine{00028\ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ T\&\ elem\ :\ vec)\ \{}
+\DoxyCodeLine{00029\ \ \ \ \ oss\ <<\ to\_str(elem);}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordflow}{if}\ (index++\ <\ vec.size()\ -\/\ 1)\ \{}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ oss\ <<\ \textcolor{stringliteral}{"{},\ "{}};}
+\DoxyCodeLine{00033\ \ \ \ \ \}}
+\DoxyCodeLine{00034\ \ \ \}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \ \ oss\ <<\ delimiter\_end;}
+\DoxyCodeLine{00037\ \ \ \textcolor{keywordflow}{return}\ oss.str();}
+\DoxyCodeLine{00038\ \}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

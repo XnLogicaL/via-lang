@@ -3,8 +3,8 @@
 
 #include "ast.h"
 
-#include <compiler/visitor.h>
-#include <compiler/types.h>
+#include <codegen/visitor.h>
+#include <codegen/types.h>
 #include <interpreter/tvalue.h>
 
 #define depth_tab_space std::string(depth, ' ')
@@ -149,9 +149,9 @@ void CallExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 }
 
 TypeNodeBase* CallExprNode::infer_type(TransUnitContext& unit_ctx) {
-  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(callee)) {
+  if (SymExprNode* symbol = dynamic_cast<SymExprNode*>(callee)) {
     TypeNodeBase* ty = symbol->infer_type(unit_ctx);
-    if (FunctionTypeNode* fn_ty = get_derived_instance<TypeNodeBase, FunctionTypeNode>(ty)) {
+    if (FunctionTypeNode* fn_ty = dynamic_cast<FunctionTypeNode*>(ty)) {
       return fn_ty->returns;
     }
   }
@@ -173,7 +173,7 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
 
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
   auto& current_closure = unit_ctx.internal.function_stack.back();
-  if (SymExprNode* symbol = get_derived_instance<ExprNodeBase, SymExprNode>(object)) {
+  if (SymExprNode* symbol = dynamic_cast<SymExprNode*>(object)) {
     auto stk_id = current_closure.locals.get_local_by_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
       return nullptr;
@@ -210,8 +210,8 @@ TypeNodeBase* BinExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 
   // Check for valid primitive types in both lhs and rhs
-  if (PrimTypeNode* lhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(lhs)) {
-    if (PrimTypeNode* rhs_primitive = get_derived_instance<TypeNodeBase, PrimTypeNode>(rhs)) {
+  if (PrimTypeNode* lhs_primitive = dynamic_cast<PrimTypeNode*>(lhs)) {
+    if (PrimTypeNode* rhs_primitive = dynamic_cast<PrimTypeNode*>(rhs)) {
       // Check for floating-point types
       if (lhs_primitive->type == Float || rhs_primitive->type == Float) {
         return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(

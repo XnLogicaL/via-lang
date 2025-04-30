@@ -1,0 +1,46 @@
+\doxysection{instruction.\+h}
+\hypertarget{instruction_8h_source}{}\label{instruction_8h_source}\index{src/interpreter/instruction.h@{src/interpreter/instruction.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_INSTRUCTION\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_INSTRUCTION\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}opcode.h"{}}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <utility/bits.h>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <utility/color.h>}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ OPERAND\_INVALID\ =\ 0xFFFF;}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{using\ }\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ =\ uint16\_t;}
+\DoxyCodeLine{00018\ \textcolor{keyword}{using\ }signed\_operand\_t\ =\ int16\_t;}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1InstructionData}{InstructionData}}\ \{}
+\DoxyCodeLine{00021\ \ \ std::string\ comment\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00022\ \};}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{keyword}{struct\ }\textcolor{keyword}{alignas}(8)\ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}\ \{}
+\DoxyCodeLine{00025\ \ \ Opcode\ op\ =\ Opcode::NOP;}
+\DoxyCodeLine{00026\ \ \ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ a\ =\ OPERAND\_INVALID;}
+\DoxyCodeLine{00027\ \ \ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ b\ =\ OPERAND\_INVALID;}
+\DoxyCodeLine{00028\ \ \ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ c\ =\ OPERAND\_INVALID;}
+\DoxyCodeLine{00029\ \};}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}}\ \{}
+\DoxyCodeLine{00032\ \ \ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}\ instruct;}
+\DoxyCodeLine{00033\ \ \ \mbox{\hyperlink{structvia_1_1InstructionData}{InstructionData}}\ meta\_data;}
+\DoxyCodeLine{00034\ \};}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ std::string\ to\_string(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}}\&,\ \textcolor{keywordtype}{bool});}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

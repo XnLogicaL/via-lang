@@ -1,0 +1,131 @@
+\doxysection{state.\+h}
+\hypertarget{state_8h_source}{}\label{state_8h_source}\index{src/interpreter/state.h@{src/interpreter/state.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_STATE\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_STATE\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <common.h>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <context.h>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}call-\/stack.h"{}}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}instruction.h"{}}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}tvalue.h"{}}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{comment}{//\ \ =========}}
+\DoxyCodeLine{00014\ \textcolor{comment}{//\ [\ state.h\ ]}}
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ \ =========}}
+\DoxyCodeLine{00016\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ REGISTER\_COUNT\ =\ 65536;\ \ \ \ \ \textcolor{comment}{//\ 2\string^16,\ operand\ range}}
+\DoxyCodeLine{00019\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ REGISTER\_STACK\_COUNT\ =\ 256;\ \textcolor{comment}{//\ C\ stack}}
+\DoxyCodeLine{00020\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ REGISTER\_SPILL\_COUNT\ =\ REGISTER\_COUNT\ -\/\ REGISTER\_STACK\_COUNT;\ \textcolor{comment}{//\ Heap}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1ErrorState}{ErrorState}}\ \{}
+\DoxyCodeLine{00023\ \ \ \mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}}*\ frame\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00024\ \ \ std::string\ message\ =\ \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{00025\ \};}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{comment}{//\ Register\ array\ wrapper.}}
+\DoxyCodeLine{00028\ \textcolor{keyword}{template}<const\ \textcolor{keywordtype}{size\_t}\ Size>}
+\DoxyCodeLine{00029\ \textcolor{keyword}{struct\ }\textcolor{keyword}{alignas}(64)\ \mbox{\hyperlink{structvia_1_1RegisterHolder}{RegisterHolder}}\ \{}
+\DoxyCodeLine{00030\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ registers[Size];}
+\DoxyCodeLine{00031\ \};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \textcolor{comment}{//\ Type\ aliases\ for\ stack\ registers\ and\ heap\ registers.}}
+\DoxyCodeLine{00034\ \textcolor{keyword}{using\ }\mbox{\hyperlink{structvia_1_1RegisterHolder}{StkRegHolder}}\ =\ \mbox{\hyperlink{structvia_1_1RegisterHolder}{RegisterHolder<REGISTER\_STACK\_COUNT>}};}
+\DoxyCodeLine{00035\ \textcolor{keyword}{using\ }\mbox{\hyperlink{structvia_1_1RegisterHolder}{HeapRegHolder}}\ =\ \mbox{\hyperlink{structvia_1_1RegisterHolder}{RegisterHolder<REGISTER\_SPILL\_COUNT>}};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00041\ \textcolor{keyword}{struct\ }\textcolor{keyword}{alignas}(64)\ \mbox{\hyperlink{structvia_1_1State}{State}}\ \{}
+\DoxyCodeLine{00042\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00043\ \ \ VIA\_NOCOPY(\mbox{\hyperlink{structvia_1_1State}{State}});}
+\DoxyCodeLine{00044\ \ \ VIA\_NOMOVE(\mbox{\hyperlink{structvia_1_1State}{State}});}
+\DoxyCodeLine{00045\ }
+\DoxyCodeLine{00046\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1State}{State}}(\mbox{\hyperlink{structvia_1_1RegisterHolder}{StkRegHolder}}\&,\ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&);}
+\DoxyCodeLine{00047\ \ \ \mbox{\hyperlink{structvia_1_1State}{\string~State}}();}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \textcolor{keywordtype}{void}\ execute();}
+\DoxyCodeLine{00050\ \ \ \textcolor{keywordtype}{void}\ execute\_step(std::optional<Instruction>\ insn\ =\ std::nullopt);}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \textcolor{comment}{//\ Returns\ a\ reference\ to\ the\ value\ that\ lives\ in\ a\ given\ register.}}
+\DoxyCodeLine{00053\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get\_register(\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ reg);}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \textcolor{comment}{//\ Sets\ a\ given\ register\ to\ a\ given\ value.}}
+\DoxyCodeLine{00056\ \ \ \textcolor{keywordtype}{void}\ set\_register(\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ reg,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ value);}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ \textcolor{comment}{//\ Pushes\ Nil\ onto\ the\ stack.}}
+\DoxyCodeLine{00059\ \ \ \textcolor{keywordtype}{void}\ push\_nil();}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \ \ \textcolor{comment}{//\ Pushes\ an\ Int\ onto\ the\ stack.}}
+\DoxyCodeLine{00062\ \ \ \textcolor{keywordtype}{void}\ push\_int(\textcolor{keywordtype}{int}\ value);}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \textcolor{comment}{//\ Pushes\ a\ float\ onto\ the\ stack.}}
+\DoxyCodeLine{00065\ \ \ \textcolor{keywordtype}{void}\ push\_float(\textcolor{keywordtype}{float}\ value);}
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \ \ \textcolor{comment}{//\ Pushes\ a\ Bool\ with\ value\ \`{}true`\ onto\ the\ stack.}}
+\DoxyCodeLine{00068\ \ \ \textcolor{keywordtype}{void}\ push\_true();}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \ \ \textcolor{comment}{//\ Pushes\ a\ Bool\ with\ value\ \`{}false`\ onto\ the\ stack.}}
+\DoxyCodeLine{00071\ \ \ \textcolor{keywordtype}{void}\ push\_false();}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \ \ \textcolor{comment}{//\ Pushes\ a\ String\ onto\ the\ stack.}}
+\DoxyCodeLine{00074\ \ \ \textcolor{keywordtype}{void}\ push\_string(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ str);}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \ \ \textcolor{comment}{//\ Pushes\ an\ empty\ array\ onto\ the\ stack.}}
+\DoxyCodeLine{00077\ \ \ \textcolor{keywordtype}{void}\ push\_array();}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \ \ \textcolor{comment}{//\ Pushes\ an\ empty\ dictionary\ onto\ the\ stack.}}
+\DoxyCodeLine{00080\ \ \ \textcolor{keywordtype}{void}\ push\_dict();}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \ \ \textcolor{comment}{//\ Pushes\ a\ value\ onto\ the\ stack.}}
+\DoxyCodeLine{00083\ \ \ \textcolor{keywordtype}{void}\ push(\mbox{\hyperlink{structvia_1_1Value}{Value}}\ value);}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \ \ \textcolor{comment}{//\ Drops\ a\ value\ from\ the\ stack,\ frees\ the\ resources\ of\ the\ dropped\ value.}}
+\DoxyCodeLine{00086\ \ \ \textcolor{keywordtype}{void}\ drop();}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00088\ \ \ \textcolor{comment}{//\ Sets\ the\ value\ at\ a\ given\ position\ on\ the\ stack\ to\ a\ given\ value.}}
+\DoxyCodeLine{00089\ \ \ \textcolor{keywordtype}{void}\ set\_local(\textcolor{keywordtype}{size\_t}\ position,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ value);}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ \ \ \textcolor{comment}{//\ Returns\ the\ stack\ value\ at\ a\ given\ position.}}
+\DoxyCodeLine{00092\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get\_local(\textcolor{keywordtype}{size\_t}\ position);}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \ \ \textcolor{comment}{//\ Returns\ the\ stack\ value\ at\ a\ given\ offset\ relative\ to\ the\ current\ stack-\/frame's\ stack}}
+\DoxyCodeLine{00095\ \ \ \textcolor{comment}{//\ pointer.}}
+\DoxyCodeLine{00096\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get\_argument(\textcolor{keywordtype}{size\_t}\ offset);}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \textcolor{comment}{//\ Returns\ the\ size\ of\ stack.}}
+\DoxyCodeLine{00099\ \ \ \textcolor{keywordtype}{size\_t}\ stack\_size();}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \ \ \textcolor{comment}{//\ Returns\ the\ global\ that\ corresponds\ to\ a\ given\ hashed\ identifier.}}
+\DoxyCodeLine{00102\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get\_global(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ name);}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ \ \ \textcolor{comment}{//\ Sets\ the\ global\ that\ corresponds\ to\ a\ given\ hashed\ identifier\ to\ a\ given\ value.}}
+\DoxyCodeLine{00105\ \ \ \textcolor{keywordtype}{void}\ set\_global(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ name,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ value);}
+\DoxyCodeLine{00106\ }
+\DoxyCodeLine{00107\ \ \ \textcolor{comment}{//\ Attempts\ to\ call\ the\ given\ value\ object\ with\ the\ given\ argument\ count.}}
+\DoxyCodeLine{00108\ \ \ \textcolor{keywordtype}{void}\ call(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1Closure}{Closure}}\&\ callee,\ \textcolor{keywordtype}{size\_t}\ argc);}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00111\ \ \ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}*\ pc\ =\ \textcolor{keyword}{nullptr};\ \textcolor{comment}{//\ Current\ instruction\ pointer}}
+\DoxyCodeLine{00112\ \ \ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}**\ labels;\ \ \ \ \ \ \textcolor{comment}{//\ Label\ array}}
+\DoxyCodeLine{00113\ }
+\DoxyCodeLine{00114\ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}}*\ globals;\ \ \ \ \ \ \ \ \textcolor{comment}{//\ Global\ table}}
+\DoxyCodeLine{00115\ \ \ \mbox{\hyperlink{structvia_1_1CallStack}{CallStack}}*\ callstack;\ \textcolor{comment}{//\ Call\ stack}}
+\DoxyCodeLine{00116\ \ \ \mbox{\hyperlink{structvia_1_1ErrorState}{ErrorState}}*\ err;\ \ \ \ \ \ \textcolor{comment}{//\ Error\ state}}
+\DoxyCodeLine{00117\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ main;\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Main\ function\ slot}}
+\DoxyCodeLine{00118\ \ \ register\_t\ ret;\ \ \ \ \ \ \ \textcolor{comment}{//\ Return\ register}}
+\DoxyCodeLine{00119\ \ \ register\_t\ args;\ \ \ \ \ \ \textcolor{comment}{//\ First\ argument\ register}}
+\DoxyCodeLine{00120\ }
+\DoxyCodeLine{00121\ \ \ \mbox{\hyperlink{structvia_1_1RegisterHolder}{StkRegHolder}}\&\ stack\_registers;\ \ \textcolor{comment}{//\ Stack\ register\ holder}}
+\DoxyCodeLine{00122\ \ \ \mbox{\hyperlink{structvia_1_1RegisterHolder}{HeapRegHolder}}*\ spill\_registers;\ \textcolor{comment}{//\ Spill\ register\ holder}}
+\DoxyCodeLine{00123\ }
+\DoxyCodeLine{00124\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ unit\_ctx;\ \textcolor{comment}{//\ Translation\ unit\ context\ reference}}
+\DoxyCodeLine{00125\ \};}
+\DoxyCodeLine{00126\ }
+\DoxyCodeLine{00127\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00129\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

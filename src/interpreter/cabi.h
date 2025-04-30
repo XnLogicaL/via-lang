@@ -1,10 +1,14 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
+/**
+ * @file cabi.h
+ * @brief <TBA>
+ * @warning This file contains experimental features
+ */
 #ifndef VIA_HAS_HEADER_CABI_H
 #define VIA_HAS_HEADER_CABI_H
 
-#include <cstdio> // for printf
 #include <common.h>
 
 #define __cmov(dst, src)     asm volatile("mov %0,%1\n" : : "r"(src), "r"(dst));

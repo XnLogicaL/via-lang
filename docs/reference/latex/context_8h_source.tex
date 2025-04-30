@@ -1,0 +1,79 @@
+\doxysection{context.\+h}
+\hypertarget{context_8h_source}{}\label{context_8h_source}\index{src/context.h@{src/context.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_CONTEXT\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_CONTEXT\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common-\/defs.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}common-\/macros.h"{}}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <arena.h>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <lex/token.h>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <parse/ast-\/base.h>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{globals_8h}{codegen/globals.h}}>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{stack_8h}{codegen/stack.h}}>}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <interpreter/tvalue.h>}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00028\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{group__via__namespace_gad55b685ebdb875ea5cf67636cb76a655}{AST\_ALLOCATOR\_SIZE}}\ =\ 1024\ *\ 1024\ *\ 8;}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00035\ \textcolor{keyword}{using\ }\mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\_stream\_t}}\ =\ std::vector<uint8\_t>;}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \textcolor{comment}{//\ Context\ objects\ forward\ declarations.}}
+\DoxyCodeLine{00038\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1CompilerVariableStack}{CompilerVariableStack}};}
+\DoxyCodeLine{00039\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1CompilerFunctionStack}{CompilerFunctionStack}};}
+\DoxyCodeLine{00040\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1GlobalHolder}{GlobalHolder}};}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{comment}{//\ Per\ translation\ unit\ context.}}
+\DoxyCodeLine{00043\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\ final\ \{}
+\DoxyCodeLine{00044\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00045\ \ \ \textcolor{comment}{//\ Resets\ the\ translation\ unit\ context.}}
+\DoxyCodeLine{00046\ \ \ \textcolor{keywordtype}{void}\ clear();}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \textcolor{comment}{//\ Encodes\ the\ translation\ unit\ onto\ a\ binary\ byte\ stream.}}
+\DoxyCodeLine{00049\ \ \ \mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\_stream\_t}}\ encode();}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \textcolor{comment}{//\ Returns\ platform\ info\ as\ a\ String\ in\ a\ static\ buffer.}}
+\DoxyCodeLine{00052\ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ get\_platform\_info();}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \textcolor{comment}{//\ Plain\ text\ file\ constructor.}}
+\DoxyCodeLine{00055\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}(\textcolor{keyword}{const}\ std::string\&\ file\_path,\ \textcolor{keyword}{const}\ std::string\&\ file\_source);}
+\DoxyCodeLine{00056\ \ \ \textcolor{comment}{//\ Binary\ file\ constructor.}}
+\DoxyCodeLine{00057\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\_stream\_t}}\&\ bytes);}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00060\ \ \ \textcolor{comment}{//\ Relative\ path\ of\ the\ target\ file.}}
+\DoxyCodeLine{00061\ \ \ \textcolor{keyword}{const}\ std::string\ file\_path;}
+\DoxyCodeLine{00062\ \ \ \textcolor{comment}{//\ Plain\ text\ source\ of\ the\ target\ file.}}
+\DoxyCodeLine{00063\ \ \ \textcolor{keyword}{const}\ std::string\ file\_source;}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \ \ \textcolor{comment}{//\ Optimization\ level:\ 0-\/3}}
+\DoxyCodeLine{00066\ \ \ \textcolor{keywordtype}{size\_t}\ optimization\_level\ =\ 0;}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \ \ std::vector<Token>\ tokens\{\};}
+\DoxyCodeLine{00069\ \ \ std::vector<StmtNodeBase*>\ ast\{\};}
+\DoxyCodeLine{00070\ \ \ std::vector<Bytecode>\ bytecode\{\};}
+\DoxyCodeLine{00071\ \ \ std::vector<Value>\ constants\{\};}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00073\ \ \ \textcolor{keyword}{struct\ }\{}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ label\_count\ =\ 0;}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{comment}{//\ Allocators}}
+\DoxyCodeLine{00077\ \ \ \ \ ArenaAllocator\ ast\_allocator\{\mbox{\hyperlink{group__via__namespace_gad55b685ebdb875ea5cf67636cb76a655}{AST\_ALLOCATOR\_SIZE}}\};}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \ \ \ \ \mbox{\hyperlink{classvia_1_1GlobalHolder}{GlobalHolder}}\ globals;}
+\DoxyCodeLine{00080\ \ \ \ \ \mbox{\hyperlink{classvia_1_1CompilerFunctionStack}{CompilerFunctionStack}}\ function\_stack;}
+\DoxyCodeLine{00081\ \ \ \ \ std::vector<std::vector<StmtNodeBase*>>\ defered\_stmts;}
+\DoxyCodeLine{00082\ \ \ \}\ internal;}
+\DoxyCodeLine{00083\ \};}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

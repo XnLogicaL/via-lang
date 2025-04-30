@@ -1,0 +1,62 @@
+\doxysection{globals.\+h}
+\hypertarget{globals_8h_source}{}\label{globals_8h_source}\index{src/codegen/globals.h@{src/codegen/globals.h}}
+\mbox{\hyperlink{globals_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_GLOBALS\_H}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_GLOBALS\_H}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}common-\/defs.h"{}}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <lex/token.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <parse/ast-\/base.h>}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <interpreter/tvalue.h>}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00029\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1CompilerGlobal}{CompilerGlobal}}\ \{}
+\DoxyCodeLine{00030\ \ \ \mbox{\hyperlink{structvia_1_1Token}{Token}}\ tok;}
+\DoxyCodeLine{00031\ \ \ std::string\ symbol;}
+\DoxyCodeLine{00032\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ type;}
+\DoxyCodeLine{00033\ \};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00040\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1GlobalHolder}{GlobalHolder}}\ final\ \{}
+\DoxyCodeLine{00041\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00042\ \ \ \textcolor{keyword}{using\ }index\_query\_result\ =\ std::optional<size\_t>;}
+\DoxyCodeLine{00043\ \ \ \textcolor{keyword}{using\ }global\_query\_result\ =\ std::optional<CompilerGlobal>;}
+\DoxyCodeLine{00044\ \ \ \textcolor{keyword}{using\ }global\_vector\ =\ std::vector<CompilerGlobal>;}
+\DoxyCodeLine{00045\ \ \ \textcolor{keyword}{using\ }builtin\_vector\ =\ std::vector<CompilerGlobal>;}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \textcolor{keyword}{inline}\ \mbox{\hyperlink{classvia_1_1GlobalHolder}{GlobalHolder}}()}
+\DoxyCodeLine{00048\ \ \ \ \ :\ allocator(64\ *\ 1024)\ \{\}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00054\ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a050caae61ad13606f4a060151428ba5d}{size}}();}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00060\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a0bad0f56adc2f99b839fa0f20b5b47ec}{declare\_global}}(\mbox{\hyperlink{structvia_1_1CompilerGlobal}{CompilerGlobal}}\ global);}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00068\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classvia_1_1GlobalHolder_ab6c6b14daabdd74ae6a7e576e4893acd}{was\_declared}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1CompilerGlobal}{CompilerGlobal}}\&\ global);}
+\DoxyCodeLine{00069\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classvia_1_1GlobalHolder_ab6c6b14daabdd74ae6a7e576e4893acd}{was\_declared}}(\textcolor{keyword}{const}\ std::string\&\ global\_symbol);}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00078\ \ \ index\_query\_result\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a9a79b212ddb2918e58cf0134fc35b79b}{get\_index}}(\textcolor{keyword}{const}\ std::string\&\ global\_symbol);}
+\DoxyCodeLine{00079\ \ \ index\_query\_result\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a9a79b212ddb2918e58cf0134fc35b79b}{get\_index}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1CompilerGlobal}{CompilerGlobal}}\&\ global);}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00087\ \ \ global\_query\_result\ \mbox{\hyperlink{classvia_1_1GlobalHolder_aa273bef38d11c121e77802deb98b84d8}{get\_global}}(\textcolor{keyword}{const}\ std::string\&\ global\_symbol);}
+\DoxyCodeLine{00088\ \ \ global\_query\_result\ \mbox{\hyperlink{classvia_1_1GlobalHolder_aa273bef38d11c121e77802deb98b84d8}{get\_global}}(\textcolor{keywordtype}{size\_t}\ global\_index);}
+\DoxyCodeLine{00089\ }
+\DoxyCodeLine{00094\ \ \ \textcolor{keyword}{const}\ global\_vector\&\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a42b1bab4dfac617a12e3a70fa010fe3e}{get}}();}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00099\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classvia_1_1GlobalHolder_a8772ad54a3d4c0b7a232d7fe0a54a0c5}{declare\_builtins}}();}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00102\ \ \ ArenaAllocator\ allocator;}
+\DoxyCodeLine{00103\ \ \ global\_vector\ globals;}
+\DoxyCodeLine{00104\ \};}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00110\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

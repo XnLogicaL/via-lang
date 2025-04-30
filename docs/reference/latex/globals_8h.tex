@@ -1,0 +1,32 @@
+\doxysection{src/codegen/globals.h File Reference}
+\hypertarget{globals_8h}{}\label{globals_8h}\index{src/codegen/globals.h@{src/codegen/globals.h}}
+
+
+Declares all necessary components for the compiler to track global variables.  
+
+
+{\ttfamily \#include "{}common-\/defs.\+h"{}}\newline
+{\ttfamily \#include $<$lex/token.\+h$>$}\newline
+{\ttfamily \#include $<$parse/ast-\/base.\+h$>$}\newline
+{\ttfamily \#include $<$interpreter/tvalue.\+h$>$}\newline
+Include dependency graph for globals.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1CompilerGlobal}{via\+::\+Compiler\+Global}}
+\begin{DoxyCompactList}\small\item\em A pure-\/data structure that represents a global variable. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1GlobalHolder}{via\+::\+Global\+Holder}}
+\begin{DoxyCompactList}\small\item\em Contains globals. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em Main namespace of the project. Contains all but macros. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares all necessary components for the compiler to track global variables. 
+

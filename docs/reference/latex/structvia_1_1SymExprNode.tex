@@ -1,0 +1,57 @@
+\doxysection{via\+::Sym\+Expr\+Node Struct Reference}
+\hypertarget{structvia_1_1SymExprNode}{}\label{structvia_1_1SymExprNode}\index{via::SymExprNode@{via::SymExprNode}}
+
+
+{\ttfamily \#include $<$ast.\+h$>$}
+
+
+
+Inheritance diagram for via\+::Sym\+Expr\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Sym\+Expr\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1SymExprNode_a69f32c729a65f95a659b68e4e3bf36a7}\label{structvia_1_1SymExprNode_a69f32c729a65f95a659b68e4e3bf36a7} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+\Hypertarget{structvia_1_1SymExprNode_ab3b1ca97acd56566f8ac80b3ba8f9441}\label{structvia_1_1SymExprNode_ab3b1ca97acd56566f8ac80b3ba8f9441} 
+{\bfseries Sym\+Expr\+Node} (\mbox{\hyperlink{structvia_1_1Token}{Token}} identifier)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual void {\bfseries accept} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, uint32\+\_\+t)=0
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries infer\+\_\+type} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)=0
+\item 
+virtual int {\bfseries precedence} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1SymExprNode_a755ce5685cc1267f5db4b0cb86ffdf87}\label{structvia_1_1SymExprNode_a755ce5685cc1267f5db4b0cb86ffdf87} 
+\mbox{\hyperlink{structvia_1_1Token}{Token}} {\bfseries identifier}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Symbol Expression Node Represents a symbol that could be a variable, index, property or global.
+
+$<$identifier$>$ \+::= \mbox{[}A-\/\+Za-\/z\+\_\+\mbox{]}\mbox{[}A-\/\+Za-\/z0-\/9\+\_\+\mbox{]}+ $<$symbol\+\_\+expr$>$ \+::= $<$identifier$>$ 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\end{DoxyCompactItemize}

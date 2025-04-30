@@ -112,12 +112,10 @@ enum class TokenType {
   UNKNOWN // Unknown Token
 };
 
-using token_lexeme_t = std::string;
-
 struct Token {
   TokenType type = TokenType::UNKNOWN;
-  token_lexeme_t lexeme = "";
-  size_t line, offset, position;
+  std::string lexeme;
+  size_t line = 0, offset = 0, position = 0;
 
   explicit Token() = default;
   explicit Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)

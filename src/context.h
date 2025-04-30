@@ -10,17 +10,27 @@
 #include <arena.h>
 #include <lex/token.h>
 #include <parse/ast-base.h>
-#include <compiler/globals.h>
-#include <compiler/stack.h>
+#include <codegen/globals.h>
+#include <codegen/stack.h>
 #include <interpreter/tvalue.h>
 
+/**
+ * @namespace via
+ * @brief Main namespace of the project. Contains all but macros
+ * @defgroup via_namespace
+ */
 namespace via {
 
+/**
+ * @brief Abstract Syntax Tree allocator size in bytes
+ * @ingroup via_namespace
+ */
 inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 1024 * 8;
 
 /**
- * Dynamic container that holds a sequence of bytes.
- * Used for constructing translation unit context objects from binary files.
+ * @brief Dynamic container that holds a sequence of bytes.
+ * @ingroup via_namespace
+ * @details Used for constructing translation unit context objects from binary files.
  */
 using byte_stream_t = std::vector<uint8_t>;
 

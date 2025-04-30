@@ -66,7 +66,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
   Lexer Lexer(unit_ctx);
   Parser Parser(unit_ctx);
-  Compiler Compiler(unit_ctx);
+  BytecodeBuilder BytecodeBuilder(unit_ctx);
 
   SET_PROFILER_POINT(lex_start);
   Lexer.tokenize();
@@ -100,7 +100,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
   }
 
   SET_PROFILER_POINT(codegen_start);
-  bool compiler_failed = Compiler.generate();
+  bool compiler_failed = BytecodeBuilder.generate();
 
   if (verbosity_flag) {
     if (compiler_failed) {
@@ -156,15 +156,15 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         std::string curr_disas;
 
         if (bytecode.instruct.op == Opcode::LBL) {
-          std::cout << std::format(" L{}{}:\n", bytecode.meta_data.comment, bytecode.instruct.a);
+          std::cout << std::format(" L{}{}:\n", bytecode.meta.comment, bytecode.instruct.a);
           continue;
         }
         else if (bytecode.instruct.op == Opcode::CLOSURE) {
           // Push the closure name and bytecode count to the stack
-          clsr_disas_stk.push(bytecode.meta_data.comment);
+          clsr_disas_stk.push(bytecode.meta.comment);
           clsr_bcc_stk.push(i + bytecode.instruct.b); // Operand1 is the bytecode count
 
-          std::cout << " [disassembly of function " << bytecode.meta_data.comment << ' '
+          std::cout << " [disassembly of function " << bytecode.meta.comment << ' '
                     << "<r=" << bytecode.instruct.a << ">, <ic=" << bytecode.instruct.b
                     << ">, <argc=" << bytecode.instruct.c << ">]:\n";
           continue;

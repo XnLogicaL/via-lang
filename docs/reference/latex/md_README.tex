@@ -1,0 +1,138 @@
+\chapter{README}
+\hypertarget{md_README}{}\label{md_README}\index{README@{README}}
+
+
+   \hypertarget{md_README_autotoc_md0}{}\doxysection{\texorpdfstring{via}{via}}\label{md_README_autotoc_md0}
+\texorpdfstring{$\ast$}{*}"{}\+An evolution, not a revolution. -\/\+C3"{}\texorpdfstring{$\ast$}{*}
+
+A performant, minimal, modern alternative to {\bfseries{Lua}}.
+
+{\bfseries{via}} is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
+
+It takes good features from all respected and established languages and carefully sows them together to hopefully make for a good scripting language.\hypertarget{md_README_autotoc_md1}{}\doxysubsection{\texorpdfstring{Why not Lua?}{Why not Lua?}}\label{md_README_autotoc_md1}
+After using Lua for many projects, you come to realize that the language has many flaws that drive you away from it in a lot of cases.
+
+One of these flaws is the {\bfseries{identity crisis}} and {\bfseries{ambigiouty}} when it comes to {\bfseries{what is a core feature}} and what is a {\bfseries{standard library feature}}.
+
+via solves this problem by only abstracting what is necessary. All of the languages features are within the scope of the capabilities of the syntax and semantics of the language. It only abstracts things like IO and OS level interactions to the C++ backend standard library, which is otherwise impossible to implement due to how interpreted languages work.
+
+{\bfseries{However}}, this does not imply that Lua is a bad language in any way. In fact I would consider it the father of many modern interpreted languages. It is a brilliant piece of engineering and the intention of this project is not to replace it, but to build upon its {\bfseries{best features}} and not fall into the pitfalls of its {\bfseries{mistakes}}.
+
+\DoxyHorRuler{0}
+\hypertarget{md_README_autotoc_md3}{}\doxysubsection{\texorpdfstring{Design}{Design}}\label{md_README_autotoc_md3}
+\hypertarget{md_README_autotoc_md4}{}\doxyparagraph{\texorpdfstring{Syntax}{Syntax}}\label{md_README_autotoc_md4}
+via has a semi-\/verbose syntax that is designed to get the behavior of code across with just a look.
+
+
+\begin{DoxyItemize}
+\item Semicolons can be used but not required. This is because modern lexical analysis really deprecates the need for semicolons and explicit statement termination in general, given the language has a robust and stable lexical structure.
+\item All syntax that could be ambigious to the user is carefully designed to dissolve that ambigiouty. It replaces symbols with keywords in a lot of places, such as conditionals, where all operators like "{}\texorpdfstring{$\ast$}{*}\&\&\texorpdfstring{$\ast$}{*}"{} (and), "{}\texorpdfstring{$\ast$}{*}\texorpdfstring{$\vert$}{|}\texorpdfstring{$\vert$}{|}\texorpdfstring{$\ast$}{*}"{} (or), "{}\texorpdfstring{$\ast$}{*}!\texorpdfstring{$\ast$}{*}"{} (not) are replaced with their more verbose keyword counterparts respectively\+: "{}\texorpdfstring{$\ast$}{*}and\texorpdfstring{$\ast$}{*}"{}, "{}\texorpdfstring{$\ast$}{*}or\texorpdfstring{$\ast$}{*}"{}, "{}\texorpdfstring{$\ast$}{*}not\texorpdfstring{$\ast$}{*}"{}.
+\item via uses curly-\/braces ("{}\texorpdfstring{$\ast$}{*}\{\texorpdfstring{$\ast$}{*}"{} and "{}\texorpdfstring{$\ast$}{*}\}\texorpdfstring{$\ast$}{*}"{}) to define scope bounds, which makes it familiar to a significant portion of programmers, while not losing the appeal of simplicity.
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md5}{}\doxyparagraph{\texorpdfstring{Static typing}{Static typing}}\label{md_README_autotoc_md5}
+via is a statically typed language. However, the type system is implemented in a way that, it does not make the language any less ergonomic and easy-\/to-\/use.
+
+
+\begin{DoxyItemize}
+\item It has been proven many times that programmers tend to favor languages that offer type safety, rather than loosely typed languages. A great example to this claim is the \mbox{[}Type\+Script\mbox{]}() project, which was made to fix the pretty much non-\/existant type system of Java\+Script, and today, it is one of the most desired programming languages out there.
+\item Static typing also has another massive benefit, which significant runtime performance improvements over dynamic typing, at the very cheap cost of more compile-\/time checks. In a lot of cases, via outperforms Lua by 1.\+5-\/2x, simply because the interpreter does not have to check types and trusts the compiler.
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md6}{}\doxyparagraph{\texorpdfstring{Simplicity}{Simplicity}}\label{md_README_autotoc_md6}
+Much like its predecessor, via treats simplicity as a core design principle.
+
+
+\begin{DoxyItemize}
+\item via does {\bfseries{not}} and will {\bfseries{never}} have things like {\bfseries{async}}, {\bfseries{inheritance}}, and among other things that introduce a unfavorable amount of complexity/ambigiouty to the language that either conceal too much behavior, or outright exist to conceal bad language design.
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md7}{}\doxyparagraph{\texorpdfstring{Performance}{Performance}}\label{md_README_autotoc_md7}
+via has an {\bfseries{extremely fast}} runtime, often outperforming reputably fast interpreted languages like Lua, without stepping into {\bfseries{JIT}} territory.
+
+
+\begin{DoxyItemize}
+\item It is bytecode interpreted, which means that it will always have fundemental overhead that puts it behind compiled languages.
+\item It uses a C++ backend that provides an interpreter along with many standard library functions that require ABI calls.
+\item It has a powerful and often aggressively-\/optimizing compiler that has the capability to compiler user-\/defined functions into native machine code and still treat them as functions during runtime, achieving close to native performance.
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md8}{}\doxyparagraph{\texorpdfstring{Embedability}{Embedability}}\label{md_README_autotoc_md8}
+via is designed to be embedable into most environments that require an efficient scripting language.
+
+
+\begin{DoxyItemize}
+\item It is a {\bfseries{minimally-\/sized}} project, it currently hosts about \texorpdfstring{$\sim$}{\string~}15k lines of code, which means that you can place it pretty much whereever you would like.
+\item It is {\bfseries{memory-\/efficient}}, using priniciples like RAII under the hood to ensure maximum memory efficiency.
+\item It is hosted on top of a C++ backend, giving you {\bfseries{almost}} full control of the sandbox environment of the language.
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md_README_autotoc_md10}{}\doxysubsection{\texorpdfstring{Installation}{Installation}}\label{md_README_autotoc_md10}
+\hypertarget{md_README_autotoc_md11}{}\doxyparagraph{\texorpdfstring{Prebuilt}{Prebuilt}}\label{md_README_autotoc_md11}
+To install pre-\/built binaries, simply go to the \mbox{[}Git\+Hub Releases\mbox{]}() page and pick the binary that suits your OS and CPU architecture.\hypertarget{md_README_autotoc_md12}{}\doxyparagraph{\texorpdfstring{From source}{From source}}\label{md_README_autotoc_md12}
+If pre-\/built installation is not available to you for whatever reason, or you just want to mess around with the source code, you\textquotesingle{}re more than welcome.
+
+{\bfseries{Linux}} is recommended for this process.
+
+\label{md_README_autotoc_md13}%
+\Hypertarget{md_README_autotoc_md13}%
+ \doxysubparagraph*{Preperation\+: Installing dependencies}
+
+via uses \mbox{[}CMake\mbox{]}() to generate build files. Compilers and other tools are preference-\/based, here are supported compilers\+:
+\begin{DoxyItemize}
+\item MSVC
+\item Clang
+\item GCC
+\end{DoxyItemize}
+
+You can verify that you have {\ttfamily CMake} installed by running this\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ cmake\ -\/-\/version}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+
+
+\label{md_README_autotoc_md15}%
+\Hypertarget{md_README_autotoc_md15}%
+ \doxysubparagraph*{Step 1\+: Cloning the repository}
+
+First step is to clone the repository into your local machine. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ git\ clone\ -\/-\/recursive\ https://github.com/XnLogicaL/via-\/lang.git}
+
+\end{DoxyCode}
+
+
+\label{md_README_autotoc_md16}%
+\Hypertarget{md_README_autotoc_md16}%
+ \doxysubparagraph*{Step 2\+: Generating build files}
+
+Now that you have the repository cloned, you will need to make a {\ttfamily build} folder. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ mkdir\ build\ \&\&\ cd\ build}
+
+\end{DoxyCode}
+
+
+After you have done that, you can go ahead and actually generate build files. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ cmake\ ..\ -\/DDEBUG\_MODE=OFF}
+
+\end{DoxyCode}
+ The {\ttfamily -\/DDEBUG\+\_\+\+MODE=OFF} flag disables debug mode, which is used for testing and disables optimizations.
+
+\label{md_README_autotoc_md17}%
+\Hypertarget{md_README_autotoc_md17}%
+ \doxysubparagraph*{Step 3\+: Building executable}
+
+Finally, you can build the executable by running your build system. If you are on Linux, this will be {\ttfamily Make}, on Windows it will be {\ttfamily msbuild}. For the sake of the guide, we will use Linux for this. 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ make\ -\/j\$(nproc)}
+
+\end{DoxyCode}
+ After make finishes building, you should be left with a statically linked executable that should work anywhere on any device as long as the OS and CPU architecture are consistent with where it was compiled.
+
+You can verify that the executable works with this command\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$\ ./via\ -\/-\/version}
+\DoxyCodeLine{via\ XX.XX.XX}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md18}{}\doxysubsection{\texorpdfstring{Credits}{Credits}}\label{md_README_autotoc_md18}
+{\bfseries{Xn\+LogicaL}} -\/ Lead maintainer {\bfseries{Prismic (Kasen L. Daniels)}} -\/ Name and banner 

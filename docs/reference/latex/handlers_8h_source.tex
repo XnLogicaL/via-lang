@@ -1,0 +1,39 @@
+\doxysection{handlers.\+h}
+\hypertarget{handlers_8h_source}{}\label{handlers_8h_source}\index{CLI/handlers.h@{CLI/handlers.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <linenoise.hpp>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <argparse/argparse.hpp>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <via/via.h>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <utility/file-\/io.h>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ SET\_PROFILER\_POINT(id)\ \ \ \ \ [[maybe\_unused]]\ const\ auto\ id\ =\ std::chrono::steady\_clock::now();}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ GET\_PROFILER\_DIFF\_MS(l,\ r)\ std::chrono::duration<double,\ std::milli>(r\ -\/\ l).count()}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{keyword}{namespace\ }handlers\ \{}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{using\ namespace\ }argparse;}
+\DoxyCodeLine{00015\ \textcolor{keyword}{using\ namespace\ }\mbox{\hyperlink{namespacevia}{via}};}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structhandlers_1_1CompileResult}{CompileResult}}\ \{}
+\DoxyCodeLine{00018\ \ \ \textcolor{keywordtype}{bool}\ failed;}
+\DoxyCodeLine{00019\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\ unit;}
+\DoxyCodeLine{00020\ \};}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{classvia_1_1CErrorBus}{CErrorBus}}\ err\_bus;}
+\DoxyCodeLine{00023\ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\ dummy\_unit\_ctx(\textcolor{stringliteral}{"{}<unavailable>"{}},\ \textcolor{stringliteral}{"{}"{}});}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ std::unique\_ptr<ArgumentParser>\ get\_standard\_parser(std::string\ name);}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \mbox{\hyperlink{structhandlers_1_1CompileResult}{CompileResult}}\ handle\_compile([[maybe\_unused]]\ argparse::ArgumentParser\&\ subcommand\_parser);}
+\DoxyCodeLine{00028\ \mbox{\hyperlink{structhandlers_1_1CompileResult}{CompileResult}}\ handle\_run(argparse::ArgumentParser\&\ subcommand\_parser);}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{keywordtype}{void}\ handle\_repl(argparse::ArgumentParser\&);}
+\DoxyCodeLine{00031\ \textcolor{keywordtype}{void}\ handle\_debugger(argparse::ArgumentParser\&\ parser);}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \}\ \textcolor{comment}{//\ namespace\ handlers}}
+
+\end{DoxyCode}

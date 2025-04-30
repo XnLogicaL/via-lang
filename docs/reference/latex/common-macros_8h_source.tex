@@ -1,0 +1,110 @@
+\doxysection{common-\/macros.h}
+\hypertarget{common-macros_8h_source}{}\label{common-macros_8h_source}\index{src/common-\/macros.h@{src/common-\/macros.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_COMMON\_MACROS\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_COMMON\_MACROS\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#define\ C\_GCC\ \ \ 0\ }\textcolor{comment}{//\ g++\ compiler}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#define\ C\_CLANG\ 1\ }\textcolor{comment}{//\ clang++\ compiler}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ C\_MSVC\ \ 2\ }\textcolor{comment}{//\ msvc\ compiler}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#ifdef\ \_\_GNUC\_\_}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#ifdef\ \_\_clang\_\_}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ VIA\_COMPILER\ C\_CLANG}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#define\ VIA\_COMPILER\ C\_GCC}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#elif\ defined(\_MSC\_VER)}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#define\ VIA\_COMPILER\ C\_MSVC}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#error\ "{}Unknown\ compiler"{}}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_GCC}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#pragma\ GCC\ diagnostic\ push}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#pragma\ GCC\ diagnostic\ ignored\ "{}-\/Wmultistatement-\/macros"{}}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{comment}{//\ Check\ if\ libstacktrace\ is\ available.}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#if\ \_\_has\_include(<stacktrace>)\ \&\&\ \_\_cplusplus\ >=\ 202302L}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ <stacktrace>}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#define\ VIA\_HASSTACKTRACE\ 1}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#define\ VIA\_HASSTACKTRACE\ 0}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \textcolor{comment}{//\ Version\ information.\ Should\ match\ with\ git\ commit\ version.}}
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#define\ VIA\_VERSION\ "{}1.0.1"{}}}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_MSVC}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#define\ VIA\_RESTRICT\ \ \ \ \ \ \_\_restrict}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ VIA\_NOMANGLE\ \ \ \ \ \ extern\ "{}C"{}}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#define\ VIA\_NODISCARD\ \ \ \ \ [[nodiscard]]}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#define\ VIA\_NORETURN\ \ \ \ \ \ \_\_declspec(noreturn)}}
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#define\ VIA\_NOINLINE\ \ \ \ \ \ \_\_declspec(noinline)}}
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#define\ VIA\_FORCEINLINE\ \ \ \_\_forceinline}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ VIA\_OPTIMIZE\ \ \ \ \ \ \_\_forceinline\ }\textcolor{comment}{//\ MSVC\ doesn't\ have\ 'hot'\ attribute}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#define\ VIA\_UNREACHABLE()\ \_\_assume(0)}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#define\ VIA\_FUNCSIG\ \ \ \ \ \ \ \_\_FUNCSIG\_\_}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#define\ VIA\_LIKELY(x)\ \ \ \ \ (x)\ }\textcolor{comment}{//\ No\ branch\ prediction\ hints\ in\ MSVC}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#define\ VIA\_UNLIKELY(x)\ \ \ (x)}}
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#else\ }\textcolor{comment}{//\ GCC\ /\ Clang}}
+\DoxyCodeLine{00052\ \textcolor{preprocessor}{\#define\ VIA\_RESTRICT\ \ \ \ \ \ \_\_restrict\_\_}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#define\ VIA\_NOMANGLE\ \ \ \ \ \ extern\ "{}C"{}}}
+\DoxyCodeLine{00054\ \textcolor{preprocessor}{\#define\ VIA\_NODISCARD\ \ \ \ \ [[nodiscard]]}}
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#define\ VIA\_NORETURN\ \ \ \ \ \ \_\_attribute\_\_((noreturn))}}
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#define\ VIA\_NOINLINE\ \ \ \ \ \ \_\_attribute\_\_((noinline))}}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#define\ VIA\_FORCEINLINE\ \ \ inline\ \_\_attribute\_\_((always\_inline))}}
+\DoxyCodeLine{00058\ \textcolor{preprocessor}{\#define\ VIA\_OPTIMIZE\ \ \ \ \ \ inline\ \_\_attribute\_\_((always\_inline,\ hot))}}
+\DoxyCodeLine{00059\ \textcolor{preprocessor}{\#define\ VIA\_UNREACHABLE()\ \_\_builtin\_unreachable()}}
+\DoxyCodeLine{00060\ \textcolor{preprocessor}{\#define\ VIA\_FUNCSIG\ \ \ \ \ \ \ \_\_PRETTY\_FUNCTION\_\_}}
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\#define\ VIA\_LIKELY(a)\ \ \ \ \ (\_\_builtin\_expect(!!(a),\ 1))}}
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\#define\ VIA\_UNLIKELY(a)\ \ \ (\_\_builtin\_expect(!!(a),\ 0))}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00069\ \textcolor{preprocessor}{\#define\ VIA\_NOCOPY(target)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00070\ \textcolor{preprocessor}{\ \ target\&\ operator=(const\ target\&)\ =\ delete;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00071\ \textcolor{preprocessor}{\ \ target(const\ target\&)\ =\ delete;}}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#define\ VIA\_IMPLCOPY(target)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00078\ \textcolor{preprocessor}{\ \ target\&\ operator=(const\ target\&);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00079\ \textcolor{preprocessor}{\ \ target(const\ target\&);}}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00085\ \textcolor{preprocessor}{\#define\ VIA\_NOMOVE(target)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00086\ \textcolor{preprocessor}{\ \ target\&\ operator=(target\&\&)\ =\ delete;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00087\ \textcolor{preprocessor}{\ \ target(target\&\&)\ =\ delete;}}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00093\ \textcolor{preprocessor}{\#define\ VIA\_IMPLMOVE(target)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00094\ \textcolor{preprocessor}{\ \ target\&\ operator=(target\&\&);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00095\ \textcolor{preprocessor}{\ \ target(target\&\&);}}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00097\ \textcolor{preprocessor}{\#if\ VIA\_HASSTACKTRACE\ ==\ 1}}
+\DoxyCodeLine{00098\ \textcolor{preprocessor}{\#define\ VIA\_STACKTRACE\ std::stacktrace::current()}}
+\DoxyCodeLine{00099\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00100\ \textcolor{preprocessor}{\#define\ VIA\_STACKTRACE\ "{}"{}}}
+\DoxyCodeLine{00101\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ \textcolor{comment}{//\ ====================================================================================================}}
+\DoxyCodeLine{00104\ \textcolor{comment}{//\ Utility\ macros}}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00111\ \textcolor{preprocessor}{\#define\ VIA\_ASSERT(condition,\ message)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00112\ \textcolor{preprocessor}{\ \ if\ (!(condition))\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00113\ \textcolor{preprocessor}{\ \ \ \ std::cerr\ <<\ "{}VIA\_ASSERT():\ assertion\ '"{}\ <<\ \#condition\ <<\ "{}'\ failed.\(\backslash\)n"{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00114\ \textcolor{preprocessor}{\ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ "{}location:\ "{}\ <<\ \_\_FILE\_\_\ <<\ "{}:"{}\ <<\ \_\_LINE\_\_\ <<\ "{}\(\backslash\)nmessage:\ "{}\ <<\ message\ <<\ "{}\(\backslash\)n"{};\ \ \(\backslash\)}}
+\DoxyCodeLine{00115\ \textcolor{preprocessor}{\ \ \ \ if\ (VIA\_HASSTACKTRACE)\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00116\ \textcolor{preprocessor}{\ \ \ \ \ \ std::cerr\ <<\ "{}callstack:\(\backslash\)n"{}\ <<\ VIA\_STACKTRACE\ <<\ '\(\backslash\)n';\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00117\ \textcolor{preprocessor}{\ \ \ \ \}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00118\ \textcolor{preprocessor}{\ \ \ \ std::abort();\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00119\ \textcolor{preprocessor}{\ \ \}}}
+\DoxyCodeLine{00120\ }
+\DoxyCodeLine{00121\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_GCC}}
+\DoxyCodeLine{00122\ \textcolor{preprocessor}{\#pragma\ GCC\ diagnostic\ pop}}
+\DoxyCodeLine{00123\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00124\ }
+\DoxyCodeLine{00125\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

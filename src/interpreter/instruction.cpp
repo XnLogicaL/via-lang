@@ -9,7 +9,7 @@ using enum Opcode;
 
 std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
   const auto& instr = bc.instruct;
-  const auto& meta = bc.meta_data;
+  const auto& meta = bc.meta;
   const Opcode op = instr.op;
 
   constexpr int opcode_column_width = 12;

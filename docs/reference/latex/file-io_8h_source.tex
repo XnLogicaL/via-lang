@@ -1,0 +1,27 @@
+\doxysection{file-\/io.h}
+\hypertarget{file-io_8h_source}{}\label{file-io_8h_source}\index{src/utility/file-\/io.h@{src/utility/file-\/io.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_FILEIO\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_FILEIO\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{comment}{//\ Read\ result.}}
+\DoxyCodeLine{00012\ \textcolor{keyword}{using\ }rd\_result\_t\ =\ tl::expected<std::string,\ std::string>;}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{comment}{//\ Writes\ the\ given\ content\ to\ the\ specified\ file\ path}}
+\DoxyCodeLine{00015\ VIA\_NODISCARD\ \textcolor{keywordtype}{bool}\ write\_to\_file(\textcolor{keyword}{const}\ std::string\&\ file\_path,\ \textcolor{keyword}{const}\ std::string\&\ content);}
+\DoxyCodeLine{00016\ \textcolor{comment}{//\ Reads\ the\ content\ of\ the\ specified\ file\ path\ into\ a\ String}}
+\DoxyCodeLine{00017\ VIA\_NODISCARD\ rd\_result\_t\ read\_from\_file(\textcolor{keyword}{const}\ std::string\&\ file\_path);}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

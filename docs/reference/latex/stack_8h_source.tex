@@ -1,0 +1,56 @@
+\doxysection{stack.\+h}
+\hypertarget{stack_8h_source}{}\label{stack_8h_source}\index{src/codegen/stack.h@{src/codegen/stack.h}}
+\mbox{\hyperlink{stack_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_STACK\_H}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_STACK\_H}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <parse/ast-\/base.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <parse/ast.h>}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <interpreter/instruction.h>}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00028\ \textcolor{keyword}{using\ }symbol\_t\ =\ std::string;}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00034\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1StackVariable}{StackVariable}}\ \{}
+\DoxyCodeLine{00036\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structvia_1_1StackVariable_aee4ccbaa492d1549341c12132637b352}{is\_const}}\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00038\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structvia_1_1StackVariable_a18c5a9028e9d1a86b04431551618a4b1}{is\_constexpr}}\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00040\ \ \ symbol\_t\ \mbox{\hyperlink{structvia_1_1StackVariable_abd30e87f71162c18b85e6d9fac666d87}{symbol}};}
+\DoxyCodeLine{00042\ \ \ \mbox{\hyperlink{structvia_1_1StmtNodeBase}{StmtNodeBase}}*\ \mbox{\hyperlink{structvia_1_1StackVariable_a67ec343819b6032ebfb8597c9411cf15}{decl}};}
+\DoxyCodeLine{00044\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ \mbox{\hyperlink{structvia_1_1StackVariable_a67cf825a80c8e003f09e1c9eb27eed1d}{type}};}
+\DoxyCodeLine{00046\ \ \ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ \mbox{\hyperlink{structvia_1_1StackVariable_aa38ed93bc01de467b3283d303e727390}{value}};}
+\DoxyCodeLine{00047\ \};}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00053\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1CompilerVariableStack}{CompilerVariableStack}}\ :\ \textcolor{keyword}{public}\ std::vector<StackVariable>\ \{}
+\DoxyCodeLine{00054\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00060\ \ \ std::optional<StackVariable*>\ \mbox{\hyperlink{classvia_1_1CompilerVariableStack_abb76f088e8c26be7307ac8f7f7522a17}{get\_local\_by\_id}}(\textcolor{keywordtype}{size\_t}\ \textcolor{keywordtype}{id});}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00067\ \ \ std::optional<StackVariable*>\ \mbox{\hyperlink{classvia_1_1CompilerVariableStack_aa6bc6b62f86cbd63ba9962fe6f11015f}{get\_local\_by\_symbol}}(\textcolor{keyword}{const}\ symbol\_t\&\ symbol);}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00074\ \ \ std::optional<operand\_t>\ \mbox{\hyperlink{classvia_1_1CompilerVariableStack_a7d4d5a9b44267f013f5065d82d1fc8e2}{find\_local\_id}}(\textcolor{keyword}{const}\ symbol\_t\&\ symbol);}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00080\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classvia_1_1CompilerVariableStack_aaf411d4ce7ece7b689289a54e9a9cce3}{restore\_stack\_pointer}}(\textcolor{keywordtype}{size\_t}\ sp);}
+\DoxyCodeLine{00081\ \};}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00087\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1StackFunction}{StackFunction}}\ \{}
+\DoxyCodeLine{00089\ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{structvia_1_1StackFunction_a3e6cd46db9b8581dfe2b184337d247ca}{stack\_pointer}}\ =\ 0;}
+\DoxyCodeLine{00091\ \ \ \mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{FuncDeclStmtNode}}*\ \mbox{\hyperlink{structvia_1_1StackFunction_a5b1f95098c390871331a37307995219b}{decl}};}
+\DoxyCodeLine{00093\ \ \ \mbox{\hyperlink{classvia_1_1CompilerVariableStack}{CompilerVariableStack}}\ \mbox{\hyperlink{structvia_1_1StackFunction_ace472135376f36deabf94fbea5fae1a9}{locals}};}
+\DoxyCodeLine{00094\ \};}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00100\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1CompilerFunctionStack}{CompilerFunctionStack}}\ :\ \textcolor{keyword}{public}\ std::vector<StackFunction>\ \{}
+\DoxyCodeLine{00101\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00106\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classvia_1_1CompilerFunctionStack_ac12fd2b4ad6e06ff09cf137771a45463}{push\_main\_function}}(\mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ unit\_ctx);}
+\DoxyCodeLine{00107\ \};}
+\DoxyCodeLine{00108\ }
+\DoxyCodeLine{00109\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00113\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

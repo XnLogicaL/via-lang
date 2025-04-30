@@ -1,0 +1,60 @@
+\doxysection{via\+::Function\+Type\+Node Struct Reference}
+\hypertarget{structvia_1_1FunctionTypeNode}{}\label{structvia_1_1FunctionTypeNode}\index{via::FunctionTypeNode@{via::FunctionTypeNode}}
+
+
+Inheritance diagram for via\+::Function\+Type\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Function\+Type\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_ac2c1c8bc2cf7a8758849b66785b473ce}\label{structvia_1_1FunctionTypeNode_ac2c1c8bc2cf7a8758849b66785b473ce} 
+using {\bfseries parameter\+\_\+vector} = std\+::vector$<$ \mbox{\hyperlink{structvia_1_1ParamStmtNode}{Param\+Stmt\+Node}} $>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_ab389c560f495397b90da33b782bd8b3c}\label{structvia_1_1FunctionTypeNode_ab389c560f495397b90da33b782bd8b3c} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_a2e5a2da933df5e5b7e96ba684d533165}\label{structvia_1_1FunctionTypeNode_a2e5a2da933df5e5b7e96ba684d533165} 
+{\bfseries VIA\+\_\+\+DECLDECAY} ()
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_aa962894c35d7f60429351cace7c8795f}\label{structvia_1_1FunctionTypeNode_aa962894c35d7f60429351cace7c8795f} 
+{\bfseries Function\+Type\+Node} (parameter\+\_\+vector args, \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}rets)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1TypeNodeBase}{via\+::\+Type\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual std\+::string {\bfseries to\+\_\+output\+\_\+string} ()=0
+\item 
+virtual void {\bfseries decay} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}\&)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_a3414d5129a75c3130ffa51c83ac8da03}\label{structvia_1_1FunctionTypeNode_a3414d5129a75c3130ffa51c83ac8da03} 
+parameter\+\_\+vector {\bfseries parameters}
+\item 
+\Hypertarget{structvia_1_1FunctionTypeNode_a0c17a83b887c95cd5ff2ccfaa335b341}\label{structvia_1_1FunctionTypeNode_a0c17a83b887c95cd5ff2ccfaa335b341} 
+\mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries returns}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1TypeNodeBase}{via\+::\+Type\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\item 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries expression} = nullptr
+\end{DoxyCompactItemize}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\end{DoxyCompactItemize}

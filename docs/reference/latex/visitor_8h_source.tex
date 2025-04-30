@@ -1,0 +1,191 @@
+\doxysection{visitor.\+h}
+\hypertarget{visitor_8h_source}{}\label{visitor_8h_source}\index{src/codegen/visitor.h@{src/codegen/visitor.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_VISITOR\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_VISITOR\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}error-\/bus.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}context.h"{}}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{register_8h}{register.h}}"{}}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{stack_8h}{stack.h}}"{}}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <lex/token.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <parse/ast.h>}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <interpreter/state.h>}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <utility/bits.h>}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ <utility/memory.h>}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#include\ <utility/ustring.h>}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#include\ <utility/color.h>}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ VIA\_INVALID\_VISIT\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\ \ \{\ VIA\_ASSERT(false,\ "{}invalid\ visit"{});\ \}}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#define\ CHECK\_INFERED\_TYPE(type,\ expr)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\ \ if\ (!type)\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\ \ \ \ compiler\_error(ctx,\ expr-\/>begin,\ expr-\/>end,\ "{}Expression\ type\ could\ not\ be\ infered"{});\ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\ \ \ \ compiler\_info(\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\ \ \ \ \ \ ctx,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\ \ \ \ \ \ "{}This\ error\ message\ likely\ indicates\ an\ internal\ compiler\ bug.\ Please\ create\ an\ "{}\ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\ \ \ \ \ \ "{}issue\ "{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\ \ \ \ \ \ "{}at\ https://github.com/XnLogicaL/via-\/lang"{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\ \ \ \ );\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\ \ \ \ return;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\ \ \}}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \textcolor{comment}{//\ =============================================================================================}}
+\DoxyCodeLine{00037\ \textcolor{comment}{//\ visitor.h}}
+\DoxyCodeLine{00038\ \textcolor{comment}{//}}
+\DoxyCodeLine{00039\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \textcolor{keyword}{using\ }label\_t\ =\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}};}
+\DoxyCodeLine{00042\ \textcolor{keyword}{using\ }unused\_expression\_handler\_t\ =\ std::function<void(\textcolor{keyword}{const}\ ExprStmtNode\&)>;}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\ \{}
+\DoxyCodeLine{00045\ \ \ \textcolor{keyword}{using\ }opt\_label\_t\ =\ std::optional<label\_t>;}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \textcolor{keywordtype}{bool}\ failed\ =\ \textcolor{keyword}{false};\ \textcolor{comment}{//\ Fail\ status}}
+\DoxyCodeLine{00048\ \ \ \textcolor{keywordtype}{size\_t}\ errc\ =\ 0;\ \ \ \ \ \textcolor{comment}{//\ Error\ count}}
+\DoxyCodeLine{00049\ \ \ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ args\ =\ 0;}
+\DoxyCodeLine{00050\ \ \ opt\_label\_t\ lesc\ =\ std::nullopt;\ \textcolor{comment}{//\ Escape\ label}}
+\DoxyCodeLine{00051\ \ \ opt\_label\_t\ lrep\ =\ std::nullopt;\ \textcolor{comment}{//\ Repeat\ label}}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ unit\_ctx;}
+\DoxyCodeLine{00054\ \ \ \mbox{\hyperlink{classvia_1_1RegisterAllocator}{RegisterAllocator}}\ reg\_alloc;}
+\DoxyCodeLine{00055\ \ \ \mbox{\hyperlink{classvia_1_1CErrorBus}{CErrorBus}}\ err\_bus;}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \ \ \textcolor{keyword}{inline}\ \mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}(\mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ ctx)}
+\DoxyCodeLine{00058\ \ \ \ \ :\ unit\_ctx(ctx),}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ reg\_alloc(REGISTER\_COUNT,\ \textcolor{keyword}{true})\ \{\}}
+\DoxyCodeLine{00060\ \};}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}\ \{}
+\DoxyCodeLine{00063\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00064\ \ \ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx)}
+\DoxyCodeLine{00065\ \ \ \ \ :\ ctx(ctx)\ \{\}}
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{\string~NodeVisitorBase}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \ \ \textcolor{comment}{//\ Expression\ visitors}}
+\DoxyCodeLine{00070\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1LitExprNode}{LitExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00071\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1SymExprNode}{SymExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00072\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1UnaryExprNode}{UnaryExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00073\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1GroupExprNode}{GroupExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00074\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1CallExprNode}{CallExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00075\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IndexExprNode}{IndexExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00076\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1BinExprNode}{BinExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00077\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1CastExprNode}{CastExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00078\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1StepExprNode}{StepExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00079\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ArrayExprNode}{ArrayExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00080\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IntrinsicExprNode}{IntrinsicExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \ \ \textcolor{comment}{//\ Type\ visitors\ (return\ type\ is\ due\ to\ type-\/decaying)}}
+\DoxyCodeLine{00083\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1AutoTypeNode}{AutoTypeNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00084\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1GenericTypeNode}{GenericTypeNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00085\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1UnionTypeNode}{UnionTypeNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00086\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1FunctionTypeNode}{FunctionTypeNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00087\ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1ArrayTypeNode}{ArrayTypeNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \ \ \textcolor{comment}{//\ Statement\ visitors}}
+\DoxyCodeLine{00090\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1DeclStmtNode}{DeclStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00091\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ScopeStmtNode}{ScopeStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00092\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{FuncDeclStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00093\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1AssignStmtNode}{AssignStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00094\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IfStmtNode}{IfStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00095\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ReturnStmtNode}{ReturnStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00096\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1BreakStmtNode}{BreakStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00097\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ContinueStmtNode}{ContinueStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00098\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1WhileStmtNode}{WhileStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00099\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1DeferStmtNode}{DeferStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00100\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ExprStmtNode}{ExprStmtNode}}\&)\ VIA\_INVALID\_VISIT;}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00102\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{bool}\ failed()\ \{}
+\DoxyCodeLine{00103\ \ \ \ \ \textcolor{keywordflow}{return}\ ctx.failed;}
+\DoxyCodeLine{00104\ \ \ \}}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00107\ \ \ \mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx;}
+\DoxyCodeLine{00108\ \};}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \textcolor{preprocessor}{\#undef\ VIA\_INVALID\_VISIT}}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00112\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1ExprNodeVisitor}{ExprNodeVisitor}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}\ \{}
+\DoxyCodeLine{00113\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00114\ \ \ \textcolor{keyword}{using\ }NodeVisitorBase::NodeVisitorBase;}
+\DoxyCodeLine{00115\ }
+\DoxyCodeLine{00116\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1LitExprNode}{LitExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00117\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1SymExprNode}{SymExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00118\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1UnaryExprNode}{UnaryExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00119\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1GroupExprNode}{GroupExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00120\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1CallExprNode}{CallExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00121\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IndexExprNode}{IndexExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00122\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1BinExprNode}{BinExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00123\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1CastExprNode}{CastExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00124\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1StepExprNode}{StepExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00125\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ArrayExprNode}{ArrayExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00126\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IntrinsicExprNode}{IntrinsicExprNode}}\&,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}})\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00127\ \};}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00129\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1DecayNodeVisitor}{DecayNodeVisitor}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}\ \{}
+\DoxyCodeLine{00130\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00131\ \ \ \textcolor{keyword}{using\ }NodeVisitorBase::NodeVisitorBase;}
+\DoxyCodeLine{00132\ }
+\DoxyCodeLine{00133\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1AutoTypeNode}{AutoTypeNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00134\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1GenericTypeNode}{GenericTypeNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00135\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1UnionTypeNode}{UnionTypeNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00136\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1FunctionTypeNode}{FunctionTypeNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00137\ \ \ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ visit(\mbox{\hyperlink{structvia_1_1ArrayTypeNode}{ArrayTypeNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00138\ \};}
+\DoxyCodeLine{00139\ }
+\DoxyCodeLine{00140\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1TypeNodeVisitor}{TypeNodeVisitor}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}\ \{}
+\DoxyCodeLine{00141\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00142\ \ \ \textcolor{keyword}{using\ }NodeVisitorBase::NodeVisitorBase;}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1DeclStmtNode}{DeclStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00145\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1AssignStmtNode}{AssignStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00146\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{FuncDeclStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00147\ \};}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00149\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1StmtNodeVisitor}{StmtNodeVisitor}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}\ \{}
+\DoxyCodeLine{00150\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00151\ \ \ \mbox{\hyperlink{classvia_1_1StmtNodeVisitor}{StmtNodeVisitor}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx)}
+\DoxyCodeLine{00152\ \ \ \ \ :\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}(ctx),}
+\DoxyCodeLine{00153\ \ \ \ \ \ \ expression\_visitor(ctx),}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ decay\_visitor(ctx),}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ type\_visitor(ctx)\ \{\}}
+\DoxyCodeLine{00156\ }
+\DoxyCodeLine{00157\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1DeclStmtNode}{DeclStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00158\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ScopeStmtNode}{ScopeStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00159\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{FuncDeclStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00160\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1AssignStmtNode}{AssignStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00161\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1IfStmtNode}{IfStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00162\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ReturnStmtNode}{ReturnStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00163\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1BreakStmtNode}{BreakStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00164\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ContinueStmtNode}{ContinueStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00165\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1WhileStmtNode}{WhileStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00166\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1DeferStmtNode}{DeferStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00167\ \ \ \textcolor{keywordtype}{void}\ visit(\mbox{\hyperlink{structvia_1_1ExprStmtNode}{ExprStmtNode}}\&)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00168\ }
+\DoxyCodeLine{00169\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{bool}\ failed()\textcolor{keyword}{\ override\ }\{}
+\DoxyCodeLine{00170\ \ \ \ \ \textcolor{keywordflow}{return}\ ctx.failed\ ||\ expression\_visitor.failed()\ ||\ decay\_visitor.failed()}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ ||\ type\_visitor.failed();}
+\DoxyCodeLine{00172\ \ \ \}}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00174\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00175\ \ \ std::optional<unused\_expression\_handler\_t>\ unused\_expr\_handler;}
+\DoxyCodeLine{00176\ }
+\DoxyCodeLine{00177\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00178\ \ \ \mbox{\hyperlink{classvia_1_1ExprNodeVisitor}{ExprNodeVisitor}}\ expression\_visitor;}
+\DoxyCodeLine{00179\ \ \ \mbox{\hyperlink{classvia_1_1DecayNodeVisitor}{DecayNodeVisitor}}\ decay\_visitor;}
+\DoxyCodeLine{00180\ \ \ \mbox{\hyperlink{classvia_1_1TypeNodeVisitor}{TypeNodeVisitor}}\ type\_visitor;}
+\DoxyCodeLine{00181\ \};}
+\DoxyCodeLine{00182\ }
+\DoxyCodeLine{00183\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00184\ }
+\DoxyCodeLine{00185\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

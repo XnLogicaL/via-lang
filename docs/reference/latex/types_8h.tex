@@ -1,0 +1,60 @@
+\doxysection{src/codegen/types.h File Reference}
+\hypertarget{types_8h}{}\label{types_8h}\index{src/codegen/types.h@{src/codegen/types.h}}
+
+
+Declares all compilation-\/time type related core and utilities.  
+
+
+{\ttfamily \#include "{}common.\+h"{}}\newline
+{\ttfamily \#include "{}context.\+h"{}}\newline
+{\ttfamily \#include "{}stack.\+h"{}}\newline
+{\ttfamily \#include $<$parse/ast.\+h$>$}\newline
+{\ttfamily \#include $<$interpreter/tvalue.\+h$>$}\newline
+Include dependency graph for types.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1DataType_3_01std_1_1monostate_01_4}{via\+::\+Data\+Type$<$ std\+::monostate $>$}}
+\item 
+struct \mbox{\hyperlink{structvia_1_1DataType_3_01int_01_4}{via\+::\+Data\+Type$<$ int $>$}}
+\item 
+struct \mbox{\hyperlink{structvia_1_1DataType_3_01float_01_4}{via\+::\+Data\+Type$<$ float $>$}}
+\item 
+struct \mbox{\hyperlink{structvia_1_1DataType_3_01bool_01_4}{via\+::\+Data\+Type$<$ bool $>$}}
+\item 
+struct \mbox{\hyperlink{structvia_1_1DataType_3_01std_1_1string_01_4}{via\+::\+Data\+Type$<$ std\+::string $>$}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em Main namespace of the project. Contains all but macros. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{namespacevia_a86d138eca7dd495febc1f3beee9ef6c7}{via\+::is\+\_\+constant\+\_\+expression}} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&ctx, const \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}expr, size\+\_\+t depth=0)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given expression is a constant expression. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_aa39a9f06d56065200a8f4d856be593b3}{via\+::is\+\_\+nil}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}type)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given type is or can decay into {\ttfamily nil} \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_af8774cf69be585af5a1e9788c8b275ca}{via\+::is\+\_\+integral}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}type)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given type is or can decay into {\ttfamily int} \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_a4e32f0fcba1f59a9b8f13642043cfb05}{via\+::is\+\_\+floating\+\_\+point}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}type)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given type is or can decay into {\ttfamily float} \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_ab69f00ad32f1b1e52e44267931c313b7}{via\+::is\+\_\+arithmetic}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}type)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given type is or can decay into a number. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_aabca9578fba3984c804bd8c34d90ec4a}{via\+::is\+\_\+callable}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}type)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given type is a callable. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_a3531303e407c1c71a4f19ea008aac3cb}{via\+::is\+\_\+same}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}left, const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}right)
+\begin{DoxyCompactList}\small\item\em Returns whether if the two given types are the same. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_af6003b98056e2c1cbf0bf43b8ce6b648}{via\+::is\+\_\+compatible}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}left, const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}right)
+\begin{DoxyCompactList}\small\item\em Returns whether if the two given types are compatible (e.\+g. {\ttfamily int} and {\ttfamily float}) \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacevia_ac882506291910f680c7b89137bde7ba5}{via\+::is\+\_\+castable}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}from, const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}to)
+\begin{DoxyCompactList}\small\item\em Returns whether if the first type is castable into the second type. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares all compilation-\/time type related core and utilities. 
+

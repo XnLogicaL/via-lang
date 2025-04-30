@@ -1,0 +1,66 @@
+\doxysection{via\+::Call\+Expr\+Node Struct Reference}
+\hypertarget{structvia_1_1CallExprNode}{}\label{structvia_1_1CallExprNode}\index{via::CallExprNode@{via::CallExprNode}}
+
+
+{\ttfamily \#include $<$ast.\+h$>$}
+
+
+
+Inheritance diagram for via\+::Call\+Expr\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Call\+Expr\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1CallExprNode_a7efe4b5afbcba39d800de2b26d475f23}\label{structvia_1_1CallExprNode_a7efe4b5afbcba39d800de2b26d475f23} 
+using {\bfseries argument\+\_\+vector} = std\+::vector$<$ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} $>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1CallExprNode_a4b565811015b08feeeeca19c7306f576}\label{structvia_1_1CallExprNode_a4b565811015b08feeeeca19c7306f576} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+\Hypertarget{structvia_1_1CallExprNode_ab34ab39929df0da724dae0a624c1f5ac}\label{structvia_1_1CallExprNode_ab34ab39929df0da724dae0a624c1f5ac} 
+{\bfseries Call\+Expr\+Node} (\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}callee, argument\+\_\+vector arguments)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual void {\bfseries accept} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, uint32\+\_\+t)=0
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries infer\+\_\+type} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)=0
+\item 
+virtual int {\bfseries precedence} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1CallExprNode_af5f7e3f80eedfcc64ff278a15df88659}\label{structvia_1_1CallExprNode_af5f7e3f80eedfcc64ff278a15df88659} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries callee}
+\item 
+\Hypertarget{structvia_1_1CallExprNode_ac4f3eeb58241c88aa1f21caa24c37cf8}\label{structvia_1_1CallExprNode_ac4f3eeb58241c88aa1f21caa24c37cf8} 
+argument\+\_\+vector {\bfseries arguments}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Call Expression Node Represents a function call expression with an argument list.
+
+$<$call\+\_\+expr$>$ \+::= $<$expression$>$ "{}("{} $<$arg\+\_\+list$>$? "{})"{} $<$arg\+\_\+list$>$ \+::= $<$expression$>$ ("{},"{} $<$expression$>$)\texorpdfstring{$\ast$}{*} 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\end{DoxyCompactItemize}

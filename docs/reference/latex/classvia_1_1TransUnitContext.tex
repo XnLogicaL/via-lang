@@ -1,0 +1,66 @@
+\doxysection{via\+::Trans\+Unit\+Context Class Reference}
+\hypertarget{classvia_1_1TransUnitContext}{}\label{classvia_1_1TransUnitContext}\index{via::TransUnitContext@{via::TransUnitContext}}
+
+
+Collaboration diagram for via\+::Trans\+Unit\+Context\+:
+% FIG 0
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a91900e5c25a34b62677146595ac56f55}\label{classvia_1_1TransUnitContext_a91900e5c25a34b62677146595ac56f55} 
+void {\bfseries clear} ()
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a8ce97f5e7ce3ddd2f57e70d3290c171d}\label{classvia_1_1TransUnitContext_a8ce97f5e7ce3ddd2f57e70d3290c171d} 
+\mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\+\_\+stream\+\_\+t}} {\bfseries encode} ()
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a269ddf29f5ea11d38d781e40bab5a493}\label{classvia_1_1TransUnitContext_a269ddf29f5ea11d38d781e40bab5a493} 
+const char \texorpdfstring{$\ast$}{*} {\bfseries get\+\_\+platform\+\_\+info} ()
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_aa435a255efc0d3bb1a4c9092c8b2e60d}\label{classvia_1_1TransUnitContext_aa435a255efc0d3bb1a4c9092c8b2e60d} 
+{\bfseries Trans\+Unit\+Context} (const std\+::string \&file\+\_\+path, const std\+::string \&file\+\_\+source)
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_abbf59546cfcab6d97d0294745f213777}\label{classvia_1_1TransUnitContext_abbf59546cfcab6d97d0294745f213777} 
+{\bfseries Trans\+Unit\+Context} (const \mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\+\_\+stream\+\_\+t}} \&bytes)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_af16305f876bc121888b59afaba46d9f6}\label{classvia_1_1TransUnitContext_af16305f876bc121888b59afaba46d9f6} 
+const std\+::string {\bfseries file\+\_\+path}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a0052c79c9ca3f9cb26eaa2860bae8fd9}\label{classvia_1_1TransUnitContext_a0052c79c9ca3f9cb26eaa2860bae8fd9} 
+const std\+::string {\bfseries file\+\_\+source}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a7d63be004b9be5b85416fa846364dd9c}\label{classvia_1_1TransUnitContext_a7d63be004b9be5b85416fa846364dd9c} 
+size\+\_\+t {\bfseries optimization\+\_\+level} = 0
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_aa0154689ef700761b9d2ad44327443fc}\label{classvia_1_1TransUnitContext_aa0154689ef700761b9d2ad44327443fc} 
+std\+::vector$<$ \mbox{\hyperlink{structvia_1_1Token}{Token}} $>$ {\bfseries tokens} \{\}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a2f23e46453e60c680634b16d491567df}\label{classvia_1_1TransUnitContext_a2f23e46453e60c680634b16d491567df} 
+std\+::vector$<$ \mbox{\hyperlink{structvia_1_1StmtNodeBase}{Stmt\+Node\+Base}} \texorpdfstring{$\ast$}{*} $>$ {\bfseries ast} \{\}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a703d7cb6c967a330f3c6a0b81b3d5657}\label{classvia_1_1TransUnitContext_a703d7cb6c967a330f3c6a0b81b3d5657} 
+std\+::vector$<$ \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}} $>$ {\bfseries bytecode} \{\}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_a46a4cbc9c84228ea160a40a72dbe7adf}\label{classvia_1_1TransUnitContext_a46a4cbc9c84228ea160a40a72dbe7adf} 
+std\+::vector$<$ \mbox{\hyperlink{structvia_1_1Value}{Value}} $>$ {\bfseries constants} \{\}
+\item 
+\Hypertarget{classvia_1_1TransUnitContext_aac102b0df088cc2ffe7d5245766f4369}\label{classvia_1_1TransUnitContext_aac102b0df088cc2ffe7d5245766f4369} 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+struct \{\\
+\>size\_t {\bfseries label\_count} = 0\\
+\>ArenaAllocator {\bfseries ast\_allocator} \{\mbox{\hyperlink{group__via__namespace_gad55b685ebdb875ea5cf67636cb76a655}{AST\_ALLOCATOR\_SIZE}}\}\\
+\>\mbox{\hyperlink{classvia_1_1GlobalHolder}{GlobalHolder}} {\bfseries globals}\\
+\>\mbox{\hyperlink{classvia_1_1CompilerFunctionStack}{CompilerFunctionStack}} {\bfseries function\_stack}\\
+\>std::vector$<$ std::vector$<$ \mbox{\hyperlink{structvia_1_1StmtNodeBase}{StmtNodeBase}} \texorpdfstring{$\ast$}{*} $>$ $>$ {\bfseries defered\_stmts}\\
+\} {\bfseries internal}\\
+
+\end{tabbing}\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/context.\+h\item 
+src/context.\+cpp\end{DoxyCompactItemize}

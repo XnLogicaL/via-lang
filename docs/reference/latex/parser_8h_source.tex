@@ -1,0 +1,82 @@
+\doxysection{parser.\+h}
+\hypertarget{parser_8h_source}{}\label{parser_8h_source}\index{src/parse/parser.h@{src/parse/parser.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_PARSER\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_PARSER\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}error-\/bus.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}ast.h"{}}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}ast-\/base.h"{}}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{comment}{//\ Parse\ error\ object\ that\ holds\ error\ location\ and\ error\ message.}}
+\DoxyCodeLine{00015\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1ParseError}{ParseError}}\ \{}
+\DoxyCodeLine{00016\ \ \ \textcolor{keywordtype}{size\_t}\ where;}
+\DoxyCodeLine{00017\ \ \ std::string\ what;}
+\DoxyCodeLine{00018\ \};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{comment}{//\ Parser\ class.\ Iterates\ over\ tokens\ and\ builds\ an\ AST.}}
+\DoxyCodeLine{00021\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classvia_1_1Parser}{Parser}}\ final\ \{}
+\DoxyCodeLine{00022\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00023\ \ \ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00024\ \ \ \textcolor{keyword}{using\ }result\ =\ tl::expected<T,\ ParseError>;}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \textcolor{comment}{//\ Constructor}}
+\DoxyCodeLine{00027\ \ \ \mbox{\hyperlink{classvia_1_1Parser}{Parser}}(\mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ unit\_ctx)}
+\DoxyCodeLine{00028\ \ \ \ \ :\ unit\_ctx(unit\_ctx)\ \{\}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \textcolor{comment}{//\ Parser\ entry\ point.\ Returns\ a\ fail\ status.}}
+\DoxyCodeLine{00031\ \ \ \textcolor{keywordtype}{bool}\ parse();}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00034\ \ \ \textcolor{comment}{//\ Position\ in\ the\ Token\ buffer.}}
+\DoxyCodeLine{00035\ \ \ \textcolor{keywordtype}{size\_t}\ position\ =\ 0;}
+\DoxyCodeLine{00036\ \ \ \mbox{\hyperlink{classvia_1_1CErrorBus}{CErrorBus}}\ err\_bus;}
+\DoxyCodeLine{00037\ \ \ \mbox{\hyperlink{classvia_1_1TransUnitContext}{TransUnitContext}}\&\ unit\_ctx;}
+\DoxyCodeLine{00038\ \ \ \textcolor{comment}{//\ Attribute\ buffer,\ holds\ attributes\ of\ statements\ and\ gets\ cleared\ every\ time\ a\ new\ statement\ is}}
+\DoxyCodeLine{00039\ \ \ \textcolor{comment}{//\ parsed.}}
+\DoxyCodeLine{00040\ \ \ std::vector<StmtAttribute>\ attrib\_buffer;}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00043\ \ \ \textcolor{comment}{//\ Returns\ the\ current\ Token\ in\ the\ Token\ buffer.}}
+\DoxyCodeLine{00044\ \ \ result<Token>\ current();}
+\DoxyCodeLine{00045\ \ \ \textcolor{comment}{//}}
+\DoxyCodeLine{00046\ \ \ result<Token>\ peek(int32\_t\ ahead\ =\ 1);}
+\DoxyCodeLine{00047\ \ \ result<Token>\ consume(uint32\_t\ ahead\ =\ 1);}
+\DoxyCodeLine{00048\ \ \ result<Token>\ expect\_consume(TokenType\ type,\ \textcolor{keyword}{const}\ std::string\&\ what);}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \ \ \textcolor{comment}{//\ Meta\ parsing.}}
+\DoxyCodeLine{00051\ \ \ result<StmtModifiers>\ parse\_modifiers();}
+\DoxyCodeLine{00052\ \ \ result<StmtAttribute>\ parse\_attribute();}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \textcolor{comment}{//\ Type\ parsing.}}
+\DoxyCodeLine{00055\ \ \ result<TypeNodeBase*>\ parse\_generic();}
+\DoxyCodeLine{00056\ \ \ result<TypeNodeBase*>\ parse\_type\_primary();}
+\DoxyCodeLine{00057\ \ \ result<TypeNodeBase*>\ parse\_type();}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \ \ \textcolor{comment}{//\ Expression\ parsing.}}
+\DoxyCodeLine{00060\ \ \ result<ExprNodeBase*>\ parse\_primary();}
+\DoxyCodeLine{00061\ \ \ result<ExprNodeBase*>\ parse\_postfix(\mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*);}
+\DoxyCodeLine{00062\ \ \ result<ExprNodeBase*>\ parse\_binary(\textcolor{keywordtype}{int});}
+\DoxyCodeLine{00063\ \ \ result<ExprNodeBase*>\ parse\_expr();}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \ \ \textcolor{comment}{//\ Statement\ parsing.}}
+\DoxyCodeLine{00066\ \ \ result<StmtNodeBase*>\ parse\_declaration();}
+\DoxyCodeLine{00067\ \ \ result<StmtNodeBase*>\ parse\_scope();}
+\DoxyCodeLine{00068\ \ \ result<StmtNodeBase*>\ parse\_if();}
+\DoxyCodeLine{00069\ \ \ result<StmtNodeBase*>\ parse\_return();}
+\DoxyCodeLine{00070\ \ \ result<StmtNodeBase*>\ parse\_while();}
+\DoxyCodeLine{00071\ \ \ result<StmtNodeBase*>\ parse\_stmt();}
+\DoxyCodeLine{00072\ \};}
+\DoxyCodeLine{00073\ }
+\DoxyCodeLine{00074\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

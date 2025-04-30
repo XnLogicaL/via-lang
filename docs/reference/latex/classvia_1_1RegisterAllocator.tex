@@ -1,0 +1,117 @@
+\doxysection{via\+::Register\+Allocator Class Reference}
+\hypertarget{classvia_1_1RegisterAllocator}{}\label{classvia_1_1RegisterAllocator}\index{via::RegisterAllocator@{via::RegisterAllocator}}
+
+
+Handles compile-\/time register allocation and deallocation.  
+
+
+
+
+{\ttfamily \#include $<$register.\+h$>$}
+
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classvia_1_1RegisterAllocator_a0d786cf83a2c8ec1b3eaa06c250277c3}\label{classvia_1_1RegisterAllocator_a0d786cf83a2c8ec1b3eaa06c250277c3} 
+using {\bfseries register\+\_\+map} = std\+::unordered\+\_\+map$<$ register\+\_\+t, bool $>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classvia_1_1RegisterAllocator_aee236bd928db1e60466611fd89959b84}\label{classvia_1_1RegisterAllocator_aee236bd928db1e60466611fd89959b84} 
+{\bfseries Register\+Allocator} (size\+\_\+t size, bool default\+\_\+value)
+\item 
+register\+\_\+t \mbox{\hyperlink{classvia_1_1RegisterAllocator_a9520ef0cef2944106fd8de1920db18e8}{allocate\+\_\+register}} ()
+\begin{DoxyCompactList}\small\item\em Allocates and returns a register. \end{DoxyCompactList}\item 
+register\+\_\+t \mbox{\hyperlink{classvia_1_1RegisterAllocator_ad2e80540bae78924fb394af46268b1d1}{allocate\+\_\+temp}} ()
+\begin{DoxyCompactList}\small\item\em Returns a temporary register. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classvia_1_1RegisterAllocator_a803062b7bafc00fb5d1afe1160e4fb00}{free\+\_\+register}} (register\+\_\+t reg)
+\begin{DoxyCompactList}\small\item\em Frees the given register. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classvia_1_1RegisterAllocator_a5f798a2706779f4ce6e96bc5215584a1}{is\+\_\+used}} (register\+\_\+t reg)
+\begin{DoxyCompactList}\small\item\em Returns whether if the given register is in use. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classvia_1_1RegisterAllocator_a278de1374b414adf472ae2ab8be3e6b3}{get\+\_\+used\+\_\+registers}} ()
+\begin{DoxyCompactList}\small\item\em Returns the amount of registers currently in-\/use. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Handles compile-\/time register allocation and deallocation. 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classvia_1_1RegisterAllocator_a9520ef0cef2944106fd8de1920db18e8}\label{classvia_1_1RegisterAllocator_a9520ef0cef2944106fd8de1920db18e8} 
+\index{via::RegisterAllocator@{via::RegisterAllocator}!allocate\_register@{allocate\_register}}
+\index{allocate\_register@{allocate\_register}!via::RegisterAllocator@{via::RegisterAllocator}}
+\doxysubsubsection{\texorpdfstring{allocate\_register()}{allocate\_register()}}
+{\footnotesize\ttfamily register\+\_\+t via\+::\+Register\+Allocator\+::allocate\+\_\+register (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Allocates and returns a register. 
+
+\begin{DoxyReturn}{Returns}
+Register 
+\end{DoxyReturn}
+\Hypertarget{classvia_1_1RegisterAllocator_ad2e80540bae78924fb394af46268b1d1}\label{classvia_1_1RegisterAllocator_ad2e80540bae78924fb394af46268b1d1} 
+\index{via::RegisterAllocator@{via::RegisterAllocator}!allocate\_temp@{allocate\_temp}}
+\index{allocate\_temp@{allocate\_temp}!via::RegisterAllocator@{via::RegisterAllocator}}
+\doxysubsubsection{\texorpdfstring{allocate\_temp()}{allocate\_temp()}}
+{\footnotesize\ttfamily register\+\_\+t via\+::\+Register\+Allocator\+::allocate\+\_\+temp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Returns a temporary register. 
+
+\begin{DoxyReturn}{Returns}
+Register 
+\end{DoxyReturn}
+\Hypertarget{classvia_1_1RegisterAllocator_a803062b7bafc00fb5d1afe1160e4fb00}\label{classvia_1_1RegisterAllocator_a803062b7bafc00fb5d1afe1160e4fb00} 
+\index{via::RegisterAllocator@{via::RegisterAllocator}!free\_register@{free\_register}}
+\index{free\_register@{free\_register}!via::RegisterAllocator@{via::RegisterAllocator}}
+\doxysubsubsection{\texorpdfstring{free\_register()}{free\_register()}}
+{\footnotesize\ttfamily void via\+::\+Register\+Allocator\+::free\+\_\+register (\begin{DoxyParamCaption}\item[{register\+\_\+t}]{reg }\end{DoxyParamCaption})}
+
+
+
+Frees the given register. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em reg} & Register \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classvia_1_1RegisterAllocator_a278de1374b414adf472ae2ab8be3e6b3}\label{classvia_1_1RegisterAllocator_a278de1374b414adf472ae2ab8be3e6b3} 
+\index{via::RegisterAllocator@{via::RegisterAllocator}!get\_used\_registers@{get\_used\_registers}}
+\index{get\_used\_registers@{get\_used\_registers}!via::RegisterAllocator@{via::RegisterAllocator}}
+\doxysubsubsection{\texorpdfstring{get\_used\_registers()}{get\_used\_registers()}}
+{\footnotesize\ttfamily size\+\_\+t via\+::\+Register\+Allocator\+::get\+\_\+used\+\_\+registers (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Returns the amount of registers currently in-\/use. 
+
+\begin{DoxyReturn}{Returns}
+Count 
+\end{DoxyReturn}
+\Hypertarget{classvia_1_1RegisterAllocator_a5f798a2706779f4ce6e96bc5215584a1}\label{classvia_1_1RegisterAllocator_a5f798a2706779f4ce6e96bc5215584a1} 
+\index{via::RegisterAllocator@{via::RegisterAllocator}!is\_used@{is\_used}}
+\index{is\_used@{is\_used}!via::RegisterAllocator@{via::RegisterAllocator}}
+\doxysubsubsection{\texorpdfstring{is\_used()}{is\_used()}}
+{\footnotesize\ttfamily bool via\+::\+Register\+Allocator\+::is\+\_\+used (\begin{DoxyParamCaption}\item[{register\+\_\+t}]{reg }\end{DoxyParamCaption})}
+
+
+
+Returns whether if the given register is in use. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em reg} & Register \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Is used 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/codegen/\mbox{\hyperlink{register_8h}{register.\+h}}\item 
+src/codegen/register.\+cpp\end{DoxyCompactItemize}

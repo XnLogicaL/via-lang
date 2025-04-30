@@ -1,0 +1,44 @@
+\doxysection{via\+::Stack\+Variable Struct Reference}
+\hypertarget{structvia_1_1StackVariable}{}\label{structvia_1_1StackVariable}\index{via::StackVariable@{via::StackVariable}}
+
+
+Pure-\/data structure that represents a variable on the stack.  
+
+
+
+
+{\ttfamily \#include $<$stack.\+h$>$}
+
+
+
+Collaboration diagram for via\+::Stack\+Variable\+:
+% FIG 0
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1StackVariable_aee4ccbaa492d1549341c12132637b352}\label{structvia_1_1StackVariable_aee4ccbaa492d1549341c12132637b352} 
+bool {\bfseries is\+\_\+const} = false
+\begin{DoxyCompactList}\small\item\em Whether if the variable is constant/immutable. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1StackVariable_a18c5a9028e9d1a86b04431551618a4b1}\label{structvia_1_1StackVariable_a18c5a9028e9d1a86b04431551618a4b1} 
+bool {\bfseries is\+\_\+constexpr} = false
+\begin{DoxyCompactList}\small\item\em Whether if the variable is a constant expression. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1StackVariable_abd30e87f71162c18b85e6d9fac666d87}\label{structvia_1_1StackVariable_abd30e87f71162c18b85e6d9fac666d87} 
+symbol\+\_\+t {\bfseries symbol}
+\begin{DoxyCompactList}\small\item\em Symbol of the variable. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1StackVariable_a67ec343819b6032ebfb8597c9411cf15}\label{structvia_1_1StackVariable_a67ec343819b6032ebfb8597c9411cf15} 
+\mbox{\hyperlink{structvia_1_1StmtNodeBase}{Stmt\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries decl}
+\begin{DoxyCompactList}\small\item\em Declaration of the variable, is Decl\+Stmt\+Node/\+Func\+Decl\+Stmt\+Node. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1StackVariable_a67cf825a80c8e003f09e1c9eb27eed1d}\label{structvia_1_1StackVariable_a67cf825a80c8e003f09e1c9eb27eed1d} 
+\mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries type}
+\begin{DoxyCompactList}\small\item\em Type of the variable. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1StackVariable_aa38ed93bc01de467b3283d303e727390}\label{structvia_1_1StackVariable_aa38ed93bc01de467b3283d303e727390} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries value}
+\begin{DoxyCompactList}\small\item\em \doxylink{structvia_1_1Value}{Value} of the variable. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Pure-\/data structure that represents a variable on the stack. 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/codegen/\mbox{\hyperlink{stack_8h}{stack.\+h}}\end{DoxyCompactItemize}

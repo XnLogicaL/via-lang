@@ -1,0 +1,71 @@
+\doxysection{via\+::Group\+Expr\+Node Struct Reference}
+\hypertarget{structvia_1_1GroupExprNode}{}\label{structvia_1_1GroupExprNode}\index{via::GroupExprNode@{via::GroupExprNode}}
+
+
+{\ttfamily \#include $<$ast.\+h$>$}
+
+
+
+Inheritance diagram for via\+::Group\+Expr\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Group\+Expr\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1GroupExprNode_a2e7546922081466fbeadf91a3d22d7e3}\label{structvia_1_1GroupExprNode_a2e7546922081466fbeadf91a3d22d7e3} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+int \mbox{\hyperlink{structvia_1_1GroupExprNode_a61d07dd603c3213f7b2b157906e386c5}{precedence}} () const override
+\item 
+\Hypertarget{structvia_1_1GroupExprNode_a016f783e37a4abf2ab619c7944d6d2e4}\label{structvia_1_1GroupExprNode_a016f783e37a4abf2ab619c7944d6d2e4} 
+{\bfseries Group\+Expr\+Node} (\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}expression)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual void {\bfseries accept} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, uint32\+\_\+t)=0
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries infer\+\_\+type} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)=0
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1GroupExprNode_a122c4c55de950629abbe1ecc3623499a}\label{structvia_1_1GroupExprNode_a122c4c55de950629abbe1ecc3623499a} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries expression}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Group Expression Node Represents a grouping expression that houses a single expression. Mainly used on the parser level to determine operator precedence.
+
+$<$group\+\_\+expr$>$ \+::= "{}("{} $<$expression$>$ "{})"{} 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structvia_1_1GroupExprNode_a61d07dd603c3213f7b2b157906e386c5}\label{structvia_1_1GroupExprNode_a61d07dd603c3213f7b2b157906e386c5} 
+\index{via::GroupExprNode@{via::GroupExprNode}!precedence@{precedence}}
+\index{precedence@{precedence}!via::GroupExprNode@{via::GroupExprNode}}
+\doxysubsubsection{\texorpdfstring{precedence()}{precedence()}}
+{\footnotesize\ttfamily int via\+::\+Group\+Expr\+Node\+::precedence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}.
+
+
+
+The documentation for this struct was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\item 
+src/parse/ast.\+cpp\end{DoxyCompactItemize}

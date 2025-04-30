@@ -1,0 +1,60 @@
+\doxysection{via\+::Index\+Expr\+Node Struct Reference}
+\hypertarget{structvia_1_1IndexExprNode}{}\label{structvia_1_1IndexExprNode}\index{via::IndexExprNode@{via::IndexExprNode}}
+
+
+{\ttfamily \#include $<$ast.\+h$>$}
+
+
+
+Inheritance diagram for via\+::Index\+Expr\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Index\+Expr\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1IndexExprNode_a45c6402de1a6c8860ba025541d89f1f5}\label{structvia_1_1IndexExprNode_a45c6402de1a6c8860ba025541d89f1f5} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+\Hypertarget{structvia_1_1IndexExprNode_a201f98e60ffafc6c28a4592aa7a92c1b}\label{structvia_1_1IndexExprNode_a201f98e60ffafc6c28a4592aa7a92c1b} 
+{\bfseries Index\+Expr\+Node} (\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}object, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}index)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual void {\bfseries accept} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, uint32\+\_\+t)=0
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries infer\+\_\+type} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)=0
+\item 
+virtual int {\bfseries precedence} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1IndexExprNode_a24f94534e0fb34507188e8436f2a0d53}\label{structvia_1_1IndexExprNode_a24f94534e0fb34507188e8436f2a0d53} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries object}
+\item 
+\Hypertarget{structvia_1_1IndexExprNode_abf747573904de801e18eb52378fc12c6}\label{structvia_1_1IndexExprNode_abf747573904de801e18eb52378fc12c6} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries index}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Index Expression Node Represents a subscript expression that holds a target and index expression.
+
+$<$index\+\_\+expr$>$ \+::= $<$primary\+\_\+expr$>$ $<$accessor$>$\texorpdfstring{$\ast$}{*} $<$accessor$>$ \+::= "{}\mbox{[}"{} $<$expression$>$ "{}\mbox{]}"{} \texorpdfstring{$\vert$}{|} "{}."{} $<$identifier$>$ $<$primary\+\_\+expr$>$ \+::= $<$identifier$>$ \texorpdfstring{$\vert$}{|} $<$literal$>$ \texorpdfstring{$\vert$}{|} "{}("{} $<$expression$>$ "{})"{} 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\end{DoxyCompactItemize}

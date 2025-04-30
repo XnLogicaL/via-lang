@@ -1,0 +1,46 @@
+\doxysection{tdict.\+h}
+\hypertarget{tdict_8h_source}{}\label{tdict_8h_source}\index{src/interpreter/tdict.h@{src/interpreter/tdict.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_TDICT\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_TDICT\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}csize.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}tvalue.h"{}}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ DICT\_INITIAL\_CAPACITY\ =\ 64;}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1Dict}{Dict}}\ \{}
+\DoxyCodeLine{00016\ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1Dict_1_1HNode}{HNode}}\ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ key;}
+\DoxyCodeLine{00018\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ value;}
+\DoxyCodeLine{00019\ \ \ \}*\ data\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00020\ \ \ \textcolor{keywordtype}{size\_t}\ data\_capacity\ =\ DICT\_INITIAL\_CAPACITY;}
+\DoxyCodeLine{00021\ \ \ \mbox{\hyperlink{structvia_1_1CSize}{CSize}}\ csize;}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}}();}
+\DoxyCodeLine{00024\ \ \ \mbox{\hyperlink{structvia_1_1Dict}{\string~Dict}}();}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ VIA\_IMPLCOPY(\mbox{\hyperlink{structvia_1_1Dict}{Dict}});}
+\DoxyCodeLine{00027\ \ \ VIA\_IMPLMOVE(\mbox{\hyperlink{structvia_1_1Dict}{Dict}});}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \textcolor{keywordtype}{size\_t}\ size()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \textcolor{comment}{//\ Returns\ the\ element\ that\ lives\ in\ the\ given\ index\ or\ Nil.}}
+\DoxyCodeLine{00032\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ key);}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \textcolor{comment}{//\ Sets\ the\ element\ that\ lives\ in\ the\ given\ index\ to\ the\ given\ value.}}
+\DoxyCodeLine{00035\ \ \ \textcolor{keywordtype}{void}\ set(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ key,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ value);}
+\DoxyCodeLine{00036\ \};}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

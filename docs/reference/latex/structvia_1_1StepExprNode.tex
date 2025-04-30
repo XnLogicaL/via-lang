@@ -1,0 +1,51 @@
+\doxysection{via\+::Step\+Expr\+Node Struct Reference}
+\hypertarget{structvia_1_1StepExprNode}{}\label{structvia_1_1StepExprNode}\index{via::StepExprNode@{via::StepExprNode}}
+
+
+Inheritance diagram for via\+::Step\+Expr\+Node\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Step\+Expr\+Node\+:
+% FIG 1
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1StepExprNode_a98b8eda62ef03451d0191319a1ea8f52}\label{structvia_1_1StepExprNode_a98b8eda62ef03451d0191319a1ea8f52} 
+{\bfseries VIA\+\_\+\+DECLASTFUNCS} ()
+\item 
+\Hypertarget{structvia_1_1StepExprNode_a9bce45458d592f76ce92b833c99c77a4}\label{structvia_1_1StepExprNode_a9bce45458d592f76ce92b833c99c77a4} 
+{\bfseries Step\+Expr\+Node} (\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}target, bool is\+\_\+increment)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::string {\bfseries to\+\_\+string} (uint32\+\_\+t \&)=0
+\item 
+virtual void {\bfseries accept} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \&, uint32\+\_\+t)=0
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries infer\+\_\+type} (\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)=0
+\item 
+virtual int {\bfseries precedence} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structvia_1_1StepExprNode_af5718b263a3ca33a5b13f6069211cc13}\label{structvia_1_1StepExprNode_af5718b263a3ca33a5b13f6069211cc13} 
+bool {\bfseries is\+\_\+increment}
+\item 
+\Hypertarget{structvia_1_1StepExprNode_a9f01a4ca11297ed1bbf8620ecaa5ab14}\label{structvia_1_1StepExprNode_a9f01a4ca11297ed1bbf8620ecaa5ab14} 
+\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries target}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structvia_1_1ExprNodeBase}{via\+::\+Expr\+Node\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries begin}
+\item 
+size\+\_\+t {\bfseries end}
+\end{DoxyCompactItemize}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/parse/ast.\+h\end{DoxyCompactItemize}

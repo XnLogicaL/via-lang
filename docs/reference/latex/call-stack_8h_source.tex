@@ -1,0 +1,41 @@
+\doxysection{call-\/stack.h}
+\hypertarget{call-stack_8h_source}{}\label{call-stack_8h_source}\index{src/interpreter/call-\/stack.h@{src/interpreter/call-\/stack.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_CALL\_STACK\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_CALL\_STACK\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}tfunction.h"{}}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ CALLSTACK\_MAX\_FRAMES\ =\ 200;}
+\DoxyCodeLine{00013\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ CALLFRAME\_MAX\_LOCALS\ =\ 200;}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}}\ \{}
+\DoxyCodeLine{00016\ \ \ \mbox{\hyperlink{structvia_1_1Closure}{Closure}}*\ closure;}
+\DoxyCodeLine{00017\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}*\ locals\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00018\ \ \ \textcolor{keywordtype}{size\_t}\ locals\_size\ =\ 0;}
+\DoxyCodeLine{00019\ \ \ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}*\ savedpc;}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ VIA\_NOCOPY(\mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}});}
+\DoxyCodeLine{00022\ \ \ VIA\_IMPLMOVE(\mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}});}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \ \ \mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}}();}
+\DoxyCodeLine{00025\ \ \ \mbox{\hyperlink{structvia_1_1CallFrame}{\string~CallFrame}}();}
+\DoxyCodeLine{00026\ \};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1CallStack}{CallStack}}\ \{}
+\DoxyCodeLine{00029\ \ \ \mbox{\hyperlink{structvia_1_1CallFrame}{CallFrame}}\ frames[CALLSTACK\_MAX\_FRAMES];}
+\DoxyCodeLine{00030\ \ \ \textcolor{keywordtype}{size\_t}\ frames\_count\ =\ 0;}
+\DoxyCodeLine{00031\ \};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

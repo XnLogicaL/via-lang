@@ -1,6 +1,14 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
+/**
+ * @file object.h
+ * @brief Declares the core `Value` type, a tagged union for the runtime.
+ *
+ * This is a polymorphic container for all dynamically typed runtime values.
+ * It efficiently stores and handles different value types including numbers,
+ * booleans, strings, arrays, dictionaries, and closures.
+ */
 #ifndef VIA_HAS_HEADER_OBJECT_H
 #define VIA_HAS_HEADER_OBJECT_H
 
@@ -13,68 +21,76 @@
 #pragma warning(disable : 26495)
 #endif
 
-//  ==========
-// [ object.h ]
-//  ==========
+/**
+ * @namespace via
+ * @ingroup via_namespace
+ * @{
+ */
 namespace via {
 
-// Forward declarations
+// Forward declarations for pointer types stored in Value
 struct State;
 struct String;
 struct Array;
 struct Dict;
 struct Closure;
 
-// C function pointer type alias.
-using cfunction_t = void (*)(State*);
-
-// Optimized tagged union value object.
+/**
+ * @struct Value
+ * @brief Polymorphic tagged union representing any runtime value in via.
+ *
+ * This type is used throughout the via VM to hold and manipulate values
+ * of different types dynamically at runtime.
+ */
 struct alignas(8) Value {
+  /**
+   * @enum Tag
+   * @brief Discriminates the active member of the Value union.
+   */
   enum class Tag : uint8_t {
-    Nil,      // Empty type, null
-    Int,      // Integer type
-    Float,    // Floating point type
-    Bool,     // Boolean type
-    String,   // String type
-    Function, // Function type
-    Array,
-    Dict,
+    Nil,      ///< Null or "empty" value.
+    Int,      ///< Integer value.
+    Float,    ///< Floating-point value.
+    Bool,     ///< Boolean value.
+    String,   ///< Pointer to `String`.
+    Function, ///< Pointer to `Closure`.
+    Array,    ///< Pointer to `Array`.
+    Dict      ///< Pointer to `Dict`.
   } type;
 
+  /**
+   * @union Un
+   * @brief Holds the actual value for the current tag.
+   */
   union Un {
-    int i;   // Integer value
-    float f; // Floating point value
-    bool b;  // Boolean value
-    String* str;
-    Array* arr;
-    Dict* dict;
-    Closure* clsr;
+    int i;         ///< Integer.
+    float f;       ///< Float.
+    bool b;        ///< Boolean.
+    String* str;   ///< Heap string pointer.
+    Array* arr;    ///< Heap array pointer.
+    Dict* dict;    ///< Heap dictionary pointer.
+    Closure* clsr; ///< Function closure pointer.
   } u;
 
   VIA_NOCOPY(Value);
   VIA_IMPLMOVE(Value);
 
-  inline ~Value() {
-    reset();
-  }
+  ~Value();
 
-  explicit Value();
-  explicit Value(bool b);
-  explicit Value(int x);
-  explicit Value(float x);
-  explicit Value(String* ptr);
-  explicit Value(Array* ptr);
-  explicit Value(Dict* ptr);
-  explicit Value(Closure* ptr);
+  // Constructors
+  explicit Value();             ///< Default constructor (Nil).
+  explicit Value(bool b);       ///< Constructs a Bool.
+  explicit Value(int x);        ///< Constructs an Int.
+  explicit Value(float x);      ///< Constructs a Float.
+  explicit Value(String* ptr);  ///< Constructs a String.
+  explicit Value(Array* ptr);   ///< Constructs an Array.
+  explicit Value(Dict* ptr);    ///< Constructs a Dict.
+  explicit Value(Closure* ptr); ///< Constructs a Closure.
 
-  // Returns a deep clone of the object.
-  VIA_NODISCARD Value clone() const;
-
-  // Frees the internal resources of the object and resets union tag to Nil.
-  void reset();
+  Value clone() const; ///< Deep copy of the value.
+  void reset();        ///< Clears the value and resets to Nil.
 
   // clang-format off
-  // Returns whether if the object holds a given type.
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is(Tag other) const { return type == other; }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_nil() const { return is(Tag::Nil); }
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_bool() const { return is(Tag::Bool); }
@@ -88,42 +104,42 @@ struct alignas(8) Value {
   VIA_NODISCARD VIA_FORCEINLINE constexpr bool is_function() const { return is(Tag::Function); }
   // clang-format on
 
-  // Returns the int interpretation of the value or Nil if impossible.
-  VIA_NODISCARD Value to_integer() const;
+  // Conversions
+  VIA_NODISCARD Value to_integer() const;                  ///< Attempts to convert to Int.
+  VIA_NODISCARD Value to_float() const;                    ///< Attempts to convert to Float.
+  VIA_NODISCARD Value to_boolean() const;                  ///< Converts to Bool (truthiness).
+  VIA_NODISCARD Value to_string() const;                   ///< Converts to a String object.
+  VIA_NODISCARD std::string to_cxx_string() const;         ///< Converts to a std::string.
+  VIA_NODISCARD std::string to_literal_cxx_string() const; ///< String with literals escaped.
 
-  // Returns the fp interpretation of the value or Nil if impossible.
-  VIA_NODISCARD Value to_float() const;
-
-  // Returns the Bool interpretation of the value.
-  VIA_NODISCARD Value to_boolean() const;
-
-  // Returns the String of the value.
-  VIA_NODISCARD Value to_string() const;
-  VIA_NODISCARD std::string to_cxx_string() const;
-  VIA_NODISCARD std::string to_literal_cxx_string() const;
-
-  // Returns the type of the value as a String.
-  VIA_NODISCARD Value type_string() const;
-  VIA_NODISCARD std::string type_cxx_string() const;
+  // Type representation
+  VIA_NODISCARD Value type_string() const;           ///< Returns type name as via::String.
+  VIA_NODISCARD std::string type_cxx_string() const; ///< Returns type name as std::string.
 
   /**
-   * Converts the value into a memory address if possible. Returns nullptr if the object contains a
-   * non-heap-allocated type. Used mainly for hashing purposes.
+   * @brief Attempts to obtain a raw pointer for the value.
+   *
+   * Only heap-allocated types (e.g., strings, arrays, dicts, closures) will
+   * return a valid pointer. Used primarily for hashing and identity checks.
+   *
+   * @return Pointer or nullptr.
    */
   VIA_NODISCARD void* to_pointer() const;
 
-  // Returns the length of the underlying type of the value or Nil if impossible.
-  VIA_NODISCARD Value length() const;
-  VIA_NODISCARD size_t cxx_length() const;
+  // Length functions
+  VIA_NODISCARD Value length() const;      ///< Returns the "length" of value if possible.
+  VIA_NODISCARD size_t cxx_length() const; ///< Returns native length.
 
-  // Compares equality between self and a given Value.
-  VIA_NODISCARD bool compare(const Value& other) const;
+  // Comparison
+  VIA_NODISCARD bool compare(const Value& other) const; ///< Deep equality check.
 };
 
 } // namespace via
+
+/** @} */
 
 #if VIA_COMPILER == C_MSVC
 #pragma warning(pop)
 #endif
 
-#endif
+#endif // VIA_HAS_HEADER_OBJECT_H

@@ -49,7 +49,7 @@ else()
   endif()
 
   # Enable static linkage
-  set(CMAKE_EXE_LINKER_FLAGS "-static")
+  # set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS CLI/*.cpp src/*.cpp)
@@ -112,6 +112,7 @@ else()
       -fgcse-lm
       -fmerge-all-constants
       -fno-math-errno
+      -fno-elide-constructors
     )
   endif()
 endif()

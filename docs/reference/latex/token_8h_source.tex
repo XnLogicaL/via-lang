@@ -1,0 +1,152 @@
+\doxysection{token.\+h}
+\hypertarget{token_8h_source}{}\label{token_8h_source}\index{src/lex/token.h@{src/lex/token.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_TOKEN\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_TOKEN\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <arena.h>}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{enum\ class}\ TokenType\ \{}
+\DoxyCodeLine{00014\ \ \ \textcolor{comment}{//\ Keywords}}
+\DoxyCodeLine{00015\ \ \ KW\_DO,\ \ \ \ \ \ \ \textcolor{comment}{//\ do}}
+\DoxyCodeLine{00016\ \ \ KW\_IN,\ \ \ \ \ \ \ \textcolor{comment}{//\ in}}
+\DoxyCodeLine{00017\ \ \ KW\_LOCAL,\ \ \ \ \textcolor{comment}{//\ let}}
+\DoxyCodeLine{00018\ \ \ KW\_GLOBAL,\ \ \ \textcolor{comment}{//\ glb}}
+\DoxyCodeLine{00019\ \ \ KW\_AS,\ \ \ \ \ \ \ \textcolor{comment}{//\ as}}
+\DoxyCodeLine{00020\ \ \ KW\_IF,\ \ \ \ \ \ \ \textcolor{comment}{//\ if}}
+\DoxyCodeLine{00021\ \ \ KW\_ELSE,\ \ \ \ \ \textcolor{comment}{//\ else}}
+\DoxyCodeLine{00022\ \ \ KW\_ELIF,\ \ \ \ \ \textcolor{comment}{//\ elif}}
+\DoxyCodeLine{00023\ \ \ KW\_WHILE,\ \ \ \ \textcolor{comment}{//\ while}}
+\DoxyCodeLine{00024\ \ \ KW\_FOR,\ \ \ \ \ \ \textcolor{comment}{//\ for}}
+\DoxyCodeLine{00025\ \ \ KW\_RETURN,\ \ \ \textcolor{comment}{//\ return}}
+\DoxyCodeLine{00026\ \ \ KW\_FUNC,\ \ \ \ \ \textcolor{comment}{//\ fn}}
+\DoxyCodeLine{00027\ \ \ KW\_CONST,\ \ \ \ \textcolor{comment}{//\ const}}
+\DoxyCodeLine{00028\ \ \ KW\_NEW,\ \ \ \ \ \ \textcolor{comment}{//\ new}}
+\DoxyCodeLine{00029\ \ \ KW\_BREAK,\ \ \ \ \textcolor{comment}{//\ break}}
+\DoxyCodeLine{00030\ \ \ KW\_CONTINUE,\ \textcolor{comment}{//\ continue}}
+\DoxyCodeLine{00031\ \ \ KW\_MATCH,\ \ \ \ \textcolor{comment}{//\ switch}}
+\DoxyCodeLine{00032\ \ \ KW\_CASE,\ \ \ \ \ \textcolor{comment}{//\ case}}
+\DoxyCodeLine{00033\ \ \ KW\_DEFAULT,\ \ \textcolor{comment}{//\ default}}
+\DoxyCodeLine{00034\ \ \ KW\_AND,\ \ \ \ \ \ \textcolor{comment}{//\ and}}
+\DoxyCodeLine{00035\ \ \ KW\_NOT,\ \ \ \ \ \ \textcolor{comment}{//\ not}}
+\DoxyCodeLine{00036\ \ \ KW\_OR,\ \ \ \ \ \ \ \textcolor{comment}{//\ or}}
+\DoxyCodeLine{00037\ \ \ KW\_STRUCT,\ \ \ \textcolor{comment}{//\ struct}}
+\DoxyCodeLine{00038\ \ \ KW\_IMPORT,\ \ \ \textcolor{comment}{//\ import}}
+\DoxyCodeLine{00039\ \ \ KW\_EXPORT,\ \ \ \textcolor{comment}{//\ export}}
+\DoxyCodeLine{00040\ \ \ KW\_MACRO,\ \ \ \ \textcolor{comment}{//\ macro}}
+\DoxyCodeLine{00041\ \ \ KW\_DEFINE,\ \ \ \textcolor{comment}{//\ define}}
+\DoxyCodeLine{00042\ \ \ KW\_TYPE,\ \ \ \ \ \textcolor{comment}{//\ type}}
+\DoxyCodeLine{00043\ \ \ KW\_TRAIT,\ \ \ \ \textcolor{comment}{//\ trait}}
+\DoxyCodeLine{00044\ \ \ KW\_DEFINED,\ \ \textcolor{comment}{//\ defined}}
+\DoxyCodeLine{00045\ \ \ KW\_PRAGMA,\ \ \ \textcolor{comment}{//\ pragma}}
+\DoxyCodeLine{00046\ \ \ KW\_ENUM,\ \ \ \ \ \textcolor{comment}{//\ enum}}
+\DoxyCodeLine{00047\ \ \ KW\_TRY,\ \ \ \ \ \ \textcolor{comment}{//\ try}}
+\DoxyCodeLine{00048\ \ \ KW\_CATCH,\ \ \ \ \textcolor{comment}{//\ catch}}
+\DoxyCodeLine{00049\ \ \ KW\_RAISE,\ \ \ \ \textcolor{comment}{//\ raise}}
+\DoxyCodeLine{00050\ \ \ KW\_AUTO,\ \ \ \ \ \textcolor{comment}{//\ auto}}
+\DoxyCodeLine{00051\ \ \ KW\_DEFER,\ \ \ \ \textcolor{comment}{//\ defer}}
+\DoxyCodeLine{00052\ \ \ KW\_TYPEOF,}
+\DoxyCodeLine{00053\ \ \ KW\_NAMEOF,}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \textcolor{comment}{//\ Operators}}
+\DoxyCodeLine{00056\ \ \ OP\_ADD,\ \textcolor{comment}{//\ +}}
+\DoxyCodeLine{00057\ \ \ OP\_SUB,\ \textcolor{comment}{//\ -\/}}
+\DoxyCodeLine{00058\ \ \ OP\_MUL,\ \textcolor{comment}{//\ *}}
+\DoxyCodeLine{00059\ \ \ OP\_DIV,\ \textcolor{comment}{//\ /}}
+\DoxyCodeLine{00060\ \ \ OP\_EXP,\ \textcolor{comment}{//\ \string^}}
+\DoxyCodeLine{00061\ \ \ OP\_MOD,\ \textcolor{comment}{//\ \%}}
+\DoxyCodeLine{00062\ \ \ OP\_EQ,\ \ \textcolor{comment}{//\ ==}}
+\DoxyCodeLine{00063\ \ \ OP\_NEQ,\ \textcolor{comment}{//\ !=}}
+\DoxyCodeLine{00064\ \ \ OP\_LT,\ \ \textcolor{comment}{//\ <}}
+\DoxyCodeLine{00065\ \ \ OP\_GT,\ \ \textcolor{comment}{//\ >}}
+\DoxyCodeLine{00066\ \ \ OP\_LEQ,\ \textcolor{comment}{//\ <=}}
+\DoxyCodeLine{00067\ \ \ OP\_GEQ,\ \textcolor{comment}{//\ >=}}
+\DoxyCodeLine{00068\ \ \ OP\_INC,\ \textcolor{comment}{//\ ++}}
+\DoxyCodeLine{00069\ \ \ OP\_DEC,\ \textcolor{comment}{//\ -\/-\/}}
+\DoxyCodeLine{00070\ \ \ OP\_LEN,}
+\DoxyCodeLine{00071\ \ \ \textcolor{comment}{//\ Pseudo-\/operators}}
+\DoxyCodeLine{00072\ \ \ EQ,\ \ \ \ \ \ \textcolor{comment}{//\ =}}
+\DoxyCodeLine{00073\ \ \ RETURNS,\ \textcolor{comment}{//\ -\/>}}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \ \ \textcolor{comment}{//\ Literals}}
+\DoxyCodeLine{00076\ \ \ LIT\_INT,\ \ \ \ \textcolor{comment}{//\ Integer\ literals}}
+\DoxyCodeLine{00077\ \ \ LIT\_FLOAT,\ \ \textcolor{comment}{//\ Floating-\/point\ literals}}
+\DoxyCodeLine{00078\ \ \ LIT\_HEX,\ \ \ \ \textcolor{comment}{//\ Hexadecimal\ number\ literals}}
+\DoxyCodeLine{00079\ \ \ LIT\_BINARY,\ \textcolor{comment}{//\ Binary\ number\ literals}}
+\DoxyCodeLine{00080\ \ \ LIT\_STRING,\ \textcolor{comment}{//\ String\ literals}}
+\DoxyCodeLine{00081\ \ \ LIT\_BOOL,\ \ \ \textcolor{comment}{//\ Boolean\ literals}}
+\DoxyCodeLine{00082\ \ \ LIT\_NIL,\ \ \ \ \textcolor{comment}{//\ Nil\ literal\ (just\ "{}Nil"{}\ lol)}}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ \ \ \textcolor{comment}{//\ Identifiers}}
+\DoxyCodeLine{00085\ \ \ IDENTIFIER,\ \textcolor{comment}{//\ Variable\ and\ function\ names}}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ \textcolor{comment}{//\ Punctuation}}
+\DoxyCodeLine{00088\ \ \ PAREN\_OPEN,\ \ \ \ \textcolor{comment}{//\ (}}
+\DoxyCodeLine{00089\ \ \ PAREN\_CLOSE,\ \ \ \textcolor{comment}{//\ )}}
+\DoxyCodeLine{00090\ \ \ BRACE\_OPEN,\ \ \ \ \textcolor{comment}{//\ \{}}
+\DoxyCodeLine{00091\ \ \ BRACE\_CLOSE,\ \ \ \textcolor{comment}{//\ \}}}
+\DoxyCodeLine{00092\ \ \ BRACKET\_OPEN,\ \ \textcolor{comment}{//\ [}}
+\DoxyCodeLine{00093\ \ \ BRACKET\_CLOSE,\ \textcolor{comment}{//\ ]}}
+\DoxyCodeLine{00094\ \ \ COMMA,\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ ,}}
+\DoxyCodeLine{00095\ \ \ SEMICOLON,\ \ \ \ \ \textcolor{comment}{//\ ;}}
+\DoxyCodeLine{00096\ \ \ COLON,\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ :}}
+\DoxyCodeLine{00097\ \ \ DOT,\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ .}}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \ \ \textcolor{comment}{//\ Miscellaneous}}
+\DoxyCodeLine{00100\ \ \ AT,\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ @}}
+\DoxyCodeLine{00101\ \ \ TILDE,\ \ \ \ \ \ \ \ \textcolor{comment}{//\ \string~}}
+\DoxyCodeLine{00102\ \ \ QUOTE,\ \ \ \ \ \ \ \ \textcolor{comment}{//\ '}}
+\DoxyCodeLine{00103\ \ \ PIPE,\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ |}}
+\DoxyCodeLine{00104\ \ \ DOLLAR,\ \ \ \ \ \ \ \textcolor{comment}{//\ \$}}
+\DoxyCodeLine{00105\ \ \ BACKTICK,\ \ \ \ \ \textcolor{comment}{//\ \`{}}}
+\DoxyCodeLine{00106\ \ \ AMPERSAND,\ \ \ \ \textcolor{comment}{//\ \&}}
+\DoxyCodeLine{00107\ \ \ DOUBLE\_QUOTE,\ \textcolor{comment}{//\ "{}}}
+\DoxyCodeLine{00108\ \ \ EXCLAMATION,\ \ \textcolor{comment}{//\ !}}
+\DoxyCodeLine{00109\ \ \ QUESTION,\ \ \ \ \ \textcolor{comment}{//\ ?}}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \ \ EOF\_,\ \ \ \textcolor{comment}{//\ End\ of\ file}}
+\DoxyCodeLine{00112\ \ \ UNKNOWN\ \textcolor{comment}{//\ Unknown\ Token}}
+\DoxyCodeLine{00113\ \};}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1Token}{Token}}\ \{}
+\DoxyCodeLine{00116\ \ \ TokenType\ type\ =\ TokenType::UNKNOWN;}
+\DoxyCodeLine{00117\ \ \ std::string\ lexeme;}
+\DoxyCodeLine{00118\ \ \ \textcolor{keywordtype}{size\_t}\ line\ =\ 0,\ offset\ =\ 0,\ position\ =\ 0;}
+\DoxyCodeLine{00119\ }
+\DoxyCodeLine{00120\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Token}{Token}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00121\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Token}{Token}}(TokenType\ type,\ std::string\ lexeme,\ \textcolor{keywordtype}{size\_t}\ line,\ \textcolor{keywordtype}{size\_t}\ offset,\ \textcolor{keywordtype}{size\_t}\ position)}
+\DoxyCodeLine{00122\ \ \ \ \ :\ type(type),}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ lexeme(lexeme),}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ line(line),}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ offset(offset),}
+\DoxyCodeLine{00126\ \ \ \ \ \ \ position(position)\ \{\}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \ \ \textcolor{comment}{//\ Returns\ the\ token\ as\ a\ string.}}
+\DoxyCodeLine{00129\ \ \ std::string\ to\_string()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \ \ \textcolor{comment}{//\ Returns\ whether\ if\ the\ tokens\ lexeme\ is\ a\ value\ literal.}}
+\DoxyCodeLine{00132\ \ \ \textcolor{keywordtype}{bool}\ is\_literal()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00133\ }
+\DoxyCodeLine{00134\ \ \ \textcolor{comment}{//\ Returns\ whether\ if\ the\ tokens\ lexeme\ is\ an\ operator.}}
+\DoxyCodeLine{00135\ \ \ \textcolor{keywordtype}{bool}\ is\_operator()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \ \ \textcolor{comment}{//\ Returns\ whether\ if\ the\ tokens\ lexeme\ is\ a\ modifier.}}
+\DoxyCodeLine{00138\ \ \ \textcolor{keywordtype}{bool}\ is\_modifier()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00139\ }
+\DoxyCodeLine{00140\ \ \ \textcolor{comment}{//\ Returns\ the\ operator\ precedence\ of\ the\ tokens\ lexeme\ or\ -\/1\ if\ impossible.}}
+\DoxyCodeLine{00141\ \ \ \textcolor{keywordtype}{int}\ bin\_prec()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00142\ \};}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00146\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

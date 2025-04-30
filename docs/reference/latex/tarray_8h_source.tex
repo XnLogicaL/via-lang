@@ -1,0 +1,43 @@
+\doxysection{tarray.\+h}
+\hypertarget{tarray_8h_source}{}\label{tarray_8h_source}\index{src/interpreter/tarray.h@{src/interpreter/tarray.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_ARRAY\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_ARRAY\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}csize.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}tvalue.h"{}}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{size\_t}\ ARRAY\_INITAL\_CAPACITY\ =\ 64;}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structvia_1_1Array}{Array}}\ \{}
+\DoxyCodeLine{00016\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}*\ data\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00017\ \ \ \textcolor{keywordtype}{size\_t}\ data\_capacity\ =\ ARRAY\_INITAL\_CAPACITY;}
+\DoxyCodeLine{00018\ \ \ \mbox{\hyperlink{structvia_1_1CSize}{CSize}}\ csize;}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ VIA\_IMPLCOPY(\mbox{\hyperlink{structvia_1_1Array}{Array}});}
+\DoxyCodeLine{00021\ \ \ VIA\_IMPLMOVE(\mbox{\hyperlink{structvia_1_1Array}{Array}});}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \mbox{\hyperlink{structvia_1_1Array}{Array}}();}
+\DoxyCodeLine{00024\ \ \ \mbox{\hyperlink{structvia_1_1Array}{\string~Array}}();}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \textcolor{keywordtype}{size\_t}\ size()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \textcolor{comment}{//\ Returns\ the\ element\ that\ lives\ in\ the\ given\ index\ or\ Nil.}}
+\DoxyCodeLine{00029\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ get(\textcolor{keywordtype}{size\_t}\ position);}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \textcolor{comment}{//\ Sets\ the\ element\ at\ the\ given\ index\ to\ the\ given\ value.\ Resizes\ the\ array\ if\ necessary.}}
+\DoxyCodeLine{00032\ \ \ \textcolor{keywordtype}{void}\ set(\textcolor{keywordtype}{size\_t}\ position,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\&\ value);}
+\DoxyCodeLine{00033\ \};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

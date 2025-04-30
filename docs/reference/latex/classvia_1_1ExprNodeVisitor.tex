@@ -1,0 +1,202 @@
+\doxysection{via\+::Expr\+Node\+Visitor Class Reference}
+\hypertarget{classvia_1_1ExprNodeVisitor}{}\label{classvia_1_1ExprNodeVisitor}\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+
+
+Inheritance diagram for via\+::Expr\+Node\+Visitor\+:
+% FIG 0
+
+
+Collaboration diagram for via\+::Expr\+Node\+Visitor\+:
+% FIG 1
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_ad3be9d1e49b4fb6035050ab95032d692}{visit}} (\mbox{\hyperlink{structvia_1_1LitExprNode}{Lit\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a2c502a3fce45b1fed8829bd7c18bfad8}{visit}} (\mbox{\hyperlink{structvia_1_1SymExprNode}{Sym\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_ad0db11b8bebc0967190cf9869ceba115}{visit}} (\mbox{\hyperlink{structvia_1_1UnaryExprNode}{Unary\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a3f78e0691378b00f278b1a56cf6b0ebf}{visit}} (\mbox{\hyperlink{structvia_1_1GroupExprNode}{Group\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a41851998f76295b09da673ffbbdd9d5d}{visit}} (\mbox{\hyperlink{structvia_1_1CallExprNode}{Call\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a9102bd4224d92d5ff700e1e4fa279c0a}{visit}} (\mbox{\hyperlink{structvia_1_1IndexExprNode}{Index\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_ac417512d6a4a6336f6dd48983b969fc2}{visit}} (\mbox{\hyperlink{structvia_1_1BinExprNode}{Bin\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_aa1834408bcd18a1df5d14d17af66830e}{visit}} (\mbox{\hyperlink{structvia_1_1CastExprNode}{Cast\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a7563e94aa4b4266753e38d10b46a0d58}{visit}} (\mbox{\hyperlink{structvia_1_1StepExprNode}{Step\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a99a0e239837a9ac5b2cd66a594223beb}{visit}} (\mbox{\hyperlink{structvia_1_1ArrayExprNode}{Array\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+void \mbox{\hyperlink{classvia_1_1ExprNodeVisitor_a9ff21cb95ab4a1efbb438be03bbdc2aa}{visit}} (\mbox{\hyperlink{structvia_1_1IntrinsicExprNode}{Intrinsic\+Expr\+Node}} \&, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}) override
+\item 
+\Hypertarget{classvia_1_1ExprNodeVisitor_a20d136304511a2219bf4beaa97c700f1}\label{classvia_1_1ExprNodeVisitor_a20d136304511a2219bf4beaa97c700f1} 
+{\bfseries Node\+Visitor\+Base} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Node\+Visitor\+Base} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx)
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries visit} (\mbox{\hyperlink{structvia_1_1AutoTypeNode}{Auto\+Type\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries visit} (\mbox{\hyperlink{structvia_1_1GenericTypeNode}{Generic\+Type\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries visit} (\mbox{\hyperlink{structvia_1_1UnionTypeNode}{Union\+Type\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries visit} (\mbox{\hyperlink{structvia_1_1FunctionTypeNode}{Function\+Type\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} {\bfseries visit} (\mbox{\hyperlink{structvia_1_1ArrayTypeNode}{Array\+Type\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1DeclStmtNode}{Decl\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1ScopeStmtNode}{Scope\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{Func\+Decl\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1AssignStmtNode}{Assign\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1IfStmtNode}{If\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1ReturnStmtNode}{Return\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1BreakStmtNode}{Break\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1ContinueStmtNode}{Continue\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1WhileStmtNode}{While\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1DeferStmtNode}{Defer\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual void {\bfseries visit} (\mbox{\hyperlink{structvia_1_1ExprStmtNode}{Expr\+Stmt\+Node}} \&) VIA\+\_\+\+INVALID\+\_\+\+VISIT
+\item 
+virtual bool {\bfseries failed} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \& {\bfseries ctx}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classvia_1_1ExprNodeVisitor_a99a0e239837a9ac5b2cd66a594223beb}\label{classvia_1_1ExprNodeVisitor_a99a0e239837a9ac5b2cd66a594223beb} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [1/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1ArrayExprNode}{Array\+Expr\+Node}} \&}]{array\+\_\+expr,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_ac417512d6a4a6336f6dd48983b969fc2}\label{classvia_1_1ExprNodeVisitor_ac417512d6a4a6336f6dd48983b969fc2} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [2/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1BinExprNode}{Bin\+Expr\+Node}} \&}]{binary\+\_\+node,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a41851998f76295b09da673ffbbdd9d5d}\label{classvia_1_1ExprNodeVisitor_a41851998f76295b09da673ffbbdd9d5d} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [3/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1CallExprNode}{Call\+Expr\+Node}} \&}]{call\+\_\+node,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_aa1834408bcd18a1df5d14d17af66830e}\label{classvia_1_1ExprNodeVisitor_aa1834408bcd18a1df5d14d17af66830e} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [4/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1CastExprNode}{Cast\+Expr\+Node}} \&}]{type\+\_\+cast,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a3f78e0691378b00f278b1a56cf6b0ebf}\label{classvia_1_1ExprNodeVisitor_a3f78e0691378b00f278b1a56cf6b0ebf} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [5/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1GroupExprNode}{Group\+Expr\+Node}} \&}]{group\+\_\+node,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a9102bd4224d92d5ff700e1e4fa279c0a}\label{classvia_1_1ExprNodeVisitor_a9102bd4224d92d5ff700e1e4fa279c0a} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [6/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1IndexExprNode}{Index\+Expr\+Node}} \&}]{index\+\_\+node,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a9ff21cb95ab4a1efbb438be03bbdc2aa}\label{classvia_1_1ExprNodeVisitor_a9ff21cb95ab4a1efbb438be03bbdc2aa} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [7/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1IntrinsicExprNode}{Intrinsic\+Expr\+Node}} \&}]{intrinsic\+\_\+expr,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_ad3be9d1e49b4fb6035050ab95032d692}\label{classvia_1_1ExprNodeVisitor_ad3be9d1e49b4fb6035050ab95032d692} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [8/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1LitExprNode}{Lit\+Expr\+Node}} \&}]{lit\+\_\+expr,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a7563e94aa4b4266753e38d10b46a0d58}\label{classvia_1_1ExprNodeVisitor_a7563e94aa4b4266753e38d10b46a0d58} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [9/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1StepExprNode}{Step\+Expr\+Node}} \&}]{step\+\_\+expr,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_a2c502a3fce45b1fed8829bd7c18bfad8}\label{classvia_1_1ExprNodeVisitor_a2c502a3fce45b1fed8829bd7c18bfad8} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [10/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1SymExprNode}{Sym\+Expr\+Node}} \&}]{sym\+\_\+expr,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+\Hypertarget{classvia_1_1ExprNodeVisitor_ad0db11b8bebc0967190cf9869ceba115}\label{classvia_1_1ExprNodeVisitor_ad0db11b8bebc0967190cf9869ceba115} 
+\index{via::ExprNodeVisitor@{via::ExprNodeVisitor}!visit@{visit}}
+\index{visit@{visit}!via::ExprNodeVisitor@{via::ExprNodeVisitor}}
+\doxysubsubsection{\texorpdfstring{visit()}{visit()}\hspace{0.1cm}{\footnotesize\ttfamily [11/11]}}
+{\footnotesize\ttfamily void via\+::\+Expr\+Node\+Visitor\+::visit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1UnaryExprNode}{Unary\+Expr\+Node}} \&}]{unary\+\_\+node,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/codegen/visitor.\+h\item 
+src/codegen/expr-\/visitor.\+cpp\end{DoxyCompactItemize}
