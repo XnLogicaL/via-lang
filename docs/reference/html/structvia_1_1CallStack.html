@@ -111,6 +111,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::CallStack Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents the function call stack of the interpreter.  
+ <a href="structvia_1_1CallStack.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="call-stack_8h_source.html">call-stack.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::CallStack:</div>
 <div class="dyncontent">
@@ -120,13 +125,18 @@ Collaboration diagram for via::CallStack:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aad238ea4a5d5de6afc3de75e99d23f6d" id="r_aad238ea4a5d5de6afc3de75e99d23f6d"><td class="memItemLeft" align="right" valign="top"><a id="aad238ea4a5d5de6afc3de75e99d23f6d" name="aad238ea4a5d5de6afc3de75e99d23f6d"></a>
-<a class="el" href="structvia_1_1CallFrame.html">CallFrame</a>&#160;</td><td class="memItemRight" valign="bottom"><b>frames</b> [CALLSTACK_MAX_FRAMES]</td></tr>
+<a class="el" href="structvia_1_1CallFrame.html">CallFrame</a>&#160;</td><td class="memItemRight" valign="bottom"><b>frames</b> [<a class="el" href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">CALLSTACK_MAX_FRAMES</a>]</td></tr>
+<tr class="memdesc:aad238ea4a5d5de6afc3de75e99d23f6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stack-allocated array of call frames. <br /></td></tr>
 <tr class="separator:aad238ea4a5d5de6afc3de75e99d23f6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae067720984948222c91a2c04bf0f4ccd" id="r_ae067720984948222c91a2c04bf0f4ccd"><td class="memItemLeft" align="right" valign="top"><a id="ae067720984948222c91a2c04bf0f4ccd" name="ae067720984948222c91a2c04bf0f4ccd"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>frames_count</b> = 0</td></tr>
+<tr class="memdesc:ae067720984948222c91a2c04bf0f4ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of currently active frames. <br /></td></tr>
 <tr class="separator:ae067720984948222c91a2c04bf0f4ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents the function call stack of the interpreter. </p>
+<p>Contains a fixed-size array of <code><a class="el" href="structvia_1_1CallFrame.html" title="Represents a single function invocation&#39;s execution context.">CallFrame</a></code> structures and a count of the current depth. Used to manage the execution of nested or recursive function calls. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/interpreter/<a class="el" href="call-stack_8h_source.html">call-stack.h</a></li>
 </ul>
 </div><!-- contents -->

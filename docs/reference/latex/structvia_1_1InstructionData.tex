@@ -1,13 +1,27 @@
 \doxysection{via\+::Instruction\+Data Struct Reference}
 \hypertarget{structvia_1_1InstructionData}{}\label{structvia_1_1InstructionData}\index{via::InstructionData@{via::InstructionData}}
+
+
+Optional debug metadata associated with a single instruction.  
+
+
+
+
+{\ttfamily \#include $<$instruction.\+h$>$}
+
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{structvia_1_1InstructionData_a15161b0c150e7c54e2738b195201b428}\label{structvia_1_1InstructionData_a15161b0c150e7c54e2738b195201b428} 
 std\+::string {\bfseries comment} = "{}"{}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Human-\/readable comment or annotation. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+Optional debug metadata associated with a single instruction. 
+
+Currently only includes a comment string, but may be extended in the future to support source mapping, line numbers, or debugging flags. 
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-src/interpreter/instruction.\+h\end{DoxyCompactItemize}
+src/interpreter/\mbox{\hyperlink{instruction_8h}{instruction.\+h}}\end{DoxyCompactItemize}

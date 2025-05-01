@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Function Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents a user-defined via function, including its bytecode and metadata.  
+ <a href="structvia_1_1Function.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tfunction_8h_source.html">tfunction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Function:</div>
 <div class="dyncontent">
@@ -122,29 +127,64 @@ Collaboration diagram for via::Function:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a04e9fa6149b0f0ed99fcd551ccdb5f2f" id="r_a04e9fa6149b0f0ed99fcd551ccdb5f2f"><td class="memItemLeft" align="right" valign="top"><a id="a04e9fa6149b0f0ed99fcd551ccdb5f2f" name="a04e9fa6149b0f0ed99fcd551ccdb5f2f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLCOPY</b> (<a class="el" href="structvia_1_1Function.html">Function</a>)</td></tr>
+<tr class="memdesc:a04e9fa6149b0f0ed99fcd551ccdb5f2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables copy constructor and assignment. <br /></td></tr>
 <tr class="separator:a04e9fa6149b0f0ed99fcd551ccdb5f2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b3599caaec18885d1d56ba46dd2aef1" id="r_a8b3599caaec18885d1d56ba46dd2aef1"><td class="memItemLeft" align="right" valign="top"><a id="a8b3599caaec18885d1d56ba46dd2aef1" name="a8b3599caaec18885d1d56ba46dd2aef1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Function.html">Function</a>)</td></tr>
+<tr class="memdesc:a8b3599caaec18885d1d56ba46dd2aef1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables move constructor and assignment. <br /></td></tr>
 <tr class="separator:a8b3599caaec18885d1d56ba46dd2aef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5816531c0305b17ee646f65f7733745" id="r_ac5816531c0305b17ee646f65f7733745"><td class="memItemLeft" align="right" valign="top"><a id="ac5816531c0305b17ee646f65f7733745" name="ac5816531c0305b17ee646f65f7733745"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Function</b> (size_t code_size)</td></tr>
+<tr class="memitem:ac5816531c0305b17ee646f65f7733745" id="r_ac5816531c0305b17ee646f65f7733745"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Function.html#ac5816531c0305b17ee646f65f7733745">Function</a> (size_t <a class="el" href="structvia_1_1Function.html#a555e006e5fde9465bd925c322fe65b73">code_size</a>)</td></tr>
+<tr class="memdesc:ac5816531c0305b17ee646f65f7733745"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="structvia_1_1Function.html" title="Represents a user-defined via function, including its bytecode and metadata.">Function</a> with preallocated bytecode capacity.  <br /></td></tr>
 <tr class="separator:ac5816531c0305b17ee646f65f7733745"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a863476fa4d20a00a0021e13355cdd11c" id="r_a863476fa4d20a00a0021e13355cdd11c"><td class="memItemLeft" align="right" valign="top"><a id="a863476fa4d20a00a0021e13355cdd11c" name="a863476fa4d20a00a0021e13355cdd11c"></a>
 <a class="el" href="structvia_1_1Instruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>code</b> = nullptr</td></tr>
+<tr class="memdesc:a863476fa4d20a00a0021e13355cdd11c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the function’s instruction sequence. <br /></td></tr>
 <tr class="separator:a863476fa4d20a00a0021e13355cdd11c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a555e006e5fde9465bd925c322fe65b73" id="r_a555e006e5fde9465bd925c322fe65b73"><td class="memItemLeft" align="right" valign="top"><a id="a555e006e5fde9465bd925c322fe65b73" name="a555e006e5fde9465bd925c322fe65b73"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>code_size</b> = 0</td></tr>
+<tr class="memdesc:a555e006e5fde9465bd925c322fe65b73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total number of instructions. <br /></td></tr>
 <tr class="separator:a555e006e5fde9465bd925c322fe65b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87dd176656911014a3a1ca247e91d2ee" id="r_a87dd176656911014a3a1ca247e91d2ee"><td class="memItemLeft" align="right" valign="top"><a id="a87dd176656911014a3a1ca247e91d2ee" name="a87dd176656911014a3a1ca247e91d2ee"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>line_number</b> = 0</td></tr>
+<tr class="memdesc:a87dd176656911014a3a1ca247e91d2ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Line number where function was defined (for debugging). <br /></td></tr>
 <tr class="separator:a87dd176656911014a3a1ca247e91d2ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b9471b6a7d6663557114fb789babd6c" id="r_a4b9471b6a7d6663557114fb789babd6c"><td class="memItemLeft" align="right" valign="top"><a id="a4b9471b6a7d6663557114fb789babd6c" name="a4b9471b6a7d6663557114fb789babd6c"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>id</b> = &quot;&lt;anonymous&gt;&quot;</td></tr>
+<tr class="memdesc:a4b9471b6a7d6663557114fb789babd6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identifier string or default name. <br /></td></tr>
 <tr class="separator:a4b9471b6a7d6663557114fb789babd6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a user-defined via function, including its bytecode and metadata. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ac5816531c0305b17ee646f65f7733745" name="ac5816531c0305b17ee646f65f7733745"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5816531c0305b17ee646f65f7733745">&#9670;&#160;</a></span>Function()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::Function::Function </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>code_size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a new <a class="el" href="structvia_1_1Function.html" title="Represents a user-defined via function, including its bytecode and metadata.">Function</a> with preallocated bytecode capacity. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">code_size</td><td>Number of instructions to allocate. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tfunction_8h_source.html">tfunction.h</a></li>
 <li>src/interpreter/<b>tfunction.cpp</b></li>

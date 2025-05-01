@@ -2,25 +2,45 @@
 \hypertarget{structvia_1_1Instruction}{}\label{structvia_1_1Instruction}\index{via::Instruction@{via::Instruction}}
 
 
+Represents a single VM instruction in the Via bytecode format.  
+
+
+
+
+{\ttfamily \#include $<$instruction.\+h$>$}
+
+
+
 Collaboration diagram for via\+::Instruction\+:
 % FIG 0
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{structvia_1_1Instruction_ab71b1950b2a952e08e836de7a25deb8e}\label{structvia_1_1Instruction_ab71b1950b2a952e08e836de7a25deb8e} 
-Opcode {\bfseries op} = Opcode\+::\+NOP
-\item 
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}} {\bfseries op} = \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}{Opcode\+::\+NOP}}
+\begin{DoxyCompactList}\small\item\em Operation code (e.\+g., ADD, LOAD, CALL). \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Instruction_a0ec8f8399055a10cf49c5867af0b4808}\label{structvia_1_1Instruction_a0ec8f8399055a10cf49c5867af0b4808} 
-\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} {\bfseries a} = OPERAND\+\_\+\+INVALID
-\item 
+\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} {\bfseries a} = \mbox{\hyperlink{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619}{OPERAND\+\_\+\+INVALID}}
+\begin{DoxyCompactList}\small\item\em First operand (typically a register or constant index). \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Instruction_a71ea67d491b9cb04b3527f3bc6b85524}\label{structvia_1_1Instruction_a71ea67d491b9cb04b3527f3bc6b85524} 
-\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} {\bfseries b} = OPERAND\+\_\+\+INVALID
-\item 
+\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} {\bfseries b} = \mbox{\hyperlink{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619}{OPERAND\+\_\+\+INVALID}}
+\begin{DoxyCompactList}\small\item\em Second operand. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Instruction_a07e1d90b04e0c433195375f817778301}\label{structvia_1_1Instruction_a07e1d90b04e0c433195375f817778301} 
-\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} {\bfseries c} = OPERAND\+\_\+\+INVALID
-\end{DoxyCompactItemize}
+\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} {\bfseries c} = \mbox{\hyperlink{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619}{OPERAND\+\_\+\+INVALID}}
+\begin{DoxyCompactList}\small\item\em Third operand. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+Represents a single VM instruction in the Via bytecode format. 
+
+Each instruction has\+:
+\begin{DoxyItemize}
+\item An opcode ({\ttfamily op}) that specifies the operation to perform.
+\item Up to three 16-\/bit operands ({\ttfamily a}, {\ttfamily b}, and {\ttfamily c}), whose semantics depend on the opcode.
+\end{DoxyItemize}
+
+The structure is aligned to 8 bytes to optimize for memory layout and access efficiency. 
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-src/interpreter/instruction.\+h\end{DoxyCompactItemize}
+src/interpreter/\mbox{\hyperlink{instruction_8h}{instruction.\+h}}\end{DoxyCompactItemize}

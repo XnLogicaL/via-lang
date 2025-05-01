@@ -114,6 +114,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Value Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Polymorphic tagged union representing any runtime value in via.  
+ <a href="structvia_1_1Value.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tvalue_8h_source.html">tvalue.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Value:</div>
 <div class="dyncontent">
@@ -123,22 +128,24 @@ Collaboration diagram for via::Value:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">union &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unionvia_1_1Value_1_1Un.html">Un</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Holds the actual value for the current tag.  <a href="unionvia_1_1Value_1_1Un.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ad7572ad8441bbe41b7e10971624650bd" id="r_ad7572ad8441bbe41b7e10971624650bd"><td class="memItemLeft" align="right" valign="top"><a id="ad7572ad8441bbe41b7e10971624650bd" name="ad7572ad8441bbe41b7e10971624650bd"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><b>Tag</b> : uint8_t { <br />
-&#160;&#160;<b>Nil</b>
-, <b>Int</b>
-, <b>Float</b>
-, <b>Bool</b>
+<tr class="memitem:ad7572ad8441bbe41b7e10971624650bd" id="r_ad7572ad8441bbe41b7e10971624650bd"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">Tag</a> : uint8_t { <br />
+&#160;&#160;<a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda4da8b7eb2c3f2007cf8238334401ef51">Nil</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda1686a6c336b71b36d77354cea19a8b52">Int</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b">Float</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bdac26f15e86e3de4c398a8273272aba034">Bool</a>
 , <br />
-&#160;&#160;<b>String</b>
-, <b>Function</b>
-, <b>Array</b>
-, <b>Dict</b>
+&#160;&#160;<a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda27118326006d3829667a400ad23d5d98">String</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261">Function</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17">Array</a>
+, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda91516e7a50ce0a67a8eb1f9229c293d1">Dict</a>
 <br />
  }</td></tr>
+<tr class="memdesc:ad7572ad8441bbe41b7e10971624650bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Discriminates the active member of the <a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a> union.  <a href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">More...</a><br /></td></tr>
 <tr class="separator:ad7572ad8441bbe41b7e10971624650bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -149,35 +156,48 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7817b575fb9eeb5b04837972834f571a" id="r_a7817b575fb9eeb5b04837972834f571a"><td class="memItemLeft" align="right" valign="top"><a id="a7817b575fb9eeb5b04837972834f571a" name="a7817b575fb9eeb5b04837972834f571a"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Value.html">Value</a>)</td></tr>
 <tr class="separator:a7817b575fb9eeb5b04837972834f571a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44570856eeed2405533df68ace85ac4f" id="r_a44570856eeed2405533df68ace85ac4f"><td class="memItemLeft" align="right" valign="top"><a id="a44570856eeed2405533df68ace85ac4f" name="a44570856eeed2405533df68ace85ac4f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> ()</td></tr>
+<tr class="memdesc:a44570856eeed2405533df68ace85ac4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default constructor (Nil). <br /></td></tr>
+<tr class="separator:a44570856eeed2405533df68ace85ac4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad38521830abbaa9a5bb390103893ae9d" id="r_ad38521830abbaa9a5bb390103893ae9d"><td class="memItemLeft" align="right" valign="top"><a id="ad38521830abbaa9a5bb390103893ae9d" name="ad38521830abbaa9a5bb390103893ae9d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (bool b)</td></tr>
+<tr class="memdesc:ad38521830abbaa9a5bb390103893ae9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a Bool. <br /></td></tr>
 <tr class="separator:ad38521830abbaa9a5bb390103893ae9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5457bcfc670a574664436f2732a8578d" id="r_a5457bcfc670a574664436f2732a8578d"><td class="memItemLeft" align="right" valign="top"><a id="a5457bcfc670a574664436f2732a8578d" name="a5457bcfc670a574664436f2732a8578d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (int x)</td></tr>
+<tr class="memdesc:a5457bcfc670a574664436f2732a8578d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs an Int. <br /></td></tr>
 <tr class="separator:a5457bcfc670a574664436f2732a8578d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cce2ff9dc0be35815826da90ec9035b" id="r_a4cce2ff9dc0be35815826da90ec9035b"><td class="memItemLeft" align="right" valign="top"><a id="a4cce2ff9dc0be35815826da90ec9035b" name="a4cce2ff9dc0be35815826da90ec9035b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (float x)</td></tr>
+<tr class="memdesc:a4cce2ff9dc0be35815826da90ec9035b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a Float. <br /></td></tr>
 <tr class="separator:a4cce2ff9dc0be35815826da90ec9035b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a008af916a862bb8d5db428320e9f72ea" id="r_a008af916a862bb8d5db428320e9f72ea"><td class="memItemLeft" align="right" valign="top"><a id="a008af916a862bb8d5db428320e9f72ea" name="a008af916a862bb8d5db428320e9f72ea"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (<a class="el" href="structvia_1_1String.html">String</a> *ptr)</td></tr>
+<tr class="memdesc:a008af916a862bb8d5db428320e9f72ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a>. <br /></td></tr>
 <tr class="separator:a008af916a862bb8d5db428320e9f72ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4d60364cc2c1ba6d1feba765235e2eb" id="r_ad4d60364cc2c1ba6d1feba765235e2eb"><td class="memItemLeft" align="right" valign="top"><a id="ad4d60364cc2c1ba6d1feba765235e2eb" name="ad4d60364cc2c1ba6d1feba765235e2eb"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (<a class="el" href="structvia_1_1Array.html">Array</a> *ptr)</td></tr>
+<tr class="memdesc:ad4d60364cc2c1ba6d1feba765235e2eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs an <a class="el" href="structvia_1_1Array.html" title="A growable, dynamically sized array of Value elements.">Array</a>. <br /></td></tr>
 <tr class="separator:ad4d60364cc2c1ba6d1feba765235e2eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedb6ad33837b4df0781e4f5104dd13cf" id="r_aedb6ad33837b4df0781e4f5104dd13cf"><td class="memItemLeft" align="right" valign="top"><a id="aedb6ad33837b4df0781e4f5104dd13cf" name="aedb6ad33837b4df0781e4f5104dd13cf"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (<a class="el" href="structvia_1_1Dict.html">Dict</a> *ptr)</td></tr>
+<tr class="memdesc:aedb6ad33837b4df0781e4f5104dd13cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="structvia_1_1Dict.html" title="A dynamically allocated hash table mapping const char* keys to Value objects.">Dict</a>. <br /></td></tr>
 <tr class="separator:aedb6ad33837b4df0781e4f5104dd13cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a170f23d147a4e01a259ffa32ef4cca86" id="r_a170f23d147a4e01a259ffa32ef4cca86"><td class="memItemLeft" align="right" valign="top"><a id="a170f23d147a4e01a259ffa32ef4cca86" name="a170f23d147a4e01a259ffa32ef4cca86"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (<a class="el" href="structvia_1_1Closure.html">Closure</a> *ptr)</td></tr>
+<tr class="memdesc:a170f23d147a4e01a259ffa32ef4cca86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="structvia_1_1Closure.html" title="Wraps a Callable with its captured upvalues for lexical scoping.">Closure</a>. <br /></td></tr>
 <tr class="separator:a170f23d147a4e01a259ffa32ef4cca86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ced84bb3d11000074a43db7071f1d95" id="r_a2ced84bb3d11000074a43db7071f1d95"><td class="memItemLeft" align="right" valign="top"><a id="a2ced84bb3d11000074a43db7071f1d95" name="a2ced84bb3d11000074a43db7071f1d95"></a>
-VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>clone</b> () const</td></tr>
+<a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>clone</b> () const</td></tr>
+<tr class="memdesc:a2ced84bb3d11000074a43db7071f1d95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep copy of the value. <br /></td></tr>
 <tr class="separator:a2ced84bb3d11000074a43db7071f1d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80ef15f9f50adc13ed464b9fcf192ef8" id="r_a80ef15f9f50adc13ed464b9fcf192ef8"><td class="memItemLeft" align="right" valign="top"><a id="a80ef15f9f50adc13ed464b9fcf192ef8" name="a80ef15f9f50adc13ed464b9fcf192ef8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
+<tr class="memdesc:a80ef15f9f50adc13ed464b9fcf192ef8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears the value and resets to Nil. <br /></td></tr>
 <tr class="separator:a80ef15f9f50adc13ed464b9fcf192ef8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95548cf0f7c57a0845f0ddfa42236fe9" id="r_a95548cf0f7c57a0845f0ddfa42236fe9"><td class="memItemLeft" align="right" valign="top"><a id="a95548cf0f7c57a0845f0ddfa42236fe9" name="a95548cf0f7c57a0845f0ddfa42236fe9"></a>
-VIA_NODISCARD VIA_FORCEINLINE constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>is</b> (Tag other) const</td></tr>
+VIA_NODISCARD VIA_FORCEINLINE constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>is</b> (<a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">Tag</a> other) const</td></tr>
 <tr class="separator:a95548cf0f7c57a0845f0ddfa42236fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c780f13aa0751dfb0874db9f5efb91b" id="r_a5c780f13aa0751dfb0874db9f5efb91b"><td class="memItemLeft" align="right" valign="top"><a id="a5c780f13aa0751dfb0874db9f5efb91b" name="a5c780f13aa0751dfb0874db9f5efb91b"></a>
 VIA_NODISCARD VIA_FORCEINLINE constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_nil</b> () const</td></tr>
@@ -211,49 +231,107 @@ VIA_NODISCARD VIA_FORCEINLINE constexpr bool&#160;</td><td class="memItemRight" 
 <tr class="separator:ad68036044554827f060c0d899aa39904"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e8510834e38e3b7a0c86f1b4e463599" id="r_a5e8510834e38e3b7a0c86f1b4e463599"><td class="memItemLeft" align="right" valign="top"><a id="a5e8510834e38e3b7a0c86f1b4e463599" name="a5e8510834e38e3b7a0c86f1b4e463599"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>to_integer</b> () const</td></tr>
+<tr class="memdesc:a5e8510834e38e3b7a0c86f1b4e463599"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempts to convert to Int. <br /></td></tr>
 <tr class="separator:a5e8510834e38e3b7a0c86f1b4e463599"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41e36d528e8c3e557528d5102bd138ad" id="r_a41e36d528e8c3e557528d5102bd138ad"><td class="memItemLeft" align="right" valign="top"><a id="a41e36d528e8c3e557528d5102bd138ad" name="a41e36d528e8c3e557528d5102bd138ad"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>to_float</b> () const</td></tr>
+<tr class="memdesc:a41e36d528e8c3e557528d5102bd138ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempts to convert to Float. <br /></td></tr>
 <tr class="separator:a41e36d528e8c3e557528d5102bd138ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0e2a6954b5f662ca705c80ac1803232" id="r_aa0e2a6954b5f662ca705c80ac1803232"><td class="memItemLeft" align="right" valign="top"><a id="aa0e2a6954b5f662ca705c80ac1803232" name="aa0e2a6954b5f662ca705c80ac1803232"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>to_boolean</b> () const</td></tr>
+<tr class="memdesc:aa0e2a6954b5f662ca705c80ac1803232"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts to Bool (truthiness). <br /></td></tr>
 <tr class="separator:aa0e2a6954b5f662ca705c80ac1803232"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a183207f92f09bf232e18fe6599c2791a" id="r_a183207f92f09bf232e18fe6599c2791a"><td class="memItemLeft" align="right" valign="top"><a id="a183207f92f09bf232e18fe6599c2791a" name="a183207f92f09bf232e18fe6599c2791a"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>to_string</b> () const</td></tr>
+<tr class="memdesc:a183207f92f09bf232e18fe6599c2791a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts to a <a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a> object. <br /></td></tr>
 <tr class="separator:a183207f92f09bf232e18fe6599c2791a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85c7922d19827ba2cf9e2dbbfc625ba4" id="r_a85c7922d19827ba2cf9e2dbbfc625ba4"><td class="memItemLeft" align="right" valign="top"><a id="a85c7922d19827ba2cf9e2dbbfc625ba4" name="a85c7922d19827ba2cf9e2dbbfc625ba4"></a>
 VIA_NODISCARD std::string&#160;</td><td class="memItemRight" valign="bottom"><b>to_cxx_string</b> () const</td></tr>
+<tr class="memdesc:a85c7922d19827ba2cf9e2dbbfc625ba4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts to a std::string. <br /></td></tr>
 <tr class="separator:a85c7922d19827ba2cf9e2dbbfc625ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a781cb4dcc066ff3bab35acbab8fd09b5" id="r_a781cb4dcc066ff3bab35acbab8fd09b5"><td class="memItemLeft" align="right" valign="top"><a id="a781cb4dcc066ff3bab35acbab8fd09b5" name="a781cb4dcc066ff3bab35acbab8fd09b5"></a>
 VIA_NODISCARD std::string&#160;</td><td class="memItemRight" valign="bottom"><b>to_literal_cxx_string</b> () const</td></tr>
+<tr class="memdesc:a781cb4dcc066ff3bab35acbab8fd09b5"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a> with literals escaped. <br /></td></tr>
 <tr class="separator:a781cb4dcc066ff3bab35acbab8fd09b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3630a6e3d7371279092eff807a26276b" id="r_a3630a6e3d7371279092eff807a26276b"><td class="memItemLeft" align="right" valign="top"><a id="a3630a6e3d7371279092eff807a26276b" name="a3630a6e3d7371279092eff807a26276b"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type_string</b> () const</td></tr>
+<tr class="memdesc:a3630a6e3d7371279092eff807a26276b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns type name as <a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">via::String</a>. <br /></td></tr>
 <tr class="separator:a3630a6e3d7371279092eff807a26276b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e51bb733366eb35526cd3ebb2ef7a3f" id="r_a1e51bb733366eb35526cd3ebb2ef7a3f"><td class="memItemLeft" align="right" valign="top"><a id="a1e51bb733366eb35526cd3ebb2ef7a3f" name="a1e51bb733366eb35526cd3ebb2ef7a3f"></a>
 VIA_NODISCARD std::string&#160;</td><td class="memItemRight" valign="bottom"><b>type_cxx_string</b> () const</td></tr>
+<tr class="memdesc:a1e51bb733366eb35526cd3ebb2ef7a3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns type name as std::string. <br /></td></tr>
 <tr class="separator:a1e51bb733366eb35526cd3ebb2ef7a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7103c3fa0da531584ebedd994492e00" id="r_ac7103c3fa0da531584ebedd994492e00"><td class="memItemLeft" align="right" valign="top">VIA_NODISCARD void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Value.html#ac7103c3fa0da531584ebedd994492e00">to_pointer</a> () const</td></tr>
+<tr class="memdesc:ac7103c3fa0da531584ebedd994492e00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempts to obtain a raw pointer for the value.  <br /></td></tr>
 <tr class="separator:ac7103c3fa0da531584ebedd994492e00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19d58c3d2cd048274206c3dcc32b04c7" id="r_a19d58c3d2cd048274206c3dcc32b04c7"><td class="memItemLeft" align="right" valign="top"><a id="a19d58c3d2cd048274206c3dcc32b04c7" name="a19d58c3d2cd048274206c3dcc32b04c7"></a>
 VIA_NODISCARD <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>length</b> () const</td></tr>
+<tr class="memdesc:a19d58c3d2cd048274206c3dcc32b04c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the "length" of value if possible. <br /></td></tr>
 <tr class="separator:a19d58c3d2cd048274206c3dcc32b04c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1ac6cabd7f79ba13a4caad203f8edfe" id="r_ab1ac6cabd7f79ba13a4caad203f8edfe"><td class="memItemLeft" align="right" valign="top"><a id="ab1ac6cabd7f79ba13a4caad203f8edfe" name="ab1ac6cabd7f79ba13a4caad203f8edfe"></a>
 VIA_NODISCARD size_t&#160;</td><td class="memItemRight" valign="bottom"><b>cxx_length</b> () const</td></tr>
+<tr class="memdesc:ab1ac6cabd7f79ba13a4caad203f8edfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns native length. <br /></td></tr>
 <tr class="separator:ab1ac6cabd7f79ba13a4caad203f8edfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa78aa4ade8b11f09fa7a7496bf93b520" id="r_aa78aa4ade8b11f09fa7a7496bf93b520"><td class="memItemLeft" align="right" valign="top"><a id="aa78aa4ade8b11f09fa7a7496bf93b520" name="aa78aa4ade8b11f09fa7a7496bf93b520"></a>
 VIA_NODISCARD bool&#160;</td><td class="memItemRight" valign="bottom"><b>compare</b> (const <a class="el" href="structvia_1_1Value.html">Value</a> &amp;other) const</td></tr>
+<tr class="memdesc:aa78aa4ade8b11f09fa7a7496bf93b520"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep equality check. <br /></td></tr>
 <tr class="separator:aa78aa4ade8b11f09fa7a7496bf93b520"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:afab1a547b2f293101a413b381e6e1b61" id="r_afab1a547b2f293101a413b381e6e1b61"><td class="memItemLeft" align="right" valign="top"><a id="afab1a547b2f293101a413b381e6e1b61" name="afab1a547b2f293101a413b381e6e1b61"></a>
-enum via::Value::Tag&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
+enum <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">via::Value::Tag</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
 <tr class="separator:afab1a547b2f293101a413b381e6e1b61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e373665fe6f2cd153fca05f0005c2d3" id="r_a9e373665fe6f2cd153fca05f0005c2d3"><td class="memItemLeft" align="right" valign="top"><a id="a9e373665fe6f2cd153fca05f0005c2d3" name="a9e373665fe6f2cd153fca05f0005c2d3"></a>
 union <a class="el" href="unionvia_1_1Value_1_1Un.html">via::Value::Un</a>&#160;</td><td class="memItemRight" valign="bottom"><b>u</b></td></tr>
 <tr class="separator:a9e373665fe6f2cd153fca05f0005c2d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Polymorphic tagged union representing any runtime value in via. </p>
+<p>This type is used throughout the via VM to hold and manipulate values of different types dynamically at runtime. </p>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="ad7572ad8441bbe41b7e10971624650bd" name="ad7572ad8441bbe41b7e10971624650bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7572ad8441bbe41b7e10971624650bd">&#9670;&#160;</a></span>Tag</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">via::Value::Tag</a> : uint8_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Discriminates the active member of the <a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a> union. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda4da8b7eb2c3f2007cf8238334401ef51" name="ad7572ad8441bbe41b7e10971624650bda4da8b7eb2c3f2007cf8238334401ef51"></a>Nil&#160;</td><td class="fielddoc"><p>Null or "empty" value. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda1686a6c336b71b36d77354cea19a8b52" name="ad7572ad8441bbe41b7e10971624650bda1686a6c336b71b36d77354cea19a8b52"></a>Int&#160;</td><td class="fielddoc"><p>Integer value. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b" name="ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b"></a>Float&#160;</td><td class="fielddoc"><p>Floating-point value. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bdac26f15e86e3de4c398a8273272aba034" name="ad7572ad8441bbe41b7e10971624650bdac26f15e86e3de4c398a8273272aba034"></a>Bool&#160;</td><td class="fielddoc"><p>Boolean value. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda27118326006d3829667a400ad23d5d98" name="ad7572ad8441bbe41b7e10971624650bda27118326006d3829667a400ad23d5d98"></a>String&#160;</td><td class="fielddoc"><p>Pointer to <code><a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a></code>. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261" name="ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261"></a>Function&#160;</td><td class="fielddoc"><p>Pointer to <code><a class="el" href="structvia_1_1Closure.html" title="Wraps a Callable with its captured upvalues for lexical scoping.">Closure</a></code>. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17" name="ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17"></a>Array&#160;</td><td class="fielddoc"><p>Pointer to <code><a class="el" href="structvia_1_1Array.html" title="A growable, dynamically sized array of Value elements.">Array</a></code>. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ad7572ad8441bbe41b7e10971624650bda91516e7a50ce0a67a8eb1f9229c293d1" name="ad7572ad8441bbe41b7e10971624650bda91516e7a50ce0a67a8eb1f9229c293d1"></a>Dict&#160;</td><td class="fielddoc"><p>Pointer to <code><a class="el" href="structvia_1_1Dict.html" title="A dynamically allocated hash table mapping const char* keys to Value objects.">Dict</a></code>. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="ac7103c3fa0da531584ebedd994492e00" name="ac7103c3fa0da531584ebedd994492e00"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac7103c3fa0da531584ebedd994492e00">&#9670;&#160;</a></span>to_pointer()</h2>
@@ -269,7 +347,10 @@ union <a class="el" href="unionvia_1_1Value_1_1Un.html">via::Value::Un</a>&#160;
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts the value into a memory address if possible. Returns nullptr if the object contains a non-heap-allocated type. Used mainly for hashing purposes. </p>
+
+<p>Attempts to obtain a raw pointer for the value. </p>
+<p>Only heap-allocated types (e.g., strings, arrays, dicts, closures) will return a valid pointer. Used primarily for hashing and identity checks.</p>
+<dl class="section return"><dt>Returns</dt><dd>Pointer or nullptr. </dd></dl>
 
 </div>
 </div>

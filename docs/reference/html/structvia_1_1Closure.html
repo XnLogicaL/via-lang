@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Closure Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Wraps a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> with its captured upvalues for lexical scoping.  
+ <a href="structvia_1_1Closure.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tfunction_8h_source.html">tfunction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Closure:</div>
 <div class="dyncontent">
@@ -122,26 +127,65 @@ Collaboration diagram for via::Closure:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a1c4f159e19583333e370d9cce52f469e" id="r_a1c4f159e19583333e370d9cce52f469e"><td class="memItemLeft" align="right" valign="top"><a id="a1c4f159e19583333e370d9cce52f469e" name="a1c4f159e19583333e370d9cce52f469e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLCOPY</b> (<a class="el" href="structvia_1_1Closure.html">Closure</a>)</td></tr>
+<tr class="memdesc:a1c4f159e19583333e370d9cce52f469e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables copy constructor and assignment. <br /></td></tr>
 <tr class="separator:a1c4f159e19583333e370d9cce52f469e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef8587578c75bf69495133e9d5c2d31b" id="r_aef8587578c75bf69495133e9d5c2d31b"><td class="memItemLeft" align="right" valign="top"><a id="aef8587578c75bf69495133e9d5c2d31b" name="aef8587578c75bf69495133e9d5c2d31b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Closure.html">Closure</a>)</td></tr>
+<tr class="memdesc:aef8587578c75bf69495133e9d5c2d31b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables move constructor and assignment. <br /></td></tr>
 <tr class="separator:aef8587578c75bf69495133e9d5c2d31b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f4ae31888f7754de8109c2f47f23428" id="r_a0f4ae31888f7754de8109c2f47f23428"><td class="memItemLeft" align="right" valign="top"><a id="a0f4ae31888f7754de8109c2f47f23428" name="a0f4ae31888f7754de8109c2f47f23428"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Closure</b> (<a class="el" href="structvia_1_1Callable.html">Callable</a> &amp;&amp;callable)</td></tr>
+<tr class="memitem:a0f4ae31888f7754de8109c2f47f23428" id="r_a0f4ae31888f7754de8109c2f47f23428"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Closure.html#a0f4ae31888f7754de8109c2f47f23428">Closure</a> (<a class="el" href="structvia_1_1Callable.html">Callable</a> &amp;&amp;callable)</td></tr>
+<tr class="memdesc:a0f4ae31888f7754de8109c2f47f23428"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a closure from a callable (usually a function).  <br /></td></tr>
 <tr class="separator:a0f4ae31888f7754de8109c2f47f23428"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb75bceb473474ed8f2aad2b9f14d103" id="r_abb75bceb473474ed8f2aad2b9f14d103"><td class="memItemLeft" align="right" valign="top"><a id="abb75bceb473474ed8f2aad2b9f14d103" name="abb75bceb473474ed8f2aad2b9f14d103"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~Closure</b> ()</td></tr>
+<tr class="memdesc:abb75bceb473474ed8f2aad2b9f14d103"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor that frees upvalue array. <br /></td></tr>
+<tr class="separator:abb75bceb473474ed8f2aad2b9f14d103"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab7380fe64e676fd80e3d24d3223ea542" id="r_ab7380fe64e676fd80e3d24d3223ea542"><td class="memItemLeft" align="right" valign="top"><a id="ab7380fe64e676fd80e3d24d3223ea542" name="ab7380fe64e676fd80e3d24d3223ea542"></a>
 <a class="el" href="structvia_1_1Callable.html">Callable</a>&#160;</td><td class="memItemRight" valign="bottom"><b>callee</b></td></tr>
+<tr class="memdesc:ab7380fe64e676fd80e3d24d3223ea542"><td class="mdescLeft">&#160;</td><td class="mdescRight">Underlying callable (function or native). <br /></td></tr>
 <tr class="separator:ab7380fe64e676fd80e3d24d3223ea542"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee2767a673337ba62136b8ad399f6ca2" id="r_aee2767a673337ba62136b8ad399f6ca2"><td class="memItemLeft" align="right" valign="top"><a id="aee2767a673337ba62136b8ad399f6ca2" name="aee2767a673337ba62136b8ad399f6ca2"></a>
 <a class="el" href="structvia_1_1UpValue.html">UpValue</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>upvs</b> = nullptr</td></tr>
+<tr class="memdesc:aee2767a673337ba62136b8ad399f6ca2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structvia_1_1Array.html" title="A growable, dynamically sized array of Value elements.">Array</a> of upvalue pointers. <br /></td></tr>
 <tr class="separator:aee2767a673337ba62136b8ad399f6ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a9d83a4fe3ad0496ede24a4d5c1960f" id="r_a1a9d83a4fe3ad0496ede24a4d5c1960f"><td class="memItemLeft" align="right" valign="top"><a id="a1a9d83a4fe3ad0496ede24a4d5c1960f" name="a1a9d83a4fe3ad0496ede24a4d5c1960f"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>upv_count</b> = 0</td></tr>
+<tr class="memdesc:a1a9d83a4fe3ad0496ede24a4d5c1960f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of captured upvalues. <br /></td></tr>
 <tr class="separator:a1a9d83a4fe3ad0496ede24a4d5c1960f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Wraps a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> with its captured upvalues for lexical scoping. </p>
+<p>A <a class="el" href="structvia_1_1Closure.html" title="Wraps a Callable with its captured upvalues for lexical scoping.">Closure</a> is created when a function expression references non-local variables. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a0f4ae31888f7754de8109c2f47f23428" name="a0f4ae31888f7754de8109c2f47f23428"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f4ae31888f7754de8109c2f47f23428">&#9670;&#160;</a></span>Closure()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::Closure::Closure </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structvia_1_1Callable.html">Callable</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>callable</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a closure from a callable (usually a function). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callable</td><td>The callable to close over. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tfunction_8h_source.html">tfunction.h</a></li>
 <li>src/interpreter/<b>tfunction.cpp</b></li>

@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::NodeVisitorBase Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Abstract base class for all AST visitors. Provides virtual <code>visit</code> methods for every AST node type.  
+ <a href="classvia_1_1NodeVisitorBase.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="visitor_8h_source.html">visitor.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for via::NodeVisitorBase:</div>
 <div class="dyncontent">
@@ -126,99 +131,132 @@ Collaboration diagram for via::NodeVisitorBase:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a20d136304511a2219bf4beaa97c700f1" id="r_a20d136304511a2219bf4beaa97c700f1"><td class="memItemLeft" align="right" valign="top"><a id="a20d136304511a2219bf4beaa97c700f1" name="a20d136304511a2219bf4beaa97c700f1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>NodeVisitorBase</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>NodeVisitorBase</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;<a class="el" href="classvia_1_1NodeVisitorBase.html#aade4d4e7a0d7a3aad2dc17add5bafe1e">ctx</a>)</td></tr>
 <tr class="separator:a20d136304511a2219bf4beaa97c700f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f5bcc551bf33a31d6eb660d213ee7d8" id="r_a8f5bcc551bf33a31d6eb660d213ee7d8"><td class="memItemLeft" align="right" valign="top"><a id="a8f5bcc551bf33a31d6eb660d213ee7d8" name="a8f5bcc551bf33a31d6eb660d213ee7d8"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1LitExprNode.html">LitExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a8f5bcc551bf33a31d6eb660d213ee7d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b46bf4d1d5491d1b05942d4f3edbe12" id="r_a6b46bf4d1d5491d1b05942d4f3edbe12"><td class="memItemLeft" align="right" valign="top"><a id="a6b46bf4d1d5491d1b05942d4f3edbe12" name="a6b46bf4d1d5491d1b05942d4f3edbe12"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1SymExprNode.html">SymExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a6b46bf4d1d5491d1b05942d4f3edbe12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca9b6169592d0692c83fcdebb8594db1" id="r_aca9b6169592d0692c83fcdebb8594db1"><td class="memItemLeft" align="right" valign="top"><a id="aca9b6169592d0692c83fcdebb8594db1" name="aca9b6169592d0692c83fcdebb8594db1"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnaryExprNode.html">UnaryExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:aca9b6169592d0692c83fcdebb8594db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abac3878e44c3bb01f191ef1b099fc816" id="r_abac3878e44c3bb01f191ef1b099fc816"><td class="memItemLeft" align="right" valign="top"><a id="abac3878e44c3bb01f191ef1b099fc816" name="abac3878e44c3bb01f191ef1b099fc816"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GroupExprNode.html">GroupExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:abac3878e44c3bb01f191ef1b099fc816"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae00c29204ff7867ef2b81e3b4450ceba" id="r_ae00c29204ff7867ef2b81e3b4450ceba"><td class="memItemLeft" align="right" valign="top"><a id="ae00c29204ff7867ef2b81e3b4450ceba" name="ae00c29204ff7867ef2b81e3b4450ceba"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CallExprNode.html">CallExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ae00c29204ff7867ef2b81e3b4450ceba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e02b47d62e7d674582efd8693c60470" id="r_a4e02b47d62e7d674582efd8693c60470"><td class="memItemLeft" align="right" valign="top"><a id="a4e02b47d62e7d674582efd8693c60470" name="a4e02b47d62e7d674582efd8693c60470"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IndexExprNode.html">IndexExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a4e02b47d62e7d674582efd8693c60470"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a0792234285235eb835c0a0d8b375af" id="r_a1a0792234285235eb835c0a0d8b375af"><td class="memItemLeft" align="right" valign="top"><a id="a1a0792234285235eb835c0a0d8b375af" name="a1a0792234285235eb835c0a0d8b375af"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BinExprNode.html">BinExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1a0792234285235eb835c0a0d8b375af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acadc7d94b44cbfe1e9026b39ef60ac0b" id="r_acadc7d94b44cbfe1e9026b39ef60ac0b"><td class="memItemLeft" align="right" valign="top"><a id="acadc7d94b44cbfe1e9026b39ef60ac0b" name="acadc7d94b44cbfe1e9026b39ef60ac0b"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CastExprNode.html">CastExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:acadc7d94b44cbfe1e9026b39ef60ac0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab556d6a2b4d7a8f2b132fad1136b1f1b" id="r_ab556d6a2b4d7a8f2b132fad1136b1f1b"><td class="memItemLeft" align="right" valign="top"><a id="ab556d6a2b4d7a8f2b132fad1136b1f1b" name="ab556d6a2b4d7a8f2b132fad1136b1f1b"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1StepExprNode.html">StepExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ab556d6a2b4d7a8f2b132fad1136b1f1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d7ffe67dd540bd0294a3c0bc1bc758e" id="r_a1d7ffe67dd540bd0294a3c0bc1bc758e"><td class="memItemLeft" align="right" valign="top"><a id="a1d7ffe67dd540bd0294a3c0bc1bc758e" name="a1d7ffe67dd540bd0294a3c0bc1bc758e"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayExprNode.html">ArrayExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1d7ffe67dd540bd0294a3c0bc1bc758e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9973c791c52eeb2996d530895a3f3233" id="r_a9973c791c52eeb2996d530895a3f3233"><td class="memItemLeft" align="right" valign="top"><a id="a9973c791c52eeb2996d530895a3f3233" name="a9973c791c52eeb2996d530895a3f3233"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IntrinsicExprNode.html">IntrinsicExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a9973c791c52eeb2996d530895a3f3233"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8eb29d1eff57004cdb4fb21b9c083c1d" id="r_a8eb29d1eff57004cdb4fb21b9c083c1d"><td class="memItemLeft" align="right" valign="top"><a id="a8eb29d1eff57004cdb4fb21b9c083c1d" name="a8eb29d1eff57004cdb4fb21b9c083c1d"></a>
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AutoTypeNode.html">AutoTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a8eb29d1eff57004cdb4fb21b9c083c1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c78788221528bcd6e475b8d4b64064c" id="r_a1c78788221528bcd6e475b8d4b64064c"><td class="memItemLeft" align="right" valign="top"><a id="a1c78788221528bcd6e475b8d4b64064c" name="a1c78788221528bcd6e475b8d4b64064c"></a>
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GenericTypeNode.html">GenericTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1c78788221528bcd6e475b8d4b64064c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8c031edaa2da174a3928b0e993476cf" id="r_ae8c031edaa2da174a3928b0e993476cf"><td class="memItemLeft" align="right" valign="top"><a id="ae8c031edaa2da174a3928b0e993476cf" name="ae8c031edaa2da174a3928b0e993476cf"></a>
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnionTypeNode.html">UnionTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ae8c031edaa2da174a3928b0e993476cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31cbeca03391ca4cb40462d39a6e34c3" id="r_a31cbeca03391ca4cb40462d39a6e34c3"><td class="memItemLeft" align="right" valign="top"><a id="a31cbeca03391ca4cb40462d39a6e34c3" name="a31cbeca03391ca4cb40462d39a6e34c3"></a>
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FunctionTypeNode.html">FunctionTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a31cbeca03391ca4cb40462d39a6e34c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b46201a2f6c5183a0321cebcc26a963" id="r_a0b46201a2f6c5183a0321cebcc26a963"><td class="memItemLeft" align="right" valign="top"><a id="a0b46201a2f6c5183a0321cebcc26a963" name="a0b46201a2f6c5183a0321cebcc26a963"></a>
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayTypeNode.html">ArrayTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a0b46201a2f6c5183a0321cebcc26a963"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af84ebac9851401bedacc519f3a6c94df" id="r_af84ebac9851401bedacc519f3a6c94df"><td class="memItemLeft" align="right" valign="top"><a id="af84ebac9851401bedacc519f3a6c94df" name="af84ebac9851401bedacc519f3a6c94df"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1DeclStmtNode.html">DeclStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:af84ebac9851401bedacc519f3a6c94df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d820a27122dfde19e397a526453e6ee" id="r_a5d820a27122dfde19e397a526453e6ee"><td class="memItemLeft" align="right" valign="top"><a id="a5d820a27122dfde19e397a526453e6ee" name="a5d820a27122dfde19e397a526453e6ee"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ScopeStmtNode.html">ScopeStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a5d820a27122dfde19e397a526453e6ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bd7d80c4cbc97e67dad4d89f2a64366" id="r_a3bd7d80c4cbc97e67dad4d89f2a64366"><td class="memItemLeft" align="right" valign="top"><a id="a3bd7d80c4cbc97e67dad4d89f2a64366" name="a3bd7d80c4cbc97e67dad4d89f2a64366"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FuncDeclStmtNode.html">FuncDeclStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a3bd7d80c4cbc97e67dad4d89f2a64366"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2ae0f7c8b7569c863244135c14e17bb" id="r_ab2ae0f7c8b7569c863244135c14e17bb"><td class="memItemLeft" align="right" valign="top"><a id="ab2ae0f7c8b7569c863244135c14e17bb" name="ab2ae0f7c8b7569c863244135c14e17bb"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AssignStmtNode.html">AssignStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ab2ae0f7c8b7569c863244135c14e17bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34d1f44139ed321f88fe6ffe4e72ae99" id="r_a34d1f44139ed321f88fe6ffe4e72ae99"><td class="memItemLeft" align="right" valign="top"><a id="a34d1f44139ed321f88fe6ffe4e72ae99" name="a34d1f44139ed321f88fe6ffe4e72ae99"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IfStmtNode.html">IfStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a34d1f44139ed321f88fe6ffe4e72ae99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a317fbe0effd70034b09b305ba510274f" id="r_a317fbe0effd70034b09b305ba510274f"><td class="memItemLeft" align="right" valign="top"><a id="a317fbe0effd70034b09b305ba510274f" name="a317fbe0effd70034b09b305ba510274f"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ReturnStmtNode.html">ReturnStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a317fbe0effd70034b09b305ba510274f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0096fa75fe7bfc07e4e1a11706a9992e" id="r_a0096fa75fe7bfc07e4e1a11706a9992e"><td class="memItemLeft" align="right" valign="top"><a id="a0096fa75fe7bfc07e4e1a11706a9992e" name="a0096fa75fe7bfc07e4e1a11706a9992e"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BreakStmtNode.html">BreakStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a0096fa75fe7bfc07e4e1a11706a9992e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0d8dffcd2577c73bc37c8b8a5cd112f" id="r_ab0d8dffcd2577c73bc37c8b8a5cd112f"><td class="memItemLeft" align="right" valign="top"><a id="ab0d8dffcd2577c73bc37c8b8a5cd112f" name="ab0d8dffcd2577c73bc37c8b8a5cd112f"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ContinueStmtNode.html">ContinueStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ab0d8dffcd2577c73bc37c8b8a5cd112f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abab746115f913afa141eb6af9edf8fa1" id="r_abab746115f913afa141eb6af9edf8fa1"><td class="memItemLeft" align="right" valign="top"><a id="abab746115f913afa141eb6af9edf8fa1" name="abab746115f913afa141eb6af9edf8fa1"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1WhileStmtNode.html">WhileStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:abab746115f913afa141eb6af9edf8fa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5c50e89e48f67b5461d201c55a70b6f" id="r_af5c50e89e48f67b5461d201c55a70b6f"><td class="memItemLeft" align="right" valign="top"><a id="af5c50e89e48f67b5461d201c55a70b6f" name="af5c50e89e48f67b5461d201c55a70b6f"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1DeferStmtNode.html">DeferStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:af5c50e89e48f67b5461d201c55a70b6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0841716c9e000ef6a0f8db424991eeb2" id="r_a0841716c9e000ef6a0f8db424991eeb2"><td class="memItemLeft" align="right" valign="top"><a id="a0841716c9e000ef6a0f8db424991eeb2" name="a0841716c9e000ef6a0f8db424991eeb2"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ExprStmtNode.html">ExprStmtNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a0841716c9e000ef6a0f8db424991eeb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a587d71a3ea5c533e1e645282eb2df279" id="r_a587d71a3ea5c533e1e645282eb2df279"><td class="memItemLeft" align="right" valign="top"><a id="a587d71a3ea5c533e1e645282eb2df279" name="a587d71a3ea5c533e1e645282eb2df279"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>failed</b> ()</td></tr>
+<tr class="memitem:a60dca928d2e27d58fdcc211cf5eef622" id="r_a60dca928d2e27d58fdcc211cf5eef622"><td class="memItemLeft" align="right" valign="top"><a id="a60dca928d2e27d58fdcc211cf5eef622" name="a60dca928d2e27d58fdcc211cf5eef622"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1LitExprNode.html">LitExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a60dca928d2e27d58fdcc211cf5eef622"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37e91dfc43c72fbd6c98e99d796f0f09" id="r_a37e91dfc43c72fbd6c98e99d796f0f09"><td class="memItemLeft" align="right" valign="top"><a id="a37e91dfc43c72fbd6c98e99d796f0f09" name="a37e91dfc43c72fbd6c98e99d796f0f09"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1SymExprNode.html">SymExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a37e91dfc43c72fbd6c98e99d796f0f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10da24a724669616a2078f0af1943e75" id="r_a10da24a724669616a2078f0af1943e75"><td class="memItemLeft" align="right" valign="top"><a id="a10da24a724669616a2078f0af1943e75" name="a10da24a724669616a2078f0af1943e75"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnaryExprNode.html">UnaryExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a10da24a724669616a2078f0af1943e75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafbfd77a27c98488a323dd629578594d" id="r_aafbfd77a27c98488a323dd629578594d"><td class="memItemLeft" align="right" valign="top"><a id="aafbfd77a27c98488a323dd629578594d" name="aafbfd77a27c98488a323dd629578594d"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GroupExprNode.html">GroupExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:aafbfd77a27c98488a323dd629578594d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dd4039296110249a2e31d840e7d1c5c" id="r_a4dd4039296110249a2e31d840e7d1c5c"><td class="memItemLeft" align="right" valign="top"><a id="a4dd4039296110249a2e31d840e7d1c5c" name="a4dd4039296110249a2e31d840e7d1c5c"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CallExprNode.html">CallExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a4dd4039296110249a2e31d840e7d1c5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdd118855f27cd002fa8c8cae292abe3" id="r_abdd118855f27cd002fa8c8cae292abe3"><td class="memItemLeft" align="right" valign="top"><a id="abdd118855f27cd002fa8c8cae292abe3" name="abdd118855f27cd002fa8c8cae292abe3"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IndexExprNode.html">IndexExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:abdd118855f27cd002fa8c8cae292abe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a313746a10aa5faaf3c957298ffa9b18a" id="r_a313746a10aa5faaf3c957298ffa9b18a"><td class="memItemLeft" align="right" valign="top"><a id="a313746a10aa5faaf3c957298ffa9b18a" name="a313746a10aa5faaf3c957298ffa9b18a"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BinExprNode.html">BinExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a313746a10aa5faaf3c957298ffa9b18a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1dad9381bac6c9e86106f75ee5202abe" id="r_a1dad9381bac6c9e86106f75ee5202abe"><td class="memItemLeft" align="right" valign="top"><a id="a1dad9381bac6c9e86106f75ee5202abe" name="a1dad9381bac6c9e86106f75ee5202abe"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CastExprNode.html">CastExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a1dad9381bac6c9e86106f75ee5202abe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a431328eb3ef47497f66f456a2f37ca1f" id="r_a431328eb3ef47497f66f456a2f37ca1f"><td class="memItemLeft" align="right" valign="top"><a id="a431328eb3ef47497f66f456a2f37ca1f" name="a431328eb3ef47497f66f456a2f37ca1f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1StepExprNode.html">StepExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a431328eb3ef47497f66f456a2f37ca1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4124ff503047dc33caeece58f3dc4c4c" id="r_a4124ff503047dc33caeece58f3dc4c4c"><td class="memItemLeft" align="right" valign="top"><a id="a4124ff503047dc33caeece58f3dc4c4c" name="a4124ff503047dc33caeece58f3dc4c4c"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayExprNode.html">ArrayExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a4124ff503047dc33caeece58f3dc4c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9417d87a294e2a6134b6539b1144b81a" id="r_a9417d87a294e2a6134b6539b1144b81a"><td class="memItemLeft" align="right" valign="top"><a id="a9417d87a294e2a6134b6539b1144b81a" name="a9417d87a294e2a6134b6539b1144b81a"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IntrinsicExprNode.html">IntrinsicExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a9417d87a294e2a6134b6539b1144b81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a912dbeb9735647f7e6368d063d08ecda" id="r_a912dbeb9735647f7e6368d063d08ecda"><td class="memItemLeft" align="right" valign="top"><a id="a912dbeb9735647f7e6368d063d08ecda" name="a912dbeb9735647f7e6368d063d08ecda"></a>
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AutoTypeNode.html">AutoTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a912dbeb9735647f7e6368d063d08ecda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bfa94531d2f1a00069d3be477bdfb4f" id="r_a1bfa94531d2f1a00069d3be477bdfb4f"><td class="memItemLeft" align="right" valign="top"><a id="a1bfa94531d2f1a00069d3be477bdfb4f" name="a1bfa94531d2f1a00069d3be477bdfb4f"></a>
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GenericTypeNode.html">GenericTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a1bfa94531d2f1a00069d3be477bdfb4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a417b31ba0d9ff8297085af43ff10d1f8" id="r_a417b31ba0d9ff8297085af43ff10d1f8"><td class="memItemLeft" align="right" valign="top"><a id="a417b31ba0d9ff8297085af43ff10d1f8" name="a417b31ba0d9ff8297085af43ff10d1f8"></a>
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnionTypeNode.html">UnionTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a417b31ba0d9ff8297085af43ff10d1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accf5200393606c9bd9ca5add1642a08f" id="r_accf5200393606c9bd9ca5add1642a08f"><td class="memItemLeft" align="right" valign="top"><a id="accf5200393606c9bd9ca5add1642a08f" name="accf5200393606c9bd9ca5add1642a08f"></a>
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FunctionTypeNode.html">FunctionTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:accf5200393606c9bd9ca5add1642a08f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcf8f057530d13470c27e7051c25eb62" id="r_afcf8f057530d13470c27e7051c25eb62"><td class="memItemLeft" align="right" valign="top"><a id="afcf8f057530d13470c27e7051c25eb62" name="afcf8f057530d13470c27e7051c25eb62"></a>
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayTypeNode.html">ArrayTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:afcf8f057530d13470c27e7051c25eb62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa19ac1da5bf9e5848b87e5dbe3576cba" id="r_aa19ac1da5bf9e5848b87e5dbe3576cba"><td class="memItemLeft" align="right" valign="top"><a id="aa19ac1da5bf9e5848b87e5dbe3576cba" name="aa19ac1da5bf9e5848b87e5dbe3576cba"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1DeclStmtNode.html">DeclStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:aa19ac1da5bf9e5848b87e5dbe3576cba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99620676a0ddcfed08cab8ef073269fd" id="r_a99620676a0ddcfed08cab8ef073269fd"><td class="memItemLeft" align="right" valign="top"><a id="a99620676a0ddcfed08cab8ef073269fd" name="a99620676a0ddcfed08cab8ef073269fd"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ScopeStmtNode.html">ScopeStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a99620676a0ddcfed08cab8ef073269fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70c6756d2e467e57906f749abece5e13" id="r_a70c6756d2e467e57906f749abece5e13"><td class="memItemLeft" align="right" valign="top"><a id="a70c6756d2e467e57906f749abece5e13" name="a70c6756d2e467e57906f749abece5e13"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FuncDeclStmtNode.html">FuncDeclStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a70c6756d2e467e57906f749abece5e13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51f0936d4c9486589033c2f62df256d5" id="r_a51f0936d4c9486589033c2f62df256d5"><td class="memItemLeft" align="right" valign="top"><a id="a51f0936d4c9486589033c2f62df256d5" name="a51f0936d4c9486589033c2f62df256d5"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AssignStmtNode.html">AssignStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a51f0936d4c9486589033c2f62df256d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45f6d5c6ad0b2a1bff01b74e0b905615" id="r_a45f6d5c6ad0b2a1bff01b74e0b905615"><td class="memItemLeft" align="right" valign="top"><a id="a45f6d5c6ad0b2a1bff01b74e0b905615" name="a45f6d5c6ad0b2a1bff01b74e0b905615"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IfStmtNode.html">IfStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a45f6d5c6ad0b2a1bff01b74e0b905615"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08ae25a1a2f73a62441f8aab4af9cadc" id="r_a08ae25a1a2f73a62441f8aab4af9cadc"><td class="memItemLeft" align="right" valign="top"><a id="a08ae25a1a2f73a62441f8aab4af9cadc" name="a08ae25a1a2f73a62441f8aab4af9cadc"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ReturnStmtNode.html">ReturnStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a08ae25a1a2f73a62441f8aab4af9cadc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a402fd953dd3a547c6d44ac8bafa2c0f0" id="r_a402fd953dd3a547c6d44ac8bafa2c0f0"><td class="memItemLeft" align="right" valign="top"><a id="a402fd953dd3a547c6d44ac8bafa2c0f0" name="a402fd953dd3a547c6d44ac8bafa2c0f0"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BreakStmtNode.html">BreakStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a402fd953dd3a547c6d44ac8bafa2c0f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6614bcacf8967a1c77ed5a122adf8f08" id="r_a6614bcacf8967a1c77ed5a122adf8f08"><td class="memItemLeft" align="right" valign="top"><a id="a6614bcacf8967a1c77ed5a122adf8f08" name="a6614bcacf8967a1c77ed5a122adf8f08"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ContinueStmtNode.html">ContinueStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a6614bcacf8967a1c77ed5a122adf8f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34115bef9bf15a9962851da9b213297f" id="r_a34115bef9bf15a9962851da9b213297f"><td class="memItemLeft" align="right" valign="top"><a id="a34115bef9bf15a9962851da9b213297f" name="a34115bef9bf15a9962851da9b213297f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1WhileStmtNode.html">WhileStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a34115bef9bf15a9962851da9b213297f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51f02396173787f343af30ec7b323840" id="r_a51f02396173787f343af30ec7b323840"><td class="memItemLeft" align="right" valign="top"><a id="a51f02396173787f343af30ec7b323840" name="a51f02396173787f343af30ec7b323840"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1DeferStmtNode.html">DeferStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a51f02396173787f343af30ec7b323840"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9440dd3fbd43a8df3f86a29bb2baab3" id="r_ae9440dd3fbd43a8df3f86a29bb2baab3"><td class="memItemLeft" align="right" valign="top"><a id="ae9440dd3fbd43a8df3f86a29bb2baab3" name="ae9440dd3fbd43a8df3f86a29bb2baab3"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ExprStmtNode.html">ExprStmtNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:ae9440dd3fbd43a8df3f86a29bb2baab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a587d71a3ea5c533e1e645282eb2df279" id="r_a587d71a3ea5c533e1e645282eb2df279"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1NodeVisitorBase.html#a587d71a3ea5c533e1e645282eb2df279">failed</a> ()</td></tr>
+<tr class="memdesc:a587d71a3ea5c533e1e645282eb2df279"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates if the visitor has failed.  <br /></td></tr>
 <tr class="separator:a587d71a3ea5c533e1e645282eb2df279"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:aade4d4e7a0d7a3aad2dc17add5bafe1e" id="r_aade4d4e7a0d7a3aad2dc17add5bafe1e"><td class="memItemLeft" align="right" valign="top"><a id="aade4d4e7a0d7a3aad2dc17add5bafe1e" name="aade4d4e7a0d7a3aad2dc17add5bafe1e"></a>
 <a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ctx</b></td></tr>
+<tr class="memdesc:aade4d4e7a0d7a3aad2dc17add5bafe1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared visitor context. <br /></td></tr>
 <tr class="separator:aade4d4e7a0d7a3aad2dc17add5bafe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Abstract base class for all AST visitors. Provides virtual <code>visit</code> methods for every AST node type. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a587d71a3ea5c533e1e645282eb2df279" name="a587d71a3ea5c533e1e645282eb2df279"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a587d71a3ea5c533e1e645282eb2df279">&#9670;&#160;</a></span>failed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool via::NodeVisitorBase::failed </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Indicates if the visitor has failed. </p>
+
+<p>Reimplemented in <a class="el" href="classvia_1_1StmtNodeVisitor.html#a81cfb388cd99084cafed12a89d39ecc7">via::StmtNodeVisitor</a>.</p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/codegen/<a class="el" href="visitor_8h_source.html">visitor.h</a></li>
 </ul>

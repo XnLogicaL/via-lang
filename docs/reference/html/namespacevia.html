@@ -111,12 +111,13 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Main namespace of the project. Contains all but macros.  
+<p>All core compiler logic is within this namespace.  
 <a href="namespacevia.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Array.html">Array</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A growable, dynamically sized array of <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> elements.  <a href="structvia_1_1Array.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ArrayExprNode.html">ArrayExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,17 +132,21 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1BreakStmtNode.html">BreakStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Bytecode.html">Bytecode</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A higher-level structure representing a complete instruction unit.  <a href="structvia_1_1Bytecode.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1BytecodeBuilder.html">BytecodeBuilder</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds bytecode from the abstract syntax tree found inside the translation unit context.  <a href="classvia_1_1BytecodeBuilder.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Callable.html">Callable</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wraps a function-like object, either user-defined or native.  <a href="structvia_1_1Callable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CallExprNode.html">CallExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CallFrame.html">CallFrame</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a single function invocation's execution context.  <a href="structvia_1_1CallFrame.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CallStack.html">CallStack</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents the function call stack of the interpreter.  <a href="structvia_1_1CallStack.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CastExprNode.html">CastExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,6 +157,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CErrorLocation.html">CErrorLocation</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Closure.html">Closure</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wraps a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> with its captured upvalues for lexical scoping.  <a href="structvia_1_1Closure.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1CompilerFunctionStack.html">CompilerFunctionStack</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stack of active functions used during compilation.  <a href="classvia_1_1CompilerFunctionStack.html#details">More...</a><br /></td></tr>
@@ -165,6 +171,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ContinueStmtNode.html">ContinueStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1CSize.html">CSize</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Small utility size caching structure.  <a href="structvia_1_1CSize.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1DataType.html">DataType</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -179,26 +186,31 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1DataType_3_01std_1_1string_01_4.html">DataType&lt; std::string &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1DecayNodeVisitor.html">DecayNodeVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">AST visitor that resolves type nodes to their underlying forms.  <a href="classvia_1_1DecayNodeVisitor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1DeclStmtNode.html">DeclStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1DeferStmtNode.html">DeferStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Dict.html">Dict</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A dynamically allocated hash table mapping <code>const char*</code> keys to <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> objects.  <a href="structvia_1_1Dict.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ElseIfNode.html">ElseIfNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ErrorState.html">ErrorState</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents an active runtime error during VM execution.  <a href="structvia_1_1ErrorState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1ExprNodeVisitor.html">ExprNodeVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">AST visitor for expression nodes only.  <a href="classvia_1_1ExprNodeVisitor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ExprStmtNode.html">ExprStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1FuncDeclStmtNode.html">FuncDeclStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Function.html">Function</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a user-defined via function, including its bytecode and metadata.  <a href="structvia_1_1Function.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1FunctionTypeNode.html">FunctionTypeNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -214,8 +226,10 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1IndexExprNode.html">IndexExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Instruction.html">Instruction</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a single VM instruction in the Via bytecode format.  <a href="structvia_1_1Instruction.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1InstructionData.html">InstructionData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional debug metadata associated with a single instruction.  <a href="structvia_1_1InstructionData.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1IntrinsicExprNode.html">IntrinsicExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -226,6 +240,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1LocalOffset.html">LocalOffset</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1NodeVisitorBase.html">NodeVisitorBase</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abstract base class for all AST visitors. Provides virtual <code>visit</code> methods for every AST node type.  <a href="classvia_1_1NodeVisitorBase.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ParamStmtNode.html">ParamStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -239,6 +254,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles compile-time register allocation and deallocation.  <a href="classvia_1_1RegisterAllocator.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1RegisterHolder.html">RegisterHolder</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic register array wrapper with fixed size and alignment.  <a href="structvia_1_1RegisterHolder.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1ReturnStmtNode.html">ReturnStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,7 +266,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1StackVariable.html">StackVariable</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure-data structure that represents a variable on the stack.  <a href="structvia_1_1StackVariable.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1State.html">State</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1State.html">State</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents the complete virtual machine execution state.  <a href="structvia_1_1State.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1StepExprNode.html">StepExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -261,8 +278,10 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1StmtNodeBase.html">StmtNodeBase</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1StmtNodeVisitor.html">StmtNodeVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">AST visitor for statement nodes. Composes expression, decay, and type visitors.  <a href="classvia_1_1StmtNodeVisitor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1String.html">String</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant-sized owning string type used in the via runtime.  <a href="structvia_1_1String.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1SymExprNode.html">SymExprNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -275,6 +294,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1TypeNodeVisitor.html">TypeNodeVisitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">AST visitor for analyzing or transforming statements relevant to type resolution.  <a href="classvia_1_1TypeNodeVisitor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1u16result.html">u16result</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -283,10 +303,13 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1UnionTypeNode.html">UnionTypeNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1UpValue.html">UpValue</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a captured variable in a closure.  <a href="structvia_1_1UpValue.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Value.html">Value</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Polymorphic tagged union representing any runtime value in via.  <a href="structvia_1_1Value.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Encapsulates state for visitor objects during AST traversal.  <a href="structvia_1_1VisitorContext.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1WhileStmtNode.html">WhileStmtNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -294,7 +317,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a28f487c4626f2d46df667a8d550136fb" id="r_a28f487c4626f2d46df667a8d550136fb"><td class="memItemLeft" align="right" valign="top"><a id="a28f487c4626f2d46df667a8d550136fb" name="a28f487c4626f2d46df667a8d550136fb"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>OpCodeId</b> = std::underlying_type_t&lt; Opcode &gt;</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>OpCodeId</b> = std::underlying_type_t&lt; <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a> &gt;</td></tr>
 <tr class="separator:a28f487c4626f2d46df667a8d550136fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a298cba1d5b08b466031bb0d9ab1a6e5a" id="r_a298cba1d5b08b466031bb0d9ab1a6e5a"><td class="memItemLeft" align="right" valign="top"><a id="a298cba1d5b08b466031bb0d9ab1a6e5a" name="a298cba1d5b08b466031bb0d9ab1a6e5a"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>index_query_result</b> = GlobalHolder::index_query_result</td></tr>
@@ -306,39 +329,36 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>global_query_result<
 using&#160;</td><td class="memItemRight" valign="bottom"><b>global_vector</b> = GlobalHolder::global_vector</td></tr>
 <tr class="separator:acd3384cc1b7b5af536eaeff3bcced0c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a53d6dec114594bfc89ef4a69763230" id="r_a6a53d6dec114594bfc89ef4a69763230"><td class="memItemLeft" align="right" valign="top"><a id="a6a53d6dec114594bfc89ef4a69763230" name="a6a53d6dec114594bfc89ef4a69763230"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>register_t</b> = <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a></td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>register_t</b> = <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a></td></tr>
 <tr class="separator:a6a53d6dec114594bfc89ef4a69763230"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9372b754bde884b9a2bb477c946d938" id="r_ac9372b754bde884b9a2bb477c946d938"><td class="memItemLeft" align="right" valign="top"><a id="ac9372b754bde884b9a2bb477c946d938" name="ac9372b754bde884b9a2bb477c946d938"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>symbol_t</b> = std::string</td></tr>
 <tr class="separator:ac9372b754bde884b9a2bb477c946d938"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ea75d6678f99a67de0addd0ce7e940b" id="r_a9ea75d6678f99a67de0addd0ce7e940b"><td class="memItemLeft" align="right" valign="top"><a id="a9ea75d6678f99a67de0addd0ce7e940b" name="a9ea75d6678f99a67de0addd0ce7e940b"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>label_t</b> = <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a></td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>label_t</b> = <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a></td></tr>
 <tr class="separator:a9ea75d6678f99a67de0addd0ce7e940b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe69cd106a41234cfacb4091e03f05ea" id="r_abe69cd106a41234cfacb4091e03f05ea"><td class="memItemLeft" align="right" valign="top"><a id="abe69cd106a41234cfacb4091e03f05ea" name="abe69cd106a41234cfacb4091e03f05ea"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>unused_expression_handler_t</b> = std::function&lt; void(const <a class="el" href="structvia_1_1ExprStmtNode.html">ExprStmtNode</a> &amp;)&gt;</td></tr>
-<tr class="separator:abe69cd106a41234cfacb4091e03f05ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga40a4d71b3f7c37889759d83cc797ea83" id="r_ga40a4d71b3f7c37889759d83cc797ea83"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__via__namespace.html#ga40a4d71b3f7c37889759d83cc797ea83">byte_stream_t</a> = std::vector&lt; uint8_t &gt;</td></tr>
 <tr class="memdesc:ga40a4d71b3f7c37889759d83cc797ea83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dynamic container that holds a sequence of bytes.  <br /></td></tr>
 <tr class="separator:ga40a4d71b3f7c37889759d83cc797ea83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68cce66c29779f23c5ae3c4ed7f9be15" id="r_a68cce66c29779f23c5ae3c4ed7f9be15"><td class="memItemLeft" align="right" valign="top"><a id="a68cce66c29779f23c5ae3c4ed7f9be15" name="a68cce66c29779f23c5ae3c4ed7f9be15"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>operand_t</b> = uint16_t</td></tr>
-<tr class="memdesc:a68cce66c29779f23c5ae3c4ed7f9be15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for operand type. <br /></td></tr>
-<tr class="separator:a68cce66c29779f23c5ae3c4ed7f9be15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90951ca238c08fe5449c13c9ed3cc38e" id="r_a90951ca238c08fe5449c13c9ed3cc38e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> = uint16_t</td></tr>
+<tr class="memdesc:a90951ca238c08fe5449c13c9ed3cc38e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unsigned 16-bit operand type used by the instruction format.  <br /></td></tr>
+<tr class="separator:a90951ca238c08fe5449c13c9ed3cc38e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d6de79b2e0d7722b68a64ec435dd61d" id="r_a3d6de79b2e0d7722b68a64ec435dd61d"><td class="memItemLeft" align="right" valign="top"><a id="a3d6de79b2e0d7722b68a64ec435dd61d" name="a3d6de79b2e0d7722b68a64ec435dd61d"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>signed_operand_t</b> = int16_t</td></tr>
+<tr class="memdesc:a3d6de79b2e0d7722b68a64ec435dd61d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signed version of <code>operand_t</code>, used for relative or signed operands. <br /></td></tr>
 <tr class="separator:a3d6de79b2e0d7722b68a64ec435dd61d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1d173fbe7db8d544b07f656b5cbbdb6" id="r_ab1d173fbe7db8d544b07f656b5cbbdb6"><td class="memItemLeft" align="right" valign="top"><a id="ab1d173fbe7db8d544b07f656b5cbbdb6" name="ab1d173fbe7db8d544b07f656b5cbbdb6"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>StkRegHolder</b> = <a class="el" href="structvia_1_1RegisterHolder.html">RegisterHolder</a>&lt; REGISTER_STACK_COUNT &gt;</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>StkRegHolder</b> = <a class="el" href="structvia_1_1RegisterHolder.html">RegisterHolder</a>&lt; <a class="el" href="namespacevia.html#a9f3c8100638fb61b095c359558bc7bd8">REGISTER_STACK_COUNT</a> &gt;</td></tr>
+<tr class="memdesc:ab1d173fbe7db8d544b07f656b5cbbdb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for stack-based register block. <br /></td></tr>
 <tr class="separator:ab1d173fbe7db8d544b07f656b5cbbdb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75a6478aadfde59a7fe15bdcdc8741e6" id="r_a75a6478aadfde59a7fe15bdcdc8741e6"><td class="memItemLeft" align="right" valign="top"><a id="a75a6478aadfde59a7fe15bdcdc8741e6" name="a75a6478aadfde59a7fe15bdcdc8741e6"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>HeapRegHolder</b> = <a class="el" href="structvia_1_1RegisterHolder.html">RegisterHolder</a>&lt; REGISTER_SPILL_COUNT &gt;</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>HeapRegHolder</b> = <a class="el" href="structvia_1_1RegisterHolder.html">RegisterHolder</a>&lt; <a class="el" href="namespacevia.html#aa0a20b52d04392dad68c2230cd48b0c3">REGISTER_SPILL_COUNT</a> &gt;</td></tr>
+<tr class="memdesc:a75a6478aadfde59a7fe15bdcdc8741e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for heap/spill register block. <br /></td></tr>
 <tr class="separator:a75a6478aadfde59a7fe15bdcdc8741e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23382f1b645a8629871fab7d0431281e" id="r_a23382f1b645a8629871fab7d0431281e"><td class="memItemLeft" align="right" valign="top"><a id="a23382f1b645a8629871fab7d0431281e" name="a23382f1b645a8629871fab7d0431281e"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>NativeFn</b> = <a class="el" href="structvia_1_1Value.html">Value</a>(*)(<a class="el" href="structvia_1_1State.html">State</a> *interpreter)</td></tr>
+<tr class="memdesc:a23382f1b645a8629871fab7d0431281e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for native C++ functions that can be called by the VM. They receive a pointer to the current interpreter state and return a <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code>. <br /></td></tr>
 <tr class="separator:a23382f1b645a8629871fab7d0431281e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b7f686427566028146c2920116e1b0d" id="r_a9b7f686427566028146c2920116e1b0d"><td class="memItemLeft" align="right" valign="top"><a id="a9b7f686427566028146c2920116e1b0d" name="a9b7f686427566028146c2920116e1b0d"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>cfunction_t</b> = void(*)(<a class="el" href="structvia_1_1State.html">State</a> *)</td></tr>
-<tr class="separator:a9b7f686427566028146c2920116e1b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a102867ffa6c70f6aee9868fa2d57e201" id="r_a102867ffa6c70f6aee9868fa2d57e201"><td class="memTemplParams" colspan="2"><a id="a102867ffa6c70f6aee9868fa2d57e201" name="a102867ffa6c70f6aee9868fa2d57e201"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a102867ffa6c70f6aee9868fa2d57e201"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>result</b> = Parser::result&lt; T &gt;</td></tr>
@@ -362,56 +382,56 @@ Enumerations</h2></td></tr>
 , <b>ERROR_</b>
  }</td></tr>
 <tr class="separator:a6ee8b46038e5ced1fdad7c9060addfaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8974a71c8a4b5a87cbb4ea665ebfd62" id="r_ac8974a71c8a4b5a87cbb4ea665ebfd62"><td class="memItemLeft" align="right" valign="top"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62" name="ac8974a71c8a4b5a87cbb4ea665ebfd62"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><b>Opcode</b> : uint16_t { <br />
-&#160;&#160;<b>NOP</b>
-, <b>LBL</b>
-, <b>EXIT</b>
-, <b>ADD</b>
+<tr class="memitem:ac8974a71c8a4b5a87cbb4ea665ebfd62" id="r_ac8974a71c8a4b5a87cbb4ea665ebfd62"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a> : uint16_t { <br />
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">NOP</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685">LBL</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927">EXIT</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d">ADD</a>
 , <br />
-&#160;&#160;<b>ADDI</b>
-, <b>ADDF</b>
-, <b>SUB</b>
-, <b>SUBI</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e">ADDI</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f">ADDF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb">SUB</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343">SUBI</a>
 , <br />
-&#160;&#160;<b>SUBF</b>
-, <b>MUL</b>
-, <b>MULI</b>
-, <b>MULF</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444">SUBF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c">MUL</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b">MULI</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a">MULF</a>
 , <br />
-&#160;&#160;<b>DIV</b>
-, <b>DIVI</b>
-, <b>DIVF</b>
-, <b>MOD</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646">DIV</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc">DIVI</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f">DIVF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967">MOD</a>
 , <br />
-&#160;&#160;<b>MODI</b>
-, <b>MODF</b>
-, <b>POW</b>
-, <b>POWI</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047">MODI</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87">MODF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe">POW</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26">POWI</a>
 , <br />
-&#160;&#160;<b>POWF</b>
-, <b>NEG</b>
-, <b>MOV</b>
-, <b>LOADK</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505">POWF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e">NEG</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df">MOV</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6">LOADK</a>
 , <br />
-&#160;&#160;<b>LOADNIL</b>
-, <b>LOADI</b>
-, <b>LOADF</b>
-, <b>LOADBT</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302">LOADNIL</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57">LOADI</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697">LOADF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b">LOADBT</a>
 , <br />
-&#160;&#160;<b>LOADBF</b>
-, <b>LOADARR</b>
-, <b>LOADDICT</b>
-, <b>CLOSURE</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c">LOADBF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532">LOADARR</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34">LOADDICT</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8">CLOSURE</a>
 , <br />
-&#160;&#160;<b>PUSH</b>
-, <b>PUSHK</b>
-, <b>PUSHNIL</b>
-, <b>PUSHI</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550">PUSH</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd">PUSHK</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e">PUSHNIL</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308">PUSHI</a>
 , <br />
-&#160;&#160;<b>PUSHF</b>
-, <b>PUSHBT</b>
-, <b>PUSHBF</b>
-, <b>DROP</b>
+&#160;&#160;<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab">PUSHF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454">PUSHBT</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1">PUSHBF</a>
+, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57">DROP</a>
 , <br />
 &#160;&#160;<b>GETGLOBAL</b>
 , <b>SETGLOBAL</b>
@@ -671,7 +691,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:ac882506291910f680c7b89137bde7ba5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns whether if the first type is castable into the second type.  <br /></td></tr>
 <tr class="separator:ac882506291910f680c7b89137bde7ba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0328d720f044501c91af19d719fcd82" id="r_ab0328d720f044501c91af19d719fcd82"><td class="memItemLeft" align="right" valign="top"><a id="ab0328d720f044501c91af19d719fcd82" name="ab0328d720f044501c91af19d719fcd82"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_castable</b> (const <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *from, Value::Tag to)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_castable</b> (const <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *from, <a class="el" href="structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bd">Value::Tag</a> to)</td></tr>
 <tr class="separator:ab0328d720f044501c91af19d719fcd82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae58014b9c95f3d950ddfca59a0ee5426" id="r_ae58014b9c95f3d950ddfca59a0ee5426"><td class="memItemLeft" align="right" valign="top"><a id="ae58014b9c95f3d950ddfca59a0ee5426" name="ae58014b9c95f3d950ddfca59a0ee5426"></a>
 std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_lines</b> (const std::string &amp;source)</td></tr>
@@ -689,9 +709,9 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>get_error_leve
 template&lt;const bool SingleStep = false, const bool OverrideProgramCounter = false&gt; </td></tr>
 <tr class="memitem:a49b15c672c9b7c28172b26c29466b607"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>__execute</b> (<a class="el" href="structvia_1_1State.html">State</a> *state, <a class="el" href="structvia_1_1Instruction.html">Instruction</a> insn=<a class="el" href="structvia_1_1Instruction.html">Instruction</a>())</td></tr>
 <tr class="separator:a49b15c672c9b7c28172b26c29466b607"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71d74114747d1397c9a72571d3c20e44" id="r_a71d74114747d1397c9a72571d3c20e44"><td class="memItemLeft" align="right" valign="top"><a id="a71d74114747d1397c9a72571d3c20e44" name="a71d74114747d1397c9a72571d3c20e44"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><b>to_string</b> (const <a class="el" href="structvia_1_1Bytecode.html">Bytecode</a> &amp;bc, bool capitalize_opcodes)</td></tr>
-<tr class="separator:a71d74114747d1397c9a72571d3c20e44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a022ef79f7ce96992df18f91da17774e3" id="r_a022ef79f7ce96992df18f91da17774e3"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacevia.html#a022ef79f7ce96992df18f91da17774e3">to_string</a> (const <a class="el" href="structvia_1_1Bytecode.html">Bytecode</a> &amp;, bool include_metadata)</td></tr>
+<tr class="memdesc:a022ef79f7ce96992df18f91da17774e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a <code><a class="el" href="structvia_1_1Bytecode.html" title="A higher-level structure representing a complete instruction unit.">Bytecode</a></code> instruction into a string representation.  <br /></td></tr>
+<tr class="separator:a022ef79f7ce96992df18f91da17774e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b8502249f9773d497fc4d832fce079d" id="r_a0b8502249f9773d497fc4d832fce079d"><td class="memItemLeft" align="right" valign="top"><a id="a0b8502249f9773d497fc4d832fce079d" name="a0b8502249f9773d497fc4d832fce079d"></a>
 std::vector&lt; <a class="el" href="structvia_1_1Token.html">Token</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>fast_tokenize</b> (std::string source)</td></tr>
 <tr class="separator:a0b8502249f9773d497fc4d832fce079d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -749,37 +769,170 @@ Variables</h2></td></tr>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>AST_ALLOCATOR_SIZE</b> = 1024 * 1024 * 8</td></tr>
 <tr class="memdesc:gad55b685ebdb875ea5cf67636cb76a655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abstract Syntax Tree allocator size in bytes. <br /></td></tr>
 <tr class="separator:gad55b685ebdb875ea5cf67636cb76a655"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08d39f97e9f2c9ce095f568e53587824" id="r_a08d39f97e9f2c9ce095f568e53587824"><td class="memItemLeft" align="right" valign="top"><a id="a08d39f97e9f2c9ce095f568e53587824" name="a08d39f97e9f2c9ce095f568e53587824"></a>
-constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>CALLSTACK_MAX_FRAMES</b> = 200</td></tr>
+<tr class="memitem:a08d39f97e9f2c9ce095f568e53587824" id="r_a08d39f97e9f2c9ce095f568e53587824"><td class="memItemLeft" align="right" valign="top">constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">CALLSTACK_MAX_FRAMES</a> = 200</td></tr>
+<tr class="memdesc:a08d39f97e9f2c9ce095f568e53587824"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of frames that the call stack can hold at any time.  <br /></td></tr>
 <tr class="separator:a08d39f97e9f2c9ce095f568e53587824"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5743d7eb3d3fea9868275cd14d87c3e0" id="r_a5743d7eb3d3fea9868275cd14d87c3e0"><td class="memItemLeft" align="right" valign="top"><a id="a5743d7eb3d3fea9868275cd14d87c3e0" name="a5743d7eb3d3fea9868275cd14d87c3e0"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>CALLFRAME_MAX_LOCALS</b> = 200</td></tr>
+<tr class="memdesc:a5743d7eb3d3fea9868275cd14d87c3e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of local variables a single call frame can support. @dtails Used primarily as a safety bound and for fixed-size local storage per function. <br /></td></tr>
 <tr class="separator:a5743d7eb3d3fea9868275cd14d87c3e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b3997daccb909f72d9d7d3ab8a9d619" id="r_a9b3997daccb909f72d9d7d3ab8a9d619"><td class="memItemLeft" align="right" valign="top"><a id="a9b3997daccb909f72d9d7d3ab8a9d619" name="a9b3997daccb909f72d9d7d3ab8a9d619"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>OPERAND_INVALID</b> = 0xFFFF</td></tr>
+<tr class="memdesc:a9b3997daccb909f72d9d7d3ab8a9d619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sentinel value used to represent an invalid or unused operand. <br /></td></tr>
 <tr class="separator:a9b3997daccb909f72d9d7d3ab8a9d619"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72a3c755471e881c73bd94ade4d5839e" id="r_a72a3c755471e881c73bd94ade4d5839e"><td class="memItemLeft" align="right" valign="top"><a id="a72a3c755471e881c73bd94ade4d5839e" name="a72a3c755471e881c73bd94ade4d5839e"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_COUNT</b> = 65536</td></tr>
+<tr class="memdesc:a72a3c755471e881c73bd94ade4d5839e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total number of general-purpose registers available. Matches the operand range (2^16). <br /></td></tr>
 <tr class="separator:a72a3c755471e881c73bd94ade4d5839e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f3c8100638fb61b095c359558bc7bd8" id="r_a9f3c8100638fb61b095c359558bc7bd8"><td class="memItemLeft" align="right" valign="top"><a id="a9f3c8100638fb61b095c359558bc7bd8" name="a9f3c8100638fb61b095c359558bc7bd8"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_STACK_COUNT</b> = 256</td></tr>
+<tr class="memdesc:a9f3c8100638fb61b095c359558bc7bd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of registers reserved for stack-based usage. These are backed by fast C++ stack memory. <br /></td></tr>
 <tr class="separator:a9f3c8100638fb61b095c359558bc7bd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0a20b52d04392dad68c2230cd48b0c3" id="r_aa0a20b52d04392dad68c2230cd48b0c3"><td class="memItemLeft" align="right" valign="top"><a id="aa0a20b52d04392dad68c2230cd48b0c3" name="aa0a20b52d04392dad68c2230cd48b0c3"></a>
-constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SPILL_COUNT</b> = REGISTER_COUNT - REGISTER_STACK_COUNT</td></tr>
+constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SPILL_COUNT</b> = <a class="el" href="namespacevia.html#a72a3c755471e881c73bd94ade4d5839e">REGISTER_COUNT</a> - <a class="el" href="namespacevia.html#a9f3c8100638fb61b095c359558bc7bd8">REGISTER_STACK_COUNT</a></td></tr>
+<tr class="memdesc:aa0a20b52d04392dad68c2230cd48b0c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of registers reserved for heap-based spilling. These are allocated separately and used when stack registers are exhausted. <br /></td></tr>
 <tr class="separator:aa0a20b52d04392dad68c2230cd48b0c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a625b182fc4186a14ef71f050e732d912" id="r_a625b182fc4186a14ef71f050e732d912"><td class="memItemLeft" align="right" valign="top"><a id="a625b182fc4186a14ef71f050e732d912" name="a625b182fc4186a14ef71f050e732d912"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>ARRAY_INITAL_CAPACITY</b> = 64</td></tr>
+<tr class="memdesc:a625b182fc4186a14ef71f050e732d912"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default starting capacity for all arrays. <br /></td></tr>
 <tr class="separator:a625b182fc4186a14ef71f050e732d912"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a465db2be24c40e033eafd74fc37da8fb" id="r_a465db2be24c40e033eafd74fc37da8fb"><td class="memItemLeft" align="right" valign="top"><a id="a465db2be24c40e033eafd74fc37da8fb" name="a465db2be24c40e033eafd74fc37da8fb"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>DICT_INITIAL_CAPACITY</b> = 64</td></tr>
+<tr class="memdesc:a465db2be24c40e033eafd74fc37da8fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default starting capacity for all dictionaries. <br /></td></tr>
 <tr class="separator:a465db2be24c40e033eafd74fc37da8fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae74c48a7cb4d4cbf4fb105c55469a39c" id="r_ae74c48a7cb4d4cbf4fb105c55469a39c"><td class="memItemLeft" align="right" valign="top"><a id="ae74c48a7cb4d4cbf4fb105c55469a39c" name="ae74c48a7cb4d4cbf4fb105c55469a39c"></a>
 constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>CLOSURE_INITIAL_UPV_COUNT</b> = 10</td></tr>
+<tr class="memdesc:ae74c48a7cb4d4cbf4fb105c55469a39c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default number of upvalues reserved during closure initialization. <br /></td></tr>
 <tr class="separator:ae74c48a7cb4d4cbf4fb105c55469a39c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Main namespace of the project. Contains all but macros. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+<div class="textblock"><p>All core compiler logic is within this namespace. </p>
+<p>Main namespace of the project. Contains all but macros. </p>
+</div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="a90951ca238c08fe5449c13c9ed3cc38e" name="a90951ca238c08fe5449c13c9ed3cc38e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90951ca238c08fe5449c13c9ed3cc38e">&#9670;&#160;</a></span>operand_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">label_t <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">via::operand_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Unsigned 16-bit operand type used by the instruction format. </p>
+<p>Alias for instruction operand type used for jump labels.</p>
+<p>Alias for operand type. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ac8974a71c8a4b5a87cbb4ea665ebfd62" name="ac8974a71c8a4b5a87cbb4ea665ebfd62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8974a71c8a4b5a87cbb4ea665ebfd62">&#9670;&#160;</a></span>Opcode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">via::Opcode</a> : uint16_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593"></a>NOP&#160;</td><td class="fielddoc"><p>nop No operation. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685"></a>LBL&#160;</td><td class="fielddoc"><p>lbl o0: &lt;label_id :: int&gt; Maps the current program counter to &lt;label_id&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927" name="ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927"></a>EXIT&#160;</td><td class="fielddoc"><p>exit o0: &lt;exit_code :: int&gt; Safely terminates the VM with exit code &lt;exit_code&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d"></a>ADD&#160;</td><td class="fielddoc"><p>add o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Adds the value in register &lt;right&gt; to register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e"></a>ADDI&#160;</td><td class="fielddoc"><p>addi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Adds the literal Int value &lt;right&gt; to register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f"></a>ADDF&#160;</td><td class="fielddoc"><p>addf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Adds the literal float value &lt;right&gt; to register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb"></a>SUB&#160;</td><td class="fielddoc"><p>sub o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Subtracts the value in register &lt;right&gt; from register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343"></a>SUBI&#160;</td><td class="fielddoc"><p>subi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Subtracts the literal Int value &lt;right&gt; from register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444"></a>SUBF&#160;</td><td class="fielddoc"><p>subf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Subtracts the literal float value &lt;right&gt; from register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c"></a>MUL&#160;</td><td class="fielddoc"><p>mul o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Multiplies the value in register &lt;left&gt; with the value in register &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b"></a>MULI&#160;</td><td class="fielddoc"><p>subi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Multiplies the value in register &lt;left&gt; with the literal Int value &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a" name="ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a"></a>MULF&#160;</td><td class="fielddoc"><p>mulf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Multiplies the value in register &lt;left&gt; with the literal float value &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646"></a>DIV&#160;</td><td class="fielddoc"><p>div o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Divides the value in register &lt;left&gt; with the value in register &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc"></a>DIVI&#160;</td><td class="fielddoc"><p>divi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Divides the value in register &lt;left&gt; with the literal Int value &lt;right&gt; </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f"></a>DIVF&#160;</td><td class="fielddoc"><p>divf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Divides the value in register &lt;left&gt; with the literal float value &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967"></a>MOD&#160;</td><td class="fielddoc"><p>mod o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Performs a modulus operation on the values in register &lt;left&gt; and register &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047"></a>MODI&#160;</td><td class="fielddoc"><p>modi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Performs a modulus operation on the value in register &lt;left&gt; and the literal Int value &lt;right&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87"></a>MODF&#160;</td><td class="fielddoc"><p>modf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Adds the literal float value &lt;right&gt; to register &lt;left&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe"></a>POW&#160;</td><td class="fielddoc"><p>pow o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: reg(int|float)&gt; Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the value in register &lt;right&gt; as the power. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26"></a>POWI&#160;</td><td class="fielddoc"><p>powi o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: int&gt; Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the literal Int value &lt;right&gt; as the power. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505"></a>POWF&#160;</td><td class="fielddoc"><p>powf o0: &lt;left :: reg(int|float)&gt; o1: &lt;right :: float&gt; Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the literal float value &lt;right&gt; as the power. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e"></a>NEG&#160;</td><td class="fielddoc"><p>neg o0: &lt;left :: reg(int|float)&gt; Negates the value in o0. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df"></a>MOV&#160;</td><td class="fielddoc"><p>mov o0: &lt;dst :: reg(any)&gt; o1: &lt;src :: reg(any)&gt; Copies the value in register &lt;src&gt; into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6"></a>LOADK&#160;</td><td class="fielddoc"><p>loadk o0: &lt;dst :: reg(any)&gt; o1: &lt;kid :: int&gt; Loads constant &lt;kid&gt; from the constant table into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302"></a>LOADNIL&#160;</td><td class="fielddoc"><p>loadnil o0: &lt;dst :: reg(any)&gt; Loads a Nil value into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57"></a>LOADI&#160;</td><td class="fielddoc"><p>loadi o0: &lt;dst :: reg(any)&gt; o1: &lt;high :: bytes&gt; o2: &lt;low :: bytes&gt; Interprets &lt;high&gt; and &lt;low&gt; as an Int and loads it into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697" name="ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697"></a>LOADF&#160;</td><td class="fielddoc"><p>loadf o0: &lt;dst :: reg(any)&gt; o1: &lt;high :: bytes&gt; o2: &lt;low :: bytes&gt; Interprets &lt;high&gt; and &lt;low&gt; as a float and loads it into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b"></a>LOADBT&#160;</td><td class="fielddoc"><p>loadbt o0: &lt;dst :: reg(any)&gt; Loads Bool true into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c" name="ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c"></a>LOADBF&#160;</td><td class="fielddoc"><p>loadbf o0: &lt;dst :: reg(any)&gt; Loads Bool false into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532" name="ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532"></a>LOADARR&#160;</td><td class="fielddoc"><p>loadarr o0: &lt;dst :: reg(any)&gt; Loads an empty array into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34"></a>LOADDICT&#160;</td><td class="fielddoc"><p>loaddict o0: &lt;dst :: reg(any)&gt; Loads an empty dictionary into register &lt;dst&gt;. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8"></a>CLOSURE&#160;</td><td class="fielddoc"><p>closure o0: &lt;dst :: reg(any)&gt; o1: &lt;argc :: int&gt; o2: &lt;insnc :: int&gt; Captures &lt;insnc&gt; amount of instructions starting from itself, creates a closure and loads it into &lt;dst&gt;. Saves the argument stack pointer and captures arguments from [sp..sp+argc]. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550"></a>PUSH&#160;</td><td class="fielddoc"><p>push o0: &lt;src :: reg(any)&gt; Pushes the value in register &lt;src&gt; onto the local stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd"></a>PUSHK&#160;</td><td class="fielddoc"><p>pushk o0: &lt;kid :: int&gt; Pushes constant &lt;kid&gt; from the constant table onto the local stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e"></a>PUSHNIL&#160;</td><td class="fielddoc"><p>pushnil Pushes Nil onto the local stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308"></a>PUSHI&#160;</td><td class="fielddoc"><p>pushi o0: &lt;high :: bytes&gt; o1: &lt;low :: bytes&gt; Interprets &lt;high&gt; and &lt;low&gt; as an Int literal and pushes it onto the local stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab"></a>PUSHF&#160;</td><td class="fielddoc"><p>pushf o0: &lt;high :: bytes&gt; o1: &lt;low :: bytes&gt; Interprets &lt;high&gt; and &lt;low&gt; as a float literal and pushes it onto the local stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454" name="ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454"></a>PUSHBT&#160;</td><td class="fielddoc"><p>pushbt Pushes Bool true onto the stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1" name="ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1"></a>PUSHBF&#160;</td><td class="fielddoc"><p>pushbf Pushes Bool false onto the stack. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57" name="ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57"></a>DROP&#160;</td><td class="fielddoc"><p>drop Drops the top-most value from the local stack. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="aa0e0339c977a1627c8fd4d65ab1b559c" name="aa0e0339c977a1627c8fd4d65ab1b559c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa0e0339c977a1627c8fd4d65ab1b559c">&#9670;&#160;</a></span>get_line_and_column()</h2>
 
@@ -1112,6 +1265,44 @@ constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>CLOSURE_I
 
 </div>
 </div>
+<a id="a022ef79f7ce96992df18f91da17774e3" name="a022ef79f7ce96992df18f91da17774e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a022ef79f7ce96992df18f91da17774e3">&#9670;&#160;</a></span>to_string()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string via::to_string </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structvia_1_1Bytecode.html">Bytecode</a> &amp;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>include_metadata</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a <code><a class="el" href="structvia_1_1Bytecode.html" title="A higher-level structure representing a complete instruction unit.">Bytecode</a></code> instruction into a string representation. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytecode</td><td>The bytecode instruction to stringify. </td></tr>
+    <tr><td class="paramname">include_metadata</td><td>If true, include metadata (such as comments) in the output. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A human-readable string representation of the instruction. </dd></dl>
+
+</div>
+</div>
 <a id="acce107c60917767cbeda40ad6ff89326" name="acce107c60917767cbeda40ad6ff89326"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acce107c60917767cbeda40ad6ff89326">&#9670;&#160;</a></span>ubit_2u16tof32()</h2>
 
@@ -1196,6 +1387,32 @@ constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>CLOSURE_I
       </table>
 </div><div class="memdoc">
 <p>Casts a high 16-bit unsigned Int and a low 16-bit unsigned Int into a 32-bit unsigned Int. Assumes big endian. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a08d39f97e9f2c9ce095f568e53587824" name="a08d39f97e9f2c9ce095f568e53587824"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08d39f97e9f2c9ce095f568e53587824">&#9670;&#160;</a></span>CALLSTACK_MAX_FRAMES</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr size_t via::CALLSTACK_MAX_FRAMES = 200</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Maximum number of frames that the call stack can hold at any time. </p>
+<p>This value places a fixed limit on the recursion depth and number of active function calls. </p>
 
 </div>
 </div>

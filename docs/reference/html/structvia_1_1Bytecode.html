@@ -111,6 +111,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Bytecode Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>A higher-level structure representing a complete instruction unit.  
+ <a href="structvia_1_1Bytecode.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="instruction_8h_source.html">instruction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Bytecode:</div>
 <div class="dyncontent">
@@ -121,12 +126,17 @@ Collaboration diagram for via::Bytecode:</div>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aa373f7b73ed86927cf4b9ed1b9be48d4" id="r_aa373f7b73ed86927cf4b9ed1b9be48d4"><td class="memItemLeft" align="right" valign="top"><a id="aa373f7b73ed86927cf4b9ed1b9be48d4" name="aa373f7b73ed86927cf4b9ed1b9be48d4"></a>
 <a class="el" href="structvia_1_1Instruction.html">Instruction</a>&#160;</td><td class="memItemRight" valign="bottom"><b>instruct</b></td></tr>
+<tr class="memdesc:aa373f7b73ed86927cf4b9ed1b9be48d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executable instruction. <br /></td></tr>
 <tr class="separator:aa373f7b73ed86927cf4b9ed1b9be48d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98aae64b12fcd76b7e51df47752ede41" id="r_a98aae64b12fcd76b7e51df47752ede41"><td class="memItemLeft" align="right" valign="top"><a id="a98aae64b12fcd76b7e51df47752ede41" name="a98aae64b12fcd76b7e51df47752ede41"></a>
-<a class="el" href="structvia_1_1InstructionData.html">InstructionData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>meta_data</b></td></tr>
-<tr class="separator:a98aae64b12fcd76b7e51df47752ede41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa53800d3b6e304bca3db493eb69787e4" id="r_aa53800d3b6e304bca3db493eb69787e4"><td class="memItemLeft" align="right" valign="top"><a id="aa53800d3b6e304bca3db493eb69787e4" name="aa53800d3b6e304bca3db493eb69787e4"></a>
+<a class="el" href="structvia_1_1InstructionData.html">InstructionData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>meta</b></td></tr>
+<tr class="memdesc:aa53800d3b6e304bca3db493eb69787e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional metadata (e.g., comments). <br /></td></tr>
+<tr class="separator:aa53800d3b6e304bca3db493eb69787e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A higher-level structure representing a complete instruction unit. </p>
+<p>Combines the executable <code><a class="el" href="structvia_1_1Instruction.html" title="Represents a single VM instruction in the Via bytecode format.">Instruction</a></code> with optional <code><a class="el" href="structvia_1_1InstructionData.html" title="Optional debug metadata associated with a single instruction.">InstructionData</a></code> metadata. Used to facilitate debugging, annotation, and serialization of code. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/interpreter/<a class="el" href="instruction_8h_source.html">instruction.h</a></li>
 </ul>
 </div><!-- contents -->

@@ -2,14 +2,14 @@
 \hypertarget{namespacevia}{}\label{namespacevia}\index{via@{via}}
 
 
-Main namespace of the project. Contains all but macros.  
+All core compiler logic is within this namespace.  
 
 
 \doxysubsubsection*{Classes}
 \begin{DoxyCompactItemize}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Array}{Array}}
-\item 
+\begin{DoxyCompactList}\small\item\em A growable, dynamically sized array of {\ttfamily \doxylink{structvia_1_1Value}{Value}} elements. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ArrayExprNode}{Array\+Expr\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1ArrayTypeNode}{Array\+Type\+Node}}
@@ -23,17 +23,17 @@ struct \mbox{\hyperlink{structvia_1_1BinExprNode}{Bin\+Expr\+Node}}
 struct \mbox{\hyperlink{structvia_1_1BreakStmtNode}{Break\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}}
-\item 
+\begin{DoxyCompactList}\small\item\em A higher-\/level structure representing a complete instruction unit. \end{DoxyCompactList}\item 
 class \mbox{\hyperlink{classvia_1_1BytecodeBuilder}{Bytecode\+Builder}}
 \begin{DoxyCompactList}\small\item\em Builds bytecode from the abstract syntax tree found inside the translation unit context. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1Callable}{Callable}}
-\item 
+\begin{DoxyCompactList}\small\item\em Wraps a function-\/like object, either user-\/defined or native. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1CallExprNode}{Call\+Expr\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1CallFrame}{Call\+Frame}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents a single function invocation\textquotesingle{}s execution context. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1CallStack}{Call\+Stack}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents the function call stack of the interpreter. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1CastExprNode}{Cast\+Expr\+Node}}
 \item 
 class \mbox{\hyperlink{classvia_1_1CError}{CError}}
@@ -43,7 +43,7 @@ class \mbox{\hyperlink{classvia_1_1CErrorBus}{CError\+Bus}}
 struct \mbox{\hyperlink{structvia_1_1CErrorLocation}{CError\+Location}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Closure}{Closure}}
-\item 
+\begin{DoxyCompactList}\small\item\em Wraps a \doxylink{structvia_1_1Callable}{Callable} with its captured upvalues for lexical scoping. \end{DoxyCompactList}\item 
 class \mbox{\hyperlink{classvia_1_1CompilerFunctionStack}{Compiler\+Function\+Stack}}
 \begin{DoxyCompactList}\small\item\em Stack of active functions used during compilation. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1CompilerGlobal}{Compiler\+Global}}
@@ -53,7 +53,7 @@ class \mbox{\hyperlink{classvia_1_1CompilerVariableStack}{Compiler\+Variable\+St
 struct \mbox{\hyperlink{structvia_1_1ContinueStmtNode}{Continue\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1CSize}{CSize}}
-\item 
+\begin{DoxyCompactList}\small\item\em Small utility size caching structure. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1DataType}{Data\+Type}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1DataType_3_01bool_01_4}{Data\+Type$<$ bool $>$}}
@@ -67,27 +67,27 @@ struct \mbox{\hyperlink{structvia_1_1DataType_3_01std_1_1monostate_01_4}{Data\+T
 struct \mbox{\hyperlink{structvia_1_1DataType_3_01std_1_1string_01_4}{Data\+Type$<$ std\+::string $>$}}
 \item 
 class \mbox{\hyperlink{classvia_1_1DecayNodeVisitor}{Decay\+Node\+Visitor}}
-\item 
+\begin{DoxyCompactList}\small\item\em AST visitor that resolves type nodes to their underlying forms. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1DeclStmtNode}{Decl\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1DeferStmtNode}{Defer\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Dict}{Dict}}
-\item 
+\begin{DoxyCompactList}\small\item\em A dynamically allocated hash table mapping {\ttfamily const char\texorpdfstring{$\ast$}{*}} keys to {\ttfamily \doxylink{structvia_1_1Value}{Value}} objects. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ElseIfNode}{Else\+If\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1ErrorState}{Error\+State}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents an active runtime error during VM execution. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}}
 \item 
 class \mbox{\hyperlink{classvia_1_1ExprNodeVisitor}{Expr\+Node\+Visitor}}
-\item 
+\begin{DoxyCompactList}\small\item\em AST visitor for expression nodes only. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ExprStmtNode}{Expr\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1FuncDeclStmtNode}{Func\+Decl\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Function}{Function}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents a user-\/defined via function, including its bytecode and metadata. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1FunctionTypeNode}{Function\+Type\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1GenericTypeNode}{Generic\+Type\+Node}}
@@ -101,9 +101,9 @@ struct \mbox{\hyperlink{structvia_1_1IfStmtNode}{If\+Stmt\+Node}}
 struct \mbox{\hyperlink{structvia_1_1IndexExprNode}{Index\+Expr\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents a single VM instruction in the Via bytecode format. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1InstructionData}{Instruction\+Data}}
-\item 
+\begin{DoxyCompactList}\small\item\em Optional debug metadata associated with a single instruction. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1IntrinsicExprNode}{Intrinsic\+Expr\+Node}}
 \item 
 class \mbox{\hyperlink{classvia_1_1Lexer}{Lexer}}
@@ -113,7 +113,7 @@ struct \mbox{\hyperlink{structvia_1_1LitExprNode}{Lit\+Expr\+Node}}
 struct \mbox{\hyperlink{structvia_1_1LocalOffset}{Local\+Offset}}
 \item 
 class \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}}
-\item 
+\begin{DoxyCompactList}\small\item\em Abstract base class for all AST visitors. Provides virtual {\ttfamily visit} methods for every AST node type. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ParamStmtNode}{Param\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1ParseError}{Parse\+Error}}
@@ -125,7 +125,7 @@ struct \mbox{\hyperlink{structvia_1_1PrimTypeNode}{Prim\+Type\+Node}}
 class \mbox{\hyperlink{classvia_1_1RegisterAllocator}{Register\+Allocator}}
 \begin{DoxyCompactList}\small\item\em Handles compile-\/time register allocation and deallocation. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}
-\item 
+\begin{DoxyCompactList}\small\item\em Generic register array wrapper with fixed size and alignment. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1ReturnStmtNode}{Return\+Stmt\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1ScopeStmtNode}{Scope\+Stmt\+Node}}
@@ -134,8 +134,8 @@ struct \mbox{\hyperlink{structvia_1_1StackFunction}{Stack\+Function}}
 \begin{DoxyCompactList}\small\item\em Represents a function on the stack with its own local variable stack. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1StackVariable}{Stack\+Variable}}
 \begin{DoxyCompactList}\small\item\em Pure-\/data structure that represents a variable on the stack. \end{DoxyCompactList}\item 
-struct \mbox{\hyperlink{structvia_1_1State}{State}}
-\item 
+class \mbox{\hyperlink{structvia_1_1State}{State}}
+\begin{DoxyCompactList}\small\item\em Represents the complete virtual machine execution state. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1StepExprNode}{Step\+Expr\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1StmtAttribute}{Stmt\+Attribute}}
@@ -145,9 +145,9 @@ struct \mbox{\hyperlink{structvia_1_1StmtModifiers}{Stmt\+Modifiers}}
 struct \mbox{\hyperlink{structvia_1_1StmtNodeBase}{Stmt\+Node\+Base}}
 \item 
 class \mbox{\hyperlink{classvia_1_1StmtNodeVisitor}{Stmt\+Node\+Visitor}}
-\item 
+\begin{DoxyCompactList}\small\item\em AST visitor for statement nodes. Composes expression, decay, and type visitors. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1String}{String}}
-\item 
+\begin{DoxyCompactList}\small\item\em Constant-\/sized owning string type used in the via runtime. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1SymExprNode}{Sym\+Expr\+Node}}
 \item 
 class \mbox{\hyperlink{classvia_1_1SyntaxTree}{Syntax\+Tree}}
@@ -159,7 +159,7 @@ class \mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}}
 struct \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}}
 \item 
 class \mbox{\hyperlink{classvia_1_1TypeNodeVisitor}{Type\+Node\+Visitor}}
-\item 
+\begin{DoxyCompactList}\small\item\em AST visitor for analyzing or transforming statements relevant to type resolution. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1u16result}{u16result}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1UnaryExprNode}{Unary\+Expr\+Node}}
@@ -167,18 +167,18 @@ struct \mbox{\hyperlink{structvia_1_1UnaryExprNode}{Unary\+Expr\+Node}}
 struct \mbox{\hyperlink{structvia_1_1UnionTypeNode}{Union\+Type\+Node}}
 \item 
 struct \mbox{\hyperlink{structvia_1_1UpValue}{Up\+Value}}
-\item 
+\begin{DoxyCompactList}\small\item\em Represents a captured variable in a closure. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1Value}{Value}}
-\item 
+\begin{DoxyCompactList}\small\item\em Polymorphic tagged union representing any runtime value in via. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}}
-\item 
+\begin{DoxyCompactList}\small\item\em Encapsulates state for visitor objects during AST traversal. \end{DoxyCompactList}\item 
 struct \mbox{\hyperlink{structvia_1_1WhileStmtNode}{While\+Stmt\+Node}}
 \end{DoxyCompactItemize}
 \doxysubsubsection*{Typedefs}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{namespacevia_a28f487c4626f2d46df667a8d550136fb}\label{namespacevia_a28f487c4626f2d46df667a8d550136fb} 
-using {\bfseries Op\+Code\+Id} = std\+::underlying\+\_\+type\+\_\+t$<$ Opcode $>$
+using {\bfseries Op\+Code\+Id} = std\+::underlying\+\_\+type\+\_\+t$<$ \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}} $>$
 \item 
 \Hypertarget{namespacevia_a298cba1d5b08b466031bb0d9ab1a6e5a}\label{namespacevia_a298cba1d5b08b466031bb0d9ab1a6e5a} 
 using {\bfseries index\+\_\+query\+\_\+result} = Global\+Holder\+::index\+\_\+query\+\_\+result
@@ -190,37 +190,30 @@ using {\bfseries global\+\_\+query\+\_\+result} = Global\+Holder\+::global\+\_\+
 using {\bfseries global\+\_\+vector} = Global\+Holder\+::global\+\_\+vector
 \item 
 \Hypertarget{namespacevia_a6a53d6dec114594bfc89ef4a69763230}\label{namespacevia_a6a53d6dec114594bfc89ef4a69763230} 
-using {\bfseries register\+\_\+t} = \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}
+using {\bfseries register\+\_\+t} = \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}
 \item 
 \Hypertarget{namespacevia_ac9372b754bde884b9a2bb477c946d938}\label{namespacevia_ac9372b754bde884b9a2bb477c946d938} 
 using {\bfseries symbol\+\_\+t} = std\+::string
 \item 
 \Hypertarget{namespacevia_a9ea75d6678f99a67de0addd0ce7e940b}\label{namespacevia_a9ea75d6678f99a67de0addd0ce7e940b} 
-using {\bfseries label\+\_\+t} = \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}
-\item 
-\Hypertarget{namespacevia_abe69cd106a41234cfacb4091e03f05ea}\label{namespacevia_abe69cd106a41234cfacb4091e03f05ea} 
-using {\bfseries unused\+\_\+expression\+\_\+handler\+\_\+t} = std\+::function$<$ void(const \mbox{\hyperlink{structvia_1_1ExprStmtNode}{Expr\+Stmt\+Node}} \&)$>$
+using {\bfseries label\+\_\+t} = \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}
 \item 
 using \mbox{\hyperlink{group__via__namespace_ga40a4d71b3f7c37889759d83cc797ea83}{byte\+\_\+stream\+\_\+t}} = std\+::vector$<$ uint8\+\_\+t $>$
 \begin{DoxyCompactList}\small\item\em Dynamic container that holds a sequence of bytes. \end{DoxyCompactList}\item 
-\Hypertarget{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}\label{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15} 
-using {\bfseries operand\+\_\+t} = uint16\+\_\+t
-\begin{DoxyCompactList}\small\item\em Alias for operand type. \end{DoxyCompactList}\item 
+using \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} = uint16\+\_\+t
+\begin{DoxyCompactList}\small\item\em Unsigned 16-\/bit operand type used by the instruction format. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a3d6de79b2e0d7722b68a64ec435dd61d}\label{namespacevia_a3d6de79b2e0d7722b68a64ec435dd61d} 
 using {\bfseries signed\+\_\+operand\+\_\+t} = int16\+\_\+t
-\item 
+\begin{DoxyCompactList}\small\item\em Signed version of {\ttfamily operand\+\_\+t}, used for relative or signed operands. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6}\label{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6} 
-using {\bfseries Stk\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ REGISTER\+\_\+\+STACK\+\_\+\+COUNT $>$
-\item 
+using {\bfseries Stk\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ \mbox{\hyperlink{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}{REGISTER\+\_\+\+STACK\+\_\+\+COUNT}} $>$
+\begin{DoxyCompactList}\small\item\em Type alias for stack-\/based register block. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a75a6478aadfde59a7fe15bdcdc8741e6}\label{namespacevia_a75a6478aadfde59a7fe15bdcdc8741e6} 
-using {\bfseries Heap\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ REGISTER\+\_\+\+SPILL\+\_\+\+COUNT $>$
-\item 
+using {\bfseries Heap\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ \mbox{\hyperlink{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3}{REGISTER\+\_\+\+SPILL\+\_\+\+COUNT}} $>$
+\begin{DoxyCompactList}\small\item\em Type alias for heap/spill register block. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a23382f1b645a8629871fab7d0431281e}\label{namespacevia_a23382f1b645a8629871fab7d0431281e} 
 using {\bfseries Native\+Fn} = \mbox{\hyperlink{structvia_1_1Value}{Value}}(\texorpdfstring{$\ast$}{*})(\mbox{\hyperlink{structvia_1_1State}{State}} \texorpdfstring{$\ast$}{*}interpreter)
-\item 
-\Hypertarget{namespacevia_a9b7f686427566028146c2920116e1b0d}\label{namespacevia_a9b7f686427566028146c2920116e1b0d} 
-using {\bfseries cfunction\+\_\+t} = void(\texorpdfstring{$\ast$}{*})(\mbox{\hyperlink{structvia_1_1State}{State}} \texorpdfstring{$\ast$}{*})
-\item 
+\begin{DoxyCompactList}\small\item\em Type alias for native C++ functions that can be called by the VM. They receive a pointer to the current interpreter state and return a {\ttfamily \doxylink{structvia_1_1Value}{Value}}. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a102867ffa6c70f6aee9868fa2d57e201}\label{namespacevia_a102867ffa6c70f6aee9868fa2d57e201} 
 {\footnotesize template$<$typename T $>$ }\\using {\bfseries result} = Parser\+::result$<$ T $>$
 \item 
@@ -242,57 +235,56 @@ enum class {\bfseries CError\+Level} \+: uint8\+\_\+t \{ {\bfseries INFO}
 , {\bfseries ERROR\+\_\+}
  \}
 \item 
-\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62} 
-enum class {\bfseries Opcode} \+: uint16\+\_\+t \{ \newline
-{\bfseries NOP}
-, {\bfseries LBL}
-, {\bfseries EXIT}
-, {\bfseries ADD}
+enum class \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}} \+: uint16\+\_\+t \{ \newline
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}{NOP}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685}{LBL}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927}{EXIT}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d}{ADD}}
 , \newline
-{\bfseries ADDI}
-, {\bfseries ADDF}
-, {\bfseries SUB}
-, {\bfseries SUBI}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e}{ADDI}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f}{ADDF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb}{SUB}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343}{SUBI}}
 , \newline
-{\bfseries SUBF}
-, {\bfseries MUL}
-, {\bfseries MULI}
-, {\bfseries MULF}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444}{SUBF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c}{MUL}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b}{MULI}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a}{MULF}}
 , \newline
-{\bfseries DIV}
-, {\bfseries DIVI}
-, {\bfseries DIVF}
-, {\bfseries MOD}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646}{DIV}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc}{DIVI}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f}{DIVF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967}{MOD}}
 , \newline
-{\bfseries MODI}
-, {\bfseries MODF}
-, {\bfseries POW}
-, {\bfseries POWI}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047}{MODI}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87}{MODF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe}{POW}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26}{POWI}}
 , \newline
-{\bfseries POWF}
-, {\bfseries NEG}
-, {\bfseries MOV}
-, {\bfseries LOADK}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505}{POWF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e}{NEG}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df}{MOV}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6}{LOADK}}
 , \newline
-{\bfseries LOADNIL}
-, {\bfseries LOADI}
-, {\bfseries LOADF}
-, {\bfseries LOADBT}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302}{LOADNIL}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57}{LOADI}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697}{LOADF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b}{LOADBT}}
 , \newline
-{\bfseries LOADBF}
-, {\bfseries LOADARR}
-, {\bfseries LOADDICT}
-, {\bfseries CLOSURE}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c}{LOADBF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532}{LOADARR}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34}{LOADDICT}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8}{CLOSURE}}
 , \newline
-{\bfseries PUSH}
-, {\bfseries PUSHK}
-, {\bfseries PUSHNIL}
-, {\bfseries PUSHI}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550}{PUSH}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd}{PUSHK}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e}{PUSHNIL}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308}{PUSHI}}
 , \newline
-{\bfseries PUSHF}
-, {\bfseries PUSHBT}
-, {\bfseries PUSHBF}
-, {\bfseries DROP}
+\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab}{PUSHF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454}{PUSHBT}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1}{PUSHBF}}
+, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57}{DROP}}
 , \newline
 {\bfseries GETGLOBAL}
 , {\bfseries SETGLOBAL}
@@ -541,7 +533,7 @@ bool \mbox{\hyperlink{namespacevia_af6003b98056e2c1cbf0bf43b8ce6b648}{is\+\_\+co
 bool \mbox{\hyperlink{namespacevia_ac882506291910f680c7b89137bde7ba5}{is\+\_\+castable}} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}from, const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}to)
 \begin{DoxyCompactList}\small\item\em Returns whether if the first type is castable into the second type. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_ab0328d720f044501c91af19d719fcd82}\label{namespacevia_ab0328d720f044501c91af19d719fcd82} 
-bool {\bfseries is\+\_\+castable} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}from, Value\+::\+Tag to)
+bool {\bfseries is\+\_\+castable} (const \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*}from, \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bd}{Value\+::\+Tag}} to)
 \item 
 \Hypertarget{namespacevia_ae58014b9c95f3d950ddfca59a0ee5426}\label{namespacevia_ae58014b9c95f3d950ddfca59a0ee5426} 
 std\+::vector$<$ std\+::string $>$ {\bfseries get\+\_\+lines} (const std\+::string \&source)
@@ -558,9 +550,8 @@ std\+::string {\bfseries get\+\_\+error\+\_\+level\+\_\+header} (const CError\+L
 \Hypertarget{namespacevia_a49b15c672c9b7c28172b26c29466b607}\label{namespacevia_a49b15c672c9b7c28172b26c29466b607} 
 {\footnotesize template$<$const bool Single\+Step = false, const bool Override\+Program\+Counter = false$>$ }\\void {\bfseries \+\_\+\+\_\+execute} (\mbox{\hyperlink{structvia_1_1State}{State}} \texorpdfstring{$\ast$}{*}state, \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}} insn=\mbox{\hyperlink{structvia_1_1Instruction}{Instruction}}())
 \item 
-\Hypertarget{namespacevia_a71d74114747d1397c9a72571d3c20e44}\label{namespacevia_a71d74114747d1397c9a72571d3c20e44} 
-std\+::string {\bfseries to\+\_\+string} (const \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}} \&bc, bool capitalize\+\_\+opcodes)
-\item 
+std\+::string \mbox{\hyperlink{namespacevia_a022ef79f7ce96992df18f91da17774e3}{to\+\_\+string}} (const \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}} \&, bool include\+\_\+metadata)
+\begin{DoxyCompactList}\small\item\em Converts a {\ttfamily \doxylink{structvia_1_1Bytecode}{Bytecode}} instruction into a string representation. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a0b8502249f9773d497fc4d832fce079d}\label{namespacevia_a0b8502249f9773d497fc4d832fce079d} 
 std\+::vector$<$ \mbox{\hyperlink{structvia_1_1Token}{Token}} $>$ {\bfseries fast\+\_\+tokenize} (std\+::string source)
 \item 
@@ -614,37 +605,224 @@ std\+::string {\bfseries ustresc} (const std\+::string \&str)
 \item 
 constexpr size\+\_\+t {\bfseries AST\+\_\+\+ALLOCATOR\+\_\+\+SIZE} = 1024 \texorpdfstring{$\ast$}{*} 1024 \texorpdfstring{$\ast$}{*} 8
 \begin{DoxyCompactList}\small\item\em Abstract Syntax Tree allocator size in bytes. \end{DoxyCompactList}\item 
-\Hypertarget{namespacevia_a08d39f97e9f2c9ce095f568e53587824}\label{namespacevia_a08d39f97e9f2c9ce095f568e53587824} 
-constexpr size\+\_\+t {\bfseries CALLSTACK\+\_\+\+MAX\+\_\+\+FRAMES} = 200
-\item 
+constexpr size\+\_\+t \mbox{\hyperlink{namespacevia_a08d39f97e9f2c9ce095f568e53587824}{CALLSTACK\+\_\+\+MAX\+\_\+\+FRAMES}} = 200
+\begin{DoxyCompactList}\small\item\em Maximum number of frames that the call stack can hold at any time. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a5743d7eb3d3fea9868275cd14d87c3e0}\label{namespacevia_a5743d7eb3d3fea9868275cd14d87c3e0} 
 constexpr size\+\_\+t {\bfseries CALLFRAME\+\_\+\+MAX\+\_\+\+LOCALS} = 200
-\item 
+\begin{DoxyCompactList}\small\item\em Maximum number of local variables a single call frame can support. @dtails Used primarily as a safety bound and for fixed-\/size local storage per function. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619}\label{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619} 
 constexpr size\+\_\+t {\bfseries OPERAND\+\_\+\+INVALID} = 0x\+FFFF
-\item 
+\begin{DoxyCompactList}\small\item\em Sentinel value used to represent an invalid or unused operand. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a72a3c755471e881c73bd94ade4d5839e}\label{namespacevia_a72a3c755471e881c73bd94ade4d5839e} 
 constexpr size\+\_\+t {\bfseries REGISTER\+\_\+\+COUNT} = 65536
-\item 
+\begin{DoxyCompactList}\small\item\em Total number of general-\/purpose registers available. Matches the operand range (2\texorpdfstring{$^\wedge$}{\string^}16). \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}\label{namespacevia_a9f3c8100638fb61b095c359558bc7bd8} 
 constexpr size\+\_\+t {\bfseries REGISTER\+\_\+\+STACK\+\_\+\+COUNT} = 256
-\item 
+\begin{DoxyCompactList}\small\item\em Number of registers reserved for stack-\/based usage. These are backed by fast C++ stack memory. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3}\label{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3} 
-constexpr size\+\_\+t {\bfseries REGISTER\+\_\+\+SPILL\+\_\+\+COUNT} = REGISTER\+\_\+\+COUNT -\/ REGISTER\+\_\+\+STACK\+\_\+\+COUNT
-\item 
+constexpr size\+\_\+t {\bfseries REGISTER\+\_\+\+SPILL\+\_\+\+COUNT} = \mbox{\hyperlink{namespacevia_a72a3c755471e881c73bd94ade4d5839e}{REGISTER\+\_\+\+COUNT}} -\/ \mbox{\hyperlink{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}{REGISTER\+\_\+\+STACK\+\_\+\+COUNT}}
+\begin{DoxyCompactList}\small\item\em Number of registers reserved for heap-\/based spilling. These are allocated separately and used when stack registers are exhausted. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a625b182fc4186a14ef71f050e732d912}\label{namespacevia_a625b182fc4186a14ef71f050e732d912} 
 constexpr size\+\_\+t {\bfseries ARRAY\+\_\+\+INITAL\+\_\+\+CAPACITY} = 64
-\item 
+\begin{DoxyCompactList}\small\item\em Default starting capacity for all arrays. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_a465db2be24c40e033eafd74fc37da8fb}\label{namespacevia_a465db2be24c40e033eafd74fc37da8fb} 
 constexpr size\+\_\+t {\bfseries DICT\+\_\+\+INITIAL\+\_\+\+CAPACITY} = 64
-\item 
+\begin{DoxyCompactList}\small\item\em Default starting capacity for all dictionaries. \end{DoxyCompactList}\item 
 \Hypertarget{namespacevia_ae74c48a7cb4d4cbf4fb105c55469a39c}\label{namespacevia_ae74c48a7cb4d4cbf4fb105c55469a39c} 
 constexpr size\+\_\+t {\bfseries CLOSURE\+\_\+\+INITIAL\+\_\+\+UPV\+\_\+\+COUNT} = 10
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Default number of upvalues reserved during closure initialization. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
+All core compiler logic is within this namespace. 
+
 Main namespace of the project. Contains all but macros. 
+
+\doxysubsection{Typedef Documentation}
+\Hypertarget{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}\label{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e} 
+\index{via@{via}!operand\_t@{operand\_t}}
+\index{operand\_t@{operand\_t}!via@{via}}
+\doxysubsubsection{\texorpdfstring{operand\_t}{operand\_t}}
+{\footnotesize\ttfamily label\+\_\+t \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{via\+::operand\+\_\+t}}}
+
+
+
+Unsigned 16-\/bit operand type used by the instruction format. 
+
+Alias for instruction operand type used for jump labels.
+
+Alias for operand type. 
+
+\doxysubsection{Enumeration Type Documentation}
+\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62} 
+\index{via@{via}!Opcode@{Opcode}}
+\index{Opcode@{Opcode}!via@{via}}
+\doxysubsubsection{\texorpdfstring{Opcode}{Opcode}}
+{\footnotesize\ttfamily enum class \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{via\+::\+Opcode}} \+: uint16\+\_\+t\hspace{0.3cm}{\ttfamily [strong]}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NOP@{NOP}!via@{via}}\index{via@{via}!NOP@{NOP}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593} 
+NOP&nop No operation. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LBL@{LBL}!via@{via}}\index{via@{via}!LBL@{LBL}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685} 
+LBL&lbl o0\+: \texorpdfstring{$<$}{<}label\+\_\+id \+:: int\texorpdfstring{$>$}{>} Maps the current program counter to $<$label\+\_\+id$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXIT@{EXIT}!via@{via}}\index{via@{via}!EXIT@{EXIT}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927} 
+EXIT&exit o0\+: \texorpdfstring{$<$}{<}exit\+\_\+code \+:: int\texorpdfstring{$>$}{>} Safely terminates the VM with exit code $<$exit\+\_\+code$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ADD@{ADD}!via@{via}}\index{via@{via}!ADD@{ADD}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d} 
+ADD&add o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Adds the value in register $<$right$>$ to register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ADDI@{ADDI}!via@{via}}\index{via@{via}!ADDI@{ADDI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e} 
+ADDI&addi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Adds the literal Int value $<$right$>$ to register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ADDF@{ADDF}!via@{via}}\index{via@{via}!ADDF@{ADDF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f} 
+ADDF&addf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Adds the literal float value $<$right$>$ to register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUB@{SUB}!via@{via}}\index{via@{via}!SUB@{SUB}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb} 
+SUB&sub o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Subtracts the value in register $<$right$>$ from register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUBI@{SUBI}!via@{via}}\index{via@{via}!SUBI@{SUBI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343} 
+SUBI&subi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Subtracts the literal Int value $<$right$>$ from register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUBF@{SUBF}!via@{via}}\index{via@{via}!SUBF@{SUBF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444} 
+SUBF&subf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Subtracts the literal float value $<$right$>$ from register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MUL@{MUL}!via@{via}}\index{via@{via}!MUL@{MUL}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c} 
+MUL&mul o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Multiplies the value in register $<$left$>$ with the value in register $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MULI@{MULI}!via@{via}}\index{via@{via}!MULI@{MULI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b} 
+MULI&subi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Multiplies the value in register $<$left$>$ with the literal Int value $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MULF@{MULF}!via@{via}}\index{via@{via}!MULF@{MULF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a} 
+MULF&mulf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Multiplies the value in register $<$left$>$ with the literal float value $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DIV@{DIV}!via@{via}}\index{via@{via}!DIV@{DIV}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646} 
+DIV&div o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Divides the value in register $<$left$>$ with the value in register $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DIVI@{DIVI}!via@{via}}\index{via@{via}!DIVI@{DIVI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc} 
+DIVI&divi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Divides the value in register $<$left$>$ with the literal Int value $<$right$>$ \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DIVF@{DIVF}!via@{via}}\index{via@{via}!DIVF@{DIVF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f} 
+DIVF&divf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Divides the value in register $<$left$>$ with the literal float value $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MOD@{MOD}!via@{via}}\index{via@{via}!MOD@{MOD}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967} 
+MOD&mod o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Performs a modulus operation on the values in register $<$left$>$ and register $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODI@{MODI}!via@{via}}\index{via@{via}!MODI@{MODI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047} 
+MODI&modi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Performs a modulus operation on the value in register $<$left$>$ and the literal Int value $<$right$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODF@{MODF}!via@{via}}\index{via@{via}!MODF@{MODF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87} 
+MODF&modf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Adds the literal float value $<$right$>$ to register $<$left$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{POW@{POW}!via@{via}}\index{via@{via}!POW@{POW}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe} 
+POW&pow o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Performs an exponentiation operation with the value in register $<$left$>$ as base and with the value in register $<$right$>$ as the power. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{POWI@{POWI}!via@{via}}\index{via@{via}!POWI@{POWI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26} 
+POWI&powi o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: int\texorpdfstring{$>$}{>} Performs an exponentiation operation with the value in register $<$left$>$ as base and with the literal Int value $<$right$>$ as the power. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{POWF@{POWF}!via@{via}}\index{via@{via}!POWF@{POWF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505} 
+POWF&powf o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}right \+:: float\texorpdfstring{$>$}{>} Performs an exponentiation operation with the value in register $<$left$>$ as base and with the literal float value $<$right$>$ as the power. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NEG@{NEG}!via@{via}}\index{via@{via}!NEG@{NEG}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e} 
+NEG&neg o0\+: \texorpdfstring{$<$}{<}left \+:: reg(int\texorpdfstring{$\vert$}{|}float)\texorpdfstring{$>$}{>} Negates the value in o0. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MOV@{MOV}!via@{via}}\index{via@{via}!MOV@{MOV}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df} 
+MOV&mov o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}src \+:: reg(any)\texorpdfstring{$>$}{>} Copies the value in register $<$src$>$ into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADK@{LOADK}!via@{via}}\index{via@{via}!LOADK@{LOADK}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6} 
+LOADK&loadk o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}kid \+:: int\texorpdfstring{$>$}{>} Loads constant $<$kid$>$ from the constant table into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADNIL@{LOADNIL}!via@{via}}\index{via@{via}!LOADNIL@{LOADNIL}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302} 
+LOADNIL&loadnil o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} Loads a Nil value into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADI@{LOADI}!via@{via}}\index{via@{via}!LOADI@{LOADI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57} 
+LOADI&loadi o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}high \+:: bytes\texorpdfstring{$>$}{>} o2\+: \texorpdfstring{$<$}{<}low \+:: bytes\texorpdfstring{$>$}{>} Interprets $<$high$>$ and $<$low$>$ as an Int and loads it into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADF@{LOADF}!via@{via}}\index{via@{via}!LOADF@{LOADF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697} 
+LOADF&loadf o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}high \+:: bytes\texorpdfstring{$>$}{>} o2\+: \texorpdfstring{$<$}{<}low \+:: bytes\texorpdfstring{$>$}{>} Interprets $<$high$>$ and $<$low$>$ as a float and loads it into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADBT@{LOADBT}!via@{via}}\index{via@{via}!LOADBT@{LOADBT}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b} 
+LOADBT&loadbt o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} Loads Bool true into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADBF@{LOADBF}!via@{via}}\index{via@{via}!LOADBF@{LOADBF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c} 
+LOADBF&loadbf o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} Loads Bool false into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADARR@{LOADARR}!via@{via}}\index{via@{via}!LOADARR@{LOADARR}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532} 
+LOADARR&loadarr o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} Loads an empty array into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOADDICT@{LOADDICT}!via@{via}}\index{via@{via}!LOADDICT@{LOADDICT}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34} 
+LOADDICT&loaddict o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} Loads an empty dictionary into register $<$dst$>$. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CLOSURE@{CLOSURE}!via@{via}}\index{via@{via}!CLOSURE@{CLOSURE}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8} 
+CLOSURE&closure o0\+: \texorpdfstring{$<$}{<}dst \+:: reg(any)\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}argc \+:: int\texorpdfstring{$>$}{>} o2\+: \texorpdfstring{$<$}{<}insnc \+:: int\texorpdfstring{$>$}{>} Captures $<$insnc$>$ amount of instructions starting from itself, creates a closure and loads it into $<$dst$>$. Saves the argument stack pointer and captures arguments from \mbox{[}sp..sp+argc\mbox{]}. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSH@{PUSH}!via@{via}}\index{via@{via}!PUSH@{PUSH}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550} 
+PUSH&push o0\+: \texorpdfstring{$<$}{<}src \+:: reg(any)\texorpdfstring{$>$}{>} Pushes the value in register $<$src$>$ onto the local stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHK@{PUSHK}!via@{via}}\index{via@{via}!PUSHK@{PUSHK}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd} 
+PUSHK&pushk o0\+: \texorpdfstring{$<$}{<}kid \+:: int\texorpdfstring{$>$}{>} Pushes constant $<$kid$>$ from the constant table onto the local stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHNIL@{PUSHNIL}!via@{via}}\index{via@{via}!PUSHNIL@{PUSHNIL}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e} 
+PUSHNIL&pushnil Pushes Nil onto the local stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHI@{PUSHI}!via@{via}}\index{via@{via}!PUSHI@{PUSHI}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308} 
+PUSHI&pushi o0\+: \texorpdfstring{$<$}{<}high \+:: bytes\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}low \+:: bytes\texorpdfstring{$>$}{>} Interprets $<$high$>$ and $<$low$>$ as an Int literal and pushes it onto the local stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHF@{PUSHF}!via@{via}}\index{via@{via}!PUSHF@{PUSHF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab} 
+PUSHF&pushf o0\+: \texorpdfstring{$<$}{<}high \+:: bytes\texorpdfstring{$>$}{>} o1\+: \texorpdfstring{$<$}{<}low \+:: bytes\texorpdfstring{$>$}{>} Interprets $<$high$>$ and $<$low$>$ as a float literal and pushes it onto the local stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHBT@{PUSHBT}!via@{via}}\index{via@{via}!PUSHBT@{PUSHBT}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454} 
+PUSHBT&pushbt Pushes Bool true onto the stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PUSHBF@{PUSHBF}!via@{via}}\index{via@{via}!PUSHBF@{PUSHBF}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1} 
+PUSHBF&pushbf Pushes Bool false onto the stack. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DROP@{DROP}!via@{via}}\index{via@{via}!DROP@{DROP}}}\Hypertarget{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57}\label{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57} 
+DROP&drop Drops the top-\/most value from the local stack. \\
+\hline
+
+\end{DoxyEnumFields}
+
 
 \doxysubsection{Function Documentation}
 \Hypertarget{namespacevia_aa0e0339c977a1627c8fd4d65ab1b559c}\label{namespacevia_aa0e0339c977a1627c8fd4d65ab1b559c} 
@@ -839,6 +1017,26 @@ Returns whether if the two given types are the same.
 \begin{DoxyReturn}{Returns}
 Is same 
 \end{DoxyReturn}
+\Hypertarget{namespacevia_a022ef79f7ce96992df18f91da17774e3}\label{namespacevia_a022ef79f7ce96992df18f91da17774e3} 
+\index{via@{via}!to\_string@{to\_string}}
+\index{to\_string@{to\_string}!via@{via}}
+\doxysubsubsection{\texorpdfstring{to\_string()}{to\_string()}}
+{\footnotesize\ttfamily std\+::string via\+::to\+\_\+string (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structvia_1_1Bytecode}{Bytecode}} \&}]{,  }\item[{bool}]{include\+\_\+metadata }\end{DoxyParamCaption})}
+
+
+
+Converts a {\ttfamily \doxylink{structvia_1_1Bytecode}{Bytecode}} instruction into a string representation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em bytecode} & The bytecode instruction to stringify. \\
+\hline
+{\em include\+\_\+metadata} & If true, include metadata (such as comments) in the output. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A human-\/readable string representation of the instruction. 
+\end{DoxyReturn}
 \Hypertarget{namespacevia_acce107c60917767cbeda40ad6ff89326}\label{namespacevia_acce107c60917767cbeda40ad6ff89326} 
 \index{via@{via}!ubit\_2u16tof32@{ubit\_2u16tof32}}
 \index{ubit\_2u16tof32@{ubit\_2u16tof32}!via@{via}}
@@ -858,3 +1056,16 @@ Casts a high 16-\/bit unsigned Int and a low 16-\/bit unsigned Int into a 32-\/b
 {\footnotesize\ttfamily uint32\+\_\+t via\+::ubit\+\_\+2u16tou32 (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{high,  }\item[{uint16\+\_\+t}]{low }\end{DoxyParamCaption})}
 
 Casts a high 16-\/bit unsigned Int and a low 16-\/bit unsigned Int into a 32-\/bit unsigned Int. Assumes big endian. 
+
+\doxysubsection{Variable Documentation}
+\Hypertarget{namespacevia_a08d39f97e9f2c9ce095f568e53587824}\label{namespacevia_a08d39f97e9f2c9ce095f568e53587824} 
+\index{via@{via}!CALLSTACK\_MAX\_FRAMES@{CALLSTACK\_MAX\_FRAMES}}
+\index{CALLSTACK\_MAX\_FRAMES@{CALLSTACK\_MAX\_FRAMES}!via@{via}}
+\doxysubsubsection{\texorpdfstring{CALLSTACK\_MAX\_FRAMES}{CALLSTACK\_MAX\_FRAMES}}
+{\footnotesize\ttfamily constexpr size\+\_\+t via\+::\+CALLSTACK\+\_\+\+MAX\+\_\+\+FRAMES = 200\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [constexpr]}}
+
+
+
+Maximum number of frames that the call stack can hold at any time. 
+
+This value places a fixed limit on the recursion depth and number of active function calls. 

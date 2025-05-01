@@ -107,11 +107,15 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classvia_1_1StmtNodeVisitor-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">via::StmtNodeVisitor Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>AST visitor for statement nodes. Composes expression, decay, and type visitors.  
+ <a href="classvia_1_1StmtNodeVisitor.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="visitor_8h_source.html">visitor.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for via::StmtNodeVisitor:</div>
 <div class="dyncontent">
@@ -126,7 +130,7 @@ Collaboration diagram for via::StmtNodeVisitor:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a37d74e3d2e6b1f2ffdd65247f692e5b2" id="r_a37d74e3d2e6b1f2ffdd65247f692e5b2"><td class="memItemLeft" align="right" valign="top"><a id="a37d74e3d2e6b1f2ffdd65247f692e5b2" name="a37d74e3d2e6b1f2ffdd65247f692e5b2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>StmtNodeVisitor</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>StmtNodeVisitor</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;<a class="el" href="classvia_1_1NodeVisitorBase.html#aade4d4e7a0d7a3aad2dc17add5bafe1e">ctx</a>)</td></tr>
 <tr class="separator:a37d74e3d2e6b1f2ffdd65247f692e5b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeee3df18747d5646cade801b01c0e38b" id="r_aeee3df18747d5646cade801b01c0e38b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1StmtNodeVisitor.html#aeee3df18747d5646cade801b01c0e38b">visit</a> (<a class="el" href="structvia_1_1DeclStmtNode.html">DeclStmtNode</a> &amp;) override</td></tr>
 <tr class="separator:aeee3df18747d5646cade801b01c0e38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,74 +155,72 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acbcb0b80e9fe397c83fe12d7ccdaba38" id="r_acbcb0b80e9fe397c83fe12d7ccdaba38"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1StmtNodeVisitor.html#acbcb0b80e9fe397c83fe12d7ccdaba38">visit</a> (<a class="el" href="structvia_1_1ExprStmtNode.html">ExprStmtNode</a> &amp;) override</td></tr>
 <tr class="separator:acbcb0b80e9fe397c83fe12d7ccdaba38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81cfb388cd99084cafed12a89d39ecc7" id="r_a81cfb388cd99084cafed12a89d39ecc7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvia_1_1StmtNodeVisitor.html#a81cfb388cd99084cafed12a89d39ecc7">failed</a> () override</td></tr>
+<tr class="memdesc:a81cfb388cd99084cafed12a89d39ecc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks whether any of the sub-visitors encountered a failure.  <br /></td></tr>
 <tr class="separator:a81cfb388cd99084cafed12a89d39ecc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classvia_1_1NodeVisitorBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classvia_1_1NodeVisitorBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classvia_1_1NodeVisitorBase.html">via::NodeVisitorBase</a></td></tr>
 <tr class="memitem:a20d136304511a2219bf4beaa97c700f1 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a20d136304511a2219bf4beaa97c700f1"><td class="memItemLeft" align="right" valign="top">
-&#160;</td><td class="memItemRight" valign="bottom"><b>NodeVisitorBase</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>NodeVisitorBase</b> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;<a class="el" href="classvia_1_1NodeVisitorBase.html#aade4d4e7a0d7a3aad2dc17add5bafe1e">ctx</a>)</td></tr>
 <tr class="separator:a20d136304511a2219bf4beaa97c700f1 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f5bcc551bf33a31d6eb660d213ee7d8 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a8f5bcc551bf33a31d6eb660d213ee7d8"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1LitExprNode.html">LitExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a8f5bcc551bf33a31d6eb660d213ee7d8 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b46bf4d1d5491d1b05942d4f3edbe12 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a6b46bf4d1d5491d1b05942d4f3edbe12"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1SymExprNode.html">SymExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a6b46bf4d1d5491d1b05942d4f3edbe12 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca9b6169592d0692c83fcdebb8594db1 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_aca9b6169592d0692c83fcdebb8594db1"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnaryExprNode.html">UnaryExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:aca9b6169592d0692c83fcdebb8594db1 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abac3878e44c3bb01f191ef1b099fc816 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_abac3878e44c3bb01f191ef1b099fc816"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GroupExprNode.html">GroupExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:abac3878e44c3bb01f191ef1b099fc816 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae00c29204ff7867ef2b81e3b4450ceba inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_ae00c29204ff7867ef2b81e3b4450ceba"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CallExprNode.html">CallExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ae00c29204ff7867ef2b81e3b4450ceba inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e02b47d62e7d674582efd8693c60470 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a4e02b47d62e7d674582efd8693c60470"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IndexExprNode.html">IndexExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a4e02b47d62e7d674582efd8693c60470 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a0792234285235eb835c0a0d8b375af inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a1a0792234285235eb835c0a0d8b375af"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BinExprNode.html">BinExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1a0792234285235eb835c0a0d8b375af inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acadc7d94b44cbfe1e9026b39ef60ac0b inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_acadc7d94b44cbfe1e9026b39ef60ac0b"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CastExprNode.html">CastExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:acadc7d94b44cbfe1e9026b39ef60ac0b inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab556d6a2b4d7a8f2b132fad1136b1f1b inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_ab556d6a2b4d7a8f2b132fad1136b1f1b"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1StepExprNode.html">StepExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ab556d6a2b4d7a8f2b132fad1136b1f1b inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d7ffe67dd540bd0294a3c0bc1bc758e inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a1d7ffe67dd540bd0294a3c0bc1bc758e"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayExprNode.html">ArrayExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1d7ffe67dd540bd0294a3c0bc1bc758e inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9973c791c52eeb2996d530895a3f3233 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a9973c791c52eeb2996d530895a3f3233"><td class="memItemLeft" align="right" valign="top">
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IntrinsicExprNode.html">IntrinsicExprNode</a> &amp;, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a9973c791c52eeb2996d530895a3f3233 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8eb29d1eff57004cdb4fb21b9c083c1d inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a8eb29d1eff57004cdb4fb21b9c083c1d"><td class="memItemLeft" align="right" valign="top">
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AutoTypeNode.html">AutoTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a8eb29d1eff57004cdb4fb21b9c083c1d inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c78788221528bcd6e475b8d4b64064c inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a1c78788221528bcd6e475b8d4b64064c"><td class="memItemLeft" align="right" valign="top">
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GenericTypeNode.html">GenericTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a1c78788221528bcd6e475b8d4b64064c inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8c031edaa2da174a3928b0e993476cf inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_ae8c031edaa2da174a3928b0e993476cf"><td class="memItemLeft" align="right" valign="top">
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnionTypeNode.html">UnionTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:ae8c031edaa2da174a3928b0e993476cf inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31cbeca03391ca4cb40462d39a6e34c3 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a31cbeca03391ca4cb40462d39a6e34c3"><td class="memItemLeft" align="right" valign="top">
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FunctionTypeNode.html">FunctionTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a31cbeca03391ca4cb40462d39a6e34c3 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b46201a2f6c5183a0321cebcc26a963 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a0b46201a2f6c5183a0321cebcc26a963"><td class="memItemLeft" align="right" valign="top">
-virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayTypeNode.html">ArrayTypeNode</a> &amp;) VIA_INVALID_VISIT</td></tr>
-<tr class="separator:a0b46201a2f6c5183a0321cebcc26a963 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:aa0f481d1d24e186c3db61a9000d4800e" id="r_aa0f481d1d24e186c3db61a9000d4800e"><td class="memItemLeft" align="right" valign="top"><a id="aa0f481d1d24e186c3db61a9000d4800e" name="aa0f481d1d24e186c3db61a9000d4800e"></a>
-std::optional&lt; unused_expression_handler_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unused_expr_handler</b></td></tr>
-<tr class="separator:aa0f481d1d24e186c3db61a9000d4800e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60dca928d2e27d58fdcc211cf5eef622 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a60dca928d2e27d58fdcc211cf5eef622"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1LitExprNode.html">LitExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a60dca928d2e27d58fdcc211cf5eef622 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37e91dfc43c72fbd6c98e99d796f0f09 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a37e91dfc43c72fbd6c98e99d796f0f09"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1SymExprNode.html">SymExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a37e91dfc43c72fbd6c98e99d796f0f09 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10da24a724669616a2078f0af1943e75 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a10da24a724669616a2078f0af1943e75"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnaryExprNode.html">UnaryExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a10da24a724669616a2078f0af1943e75 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafbfd77a27c98488a323dd629578594d inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_aafbfd77a27c98488a323dd629578594d"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GroupExprNode.html">GroupExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:aafbfd77a27c98488a323dd629578594d inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dd4039296110249a2e31d840e7d1c5c inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a4dd4039296110249a2e31d840e7d1c5c"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CallExprNode.html">CallExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a4dd4039296110249a2e31d840e7d1c5c inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdd118855f27cd002fa8c8cae292abe3 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_abdd118855f27cd002fa8c8cae292abe3"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IndexExprNode.html">IndexExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:abdd118855f27cd002fa8c8cae292abe3 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a313746a10aa5faaf3c957298ffa9b18a inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a313746a10aa5faaf3c957298ffa9b18a"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1BinExprNode.html">BinExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a313746a10aa5faaf3c957298ffa9b18a inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1dad9381bac6c9e86106f75ee5202abe inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a1dad9381bac6c9e86106f75ee5202abe"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1CastExprNode.html">CastExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a1dad9381bac6c9e86106f75ee5202abe inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a431328eb3ef47497f66f456a2f37ca1f inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a431328eb3ef47497f66f456a2f37ca1f"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1StepExprNode.html">StepExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a431328eb3ef47497f66f456a2f37ca1f inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4124ff503047dc33caeece58f3dc4c4c inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a4124ff503047dc33caeece58f3dc4c4c"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayExprNode.html">ArrayExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a4124ff503047dc33caeece58f3dc4c4c inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9417d87a294e2a6134b6539b1144b81a inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a9417d87a294e2a6134b6539b1144b81a"><td class="memItemLeft" align="right" valign="top">
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1IntrinsicExprNode.html">IntrinsicExprNode</a> &amp;, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a9417d87a294e2a6134b6539b1144b81a inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a912dbeb9735647f7e6368d063d08ecda inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a912dbeb9735647f7e6368d063d08ecda"><td class="memItemLeft" align="right" valign="top">
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1AutoTypeNode.html">AutoTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a912dbeb9735647f7e6368d063d08ecda inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bfa94531d2f1a00069d3be477bdfb4f inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a1bfa94531d2f1a00069d3be477bdfb4f"><td class="memItemLeft" align="right" valign="top">
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1GenericTypeNode.html">GenericTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a1bfa94531d2f1a00069d3be477bdfb4f inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a417b31ba0d9ff8297085af43ff10d1f8 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_a417b31ba0d9ff8297085af43ff10d1f8"><td class="memItemLeft" align="right" valign="top">
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1UnionTypeNode.html">UnionTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:a417b31ba0d9ff8297085af43ff10d1f8 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accf5200393606c9bd9ca5add1642a08f inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_accf5200393606c9bd9ca5add1642a08f"><td class="memItemLeft" align="right" valign="top">
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1FunctionTypeNode.html">FunctionTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:accf5200393606c9bd9ca5add1642a08f inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcf8f057530d13470c27e7051c25eb62 inherit pub_methods_classvia_1_1NodeVisitorBase" id="r_afcf8f057530d13470c27e7051c25eb62"><td class="memItemLeft" align="right" valign="top">
+virtual <a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (<a class="el" href="structvia_1_1ArrayTypeNode.html">ArrayTypeNode</a> &amp;) <a class="el" href="visitor_8h.html#adec4b3481950855cb47e02916b4fb56a">INVALID_VISIT</a></td></tr>
+<tr class="separator:afcf8f057530d13470c27e7051c25eb62 inherit pub_methods_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_classvia_1_1NodeVisitorBase"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classvia_1_1NodeVisitorBase')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classvia_1_1NodeVisitorBase.html">via::NodeVisitorBase</a></td></tr>
 <tr class="memitem:aade4d4e7a0d7a3aad2dc17add5bafe1e inherit pro_attribs_classvia_1_1NodeVisitorBase" id="r_aade4d4e7a0d7a3aad2dc17add5bafe1e"><td class="memItemLeft" align="right" valign="top">
 <a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ctx</b></td></tr>
+<tr class="memdesc:aade4d4e7a0d7a3aad2dc17add5bafe1e inherit pro_attribs_classvia_1_1NodeVisitorBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared visitor context. <br /></td></tr>
 <tr class="separator:aade4d4e7a0d7a3aad2dc17add5bafe1e inherit pro_attribs_classvia_1_1NodeVisitorBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>AST visitor for statement nodes. Composes expression, decay, and type visitors. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a81cfb388cd99084cafed12a89d39ecc7" name="a81cfb388cd99084cafed12a89d39ecc7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a81cfb388cd99084cafed12a89d39ecc7">&#9670;&#160;</a></span>failed()</h2>
 
@@ -242,7 +244,9 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Reimplemented from <a class="el" href="classvia_1_1NodeVisitorBase.html">via::NodeVisitorBase</a>.</p>
+<p>Checks whether any of the sub-visitors encountered a failure. </p>
+
+<p>Reimplemented from <a class="el" href="classvia_1_1NodeVisitorBase.html#a587d71a3ea5c533e1e645282eb2df279">via::NodeVisitorBase</a>.</p>
 
 </div>
 </div>

@@ -113,6 +113,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Dict Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>A dynamically allocated hash table mapping <code>const char*</code> keys to <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> objects.  
+ <a href="structvia_1_1Dict.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tdict_8h_source.html">tdict.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Dict:</div>
 <div class="dyncontent">
@@ -122,38 +127,132 @@ Collaboration diagram for via::Dict:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Dict_1_1HNode.html">HNode</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A single key-value entry within the dictionary hash table.  <a href="structvia_1_1Dict_1_1HNode.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a6775b5a496771fb2ef5d3ffade8c4024" id="r_a6775b5a496771fb2ef5d3ffade8c4024"><td class="memItemLeft" align="right" valign="top"><a id="a6775b5a496771fb2ef5d3ffade8c4024" name="a6775b5a496771fb2ef5d3ffade8c4024"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLCOPY</b> (<a class="el" href="structvia_1_1Dict.html">Dict</a>)</td></tr>
+<tr class="memdesc:a6775b5a496771fb2ef5d3ffade8c4024"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables copy constructor and assignment. <br /></td></tr>
 <tr class="separator:a6775b5a496771fb2ef5d3ffade8c4024"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4df5736a46966a154209b31c43e15b37" id="r_a4df5736a46966a154209b31c43e15b37"><td class="memItemLeft" align="right" valign="top"><a id="a4df5736a46966a154209b31c43e15b37" name="a4df5736a46966a154209b31c43e15b37"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Dict.html">Dict</a>)</td></tr>
+<tr class="memdesc:a4df5736a46966a154209b31c43e15b37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables move constructor and assignment. <br /></td></tr>
 <tr class="separator:a4df5736a46966a154209b31c43e15b37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc4426b03176285152fb695f887b51fd" id="r_abc4426b03176285152fb695f887b51fd"><td class="memItemLeft" align="right" valign="top"><a id="abc4426b03176285152fb695f887b51fd" name="abc4426b03176285152fb695f887b51fd"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
+<tr class="memitem:abc4426b03176285152fb695f887b51fd" id="r_abc4426b03176285152fb695f887b51fd"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Dict.html#abc4426b03176285152fb695f887b51fd">size</a> () const</td></tr>
+<tr class="memdesc:abc4426b03176285152fb695f887b51fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of key-value pairs currently stored.  <br /></td></tr>
 <tr class="separator:abc4426b03176285152fb695f887b51fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ed3b4ab9e393280e41b2983a867ebab" id="r_a0ed3b4ab9e393280e41b2983a867ebab"><td class="memItemLeft" align="right" valign="top"><a id="a0ed3b4ab9e393280e41b2983a867ebab" name="a0ed3b4ab9e393280e41b2983a867ebab"></a>
-<a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const char *key)</td></tr>
+<tr class="memitem:a0ed3b4ab9e393280e41b2983a867ebab" id="r_a0ed3b4ab9e393280e41b2983a867ebab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Dict.html#a0ed3b4ab9e393280e41b2983a867ebab">get</a> (const char *key)</td></tr>
+<tr class="memdesc:a0ed3b4ab9e393280e41b2983a867ebab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the value associated with a given key. If the key is not found, returns a reference to Nil.  <br /></td></tr>
 <tr class="separator:a0ed3b4ab9e393280e41b2983a867ebab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a330fb19211d1a2997da5b2f15eb7f437" id="r_a330fb19211d1a2997da5b2f15eb7f437"><td class="memItemLeft" align="right" valign="top"><a id="a330fb19211d1a2997da5b2f15eb7f437" name="a330fb19211d1a2997da5b2f15eb7f437"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set</b> (const char *key, <a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+<tr class="memitem:a330fb19211d1a2997da5b2f15eb7f437" id="r_a330fb19211d1a2997da5b2f15eb7f437"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Dict.html#a330fb19211d1a2997da5b2f15eb7f437">set</a> (const char *key, <a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+<tr class="memdesc:a330fb19211d1a2997da5b2f15eb7f437"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the value associated with a given key. If the key already exists, the value is overwritten. If the key does not exist, a new entry is inserted.  <br /></td></tr>
 <tr class="separator:a330fb19211d1a2997da5b2f15eb7f437"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a9ada98c752186e115070ee656ce1c1d6" id="r_a9ada98c752186e115070ee656ce1c1d6"><td class="memItemLeft" align="right" valign="top"><a id="a9ada98c752186e115070ee656ce1c1d6" name="a9ada98c752186e115070ee656ce1c1d6"></a>
 struct <a class="el" href="structvia_1_1Dict_1_1HNode.html">via::Dict::HNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> = nullptr</td></tr>
+<tr class="memdesc:a9ada98c752186e115070ee656ce1c1d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the hash table buffer. <br /></td></tr>
 <tr class="separator:a9ada98c752186e115070ee656ce1c1d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6a24eb1260127a22bb4d2fe8ddb6ef0" id="r_ae6a24eb1260127a22bb4d2fe8ddb6ef0"><td class="memItemLeft" align="right" valign="top"><a id="ae6a24eb1260127a22bb4d2fe8ddb6ef0" name="ae6a24eb1260127a22bb4d2fe8ddb6ef0"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>data_capacity</b> = DICT_INITIAL_CAPACITY</td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>data_capacity</b> = <a class="el" href="namespacevia.html#a465db2be24c40e033eafd74fc37da8fb">DICT_INITIAL_CAPACITY</a></td></tr>
+<tr class="memdesc:ae6a24eb1260127a22bb4d2fe8ddb6ef0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total capacity of the table. <br /></td></tr>
 <tr class="separator:ae6a24eb1260127a22bb4d2fe8ddb6ef0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac02c066d8e3653a87de82f583ad76ce0" id="r_ac02c066d8e3653a87de82f583ad76ce0"><td class="memItemLeft" align="right" valign="top"><a id="ac02c066d8e3653a87de82f583ad76ce0" name="ac02c066d8e3653a87de82f583ad76ce0"></a>
 <a class="el" href="structvia_1_1CSize.html">CSize</a>&#160;</td><td class="memItemRight" valign="bottom"><b>csize</b></td></tr>
+<tr class="memdesc:ac02c066d8e3653a87de82f583ad76ce0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tracks logical size and handles resizing. <br /></td></tr>
 <tr class="separator:ac02c066d8e3653a87de82f583ad76ce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A dynamically allocated hash table mapping <code>const char*</code> keys to <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> objects. </p>
+<p>This dictionary implementation is based on open addressing (linear probing). Keys are raw C strings assumed to be interned or otherwise stable. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a0ed3b4ab9e393280e41b2983a867ebab" name="a0ed3b4ab9e393280e41b2983a867ebab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ed3b4ab9e393280e41b2983a867ebab">&#9670;&#160;</a></span>get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structvia_1_1Value.html">Value</a> &amp; via::Dict::get </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieves the value associated with a given key. If the key is not found, returns a reference to Nil. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>The null-terminated key string. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the value associated with the key or Nil. </dd></dl>
+
+</div>
+</div>
+<a id="a330fb19211d1a2997da5b2f15eb7f437" name="a330fb19211d1a2997da5b2f15eb7f437"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a330fb19211d1a2997da5b2f15eb7f437">&#9670;&#160;</a></span>set()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void via::Dict::set </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td>
+          <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the value associated with a given key. If the key already exists, the value is overwritten. If the key does not exist, a new entry is inserted. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>The null-terminated key string. </td></tr>
+    <tr><td class="paramname">value</td><td>The value to associate with the key. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="abc4426b03176285152fb695f887b51fd" name="abc4426b03176285152fb695f887b51fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc4426b03176285152fb695f887b51fd">&#9670;&#160;</a></span>size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t via::Dict::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the number of key-value pairs currently stored. </p>
+<dl class="section return"><dt>Returns</dt><dd>Logical size of the dictionary. </dd></dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tdict_8h_source.html">tdict.h</a></li>
 <li>src/interpreter/<b>tdict.cpp</b></li>

@@ -42,89 +42,106 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
     }
   }
   else {
+    auto emit_constant =
+      [this, &symbol, &current_closure, &declaration_node, &is_const, &val](LitExprNode& literal) {
+        // Check for Nil
+        if (std::get_if<std::monostate>(&literal.value)) {
+          bytecode_emit(ctx, PUSHNIL, {}, symbol);
+          current_closure.locals.push_back({
+            .is_const = is_const,
+            .is_constexpr = true,
+            .symbol = symbol,
+            .decl = &declaration_node,
+            .type =
+              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
+            .value = &literal,
+          });
+        }
+        // Check for Int
+        else if (int* int_value = std::get_if<int>(&literal.value)) {
+          uint32_t final_value = *int_value;
+          auto operands = ubit_u32to2u16(final_value);
+
+          bytecode_emit(ctx, PUSHI, {operands.high, operands.low}, symbol);
+          current_closure.locals.push_back({
+            .is_const = is_const,
+            .is_constexpr = true,
+            .symbol = symbol,
+            .decl = &declaration_node,
+            .type =
+              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Int),
+            .value = &literal,
+          });
+        }
+        // Check for float
+        else if (float* float_value = std::get_if<float>(&literal.value)) {
+          uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
+          auto operands = ubit_u32to2u16(final_value);
+
+          bytecode_emit(ctx, PUSHF, {operands.high, operands.low}, symbol);
+          current_closure.locals.push_back({
+            .is_const = is_const,
+            .is_constexpr = true,
+            .symbol = symbol,
+            .decl = &declaration_node,
+            .type =
+              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Float),
+            .value = &literal,
+          });
+        }
+        // Check for Bool
+        else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
+          bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF, {}, symbol);
+          current_closure.locals.push_back({
+            .is_const = is_const,
+            .is_constexpr = true,
+            .symbol = symbol,
+            .decl = &declaration_node,
+            .type =
+              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
+            .value = &literal,
+          });
+        }
+        // Other constant
+        else {
+          Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
+          Value::Tag constant_ty = constant.type;
+          operand_t const_id = push_constant(ctx, std::move(constant));
+
+          bytecode_emit(ctx, PUSHK, {const_id}, symbol);
+          current_closure.locals.push_back({
+            .is_const = is_const,
+            .is_constexpr = true,
+            .symbol = symbol,
+            .decl = &declaration_node,
+            .type = ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+              literal.value_token, constant_ty
+            ),
+            .value = &literal,
+          });
+        }
+      };
+
     if (is_constant_expression(ctx.unit_ctx, val)) {
-      // Constant folding is an O1 optimization.
-      if (ctx.unit_ctx.optimization_level < 1) {
-        goto non_constexpr;
-      }
+      if (LitExprNode* lit_expr = dynamic_cast<LitExprNode*>(val))
+        emit_constant(*lit_expr);
+      // Special case: Arrays cannot be represented as LitExprNode.
+      else if (dynamic_cast<ArrayExprNode*>(val) != nullptr) {
+        val->accept(expression_visitor, OPERAND_INVALID);
 
-      LitExprNode literal = fold_constant(ctx, val);
-
-      // Check for Nil
-      if (std::get_if<std::monostate>(&literal.value)) {
-        bytecode_emit(ctx, PUSHNIL, {}, symbol);
-        current_closure.locals.push_back({
-          .is_const = is_const,
-          .is_constexpr = true,
-          .symbol = symbol,
-          .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
-          .value = &literal,
-        });
+        Bytecode& bc = ctx.unit_ctx.bytecode.back();
+        bc.instruct.op = PUSHK;
+        bc.instruct.a = bc.instruct.b;
+        bc.instruct.b = OPERAND_INVALID;
       }
-      // Check for Int
-      else if (int* int_value = std::get_if<int>(&literal.value)) {
-        uint32_t final_value = *int_value;
-        auto operands = ubit_u32to2u16(final_value);
-
-        bytecode_emit(ctx, PUSHI, {operands.high, operands.low}, symbol);
-        current_closure.locals.push_back({
-          .is_const = is_const,
-          .is_constexpr = true,
-          .symbol = symbol,
-          .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Int),
-          .value = &literal,
-        });
-      }
-      // Check for float
-      else if (float* float_value = std::get_if<float>(&literal.value)) {
-        uint32_t final_value = std::bit_cast<uint32_t>(*float_value);
-        auto operands = ubit_u32to2u16(final_value);
-
-        bytecode_emit(ctx, PUSHF, {operands.high, operands.low}, symbol);
-        current_closure.locals.push_back({
-          .is_const = is_const,
-          .is_constexpr = true,
-          .symbol = symbol,
-          .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Float),
-          .value = &literal,
-        });
-      }
-      // Check for Bool
-      else if (bool* bool_value = std::get_if<bool>(&literal.value)) {
-        bytecode_emit(ctx, *bool_value ? PUSHBT : PUSHBF, {}, symbol);
-        current_closure.locals.push_back({
-          .is_const = is_const,
-          .is_constexpr = true,
-          .symbol = symbol,
-          .decl = &declaration_node,
-          .type =
-            ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
-          .value = &literal,
-        });
-      }
-      // Other constant
       else {
-        Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
-        Value::Tag constant_ty = constant.type;
-        operand_t const_id = push_constant(ctx, std::move(constant));
+        // Constant folding is an O1 optimization.
+        if (ctx.unit_ctx.optimization_level < 1) {
+          goto non_constexpr;
+        }
 
-        bytecode_emit(ctx, PUSHK, {const_id}, symbol);
-        current_closure.locals.push_back({
-          .is_const = is_const,
-          .is_constexpr = true,
-          .symbol = symbol,
-          .decl = &declaration_node,
-          .type = ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-            literal.value_token, constant_ty
-          ),
-          .value = &literal,
-        });
+        LitExprNode literal = fold_constant(ctx, val);
+        emit_constant(literal);
       }
     }
     else {
@@ -456,15 +473,10 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
     }
   }
   else {
-    if (unused_expr_handler.has_value()) {
-      (*unused_expr_handler)(expr_stmt);
-    }
-    else {
-      // Warning: "expr-result-unused"
-      auto message = "Expression result unused";
-      compiler_warning(ctx, expr->begin, expr->end, message);
-      compiler_output_end(ctx);
-    }
+    // Warning: "expr-result-unused"
+    auto message = "Expression result unused";
+    compiler_warning(ctx, expr->begin, expr->end, message);
+    compiler_output_end(ctx);
   }
 
   free_register(ctx, reg);

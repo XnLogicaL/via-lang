@@ -1,0 +1,57 @@
+\doxysection{src/interpreter/state.h File Reference}
+\hypertarget{state_8h}{}\label{state_8h}\index{src/interpreter/state.h@{src/interpreter/state.h}}
+
+
+Declares the State class and related components for managing VM execution.  
+
+
+{\ttfamily \#include $<$common.\+h$>$}\newline
+{\ttfamily \#include $<$context.\+h$>$}\newline
+{\ttfamily \#include "{}call-\/stack.\+h"{}}\newline
+{\ttfamily \#include "{}instruction.\+h"{}}\newline
+{\ttfamily \#include "{}tvalue.\+h"{}}\newline
+Include dependency graph for state.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1ErrorState}{via\+::\+Error\+State}}
+\begin{DoxyCompactList}\small\item\em Represents an active runtime error during VM execution. \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{structvia_1_1RegisterHolder}{via\+::\+Register\+Holder$<$ Size $>$}}
+\begin{DoxyCompactList}\small\item\em Generic register array wrapper with fixed size and alignment. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{structvia_1_1State}{via\+::\+State}}
+\begin{DoxyCompactList}\small\item\em Represents the complete virtual machine execution state. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6}\label{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6} 
+using {\bfseries via\+::\+Stk\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ \mbox{\hyperlink{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}{REGISTER\+\_\+\+STACK\+\_\+\+COUNT}} $>$
+\begin{DoxyCompactList}\small\item\em Type alias for stack-\/based register block. \end{DoxyCompactList}\item 
+\Hypertarget{namespacevia_a75a6478aadfde59a7fe15bdcdc8741e6}\label{namespacevia_a75a6478aadfde59a7fe15bdcdc8741e6} 
+using {\bfseries via\+::\+Heap\+Reg\+Holder} = \mbox{\hyperlink{structvia_1_1RegisterHolder}{Register\+Holder}}$<$ \mbox{\hyperlink{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3}{REGISTER\+\_\+\+SPILL\+\_\+\+COUNT}} $>$
+\begin{DoxyCompactList}\small\item\em Type alias for heap/spill register block. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespacevia_a72a3c755471e881c73bd94ade4d5839e}\label{namespacevia_a72a3c755471e881c73bd94ade4d5839e} 
+constexpr size\+\_\+t {\bfseries via\+::\+REGISTER\+\_\+\+COUNT} = 65536
+\begin{DoxyCompactList}\small\item\em Total number of general-\/purpose registers available. Matches the operand range (2\texorpdfstring{$^\wedge$}{\string^}16). \end{DoxyCompactList}\item 
+\Hypertarget{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}\label{namespacevia_a9f3c8100638fb61b095c359558bc7bd8} 
+constexpr size\+\_\+t {\bfseries via\+::\+REGISTER\+\_\+\+STACK\+\_\+\+COUNT} = 256
+\begin{DoxyCompactList}\small\item\em Number of registers reserved for stack-\/based usage. These are backed by fast C++ stack memory. \end{DoxyCompactList}\item 
+\Hypertarget{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3}\label{namespacevia_aa0a20b52d04392dad68c2230cd48b0c3} 
+constexpr size\+\_\+t {\bfseries via\+::\+REGISTER\+\_\+\+SPILL\+\_\+\+COUNT} = \mbox{\hyperlink{namespacevia_a72a3c755471e881c73bd94ade4d5839e}{REGISTER\+\_\+\+COUNT}} -\/ \mbox{\hyperlink{namespacevia_a9f3c8100638fb61b095c359558bc7bd8}{REGISTER\+\_\+\+STACK\+\_\+\+COUNT}}
+\begin{DoxyCompactList}\small\item\em Number of registers reserved for heap-\/based spilling. These are allocated separately and used when stack registers are exhausted. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares the State class and related components for managing VM execution. 
+
+The State object encapsulates the full runtime state of the virtual machine. It holds the register space (stack and heap), manages the call stack, and controls instruction dispatch and execution. It provides an interface for interacting with local, global, and argument values, as well as for calling functions and handling errors. 

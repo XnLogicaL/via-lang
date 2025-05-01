@@ -258,6 +258,7 @@ enum class Opcode : uint16_t {
   INC,
   DEC,
   EQ,
+  DEQ,
   NEQ,
   AND,
   OR,

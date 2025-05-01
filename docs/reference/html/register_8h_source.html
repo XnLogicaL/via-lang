@@ -121,12 +121,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;interpreter/state.h&gt;</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;interpreter/instruction.h&gt;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;<a class="code" href="state_8h.html">interpreter/state.h</a>&gt;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;<a class="code" href="instruction_8h.html">interpreter/instruction.h</a>&gt;</span></div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">using </span>register_t = <a class="code hl_typedef" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">using </span>register_t = <a class="code hl_typedef" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>;</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
 <div class="foldopen" id="foldopen00033" data-start="{" data-end="};">
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="classvia_1_1RegisterAllocator.html">   33</a></span><span class="keyword">class </span><a class="code hl_class" href="classvia_1_1RegisterAllocator.html">RegisterAllocator</a> final {</div>
@@ -164,8 +164,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassvia_1_1RegisterAllocator_html_a803062b7bafc00fb5d1afe1160e4fb00"><div class="ttname"><a href="classvia_1_1RegisterAllocator.html#a803062b7bafc00fb5d1afe1160e4fb00">via::RegisterAllocator::free_register</a></div><div class="ttdeci">void free_register(register_t reg)</div><div class="ttdoc">Frees the given register.</div><div class="ttdef"><b>Definition</b> register.cpp:25</div></div>
 <div class="ttc" id="aclassvia_1_1RegisterAllocator_html_a9520ef0cef2944106fd8de1920db18e8"><div class="ttname"><a href="classvia_1_1RegisterAllocator.html#a9520ef0cef2944106fd8de1920db18e8">via::RegisterAllocator::allocate_register</a></div><div class="ttdeci">register_t allocate_register()</div><div class="ttdoc">Allocates and returns a register.</div><div class="ttdef"><b>Definition</b> register.cpp:8</div></div>
 <div class="ttc" id="aclassvia_1_1RegisterAllocator_html_ad2e80540bae78924fb394af46268b1d1"><div class="ttname"><a href="classvia_1_1RegisterAllocator.html#ad2e80540bae78924fb394af46268b1d1">via::RegisterAllocator::allocate_temp</a></div><div class="ttdeci">register_t allocate_temp()</div><div class="ttdoc">Returns a temporary register.</div><div class="ttdef"><b>Definition</b> register.cpp:19</div></div>
-<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">Main namespace of the project. Contains all but macros.</div></div>
-<div class="ttc" id="anamespacevia_html_a68cce66c29779f23c5ae3c4ed7f9be15"><div class="ttname"><a href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">via::operand_t</a></div><div class="ttdeci">uint16_t operand_t</div><div class="ttdoc">Alias for operand type.</div><div class="ttdef"><b>Definition</b> instruction.h:17</div></div>
+<div class="ttc" id="ainstruction_8h_html"><div class="ttname"><a href="instruction_8h.html">instruction.h</a></div><div class="ttdoc">Defines the representation of bytecode instructions in the Via VM.</div></div>
+<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">All core compiler logic is within this namespace.</div></div>
+<div class="ttc" id="anamespacevia_html_a90951ca238c08fe5449c13c9ed3cc38e"><div class="ttname"><a href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">via::operand_t</a></div><div class="ttdeci">uint16_t operand_t</div><div class="ttdoc">Unsigned 16-bit operand type used by the instruction format.</div><div class="ttdef"><b>Definition</b> instruction.h:36</div></div>
+<div class="ttc" id="astate_8h_html"><div class="ttname"><a href="state_8h.html">state.h</a></div><div class="ttdoc">Declares the State class and related components for managing VM execution.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

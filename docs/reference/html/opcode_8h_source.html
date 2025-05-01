@@ -121,313 +121,209 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">enum class</span> Opcode : uint16_t {</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>  <span class="comment">// nop</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>  <span class="comment">// No operation.</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>  NOP,</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>  <span class="comment">// lbl</span></div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>  <span class="comment">// o0: &lt;label_id :: int&gt;</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>  <span class="comment">// Maps the current program counter to &lt;label_id&gt;.</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>  LBL,</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  <span class="comment">// exit</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <span class="comment">// o0: &lt;exit_code :: int&gt;</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>  <span class="comment">// Safely terminates the VM with exit code &lt;exit_code&gt;.</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>  EXIT,</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  <span class="comment">// add</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="comment">// Adds the value in register &lt;right&gt; to register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  ADD,</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  <span class="comment">// addi</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>  <span class="comment">// Adds the literal Int value &lt;right&gt; to register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  ADDI,</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  <span class="comment">// addf</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  <span class="comment">// Adds the literal float value &lt;right&gt; to register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  ADDF,</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>  <span class="comment">// sub</span></div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  <span class="comment">// Subtracts the value in register &lt;right&gt; from register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>  SUB,</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <span class="comment">// subi</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <span class="comment">// Subtracts the literal Int value &lt;right&gt; from register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  SUBI,</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="comment">// subf</span></div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  <span class="comment">// Subtracts the literal float value &lt;right&gt; from register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>  SUBF,</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  <span class="comment">// mul</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>  <span class="comment">// Multiplies the value in register &lt;left&gt; with the value in register &lt;right&gt;.</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  MUL,</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  <span class="comment">// subi</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  <span class="comment">// Multiplies the value in register &lt;left&gt; with the literal Int value &lt;right&gt;.</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>  MULI,</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <span class="comment">// mulf</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  <span class="comment">// Multiplies the value in register &lt;left&gt; with the literal float value &lt;right&gt;.</span></div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>  MULF,</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>  <span class="comment">// div</span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>  <span class="comment">// Divides the value in register &lt;left&gt; with the value in register &lt;right&gt;.</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>  DIV,</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>  <span class="comment">// divi</span></div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>  <span class="comment">// Divides the value in register &lt;left&gt; with the literal Int value &lt;right&gt;</span></div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  DIVI,</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <span class="comment">// divf</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>  <span class="comment">// Divides the value in register &lt;left&gt; with the literal float value &lt;right&gt;.</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>  DIVF,</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span> </div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>  <span class="comment">// mod</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>  <span class="comment">// Performs a modulus operation on the values in register &lt;left&gt; and register &lt;right&gt;.</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  MOD,</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>  <span class="comment">// modi</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>  <span class="comment">// Performs a modulus operation on the value in register &lt;left&gt; and the literal Int value</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>  <span class="comment">// &lt;right&gt;.</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>  MODI,</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  <span class="comment">// modf</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>  <span class="comment">// Adds the literal float value &lt;right&gt; to register &lt;left&gt;.</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>  MODF,</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>  <span class="comment">// pow</span></div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>  <span class="comment">// o1: &lt;right :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  <span class="comment">// Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>  <span class="comment">// value in register &lt;right&gt; as the power.</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  POW,</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>  <span class="comment">// powi</span></div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>  <span class="comment">// o1: &lt;right :: int&gt;</span></div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>  <span class="comment">// Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the</span></div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>  <span class="comment">// literal Int value &lt;right&gt; as the power.</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>  POWI,</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>  <span class="comment">// powf</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>  <span class="comment">// o1: &lt;right :: float&gt;</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>  <span class="comment">// Performs an exponentiation operation with the value in register &lt;left&gt; as base and with the</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>  <span class="comment">// literal float value &lt;right&gt; as the power.</span></div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>  POWF,</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>  <span class="comment">// neg</span></div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>  <span class="comment">// o0: &lt;left :: reg(int|float)&gt;</span></div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>  <span class="comment">// Negates the value in o0.</span></div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>  NEG,</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>  <span class="comment">// mov</span></div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>  <span class="comment">// o1: &lt;src :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>  <span class="comment">// Copies the value in register &lt;src&gt; into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>  MOV,</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>  <span class="comment">// loadk</span></div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>  <span class="comment">// o1: &lt;kid :: int&gt;</span></div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>  <span class="comment">// Loads constant &lt;kid&gt; from the constant table into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>  LOADK,</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>  <span class="comment">// loadnil</span></div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>  <span class="comment">// Loads a Nil value into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>  LOADNIL,</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>  <span class="comment">// loadi</span></div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>  <span class="comment">// o1: &lt;high :: bytes&gt;</span></div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>  <span class="comment">// o2: &lt;low :: bytes&gt;</span></div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>  <span class="comment">// Interprets &lt;high&gt; and &lt;low&gt; as an Int and loads it into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  LOADI,</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>  <span class="comment">// loadf</span></div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>  <span class="comment">// o1: &lt;high :: bytes&gt;</span></div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>  <span class="comment">// o2: &lt;low :: bytes&gt;</span></div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>  <span class="comment">// Interprets &lt;high&gt; and &lt;low&gt; as a float and loads it into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>  LOADF,</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>  <span class="comment">// loadbt</span></div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>  <span class="comment">// Loads Bool true into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>  LOADBT,</div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span> </div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>  <span class="comment">// loadbf</span></div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>  <span class="comment">// Loads Bool false into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>  LOADBF,</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>  <span class="comment">// loadarr</span></div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>  <span class="comment">// Loads an empty array into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>  LOADARR,</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>  <span class="comment">// loaddict</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>  <span class="comment">// Loads an empty dictionary into register &lt;dst&gt;.</span></div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>  LOADDICT,</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span> </div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>  <span class="comment">// closure</span></div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  <span class="comment">// o0: &lt;dst :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>  <span class="comment">// o1: &lt;argc :: int&gt;</span></div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>  <span class="comment">// o2: &lt;insnc :: int&gt;</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>  <span class="comment">// Captures &lt;insnc&gt; amount of instructions starting from itself, creates a closure and loads it</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>  <span class="comment">// into &lt;dst&gt;. Saves the argument stack pointer and captures arguments from [sp..sp+argc].</span></div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>  CLOSURE,</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00019" data-start="{" data-end="};">
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">   19</a></span><span class="keyword">enum class</span> <a class="code hl_enumeration" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a> : uint16_t {</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">NOP</a>,</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685">LBL</a>,</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927">EXIT</a>,</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d">ADD</a>,</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e">ADDI</a>,</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f">ADDF</a>,</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb">SUB</a>,</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343">SUBI</a>,</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444">SUBF</a>,</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c">MUL</a>,</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b">MULI</a>,</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a">MULF</a>,</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646">DIV</a>,</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc">DIVI</a>,</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f">DIVF</a>,</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967">MOD</a>,</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047">MODI</a>,</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87">MODF</a>,</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe">POW</a>,</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26">POWI</a>,</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505">POWF</a>,</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e">NEG</a>,</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df">MOV</a>,</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6">LOADK</a>,</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302">LOADNIL</a>,</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57">LOADI</a>,</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697">LOADF</a>,</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b">LOADBT</a>,</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c">LOADBF</a>,</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532">LOADARR</a>,</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34">LOADDICT</a>,</div>
 <div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span> </div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>  <span class="comment">// push</span></div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>  <span class="comment">// o0: &lt;src :: reg(any)&gt;</span></div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>  <span class="comment">// Pushes the value in register &lt;src&gt; onto the local stack.</span></div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>  PUSH,</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>  <span class="comment">// pushk</span></div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>  <span class="comment">// o0: &lt;kid :: int&gt;</span></div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>  <span class="comment">// Pushes constant &lt;kid&gt; from the constant table onto the local stack.</span></div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>  PUSHK,</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span> </div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>  <span class="comment">// pushnil</span></div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>  <span class="comment">// Pushes Nil onto the local stack.</span></div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>  PUSHNIL,</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>  <span class="comment">// pushi</span></div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>  <span class="comment">// o0: &lt;high :: bytes&gt;</span></div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>  <span class="comment">// o1: &lt;low :: bytes&gt;</span></div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>  <span class="comment">// Interprets &lt;high&gt; and &lt;low&gt; as an Int literal and pushes it onto the local stack.</span></div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>  PUSHI,</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span> </div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>  <span class="comment">// pushf</span></div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>  <span class="comment">// o0: &lt;high :: bytes&gt;</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>  <span class="comment">// o1: &lt;low :: bytes&gt;</span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>  <span class="comment">// Interprets &lt;high&gt; and &lt;low&gt; as a float literal and pushes it onto the local stack.</span></div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>  PUSHF,</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span> </div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>  <span class="comment">// pushbt</span></div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>  <span class="comment">// Pushes Bool true onto the stack.</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>  PUSHBT,</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span> </div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>  <span class="comment">// pushbf</span></div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>  <span class="comment">// Pushes Bool false onto the stack.</span></div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>  PUSHBF,</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8">CLOSURE</a>,</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550">PUSH</a>,</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd">PUSHK</a>,</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span> </div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e">PUSHNIL</a>,</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span> </div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308">PUSHI</a>,</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span> </div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab">PUSHF</a>,</div>
 <div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>  <span class="comment">// drop</span></div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>  <span class="comment">// Drops the top-most value from the local stack.</span></div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>  DROP,</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454">PUSHBT</a>,</div>
 <div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>  GETGLOBAL,</div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>  SETGLOBAL,</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span> </div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>  SETUPV,</div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>  GETUPV,</div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>  GETLOCAL,</div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>  SETLOCAL,</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1">PUSHBF</a>,</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>  <a class="code hl_enumvalue" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57">DROP</a>,</div>
 <div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span> </div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>  CAPTURE,</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span> </div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>  INC,</div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>  DEC,</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>  EQ,</div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>  NEQ,</div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>  AND,</div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>  OR,</div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>  NOT,</div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>  LT,</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>  GT,</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>  LTEQ,</div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>  GTEQ,</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span> </div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>  JMP,</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>  JMPIF,</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>  JMPIFN,</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>  JMPIFEQ,</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>  JMPIFNEQ,</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>  JMPIFLT,</div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>  JMPIFGT,</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>  JMPIFLTEQ,</div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>  JMPIFGTEQ,</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>  LJMP,</div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>  LJMPIF,</div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>  LJMPIFN,</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>  LJMPIFEQ,</div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>  LJMPIFNEQ,</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>  LJMPIFLT,</div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>  LJMPIFGT,</div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>  LJMPIFLTEQ,</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>  LJMPIFGTEQ,</div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span> </div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>  CALL,</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>  RET,</div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>  RETBT,</div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>  RETBF,</div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>  RETNIL,</div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span> </div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>  RAISE,</div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>  TRY,</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>  CATCH,</div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span> </div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>  GETARR,</div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>  SETARR,</div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>  NEXTARR,</div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>  LENARR,</div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span> </div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  GETDICT,</div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  SETDICT,</div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>  NEXTDICT,</div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>  LENDICT,</div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span> </div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>  CONSTR,</div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>  GETSTR,</div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>  SETSTR,</div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>  LENSTR,</div>
-<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span> </div>
-<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>  ICAST,</div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>  FCAST,</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>  STRCAST,</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>  BCAST,</div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>};</div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>}</div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span> </div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">Main namespace of the project. Contains all but macros.</div></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>  GETGLOBAL,</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>  SETGLOBAL,</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span> </div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>  SETUPV,</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>  GETUPV,</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>  GETLOCAL,</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>  SETLOCAL,</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span> </div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>  CAPTURE,</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span> </div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>  INC,</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>  DEC,</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>  EQ,</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>  NEQ,</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>  AND,</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>  OR,</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>  NOT,</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>  LT,</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>  GT,</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>  LTEQ,</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>  GTEQ,</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span> </div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>  JMP,</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>  JMPIF,</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>  JMPIFN,</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>  JMPIFEQ,</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>  JMPIFNEQ,</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>  JMPIFLT,</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>  JMPIFGT,</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>  JMPIFLTEQ,</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>  JMPIFGTEQ,</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span> </div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>  LJMP,</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>  LJMPIF,</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>  LJMPIFN,</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>  LJMPIFEQ,</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>  LJMPIFNEQ,</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>  LJMPIFLT,</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>  LJMPIFGT,</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>  LJMPIFLTEQ,</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>  LJMPIFGTEQ,</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>  CALL,</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>  RET,</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>  RETBT,</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>  RETBF,</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>  RETNIL,</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span> </div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>  RAISE,</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  TRY,</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  CATCH,</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span> </div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>  GETARR,</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>  SETARR,</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>  NEXTARR,</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>  LENARR,</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>  GETDICT,</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>  SETDICT,</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>  NEXTDICT,</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>  LENDICT,</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span> </div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>  CONSTR,</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>  GETSTR,</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>  SETSTR,</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>  LENSTR,</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span> </div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>  ICAST,</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>  FCAST,</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>  STRCAST,</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>  BCAST,</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>};</div>
+</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span> </div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>} <span class="comment">// namespace via</span></div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span> </div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">All core compiler logic is within this namespace.</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">via::Opcode</a></div><div class="ttdeci">Opcode</div><div class="ttdef"><b>Definition</b> opcode.h:19</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a07f63c3bc9d7b60a46d7d887a6ac7343">via::Opcode::SUBI</a></div><div class="ttdeci">@ SUBI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a091a5676bc2c5e3e6f9986e78aa9f308">via::Opcode::PUSHI</a></div><div class="ttdeci">@ PUSHI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a0cc742eaab58a01e4a12d474853a82fd">via::Opcode::PUSHK</a></div><div class="ttdeci">@ PUSHK</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b32100aef1fc19670be7fd58bc85df">via::Opcode::MOV</a></div><div class="ttdeci">@ MOV</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f">via::Opcode::ADDF</a></div><div class="ttdeci">@ ADDF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17faf4e999b8cee4c36915c1f54ccffe">via::Opcode::POW</a></div><div class="ttdeci">@ POW</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">via::Opcode::NOP</a></div><div class="ttdeci">@ NOP</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a241dd841abade20fcb27b8a9f494e1eb">via::Opcode::SUB</a></div><div class="ttdeci">@ SUB</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2983445a9b7a525dd89ee4130ece7302">via::Opcode::LOADNIL</a></div><div class="ttdeci">@ LOADNIL</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a29bbf66f7f8529ec47e394fb5a36c646">via::Opcode::DIV</a></div><div class="ttdeci">@ DIV</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a2cdf52a55876063ec93b7d18bc741f6c">via::Opcode::MUL</a></div><div class="ttdeci">@ MUL</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a3263b1ade9587f62eae97aa2e654ee57">via::Opcode::LOADI</a></div><div class="ttdeci">@ LOADI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a37e36b10637a22aaa732c7b6c34d796b">via::Opcode::MULI</a></div><div class="ttdeci">@ MULI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a46227796182ad759b8b496f70e53aa26">via::Opcode::POWI</a></div><div class="ttdeci">@ POWI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a472fdb03a76b752d26a9f9545153a505">via::Opcode::POWF</a></div><div class="ttdeci">@ POWF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a4e04d869421cb3220a05323f46a7270e">via::Opcode::PUSHNIL</a></div><div class="ttdeci">@ PUSHNIL</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a5dd68b1a7db42a1cce4dce09dbaa179e">via::Opcode::NEG</a></div><div class="ttdeci">@ NEG</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a62031de222601bb20fadc46ade23e444">via::Opcode::SUBF</a></div><div class="ttdeci">@ SUBF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a65894b10216e1dc328f8fee6d3891685">via::Opcode::LBL</a></div><div class="ttdeci">@ LBL</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a686580c582579885c320573e12953f34">via::Opcode::LOADDICT</a></div><div class="ttdeci">@ LOADDICT</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a6b4ee6ec30799b1bb219a7a31ad616f6">via::Opcode::LOADK</a></div><div class="ttdeci">@ LOADK</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a73dabe4437725eedc05a1824a2c31550">via::Opcode::PUSH</a></div><div class="ttdeci">@ PUSH</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a856992308f54ebd6b725c74f795ee2f1">via::Opcode::PUSHBF</a></div><div class="ttdeci">@ PUSHBF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a8d924270701ec2b0ecde6715d271291f">via::Opcode::DIVF</a></div><div class="ttdeci">@ DIVF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a91878509fb81342b00185ddabe606b87">via::Opcode::MODF</a></div><div class="ttdeci">@ MODF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9ea8bbe9f86e7fb8377186c8755f3047">via::Opcode::MODI</a></div><div class="ttdeci">@ MODI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d">via::Opcode::ADD</a></div><div class="ttdeci">@ ADD</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9faf5d8039f3b63841260f2f6e2f4f8b">via::Opcode::LOADBT</a></div><div class="ttdeci">@ LOADBT</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa09da3f0988bd9b98af2640242960532">via::Opcode::LOADARR</a></div><div class="ttdeci">@ LOADARR</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62aa42b2fb0e720a080e79a92f4ca97d927">via::Opcode::EXIT</a></div><div class="ttdeci">@ EXIT</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ab27025b4b0dce496c519e0d5c69acaf8">via::Opcode::CLOSURE</a></div><div class="ttdeci">@ CLOSURE</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62abf8f3be424eb6a72b21549fbb24ffb57">via::Opcode::DROP</a></div><div class="ttdeci">@ DROP</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac43ec83b8852b2069b3f3e52dc7e39ab">via::Opcode::PUSHF</a></div><div class="ttdeci">@ PUSHF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ac5a28f4b35a2884fa3277150ac5d0967">via::Opcode::MOD</a></div><div class="ttdeci">@ MOD</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62acd64d4a1b9843a71dff6ae646987f697">via::Opcode::LOADF</a></div><div class="ttdeci">@ LOADF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e">via::Opcode::ADDI</a></div><div class="ttdeci">@ ADDI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad6e0206491ca2c479680b6a7b98162bc">via::Opcode::DIVI</a></div><div class="ttdeci">@ DIVI</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62adf6a295fc9170662fea72b1818147d4c">via::Opcode::LOADBF</a></div><div class="ttdeci">@ LOADBF</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ae6a4cf7c208a870a372521881a37f454">via::Opcode::PUSHBT</a></div><div class="ttdeci">@ PUSHBT</div></div>
+<div class="ttc" id="anamespacevia_html_ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a"><div class="ttname"><a href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62afa1809c7da5f8116b0c79a87550c311a">via::Opcode::MULF</a></div><div class="ttdeci">@ MULF</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

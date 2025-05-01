@@ -1,0 +1,36 @@
+\doxysection{src/interpreter/tarray.h File Reference}
+\hypertarget{tarray_8h}{}\label{tarray_8h}\index{src/interpreter/tarray.h@{src/interpreter/tarray.h}}
+
+
+Declares the Array structure used for dynamic, indexed storage in the virtual machine.  
+
+
+{\ttfamily \#include "{}common.\+h"{}}\newline
+{\ttfamily \#include "{}csize.\+h"{}}\newline
+{\ttfamily \#include "{}tvalue.\+h"{}}\newline
+Include dependency graph for tarray.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1Array}{via\+::\+Array}}
+\begin{DoxyCompactList}\small\item\em A growable, dynamically sized array of {\ttfamily \doxylink{structvia_1_1Value}{Value}} elements. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespacevia_a625b182fc4186a14ef71f050e732d912}\label{namespacevia_a625b182fc4186a14ef71f050e732d912} 
+constexpr size\+\_\+t {\bfseries via\+::\+ARRAY\+\_\+\+INITAL\+\_\+\+CAPACITY} = 64
+\begin{DoxyCompactList}\small\item\em Default starting capacity for all arrays. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares the Array structure used for dynamic, indexed storage in the virtual machine. 
+
+The Array structure implements a dynamic array of {\ttfamily Value}s with automatic resizing and index-\/based access. Arrays are core collection types in the via language runtime. 

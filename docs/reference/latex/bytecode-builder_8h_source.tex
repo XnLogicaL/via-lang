@@ -11,10 +11,10 @@
 \DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
 \DoxyCodeLine{00012\ }
 \DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <parse/ast.h>}}
-\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <codegen/visitor.h>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{visitor_8h}{codegen/visitor.h}}>}}
 \DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{types_8h}{codegen/types.h}}>}}
-\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <interpreter/instruction.h>}}
-\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ <interpreter/state.h>}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{instruction_8h}{interpreter/instruction.h}}>}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{state_8h}{interpreter/state.h}}>}}
 \DoxyCodeLine{00018\ }
 \DoxyCodeLine{00024\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
 \DoxyCodeLine{00025\ }
@@ -68,13 +68,13 @@
 \DoxyCodeLine{00151\ }
 \DoxyCodeLine{00159\ \mbox{\hyperlink{structvia_1_1LitExprNode}{LitExprNode}}\ \mbox{\hyperlink{bytecode-builder_8cpp_ac9703f204266ee5ff6611665067a580c}{fold\_constant}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ constant,\ \textcolor{keywordtype}{size\_t}\ fold\_depth\ =\ 0);}
 \DoxyCodeLine{00160\ }
-\DoxyCodeLine{00167\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ \mbox{\hyperlink{bytecode-builder_8cpp_a821ac9cae97689669d2c96e6d1411d28}{push\_constant}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\&\ constant);}
+\DoxyCodeLine{00167\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ \mbox{\hyperlink{bytecode-builder_8cpp_a821ac9cae97689669d2c96e6d1411d28}{push\_constant}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\&\ constant);}
 \DoxyCodeLine{00168\ }
-\DoxyCodeLine{00176\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_ae336781c36f310148a11623a10fd6761}{resolve\_lvalue}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ lvalue,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ dst);}
+\DoxyCodeLine{00176\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_ae336781c36f310148a11623a10fd6761}{resolve\_lvalue}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ lvalue,\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ dst);}
 \DoxyCodeLine{00177\ }
-\DoxyCodeLine{00185\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_aa83c6cf545d9a79002c7088f35f7ec31}{resolve\_rvalue}}(\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}*\ visitor,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ rvalue,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ dst);}
+\DoxyCodeLine{00185\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_aa83c6cf545d9a79002c7088f35f7ec31}{resolve\_rvalue}}(\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}*\ visitor,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ rvalue,\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ dst);}
 \DoxyCodeLine{00186\ }
-\DoxyCodeLine{00194\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_a69030828d339302cc913315f7a911490}{bind\_lvalue}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ lvalue,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ src);}
+\DoxyCodeLine{00194\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{bytecode-builder_8cpp_a69030828d339302cc913315f7a911490}{bind\_lvalue}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ lvalue,\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ src);}
 \DoxyCodeLine{00195\ }
 \DoxyCodeLine{00203\ \mbox{\hyperlink{structvia_1_1TypeNodeBase}{TypeNodeBase}}*\ \mbox{\hyperlink{bytecode-builder_8cpp_add415b7aca65d8e5f933f440968a0533}{resolve\_type}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{structvia_1_1ExprNodeBase}{ExprNodeBase}}*\ expr);}
 \DoxyCodeLine{00204\ }
@@ -82,19 +82,19 @@
 \DoxyCodeLine{00210\ }
 \DoxyCodeLine{00218\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{bytecode-builder_8cpp_a7da6a7e98da441aeb6cce0b329a15cb1}{bytecode\_emit}}(}
 \DoxyCodeLine{00219\ \ \ \mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,}
-\DoxyCodeLine{00220\ \ \ Opcode\ opcode\ =\ Opcode::NOP,}
+\DoxyCodeLine{00220\ \ \ \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}}\ opcode\ =\ \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}{Opcode::NOP}},}
 \DoxyCodeLine{00221\ \ \ \mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{operands\_init\_t}}\&\&\ operands\ =\ \{\},}
 \DoxyCodeLine{00222\ \ \ std::string\ comment\ =\ \textcolor{stringliteral}{"{}"{}}}
 \DoxyCodeLine{00223\ );}
 \DoxyCodeLine{00224\ }
 \DoxyCodeLine{00230\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{bytecode-builder_8cpp_a7bce3ee1324627943bb8a7dae03f82ce}{close\_defer\_statements}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{NodeVisitorBase}}*\ visitor);}
 \DoxyCodeLine{00231\ }
-\DoxyCodeLine{00237\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ \mbox{\hyperlink{bytecode-builder_8h_a1a769bd32cb52620f99848cfe93fae0c}{alloc\_register}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx)\ \{}
-\DoxyCodeLine{00238\ \ \ \textcolor{keywordflow}{return}\ ctx.reg\_alloc.\mbox{\hyperlink{classvia_1_1RegisterAllocator_a9520ef0cef2944106fd8de1920db18e8}{allocate\_register}}();}
+\DoxyCodeLine{00237\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ \mbox{\hyperlink{bytecode-builder_8h_a1a769bd32cb52620f99848cfe93fae0c}{alloc\_register}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx)\ \{}
+\DoxyCodeLine{00238\ \ \ \textcolor{keywordflow}{return}\ ctx.\mbox{\hyperlink{structvia_1_1VisitorContext_a3f2713ae46030f92aaa3856377cd3afa}{reg\_alloc}}.\mbox{\hyperlink{classvia_1_1RegisterAllocator_a9520ef0cef2944106fd8de1920db18e8}{allocate\_register}}();}
 \DoxyCodeLine{00239\ \}}
 \DoxyCodeLine{00240\ }
-\DoxyCodeLine{00247\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{bytecode-builder_8h_af77668addbda8eb247ec34282720901c}{free\_register}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\_t}}\ reg)\ \{}
-\DoxyCodeLine{00248\ \ \ ctx.reg\_alloc.\mbox{\hyperlink{classvia_1_1RegisterAllocator_a803062b7bafc00fb5d1afe1160e4fb00}{free\_register}}(reg);}
+\DoxyCodeLine{00247\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{bytecode-builder_8h_af77668addbda8eb247ec34282720901c}{free\_register}}(\mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\&\ ctx,\ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\_t}}\ reg)\ \{}
+\DoxyCodeLine{00248\ \ \ ctx.\mbox{\hyperlink{structvia_1_1VisitorContext_a3f2713ae46030f92aaa3856377cd3afa}{reg\_alloc}}.\mbox{\hyperlink{classvia_1_1RegisterAllocator_a803062b7bafc00fb5d1afe1160e4fb00}{free\_register}}(reg);}
 \DoxyCodeLine{00249\ \}}
 \DoxyCodeLine{00250\ }
 \DoxyCodeLine{00251\ \}\ \textcolor{comment}{//\ namespace\ compiler\_util}}
@@ -106,19 +106,17 @@
 \DoxyCodeLine{00263\ }
 \DoxyCodeLine{00268\ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classvia_1_1BytecodeBuilder_ae47deccecfdd87d4f1af4ee7fab3830f}{generate}}();}
 \DoxyCodeLine{00269\ }
-\DoxyCodeLine{00270\ \ \ \textcolor{keywordtype}{void}\ add\_unused\_expression\_handler(\textcolor{keyword}{const}\ unused\_expression\_handler\_t\&\ handler);}
-\DoxyCodeLine{00271\ }
-\DoxyCodeLine{00272\ \textcolor{keyword}{private}:}
-\DoxyCodeLine{00276\ \ \ \textcolor{keywordtype}{void}\ codegen\_prep();}
-\DoxyCodeLine{00277\ }
-\DoxyCodeLine{00281\ \ \ \textcolor{keywordtype}{void}\ insert\_exit0\_instruction();}
-\DoxyCodeLine{00282\ }
-\DoxyCodeLine{00283\ \textcolor{keyword}{private}:}
-\DoxyCodeLine{00284\ \ \ \mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\ ctx;}
-\DoxyCodeLine{00285\ \};}
+\DoxyCodeLine{00270\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00274\ \ \ \textcolor{keywordtype}{void}\ codegen\_prep();}
+\DoxyCodeLine{00275\ }
+\DoxyCodeLine{00279\ \ \ \textcolor{keywordtype}{void}\ insert\_exit0\_instruction();}
+\DoxyCodeLine{00280\ }
+\DoxyCodeLine{00281\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00282\ \ \ \mbox{\hyperlink{structvia_1_1VisitorContext}{VisitorContext}}\ ctx;}
+\DoxyCodeLine{00283\ \};}
+\DoxyCodeLine{00284\ }
+\DoxyCodeLine{00285\ \}\ \textcolor{comment}{//\ namespace\ via}}
 \DoxyCodeLine{00286\ }
-\DoxyCodeLine{00287\ \}\ \textcolor{comment}{//\ namespace\ via}}
-\DoxyCodeLine{00288\ }
-\DoxyCodeLine{00291\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00289\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

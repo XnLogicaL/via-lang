@@ -79,7 +79,7 @@ digraph "src/codegen/register.h"
   Node8 -> Node37 [id="edge110_Node000008_Node000037",color="steelblue1",style="solid",tooltip=" "];
   Node37 [id="Node000037",label="vector",height=0.2,width=0.4,color="grey60", fillcolor="#E0E0E0", style="filled",tooltip=" "];
   Node1 -> Node38 [id="edge111_Node000001_Node000038",color="steelblue1",style="solid",tooltip=" "];
-  Node38 [id="Node000038",label="interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h_source.html",tooltip=" "];
+  Node38 [id="Node000038",label="interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h.html",tooltip="Declares the State class and related components for managing VM execution."];
   Node38 -> Node2 [id="edge112_Node000038_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node38 -> Node39 [id="edge113_Node000038_Node000039",color="steelblue1",style="solid",tooltip=" "];
   Node39 [id="Node000039",label="context.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$context_8h_source.html",tooltip=" "];
@@ -109,7 +109,7 @@ digraph "src/codegen/register.h"
   Node45 -> Node2 [id="edge131_Node000045_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node45 -> Node42 [id="edge132_Node000045_Node000042",color="steelblue1",style="solid",tooltip=" "];
   Node45 -> Node49 [id="edge133_Node000045_Node000049",color="steelblue1",style="solid",tooltip=" "];
-  Node49 [id="Node000049",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h_source.html",tooltip=" "];
+  Node49 [id="Node000049",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h.html",tooltip="Defines the representation of bytecode instructions in the Via VM."];
   Node49 -> Node2 [id="edge134_Node000049_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node49 -> Node50 [id="edge135_Node000049_Node000050",color="steelblue1",style="solid",tooltip=" "];
   Node50 [id="Node000050",label="opcode.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$opcode_8h_source.html",tooltip=" "];
@@ -122,7 +122,7 @@ digraph "src/codegen/register.h"
   Node47 -> Node2 [id="edge140_Node000047_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node39 -> Node44 [id="edge141_Node000039_Node000044",color="steelblue1",style="solid",tooltip=" "];
   Node38 -> Node52 [id="edge142_Node000038_Node000052",color="steelblue1",style="solid",tooltip=" "];
-  Node52 [id="Node000052",label="call-stack.h",height=0.2,width=0.4,color="red", fillcolor="#FFF0F0", style="filled",URL="$call-stack_8h_source.html",tooltip=" "];
+  Node52 [id="Node000052",label="call-stack.h",height=0.2,width=0.4,color="red", fillcolor="#FFF0F0", style="filled",URL="$call-stack_8h.html",tooltip="Defines the call stack and call frame structures for function execution."];
   Node52 -> Node2 [id="edge143_Node000052_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node38 -> Node49 [id="edge144_Node000038_Node000049",color="steelblue1",style="solid",tooltip=" "];
   Node38 -> Node44 [id="edge145_Node000038_Node000044",color="steelblue1",style="solid",tooltip=" "];

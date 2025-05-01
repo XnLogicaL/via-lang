@@ -1,12 +1,21 @@
 var searchData=
 [
-  ['bind_5flvalue_0',['bind_lvalue',['../bytecode-builder_8cpp.html#a69030828d339302cc913315f7a911490',1,'via::compiler_util']]],
-  ['binexprnode_1',['BinExprNode',['../structvia_1_1BinExprNode.html',1,'via']]],
-  ['breakstmtnode_2',['BreakStmtNode',['../structvia_1_1BreakStmtNode.html',1,'via']]],
-  ['byte_5fstream_5ft_3',['byte_stream_t',['../group__via__namespace.html#ga40a4d71b3f7c37889759d83cc797ea83',1,'via']]],
-  ['bytecode_4',['Bytecode',['../structvia_1_1Bytecode.html',1,'via']]],
-  ['bytecode_2dbuilder_2ecpp_5',['bytecode-builder.cpp',['../bytecode-builder_8cpp.html',1,'']]],
-  ['bytecode_2dbuilder_2eh_6',['bytecode-builder.h',['../bytecode-builder_8h.html',1,'']]],
-  ['bytecode_5femit_7',['bytecode_emit',['../bytecode-builder_8cpp.html#a7da6a7e98da441aeb6cce0b329a15cb1',1,'via::compiler_util']]],
-  ['bytecodebuilder_8',['BytecodeBuilder',['../classvia_1_1BytecodeBuilder.html',1,'via']]]
+  ['a_0',['a',['../structvia_1_1Instruction.html#a0ec8f8399055a10cf49c5867af0b4808',1,'via::Instruction']]],
+  ['add_1',['ADD',['../namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a9eeb52badb613229884838847294b90d',1,'via']]],
+  ['addf_2',['ADDF',['../namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a17b4ec3cdf552c43d7e91fe3471cd32f',1,'via']]],
+  ['addi_3',['ADDI',['../namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62ad325c9b9b5aede6e4db6f0bd46cec60e',1,'via']]],
+  ['alloc_5fregister_4',['alloc_register',['../bytecode-builder_8h.html#a1a769bd32cb52620f99848cfe93fae0c',1,'via::compiler_util']]],
+  ['allocate_5fregister_5',['allocate_register',['../classvia_1_1RegisterAllocator.html#a9520ef0cef2944106fd8de1920db18e8',1,'via::RegisterAllocator']]],
+  ['allocate_5ftemp_6',['allocate_temp',['../classvia_1_1RegisterAllocator.html#ad2e80540bae78924fb394af46268b1d1',1,'via::RegisterAllocator']]],
+  ['api_2dimpl_2eh_7',['api-impl.h',['../api-impl_8h.html',1,'']]],
+  ['args_8',['args',['../structvia_1_1VisitorContext.html#ad6ad9d494fa35f9c647e65dfa7cfa1df',1,'via::VisitorContext::args'],['../structvia_1_1State.html#a32f49386f9e16d0b41dc1f7e3a726764',1,'via::State::args']]],
+  ['arity_9',['arity',['../structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47',1,'via::Callable']]],
+  ['arr_10',['arr',['../unionvia_1_1Value_1_1Un.html#ad8001e9d9e7b18d289c51e11abc1084b',1,'via::Value::Un']]],
+  ['array_11',['array',['../structvia_1_1Array.html',1,'via::Array'],['../structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17',1,'via::Value::Array']]],
+  ['array_5finital_5fcapacity_12',['ARRAY_INITAL_CAPACITY',['../namespacevia.html#a625b182fc4186a14ef71f050e732d912',1,'via']]],
+  ['arrayexprnode_13',['ArrayExprNode',['../structvia_1_1ArrayExprNode.html',1,'via']]],
+  ['arraytypenode_14',['ArrayTypeNode',['../structvia_1_1ArrayTypeNode.html',1,'via']]],
+  ['assignstmtnode_15',['AssignStmtNode',['../structvia_1_1AssignStmtNode.html',1,'via']]],
+  ['ast_5fallocator_5fsize_16',['AST_ALLOCATOR_SIZE',['../group__via__namespace.html#gad55b685ebdb875ea5cf67636cb76a655',1,'via']]],
+  ['autotypenode_17',['AutoTypeNode',['../structvia_1_1AutoTypeNode.html',1,'via']]]
 ];

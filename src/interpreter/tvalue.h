@@ -131,7 +131,8 @@ struct alignas(8) Value {
   VIA_NODISCARD size_t cxx_length() const; ///< Returns native length.
 
   // Comparison
-  VIA_NODISCARD bool compare(const Value& other) const; ///< Deep equality check.
+  VIA_NODISCARD bool compare(const Value& other) const;      ///< Shallow equality check.
+  VIA_NODISCARD bool deep_compare(const Value& other) const; ///< Deep equality check.
 };
 
 } // namespace via

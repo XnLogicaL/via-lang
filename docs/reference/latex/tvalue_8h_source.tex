@@ -5,127 +5,109 @@
 \DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
 \DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
 \DoxyCodeLine{00003\ }
-\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_OBJECT\_H}}
-\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_OBJECT\_H}}
-\DoxyCodeLine{00006\ }
-\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
-\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <magic\_enum/magic\_enum.hpp>}}
-\DoxyCodeLine{00009\ }
-\DoxyCodeLine{00010\ \textcolor{comment}{//\ MSVC\ is\ annoying\ with\ uninitialized\ members}}
-\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_MSVC}}
-\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#pragma\ warning(push)}}
-\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#pragma\ warning(disable\ :\ 26495)}}
-\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{00015\ }
-\DoxyCodeLine{00016\ \textcolor{comment}{//\ \ ==========}}
-\DoxyCodeLine{00017\ \textcolor{comment}{//\ [\ object.h\ ]}}
-\DoxyCodeLine{00018\ \textcolor{comment}{//\ \ ==========}}
-\DoxyCodeLine{00019\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
-\DoxyCodeLine{00020\ }
-\DoxyCodeLine{00021\ \textcolor{comment}{//\ Forward\ declarations}}
-\DoxyCodeLine{00022\ \textcolor{keyword}{struct\ }State;}
-\DoxyCodeLine{00023\ \textcolor{keyword}{struct\ }String;}
-\DoxyCodeLine{00024\ \textcolor{keyword}{struct\ }Array;}
-\DoxyCodeLine{00025\ \textcolor{keyword}{struct\ }Dict;}
-\DoxyCodeLine{00026\ \textcolor{keyword}{struct\ }Closure;}
-\DoxyCodeLine{00027\ }
-\DoxyCodeLine{00028\ \textcolor{comment}{//\ C\ function\ pointer\ type\ alias.}}
-\DoxyCodeLine{00029\ \textcolor{keyword}{using\ }cfunction\_t\ =\ void\ (*)(State*);}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_OBJECT\_H}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_OBJECT\_H}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ "{}common.h"{}}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ <magic\_enum/magic\_enum.hpp>}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{comment}{//\ MSVC\ is\ annoying\ with\ uninitialized\ members}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_MSVC}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#pragma\ warning(push)}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#pragma\ warning(disable\ :\ 26495)}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00029\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacevia}{via}}\ \{}
 \DoxyCodeLine{00030\ }
-\DoxyCodeLine{00031\ \textcolor{comment}{//\ Optimized\ tagged\ union\ value\ object.}}
-\DoxyCodeLine{00032\ \textcolor{keyword}{struct\ }\textcolor{keyword}{alignas}(8)\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \{}
-\DoxyCodeLine{00033\ \ \ \textcolor{keyword}{enum\ class}\ Tag\ :\ uint8\_t\ \{}
-\DoxyCodeLine{00034\ \ \ \ \ Nil,\ \ \ \ \ \ \textcolor{comment}{//\ Empty\ type,\ null}}
-\DoxyCodeLine{00035\ \ \ \ \ Int,\ \ \ \ \ \ \textcolor{comment}{//\ Integer\ type}}
-\DoxyCodeLine{00036\ \ \ \ \ Float,\ \ \ \ \textcolor{comment}{//\ Floating\ point\ type}}
-\DoxyCodeLine{00037\ \ \ \ \ Bool,\ \ \ \ \ \textcolor{comment}{//\ Boolean\ type}}
-\DoxyCodeLine{00038\ \ \ \ \ \mbox{\hyperlink{structvia_1_1String}{String}},\ \ \ \textcolor{comment}{//\ String\ type}}
-\DoxyCodeLine{00039\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Function}{Function}},\ \textcolor{comment}{//\ Function\ type}}
-\DoxyCodeLine{00040\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Array}{Array}},}
-\DoxyCodeLine{00041\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}},}
-\DoxyCodeLine{00042\ \ \ \}\ type;}
-\DoxyCodeLine{00043\ }
-\DoxyCodeLine{00044\ \ \ \textcolor{keyword}{union\ }\mbox{\hyperlink{unionvia_1_1Value_1_1Un}{Un}}\ \{}
-\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keywordtype}{int}\ i;\ \ \ \textcolor{comment}{//\ Integer\ value}}
-\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keywordtype}{float}\ f;\ \textcolor{comment}{//\ Floating\ point\ value}}
-\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keywordtype}{bool}\ b;\ \ \textcolor{comment}{//\ Boolean\ value}}
-\DoxyCodeLine{00048\ \ \ \ \ \mbox{\hyperlink{structvia_1_1String}{String}}*\ str;}
-\DoxyCodeLine{00049\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Array}{Array}}*\ arr;}
-\DoxyCodeLine{00050\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}}*\ dict;}
-\DoxyCodeLine{00051\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Closure}{Closure}}*\ clsr;}
-\DoxyCodeLine{00052\ \ \ \}\ u;}
-\DoxyCodeLine{00053\ }
-\DoxyCodeLine{00054\ \ \ VIA\_NOCOPY(\mbox{\hyperlink{structvia_1_1Value}{Value}});}
-\DoxyCodeLine{00055\ \ \ VIA\_IMPLMOVE(\mbox{\hyperlink{structvia_1_1Value}{Value}});}
-\DoxyCodeLine{00056\ }
-\DoxyCodeLine{00057\ \ \ \textcolor{keyword}{inline}\ \mbox{\hyperlink{structvia_1_1Value}{\string~Value}}()\ \{}
-\DoxyCodeLine{00058\ \ \ \ \ reset();}
-\DoxyCodeLine{00059\ \ \ \}}
+\DoxyCodeLine{00031\ \textcolor{comment}{//\ Forward\ declarations\ for\ pointer\ types\ stored\ in\ Value}}
+\DoxyCodeLine{00032\ \textcolor{keyword}{struct\ }State;}
+\DoxyCodeLine{00033\ \textcolor{keyword}{struct\ }String;}
+\DoxyCodeLine{00034\ \textcolor{keyword}{struct\ }Array;}
+\DoxyCodeLine{00035\ \textcolor{keyword}{struct\ }Dict;}
+\DoxyCodeLine{00036\ \textcolor{keyword}{struct\ }Closure;}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00045\ \textcolor{keyword}{struct\ }\textcolor{keyword}{alignas}(8)\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \{}
+\DoxyCodeLine{00050\ \ \ \textcolor{keyword}{enum\ class}\ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bd}{Tag}}\ :\ uint8\_t\ \{}
+\DoxyCodeLine{00051\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda4da8b7eb2c3f2007cf8238334401ef51}{Nil}},\ \ \ \ \ \ }
+\DoxyCodeLine{00052\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda1686a6c336b71b36d77354cea19a8b52}{Int}},\ \ \ \ \ \ }
+\DoxyCodeLine{00053\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b}{Float}},\ \ \ \ }
+\DoxyCodeLine{00054\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bdac26f15e86e3de4c398a8273272aba034}{Bool}},\ \ \ \ \ }
+\DoxyCodeLine{00055\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda27118326006d3829667a400ad23d5d98}{String}},\ \ \ }
+\DoxyCodeLine{00056\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261}{Function}},\ }
+\DoxyCodeLine{00057\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17}{Array}},\ \ \ \ }
+\DoxyCodeLine{00058\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}}\ \ \ \ \ \ }
+\DoxyCodeLine{00059\ \ \ \}\ type;}
 \DoxyCodeLine{00060\ }
-\DoxyCodeLine{00061\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}();}
-\DoxyCodeLine{00062\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\textcolor{keywordtype}{bool}\ b);}
-\DoxyCodeLine{00063\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\textcolor{keywordtype}{int}\ x);}
-\DoxyCodeLine{00064\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\textcolor{keywordtype}{float}\ x);}
-\DoxyCodeLine{00065\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\mbox{\hyperlink{structvia_1_1String}{String}}*\ ptr);}
-\DoxyCodeLine{00066\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\mbox{\hyperlink{structvia_1_1Array}{Array}}*\ ptr);}
-\DoxyCodeLine{00067\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\mbox{\hyperlink{structvia_1_1Dict}{Dict}}*\ ptr);}
-\DoxyCodeLine{00068\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}(\mbox{\hyperlink{structvia_1_1Closure}{Closure}}*\ ptr);}
-\DoxyCodeLine{00069\ }
-\DoxyCodeLine{00070\ \ \ \textcolor{comment}{//\ Returns\ a\ deep\ clone\ of\ the\ object.}}
-\DoxyCodeLine{00071\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ clone()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00072\ }
-\DoxyCodeLine{00073\ \ \ \textcolor{comment}{//\ Frees\ the\ internal\ resources\ of\ the\ object\ and\ resets\ union\ tag\ to\ Nil.}}
-\DoxyCodeLine{00074\ \ \ \textcolor{keywordtype}{void}\ reset();}
-\DoxyCodeLine{00075\ }
-\DoxyCodeLine{00076\ \ \ \textcolor{comment}{//\ clang-\/format\ off}}
-\DoxyCodeLine{00077\ \ \ \textcolor{comment}{//\ Returns\ whether\ if\ the\ object\ holds\ a\ given\ type.}}
-\DoxyCodeLine{00078\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is(Tag\ other)\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ type\ ==\ other;\ \}}
-\DoxyCodeLine{00079\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_nil()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Nil);\ \}}
-\DoxyCodeLine{00080\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_bool()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Bool);\ \}}
-\DoxyCodeLine{00081\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_int()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Int);\ \}}
-\DoxyCodeLine{00082\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_float()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Float);\ \}}
-\DoxyCodeLine{00083\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_number()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is\_int()\ ||\ is\_float();\ \}}
-\DoxyCodeLine{00084\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_string()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::String);\ \}}
-\DoxyCodeLine{00085\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_array()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Array);\ \}}
-\DoxyCodeLine{00086\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_dict()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Dict);\ \}}
-\DoxyCodeLine{00087\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_subscriptable()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is\_string()\ ||\ is\_array()\ ||\ is\_dict();\ \}}
-\DoxyCodeLine{00088\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_function()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(Tag::Function);\ \}}
-\DoxyCodeLine{00089\ \ \ \textcolor{comment}{//\ clang-\/format\ on}}
-\DoxyCodeLine{00090\ }
-\DoxyCodeLine{00091\ \ \ \textcolor{comment}{//\ Returns\ the\ int\ interpretation\ of\ the\ value\ or\ Nil\ if\ impossible.}}
-\DoxyCodeLine{00092\ \ \ VIA\_NODISCARD\ Value\ to\_integer()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00093\ }
-\DoxyCodeLine{00094\ \ \ \textcolor{comment}{//\ Returns\ the\ fp\ interpretation\ of\ the\ value\ or\ Nil\ if\ impossible.}}
-\DoxyCodeLine{00095\ \ \ VIA\_NODISCARD\ Value\ to\_float()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00096\ }
-\DoxyCodeLine{00097\ \ \ \textcolor{comment}{//\ Returns\ the\ Bool\ interpretation\ of\ the\ value.}}
-\DoxyCodeLine{00098\ \ \ VIA\_NODISCARD\ Value\ to\_boolean()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00099\ }
-\DoxyCodeLine{00100\ \ \ \textcolor{comment}{//\ Returns\ the\ String\ of\ the\ value.}}
-\DoxyCodeLine{00101\ \ \ VIA\_NODISCARD\ Value\ to\_string()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00102\ \ \ VIA\_NODISCARD\ std::string\ to\_cxx\_string()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00103\ \ \ VIA\_NODISCARD\ std::string\ to\_literal\_cxx\_string()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00104\ }
-\DoxyCodeLine{00105\ \ \ \textcolor{comment}{//\ Returns\ the\ type\ of\ the\ value\ as\ a\ String.}}
-\DoxyCodeLine{00106\ \ \ VIA\_NODISCARD\ Value\ type\_string()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00107\ \ \ VIA\_NODISCARD\ std::string\ type\_cxx\_string()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00108\ }
-\DoxyCodeLine{00113\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{void}*\ \mbox{\hyperlink{structvia_1_1Value_ac7103c3fa0da531584ebedd994492e00}{to\_pointer}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00065\ \ \ \textcolor{keyword}{union\ }\mbox{\hyperlink{unionvia_1_1Value_1_1Un}{Un}}\ \{}
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_af2cc8223e0d0b78c6168f287dbe52f7d}{i}};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_afb397ce3a33310ac53d48214f40647ce}{f}};\ \ \ \ \ \ \ }
+\DoxyCodeLine{00068\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_a84ecab33070fee4980c311c573e420c1}{b}};\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00069\ \ \ \ \ \mbox{\hyperlink{structvia_1_1String}{String}}*\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_ad700748576d06928453e54f30c211d55}{str}};\ \ \ }
+\DoxyCodeLine{00070\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Array}{Array}}*\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_ad8001e9d9e7b18d289c51e11abc1084b}{arr}};\ \ \ \ }
+\DoxyCodeLine{00071\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Dict}{Dict}}*\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_aae423135d912f0a165cbf3b5c6c88ff4}{dict}};\ \ \ \ }
+\DoxyCodeLine{00072\ \ \ \ \ \mbox{\hyperlink{structvia_1_1Closure}{Closure}}*\ \mbox{\hyperlink{unionvia_1_1Value_1_1Un_a723f43daa02c97209d5e6669e6c51dd1}{clsr}};\ }
+\DoxyCodeLine{00073\ \ \ \}\ u;}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \ \ VIA\_NOCOPY(\mbox{\hyperlink{structvia_1_1Value}{Value}});}
+\DoxyCodeLine{00076\ \ \ VIA\_IMPLMOVE(\mbox{\hyperlink{structvia_1_1Value}{Value}});}
+\DoxyCodeLine{00077\ }
+\DoxyCodeLine{00078\ \ \ \mbox{\hyperlink{structvia_1_1Value}{\string~Value}}();}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00080\ \ \ \textcolor{comment}{//\ Constructors}}
+\DoxyCodeLine{00081\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}();\ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00082\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\textcolor{keywordtype}{bool}\ b);\ \ \ \ \ \ \ }
+\DoxyCodeLine{00083\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\textcolor{keywordtype}{int}\ x);\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00084\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\textcolor{keywordtype}{float}\ x);\ \ \ \ \ \ }
+\DoxyCodeLine{00085\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\mbox{\hyperlink{structvia_1_1String}{String}}*\ ptr);\ \ }
+\DoxyCodeLine{00086\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\mbox{\hyperlink{structvia_1_1Array}{Array}}*\ ptr);\ \ \ }
+\DoxyCodeLine{00087\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\mbox{\hyperlink{structvia_1_1Dict}{Dict}}*\ ptr);\ \ \ \ }
+\DoxyCodeLine{00088\ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{structvia_1_1Value_a44570856eeed2405533df68ace85ac4f}{Value}}(\mbox{\hyperlink{structvia_1_1Closure}{Closure}}*\ ptr);\ }
+\DoxyCodeLine{00089\ }
+\DoxyCodeLine{00090\ \ \ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a2ced84bb3d11000074a43db7071f1d95}{clone}}()\ \textcolor{keyword}{const};\ }
+\DoxyCodeLine{00091\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structvia_1_1Value_a80ef15f9f50adc13ed464b9fcf192ef8}{reset}}();\ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \ \ \textcolor{comment}{//\ clang-\/format\ off}}
+\DoxyCodeLine{00094\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bd}{Tag}}\ other)\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ type\ ==\ other;\ \}}
+\DoxyCodeLine{00095\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_nil()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda4da8b7eb2c3f2007cf8238334401ef51}{Tag::Nil}});\ \}}
+\DoxyCodeLine{00096\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_bool()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bdac26f15e86e3de4c398a8273272aba034}{Tag::Bool}});\ \}}
+\DoxyCodeLine{00097\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_int()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda1686a6c336b71b36d77354cea19a8b52}{Tag::Int}});\ \}}
+\DoxyCodeLine{00098\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_float()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b}{Tag::Float}});\ \}}
+\DoxyCodeLine{00099\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_number()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is\_int()\ ||\ is\_float();\ \}}
+\DoxyCodeLine{00100\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_string()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda27118326006d3829667a400ad23d5d98}{Tag::String}});\ \}}
+\DoxyCodeLine{00101\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_array()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda4410ec34d9e6c1a68100ca0ce033fb17}{Tag::Array}});\ \}}
+\DoxyCodeLine{00102\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_dict()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda91516e7a50ce0a67a8eb1f9229c293d1}{Tag::Dict}});\ \}}
+\DoxyCodeLine{00103\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_subscriptable()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is\_string()\ ||\ is\_array()\ ||\ is\_dict();\ \}}
+\DoxyCodeLine{00104\ \ \ VIA\_NODISCARD\ VIA\_FORCEINLINE\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{bool}\ is\_function()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ is(\mbox{\hyperlink{structvia_1_1Value_ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261}{Tag::Function}});\ \}}
+\DoxyCodeLine{00105\ \ \ \textcolor{comment}{//\ clang-\/format\ on}}
+\DoxyCodeLine{00106\ }
+\DoxyCodeLine{00107\ \ \ \textcolor{comment}{//\ Conversions}}
+\DoxyCodeLine{00108\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a5e8510834e38e3b7a0c86f1b4e463599}{to\_integer}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00109\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a41e36d528e8c3e557528d5102bd138ad}{to\_float}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00110\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_aa0e2a6954b5f662ca705c80ac1803232}{to\_boolean}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00111\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a183207f92f09bf232e18fe6599c2791a}{to\_string}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00112\ \ \ VIA\_NODISCARD\ std::string\ \mbox{\hyperlink{structvia_1_1Value_a85c7922d19827ba2cf9e2dbbfc625ba4}{to\_cxx\_string}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00113\ \ \ VIA\_NODISCARD\ std::string\ \mbox{\hyperlink{structvia_1_1Value_a781cb4dcc066ff3bab35acbab8fd09b5}{to\_literal\_cxx\_string}}()\ \textcolor{keyword}{const};\ }
 \DoxyCodeLine{00114\ }
-\DoxyCodeLine{00115\ \ \ \textcolor{comment}{//\ Returns\ the\ length\ of\ the\ underlying\ type\ of\ the\ value\ or\ Nil\ if\ impossible.}}
-\DoxyCodeLine{00116\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ length()\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00117\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{size\_t}\ cxx\_length()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00115\ \ \ \textcolor{comment}{//\ Type\ representation}}
+\DoxyCodeLine{00116\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a3630a6e3d7371279092eff807a26276b}{type\_string}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00117\ \ \ VIA\_NODISCARD\ std::string\ \mbox{\hyperlink{structvia_1_1Value_a1e51bb733366eb35526cd3ebb2ef7a3f}{type\_cxx\_string}}()\ \textcolor{keyword}{const};\ }
 \DoxyCodeLine{00118\ }
-\DoxyCodeLine{00119\ \ \ \textcolor{comment}{//\ Compares\ equality\ between\ self\ and\ a\ given\ Value.}}
-\DoxyCodeLine{00120\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{bool}\ compare(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ other)\ \textcolor{keyword}{const};}
-\DoxyCodeLine{00121\ \};}
-\DoxyCodeLine{00122\ }
-\DoxyCodeLine{00123\ \}\ \textcolor{comment}{//\ namespace\ via}}
-\DoxyCodeLine{00124\ }
-\DoxyCodeLine{00125\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_MSVC}}
-\DoxyCodeLine{00126\ \textcolor{preprocessor}{\#pragma\ warning(pop)}}
-\DoxyCodeLine{00127\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00127\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{void}*\ \mbox{\hyperlink{structvia_1_1Value_ac7103c3fa0da531584ebedd994492e00}{to\_pointer}}()\ \textcolor{keyword}{const};}
 \DoxyCodeLine{00128\ }
-\DoxyCodeLine{00129\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00129\ \ \ \textcolor{comment}{//\ Length\ functions}}
+\DoxyCodeLine{00130\ \ \ VIA\_NODISCARD\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\ \mbox{\hyperlink{structvia_1_1Value_a19d58c3d2cd048274206c3dcc32b04c7}{length}}()\ \textcolor{keyword}{const};\ \ \ \ \ \ }
+\DoxyCodeLine{00131\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{structvia_1_1Value_ab1ac6cabd7f79ba13a4caad203f8edfe}{cxx\_length}}()\ \textcolor{keyword}{const};\ }
+\DoxyCodeLine{00132\ }
+\DoxyCodeLine{00133\ \ \ \textcolor{comment}{//\ Comparison}}
+\DoxyCodeLine{00134\ \ \ VIA\_NODISCARD\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structvia_1_1Value_aa78aa4ade8b11f09fa7a7496bf93b520}{compare}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structvia_1_1Value}{Value}}\&\ other)\ \textcolor{keyword}{const};\ }
+\DoxyCodeLine{00135\ \};}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \}\ \textcolor{comment}{//\ namespace\ via}}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00141\ \textcolor{preprocessor}{\#if\ VIA\_COMPILER\ ==\ C\_MSVC}}
+\DoxyCodeLine{00142\ \textcolor{preprocessor}{\#pragma\ warning(pop)}}
+\DoxyCodeLine{00143\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ VIA\_HAS\_HEADER\_OBJECT\_H}}
 
 \end{DoxyCode}

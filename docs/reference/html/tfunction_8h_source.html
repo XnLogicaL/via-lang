@@ -113,105 +113,139 @@ $(document).ready(function() { init_codefold(0); });
   <div class="headertitle"><div class="title">tfunction.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// This file is a part of the via Programming Language project</span></div>
+<a href="tfunction_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// This file is a part of the via Programming Language project</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef VIA_HAS_HEADER_FUNCTION_H</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#define VIA_HAS_HEADER_FUNCTION_H</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;instruction.h&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;tvalue.h&quot;</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> CLOSURE_INITIAL_UPV_COUNT = 10;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#ifndef VIA_HAS_HEADER_FUNCTION_H</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#define VIA_HAS_HEADER_FUNCTION_H</span></div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword">struct </span>State;</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">struct </span>Closure;</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">struct </span>CallFrame;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;<a class="code" href="instruction_8h.html">instruction.h</a>&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;tvalue.h&quot;</span></div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
-<div class="foldopen" id="foldopen00019" data-start="{" data-end="};">
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html">   19</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1UpValue.html">UpValue</a> {</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>  <span class="keywordtype">bool</span> is_open = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  <span class="keywordtype">bool</span> is_valid = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>* value = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a> heap_value = <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>();</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>};</div>
-</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="foldopen" id="foldopen00026" data-start="{" data-end="};">
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html">   26</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Function.html">Function</a> {</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <a class="code hl_struct" href="structvia_1_1Instruction.html">Instruction</a>* code = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  <span class="keywordtype">size_t</span> code_size = 0;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="keywordtype">size_t</span> line_number = 0;</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keyword">const</span> <span class="keywordtype">char</span>* <span class="keywordtype">id</span> = <span class="stringliteral">&quot;&lt;anonymous&gt;&quot;</span>;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  VIA_IMPLCOPY(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>);</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>  VIA_IMPLMOVE(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>);</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="namespacevia.html#ae74c48a7cb4d4cbf4fb105c55469a39c">   29</a></span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> <a class="code hl_variable" href="namespacevia.html#ae74c48a7cb4d4cbf4fb105c55469a39c">CLOSURE_INITIAL_UPV_COUNT</a> = 10;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="keyword">struct </span><a class="code hl_class" href="structvia_1_1State.html">State</a>;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>;</div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>  <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>(<span class="keywordtype">size_t</span> code_size);</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>  <a class="code hl_struct" href="structvia_1_1Function.html">~Function</a>();</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>};</div>
-</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keyword">using </span>NativeFn = <a class="code hl_struct" href="structvia_1_1Value.html">Value</a> (*)(<a class="code hl_struct" href="structvia_1_1State.html">State</a>* interpreter);</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
 <div class="foldopen" id="foldopen00042" data-start="{" data-end="};">
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html">   42</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a> {</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>  <span class="keyword">enum class</span> Tag {</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    None,</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>,</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    Native,</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  } type = Tag::Function;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html">   42</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1UpValue.html">UpValue</a> {</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html#a7241f59c995dbc25c16be65c5438acf8">   43</a></span>  <span class="keywordtype">bool</span> <a class="code hl_variable" href="structvia_1_1UpValue.html#a7241f59c995dbc25c16be65c5438acf8">is_open</a> = <span class="keyword">true</span>;        </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html#a2161745342ab682859a1da6254ce52fb">   44</a></span>  <span class="keywordtype">bool</span> <a class="code hl_variable" href="structvia_1_1UpValue.html#a2161745342ab682859a1da6254ce52fb">is_valid</a> = <span class="keyword">false</span>;      </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html#a83fd4ebc33c2e1c482fb20fc1e2d583e">   45</a></span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>* <a class="code hl_variable" href="structvia_1_1UpValue.html#a83fd4ebc33c2e1c482fb20fc1e2d583e">value</a> = <span class="keyword">nullptr</span>;     </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structvia_1_1UpValue.html#a6580eaf8e316a50877652c899acf843d">   46</a></span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a> <a class="code hl_variable" href="structvia_1_1UpValue.html#a6580eaf8e316a50877652c899acf843d">heap_value</a> = <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>(); </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>};</div>
+</div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="foldopen" id="foldopen00049" data-start="{" data-end="};">
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="unionvia_1_1Callable_1_1Un.html">   49</a></span>  <span class="keyword">union </span><a class="code hl_union" href="unionvia_1_1Callable_1_1Un.html">Un</a> {</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>* fn = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    NativeFn ntv;</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>  } u;</div>
-</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  <span class="keywordtype">size_t</span> arity = 0; <span class="comment">// Argc</span></div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  VIA_IMPLCOPY(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>);</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  VIA_IMPLMOVE(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>);</div>
+<div class="foldopen" id="foldopen00053" data-start="{" data-end="};">
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html">   53</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Function.html">Function</a> {</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a863476fa4d20a00a0021e13355cdd11c">   54</a></span>  <a class="code hl_struct" href="structvia_1_1Instruction.html">Instruction</a>* <a class="code hl_variable" href="structvia_1_1Function.html#a863476fa4d20a00a0021e13355cdd11c">code</a> = <span class="keyword">nullptr</span>;    </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a555e006e5fde9465bd925c322fe65b73">   55</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Function.html#a555e006e5fde9465bd925c322fe65b73">code_size</a> = 0;           </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a87dd176656911014a3a1ca247e91d2ee">   56</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Function.html#a87dd176656911014a3a1ca247e91d2ee">line_number</a> = 0;         </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a4b9471b6a7d6663557114fb789babd6c">   57</a></span>  <span class="keyword">const</span> <span class="keywordtype">char</span>* <span class="keywordtype">id</span> = <span class="stringliteral">&quot;&lt;anonymous&gt;&quot;</span>; </div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>* fn, <span class="keywordtype">size_t</span> arity);</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>(NativeFn fn, <span class="keywordtype">size_t</span> arity);</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">~Callable</a>();</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>};</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a04e9fa6149b0f0ed99fcd551ccdb5f2f">   59</a></span>  <a class="code hl_function" href="structvia_1_1Function.html#a04e9fa6149b0f0ed99fcd551ccdb5f2f">VIA_IMPLCOPY</a>(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>); </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="structvia_1_1Function.html#a8b3599caaec18885d1d56ba46dd2aef1">   60</a></span>  <a class="code hl_function" href="structvia_1_1Function.html#a8b3599caaec18885d1d56ba46dd2aef1">VIA_IMPLMOVE</a>(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>); </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>(<span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Function.html#a555e006e5fde9465bd925c322fe65b73">code_size</a>);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  <a class="code hl_struct" href="structvia_1_1Function.html">~Function</a>();</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>};</div>
 </div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
-<div class="foldopen" id="foldopen00065" data-start="{" data-end="};">
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html">   65</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a> {</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a> callee;</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  <a class="code hl_struct" href="structvia_1_1UpValue.html">UpValue</a>* upvs = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  <span class="keywordtype">size_t</span> upv_count = 0;</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>  VIA_IMPLCOPY(<a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>);</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  VIA_IMPLMOVE(<a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>);</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>();</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>&amp;&amp; callable);</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">~Closure</a>();</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>};</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">   75</a></span><span class="keyword">using </span><a class="code hl_typedef" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">NativeFn</a> = <a class="code hl_struct" href="structvia_1_1Value.html">Value</a> (*)(<a class="code hl_class" href="structvia_1_1State.html">State</a>* interpreter);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="foldopen" id="foldopen00083" data-start="{" data-end="};">
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html">   83</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a> {</div>
+<div class="foldopen" id="foldopen00088" data-start="{" data-end="};">
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">   88</a></span>  <span class="keyword">enum class</span> <a class="code hl_enumeration" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">Tag</a> {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <a class="code hl_enumvalue" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754">None</a>,     </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <a class="code hl_enumvalue" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261">Function</a>, </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <a class="code hl_enumvalue" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826">Native</a>,   </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  } type = <a class="code hl_enumvalue" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261">Tag::Function</a>;</div>
 </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>} <span class="comment">// namespace via</span></div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">Main namespace of the project. Contains all but macros.</div></div>
-<div class="ttc" id="astructvia_1_1Callable_html"><div class="ttname"><a href="structvia_1_1Callable.html">via::Callable</a></div><div class="ttdef"><b>Definition</b> tfunction.h:42</div></div>
-<div class="ttc" id="astructvia_1_1Closure_html"><div class="ttname"><a href="structvia_1_1Closure.html">via::Closure</a></div><div class="ttdef"><b>Definition</b> tfunction.h:65</div></div>
-<div class="ttc" id="astructvia_1_1Function_html"><div class="ttname"><a href="structvia_1_1Function.html">via::Function</a></div><div class="ttdef"><b>Definition</b> tfunction.h:26</div></div>
-<div class="ttc" id="astructvia_1_1Instruction_html"><div class="ttname"><a href="structvia_1_1Instruction.html">via::Instruction</a></div><div class="ttdef"><b>Definition</b> instruction.h:24</div></div>
-<div class="ttc" id="astructvia_1_1State_html"><div class="ttname"><a href="structvia_1_1State.html">via::State</a></div><div class="ttdef"><b>Definition</b> state.h:41</div></div>
-<div class="ttc" id="astructvia_1_1UpValue_html"><div class="ttname"><a href="structvia_1_1UpValue.html">via::UpValue</a></div><div class="ttdef"><b>Definition</b> tfunction.h:19</div></div>
-<div class="ttc" id="astructvia_1_1Value_html"><div class="ttname"><a href="structvia_1_1Value.html">via::Value</a></div><div class="ttdef"><b>Definition</b> tvalue.h:32</div></div>
-<div class="ttc" id="aunionvia_1_1Callable_1_1Un_html"><div class="ttname"><a href="unionvia_1_1Callable_1_1Un.html">via::Callable::Un</a></div><div class="ttdef"><b>Definition</b> tfunction.h:49</div></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="foldopen" id="foldopen00098" data-start="{" data-end="};">
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="unionvia_1_1Callable_1_1Un.html">   98</a></span>  <span class="keyword">union </span><a class="code hl_union" href="unionvia_1_1Callable_1_1Un.html">Un</a> {</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_struct" href="structvia_1_1Function.html">Function</a>* fn = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <a class="code hl_typedef" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">NativeFn</a> ntv;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>  } u;</div>
+</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">  103</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">arity</a> = 0; </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html#a214a57f0cd0b65af92be31bde7752a3e">  105</a></span>  <a class="code hl_function" href="structvia_1_1Callable.html#a214a57f0cd0b65af92be31bde7752a3e">VIA_IMPLCOPY</a>(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>); </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="structvia_1_1Callable.html#a202c65c114e01627f2445a4b507e4edd">  106</a></span>  <a class="code hl_function" href="structvia_1_1Callable.html#a202c65c114e01627f2445a4b507e4edd">VIA_IMPLMOVE</a>(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>); </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>(<a class="code hl_struct" href="structvia_1_1Function.html">Function</a>* fn, <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">arity</a>);</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>(<a class="code hl_typedef" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">NativeFn</a> fn, <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">arity</a>);</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>  <a class="code hl_function" href="structvia_1_1Callable.html#a292fa09faa3056b47cd5336ad742c2e5">~Callable</a>();</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>};</div>
+</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="foldopen" id="foldopen00136" data-start="{" data-end="};">
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html">  136</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a> {</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html#ab7380fe64e676fd80e3d24d3223ea542">  137</a></span>  <a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a> <a class="code hl_variable" href="structvia_1_1Closure.html#ab7380fe64e676fd80e3d24d3223ea542">callee</a>;         </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html#aee2767a673337ba62136b8ad399f6ca2">  138</a></span>  <a class="code hl_struct" href="structvia_1_1UpValue.html">UpValue</a>* <a class="code hl_variable" href="structvia_1_1Closure.html#aee2767a673337ba62136b8ad399f6ca2">upvs</a> = <span class="keyword">nullptr</span>; </div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html#a1a9d83a4fe3ad0496ede24a4d5c1960f">  139</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1Closure.html#a1a9d83a4fe3ad0496ede24a4d5c1960f">upv_count</a> = 0;    </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html#a1c4f159e19583333e370d9cce52f469e">  141</a></span>  <a class="code hl_function" href="structvia_1_1Closure.html#a1c4f159e19583333e370d9cce52f469e">VIA_IMPLCOPY</a>(<a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>); </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno"><a class="line" href="structvia_1_1Closure.html#aef8587578c75bf69495133e9d5c2d31b">  142</a></span>  <a class="code hl_function" href="structvia_1_1Closure.html#aef8587578c75bf69495133e9d5c2d31b">VIA_IMPLMOVE</a>(<a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>); </div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>();</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>(<a class="code hl_struct" href="structvia_1_1Callable.html">Callable</a>&amp;&amp; callable);</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>  <a class="code hl_function" href="structvia_1_1Closure.html#abb75bceb473474ed8f2aad2b9f14d103">~Closure</a>();</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>};</div>
+</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>} <span class="comment">// namespace via</span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="ainstruction_8h_html"><div class="ttname"><a href="instruction_8h.html">instruction.h</a></div><div class="ttdoc">Defines the representation of bytecode instructions in the Via VM.</div></div>
+<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">All core compiler logic is within this namespace.</div></div>
+<div class="ttc" id="anamespacevia_html_a23382f1b645a8629871fab7d0431281e"><div class="ttname"><a href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">via::NativeFn</a></div><div class="ttdeci">Value(*)(State *interpreter) NativeFn</div><div class="ttdoc">Type alias for native C++ functions that can be called by the VM. They receive a pointer to the curre...</div><div class="ttdef"><b>Definition</b> tfunction.h:75</div></div>
+<div class="ttc" id="anamespacevia_html_ae74c48a7cb4d4cbf4fb105c55469a39c"><div class="ttname"><a href="namespacevia.html#ae74c48a7cb4d4cbf4fb105c55469a39c">via::CLOSURE_INITIAL_UPV_COUNT</a></div><div class="ttdeci">constexpr size_t CLOSURE_INITIAL_UPV_COUNT</div><div class="ttdoc">Default number of upvalues reserved during closure initialization.</div><div class="ttdef"><b>Definition</b> tfunction.h:29</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html"><div class="ttname"><a href="structvia_1_1CallFrame.html">via::CallFrame</a></div><div class="ttdoc">Represents a single function invocation's execution context.</div><div class="ttdef"><b>Definition</b> call-stack.h:51</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html"><div class="ttname"><a href="structvia_1_1Callable.html">via::Callable</a></div><div class="ttdoc">Wraps a function-like object, either user-defined or native.</div><div class="ttdef"><b>Definition</b> tfunction.h:83</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a202c65c114e01627f2445a4b507e4edd"><div class="ttname"><a href="structvia_1_1Callable.html#a202c65c114e01627f2445a4b507e4edd">via::Callable::VIA_IMPLMOVE</a></div><div class="ttdeci">VIA_IMPLMOVE(Callable)</div><div class="ttdoc">Enables move constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a214a57f0cd0b65af92be31bde7752a3e"><div class="ttname"><a href="structvia_1_1Callable.html#a214a57f0cd0b65af92be31bde7752a3e">via::Callable::VIA_IMPLCOPY</a></div><div class="ttdeci">VIA_IMPLCOPY(Callable)</div><div class="ttdoc">Enables copy constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a292fa09faa3056b47cd5336ad742c2e5"><div class="ttname"><a href="structvia_1_1Callable.html#a292fa09faa3056b47cd5336ad742c2e5">via::Callable::~Callable</a></div><div class="ttdeci">~Callable()</div><div class="ttdoc">Destructor (does not delete the function pointer).</div><div class="ttdef"><b>Definition</b> tfunction.cpp:129</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a295f83c55ac11eeeb70def52ddc8450e"><div class="ttname"><a href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">via::Callable::Tag</a></div><div class="ttdeci">Tag</div><div class="ttdoc">Indicates the kind of function this Callable represents.</div><div class="ttdef"><b>Definition</b> tfunction.h:88</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754"><div class="ttname"><a href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754">via::Callable::Tag::None</a></div><div class="ttdeci">@ None</div><div class="ttdoc">No function.</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261"><div class="ttname"><a href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261">via::Callable::Tag::Function</a></div><div class="ttdeci">@ Function</div><div class="ttdoc">User-defined function.</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826"><div class="ttname"><a href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826">via::Callable::Tag::Native</a></div><div class="ttdeci">@ Native</div><div class="ttdoc">Native function.</div></div>
+<div class="ttc" id="astructvia_1_1Callable_html_af7ef8d36ade9b4fa99782629cd696c47"><div class="ttname"><a href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">via::Callable::arity</a></div><div class="ttdeci">size_t arity</div><div class="ttdoc">Number of arguments expected.</div><div class="ttdef"><b>Definition</b> tfunction.h:103</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html"><div class="ttname"><a href="structvia_1_1Closure.html">via::Closure</a></div><div class="ttdoc">Wraps a Callable with its captured upvalues for lexical scoping.</div><div class="ttdef"><b>Definition</b> tfunction.h:136</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_a1a9d83a4fe3ad0496ede24a4d5c1960f"><div class="ttname"><a href="structvia_1_1Closure.html#a1a9d83a4fe3ad0496ede24a4d5c1960f">via::Closure::upv_count</a></div><div class="ttdeci">size_t upv_count</div><div class="ttdoc">Number of captured upvalues.</div><div class="ttdef"><b>Definition</b> tfunction.h:139</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_a1c4f159e19583333e370d9cce52f469e"><div class="ttname"><a href="structvia_1_1Closure.html#a1c4f159e19583333e370d9cce52f469e">via::Closure::VIA_IMPLCOPY</a></div><div class="ttdeci">VIA_IMPLCOPY(Closure)</div><div class="ttdoc">Enables copy constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_ab7380fe64e676fd80e3d24d3223ea542"><div class="ttname"><a href="structvia_1_1Closure.html#ab7380fe64e676fd80e3d24d3223ea542">via::Closure::callee</a></div><div class="ttdeci">Callable callee</div><div class="ttdoc">Underlying callable (function or native).</div><div class="ttdef"><b>Definition</b> tfunction.h:137</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_abb75bceb473474ed8f2aad2b9f14d103"><div class="ttname"><a href="structvia_1_1Closure.html#abb75bceb473474ed8f2aad2b9f14d103">via::Closure::~Closure</a></div><div class="ttdeci">~Closure()</div><div class="ttdoc">Destructor that frees upvalue array.</div><div class="ttdef"><b>Definition</b> tfunction.cpp:205</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_aee2767a673337ba62136b8ad399f6ca2"><div class="ttname"><a href="structvia_1_1Closure.html#aee2767a673337ba62136b8ad399f6ca2">via::Closure::upvs</a></div><div class="ttdeci">UpValue * upvs</div><div class="ttdoc">Array of upvalue pointers.</div><div class="ttdef"><b>Definition</b> tfunction.h:138</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html_aef8587578c75bf69495133e9d5c2d31b"><div class="ttname"><a href="structvia_1_1Closure.html#aef8587578c75bf69495133e9d5c2d31b">via::Closure::VIA_IMPLMOVE</a></div><div class="ttdeci">VIA_IMPLMOVE(Closure)</div><div class="ttdoc">Enables move constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Function_html"><div class="ttname"><a href="structvia_1_1Function.html">via::Function</a></div><div class="ttdoc">Represents a user-defined via function, including its bytecode and metadata.</div><div class="ttdef"><b>Definition</b> tfunction.h:53</div></div>
+<div class="ttc" id="astructvia_1_1Function_html_a04e9fa6149b0f0ed99fcd551ccdb5f2f"><div class="ttname"><a href="structvia_1_1Function.html#a04e9fa6149b0f0ed99fcd551ccdb5f2f">via::Function::VIA_IMPLCOPY</a></div><div class="ttdeci">VIA_IMPLCOPY(Function)</div><div class="ttdoc">Enables copy constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Function_html_a555e006e5fde9465bd925c322fe65b73"><div class="ttname"><a href="structvia_1_1Function.html#a555e006e5fde9465bd925c322fe65b73">via::Function::code_size</a></div><div class="ttdeci">size_t code_size</div><div class="ttdoc">Total number of instructions.</div><div class="ttdef"><b>Definition</b> tfunction.h:55</div></div>
+<div class="ttc" id="astructvia_1_1Function_html_a863476fa4d20a00a0021e13355cdd11c"><div class="ttname"><a href="structvia_1_1Function.html#a863476fa4d20a00a0021e13355cdd11c">via::Function::code</a></div><div class="ttdeci">Instruction * code</div><div class="ttdoc">Pointer to the function’s instruction sequence.</div><div class="ttdef"><b>Definition</b> tfunction.h:54</div></div>
+<div class="ttc" id="astructvia_1_1Function_html_a87dd176656911014a3a1ca247e91d2ee"><div class="ttname"><a href="structvia_1_1Function.html#a87dd176656911014a3a1ca247e91d2ee">via::Function::line_number</a></div><div class="ttdeci">size_t line_number</div><div class="ttdoc">Line number where function was defined (for debugging).</div><div class="ttdef"><b>Definition</b> tfunction.h:56</div></div>
+<div class="ttc" id="astructvia_1_1Function_html_a8b3599caaec18885d1d56ba46dd2aef1"><div class="ttname"><a href="structvia_1_1Function.html#a8b3599caaec18885d1d56ba46dd2aef1">via::Function::VIA_IMPLMOVE</a></div><div class="ttdeci">VIA_IMPLMOVE(Function)</div><div class="ttdoc">Enables move constructor and assignment.</div></div>
+<div class="ttc" id="astructvia_1_1Instruction_html"><div class="ttname"><a href="structvia_1_1Instruction.html">via::Instruction</a></div><div class="ttdoc">Represents a single VM instruction in the Via bytecode format.</div><div class="ttdef"><b>Definition</b> instruction.h:64</div></div>
+<div class="ttc" id="astructvia_1_1State_html"><div class="ttname"><a href="structvia_1_1State.html">via::State</a></div><div class="ttdoc">Represents the complete virtual machine execution state.</div><div class="ttdef"><b>Definition</b> state.h:79</div></div>
+<div class="ttc" id="astructvia_1_1UpValue_html"><div class="ttname"><a href="structvia_1_1UpValue.html">via::UpValue</a></div><div class="ttdoc">Represents a captured variable in a closure.</div><div class="ttdef"><b>Definition</b> tfunction.h:42</div></div>
+<div class="ttc" id="astructvia_1_1UpValue_html_a2161745342ab682859a1da6254ce52fb"><div class="ttname"><a href="structvia_1_1UpValue.html#a2161745342ab682859a1da6254ce52fb">via::UpValue::is_valid</a></div><div class="ttdeci">bool is_valid</div><div class="ttdoc">Whether the upvalue has been properly initialized.</div><div class="ttdef"><b>Definition</b> tfunction.h:44</div></div>
+<div class="ttc" id="astructvia_1_1UpValue_html_a6580eaf8e316a50877652c899acf843d"><div class="ttname"><a href="structvia_1_1UpValue.html#a6580eaf8e316a50877652c899acf843d">via::UpValue::heap_value</a></div><div class="ttdeci">Value heap_value</div><div class="ttdoc">Used to store the value when closed.</div><div class="ttdef"><b>Definition</b> tfunction.h:46</div></div>
+<div class="ttc" id="astructvia_1_1UpValue_html_a7241f59c995dbc25c16be65c5438acf8"><div class="ttname"><a href="structvia_1_1UpValue.html#a7241f59c995dbc25c16be65c5438acf8">via::UpValue::is_open</a></div><div class="ttdeci">bool is_open</div><div class="ttdoc">Whether the upvalue is open (points to stack).</div><div class="ttdef"><b>Definition</b> tfunction.h:43</div></div>
+<div class="ttc" id="astructvia_1_1UpValue_html_a83fd4ebc33c2e1c482fb20fc1e2d583e"><div class="ttname"><a href="structvia_1_1UpValue.html#a83fd4ebc33c2e1c482fb20fc1e2d583e">via::UpValue::value</a></div><div class="ttdeci">Value * value</div><div class="ttdoc">Pointer to the actual value, or null.</div><div class="ttdef"><b>Definition</b> tfunction.h:45</div></div>
+<div class="ttc" id="astructvia_1_1Value_html"><div class="ttname"><a href="structvia_1_1Value.html">via::Value</a></div><div class="ttdoc">Polymorphic tagged union representing any runtime value in via.</div><div class="ttdef"><b>Definition</b> tvalue.h:45</div></div>
+<div class="ttc" id="aunionvia_1_1Callable_1_1Un_html"><div class="ttname"><a href="unionvia_1_1Callable_1_1Un.html">via::Callable::Un</a></div><div class="ttdoc">Stores either a pointer to a Function or a NativeFn.</div><div class="ttdef"><b>Definition</b> tfunction.h:98</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

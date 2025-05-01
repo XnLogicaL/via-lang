@@ -1,0 +1,29 @@
+\doxysection{src/interpreter/tstring.h File Reference}
+\hypertarget{tstring_8h}{}\label{tstring_8h}\index{src/interpreter/tstring.h@{src/interpreter/tstring.h}}
+
+
+Defines the {\ttfamily String} type used within the virtual machine and runtime.  
+
+
+{\ttfamily \#include "{}common.\+h"{}}\newline
+{\ttfamily \#include $<$utility/ustring.\+h$>$}\newline
+Include dependency graph for tstring.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1String}{via\+::\+String}}
+\begin{DoxyCompactList}\small\item\em Constant-\/sized owning string type used in the via runtime. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Defines the {\ttfamily String} type used within the virtual machine and runtime. 
+
+This is a constant-\/sized, heap-\/allocated, hash-\/cached string structure designed for performance in dictionary lookups and language runtime internals. 

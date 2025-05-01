@@ -1,6 +1,10 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
+/**
+ * @file token.h
+ * @brief Declares lex related token structures.
+ */
 #ifndef VIA_HAS_HEADER_TOKEN_H
 #define VIA_HAS_HEADER_TOKEN_H
 
@@ -8,8 +12,17 @@
 
 #include <arena.h>
 
+/**
+ * @namespace via
+ * @ingroup via_namespace
+ * @{
+ */
 namespace via {
 
+/**
+ * @enum TokenType
+ * @brief Describes the type of a token's lexeme.
+ */
 enum class TokenType {
   // Keywords
   KW_DO,       // do
@@ -112,10 +125,14 @@ enum class TokenType {
   UNKNOWN // Unknown Token
 };
 
+/**
+ * @struct Token
+ * @brief Token structure that contains a lexeme and location.
+ */
 struct Token {
-  TokenType type = TokenType::UNKNOWN;
-  std::string lexeme;
-  size_t line = 0, offset = 0, position = 0;
+  TokenType type = TokenType::UNKNOWN;       ///< Type of the token's lexeme
+  std::string lexeme;                        ///< The token's lexeme
+  size_t line = 0, offset = 0, position = 0; ///< Location of the token
 
   explicit Token() = default;
   explicit Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)
@@ -125,22 +142,39 @@ struct Token {
       offset(offset),
       position(position) {}
 
-  // Returns the token as a string.
+  /**
+   * @brief Returns the token represented as an std::string.
+   * @return std::string Token string
+   */
   std::string to_string() const;
 
-  // Returns whether if the tokens lexeme is a value literal.
+  /**
+   * @brief Returns whether if the token's lexeme is classified as a literal.
+   * @return bool Is literal
+   */
   bool is_literal() const;
 
-  // Returns whether if the tokens lexeme is an operator.
+  /**
+   * @brief Returns whether if the token's lexeme is classified as an operator.
+   * @return bool Is operator
+   */
   bool is_operator() const;
 
-  // Returns whether if the tokens lexeme is a modifier.
+  /**
+   * @brief Returns whether if the token's lexeme is classified as a modifier keyword.
+   * @return bool Is modifier keyword
+   */
   bool is_modifier() const;
 
-  // Returns the operator precedence of the tokens lexeme or -1 if impossible.
+  /**
+   * @brief Returns the binary precedence of the token if it is an operator.
+   * @return int Operator precedence or -1 if not operator
+   */
   int bin_prec() const;
 };
 
 } // namespace via
+
+/** @} */
 
 #endif

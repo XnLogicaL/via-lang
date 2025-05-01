@@ -113,51 +113,63 @@ $(document).ready(function() { init_codefold(0); });
   <div class="headertitle"><div class="title">call-stack.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// This file is a part of the via Programming Language project</span></div>
+<a href="call-stack_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// This file is a part of the via Programming Language project</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef VIA_HAS_HEADER_CALL_STACK_H</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#define VIA_HAS_HEADER_CALL_STACK_H</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;tfunction.h&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> CALLSTACK_MAX_FRAMES = 200;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> CALLFRAME_MAX_LOCALS = 200;</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="foldopen" id="foldopen00015" data-start="{" data-end="};">
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html">   15</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a> {</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>* closure;</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>* locals = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>  <span class="keywordtype">size_t</span> locals_size = 0;</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>  <a class="code hl_struct" href="structvia_1_1Instruction.html">Instruction</a>* savedpc;</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  VIA_NOCOPY(<a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  VIA_IMPLMOVE(<a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>);</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>();</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">~CallFrame</a>();</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>};</div>
-</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
-<div class="foldopen" id="foldopen00028" data-start="{" data-end="};">
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="structvia_1_1CallStack.html">   28</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1CallStack.html">CallStack</a> {</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a> frames[CALLSTACK_MAX_FRAMES];</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keywordtype">size_t</span> frames_count = 0;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>};</div>
-</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#ifndef VIA_HAS_HEADER_CALL_STACK_H</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#define VIA_HAS_HEADER_CALL_STACK_H</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;common.h&quot;</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="tfunction_8h.html">tfunction.h</a>&quot;</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacevia.html">via</a> {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">   31</a></span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> <a class="code hl_variable" href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">CALLSTACK_MAX_FRAMES</a> = 200;</div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>} <span class="comment">// namespace via</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">Main namespace of the project. Contains all but macros.</div></div>
-<div class="ttc" id="astructvia_1_1CallFrame_html"><div class="ttname"><a href="structvia_1_1CallFrame.html">via::CallFrame</a></div><div class="ttdef"><b>Definition</b> call-stack.h:15</div></div>
-<div class="ttc" id="astructvia_1_1CallStack_html"><div class="ttname"><a href="structvia_1_1CallStack.html">via::CallStack</a></div><div class="ttdef"><b>Definition</b> call-stack.h:28</div></div>
-<div class="ttc" id="astructvia_1_1Closure_html"><div class="ttname"><a href="structvia_1_1Closure.html">via::Closure</a></div><div class="ttdef"><b>Definition</b> tfunction.h:65</div></div>
-<div class="ttc" id="astructvia_1_1Instruction_html"><div class="ttname"><a href="structvia_1_1Instruction.html">via::Instruction</a></div><div class="ttdef"><b>Definition</b> instruction.h:24</div></div>
-<div class="ttc" id="astructvia_1_1Value_html"><div class="ttname"><a href="structvia_1_1Value.html">via::Value</a></div><div class="ttdef"><b>Definition</b> tvalue.h:32</div></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="namespacevia.html#a5743d7eb3d3fea9868275cd14d87c3e0">   37</a></span><span class="keyword">inline</span> <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> <a class="code hl_variable" href="namespacevia.html#a5743d7eb3d3fea9868275cd14d87c3e0">CALLFRAME_MAX_LOCALS</a> = 200;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="foldopen" id="foldopen00051" data-start="{" data-end="};">
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html">   51</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a> {</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#ac43211ff6cb7ae55503d7a48b135ee91">   52</a></span>  <a class="code hl_struct" href="structvia_1_1Closure.html">Closure</a>* <a class="code hl_variable" href="structvia_1_1CallFrame.html#ac43211ff6cb7ae55503d7a48b135ee91">closure</a>;        </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#af59b73bfe8a072f58a2b2f70a32d3a0a">   53</a></span>  <a class="code hl_struct" href="structvia_1_1Value.html">Value</a>* <a class="code hl_variable" href="structvia_1_1CallFrame.html#af59b73bfe8a072f58a2b2f70a32d3a0a">locals</a> = <span class="keyword">nullptr</span>; </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#ad8bf422b1bcc838c44e535f4c7ad9467">   54</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1CallFrame.html#ad8bf422b1bcc838c44e535f4c7ad9467">locals_size</a> = 0;  </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#a097492f671f1edf6f2dc4cd94576697d">   55</a></span>  <a class="code hl_struct" href="structvia_1_1Instruction.html">Instruction</a>* <a class="code hl_variable" href="structvia_1_1CallFrame.html#a097492f671f1edf6f2dc4cd94576697d">savedpc</a>;    </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#a647cce5b5775479d535635b11b9a55d4">   57</a></span>  <a class="code hl_function" href="structvia_1_1CallFrame.html#a647cce5b5775479d535635b11b9a55d4">VIA_NOCOPY</a>(<a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>);   </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno"><a class="line" href="structvia_1_1CallFrame.html#a4cc001887ff541319befef054d7056d2">   58</a></span>  <a class="code hl_function" href="structvia_1_1CallFrame.html#a4cc001887ff541319befef054d7056d2">VIA_IMPLMOVE</a>(<a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>); </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a>();</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">~CallFrame</a>();</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>};</div>
+</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
+<div class="foldopen" id="foldopen00071" data-start="{" data-end="};">
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="structvia_1_1CallStack.html">   71</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structvia_1_1CallStack.html">CallStack</a> {</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="structvia_1_1CallStack.html#aad238ea4a5d5de6afc3de75e99d23f6d">   72</a></span>  <a class="code hl_struct" href="structvia_1_1CallFrame.html">CallFrame</a> <a class="code hl_variable" href="structvia_1_1CallStack.html#aad238ea4a5d5de6afc3de75e99d23f6d">frames</a>[<a class="code hl_variable" href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">CALLSTACK_MAX_FRAMES</a>]; </div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="structvia_1_1CallStack.html#ae067720984948222c91a2c04bf0f4ccd">   73</a></span>  <span class="keywordtype">size_t</span> <a class="code hl_variable" href="structvia_1_1CallStack.html#ae067720984948222c91a2c04bf0f4ccd">frames_count</a> = 0;                </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>};</div>
+</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>} <span class="comment">// namespace via</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="anamespacevia_html"><div class="ttname"><a href="namespacevia.html">via</a></div><div class="ttdoc">All core compiler logic is within this namespace.</div></div>
+<div class="ttc" id="anamespacevia_html_a08d39f97e9f2c9ce095f568e53587824"><div class="ttname"><a href="namespacevia.html#a08d39f97e9f2c9ce095f568e53587824">via::CALLSTACK_MAX_FRAMES</a></div><div class="ttdeci">constexpr size_t CALLSTACK_MAX_FRAMES</div><div class="ttdoc">Maximum number of frames that the call stack can hold at any time.</div><div class="ttdef"><b>Definition</b> call-stack.h:31</div></div>
+<div class="ttc" id="anamespacevia_html_a5743d7eb3d3fea9868275cd14d87c3e0"><div class="ttname"><a href="namespacevia.html#a5743d7eb3d3fea9868275cd14d87c3e0">via::CALLFRAME_MAX_LOCALS</a></div><div class="ttdeci">constexpr size_t CALLFRAME_MAX_LOCALS</div><div class="ttdoc">Maximum number of local variables a single call frame can support. @dtails Used primarily as a safety...</div><div class="ttdef"><b>Definition</b> call-stack.h:37</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html"><div class="ttname"><a href="structvia_1_1CallFrame.html">via::CallFrame</a></div><div class="ttdoc">Represents a single function invocation's execution context.</div><div class="ttdef"><b>Definition</b> call-stack.h:51</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_a097492f671f1edf6f2dc4cd94576697d"><div class="ttname"><a href="structvia_1_1CallFrame.html#a097492f671f1edf6f2dc4cd94576697d">via::CallFrame::savedpc</a></div><div class="ttdeci">Instruction * savedpc</div><div class="ttdoc">Instruction pointer saved for return.</div><div class="ttdef"><b>Definition</b> call-stack.h:55</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_a4cc001887ff541319befef054d7056d2"><div class="ttname"><a href="structvia_1_1CallFrame.html#a4cc001887ff541319befef054d7056d2">via::CallFrame::VIA_IMPLMOVE</a></div><div class="ttdeci">VIA_IMPLMOVE(CallFrame)</div><div class="ttdoc">Enable move constructor and move assignment.</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_a647cce5b5775479d535635b11b9a55d4"><div class="ttname"><a href="structvia_1_1CallFrame.html#a647cce5b5775479d535635b11b9a55d4">via::CallFrame::VIA_NOCOPY</a></div><div class="ttdeci">VIA_NOCOPY(CallFrame)</div><div class="ttdoc">Disable copy constructor and copy assignment.</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_ac43211ff6cb7ae55503d7a48b135ee91"><div class="ttname"><a href="structvia_1_1CallFrame.html#ac43211ff6cb7ae55503d7a48b135ee91">via::CallFrame::closure</a></div><div class="ttdeci">Closure * closure</div><div class="ttdoc">Function closure being invoked.</div><div class="ttdef"><b>Definition</b> call-stack.h:52</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_ad8bf422b1bcc838c44e535f4c7ad9467"><div class="ttname"><a href="structvia_1_1CallFrame.html#ad8bf422b1bcc838c44e535f4c7ad9467">via::CallFrame::locals_size</a></div><div class="ttdeci">size_t locals_size</div><div class="ttdoc">Number of allocated local variables.</div><div class="ttdef"><b>Definition</b> call-stack.h:54</div></div>
+<div class="ttc" id="astructvia_1_1CallFrame_html_af59b73bfe8a072f58a2b2f70a32d3a0a"><div class="ttname"><a href="structvia_1_1CallFrame.html#af59b73bfe8a072f58a2b2f70a32d3a0a">via::CallFrame::locals</a></div><div class="ttdeci">Value * locals</div><div class="ttdoc">Pointer to local variable storage.</div><div class="ttdef"><b>Definition</b> call-stack.h:53</div></div>
+<div class="ttc" id="astructvia_1_1CallStack_html"><div class="ttname"><a href="structvia_1_1CallStack.html">via::CallStack</a></div><div class="ttdoc">Represents the function call stack of the interpreter.</div><div class="ttdef"><b>Definition</b> call-stack.h:71</div></div>
+<div class="ttc" id="astructvia_1_1CallStack_html_aad238ea4a5d5de6afc3de75e99d23f6d"><div class="ttname"><a href="structvia_1_1CallStack.html#aad238ea4a5d5de6afc3de75e99d23f6d">via::CallStack::frames</a></div><div class="ttdeci">CallFrame frames[CALLSTACK_MAX_FRAMES]</div><div class="ttdoc">Stack-allocated array of call frames.</div><div class="ttdef"><b>Definition</b> call-stack.h:72</div></div>
+<div class="ttc" id="astructvia_1_1CallStack_html_ae067720984948222c91a2c04bf0f4ccd"><div class="ttname"><a href="structvia_1_1CallStack.html#ae067720984948222c91a2c04bf0f4ccd">via::CallStack::frames_count</a></div><div class="ttdeci">size_t frames_count</div><div class="ttdoc">Number of currently active frames.</div><div class="ttdef"><b>Definition</b> call-stack.h:73</div></div>
+<div class="ttc" id="astructvia_1_1Closure_html"><div class="ttname"><a href="structvia_1_1Closure.html">via::Closure</a></div><div class="ttdoc">Wraps a Callable with its captured upvalues for lexical scoping.</div><div class="ttdef"><b>Definition</b> tfunction.h:136</div></div>
+<div class="ttc" id="astructvia_1_1Instruction_html"><div class="ttname"><a href="structvia_1_1Instruction.html">via::Instruction</a></div><div class="ttdoc">Represents a single VM instruction in the Via bytecode format.</div><div class="ttdef"><b>Definition</b> instruction.h:64</div></div>
+<div class="ttc" id="astructvia_1_1Value_html"><div class="ttname"><a href="structvia_1_1Value.html">via::Value</a></div><div class="ttdoc">Polymorphic tagged union representing any runtime value in via.</div><div class="ttdef"><b>Definition</b> tvalue.h:45</div></div>
+<div class="ttc" id="atfunction_8h_html"><div class="ttname"><a href="tfunction_8h.html">tfunction.h</a></div><div class="ttdoc">Declares function, closure, and upvalue types used for virtual machine function invocation.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

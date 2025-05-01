@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::CallFrame Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents a single function invocation's execution context.  
+ <a href="structvia_1_1CallFrame.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="call-stack_8h_source.html">call-stack.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::CallFrame:</div>
 <div class="dyncontent">
@@ -122,27 +127,42 @@ Collaboration diagram for via::CallFrame:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a647cce5b5775479d535635b11b9a55d4" id="r_a647cce5b5775479d535635b11b9a55d4"><td class="memItemLeft" align="right" valign="top"><a id="a647cce5b5775479d535635b11b9a55d4" name="a647cce5b5775479d535635b11b9a55d4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_NOCOPY</b> (<a class="el" href="structvia_1_1CallFrame.html">CallFrame</a>)</td></tr>
+<tr class="memdesc:a647cce5b5775479d535635b11b9a55d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable copy constructor and copy assignment. <br /></td></tr>
 <tr class="separator:a647cce5b5775479d535635b11b9a55d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cc001887ff541319befef054d7056d2" id="r_a4cc001887ff541319befef054d7056d2"><td class="memItemLeft" align="right" valign="top"><a id="a4cc001887ff541319befef054d7056d2" name="a4cc001887ff541319befef054d7056d2"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1CallFrame.html">CallFrame</a>)</td></tr>
+<tr class="memdesc:a4cc001887ff541319befef054d7056d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable move constructor and move assignment. <br /></td></tr>
 <tr class="separator:a4cc001887ff541319befef054d7056d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ac43211ff6cb7ae55503d7a48b135ee91" id="r_ac43211ff6cb7ae55503d7a48b135ee91"><td class="memItemLeft" align="right" valign="top"><a id="ac43211ff6cb7ae55503d7a48b135ee91" name="ac43211ff6cb7ae55503d7a48b135ee91"></a>
 <a class="el" href="structvia_1_1Closure.html">Closure</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>closure</b></td></tr>
+<tr class="memdesc:ac43211ff6cb7ae55503d7a48b135ee91"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structvia_1_1Function.html" title="Represents a user-defined via function, including its bytecode and metadata.">Function</a> closure being invoked. <br /></td></tr>
 <tr class="separator:ac43211ff6cb7ae55503d7a48b135ee91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af59b73bfe8a072f58a2b2f70a32d3a0a" id="r_af59b73bfe8a072f58a2b2f70a32d3a0a"><td class="memItemLeft" align="right" valign="top"><a id="af59b73bfe8a072f58a2b2f70a32d3a0a" name="af59b73bfe8a072f58a2b2f70a32d3a0a"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>locals</b> = nullptr</td></tr>
+<tr class="memdesc:af59b73bfe8a072f58a2b2f70a32d3a0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to local variable storage. <br /></td></tr>
 <tr class="separator:af59b73bfe8a072f58a2b2f70a32d3a0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8bf422b1bcc838c44e535f4c7ad9467" id="r_ad8bf422b1bcc838c44e535f4c7ad9467"><td class="memItemLeft" align="right" valign="top"><a id="ad8bf422b1bcc838c44e535f4c7ad9467" name="ad8bf422b1bcc838c44e535f4c7ad9467"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>locals_size</b> = 0</td></tr>
+<tr class="memdesc:ad8bf422b1bcc838c44e535f4c7ad9467"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of allocated local variables. <br /></td></tr>
 <tr class="separator:ad8bf422b1bcc838c44e535f4c7ad9467"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a097492f671f1edf6f2dc4cd94576697d" id="r_a097492f671f1edf6f2dc4cd94576697d"><td class="memItemLeft" align="right" valign="top"><a id="a097492f671f1edf6f2dc4cd94576697d" name="a097492f671f1edf6f2dc4cd94576697d"></a>
 <a class="el" href="structvia_1_1Instruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>savedpc</b></td></tr>
+<tr class="memdesc:a097492f671f1edf6f2dc4cd94576697d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structvia_1_1Instruction.html" title="Represents a single VM instruction in the Via bytecode format.">Instruction</a> pointer saved for return. <br /></td></tr>
 <tr class="separator:a097492f671f1edf6f2dc4cd94576697d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following files:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a single function invocation's execution context. </p>
+<p>Each <code><a class="el" href="structvia_1_1CallFrame.html" title="Represents a single function invocation&#39;s execution context.">CallFrame</a></code> holds:</p><ul>
+<li>A pointer to the <code><a class="el" href="structvia_1_1Closure.html" title="Wraps a Callable with its captured upvalues for lexical scoping.">Closure</a></code> being executed (compiled function and captured upvalues).</li>
+<li>A pointer to a local variables array (<code>locals</code>).</li>
+<li>The size of the local variables array (<code>locals_size</code>).</li>
+<li>A saved program counter (<code>savedpc</code>) indicating where execution resumes after return.</li>
+</ul>
+<p>Copy operations are disabled via <code>VIA_NOCOPY</code>, but move semantics are allowed via <code>VIA_IMPLMOVE</code>. </p>
+</div><hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="call-stack_8h_source.html">call-stack.h</a></li>
 <li>src/interpreter/<b>call-stack.cpp</b></li>
 </ul>

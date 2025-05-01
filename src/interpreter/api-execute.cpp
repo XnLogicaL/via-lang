@@ -66,21 +66,22 @@
     VM_DISPATCH_OP(DROP), VM_DISPATCH_OP(GETGLOBAL), VM_DISPATCH_OP(SETGLOBAL),                    \
     VM_DISPATCH_OP(SETUPV), VM_DISPATCH_OP(GETUPV), VM_DISPATCH_OP(GETLOCAL),                      \
     VM_DISPATCH_OP(SETLOCAL), VM_DISPATCH_OP(CAPTURE), VM_DISPATCH_OP(INC), VM_DISPATCH_OP(DEC),   \
-    VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND), VM_DISPATCH_OP(OR),              \
-    VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT), VM_DISPATCH_OP(LTEQ),             \
-    VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF), VM_DISPATCH_OP(JMPIFN),      \
-    VM_DISPATCH_OP(JMPIFEQ), VM_DISPATCH_OP(JMPIFNEQ), VM_DISPATCH_OP(JMPIFLT),                    \
-    VM_DISPATCH_OP(JMPIFGT), VM_DISPATCH_OP(JMPIFLTEQ), VM_DISPATCH_OP(JMPIFGTEQ),                 \
-    VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF), VM_DISPATCH_OP(LJMPIFN),                         \
-    VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ), VM_DISPATCH_OP(LJMPIFLT),                 \
-    VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ), VM_DISPATCH_OP(LJMPIFGTEQ),              \
-    VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETBT), VM_DISPATCH_OP(RETBF),       \
-    VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY), VM_DISPATCH_OP(CATCH),     \
-    VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR), VM_DISPATCH_OP(NEXTARR),                       \
-    VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT), VM_DISPATCH_OP(SETDICT),                      \
-    VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT), VM_DISPATCH_OP(CONSTR),                     \
-    VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR), VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), \
-    VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), VM_DISPATCH_OP(BCAST)
+    VM_DISPATCH_OP(EQ), VM_DISPATCH_OP(DEQ), VM_DISPATCH_OP(NEQ), VM_DISPATCH_OP(AND),             \
+    VM_DISPATCH_OP(OR), VM_DISPATCH_OP(NOT), VM_DISPATCH_OP(LT), VM_DISPATCH_OP(GT),               \
+    VM_DISPATCH_OP(LTEQ), VM_DISPATCH_OP(GTEQ), VM_DISPATCH_OP(JMP), VM_DISPATCH_OP(JMPIF),        \
+    VM_DISPATCH_OP(JMPIFN), VM_DISPATCH_OP(JMPIFEQ), VM_DISPATCH_OP(JMPIFNEQ),                     \
+    VM_DISPATCH_OP(JMPIFLT), VM_DISPATCH_OP(JMPIFGT), VM_DISPATCH_OP(JMPIFLTEQ),                   \
+    VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF),                       \
+    VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ),                  \
+    VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ),                \
+    VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETBT),  \
+    VM_DISPATCH_OP(RETBF), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(RAISE), VM_DISPATCH_OP(TRY),     \
+    VM_DISPATCH_OP(CATCH), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR),                         \
+    VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
+    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT),                    \
+    VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR),                        \
+    VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), \
+    VM_DISPATCH_OP(BCAST)
 
 namespace via {
 
@@ -790,6 +791,30 @@ dispatch:
       }
 
       bool result = __compare(*lhs_val, *rhs_val);
+      __set_register(state, dst, Value(result));
+
+      VM_NEXT();
+    }
+
+    VM_CASE(DEQ) {
+      operand_t dst = state->pc->a;
+      operand_t lhs = state->pc->b;
+      operand_t rhs = state->pc->c;
+
+      if VIA_UNLIKELY (lhs == rhs) {
+        __set_register(state, dst, Value(true));
+        VM_NEXT();
+      }
+
+      Value* lhs_val = __get_register(state, lhs);
+      Value* rhs_val = __get_register(state, rhs);
+
+      if VIA_UNLIKELY (lhs_val == rhs_val) {
+        __set_register(state, dst, Value(true));
+        VM_NEXT();
+      }
+
+      bool result = __compare_deep(*lhs_val, *rhs_val);
       __set_register(state, dst, Value(result));
 
       VM_NEXT();

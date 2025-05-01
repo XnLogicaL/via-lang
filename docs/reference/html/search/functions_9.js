@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['size_0',['size',['../classvia_1_1GlobalHolder.html#a050caae61ad13606f4a060151428ba5d',1,'via::GlobalHolder']]]
+  ['length_0',['length',['../structvia_1_1Value.html#a19d58c3d2cd048274206c3dcc32b04c7',1,'via::Value']]]
 ];

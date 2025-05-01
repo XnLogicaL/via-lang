@@ -1,0 +1,88 @@
+\doxysection{src/codegen/visitor.h File Reference}
+\hypertarget{visitor_8h}{}\label{visitor_8h}\index{src/codegen/visitor.h@{src/codegen/visitor.h}}
+
+
+Declares visitor interfaces for the Abstract Syntax Tree (AST) used in the via compiler.  
+
+
+{\ttfamily \#include "{}common.\+h"{}}\newline
+{\ttfamily \#include "{}error-\/bus.\+h"{}}\newline
+{\ttfamily \#include "{}context.\+h"{}}\newline
+{\ttfamily \#include "{}register.\+h"{}}\newline
+{\ttfamily \#include "{}stack.\+h"{}}\newline
+{\ttfamily \#include $<$lex/token.\+h$>$}\newline
+{\ttfamily \#include $<$parse/ast.\+h$>$}\newline
+{\ttfamily \#include $<$interpreter/state.\+h$>$}\newline
+{\ttfamily \#include $<$utility/bits.\+h$>$}\newline
+{\ttfamily \#include $<$utility/memory.\+h$>$}\newline
+{\ttfamily \#include $<$utility/ustring.\+h$>$}\newline
+{\ttfamily \#include $<$utility/color.\+h$>$}\newline
+Include dependency graph for visitor.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1VisitorContext}{via\+::\+Visitor\+Context}}
+\begin{DoxyCompactList}\small\item\em Encapsulates state for visitor objects during AST traversal. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{via\+::\+Node\+Visitor\+Base}}
+\begin{DoxyCompactList}\small\item\em Abstract base class for all AST visitors. Provides virtual {\ttfamily visit} methods for every AST node type. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1ExprNodeVisitor}{via\+::\+Expr\+Node\+Visitor}}
+\begin{DoxyCompactList}\small\item\em AST visitor for expression nodes only. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1DecayNodeVisitor}{via\+::\+Decay\+Node\+Visitor}}
+\begin{DoxyCompactList}\small\item\em AST visitor that resolves type nodes to their underlying forms. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1TypeNodeVisitor}{via\+::\+Type\+Node\+Visitor}}
+\begin{DoxyCompactList}\small\item\em AST visitor for analyzing or transforming statements relevant to type resolution. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classvia_1_1StmtNodeVisitor}{via\+::\+Stmt\+Node\+Visitor}}
+\begin{DoxyCompactList}\small\item\em AST visitor for statement nodes. Composes expression, decay, and type visitors. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{visitor_8h_a3bbbc5f7f508c04faa58532b6e9c8f73}{VIA\+\_\+\+CHECK\+\_\+\+INFERED}}(type,  expr)
+\begin{DoxyCompactList}\small\item\em Fails with an internal compiler error if type inference fails. \end{DoxyCompactList}\item 
+\Hypertarget{visitor_8h_adec4b3481950855cb47e02916b4fb56a}\label{visitor_8h_adec4b3481950855cb47e02916b4fb56a} 
+\#define {\bfseries INVALID\+\_\+\+VISIT}~  \{ VIA\+\_\+\+ASSERT(false, "{}invalid visit"{}); \}
+\begin{DoxyCompactList}\small\item\em Default implementation for unimplemented visit methods. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespacevia_a9ea75d6678f99a67de0addd0ce7e940b}\label{namespacevia_a9ea75d6678f99a67de0addd0ce7e940b} 
+using {\bfseries via\+::label\+\_\+t} = \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares visitor interfaces for the Abstract Syntax Tree (AST) used in the via compiler. 
+
+This file provides a hierarchy of visitor classes that traverse or transform the AST of the via programming language. These include visitors for expression evaluation, type inference, and statement processing. The {\ttfamily Visitor\+Context} struct stores shared visitor state, including register allocation and error tracking. 
+
+\doxysubsection{Macro Definition Documentation}
+\Hypertarget{visitor_8h_a3bbbc5f7f508c04faa58532b6e9c8f73}\label{visitor_8h_a3bbbc5f7f508c04faa58532b6e9c8f73} 
+\index{visitor.h@{visitor.h}!VIA\_CHECK\_INFERED@{VIA\_CHECK\_INFERED}}
+\index{VIA\_CHECK\_INFERED@{VIA\_CHECK\_INFERED}!visitor.h@{visitor.h}}
+\doxysubsubsection{\texorpdfstring{VIA\_CHECK\_INFERED}{VIA\_CHECK\_INFERED}}
+{\footnotesize\ttfamily \#define VIA\+\_\+\+CHECK\+\_\+\+INFERED(\begin{DoxyParamCaption}\item[{}]{type,  }\item[{}]{expr }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\ \ \textcolor{keywordflow}{if}\ (!type)\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ compiler\_error(ctx,\ expr-\/>begin,\ expr-\/>end,\ \textcolor{stringliteral}{"{}Expression\ type\ could\ not\ be\ inferred"{}});\ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ compiler\_info(\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ ctx,\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \textcolor{stringliteral}{"{}This\ message\ indicates\ a\ likely\ internal\ compiler\ bug.\ Please\ report\ it\ at\ "{}}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \ \ \textcolor{stringliteral}{"{}https://github.com/XnLogicaL/via-\/lang"{}}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ );\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{return};\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{\ \ \}}
+
+\end{DoxyCode}
+
+
+Fails with an internal compiler error if type inference fails. 
+

@@ -115,7 +115,7 @@ $(function() {
 <p>BytecodeBuilder class imeplementation.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="bytecode-builder_8h_source.html">bytecode-builder.h</a>&quot;</code><br />
-<code>#include &lt;interpreter/tstring.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="tstring_8h_source.html">interpreter/tstring.h</a>&gt;</code><br />
 <code>#include &lt;cmath&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for bytecode-builder.cpp:</div>
@@ -126,7 +126,7 @@ Include dependency graph for bytecode-builder.cpp:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacevia" id="r_namespacevia"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacevia.html">via</a></td></tr>
-<tr class="memdesc:namespacevia"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main namespace of the project. Contains all but macros. <br /></td></tr>
+<tr class="memdesc:namespacevia"><td class="mdescLeft">&#160;</td><td class="mdescRight">All core compiler logic is within this namespace. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespacecompiler__util" id="r_namespacecompiler__util"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecompiler__util.html">compiler_util</a></td></tr>
 <tr class="memdesc:namespacecompiler__util"><td class="mdescLeft">&#160;</td><td class="mdescRight">Contains compiler utility functions. <br /></td></tr>
@@ -143,7 +143,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ac9703f204266ee5ff6611665067a580c" id="r_ac9703f204266ee5ff6611665067a580c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1LitExprNode.html">LitExprNode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#ac9703f204266ee5ff6611665067a580c">via::compiler_util::fold_constant</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *expr, size_t fold_depth)</td></tr>
 <tr class="memdesc:ac9703f204266ee5ff6611665067a580c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Folds an expression into a constant if possible.  <br /></td></tr>
 <tr class="separator:ac9703f204266ee5ff6611665067a580c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a821ac9cae97689669d2c96e6d1411d28" id="r_a821ac9cae97689669d2c96e6d1411d28"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a821ac9cae97689669d2c96e6d1411d28">via::compiler_util::push_constant</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&amp;constant)</td></tr>
+<tr class="memitem:a821ac9cae97689669d2c96e6d1411d28" id="r_a821ac9cae97689669d2c96e6d1411d28"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a821ac9cae97689669d2c96e6d1411d28">via::compiler_util::push_constant</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&amp;constant)</td></tr>
 <tr class="memdesc:a821ac9cae97689669d2c96e6d1411d28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a constant onto the constant table.  <br /></td></tr>
 <tr class="separator:a821ac9cae97689669d2c96e6d1411d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af27fc4468b84dff327faecf6c2b62095" id="r_af27fc4468b84dff327faecf6c2b62095"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#af27fc4468b84dff327faecf6c2b62095">via::compiler_util::compiler_error</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, size_t begin, size_t end, const std::string &amp;message)</td></tr>
@@ -179,19 +179,19 @@ Functions</h2></td></tr>
 <tr class="memitem:a8da7ee9839b6bf66721300862d71a126" id="r_a8da7ee9839b6bf66721300862d71a126"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1StackFunction.html">StackFunction</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a8da7ee9839b6bf66721300862d71a126">via::compiler_util::get_current_closure</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx)</td></tr>
 <tr class="memdesc:a8da7ee9839b6bf66721300862d71a126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the top-most closure on the function stack.  <br /></td></tr>
 <tr class="separator:a8da7ee9839b6bf66721300862d71a126"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae336781c36f310148a11623a10fd6761" id="r_ae336781c36f310148a11623a10fd6761"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#ae336781c36f310148a11623a10fd6761">via::compiler_util::resolve_lvalue</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *lvalue, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a> dst)</td></tr>
+<tr class="memitem:ae336781c36f310148a11623a10fd6761" id="r_ae336781c36f310148a11623a10fd6761"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#ae336781c36f310148a11623a10fd6761">via::compiler_util::resolve_lvalue</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *lvalue, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> dst)</td></tr>
 <tr class="memdesc:ae336781c36f310148a11623a10fd6761"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolves the given lvalue and loads the result into the given register.  <br /></td></tr>
 <tr class="separator:ae336781c36f310148a11623a10fd6761"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa83c6cf545d9a79002c7088f35f7ec31" id="r_aa83c6cf545d9a79002c7088f35f7ec31"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#aa83c6cf545d9a79002c7088f35f7ec31">via::compiler_util::resolve_rvalue</a> (<a class="el" href="classvia_1_1NodeVisitorBase.html">NodeVisitorBase</a> *visitor, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *rvalue, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a> dst)</td></tr>
+<tr class="memitem:aa83c6cf545d9a79002c7088f35f7ec31" id="r_aa83c6cf545d9a79002c7088f35f7ec31"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#aa83c6cf545d9a79002c7088f35f7ec31">via::compiler_util::resolve_rvalue</a> (<a class="el" href="classvia_1_1NodeVisitorBase.html">NodeVisitorBase</a> *visitor, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *rvalue, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> dst)</td></tr>
 <tr class="memdesc:aa83c6cf545d9a79002c7088f35f7ec31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolves the given rvalue and loads the result into the given register.  <br /></td></tr>
 <tr class="separator:aa83c6cf545d9a79002c7088f35f7ec31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69030828d339302cc913315f7a911490" id="r_a69030828d339302cc913315f7a911490"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a69030828d339302cc913315f7a911490">via::compiler_util::bind_lvalue</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *lvalue, <a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a> src)</td></tr>
+<tr class="memitem:a69030828d339302cc913315f7a911490" id="r_a69030828d339302cc913315f7a911490"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a69030828d339302cc913315f7a911490">via::compiler_util::bind_lvalue</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *lvalue, <a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> src)</td></tr>
 <tr class="memdesc:a69030828d339302cc913315f7a911490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binds the value in the given register to the given lvalue.  <br /></td></tr>
 <tr class="separator:a69030828d339302cc913315f7a911490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add415b7aca65d8e5f933f440968a0533" id="r_add415b7aca65d8e5f933f440968a0533"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1TypeNodeBase.html">TypeNodeBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#add415b7aca65d8e5f933f440968a0533">via::compiler_util::resolve_type</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="structvia_1_1ExprNodeBase.html">ExprNodeBase</a> *expr)</td></tr>
 <tr class="memdesc:add415b7aca65d8e5f933f440968a0533"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolves the type of the given expression.  <br /></td></tr>
 <tr class="separator:add415b7aca65d8e5f933f440968a0533"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7da6a7e98da441aeb6cce0b329a15cb1" id="r_a7da6a7e98da441aeb6cce0b329a15cb1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a7da6a7e98da441aeb6cce0b329a15cb1">via::compiler_util::bytecode_emit</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, Opcode opcode=Opcode::NOP, <a class="el" href="structvia_1_1compiler__util_1_1OperandsArray.html">operands_init_t</a> &amp;&amp;operands={}, std::string comment=&quot;&quot;)</td></tr>
+<tr class="memitem:a7da6a7e98da441aeb6cce0b329a15cb1" id="r_a7da6a7e98da441aeb6cce0b329a15cb1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a7da6a7e98da441aeb6cce0b329a15cb1">via::compiler_util::bytecode_emit</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a> opcode=<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">Opcode::NOP</a>, <a class="el" href="structvia_1_1compiler__util_1_1OperandsArray.html">operands_init_t</a> &amp;&amp;operands={}, std::string comment=&quot;&quot;)</td></tr>
 <tr class="memdesc:a7da6a7e98da441aeb6cce0b329a15cb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emits a bytecode pair with the given data.  <br /></td></tr>
 <tr class="separator:a7da6a7e98da441aeb6cce0b329a15cb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bce3ee1324627943bb8a7dae03f82ce" id="r_a7bce3ee1324627943bb8a7dae03f82ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bytecode-builder_8cpp.html#a7bce3ee1324627943bb8a7dae03f82ce">via::compiler_util::close_defer_statements</a> (<a class="el" href="structvia_1_1VisitorContext.html">VisitorContext</a> &amp;ctx, <a class="el" href="classvia_1_1NodeVisitorBase.html">NodeVisitorBase</a> *visitor)</td></tr>
@@ -223,7 +223,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td>
           <td class="paramname"><em>src</em>&#160;</td>
         </tr>
         <tr>
@@ -262,8 +262,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Opcode&#160;</td>
-          <td class="paramname"><em>opcode</em> = <code>Opcode::NOP</code>, </td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a>&#160;</td>
+          <td class="paramname"><em>opcode</em> = <code><a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">Opcode::NOP</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -915,7 +915,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td>
           <td class="paramname"><em>dst</em>&#160;</td>
         </tr>
         <tr>
@@ -960,7 +960,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td>
           <td class="paramname"><em>dst</em>&#160;</td>
         </tr>
         <tr>

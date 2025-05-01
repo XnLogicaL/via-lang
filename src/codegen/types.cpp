@@ -29,6 +29,15 @@ bool is_constant_expression(TransUnitContext& unit_ctx, const ExprNodeBase* expr
 
     return is_constant_expression(unit_ctx, (*var_obj)->value, ++variable_depth);
   }
+  else if (const ArrayExprNode* arr_expr = dynamic_cast<const ArrayExprNode*>(expression)) {
+    for (ExprNodeBase* arr_val : arr_expr->values) {
+      if (!is_constant_expression(unit_ctx, arr_val, variable_depth + 1)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   return false;
 }

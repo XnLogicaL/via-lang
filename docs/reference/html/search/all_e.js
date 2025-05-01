@@ -1,19 +1,9 @@
 var searchData=
 [
-  ['scopestmtnode_0',['ScopeStmtNode',['../structvia_1_1ScopeStmtNode.html',1,'via']]],
-  ['size_1',['size',['../classvia_1_1GlobalHolder.html#a050caae61ad13606f4a060151428ba5d',1,'via::GlobalHolder']]],
-  ['stack_2eh_2',['stack.h',['../stack_8h.html',1,'']]],
-  ['stack_5fpointer_3',['stack_pointer',['../structvia_1_1StackFunction.html#a3e6cd46db9b8581dfe2b184337d247ca',1,'via::StackFunction']]],
-  ['stackfunction_4',['StackFunction',['../structvia_1_1StackFunction.html',1,'via']]],
-  ['stackvariable_5',['StackVariable',['../structvia_1_1StackVariable.html',1,'via']]],
-  ['state_6',['State',['../structvia_1_1State.html',1,'via']]],
-  ['stepexprnode_7',['StepExprNode',['../structvia_1_1StepExprNode.html',1,'via']]],
-  ['stmtattribute_8',['StmtAttribute',['../structvia_1_1StmtAttribute.html',1,'via']]],
-  ['stmtmodifiers_9',['StmtModifiers',['../structvia_1_1StmtModifiers.html',1,'via']]],
-  ['stmtnodebase_10',['StmtNodeBase',['../structvia_1_1StmtNodeBase.html',1,'via']]],
-  ['stmtnodevisitor_11',['StmtNodeVisitor',['../classvia_1_1StmtNodeVisitor.html',1,'via']]],
-  ['string_12',['String',['../structvia_1_1String.html',1,'via']]],
-  ['symbol_13',['symbol',['../structvia_1_1StackVariable.html#abd30e87f71162c18b85e6d9fac666d87',1,'via::StackVariable']]],
-  ['symexprnode_14',['SymExprNode',['../structvia_1_1SymExprNode.html',1,'via']]],
-  ['syntaxtree_15',['SyntaxTree',['../classvia_1_1SyntaxTree.html',1,'via']]]
+  ['op_0',['op',['../structvia_1_1Instruction.html#ab71b1950b2a952e08e836de7a25deb8e',1,'via::Instruction']]],
+  ['opcode_1',['Opcode',['../namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62',1,'via']]],
+  ['operand_5finvalid_2',['OPERAND_INVALID',['../namespacevia.html#a9b3997daccb909f72d9d7d3ab8a9d619',1,'via']]],
+  ['operand_5ft_3',['operand_t',['../namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e',1,'via']]],
+  ['operandsarray_4',['OperandsArray',['../structvia_1_1compiler__util_1_1OperandsArray.html',1,'via::compiler_util']]],
+  ['opt_5flabel_5ft_5',['opt_label_t',['../structvia_1_1VisitorContext.html#a4b55fc4b272069e39d9086a881d0fb52',1,'via::VisitorContext']]]
 ];

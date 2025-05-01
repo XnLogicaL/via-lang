@@ -66,6 +66,10 @@ Value& Value::operator=(Value&& other) {
   return *this;
 }
 
+Value::~Value() {
+  reset();
+}
+
 // Return a clone of the Value based on its type
 VIA_NODISCARD Value Value::clone() const {
   switch (type) {
@@ -117,26 +121,11 @@ void Value::reset() {
 }
 
 VIA_NODISCARD bool Value::compare(const Value& other) const {
-  if (type != other.type) {
-    return false;
-  }
+  return impl::__compare(*this, other);
+}
 
-  switch (type) {
-  case Nil: // Nil values are always equal
-    return true;
-  case Int:
-    return u.i == other.u.i;
-  case Float:
-    return u.f == other.u.f;
-  case Bool:
-    return u.b == other.u.b;
-  case String:
-    return !std::strcmp(u.str->data, other.u.str->data);
-  default: // Objects are never equal with the exception of strings
-    break;
-  }
-
-  return false;
+VIA_NODISCARD bool Value::deep_compare(const Value& other) const {
+  return impl::__compare_deep(*this, other);
 }
 
 VIA_NODISCARD Value Value::to_string() const {

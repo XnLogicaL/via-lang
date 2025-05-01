@@ -86,7 +86,7 @@ digraph "src/codegen/bytecode-builder.h"
   Node44 [id="Node000044",label="utility/format-vector.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$format-vector_8h_source.html",tooltip=" "];
   Node44 -> Node2 [id="edge140_Node000044_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node1 -> Node45 [id="edge141_Node000001_Node000045",color="steelblue1",style="solid",tooltip=" "];
-  Node45 [id="Node000045",label="codegen/visitor.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$visitor_8h_source.html",tooltip=" "];
+  Node45 [id="Node000045",label="codegen/visitor.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$visitor_8h.html",tooltip="Declares visitor interfaces for the Abstract Syntax Tree (AST) used in the via compiler."];
   Node45 -> Node2 [id="edge142_Node000045_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node45 -> Node46 [id="edge143_Node000045_Node000046",color="steelblue1",style="solid",tooltip=" "];
   Node46 [id="Node000046",label="error-bus.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$error-bus_8h_source.html",tooltip=" "];
@@ -103,7 +103,7 @@ digraph "src/codegen/bytecode-builder.h"
   Node49 -> Node42 [id="edge152_Node000049_Node000042",color="steelblue1",style="solid",tooltip=" "];
   Node49 -> Node38 [id="edge153_Node000049_Node000038",color="steelblue1",style="solid",tooltip=" "];
   Node49 -> Node50 [id="edge154_Node000049_Node000050",color="steelblue1",style="solid",tooltip=" "];
-  Node50 [id="Node000050",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h_source.html",tooltip=" "];
+  Node50 [id="Node000050",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h.html",tooltip="Defines the representation of bytecode instructions in the Via VM."];
   Node50 -> Node2 [id="edge155_Node000050_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node50 -> Node51 [id="edge156_Node000050_Node000051",color="steelblue1",style="solid",tooltip=" "];
   Node51 [id="Node000051",label="opcode.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$opcode_8h_source.html",tooltip=" "];
@@ -120,11 +120,11 @@ digraph "src/codegen/bytecode-builder.h"
   Node53 [id="Node000053",label="register.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$register_8h.html",tooltip="Declares compile-time register semantics."];
   Node53 -> Node2 [id="edge166_Node000053_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node53 -> Node54 [id="edge167_Node000053_Node000054",color="steelblue1",style="solid",tooltip=" "];
-  Node54 [id="Node000054",label="interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h_source.html",tooltip=" "];
+  Node54 [id="Node000054",label="interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h.html",tooltip="Declares the State class and related components for managing VM execution."];
   Node54 -> Node2 [id="edge168_Node000054_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node54 -> Node47 [id="edge169_Node000054_Node000047",color="steelblue1",style="solid",tooltip=" "];
   Node54 -> Node55 [id="edge170_Node000054_Node000055",color="steelblue1",style="solid",tooltip=" "];
-  Node55 [id="Node000055",label="call-stack.h",height=0.2,width=0.4,color="red", fillcolor="#FFF0F0", style="filled",URL="$call-stack_8h_source.html",tooltip=" "];
+  Node55 [id="Node000055",label="call-stack.h",height=0.2,width=0.4,color="red", fillcolor="#FFF0F0", style="filled",URL="$call-stack_8h.html",tooltip="Defines the call stack and call frame structures for function execution."];
   Node55 -> Node2 [id="edge171_Node000055_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node54 -> Node50 [id="edge172_Node000054_Node000050",color="steelblue1",style="solid",tooltip=" "];
   Node54 -> Node39 [id="edge173_Node000054_Node000039",color="steelblue1",style="solid",tooltip=" "];

@@ -111,6 +111,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Instruction Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents a single VM instruction in the Via bytecode format.  
+ <a href="structvia_1_1Instruction.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="instruction_8h_source.html">instruction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Instruction:</div>
 <div class="dyncontent">
@@ -120,19 +125,30 @@ Collaboration diagram for via::Instruction:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab71b1950b2a952e08e836de7a25deb8e" id="r_ab71b1950b2a952e08e836de7a25deb8e"><td class="memItemLeft" align="right" valign="top"><a id="ab71b1950b2a952e08e836de7a25deb8e" name="ab71b1950b2a952e08e836de7a25deb8e"></a>
-Opcode&#160;</td><td class="memItemRight" valign="bottom"><b>op</b> = Opcode::NOP</td></tr>
+<a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62">Opcode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>op</b> = <a class="el" href="namespacevia.html#ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593">Opcode::NOP</a></td></tr>
+<tr class="memdesc:ab71b1950b2a952e08e836de7a25deb8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Operation code (e.g., ADD, LOAD, CALL). <br /></td></tr>
 <tr class="separator:ab71b1950b2a952e08e836de7a25deb8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ec8f8399055a10cf49c5867af0b4808" id="r_a0ec8f8399055a10cf49c5867af0b4808"><td class="memItemLeft" align="right" valign="top"><a id="a0ec8f8399055a10cf49c5867af0b4808" name="a0ec8f8399055a10cf49c5867af0b4808"></a>
-<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>a</b> = OPERAND_INVALID</td></tr>
+<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>a</b> = <a class="el" href="namespacevia.html#a9b3997daccb909f72d9d7d3ab8a9d619">OPERAND_INVALID</a></td></tr>
+<tr class="memdesc:a0ec8f8399055a10cf49c5867af0b4808"><td class="mdescLeft">&#160;</td><td class="mdescRight">First operand (typically a register or constant index). <br /></td></tr>
 <tr class="separator:a0ec8f8399055a10cf49c5867af0b4808"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ea67d491b9cb04b3527f3bc6b85524" id="r_a71ea67d491b9cb04b3527f3bc6b85524"><td class="memItemLeft" align="right" valign="top"><a id="a71ea67d491b9cb04b3527f3bc6b85524" name="a71ea67d491b9cb04b3527f3bc6b85524"></a>
-<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>b</b> = OPERAND_INVALID</td></tr>
+<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>b</b> = <a class="el" href="namespacevia.html#a9b3997daccb909f72d9d7d3ab8a9d619">OPERAND_INVALID</a></td></tr>
+<tr class="memdesc:a71ea67d491b9cb04b3527f3bc6b85524"><td class="mdescLeft">&#160;</td><td class="mdescRight">Second operand. <br /></td></tr>
 <tr class="separator:a71ea67d491b9cb04b3527f3bc6b85524"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e1d90b04e0c433195375f817778301" id="r_a07e1d90b04e0c433195375f817778301"><td class="memItemLeft" align="right" valign="top"><a id="a07e1d90b04e0c433195375f817778301" name="a07e1d90b04e0c433195375f817778301"></a>
-<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>c</b> = OPERAND_INVALID</td></tr>
+<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>c</b> = <a class="el" href="namespacevia.html#a9b3997daccb909f72d9d7d3ab8a9d619">OPERAND_INVALID</a></td></tr>
+<tr class="memdesc:a07e1d90b04e0c433195375f817778301"><td class="mdescLeft">&#160;</td><td class="mdescRight">Third operand. <br /></td></tr>
 <tr class="separator:a07e1d90b04e0c433195375f817778301"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a single VM instruction in the Via bytecode format. </p>
+<p>Each instruction has:</p><ul>
+<li>An opcode (<code>op</code>) that specifies the operation to perform.</li>
+<li>Up to three 16-bit operands (<code>a</code>, <code>b</code>, and <code>c</code>), whose semantics depend on the opcode.</li>
+</ul>
+<p>The structure is aligned to 8 bytes to optimize for memory layout and access efficiency. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/interpreter/<a class="el" href="instruction_8h_source.html">instruction.h</a></li>
 </ul>
 </div><!-- contents -->

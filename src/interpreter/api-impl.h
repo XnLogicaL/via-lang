@@ -30,7 +30,7 @@ namespace via {
 
 /**
  * @namespace impl
- * @defgroup impl
+ * @defgroup impl_namespace
  * @{
  */
 namespace impl {
@@ -229,9 +229,20 @@ Value __to_float(const State* V, const Value& val);
  *
  * @param val0 First value.
  * @param val1 Second value.
- * @return bool True if values are deeply equal, false otherwise.
+ * @return bool True if values are shallow-ly equal, false otherwise.
  */
 bool __compare(const Value& val0, const Value& val1);
+
+/**
+ * @brief Deeply compares two values for equality.
+ *
+ * Handles primitive types and recursively compares structures like arrays and dictionaries.
+ *
+ * @param val0 First value.
+ * @param val1 Second value.
+ * @return bool True if values are deeply equal, false otherwise.
+ */
+bool __compare_deep(const Value& val0, const Value& val1);
 
 // Automatically resizes UpValue vector of closure by VIA_UPV_RESIZE_FACTOR.
 void __closure_upvs_resize(Closure* closure);

@@ -26,14 +26,14 @@ class \mbox{\hyperlink{classvia_1_1BytecodeBuilder}{via\+::\+Bytecode\+Builder}}
 \begin{DoxyCompactItemize}
 \item 
 namespace \mbox{\hyperlink{namespacevia}{via}}
-\begin{DoxyCompactList}\small\item\em Main namespace of the project. Contains all but macros. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\item 
 namespace \mbox{\hyperlink{namespacecompiler__util}{compiler\+\_\+util}}
 \begin{DoxyCompactList}\small\item\em Contains compiler utility functions. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Typedefs}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{bytecode-builder_8h_ab4608f18c1f176248d02055de62c9440}\label{bytecode-builder_8h_ab4608f18c1f176248d02055de62c9440} 
-using {\bfseries via\+::compiler\+\_\+util\+::operands\+\_\+init\+\_\+t} = \mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{Operands\+Array}}$<$ \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}, 3, OPERAND\+\_\+\+INVALID $>$
+using {\bfseries via\+::compiler\+\_\+util\+::operands\+\_\+init\+\_\+t} = \mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{Operands\+Array}}$<$ \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}, 3, \mbox{\hyperlink{namespacevia_a9b3997daccb909f72d9d7d3ab8a9d619}{OPERAND\+\_\+\+INVALID}} $>$
 \end{DoxyCompactItemize}
 \doxysubsubsection*{Functions}
 \begin{DoxyCompactItemize}
@@ -64,23 +64,23 @@ void \mbox{\hyperlink{bytecode-builder_8cpp_ad6a1180fc963b94b13e5513905590593}{v
 \begin{DoxyCompactList}\small\item\em Constructs a constant value from the given literal expression node. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{structvia_1_1LitExprNode}{Lit\+Expr\+Node}} \mbox{\hyperlink{bytecode-builder_8cpp_ac9703f204266ee5ff6611665067a580c}{via\+::compiler\+\_\+util\+::fold\+\_\+constant}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}expr, size\+\_\+t fold\+\_\+depth)
 \begin{DoxyCompactList}\small\item\em Folds an expression into a constant if possible. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} \mbox{\hyperlink{bytecode-builder_8cpp_a821ac9cae97689669d2c96e6d1411d28}{via\+::compiler\+\_\+util\+::push\+\_\+constant}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1Value}{Value}} \&\&constant)
+\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} \mbox{\hyperlink{bytecode-builder_8cpp_a821ac9cae97689669d2c96e6d1411d28}{via\+::compiler\+\_\+util\+::push\+\_\+constant}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1Value}{Value}} \&\&constant)
 \begin{DoxyCompactList}\small\item\em Pushes a constant onto the constant table. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{bytecode-builder_8cpp_ae336781c36f310148a11623a10fd6761}{via\+::compiler\+\_\+util\+::resolve\+\_\+lvalue}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}lvalue, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} dst)
+bool \mbox{\hyperlink{bytecode-builder_8cpp_ae336781c36f310148a11623a10fd6761}{via\+::compiler\+\_\+util\+::resolve\+\_\+lvalue}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}lvalue, \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} dst)
 \begin{DoxyCompactList}\small\item\em Resolves the given lvalue and loads the result into the given register. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{bytecode-builder_8cpp_aa83c6cf545d9a79002c7088f35f7ec31}{via\+::compiler\+\_\+util\+::resolve\+\_\+rvalue}} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \texorpdfstring{$\ast$}{*}visitor, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}rvalue, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} dst)
+bool \mbox{\hyperlink{bytecode-builder_8cpp_aa83c6cf545d9a79002c7088f35f7ec31}{via\+::compiler\+\_\+util\+::resolve\+\_\+rvalue}} (\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \texorpdfstring{$\ast$}{*}visitor, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}rvalue, \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} dst)
 \begin{DoxyCompactList}\small\item\em Resolves the given rvalue and loads the result into the given register. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{bytecode-builder_8cpp_a69030828d339302cc913315f7a911490}{via\+::compiler\+\_\+util\+::bind\+\_\+lvalue}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}lvalue, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} src)
+bool \mbox{\hyperlink{bytecode-builder_8cpp_a69030828d339302cc913315f7a911490}{via\+::compiler\+\_\+util\+::bind\+\_\+lvalue}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}lvalue, \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} src)
 \begin{DoxyCompactList}\small\item\em Binds the value in the given register to the given lvalue. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{structvia_1_1TypeNodeBase}{Type\+Node\+Base}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{bytecode-builder_8cpp_add415b7aca65d8e5f933f440968a0533}{via\+::compiler\+\_\+util\+::resolve\+\_\+type}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}expr)
 \begin{DoxyCompactList}\small\item\em Resolves the type of the given expression. \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{bytecode-builder_8cpp_a7da6a7e98da441aeb6cce0b329a15cb1}{via\+::compiler\+\_\+util\+::bytecode\+\_\+emit}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, Opcode opcode=Opcode\+::\+NOP, \mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{operands\+\_\+init\+\_\+t}} \&\&operands=\{\}, std\+::string comment="{}"{})
+void \mbox{\hyperlink{bytecode-builder_8cpp_a7da6a7e98da441aeb6cce0b329a15cb1}{via\+::compiler\+\_\+util\+::bytecode\+\_\+emit}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}} opcode=\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}{Opcode\+::\+NOP}}, \mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{operands\+\_\+init\+\_\+t}} \&\&operands=\{\}, std\+::string comment="{}"{})
 \begin{DoxyCompactList}\small\item\em Emits a bytecode pair with the given data. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{bytecode-builder_8cpp_a7bce3ee1324627943bb8a7dae03f82ce}{via\+::compiler\+\_\+util\+::close\+\_\+defer\+\_\+statements}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \texorpdfstring{$\ast$}{*}visitor)
 \begin{DoxyCompactList}\small\item\em Closes and emits all defer statements found inside the given visitor. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} \mbox{\hyperlink{bytecode-builder_8h_a1a769bd32cb52620f99848cfe93fae0c}{via\+::compiler\+\_\+util\+::alloc\+\_\+register}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx)
+\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} \mbox{\hyperlink{bytecode-builder_8h_a1a769bd32cb52620f99848cfe93fae0c}{via\+::compiler\+\_\+util\+::alloc\+\_\+register}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx)
 \begin{DoxyCompactList}\small\item\em Allocates a new register. \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{bytecode-builder_8h_af77668addbda8eb247ec34282720901c}{via\+::compiler\+\_\+util\+::free\+\_\+register}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} reg)
+void \mbox{\hyperlink{bytecode-builder_8h_af77668addbda8eb247ec34282720901c}{via\+::compiler\+\_\+util\+::free\+\_\+register}} (\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&ctx, \mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} reg)
 \begin{DoxyCompactList}\small\item\em Fress the given registers that was previously allocated with {\ttfamily alloc\+\_\+register} \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
@@ -112,7 +112,7 @@ Register id
 \index{bytecode-\/builder.h@{bytecode-\/builder.h}!bind\_lvalue@{bind\_lvalue}}
 \index{bind\_lvalue@{bind\_lvalue}!bytecode-\/builder.h@{bytecode-\/builder.h}}
 \doxysubsubsection{\texorpdfstring{bind\_lvalue()}{bind\_lvalue()}}
-{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::bind\+\_\+lvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{lvalue,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{src }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::bind\+\_\+lvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{lvalue,  }\item[{\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}}]{src }\end{DoxyParamCaption})}
 
 
 
@@ -134,7 +134,7 @@ Fail status
 \index{bytecode-\/builder.h@{bytecode-\/builder.h}!bytecode\_emit@{bytecode\_emit}}
 \index{bytecode\_emit@{bytecode\_emit}!bytecode-\/builder.h@{bytecode-\/builder.h}}
 \doxysubsubsection{\texorpdfstring{bytecode\_emit()}{bytecode\_emit()}}
-{\footnotesize\ttfamily void via\+::compiler\+\_\+util\+::bytecode\+\_\+emit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{Opcode}]{opcode = {\ttfamily Opcode\+:\+:NOP},  }\item[{\mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{operands\+\_\+init\+\_\+t}} \&\&}]{operands = {\ttfamily \{\}},  }\item[{std\+::string}]{comment = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void via\+::compiler\+\_\+util\+::bytecode\+\_\+emit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62}{Opcode}}}]{opcode = {\ttfamily \mbox{\hyperlink{namespacevia_ac8974a71c8a4b5a87cbb4ea665ebfd62a1a004f5abe2b334db21328be1ea6b593}{Opcode\+::\+NOP}}},  }\item[{\mbox{\hyperlink{structvia_1_1compiler__util_1_1OperandsArray}{operands\+\_\+init\+\_\+t}} \&\&}]{operands = {\ttfamily \{\}},  }\item[{std\+::string}]{comment = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
 
 
 
@@ -398,7 +398,7 @@ Literal expression node
 \index{bytecode-\/builder.h@{bytecode-\/builder.h}!free\_register@{free\_register}}
 \index{free\_register@{free\_register}!bytecode-\/builder.h@{bytecode-\/builder.h}}
 \doxysubsubsection{\texorpdfstring{free\_register()}{free\_register()}}
-{\footnotesize\ttfamily void via\+::compiler\+\_\+util\+::free\+\_\+register (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{reg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily void via\+::compiler\+\_\+util\+::free\+\_\+register (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}}]{reg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -456,7 +456,7 @@ Constant id
 \index{bytecode-\/builder.h@{bytecode-\/builder.h}!resolve\_lvalue@{resolve\_lvalue}}
 \index{resolve\_lvalue@{resolve\_lvalue}!bytecode-\/builder.h@{bytecode-\/builder.h}}
 \doxysubsubsection{\texorpdfstring{resolve\_lvalue()}{resolve\_lvalue()}}
-{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::resolve\+\_\+lvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{lvalue,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::resolve\+\_\+lvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1VisitorContext}{Visitor\+Context}} \&}]{ctx,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{lvalue,  }\item[{\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})}
 
 
 
@@ -478,7 +478,7 @@ Fail status
 \index{bytecode-\/builder.h@{bytecode-\/builder.h}!resolve\_rvalue@{resolve\_rvalue}}
 \index{resolve\_rvalue@{resolve\_rvalue}!bytecode-\/builder.h@{bytecode-\/builder.h}}
 \doxysubsubsection{\texorpdfstring{resolve\_rvalue()}{resolve\_rvalue()}}
-{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::resolve\+\_\+rvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \texorpdfstring{$\ast$}{*}}]{visitor,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{rvalue,  }\item[{\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily bool via\+::compiler\+\_\+util\+::resolve\+\_\+rvalue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classvia_1_1NodeVisitorBase}{Node\+Visitor\+Base}} \texorpdfstring{$\ast$}{*}}]{visitor,  }\item[{\mbox{\hyperlink{structvia_1_1ExprNodeBase}{Expr\+Node\+Base}} \texorpdfstring{$\ast$}{*}}]{rvalue,  }\item[{\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}}}]{dst }\end{DoxyParamCaption})}
 
 
 

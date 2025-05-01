@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::String Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Constant-sized owning string type used in the via runtime.  
+ <a href="structvia_1_1String.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tstring_8h_source.html">tstring.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -121,28 +126,126 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac5caab5230f247c4cf91ff97f1ae2a13" id="r_ac5caab5230f247c4cf91ff97f1ae2a13"><td class="memItemLeft" align="right" valign="top"><a id="ac5caab5230f247c4cf91ff97f1ae2a13" name="ac5caab5230f247c4cf91ff97f1ae2a13"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1String.html">String</a>)</td></tr>
 <tr class="separator:ac5caab5230f247c4cf91ff97f1ae2a13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add716a9d3698dca2d910572f2d2ad484" id="r_add716a9d3698dca2d910572f2d2ad484"><td class="memItemLeft" align="right" valign="top"><a id="add716a9d3698dca2d910572f2d2ad484" name="add716a9d3698dca2d910572f2d2ad484"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>String</b> (const char *str)</td></tr>
+<tr class="memitem:add716a9d3698dca2d910572f2d2ad484" id="r_add716a9d3698dca2d910572f2d2ad484"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1String.html#add716a9d3698dca2d910572f2d2ad484">String</a> (const char *str)</td></tr>
+<tr class="memdesc:add716a9d3698dca2d910572f2d2ad484"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <code><a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a></code> from a null-terminated C-string.  <br /></td></tr>
 <tr class="separator:add716a9d3698dca2d910572f2d2ad484"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc54076fa2ba8ee7d6dab4b687e9d4c2" id="r_abc54076fa2ba8ee7d6dab4b687e9d4c2"><td class="memItemLeft" align="right" valign="top"><a id="abc54076fa2ba8ee7d6dab4b687e9d4c2" name="abc54076fa2ba8ee7d6dab4b687e9d4c2"></a>
-<a class="el" href="structvia_1_1String.html">String</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (size_t position)</td></tr>
+<tr class="memitem:abc54076fa2ba8ee7d6dab4b687e9d4c2" id="r_abc54076fa2ba8ee7d6dab4b687e9d4c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1String.html">String</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1String.html#abc54076fa2ba8ee7d6dab4b687e9d4c2">get</a> (size_t position)</td></tr>
+<tr class="memdesc:abc54076fa2ba8ee7d6dab4b687e9d4c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a single-character string at the specified position.  <br /></td></tr>
 <tr class="separator:abc54076fa2ba8ee7d6dab4b687e9d4c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae67af59b99bd0c307fc39178c9b027e1" id="r_ae67af59b99bd0c307fc39178c9b027e1"><td class="memItemLeft" align="right" valign="top"><a id="ae67af59b99bd0c307fc39178c9b027e1" name="ae67af59b99bd0c307fc39178c9b027e1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set</b> (size_t position, const <a class="el" href="structvia_1_1String.html">String</a> &amp;value)</td></tr>
+<tr class="memitem:ae67af59b99bd0c307fc39178c9b027e1" id="r_ae67af59b99bd0c307fc39178c9b027e1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1String.html#ae67af59b99bd0c307fc39178c9b027e1">set</a> (size_t position, const <a class="el" href="structvia_1_1String.html">String</a> &amp;value)</td></tr>
+<tr class="memdesc:ae67af59b99bd0c307fc39178c9b027e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replaces the character at the given index with the first character of another string.  <br /></td></tr>
 <tr class="separator:ae67af59b99bd0c307fc39178c9b027e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a9d3c30a0e703bc936dce2b94457d7896" id="r_a9d3c30a0e703bc936dce2b94457d7896"><td class="memItemLeft" align="right" valign="top"><a id="a9d3c30a0e703bc936dce2b94457d7896" name="a9d3c30a0e703bc936dce2b94457d7896"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b></td></tr>
+<tr class="memdesc:a9d3c30a0e703bc936dce2b94457d7896"><td class="mdescLeft">&#160;</td><td class="mdescRight">Heap-allocated UTF-8 character data. <br /></td></tr>
 <tr class="separator:a9d3c30a0e703bc936dce2b94457d7896"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab42b036476a01f5cc80c83533dfdbeaf" id="r_ab42b036476a01f5cc80c83533dfdbeaf"><td class="memItemLeft" align="right" valign="top"><a id="ab42b036476a01f5cc80c83533dfdbeaf" name="ab42b036476a01f5cc80c83533dfdbeaf"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>data_size</b></td></tr>
+<tr class="memdesc:ab42b036476a01f5cc80c83533dfdbeaf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of bytes in the string (not null-terminated). <br /></td></tr>
 <tr class="separator:ab42b036476a01f5cc80c83533dfdbeaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06dbf842c9e4cde47cd1bbf41b15040e" id="r_a06dbf842c9e4cde47cd1bbf41b15040e"><td class="memItemLeft" align="right" valign="top"><a id="a06dbf842c9e4cde47cd1bbf41b15040e" name="a06dbf842c9e4cde47cd1bbf41b15040e"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>hash</b></td></tr>
+<tr class="memdesc:a06dbf842c9e4cde47cd1bbf41b15040e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached hash for fast comparisons and dict lookup. <br /></td></tr>
 <tr class="separator:a06dbf842c9e4cde47cd1bbf41b15040e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Constant-sized owning string type used in the via runtime. </p>
+<p>This structure owns its character data, tracks its size, and caches a hash value to accelerate dictionary operations and comparisons. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="add716a9d3698dca2d910572f2d2ad484" name="add716a9d3698dca2d910572f2d2ad484"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add716a9d3698dca2d910572f2d2ad484">&#9670;&#160;</a></span>String()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::String::String </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a new <code><a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a></code> from a null-terminated C-string. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>The input C-string to copy. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="abc54076fa2ba8ee7d6dab4b687e9d4c2" name="abc54076fa2ba8ee7d6dab4b687e9d4c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc54076fa2ba8ee7d6dab4b687e9d4c2">&#9670;&#160;</a></span>get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structvia_1_1String.html">String</a> via::String::get </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>position</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets a single-character string at the specified position. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">position</td><td>Index of the character to retrieve. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A new <code><a class="el" href="structvia_1_1String.html" title="Constant-sized owning string type used in the via runtime.">String</a></code> containing just that character. </dd></dl>
+
+</div>
+</div>
+<a id="ae67af59b99bd0c307fc39178c9b027e1" name="ae67af59b99bd0c307fc39178c9b027e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae67af59b99bd0c307fc39178c9b027e1">&#9670;&#160;</a></span>set()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void via::String::set </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>position</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structvia_1_1String.html">String</a> &amp;&#160;</td>
+          <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Replaces the character at the given index with the first character of another string. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">position</td><td>Index of the character to replace. </td></tr>
+    <tr><td class="paramname">value</td><td>A string whose first character will be used as the replacement. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tstring_8h_source.html">tstring.h</a></li>
 <li>src/interpreter/<b>tstring.cpp</b></li>

@@ -1,24 +1,23 @@
 \doxysection{cabi.\+h}
 \hypertarget{cabi_8h_source}{}\label{cabi_8h_source}\index{src/interpreter/cabi.h@{src/interpreter/cabi.h}}
-
+\mbox{\hyperlink{cabi_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{00001\ \textcolor{comment}{//\ This\ file\ is\ a\ part\ of\ the\ via\ Programming\ Language\ project}}
 \DoxyCodeLine{00002\ \textcolor{comment}{//\ Copyright\ (C)\ 2024-\/2025\ XnLogical\ -\/\ Licensed\ under\ GNU\ GPL\ v3.0}}
 \DoxyCodeLine{00003\ }
-\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_CABI\_H}}
-\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_CABI\_H}}
-\DoxyCodeLine{00006\ }
-\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <cstdio>}\ \textcolor{comment}{//\ for\ printf}}
-\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <common.h>}}
-\DoxyCodeLine{00009\ }
-\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ \_\_cmov(dst,\ src)\ \ \ \ \ asm\ volatile("{}mov\ \%0,\%1\(\backslash\)n"{}\ :\ :\ "{}r"{}(src),\ "{}r"{}(dst));}}
-\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#define\ \_\_cmovrdst(dst,\ src)\ asm\ volatile("{}mov\ \%0,\ \%\%"{}\ \#dst\ "{}\(\backslash\)n"{}\ :\ :\ "{}r"{}(src)\ :\ \#dst)}}
-\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#define\ \_\_cmovrsrc(dst,\ src)\ asm\ volatile("{}mov\ \%\%"{}\ \#src\ "{},\%0\(\backslash\)n"{}\ :\ :\ "{}r"{}(dst)\ :\ \#src)}}
-\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ \_\_cmovrr(dst,\ src)\ \ \ asm\ volatile("{}mov\ \%\%"{}\ \#src\ "{},\ \%\%"{}\ \#dst\ "{}\(\backslash\)n"{}\ :\ :\ :\ \#dst,\ \#src)}}
-\DoxyCodeLine{00014\ }
-\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#define\ \_\_ccall(addr)}}
-\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#define\ \_\_ccallr(reg)\ asm\ volatile("{}call\ *\%\%"{}\ \#reg\ "{}\(\backslash\)n"{}\ :\ :\ :\ \#reg)}}
-\DoxyCodeLine{00017\ }
-\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifndef\ VIA\_HAS\_HEADER\_CABI\_H}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ VIA\_HAS\_HEADER\_CABI\_H}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <common.h>}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#define\ \_\_cmov(dst,\ src)\ \ \ \ \ asm\ volatile("{}mov\ \%0,\%1\(\backslash\)n"{}\ :\ :\ "{}r"{}(src),\ "{}r"{}(dst));}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#define\ \_\_cmovrdst(dst,\ src)\ asm\ volatile("{}mov\ \%0,\ \%\%"{}\ \#dst\ "{}\(\backslash\)n"{}\ :\ :\ "{}r"{}(src)\ :\ \#dst)}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#define\ \_\_cmovrsrc(dst,\ src)\ asm\ volatile("{}mov\ \%\%"{}\ \#src\ "{},\%0\(\backslash\)n"{}\ :\ :\ "{}r"{}(dst)\ :\ \#src)}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#define\ \_\_cmovrr(dst,\ src)\ \ \ asm\ volatile("{}mov\ \%\%"{}\ \#src\ "{},\ \%\%"{}\ \#dst\ "{}\(\backslash\)n"{}\ :\ :\ :\ \#dst,\ \#src)}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#define\ \_\_ccall(addr)}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#define\ \_\_ccallr(reg)\ asm\ volatile("{}call\ *\%\%"{}\ \#reg\ "{}\(\backslash\)n"{}\ :\ :\ :\ \#reg)}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

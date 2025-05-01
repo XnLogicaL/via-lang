@@ -112,6 +112,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Array Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>A growable, dynamically sized array of <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> elements.  
+ <a href="structvia_1_1Array.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tarray_8h_source.html">tarray.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Array:</div>
 <div class="dyncontent">
@@ -126,28 +131,120 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa8a8dc7edfdbd7205f071c3a60072848" id="r_aa8a8dc7edfdbd7205f071c3a60072848"><td class="memItemLeft" align="right" valign="top"><a id="aa8a8dc7edfdbd7205f071c3a60072848" name="aa8a8dc7edfdbd7205f071c3a60072848"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Array.html">Array</a>)</td></tr>
 <tr class="separator:aa8a8dc7edfdbd7205f071c3a60072848"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa53da74f0a07714d3b513cdda3c791b6" id="r_aa53da74f0a07714d3b513cdda3c791b6"><td class="memItemLeft" align="right" valign="top"><a id="aa53da74f0a07714d3b513cdda3c791b6" name="aa53da74f0a07714d3b513cdda3c791b6"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
+<tr class="memitem:aa53da74f0a07714d3b513cdda3c791b6" id="r_aa53da74f0a07714d3b513cdda3c791b6"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Array.html#aa53da74f0a07714d3b513cdda3c791b6">size</a> () const</td></tr>
+<tr class="memdesc:aa53da74f0a07714d3b513cdda3c791b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of initialized elements in the array.  <br /></td></tr>
 <tr class="separator:aa53da74f0a07714d3b513cdda3c791b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae335226420ff68fb38f7ab00432052d6" id="r_ae335226420ff68fb38f7ab00432052d6"><td class="memItemLeft" align="right" valign="top"><a id="ae335226420ff68fb38f7ab00432052d6" name="ae335226420ff68fb38f7ab00432052d6"></a>
-<a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (size_t position)</td></tr>
+<tr class="memitem:ae335226420ff68fb38f7ab00432052d6" id="r_ae335226420ff68fb38f7ab00432052d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Array.html#ae335226420ff68fb38f7ab00432052d6">get</a> (size_t position)</td></tr>
+<tr class="memdesc:ae335226420ff68fb38f7ab00432052d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the value at the given index. If out of bounds, returns a reference to Nil.  <br /></td></tr>
 <tr class="separator:ae335226420ff68fb38f7ab00432052d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96eca811c8c9f365847b0c83f992d7c0" id="r_a96eca811c8c9f365847b0c83f992d7c0"><td class="memItemLeft" align="right" valign="top"><a id="a96eca811c8c9f365847b0c83f992d7c0" name="a96eca811c8c9f365847b0c83f992d7c0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set</b> (size_t position, <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&amp;value)</td></tr>
+<tr class="memitem:a96eca811c8c9f365847b0c83f992d7c0" id="r_a96eca811c8c9f365847b0c83f992d7c0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Array.html#a96eca811c8c9f365847b0c83f992d7c0">set</a> (size_t position, <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&amp;value)</td></tr>
+<tr class="memdesc:a96eca811c8c9f365847b0c83f992d7c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a value to the element at the given index. If the index exceeds the current size, the array is resized.  <br /></td></tr>
 <tr class="separator:a96eca811c8c9f365847b0c83f992d7c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aa8c6b451b99e5f1d82612176af8398cc" id="r_aa8c6b451b99e5f1d82612176af8398cc"><td class="memItemLeft" align="right" valign="top"><a id="aa8c6b451b99e5f1d82612176af8398cc" name="aa8c6b451b99e5f1d82612176af8398cc"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> = nullptr</td></tr>
+<tr class="memdesc:aa8c6b451b99e5f1d82612176af8398cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to array data buffer. <br /></td></tr>
 <tr class="separator:aa8c6b451b99e5f1d82612176af8398cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba5f6114486e9dd68fcf13d615bdc53f" id="r_aba5f6114486e9dd68fcf13d615bdc53f"><td class="memItemLeft" align="right" valign="top"><a id="aba5f6114486e9dd68fcf13d615bdc53f" name="aba5f6114486e9dd68fcf13d615bdc53f"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>data_capacity</b> = ARRAY_INITAL_CAPACITY</td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>data_capacity</b> = <a class="el" href="namespacevia.html#a625b182fc4186a14ef71f050e732d912">ARRAY_INITAL_CAPACITY</a></td></tr>
+<tr class="memdesc:aba5f6114486e9dd68fcf13d615bdc53f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocated capacity. <br /></td></tr>
 <tr class="separator:aba5f6114486e9dd68fcf13d615bdc53f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b32f10fda4e8e65aeb0916642439aba" id="r_a2b32f10fda4e8e65aeb0916642439aba"><td class="memItemLeft" align="right" valign="top"><a id="a2b32f10fda4e8e65aeb0916642439aba" name="a2b32f10fda4e8e65aeb0916642439aba"></a>
 <a class="el" href="structvia_1_1CSize.html">CSize</a>&#160;</td><td class="memItemRight" valign="bottom"><b>csize</b></td></tr>
+<tr class="memdesc:a2b32f10fda4e8e65aeb0916642439aba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logical size and resizing helper. <br /></td></tr>
 <tr class="separator:a2b32f10fda4e8e65aeb0916642439aba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A growable, dynamically sized array of <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> elements. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structvia_1_1CSize.html" title="Small utility size caching structure.">CSize</a></dd></dl>
+<p>This structure wraps a heap-allocated buffer of <code><a class="el" href="structvia_1_1Value.html" title="Polymorphic tagged union representing any runtime value in via.">Value</a></code> entries and supports index-based access with automatic capacity expansion. Internally, resizing is delegated to the <code><a class="el" href="structvia_1_1CSize.html" title="Small utility size caching structure.">CSize</a></code> helper, which tracks the logical size and performs bounds checks. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="ae335226420ff68fb38f7ab00432052d6" name="ae335226420ff68fb38f7ab00432052d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae335226420ff68fb38f7ab00432052d6">&#9670;&#160;</a></span>get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structvia_1_1Value.html">Value</a> &amp; via::Array::get </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>position</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the value at the given index. If out of bounds, returns a reference to Nil. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">position</td><td>Index to fetch. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the value at the given index, or Nil. </dd></dl>
+
+</div>
+</div>
+<a id="a96eca811c8c9f365847b0c83f992d7c0" name="a96eca811c8c9f365847b0c83f992d7c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96eca811c8c9f365847b0c83f992d7c0">&#9670;&#160;</a></span>set()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void via::Array::set </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>position</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structvia_1_1Value.html">Value</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Assigns a value to the element at the given index. If the index exceeds the current size, the array is resized. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">position</td><td>Index to assign to. </td></tr>
+    <tr><td class="paramname">value</td><td>The value to assign. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa53da74f0a07714d3b513cdda3c791b6" name="aa53da74f0a07714d3b513cdda3c791b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa53da74f0a07714d3b513cdda3c791b6">&#9670;&#160;</a></span>size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t via::Array::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the number of initialized elements in the array. </p>
+<dl class="section return"><dt>Returns</dt><dd>Current logical size of the array. </dd></dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tarray_8h_source.html">tarray.h</a></li>
 <li>src/interpreter/<b>tarray.cpp</b></li>

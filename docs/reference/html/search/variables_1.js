@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['decl_0',['decl',['../structvia_1_1StackVariable.html#a67ec343819b6032ebfb8597c9411cf15',1,'via::StackVariable::decl'],['../structvia_1_1StackFunction.html#a5b1f95098c390871331a37307995219b',1,'via::StackFunction::decl']]]
+  ['b_0',['b',['../structvia_1_1Instruction.html#a71ea67d491b9cb04b3527f3bc6b85524',1,'via::Instruction::b'],['../unionvia_1_1Value_1_1Un.html#a84ecab33070fee4980c311c573e420c1',1,'via::Value::Un::b']]]
 ];

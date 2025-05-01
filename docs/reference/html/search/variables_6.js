@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['value_0',['value',['../structvia_1_1StackVariable.html#aa38ed93bc01de467b3283d303e727390',1,'via::StackVariable']]]
+  ['globals_0',['globals',['../structvia_1_1State.html#a2f2ec338bd909545738e9765fbbcf81b',1,'via::State']]]
 ];

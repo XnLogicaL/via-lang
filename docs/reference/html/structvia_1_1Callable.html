@@ -114,6 +114,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::Callable Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Wraps a function-like object, either user-defined or native.  
+ <a href="structvia_1_1Callable.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tfunction_8h_source.html">tfunction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::Callable:</div>
 <div class="dyncontent">
@@ -123,43 +128,163 @@ Collaboration diagram for via::Callable:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">union &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unionvia_1_1Callable_1_1Un.html">Un</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores either a pointer to a <code><a class="el" href="structvia_1_1Function.html" title="Represents a user-defined via function, including its bytecode and metadata.">Function</a></code> or a <code>NativeFn</code>.  <a href="unionvia_1_1Callable_1_1Un.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a295f83c55ac11eeeb70def52ddc8450e" id="r_a295f83c55ac11eeeb70def52ddc8450e"><td class="memItemLeft" align="right" valign="top"><a id="a295f83c55ac11eeeb70def52ddc8450e" name="a295f83c55ac11eeeb70def52ddc8450e"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><b>Tag</b> { <b>None</b>
-, <b>Function</b>
-, <b>Native</b>
+<tr class="memitem:a295f83c55ac11eeeb70def52ddc8450e" id="r_a295f83c55ac11eeeb70def52ddc8450e"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">Tag</a> { <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754">None</a>
+, <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261">Function</a>
+, <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826">Native</a>
  }</td></tr>
+<tr class="memdesc:a295f83c55ac11eeeb70def52ddc8450e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates the kind of function this <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> represents.  <a href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">More...</a><br /></td></tr>
 <tr class="separator:a295f83c55ac11eeeb70def52ddc8450e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a214a57f0cd0b65af92be31bde7752a3e" id="r_a214a57f0cd0b65af92be31bde7752a3e"><td class="memItemLeft" align="right" valign="top"><a id="a214a57f0cd0b65af92be31bde7752a3e" name="a214a57f0cd0b65af92be31bde7752a3e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLCOPY</b> (<a class="el" href="structvia_1_1Callable.html">Callable</a>)</td></tr>
+<tr class="memdesc:a214a57f0cd0b65af92be31bde7752a3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables copy constructor and assignment. <br /></td></tr>
 <tr class="separator:a214a57f0cd0b65af92be31bde7752a3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a202c65c114e01627f2445a4b507e4edd" id="r_a202c65c114e01627f2445a4b507e4edd"><td class="memItemLeft" align="right" valign="top"><a id="a202c65c114e01627f2445a4b507e4edd" name="a202c65c114e01627f2445a4b507e4edd"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_IMPLMOVE</b> (<a class="el" href="structvia_1_1Callable.html">Callable</a>)</td></tr>
+<tr class="memdesc:a202c65c114e01627f2445a4b507e4edd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables move constructor and assignment. <br /></td></tr>
 <tr class="separator:a202c65c114e01627f2445a4b507e4edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a654ae174622fecf135d05de88901e0d0" id="r_a654ae174622fecf135d05de88901e0d0"><td class="memItemLeft" align="right" valign="top"><a id="a654ae174622fecf135d05de88901e0d0" name="a654ae174622fecf135d05de88901e0d0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Callable</b> (<a class="el" href="structvia_1_1Function.html">Function</a> *fn, size_t arity)</td></tr>
+<tr class="memitem:a654ae174622fecf135d05de88901e0d0" id="r_a654ae174622fecf135d05de88901e0d0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Callable.html#a654ae174622fecf135d05de88901e0d0">Callable</a> (<a class="el" href="structvia_1_1Function.html">Function</a> *fn, size_t <a class="el" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">arity</a>)</td></tr>
+<tr class="memdesc:a654ae174622fecf135d05de88901e0d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> for a user-defined function.  <br /></td></tr>
 <tr class="separator:a654ae174622fecf135d05de88901e0d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac86fe60ddd3f63647966365882b6119e" id="r_ac86fe60ddd3f63647966365882b6119e"><td class="memItemLeft" align="right" valign="top"><a id="ac86fe60ddd3f63647966365882b6119e" name="ac86fe60ddd3f63647966365882b6119e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Callable</b> (NativeFn fn, size_t arity)</td></tr>
+<tr class="memitem:ac86fe60ddd3f63647966365882b6119e" id="r_ac86fe60ddd3f63647966365882b6119e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1Callable.html#ac86fe60ddd3f63647966365882b6119e">Callable</a> (<a class="el" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">NativeFn</a> fn, size_t <a class="el" href="structvia_1_1Callable.html#af7ef8d36ade9b4fa99782629cd696c47">arity</a>)</td></tr>
+<tr class="memdesc:ac86fe60ddd3f63647966365882b6119e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> for a native function.  <br /></td></tr>
 <tr class="separator:ac86fe60ddd3f63647966365882b6119e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a292fa09faa3056b47cd5336ad742c2e5" id="r_a292fa09faa3056b47cd5336ad742c2e5"><td class="memItemLeft" align="right" valign="top"><a id="a292fa09faa3056b47cd5336ad742c2e5" name="a292fa09faa3056b47cd5336ad742c2e5"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~Callable</b> ()</td></tr>
+<tr class="memdesc:a292fa09faa3056b47cd5336ad742c2e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor (does not delete the function pointer). <br /></td></tr>
+<tr class="separator:a292fa09faa3056b47cd5336ad742c2e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a4b90de1e1c17050f87bb861a0f1dcf8f" id="r_a4b90de1e1c17050f87bb861a0f1dcf8f"><td class="memItemLeft" align="right" valign="top"><a id="a4b90de1e1c17050f87bb861a0f1dcf8f" name="a4b90de1e1c17050f87bb861a0f1dcf8f"></a>
-enum via::Callable::Tag&#160;</td><td class="memItemRight" valign="bottom"><b>type</b> = Tag::Function</td></tr>
+enum <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">via::Callable::Tag</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type</b> = <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261">Tag::Function</a></td></tr>
 <tr class="separator:a4b90de1e1c17050f87bb861a0f1dcf8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a852371ec7a1553d572900c733777514c" id="r_a852371ec7a1553d572900c733777514c"><td class="memItemLeft" align="right" valign="top"><a id="a852371ec7a1553d572900c733777514c" name="a852371ec7a1553d572900c733777514c"></a>
 union <a class="el" href="unionvia_1_1Callable_1_1Un.html">via::Callable::Un</a>&#160;</td><td class="memItemRight" valign="bottom"><b>u</b></td></tr>
 <tr class="separator:a852371ec7a1553d572900c733777514c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7ef8d36ade9b4fa99782629cd696c47" id="r_af7ef8d36ade9b4fa99782629cd696c47"><td class="memItemLeft" align="right" valign="top"><a id="af7ef8d36ade9b4fa99782629cd696c47" name="af7ef8d36ade9b4fa99782629cd696c47"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>arity</b> = 0</td></tr>
+<tr class="memdesc:af7ef8d36ade9b4fa99782629cd696c47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of arguments expected. <br /></td></tr>
 <tr class="separator:af7ef8d36ade9b4fa99782629cd696c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Wraps a function-like object, either user-defined or native. </p>
+<p>Used uniformly throughout the VM for calling both compiled and native routines. </p>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a295f83c55ac11eeeb70def52ddc8450e" name="a295f83c55ac11eeeb70def52ddc8450e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a295f83c55ac11eeeb70def52ddc8450e">&#9670;&#160;</a></span>Tag</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450e">via::Callable::Tag</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Indicates the kind of function this <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> represents. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754" name="a295f83c55ac11eeeb70def52ddc8450ea6adf97f83acf6453d4a6a4b1070f3754"></a>None&#160;</td><td class="fielddoc"><p>No function. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261" name="a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261"></a>Function&#160;</td><td class="fielddoc"><p>User-defined function. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826" name="a295f83c55ac11eeeb70def52ddc8450ea925641e0b76c28cc940e8f3ca178d826"></a>Native&#160;</td><td class="fielddoc"><p>Native function. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a654ae174622fecf135d05de88901e0d0" name="a654ae174622fecf135d05de88901e0d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a654ae174622fecf135d05de88901e0d0">&#9670;&#160;</a></span>Callable() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::Callable::Callable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structvia_1_1Function.html">Function</a> *&#160;</td>
+          <td class="paramname"><em>fn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>arity</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> for a user-defined function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fn</td><td>Pointer to the <code><a class="el" href="structvia_1_1Function.html" title="Represents a user-defined via function, including its bytecode and metadata.">Function</a></code> object. </td></tr>
+    <tr><td class="paramname">arity</td><td>Expected argument count. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac86fe60ddd3f63647966365882b6119e" name="ac86fe60ddd3f63647966365882b6119e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac86fe60ddd3f63647966365882b6119e">&#9670;&#160;</a></span>Callable() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::Callable::Callable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#a23382f1b645a8629871fab7d0431281e">NativeFn</a>&#160;</td>
+          <td class="paramname"><em>fn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>arity</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a <a class="el" href="structvia_1_1Callable.html" title="Wraps a function-like object, either user-defined or native.">Callable</a> for a native function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fn</td><td>Pointer to the native function. </td></tr>
+    <tr><td class="paramname">arity</td><td>Expected argument count. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="tfunction_8h_source.html">tfunction.h</a></li>
 <li>src/interpreter/<b>tfunction.cpp</b></li>

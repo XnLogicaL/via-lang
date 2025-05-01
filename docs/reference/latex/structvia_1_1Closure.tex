@@ -2,6 +2,15 @@
 \hypertarget{structvia_1_1Closure}{}\label{structvia_1_1Closure}\index{via::Closure@{via::Closure}}
 
 
+Wraps a \doxylink{structvia_1_1Callable}{Callable} with its captured upvalues for lexical scoping.  
+
+
+
+
+{\ttfamily \#include $<$tfunction.\+h$>$}
+
+
+
 Collaboration diagram for via\+::Closure\+:
 % FIG 0
 \doxysubsubsection*{Public Member Functions}
@@ -9,28 +18,53 @@ Collaboration diagram for via\+::Closure\+:
 \item 
 \Hypertarget{structvia_1_1Closure_a1c4f159e19583333e370d9cce52f469e}\label{structvia_1_1Closure_a1c4f159e19583333e370d9cce52f469e} 
 {\bfseries VIA\+\_\+\+IMPLCOPY} (\mbox{\hyperlink{structvia_1_1Closure}{Closure}})
-\item 
+\begin{DoxyCompactList}\small\item\em Enables copy constructor and assignment. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Closure_aef8587578c75bf69495133e9d5c2d31b}\label{structvia_1_1Closure_aef8587578c75bf69495133e9d5c2d31b} 
 {\bfseries VIA\+\_\+\+IMPLMOVE} (\mbox{\hyperlink{structvia_1_1Closure}{Closure}})
-\item 
-\Hypertarget{structvia_1_1Closure_a0f4ae31888f7754de8109c2f47f23428}\label{structvia_1_1Closure_a0f4ae31888f7754de8109c2f47f23428} 
-{\bfseries Closure} (\mbox{\hyperlink{structvia_1_1Callable}{Callable}} \&\&callable)
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Enables move constructor and assignment. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structvia_1_1Closure_a0f4ae31888f7754de8109c2f47f23428}{Closure}} (\mbox{\hyperlink{structvia_1_1Callable}{Callable}} \&\&callable)
+\begin{DoxyCompactList}\small\item\em Constructs a closure from a callable (usually a function). \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1Closure_abb75bceb473474ed8f2aad2b9f14d103}\label{structvia_1_1Closure_abb75bceb473474ed8f2aad2b9f14d103} 
+{\bfseries \texorpdfstring{$\sim$}{\string~}\+Closure} ()
+\begin{DoxyCompactList}\small\item\em Destructor that frees upvalue array. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{structvia_1_1Closure_ab7380fe64e676fd80e3d24d3223ea542}\label{structvia_1_1Closure_ab7380fe64e676fd80e3d24d3223ea542} 
 \mbox{\hyperlink{structvia_1_1Callable}{Callable}} {\bfseries callee}
-\item 
+\begin{DoxyCompactList}\small\item\em Underlying callable (function or native). \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Closure_aee2767a673337ba62136b8ad399f6ca2}\label{structvia_1_1Closure_aee2767a673337ba62136b8ad399f6ca2} 
 \mbox{\hyperlink{structvia_1_1UpValue}{Up\+Value}} \texorpdfstring{$\ast$}{*} {\bfseries upvs} = nullptr
-\item 
+\begin{DoxyCompactList}\small\item\em \doxylink{structvia_1_1Array}{Array} of upvalue pointers. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1Closure_a1a9d83a4fe3ad0496ede24a4d5c1960f}\label{structvia_1_1Closure_a1a9d83a4fe3ad0496ede24a4d5c1960f} 
 size\+\_\+t {\bfseries upv\+\_\+count} = 0
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Number of captured upvalues. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Wraps a \doxylink{structvia_1_1Callable}{Callable} with its captured upvalues for lexical scoping. 
+
+A \doxylink{structvia_1_1Closure}{Closure} is created when a function expression references non-\/local variables. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structvia_1_1Closure_a0f4ae31888f7754de8109c2f47f23428}\label{structvia_1_1Closure_a0f4ae31888f7754de8109c2f47f23428} 
+\index{via::Closure@{via::Closure}!Closure@{Closure}}
+\index{Closure@{Closure}!via::Closure@{via::Closure}}
+\doxysubsubsection{\texorpdfstring{Closure()}{Closure()}}
+{\footnotesize\ttfamily via\+::\+Closure\+::\+Closure (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structvia_1_1Callable}{Callable}} \&\&}]{callable }\end{DoxyParamCaption})}
+
+
+
+Constructs a closure from a callable (usually a function). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em callable} & The callable to close over. \\
+\hline
+\end{DoxyParams}
 
 
 The documentation for this struct was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 
-src/interpreter/tfunction.\+h\item 
+src/interpreter/\mbox{\hyperlink{tfunction_8h}{tfunction.\+h}}\item 
 src/interpreter/tfunction.\+cpp\end{DoxyCompactItemize}

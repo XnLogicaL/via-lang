@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['find_5flocal_5fid_0',['find_local_id',['../classvia_1_1CompilerVariableStack.html#a7d4d5a9b44267f013f5065d82d1fc8e2',1,'via::CompilerVariableStack']]],
-  ['fold_5fconstant_1',['fold_constant',['../bytecode-builder_8cpp.html#ac9703f204266ee5ff6611665067a580c',1,'via::compiler_util']]],
-  ['free_5fregister_2',['free_register',['../classvia_1_1RegisterAllocator.html#a803062b7bafc00fb5d1afe1160e4fb00',1,'via::RegisterAllocator::free_register()'],['../bytecode-builder_8h.html#af77668addbda8eb247ec34282720901c',1,'via::compiler_util::free_register()']]]
+  ['declare_5fbuiltins_0',['declare_builtins',['../classvia_1_1GlobalHolder.html#a8772ad54a3d4c0b7a232d7fe0a54a0c5',1,'via::GlobalHolder']]],
+  ['declare_5fglobal_1',['declare_global',['../classvia_1_1GlobalHolder.html#a0bad0f56adc2f99b839fa0f20b5b47ec',1,'via::GlobalHolder']]],
+  ['drop_2',['drop',['../structvia_1_1State.html#af3f224a307724ffaa26b1fc848c6a2c0',1,'via::State']]]
 ];

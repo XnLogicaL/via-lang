@@ -3,12 +3,12 @@
 
 #include "parser.h"
 
-#define VIA_CHECKRESULT(result)                                                                    \
+#define CHECK_RESULT(result)                                                                       \
   if (!result.has_value()) {                                                                       \
     return tl::unexpected(result.error());                                                         \
   }
 
-#define VIA_CHECKRESULT_MAINFN(result)                                                             \
+#define CHECK_RESULT_MAINFN(result)                                                                \
   if (!result.has_value()) {                                                                       \
     auto err = result.error();                                                                     \
     err_bus.log({false, err.what, unit_ctx, ERROR_, unit_ctx.tokens.at(err.where)});               \
@@ -74,7 +74,7 @@ result<StmtModifiers> Parser::parse_modifiers() {
 
   while (true) {
     result<Token> curr = current();
-    VIA_CHECKRESULT(curr);
+    CHECK_RESULT(curr);
 
     if (curr->type == KW_CONST) {
       if (modifiers.is_const) {
@@ -99,9 +99,9 @@ result<StmtAttribute> Parser::parse_attribute() {
     expect_consume(IDENTIFIER, "Expected identifier for StmtAttribute name");
   result<Token> curr = current();
 
-  VIA_CHECKRESULT(expect_at);
-  VIA_CHECKRESULT(expect_id);
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(expect_at);
+  CHECK_RESULT(expect_id);
+  CHECK_RESULT(curr);
 
   StmtAttribute attr;
   attr.identifier = *expect_id;
@@ -111,7 +111,7 @@ result<StmtAttribute> Parser::parse_attribute() {
 
     while (true) {
       curr = current();
-      VIA_CHECKRESULT(curr);
+      CHECK_RESULT(curr);
 
       if (curr->type == PAREN_CLOSE) {
         break;
@@ -133,35 +133,35 @@ result<TypeNodeBase*> Parser::parse_generic() {
   result<Token> identifier = consume();
   result<StmtModifiers> modifiers = parse_modifiers();
 
-  VIA_CHECKRESULT(identifier);
-  VIA_CHECKRESULT(modifiers);
+  CHECK_RESULT(identifier);
+  CHECK_RESULT(modifiers);
 
   generics_t generics;
 
   result<Token> expect_lt = expect_consume(OP_LT, "Expected '<' to open type generic");
   result<Token> curr = current();
 
-  VIA_CHECKRESULT(expect_lt);
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(expect_lt);
+  CHECK_RESULT(curr);
 
   while (curr->type != OP_GT) {
     result<TypeNodeBase*> result_type = parse_type();
     result<Token> result_token = current();
 
-    VIA_CHECKRESULT(result_type);
-    VIA_CHECKRESULT(result_token);
+    CHECK_RESULT(result_type);
+    CHECK_RESULT(result_token);
 
     generics.emplace_back(result_type.value());
 
     if (curr->type != OP_GT) {
       result<Token> expect_comma = expect_consume(COMMA, "Expected ',' to seperate type generics");
 
-      VIA_CHECKRESULT(expect_comma);
+      CHECK_RESULT(expect_comma);
     }
   }
 
   result<Token> expect_gt = expect_consume(OP_GT, "Expected '>' to close type generic");
-  VIA_CHECKRESULT(expect_gt);
+  CHECK_RESULT(expect_gt);
 
   return unit_ctx.internal.ast_allocator.emplace<GenericTypeNode>(
     *identifier, generics, *modifiers
@@ -178,7 +178,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
   };
 
   result<Token> tok = current();
-  VIA_CHECKRESULT(tok);
+  CHECK_RESULT(tok);
 
   switch (tok->type) {
   case KW_AUTO:
@@ -202,11 +202,11 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
     parameters params;
 
     result<Token> curr = consume();
-    VIA_CHECKRESULT(curr);
+    CHECK_RESULT(curr);
 
     while (true) {
       result<Token> tok = current();
-      VIA_CHECKRESULT(tok);
+      CHECK_RESULT(tok);
 
       if (tok->type == PAREN_CLOSE) {
         consume();
@@ -214,7 +214,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
       }
 
       result<TypeNodeBase*> type_result = parse_type();
-      VIA_CHECKRESULT(type_result);
+      CHECK_RESULT(type_result);
 
       ParamStmtNode* param = unit_ctx.internal.ast_allocator.emplace<ParamStmtNode>(
         Token(TokenType::IDENTIFIER, "", 0, 0, 0), StmtModifiers{}, *type_result
@@ -226,7 +226,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
         result<Token> expect_comma =
           expect_consume(COMMA, "Expected ',' to seperate function parameter types");
 
-        VIA_CHECKRESULT(expect_comma);
+        CHECK_RESULT(expect_comma);
       }
     }
 
@@ -236,9 +236,9 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
       expect_consume(RETURNS, "Expected '->' to specify function return type");
     result<TypeNodeBase*> return_type = parse_type();
 
-    VIA_CHECKRESULT(expect_pc);
-    VIA_CHECKRESULT(expect_rt);
-    VIA_CHECKRESULT(return_type);
+    CHECK_RESULT(expect_pc);
+    CHECK_RESULT(expect_rt);
+    CHECK_RESULT(return_type);
 
     return unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(params, return_type.value());
   }
@@ -248,8 +248,8 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
     result<TypeNodeBase*> inner_type = parse_type();
     result<Token> expect_br = expect_consume(BRACKET_CLOSE, "Expected ']' to close array type");
 
-    VIA_CHECKRESULT(inner_type);
-    VIA_CHECKRESULT(expect_br);
+    CHECK_RESULT(inner_type);
+    CHECK_RESULT(expect_br);
 
     return unit_ctx.internal.ast_allocator.emplace<ArrayTypeNode>(*inner_type);
   }
@@ -271,7 +271,7 @@ result<TypeNodeBase*> Parser::parse_type() {
 result<ExprNodeBase*> Parser::parse_primary() {
   // Get the current Token.
   result<Token> tok = current();
-  VIA_CHECKRESULT(tok);
+  CHECK_RESULT(tok);
 
   switch (tok->type) {
   case LIT_INT:
@@ -298,9 +298,33 @@ result<ExprNodeBase*> Parser::parse_primary() {
   case LIT_BOOL:
     consume();
     return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme == "true");
-  case IDENTIFIER:
-    consume();
+  case IDENTIFIER: {
+    result<Token> id = consume();
+
+    // Check for intrinsic
+    if (id->lexeme == "deep_eq") {
+      result<Token> expect_par =
+        expect_consume(PAREN_OPEN, "Expected '(' to open intrinsic arguments for 'deep_eq'");
+      result<ExprNodeBase*> left = parse_expr();
+      result<Token> expect_comma =
+        expect_consume(COMMA, "Expected ',' to seperate intrinsic 'deep_eq' arguments");
+      result<ExprNodeBase*> right = parse_expr();
+      result<Token> expect_parc =
+        expect_consume(PAREN_CLOSE, "Expected ')' to close intrinsic arguments for 'deep_eq'");
+
+      CHECK_RESULT(expect_par);
+      CHECK_RESULT(left);
+      CHECK_RESULT(expect_comma);
+      CHECK_RESULT(right);
+      CHECK_RESULT(expect_parc);
+
+      return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(
+        *id, std::vector<ExprNodeBase*>{*left, *right}
+      );
+    }
+
     return unit_ctx.internal.ast_allocator.emplace<SymExprNode>(*tok);
+  }
   case LIT_STRING:
     consume();
     return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme);
@@ -311,8 +335,8 @@ result<ExprNodeBase*> Parser::parse_primary() {
     result<Token> op = consume();
     result<ExprNodeBase*> expr = parse_primary();
 
-    VIA_CHECKRESULT(op);
-    VIA_CHECKRESULT(expr);
+    CHECK_RESULT(op);
+    CHECK_RESULT(expr);
 
     return unit_ctx.internal.ast_allocator.emplace<UnaryExprNode>(*op, *expr);
   }
@@ -322,23 +346,23 @@ result<ExprNodeBase*> Parser::parse_primary() {
 
     while (true) {
       result<Token> curr = current();
-      VIA_CHECKRESULT(curr);
+      CHECK_RESULT(curr);
 
       if (curr->type == BRACKET_CLOSE) {
         break;
       }
 
       result<ExprNodeBase*> expr = parse_expr();
-      VIA_CHECKRESULT(expr);
+      CHECK_RESULT(expr);
 
       values.emplace_back(*expr);
 
       curr = expect_consume(COMMA, "Expected ',' to seperate list elements");
-      VIA_CHECKRESULT(curr);
+      CHECK_RESULT(curr);
     }
 
     result<Token> br_close = consume();
-    VIA_CHECKRESULT(br_close);
+    CHECK_RESULT(br_close);
 
     return unit_ctx.internal.ast_allocator.emplace<ArrayExprNode>(
       br_open->position, br_close->position, values
@@ -350,10 +374,12 @@ result<ExprNodeBase*> Parser::parse_primary() {
     result<Token> intrinsic = consume();
     result<ExprNodeBase*> expr = parse_expr();
 
-    VIA_CHECKRESULT(intrinsic);
-    VIA_CHECKRESULT(expr);
+    CHECK_RESULT(intrinsic);
+    CHECK_RESULT(expr);
 
-    return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(*intrinsic, *expr);
+    return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(
+      *intrinsic, std::vector<ExprNodeBase*>{*expr}
+    );
   }
   case PAREN_OPEN: {
     consume();
@@ -362,8 +388,8 @@ result<ExprNodeBase*> Parser::parse_primary() {
     result<Token> expect_par =
       expect_consume(PAREN_CLOSE, "Expected ')' to close grouping expression");
 
-    VIA_CHECKRESULT(expr);
-    VIA_CHECKRESULT(expect_par);
+    CHECK_RESULT(expr);
+    CHECK_RESULT(expect_par);
 
     return unit_ctx.internal.ast_allocator.emplace<GroupExprNode>(*expr);
   }
@@ -390,7 +416,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       consume();
       result<Token> index_token =
         expect_consume(IDENTIFIER, "Expected identifier while parsing index");
-      VIA_CHECKRESULT(index_token);
+      CHECK_RESULT(index_token);
 
       lhs = unit_ctx.internal.ast_allocator.emplace<IndexExprNode>(
         lhs, unit_ctx.internal.ast_allocator.emplace<SymExprNode>(*index_token)
@@ -405,8 +431,8 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       result<Token> expect_br =
         expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
 
-      VIA_CHECKRESULT(index);
-      VIA_CHECKRESULT(expect_br);
+      CHECK_RESULT(index);
+      CHECK_RESULT(expect_br);
 
       lhs = unit_ctx.internal.ast_allocator.emplace<IndexExprNode>(lhs, *index);
       continue;
@@ -417,20 +443,20 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
 
       while (true) {
         result<Token> curr = current();
-        VIA_CHECKRESULT(curr);
+        CHECK_RESULT(curr);
 
         if (curr->type == PAREN_CLOSE) {
           break;
         }
 
         result<ExprNodeBase*> expr = parse_expr();
-        VIA_CHECKRESULT(expr);
+        CHECK_RESULT(expr);
 
         arguments.emplace_back(*expr);
 
         // After an argument, check for a comma.
         curr = current();
-        VIA_CHECKRESULT(curr);
+        CHECK_RESULT(curr);
 
         if (curr->type == COMMA) {
           consume();
@@ -443,7 +469,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       // Expect the closing parenthesis.
       result<Token> expect_par =
         expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
-      VIA_CHECKRESULT(expect_par);
+      CHECK_RESULT(expect_par);
 
       lhs = unit_ctx.internal.ast_allocator.emplace<CallExprNode>(lhs, arguments);
       continue;
@@ -464,7 +490,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       consume();
 
       result<TypeNodeBase*> type_result = parse_type();
-      VIA_CHECKRESULT(type_result);
+      CHECK_RESULT(type_result);
 
       lhs = unit_ctx.internal.ast_allocator.emplace<CastExprNode>(lhs, *type_result);
       continue;
@@ -479,16 +505,16 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
 result<ExprNodeBase*> Parser::parse_binary(int precedence) {
   // Parse the primary expression first.
   result<ExprNodeBase*> prim = parse_primary();
-  VIA_CHECKRESULT(prim);
+  CHECK_RESULT(prim);
 
   // Parse any postfix operations that apply to the primary expression.
   result<ExprNodeBase*> lhs = parse_postfix(*prim);
-  VIA_CHECKRESULT(lhs);
+  CHECK_RESULT(lhs);
 
   // Parse binary operators according to precedence.
   while (position < unit_ctx.tokens.size()) {
     result<Token> op = current();
-    VIA_CHECKRESULT(op);
+    CHECK_RESULT(op);
 
     // Stop if the Token is not an operator.
     if (!op->is_operator()) {
@@ -503,7 +529,7 @@ result<ExprNodeBase*> Parser::parse_binary(int precedence) {
     consume();
 
     result<ExprNodeBase*> rhs = parse_binary(op_prec + 1);
-    VIA_CHECKRESULT(rhs);
+    CHECK_RESULT(rhs);
 
     lhs = unit_ctx.internal.ast_allocator.emplace<BinExprNode>(*op, *lhs, *rhs);
   }
@@ -517,7 +543,7 @@ result<ExprNodeBase*> Parser::parse_expr() {
 
 result<StmtNodeBase*> Parser::parse_declaration() {
   result<Token> first = consume();
-  VIA_CHECKRESULT(first);
+  CHECK_RESULT(first);
 
   size_t begin = first->position;
   TokenType first_type = first->type;
@@ -532,7 +558,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
   is_const = first_type == KW_CONST;
 
   result<Token> curr = current();
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(curr);
 
   // Detect `fn` at the start (fn name())
   if (first_type == KW_FUNC) {
@@ -545,7 +571,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
   }
 
   curr = current();
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(curr);
 
   if (curr->type == KW_FUNC) {
     consume();
@@ -555,8 +581,8 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     result<Token> expect_par =
       expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
 
-    VIA_CHECKRESULT(identifier);
-    VIA_CHECKRESULT(expect_par);
+    CHECK_RESULT(identifier);
+    CHECK_RESULT(expect_par);
 
     std::vector<ParamStmtNode> parameters;
 
@@ -572,20 +598,20 @@ result<StmtNodeBase*> Parser::parse_declaration() {
       result<Token> expect_col = expect_consume(COLON, "Expected ':' between parameter and type");
       result<TypeNodeBase*> param_type = parse_type();
 
-      VIA_CHECKRESULT(StmtModifiers);
-      VIA_CHECKRESULT(param_name);
-      VIA_CHECKRESULT(expect_col);
-      VIA_CHECKRESULT(param_type);
+      CHECK_RESULT(StmtModifiers);
+      CHECK_RESULT(param_name);
+      CHECK_RESULT(expect_col);
+      CHECK_RESULT(param_type);
 
       parameters.emplace_back(*param_name, *StmtModifiers, *param_type);
 
       curr = current();
-      VIA_CHECKRESULT(curr);
+      CHECK_RESULT(curr);
 
       if (curr->type != PAREN_CLOSE) {
         result<Token> expect_comma =
           expect_consume(COMMA, "Expected ',' between function parameters");
-        VIA_CHECKRESULT(expect_comma);
+        CHECK_RESULT(expect_comma);
       }
       else {
         break;
@@ -601,10 +627,10 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     result<TypeNodeBase*> returns = parse_type();
     result<StmtNodeBase*> body_scope = parse_scope();
 
-    VIA_CHECKRESULT(expect_rpar);
-    VIA_CHECKRESULT(expect_rets);
-    VIA_CHECKRESULT(returns);
-    VIA_CHECKRESULT(body_scope);
+    CHECK_RESULT(expect_rpar);
+    CHECK_RESULT(expect_rets);
+    CHECK_RESULT(returns);
+    CHECK_RESULT(body_scope);
 
     return unit_ctx.internal.ast_allocator.emplace<FuncDeclStmtNode>(
       begin,
@@ -624,14 +650,14 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
   curr = current();
 
-  VIA_CHECKRESULT(identifier);
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(identifier);
+  CHECK_RESULT(curr);
 
   if (curr->type == COLON) {
     consume();
 
     result<TypeNodeBase*> temp = parse_type();
-    VIA_CHECKRESULT(temp);
+    CHECK_RESULT(temp);
     type = *temp;
   }
   else {
@@ -643,8 +669,8 @@ result<StmtNodeBase*> Parser::parse_declaration() {
   result<Token> expect_eq = expect_consume(EQ, "Expected '=' for variable declaration");
   result<ExprNodeBase*> value = parse_expr();
 
-  VIA_CHECKRESULT(expect_eq);
-  VIA_CHECKRESULT(value);
+  CHECK_RESULT(expect_eq);
+  CHECK_RESULT(value);
 
   type->expression = *value; // Attach expression reference to type
 
@@ -657,39 +683,39 @@ result<StmtNodeBase*> Parser::parse_scope() {
   std::vector<StmtNodeBase*> scope_statements;
 
   result<Token> curr = current();
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(curr);
 
   size_t begin = curr->position;
   size_t end;
 
   if (curr->type == BRACE_OPEN) {
     result<Token> expect_br = expect_consume(BRACE_OPEN, "Expected '{' to open scope");
-    VIA_CHECKRESULT(expect_br);
+    CHECK_RESULT(expect_br);
 
     while (true) {
       result<Token> curr = current();
-      VIA_CHECKRESULT(curr);
+      CHECK_RESULT(curr);
 
       if (curr->type == BRACE_CLOSE) {
         break;
       }
 
       result<StmtNodeBase*> stmt = parse_stmt();
-      VIA_CHECKRESULT(stmt);
+      CHECK_RESULT(stmt);
 
       scope_statements.emplace_back(*stmt);
     }
 
     expect_br = expect_consume(BRACE_CLOSE, "Expected '}' to close scope");
-    VIA_CHECKRESULT(expect_br);
+    CHECK_RESULT(expect_br);
     end = expect_br->position;
   }
   else if (curr->type == COLON) {
     result<Token> expect_col = expect_consume(COLON, "Expected ':' to open single-statment scope");
-    VIA_CHECKRESULT(expect_col);
+    CHECK_RESULT(expect_col);
 
     result<StmtNodeBase*> stmt = parse_stmt();
-    VIA_CHECKRESULT(stmt);
+    CHECK_RESULT(stmt);
 
     scope_statements.emplace_back(*stmt);
     end = (*stmt)->end;
@@ -708,9 +734,9 @@ result<StmtNodeBase*> Parser::parse_if() {
   result<ExprNodeBase*> condition = parse_expr();
   result<StmtNodeBase*> scope = parse_scope();
 
-  VIA_CHECKRESULT(kw);
-  VIA_CHECKRESULT(condition);
-  VIA_CHECKRESULT(scope);
+  CHECK_RESULT(kw);
+  CHECK_RESULT(condition);
+  CHECK_RESULT(scope);
 
   size_t begin = kw->position;
   size_t end;
@@ -719,7 +745,7 @@ result<StmtNodeBase*> Parser::parse_if() {
 
   while (true) {
     result<Token> curr = current();
-    VIA_CHECKRESULT(curr);
+    CHECK_RESULT(curr);
 
     if (curr->type != KW_ELIF) {
       break;
@@ -730,8 +756,8 @@ result<StmtNodeBase*> Parser::parse_if() {
     result<ExprNodeBase*> elseif_condition = parse_expr();
     result<StmtNodeBase*> elseif_scope = parse_scope();
 
-    VIA_CHECKRESULT(elseif_condition);
-    VIA_CHECKRESULT(elseif_scope);
+    CHECK_RESULT(elseif_condition);
+    CHECK_RESULT(elseif_scope);
 
     ElseIfNode* elseif = unit_ctx.internal.ast_allocator.emplace<ElseIfNode>(
       begin, (*elseif_scope)->end, *elseif_condition, *elseif_scope
@@ -741,13 +767,13 @@ result<StmtNodeBase*> Parser::parse_if() {
   }
 
   result<Token> curr = current();
-  VIA_CHECKRESULT(curr);
+  CHECK_RESULT(curr);
 
   if (curr->type == KW_ELSE) {
     consume();
 
     result<StmtNodeBase*> else_scope_inner = parse_scope();
-    VIA_CHECKRESULT(else_scope_inner);
+    CHECK_RESULT(else_scope_inner);
 
     else_scope = *else_scope_inner;
     end = (*else_scope_inner)->end;
@@ -773,8 +799,8 @@ result<StmtNodeBase*> Parser::parse_if() {
 result<StmtNodeBase*> Parser::parse_return() {
   result<Token> kw = consume();
   result<ExprNodeBase*> expr = parse_expr();
-  VIA_CHECKRESULT(kw);
-  VIA_CHECKRESULT(expr);
+  CHECK_RESULT(kw);
+  CHECK_RESULT(expr);
 
   return unit_ctx.internal.ast_allocator.emplace<ReturnStmtNode>(kw->position, (*expr)->end, *expr);
 }
@@ -784,9 +810,9 @@ result<StmtNodeBase*> Parser::parse_while() {
   result<ExprNodeBase*> condition = parse_expr();
   result<StmtNodeBase*> body = parse_scope();
 
-  VIA_CHECKRESULT(kw);
-  VIA_CHECKRESULT(condition);
-  VIA_CHECKRESULT(body);
+  CHECK_RESULT(kw);
+  CHECK_RESULT(condition);
+  CHECK_RESULT(body);
 
   return unit_ctx.internal.ast_allocator.emplace<WhileStmtNode>(
     kw->position, (*body)->end, *condition, *body
@@ -795,7 +821,7 @@ result<StmtNodeBase*> Parser::parse_while() {
 
 result<StmtNodeBase*> Parser::parse_stmt() {
   result<Token> initial_token = current();
-  VIA_CHECKRESULT(initial_token);
+  CHECK_RESULT(initial_token);
 
   switch (initial_token->type) {
   case KW_LOCAL:
@@ -816,8 +842,8 @@ result<StmtNodeBase*> Parser::parse_stmt() {
     result<Token> con = consume();
     result<StmtNodeBase*> stmt = parse_stmt();
 
-    VIA_CHECKRESULT(con);
-    VIA_CHECKRESULT(stmt);
+    CHECK_RESULT(con);
+    CHECK_RESULT(stmt);
 
     return unit_ctx.internal.ast_allocator.emplace<DeferStmtNode>(
       con->position, (*stmt)->end, *stmt
@@ -825,7 +851,7 @@ result<StmtNodeBase*> Parser::parse_stmt() {
   }
   case KW_BREAK: {
     result<Token> con = consume();
-    VIA_CHECKRESULT(con);
+    CHECK_RESULT(con);
 
     return unit_ctx.internal.ast_allocator.emplace<BreakStmtNode>(
       con->position, con->position + con->lexeme.length()
@@ -833,7 +859,7 @@ result<StmtNodeBase*> Parser::parse_stmt() {
   }
   case KW_CONTINUE: {
     result<Token> con = consume();
-    VIA_CHECKRESULT(con);
+    CHECK_RESULT(con);
 
     return unit_ctx.internal.ast_allocator.emplace<ContinueStmtNode>(
       con->position, con->position + con->lexeme.length()
@@ -843,19 +869,19 @@ result<StmtNodeBase*> Parser::parse_stmt() {
     result<ExprNodeBase*> lvalue = parse_expr();
     result<Token> curr = current();
 
-    VIA_CHECKRESULT(lvalue);
-    VIA_CHECKRESULT(curr);
+    CHECK_RESULT(lvalue);
+    CHECK_RESULT(curr);
 
     if (curr->type == EOF_) {
       return unit_ctx.internal.ast_allocator.emplace<ExprStmtNode>(*lvalue);
     }
 
     result<Token> pk = peek();
-    VIA_CHECKRESULT(pk);
+    CHECK_RESULT(pk);
 
     if (curr->lexeme == "=" || (curr->is_operator() && pk->lexeme == "=")) {
       result<Token> possible_augment = consume();
-      VIA_CHECKRESULT(possible_augment);
+      CHECK_RESULT(possible_augment);
 
       if (possible_augment->lexeme != "=") {
         consume();
@@ -877,7 +903,7 @@ result<StmtNodeBase*> Parser::parse_stmt() {
 bool Parser::parse() {
   while (true) {
     result<Token> curr = current();
-    VIA_CHECKRESULT_MAINFN(curr);
+    CHECK_RESULT_MAINFN(curr);
 
     if (curr->type == EOF_) {
       break;
@@ -885,20 +911,20 @@ bool Parser::parse() {
 
     while (true) {
       curr = current();
-      VIA_CHECKRESULT_MAINFN(curr);
+      CHECK_RESULT_MAINFN(curr);
 
       if (curr->type != AT) {
         break;
       }
 
       result<StmtAttribute> attrib = parse_attribute();
-      VIA_CHECKRESULT_MAINFN(attrib);
+      CHECK_RESULT_MAINFN(attrib);
 
       attrib_buffer.push_back(*attrib);
     }
 
     result<StmtNodeBase*> stmt = parse_stmt();
-    VIA_CHECKRESULT_MAINFN(stmt);
+    CHECK_RESULT_MAINFN(stmt);
 
     stmt.value()->attributes = attrib_buffer;
     attrib_buffer.clear();

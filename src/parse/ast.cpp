@@ -37,7 +37,7 @@ std::string LitExprNode::to_string(uint32_t&) {
   }
 }
 
-void LitExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void LitExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -59,7 +59,7 @@ std::string SymExprNode::to_string(uint32_t&) {
   return std::format("Symbol<{}>", identifier.lexeme);
 }
 
-void SymExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void SymExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -94,7 +94,7 @@ std::string UnaryExprNode::to_string(uint32_t& depth) {
   return std::format("Unary<{}>", expression->to_string(depth));
 }
 
-void UnaryExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void UnaryExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -120,7 +120,7 @@ std::string GroupExprNode::to_string(uint32_t& depth) {
   return std::format("Group<{}>", expression->to_string(depth));
 }
 
-void GroupExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void GroupExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -144,7 +144,7 @@ std::string CallExprNode::to_string(uint32_t& depth) {
   );
 }
 
-void CallExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void CallExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -167,7 +167,7 @@ std::string IndexExprNode::to_string(uint32_t& depth) {
   );
 }
 
-void IndexExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void IndexExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -196,7 +196,7 @@ std::string BinExprNode::to_string(uint32_t& depth) {
   );
 }
 
-void BinExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void BinExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -239,7 +239,7 @@ std::string CastExprNode::to_string(uint32_t& depth) {
   );
 }
 
-void CastExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void CastExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -261,7 +261,7 @@ TypeNodeBase* StepExprNode::infer_type(TransUnitContext& unit_ctx) {
   return target->infer_type(unit_ctx);
 }
 
-void StepExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void StepExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
@@ -292,12 +292,18 @@ TypeNodeBase* ArrayExprNode::infer_type(TransUnitContext& unit_ctx) {
   return unit_ctx.internal.ast_allocator.emplace<ArrayTypeNode>(first_type);
 }
 
-void ArrayExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void ArrayExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
 std::string IntrinsicExprNode::to_string(uint32_t& depth) {
-  return std::format("IntrinsicExprNode<{}, {}>", intrinsic.lexeme, expr->to_string(depth));
+  return std::format(
+    "IntrinsicExprNode<{}, {}>",
+    intrinsic.lexeme,
+    format_vector<ExprNodeBase*>(
+      exprs, [&depth](ExprNodeBase* expr) { return expr->to_string(depth); }
+    )
+  );
 }
 
 TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
@@ -311,7 +317,7 @@ TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 }
 
-void IntrinsicExprNode::accept(NodeVisitorBase& visitor, uint32_t dst) {
+void IntrinsicExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 

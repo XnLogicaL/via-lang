@@ -117,7 +117,7 @@ digraph "src/codegen/types.h"
   Node47 [id="Node000047",label="utility/format-vector.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$format-vector_8h_source.html",tooltip=" "];
   Node47 -> Node2 [id="edge141_Node000047_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node44 -> Node48 [id="edge142_Node000044_Node000048",color="steelblue1",style="solid",tooltip=" "];
-  Node48 [id="Node000048",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h_source.html",tooltip=" "];
+  Node48 [id="Node000048",label="interpreter/instruction.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$instruction_8h.html",tooltip="Defines the representation of bytecode instructions in the Via VM."];
   Node48 -> Node2 [id="edge143_Node000048_Node000002",color="steelblue1",style="solid",tooltip=" "];
   Node48 -> Node49 [id="edge144_Node000048_Node000049",color="steelblue1",style="solid",tooltip=" "];
   Node49 [id="Node000049",label="opcode.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$opcode_8h_source.html",tooltip=" "];

@@ -1,5 +1,10 @@
-\doxysection{via\+::State Struct Reference}
+\doxysection{via\+::State Class Reference}
 \hypertarget{structvia_1_1State}{}\label{structvia_1_1State}\index{via::State@{via::State}}
+
+
+Represents the complete virtual machine execution state.  
+
+
 
 
 {\ttfamily \#include $<$state.\+h$>$}
@@ -17,116 +22,137 @@ Collaboration diagram for via\+::State\+:
 \Hypertarget{structvia_1_1State_a1de70d3e193ced2d156b0f007484aedf}\label{structvia_1_1State_a1de70d3e193ced2d156b0f007484aedf} 
 {\bfseries VIA\+\_\+\+NOMOVE} (\mbox{\hyperlink{structvia_1_1State}{State}})
 \item 
-\Hypertarget{structvia_1_1State_aad783347f96cebc3ec86cd7474335e8b}\label{structvia_1_1State_aad783347f96cebc3ec86cd7474335e8b} 
-{\bfseries State} (\mbox{\hyperlink{structvia_1_1RegisterHolder}{Stk\+Reg\+Holder}} \&, \mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&)
-\item 
+\mbox{\hyperlink{structvia_1_1State_a8590f98ccefc6a0388cb32335234a2b1}{State}} (\mbox{\hyperlink{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6}{Stk\+Reg\+Holder}} \&stack\+\_\+regs, \mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&\mbox{\hyperlink{structvia_1_1State_a5d1d7c7a62afa0de44f4e49964f66152}{unit\+\_\+ctx}})
+\begin{DoxyCompactList}\small\item\em Constructs a new \doxylink{structvia_1_1State}{State}. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a68d48cb315d46be083a872c56728a250}\label{structvia_1_1State_a68d48cb315d46be083a872c56728a250} 
 void {\bfseries execute} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Begins executing instructions starting at the current program counter ({\ttfamily pc}). \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a2d079d02ce484fa69f0c563146f89383}\label{structvia_1_1State_a2d079d02ce484fa69f0c563146f89383} 
 void {\bfseries execute\+\_\+step} (std\+::optional$<$ \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}} $>$ insn=std\+::nullopt)
-\item 
+\begin{DoxyCompactList}\small\item\em Executes a single instruction step. Optionally provide an override instruction. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_ae0da756ce5488bb557815be631d23e95}\label{structvia_1_1State_ae0da756ce5488bb557815be631d23e95} 
-\mbox{\hyperlink{structvia_1_1Value}{Value}} \& {\bfseries get\+\_\+register} (\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} reg)
-\item 
+\mbox{\hyperlink{structvia_1_1Value}{Value}} \& {\bfseries get\+\_\+register} (\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} reg)
+\begin{DoxyCompactList}\small\item\em Returns a mutable reference to the value stored in the given register. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a35f4055771617b549d18b2b3055a5565}\label{structvia_1_1State_a35f4055771617b549d18b2b3055a5565} 
-void {\bfseries set\+\_\+register} (\mbox{\hyperlink{namespacevia_a68cce66c29779f23c5ae3c4ed7f9be15}{operand\+\_\+t}} reg, \mbox{\hyperlink{structvia_1_1Value}{Value}} value)
-\item 
+void {\bfseries set\+\_\+register} (\mbox{\hyperlink{namespacevia_a90951ca238c08fe5449c13c9ed3cc38e}{operand\+\_\+t}} reg, \mbox{\hyperlink{structvia_1_1Value}{Value}} value)
+\begin{DoxyCompactList}\small\item\em Assigns a value to the given register. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a8a45bf94707cb30b0b9f67f48a278fca}\label{structvia_1_1State_a8a45bf94707cb30b0b9f67f48a278fca} 
 void {\bfseries push\+\_\+nil} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a {\ttfamily Nil} value onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a6233ca75e8cd3ce034ec0b3d5950f974}\label{structvia_1_1State_a6233ca75e8cd3ce034ec0b3d5950f974} 
 void {\bfseries push\+\_\+int} (int value)
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes an integer value onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a26ce2600d847e6c8be732915c9213991}\label{structvia_1_1State_a26ce2600d847e6c8be732915c9213991} 
 void {\bfseries push\+\_\+float} (float value)
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a floating-\/point value onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a2608f3a09f5ffd338c7617384f71a6a4}\label{structvia_1_1State_a2608f3a09f5ffd338c7617384f71a6a4} 
 void {\bfseries push\+\_\+true} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a boolean {\ttfamily true} onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_afd335db2b880c527266d109fdb3bc232}\label{structvia_1_1State_afd335db2b880c527266d109fdb3bc232} 
 void {\bfseries push\+\_\+false} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a boolean {\ttfamily false} onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a9bf9e2df593f981b2d3043154b74c274}\label{structvia_1_1State_a9bf9e2df593f981b2d3043154b74c274} 
 void {\bfseries push\+\_\+string} (const char \texorpdfstring{$\ast$}{*}str)
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a string value onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a2b8c32ab796ca6205af1442e9b0399cc}\label{structvia_1_1State_a2b8c32ab796ca6205af1442e9b0399cc} 
 void {\bfseries push\+\_\+array} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes an empty array onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a516b171b140af835419f1c80214fa082}\label{structvia_1_1State_a516b171b140af835419f1c80214fa082} 
 void {\bfseries push\+\_\+dict} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes an empty dictionary onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a283868e76335bbd137696faca1927ede}\label{structvia_1_1State_a283868e76335bbd137696faca1927ede} 
 void {\bfseries push} (\mbox{\hyperlink{structvia_1_1Value}{Value}} value)
-\item 
+\begin{DoxyCompactList}\small\item\em Pushes a generic value onto the stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_af3f224a307724ffaa26b1fc848c6a2c0}\label{structvia_1_1State_af3f224a307724ffaa26b1fc848c6a2c0} 
 void {\bfseries drop} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Drops the top value from the stack and frees its resources. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a01471c2328b8d5a96e8a1e0e0638a19b}\label{structvia_1_1State_a01471c2328b8d5a96e8a1e0e0638a19b} 
 void {\bfseries set\+\_\+local} (size\+\_\+t position, \mbox{\hyperlink{structvia_1_1Value}{Value}} value)
-\item 
+\begin{DoxyCompactList}\small\item\em Assigns a value to a local variable at the given position. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a40bbb562770686a36d25f6dbc9737ed4}\label{structvia_1_1State_a40bbb562770686a36d25f6dbc9737ed4} 
 \mbox{\hyperlink{structvia_1_1Value}{Value}} \& {\bfseries get\+\_\+local} (size\+\_\+t position)
-\item 
+\begin{DoxyCompactList}\small\item\em Returns a reference to a local value at the given position. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_acf934b61922d564833e6a0eae5c0236e}\label{structvia_1_1State_acf934b61922d564833e6a0eae5c0236e} 
 \mbox{\hyperlink{structvia_1_1Value}{Value}} \& {\bfseries get\+\_\+argument} (size\+\_\+t offset)
-\item 
+\begin{DoxyCompactList}\small\item\em Returns a reference to an argument value relative to the current call frame. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a72abbce72a8c216adcb99a1bb8a90ae4}\label{structvia_1_1State_a72abbce72a8c216adcb99a1bb8a90ae4} 
 size\+\_\+t {\bfseries stack\+\_\+size} ()
-\item 
+\begin{DoxyCompactList}\small\item\em Returns the current size of the value stack. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a41bc340c01119ceab9cecb91d63f77c7}\label{structvia_1_1State_a41bc340c01119ceab9cecb91d63f77c7} 
 \mbox{\hyperlink{structvia_1_1Value}{Value}} \& {\bfseries get\+\_\+global} (const char \texorpdfstring{$\ast$}{*}name)
-\item 
+\begin{DoxyCompactList}\small\item\em Retrieves the global variable with the given name. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_ab4bb7a801045f5c34e993ed85fd5d95e}\label{structvia_1_1State_ab4bb7a801045f5c34e993ed85fd5d95e} 
 void {\bfseries set\+\_\+global} (const char \texorpdfstring{$\ast$}{*}name, const \mbox{\hyperlink{structvia_1_1Value}{Value}} \&value)
-\item 
+\begin{DoxyCompactList}\small\item\em Assigns a value to a global variable with the given name. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a0247e4df4f8370943e472e164e38fb42}\label{structvia_1_1State_a0247e4df4f8370943e472e164e38fb42} 
 void {\bfseries call} (const \mbox{\hyperlink{structvia_1_1Closure}{Closure}} \&callee, size\+\_\+t argc)
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Invokes a function closure with a given number of arguments. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 \Hypertarget{structvia_1_1State_a81bd8e971d3cc2ee8de0f91455ef0a76}\label{structvia_1_1State_a81bd8e971d3cc2ee8de0f91455ef0a76} 
 \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}} \texorpdfstring{$\ast$}{*} {\bfseries pc} = nullptr
-\item 
+\begin{DoxyCompactList}\small\item\em Current instruction pointer. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_ab19a2e0fec0a69aa3cd45094afe2055b}\label{structvia_1_1State_ab19a2e0fec0a69aa3cd45094afe2055b} 
 \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}} \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*} {\bfseries labels}
-\item 
+\begin{DoxyCompactList}\small\item\em Jump target label array. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a2f2ec338bd909545738e9765fbbcf81b}\label{structvia_1_1State_a2f2ec338bd909545738e9765fbbcf81b} 
 \mbox{\hyperlink{structvia_1_1Dict}{Dict}} \texorpdfstring{$\ast$}{*} {\bfseries globals}
-\item 
+\begin{DoxyCompactList}\small\item\em Global variable dictionary. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a867bbeaf5f8f95597662d97b3d7c8b46}\label{structvia_1_1State_a867bbeaf5f8f95597662d97b3d7c8b46} 
 \mbox{\hyperlink{structvia_1_1CallStack}{Call\+Stack}} \texorpdfstring{$\ast$}{*} {\bfseries callstack}
-\item 
+\begin{DoxyCompactList}\small\item\em Call stack of function frames. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a0ab5252a2dfb3e0fc507ecc053e86436}\label{structvia_1_1State_a0ab5252a2dfb3e0fc507ecc053e86436} 
 \mbox{\hyperlink{structvia_1_1ErrorState}{Error\+State}} \texorpdfstring{$\ast$}{*} {\bfseries err}
-\item 
+\begin{DoxyCompactList}\small\item\em Active error state, if any. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a1684cdb01028aa5c417e201dec8e9ab7}\label{structvia_1_1State_a1684cdb01028aa5c417e201dec8e9ab7} 
 \mbox{\hyperlink{structvia_1_1Value}{Value}} {\bfseries main}
-\item 
+\begin{DoxyCompactList}\small\item\em Reference to the main function. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a6684dd3a8a6ec87f408b33edb0f89345}\label{structvia_1_1State_a6684dd3a8a6ec87f408b33edb0f89345} 
 register\+\_\+t {\bfseries ret}
-\item 
+\begin{DoxyCompactList}\small\item\em Return register index. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a32f49386f9e16d0b41dc1f7e3a726764}\label{structvia_1_1State_a32f49386f9e16d0b41dc1f7e3a726764} 
 register\+\_\+t {\bfseries args}
-\item 
+\begin{DoxyCompactList}\small\item\em First argument register index. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_acdae6236fd92b4d5954fbef758937c8d}\label{structvia_1_1State_acdae6236fd92b4d5954fbef758937c8d} 
-\mbox{\hyperlink{structvia_1_1RegisterHolder}{Stk\+Reg\+Holder}} \& {\bfseries stack\+\_\+registers}
-\item 
+\mbox{\hyperlink{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6}{Stk\+Reg\+Holder}} \& {\bfseries stack\+\_\+registers}
+\begin{DoxyCompactList}\small\item\em Stack register block. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a144b1e6643e0c2f2e2ed8969edf288c0}\label{structvia_1_1State_a144b1e6643e0c2f2e2ed8969edf288c0} 
-\mbox{\hyperlink{structvia_1_1RegisterHolder}{Heap\+Reg\+Holder}} \texorpdfstring{$\ast$}{*} {\bfseries spill\+\_\+registers}
-\item 
+\mbox{\hyperlink{namespacevia_a75a6478aadfde59a7fe15bdcdc8741e6}{Heap\+Reg\+Holder}} \texorpdfstring{$\ast$}{*} {\bfseries spill\+\_\+registers}
+\begin{DoxyCompactList}\small\item\em Heap (spill) register block. \end{DoxyCompactList}\item 
 \Hypertarget{structvia_1_1State_a5d1d7c7a62afa0de44f4e49964f66152}\label{structvia_1_1State_a5d1d7c7a62afa0de44f4e49964f66152} 
 \mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \& {\bfseries unit\+\_\+ctx}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Translation unit compilation context. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
-Interpreter state object. Manages things like registers, stack, heap of the VM. 64-\/byte aligned for maximum cache friendliness. 
+Represents the complete virtual machine execution state. 
 
-The documentation for this struct was generated from the following files\+:\begin{DoxyCompactItemize}
+This object owns and manages the program counter, call stack, register file, globals, error reporting, and runtime execution loop. The structure is aligned to 64 bytes to ensure optimal CPU cache usage during high-\/frequency access. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structvia_1_1State_a8590f98ccefc6a0388cb32335234a2b1}\label{structvia_1_1State_a8590f98ccefc6a0388cb32335234a2b1} 
+\index{via::State@{via::State}!State@{State}}
+\index{State@{State}!via::State@{via::State}}
+\doxysubsubsection{\texorpdfstring{State()}{State()}}
+{\footnotesize\ttfamily via\+::\+State\+::\+State (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacevia_ab1d173fbe7db8d544b07f656b5cbbdb6}{Stk\+Reg\+Holder}} \&}]{stack\+\_\+regs,  }\item[{\mbox{\hyperlink{classvia_1_1TransUnitContext}{Trans\+Unit\+Context}} \&}]{unit\+\_\+ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Constructs a new \doxylink{structvia_1_1State}{State}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em stack\+\_\+regs} & Reference to the stack register block. \\
+\hline
+{\em unit\+\_\+ctx} & Reference to the translation unit\textquotesingle{}s compilation context. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 
-src/interpreter/state.\+h\item 
+src/interpreter/\mbox{\hyperlink{state_8h}{state.\+h}}\item 
 src/interpreter/api-\/execute.\+cpp\item 
 src/interpreter/api.\+cpp\item 
 src/interpreter/state.\+cpp\end{DoxyCompactItemize}

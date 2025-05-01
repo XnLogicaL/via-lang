@@ -1,16 +1,15 @@
 var searchData=
 [
-  ['generate_0',['generate',['../classvia_1_1BytecodeBuilder.html#ae47deccecfdd87d4f1af4ee7fab3830f',1,'via::BytecodeBuilder']]],
-  ['generictypenode_1',['GenericTypeNode',['../structvia_1_1GenericTypeNode.html',1,'via']]],
-  ['get_2',['get',['../classvia_1_1GlobalHolder.html#a42b1bab4dfac617a12e3a70fa010fe3e',1,'via::GlobalHolder']]],
-  ['get_5fcurrent_5fclosure_3',['get_current_closure',['../bytecode-builder_8cpp.html#a8da7ee9839b6bf66721300862d71a126',1,'via::compiler_util']]],
-  ['get_5fglobal_4',['get_global',['../classvia_1_1GlobalHolder.html#aa273bef38d11c121e77802deb98b84d8',1,'via::GlobalHolder']]],
-  ['get_5findex_5',['get_index',['../classvia_1_1GlobalHolder.html#a9a79b212ddb2918e58cf0134fc35b79b',1,'via::GlobalHolder']]],
-  ['get_5fline_5fand_5fcolumn_6',['get_line_and_column',['../namespacevia.html#aa0e0339c977a1627c8fd4d65ab1b559c',1,'via']]],
-  ['get_5flocal_5fby_5fid_7',['get_local_by_id',['../classvia_1_1CompilerVariableStack.html#abb76f088e8c26be7307ac8f7f7522a17',1,'via::CompilerVariableStack']]],
-  ['get_5flocal_5fby_5fsymbol_8',['get_local_by_symbol',['../classvia_1_1CompilerVariableStack.html#aa6bc6b62f86cbd63ba9962fe6f11015f',1,'via::CompilerVariableStack']]],
-  ['get_5fused_5fregisters_9',['get_used_registers',['../classvia_1_1RegisterAllocator.html#a278de1374b414adf472ae2ab8be3e6b3',1,'via::RegisterAllocator']]],
-  ['globalholder_10',['GlobalHolder',['../classvia_1_1GlobalHolder.html',1,'via']]],
-  ['globals_2eh_11',['globals.h',['../globals_8h.html',1,'']]],
-  ['groupexprnode_12',['GroupExprNode',['../structvia_1_1GroupExprNode.html',1,'via']]]
+  ['f_0',['f',['../unionvia_1_1Value_1_1Un.html#afb397ce3a33310ac53d48214f40647ce',1,'via::Value::Un']]],
+  ['failed_1',['failed',['../structvia_1_1VisitorContext.html#a2d3066cc626fe89ac1fe4ae1880e0116',1,'via::VisitorContext::failed'],['../classvia_1_1NodeVisitorBase.html#a587d71a3ea5c533e1e645282eb2df279',1,'via::NodeVisitorBase::failed()'],['../classvia_1_1StmtNodeVisitor.html#a81cfb388cd99084cafed12a89d39ecc7',1,'via::StmtNodeVisitor::failed()']]],
+  ['find_5flocal_5fid_2',['find_local_id',['../classvia_1_1CompilerVariableStack.html#a7d4d5a9b44267f013f5065d82d1fc8e2',1,'via::CompilerVariableStack']]],
+  ['float_3',['Float',['../structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda22ae0e2b89e5e3d477f988cc36d3272b',1,'via::Value']]],
+  ['fold_5fconstant_4',['fold_constant',['../bytecode-builder_8cpp.html#ac9703f204266ee5ff6611665067a580c',1,'via::compiler_util']]],
+  ['frame_5',['frame',['../structvia_1_1ErrorState.html#af09d96cbe31a2f6b72c8f9f60aa9a2aa',1,'via::ErrorState']]],
+  ['frames_6',['frames',['../structvia_1_1CallStack.html#aad238ea4a5d5de6afc3de75e99d23f6d',1,'via::CallStack']]],
+  ['frames_5fcount_7',['frames_count',['../structvia_1_1CallStack.html#ae067720984948222c91a2c04bf0f4ccd',1,'via::CallStack']]],
+  ['free_5fregister_8',['free_register',['../bytecode-builder_8h.html#af77668addbda8eb247ec34282720901c',1,'via::compiler_util::free_register()'],['../classvia_1_1RegisterAllocator.html#a803062b7bafc00fb5d1afe1160e4fb00',1,'via::RegisterAllocator::free_register()']]],
+  ['funcdeclstmtnode_9',['FuncDeclStmtNode',['../structvia_1_1FuncDeclStmtNode.html',1,'via']]],
+  ['function_10',['function',['../structvia_1_1Function.html#ac5816531c0305b17ee646f65f7733745',1,'via::Function::Function()'],['../structvia_1_1Callable.html#a295f83c55ac11eeeb70def52ddc8450ea86408593c34af77fdd90df932f8b5261',1,'via::Callable::Function'],['../structvia_1_1Value.html#ad7572ad8441bbe41b7e10971624650bda86408593c34af77fdd90df932f8b5261',1,'via::Value::Function'],['../structvia_1_1Function.html',1,'via::Function']]],
+  ['functiontypenode_11',['FunctionTypeNode',['../structvia_1_1FunctionTypeNode.html',1,'via']]]
 ];

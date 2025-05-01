@@ -113,6 +113,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::VisitorContext Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Encapsulates state for visitor objects during AST traversal.  
+ <a href="structvia_1_1VisitorContext.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="visitor_8h_source.html">visitor.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::VisitorContext:</div>
 <div class="dyncontent">
@@ -123,42 +128,54 @@ Collaboration diagram for via::VisitorContext:</div>
 Public Types</h2></td></tr>
 <tr class="memitem:a4b55fc4b272069e39d9086a881d0fb52" id="r_a4b55fc4b272069e39d9086a881d0fb52"><td class="memItemLeft" align="right" valign="top"><a id="a4b55fc4b272069e39d9086a881d0fb52" name="a4b55fc4b272069e39d9086a881d0fb52"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>opt_label_t</b> = std::optional&lt; label_t &gt;</td></tr>
+<tr class="memdesc:a4b55fc4b272069e39d9086a881d0fb52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional label type used for break/continue tracking. <br /></td></tr>
 <tr class="separator:a4b55fc4b272069e39d9086a881d0fb52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:adc578919eaa3e8a37340a739cf0f0e7f" id="r_adc578919eaa3e8a37340a739cf0f0e7f"><td class="memItemLeft" align="right" valign="top"><a id="adc578919eaa3e8a37340a739cf0f0e7f" name="adc578919eaa3e8a37340a739cf0f0e7f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VisitorContext</b> (<a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;ctx)</td></tr>
+<tr class="memdesc:adc578919eaa3e8a37340a739cf0f0e7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a visitor context from a translation unit. <br /></td></tr>
 <tr class="separator:adc578919eaa3e8a37340a739cf0f0e7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2d3066cc626fe89ac1fe4ae1880e0116" id="r_a2d3066cc626fe89ac1fe4ae1880e0116"><td class="memItemLeft" align="right" valign="top"><a id="a2d3066cc626fe89ac1fe4ae1880e0116" name="a2d3066cc626fe89ac1fe4ae1880e0116"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>failed</b> = false</td></tr>
+<tr class="memdesc:a2d3066cc626fe89ac1fe4ae1880e0116"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visitor failure status flag. <br /></td></tr>
 <tr class="separator:a2d3066cc626fe89ac1fe4ae1880e0116"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3cac30a5ced52b039502757e520337d" id="r_ae3cac30a5ced52b039502757e520337d"><td class="memItemLeft" align="right" valign="top"><a id="ae3cac30a5ced52b039502757e520337d" name="ae3cac30a5ced52b039502757e520337d"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>errc</b> = 0</td></tr>
+<tr class="memdesc:ae3cac30a5ced52b039502757e520337d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error count, reflecting errors in <a class="el" href="classvia_1_1CErrorBus.html">CErrorBus</a>. <br /></td></tr>
 <tr class="separator:ae3cac30a5ced52b039502757e520337d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6ad9d494fa35f9c647e65dfa7cfa1df" id="r_ad6ad9d494fa35f9c647e65dfa7cfa1df"><td class="memItemLeft" align="right" valign="top"><a id="ad6ad9d494fa35f9c647e65dfa7cfa1df" name="ad6ad9d494fa35f9c647e65dfa7cfa1df"></a>
-<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>args</b> = 0</td></tr>
+<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>args</b> = 0</td></tr>
+<tr class="memdesc:ad6ad9d494fa35f9c647e65dfa7cfa1df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Argument register index (head). <br /></td></tr>
 <tr class="separator:ad6ad9d494fa35f9c647e65dfa7cfa1df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab212b82d07009d4644ecb19f02a20183" id="r_ab212b82d07009d4644ecb19f02a20183"><td class="memItemLeft" align="right" valign="top"><a id="ab212b82d07009d4644ecb19f02a20183" name="ab212b82d07009d4644ecb19f02a20183"></a>
-opt_label_t&#160;</td><td class="memItemRight" valign="bottom"><b>lesc</b> = std::nullopt</td></tr>
+<a class="el" href="structvia_1_1VisitorContext.html#a4b55fc4b272069e39d9086a881d0fb52">opt_label_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lesc</b> = std::nullopt</td></tr>
+<tr class="memdesc:ab212b82d07009d4644ecb19f02a20183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Label for break/escape control flow. <br /></td></tr>
 <tr class="separator:ab212b82d07009d4644ecb19f02a20183"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcb35fdb0451b1ae962a779f8363e4c8" id="r_abcb35fdb0451b1ae962a779f8363e4c8"><td class="memItemLeft" align="right" valign="top"><a id="abcb35fdb0451b1ae962a779f8363e4c8" name="abcb35fdb0451b1ae962a779f8363e4c8"></a>
-opt_label_t&#160;</td><td class="memItemRight" valign="bottom"><b>lrep</b> = std::nullopt</td></tr>
+<a class="el" href="structvia_1_1VisitorContext.html#a4b55fc4b272069e39d9086a881d0fb52">opt_label_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lrep</b> = std::nullopt</td></tr>
+<tr class="memdesc:abcb35fdb0451b1ae962a779f8363e4c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Label for continue/repeat control flow. <br /></td></tr>
 <tr class="separator:abcb35fdb0451b1ae962a779f8363e4c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35ee30dafeb73299555f4736415dfb75" id="r_a35ee30dafeb73299555f4736415dfb75"><td class="memItemLeft" align="right" valign="top"><a id="a35ee30dafeb73299555f4736415dfb75" name="a35ee30dafeb73299555f4736415dfb75"></a>
 <a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>unit_ctx</b></td></tr>
+<tr class="memdesc:a35ee30dafeb73299555f4736415dfb75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translation unit context. <br /></td></tr>
 <tr class="separator:a35ee30dafeb73299555f4736415dfb75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f2713ae46030f92aaa3856377cd3afa" id="r_a3f2713ae46030f92aaa3856377cd3afa"><td class="memItemLeft" align="right" valign="top"><a id="a3f2713ae46030f92aaa3856377cd3afa" name="a3f2713ae46030f92aaa3856377cd3afa"></a>
 <a class="el" href="classvia_1_1RegisterAllocator.html">RegisterAllocator</a>&#160;</td><td class="memItemRight" valign="bottom"><b>reg_alloc</b></td></tr>
+<tr class="memdesc:a3f2713ae46030f92aaa3856377cd3afa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register allocator for code generation. <br /></td></tr>
 <tr class="separator:a3f2713ae46030f92aaa3856377cd3afa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ab521d305d04581321d0b98ad87eee3" id="r_a0ab521d305d04581321d0b98ad87eee3"><td class="memItemLeft" align="right" valign="top"><a id="a0ab521d305d04581321d0b98ad87eee3" name="a0ab521d305d04581321d0b98ad87eee3"></a>
 <a class="el" href="classvia_1_1CErrorBus.html">CErrorBus</a>&#160;</td><td class="memItemRight" valign="bottom"><b>err_bus</b></td></tr>
+<tr class="memdesc:a0ab521d305d04581321d0b98ad87eee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Local error bus for tracking visitor errors. <br /></td></tr>
 <tr class="separator:a0ab521d305d04581321d0b98ad87eee3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Encapsulates state for visitor objects during AST traversal. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/codegen/<a class="el" href="visitor_8h_source.html">visitor.h</a></li>
 </ul>
 </div><!-- contents -->

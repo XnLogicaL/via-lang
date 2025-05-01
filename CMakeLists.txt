@@ -53,7 +53,6 @@ else()
 endif()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS CLI/*.cpp src/*.cpp)
-file(GLOB_RECURSE HEADERS "include/*.hpp" "include/*.h" "src/*.hpp" "src/*.h")
 
 # Define executable
 add_executable(via "CLI/main.cpp" ${SOURCES})

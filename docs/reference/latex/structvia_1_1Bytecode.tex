@@ -2,6 +2,15 @@
 \hypertarget{structvia_1_1Bytecode}{}\label{structvia_1_1Bytecode}\index{via::Bytecode@{via::Bytecode}}
 
 
+A higher-\/level structure representing a complete instruction unit.  
+
+
+
+
+{\ttfamily \#include $<$instruction.\+h$>$}
+
+
+
 Collaboration diagram for via\+::Bytecode\+:
 % FIG 0
 \doxysubsubsection*{Public Attributes}
@@ -9,12 +18,17 @@ Collaboration diagram for via\+::Bytecode\+:
 \item 
 \Hypertarget{structvia_1_1Bytecode_aa373f7b73ed86927cf4b9ed1b9be48d4}\label{structvia_1_1Bytecode_aa373f7b73ed86927cf4b9ed1b9be48d4} 
 \mbox{\hyperlink{structvia_1_1Instruction}{Instruction}} {\bfseries instruct}
-\item 
-\Hypertarget{structvia_1_1Bytecode_a98aae64b12fcd76b7e51df47752ede41}\label{structvia_1_1Bytecode_a98aae64b12fcd76b7e51df47752ede41} 
-\mbox{\hyperlink{structvia_1_1InstructionData}{Instruction\+Data}} {\bfseries meta\+\_\+data}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Executable instruction. \end{DoxyCompactList}\item 
+\Hypertarget{structvia_1_1Bytecode_aa53800d3b6e304bca3db493eb69787e4}\label{structvia_1_1Bytecode_aa53800d3b6e304bca3db493eb69787e4} 
+\mbox{\hyperlink{structvia_1_1InstructionData}{Instruction\+Data}} {\bfseries meta}
+\begin{DoxyCompactList}\small\item\em Optional metadata (e.\+g., comments). \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+A higher-\/level structure representing a complete instruction unit. 
+
+Combines the executable {\ttfamily \doxylink{structvia_1_1Instruction}{Instruction}} with optional {\ttfamily \doxylink{structvia_1_1InstructionData}{Instruction\+Data}} metadata. Used to facilitate debugging, annotation, and serialization of code. 
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-src/interpreter/instruction.\+h\end{DoxyCompactItemize}
+src/interpreter/\mbox{\hyperlink{instruction_8h}{instruction.\+h}}\end{DoxyCompactItemize}

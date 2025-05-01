@@ -12,7 +12,7 @@ digraph "src/codegen/stack.h"
   Node3 -> Node4 [id="edge26_Node000003_Node000004",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node4 [id="Node000004",label="src/codegen/bytecode\l-builder.cpp",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$bytecode-builder_8cpp.html",tooltip="BytecodeBuilder class imeplementation."];
   Node1 -> Node5 [id="edge27_Node000001_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
-  Node5 [id="Node000005",label="src/codegen/visitor.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$visitor_8h_source.html",tooltip=" "];
+  Node5 [id="Node000005",label="src/codegen/visitor.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$visitor_8h.html",tooltip="Declares visitor interfaces for the Abstract Syntax Tree (AST) used in the via compiler."];
   Node5 -> Node3 [id="edge28_Node000005_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node1 -> Node6 [id="edge29_Node000001_Node000006",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node6 [id="Node000006",label="src/context.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$context_8h_source.html",tooltip=" "];
@@ -29,7 +29,7 @@ digraph "src/codegen/stack.h"
   Node10 [id="Node000010",label="src/parse/parser.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$parser_8h_source.html",tooltip=" "];
   Node10 -> Node7 [id="edge37_Node000010_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node6 -> Node11 [id="edge38_Node000006_Node000011",dir="back",color="steelblue1",style="solid",tooltip=" "];
-  Node11 [id="Node000011",label="src/interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h_source.html",tooltip=" "];
+  Node11 [id="Node000011",label="src/interpreter/state.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$state_8h.html",tooltip="Declares the State class and related components for managing VM execution."];
   Node11 -> Node7 [id="edge39_Node000011_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node11 -> Node3 [id="edge40_Node000011_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node11 -> Node12 [id="edge41_Node000011_Node000012",dir="back",color="steelblue1",style="solid",tooltip=" "];
@@ -37,7 +37,7 @@ digraph "src/codegen/stack.h"
   Node12 -> Node5 [id="edge42_Node000012_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node11 -> Node5 [id="edge43_Node000011_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node11 -> Node13 [id="edge44_Node000011_Node000013",dir="back",color="steelblue1",style="solid",tooltip=" "];
-  Node13 [id="Node000013",label="src/interpreter/api\l-impl.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$api-impl_8h_source.html",tooltip=" "];
+  Node13 [id="Node000013",label="src/interpreter/api\l-impl.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$api-impl_8h.html",tooltip="Internal interpreter API implementation."];
   Node6 -> Node14 [id="edge45_Node000006_Node000014",dir="back",color="steelblue1",style="solid",tooltip=" "];
   Node14 [id="Node000014",label="src/lex/lexer.h",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$lexer_8h_source.html",tooltip=" "];
   Node14 -> Node7 [id="edge46_Node000014_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];

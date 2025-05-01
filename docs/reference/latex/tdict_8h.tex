@@ -1,0 +1,38 @@
+\doxysection{src/interpreter/tdict.h File Reference}
+\hypertarget{tdict_8h}{}\label{tdict_8h}\index{src/interpreter/tdict.h@{src/interpreter/tdict.h}}
+
+
+Declares the Dict structure used for key-\/value mapping in the via VM.  
+
+
+{\ttfamily \#include "{}common.\+h"{}}\newline
+{\ttfamily \#include "{}csize.\+h"{}}\newline
+{\ttfamily \#include "{}tvalue.\+h"{}}\newline
+Include dependency graph for tdict.\+h\+:
+% FIG 0
+This graph shows which files directly or indirectly include this file\+:
+% FIG 1
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvia_1_1Dict}{via\+::\+Dict}}
+\begin{DoxyCompactList}\small\item\em A dynamically allocated hash table mapping {\ttfamily const char\texorpdfstring{$\ast$}{*}} keys to {\ttfamily \doxylink{structvia_1_1Value}{Value}} objects. \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{structvia_1_1Dict_1_1HNode}{via\+::\+Dict\+::\+HNode}}
+\begin{DoxyCompactList}\small\item\em A single key-\/value entry within the dictionary hash table. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacevia}{via}}
+\begin{DoxyCompactList}\small\item\em All core compiler logic is within this namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespacevia_a465db2be24c40e033eafd74fc37da8fb}\label{namespacevia_a465db2be24c40e033eafd74fc37da8fb} 
+constexpr size\+\_\+t {\bfseries via\+::\+DICT\+\_\+\+INITIAL\+\_\+\+CAPACITY} = 64
+\begin{DoxyCompactList}\small\item\em Default starting capacity for all dictionaries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Declares the Dict structure used for key-\/value mapping in the via VM. 
+
+The Dict structure implements a hash table mapping string keys to {\ttfamily Value}s. It is used to represent dictionaries and object-\/like structures in the via language. 

@@ -16,7 +16,7 @@
 <meta name="twitter:title" content="Doxygen Awesome" />
 <meta name="twitter:description" content="Custom CSS theme for doxygen html-documentation with lots of customization parameters." />
 <!-- END twitter metadata -->
-<title>via: via::State Struct Reference</title>
+<title>via: via::State Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link rel="icon" type="image/svg+xml" href="logo.drawio.svg"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -109,9 +109,12 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structvia_1_1State-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">via::State Struct Reference</div></div>
+  <div class="headertitle"><div class="title">via::State Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents the complete virtual machine execution state.  
+ <a href="structvia_1_1State.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="state_8h_source.html">state.h</a>&gt;</code></p>
 <div class="dynheader">
@@ -128,112 +131,191 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1de70d3e193ced2d156b0f007484aedf" id="r_a1de70d3e193ced2d156b0f007484aedf"><td class="memItemLeft" align="right" valign="top"><a id="a1de70d3e193ced2d156b0f007484aedf" name="a1de70d3e193ced2d156b0f007484aedf"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>VIA_NOMOVE</b> (<a class="el" href="structvia_1_1State.html">State</a>)</td></tr>
 <tr class="separator:a1de70d3e193ced2d156b0f007484aedf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad783347f96cebc3ec86cd7474335e8b" id="r_aad783347f96cebc3ec86cd7474335e8b"><td class="memItemLeft" align="right" valign="top"><a id="aad783347f96cebc3ec86cd7474335e8b" name="aad783347f96cebc3ec86cd7474335e8b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>State</b> (<a class="el" href="structvia_1_1RegisterHolder.html">StkRegHolder</a> &amp;, <a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;)</td></tr>
-<tr class="separator:aad783347f96cebc3ec86cd7474335e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8590f98ccefc6a0388cb32335234a2b1" id="r_a8590f98ccefc6a0388cb32335234a2b1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvia_1_1State.html#a8590f98ccefc6a0388cb32335234a2b1">State</a> (<a class="el" href="namespacevia.html#ab1d173fbe7db8d544b07f656b5cbbdb6">StkRegHolder</a> &amp;stack_regs, <a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;<a class="el" href="structvia_1_1State.html#a5d1d7c7a62afa0de44f4e49964f66152">unit_ctx</a>)</td></tr>
+<tr class="memdesc:a8590f98ccefc6a0388cb32335234a2b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="structvia_1_1State.html" title="Represents the complete virtual machine execution state.">State</a>.  <br /></td></tr>
+<tr class="separator:a8590f98ccefc6a0388cb32335234a2b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68d48cb315d46be083a872c56728a250" id="r_a68d48cb315d46be083a872c56728a250"><td class="memItemLeft" align="right" valign="top"><a id="a68d48cb315d46be083a872c56728a250" name="a68d48cb315d46be083a872c56728a250"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>execute</b> ()</td></tr>
+<tr class="memdesc:a68d48cb315d46be083a872c56728a250"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begins executing instructions starting at the current program counter (<code>pc</code>). <br /></td></tr>
 <tr class="separator:a68d48cb315d46be083a872c56728a250"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d079d02ce484fa69f0c563146f89383" id="r_a2d079d02ce484fa69f0c563146f89383"><td class="memItemLeft" align="right" valign="top"><a id="a2d079d02ce484fa69f0c563146f89383" name="a2d079d02ce484fa69f0c563146f89383"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>execute_step</b> (std::optional&lt; <a class="el" href="structvia_1_1Instruction.html">Instruction</a> &gt; insn=std::nullopt)</td></tr>
+<tr class="memdesc:a2d079d02ce484fa69f0c563146f89383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executes a single instruction step. Optionally provide an override instruction. <br /></td></tr>
 <tr class="separator:a2d079d02ce484fa69f0c563146f89383"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0da756ce5488bb557815be631d23e95" id="r_ae0da756ce5488bb557815be631d23e95"><td class="memItemLeft" align="right" valign="top"><a id="ae0da756ce5488bb557815be631d23e95" name="ae0da756ce5488bb557815be631d23e95"></a>
-<a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_register</b> (<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a> reg)</td></tr>
+<a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_register</b> (<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> reg)</td></tr>
+<tr class="memdesc:ae0da756ce5488bb557815be631d23e95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a mutable reference to the value stored in the given register. <br /></td></tr>
 <tr class="separator:ae0da756ce5488bb557815be631d23e95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35f4055771617b549d18b2b3055a5565" id="r_a35f4055771617b549d18b2b3055a5565"><td class="memItemLeft" align="right" valign="top"><a id="a35f4055771617b549d18b2b3055a5565" name="a35f4055771617b549d18b2b3055a5565"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_register</b> (<a class="el" href="namespacevia.html#a68cce66c29779f23c5ae3c4ed7f9be15">operand_t</a> reg, <a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>set_register</b> (<a class="el" href="namespacevia.html#a90951ca238c08fe5449c13c9ed3cc38e">operand_t</a> reg, <a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+<tr class="memdesc:a35f4055771617b549d18b2b3055a5565"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a value to the given register. <br /></td></tr>
 <tr class="separator:a35f4055771617b549d18b2b3055a5565"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a45bf94707cb30b0b9f67f48a278fca" id="r_a8a45bf94707cb30b0b9f67f48a278fca"><td class="memItemLeft" align="right" valign="top"><a id="a8a45bf94707cb30b0b9f67f48a278fca" name="a8a45bf94707cb30b0b9f67f48a278fca"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_nil</b> ()</td></tr>
+<tr class="memdesc:a8a45bf94707cb30b0b9f67f48a278fca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a <code>Nil</code> value onto the stack. <br /></td></tr>
 <tr class="separator:a8a45bf94707cb30b0b9f67f48a278fca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6233ca75e8cd3ce034ec0b3d5950f974" id="r_a6233ca75e8cd3ce034ec0b3d5950f974"><td class="memItemLeft" align="right" valign="top"><a id="a6233ca75e8cd3ce034ec0b3d5950f974" name="a6233ca75e8cd3ce034ec0b3d5950f974"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_int</b> (int value)</td></tr>
+<tr class="memdesc:a6233ca75e8cd3ce034ec0b3d5950f974"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes an integer value onto the stack. <br /></td></tr>
 <tr class="separator:a6233ca75e8cd3ce034ec0b3d5950f974"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26ce2600d847e6c8be732915c9213991" id="r_a26ce2600d847e6c8be732915c9213991"><td class="memItemLeft" align="right" valign="top"><a id="a26ce2600d847e6c8be732915c9213991" name="a26ce2600d847e6c8be732915c9213991"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_float</b> (float value)</td></tr>
+<tr class="memdesc:a26ce2600d847e6c8be732915c9213991"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a floating-point value onto the stack. <br /></td></tr>
 <tr class="separator:a26ce2600d847e6c8be732915c9213991"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2608f3a09f5ffd338c7617384f71a6a4" id="r_a2608f3a09f5ffd338c7617384f71a6a4"><td class="memItemLeft" align="right" valign="top"><a id="a2608f3a09f5ffd338c7617384f71a6a4" name="a2608f3a09f5ffd338c7617384f71a6a4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_true</b> ()</td></tr>
+<tr class="memdesc:a2608f3a09f5ffd338c7617384f71a6a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a boolean <code>true</code> onto the stack. <br /></td></tr>
 <tr class="separator:a2608f3a09f5ffd338c7617384f71a6a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd335db2b880c527266d109fdb3bc232" id="r_afd335db2b880c527266d109fdb3bc232"><td class="memItemLeft" align="right" valign="top"><a id="afd335db2b880c527266d109fdb3bc232" name="afd335db2b880c527266d109fdb3bc232"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_false</b> ()</td></tr>
+<tr class="memdesc:afd335db2b880c527266d109fdb3bc232"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a boolean <code>false</code> onto the stack. <br /></td></tr>
 <tr class="separator:afd335db2b880c527266d109fdb3bc232"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bf9e2df593f981b2d3043154b74c274" id="r_a9bf9e2df593f981b2d3043154b74c274"><td class="memItemLeft" align="right" valign="top"><a id="a9bf9e2df593f981b2d3043154b74c274" name="a9bf9e2df593f981b2d3043154b74c274"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_string</b> (const char *str)</td></tr>
+<tr class="memdesc:a9bf9e2df593f981b2d3043154b74c274"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a string value onto the stack. <br /></td></tr>
 <tr class="separator:a9bf9e2df593f981b2d3043154b74c274"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b8c32ab796ca6205af1442e9b0399cc" id="r_a2b8c32ab796ca6205af1442e9b0399cc"><td class="memItemLeft" align="right" valign="top"><a id="a2b8c32ab796ca6205af1442e9b0399cc" name="a2b8c32ab796ca6205af1442e9b0399cc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_array</b> ()</td></tr>
+<tr class="memdesc:a2b8c32ab796ca6205af1442e9b0399cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes an empty array onto the stack. <br /></td></tr>
 <tr class="separator:a2b8c32ab796ca6205af1442e9b0399cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a516b171b140af835419f1c80214fa082" id="r_a516b171b140af835419f1c80214fa082"><td class="memItemLeft" align="right" valign="top"><a id="a516b171b140af835419f1c80214fa082" name="a516b171b140af835419f1c80214fa082"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_dict</b> ()</td></tr>
+<tr class="memdesc:a516b171b140af835419f1c80214fa082"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes an empty dictionary onto the stack. <br /></td></tr>
 <tr class="separator:a516b171b140af835419f1c80214fa082"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a283868e76335bbd137696faca1927ede" id="r_a283868e76335bbd137696faca1927ede"><td class="memItemLeft" align="right" valign="top"><a id="a283868e76335bbd137696faca1927ede" name="a283868e76335bbd137696faca1927ede"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push</b> (<a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+<tr class="memdesc:a283868e76335bbd137696faca1927ede"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a generic value onto the stack. <br /></td></tr>
 <tr class="separator:a283868e76335bbd137696faca1927ede"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3f224a307724ffaa26b1fc848c6a2c0" id="r_af3f224a307724ffaa26b1fc848c6a2c0"><td class="memItemLeft" align="right" valign="top"><a id="af3f224a307724ffaa26b1fc848c6a2c0" name="af3f224a307724ffaa26b1fc848c6a2c0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>drop</b> ()</td></tr>
+<tr class="memdesc:af3f224a307724ffaa26b1fc848c6a2c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Drops the top value from the stack and frees its resources. <br /></td></tr>
 <tr class="separator:af3f224a307724ffaa26b1fc848c6a2c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01471c2328b8d5a96e8a1e0e0638a19b" id="r_a01471c2328b8d5a96e8a1e0e0638a19b"><td class="memItemLeft" align="right" valign="top"><a id="a01471c2328b8d5a96e8a1e0e0638a19b" name="a01471c2328b8d5a96e8a1e0e0638a19b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_local</b> (size_t position, <a class="el" href="structvia_1_1Value.html">Value</a> value)</td></tr>
+<tr class="memdesc:a01471c2328b8d5a96e8a1e0e0638a19b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a value to a local variable at the given position. <br /></td></tr>
 <tr class="separator:a01471c2328b8d5a96e8a1e0e0638a19b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40bbb562770686a36d25f6dbc9737ed4" id="r_a40bbb562770686a36d25f6dbc9737ed4"><td class="memItemLeft" align="right" valign="top"><a id="a40bbb562770686a36d25f6dbc9737ed4" name="a40bbb562770686a36d25f6dbc9737ed4"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_local</b> (size_t position)</td></tr>
+<tr class="memdesc:a40bbb562770686a36d25f6dbc9737ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to a local value at the given position. <br /></td></tr>
 <tr class="separator:a40bbb562770686a36d25f6dbc9737ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf934b61922d564833e6a0eae5c0236e" id="r_acf934b61922d564833e6a0eae5c0236e"><td class="memItemLeft" align="right" valign="top"><a id="acf934b61922d564833e6a0eae5c0236e" name="acf934b61922d564833e6a0eae5c0236e"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_argument</b> (size_t offset)</td></tr>
+<tr class="memdesc:acf934b61922d564833e6a0eae5c0236e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to an argument value relative to the current call frame. <br /></td></tr>
 <tr class="separator:acf934b61922d564833e6a0eae5c0236e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72abbce72a8c216adcb99a1bb8a90ae4" id="r_a72abbce72a8c216adcb99a1bb8a90ae4"><td class="memItemLeft" align="right" valign="top"><a id="a72abbce72a8c216adcb99a1bb8a90ae4" name="a72abbce72a8c216adcb99a1bb8a90ae4"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>stack_size</b> ()</td></tr>
+<tr class="memdesc:a72abbce72a8c216adcb99a1bb8a90ae4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current size of the value stack. <br /></td></tr>
 <tr class="separator:a72abbce72a8c216adcb99a1bb8a90ae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41bc340c01119ceab9cecb91d63f77c7" id="r_a41bc340c01119ceab9cecb91d63f77c7"><td class="memItemLeft" align="right" valign="top"><a id="a41bc340c01119ceab9cecb91d63f77c7" name="a41bc340c01119ceab9cecb91d63f77c7"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_global</b> (const char *name)</td></tr>
+<tr class="memdesc:a41bc340c01119ceab9cecb91d63f77c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the global variable with the given name. <br /></td></tr>
 <tr class="separator:a41bc340c01119ceab9cecb91d63f77c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4bb7a801045f5c34e993ed85fd5d95e" id="r_ab4bb7a801045f5c34e993ed85fd5d95e"><td class="memItemLeft" align="right" valign="top"><a id="ab4bb7a801045f5c34e993ed85fd5d95e" name="ab4bb7a801045f5c34e993ed85fd5d95e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_global</b> (const char *name, const <a class="el" href="structvia_1_1Value.html">Value</a> &amp;value)</td></tr>
+<tr class="memdesc:ab4bb7a801045f5c34e993ed85fd5d95e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a value to a global variable with the given name. <br /></td></tr>
 <tr class="separator:ab4bb7a801045f5c34e993ed85fd5d95e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0247e4df4f8370943e472e164e38fb42" id="r_a0247e4df4f8370943e472e164e38fb42"><td class="memItemLeft" align="right" valign="top"><a id="a0247e4df4f8370943e472e164e38fb42" name="a0247e4df4f8370943e472e164e38fb42"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>call</b> (const <a class="el" href="structvia_1_1Closure.html">Closure</a> &amp;callee, size_t argc)</td></tr>
+<tr class="memdesc:a0247e4df4f8370943e472e164e38fb42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invokes a function closure with a given number of arguments. <br /></td></tr>
 <tr class="separator:a0247e4df4f8370943e472e164e38fb42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a81bd8e971d3cc2ee8de0f91455ef0a76" id="r_a81bd8e971d3cc2ee8de0f91455ef0a76"><td class="memItemLeft" align="right" valign="top"><a id="a81bd8e971d3cc2ee8de0f91455ef0a76" name="a81bd8e971d3cc2ee8de0f91455ef0a76"></a>
 <a class="el" href="structvia_1_1Instruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pc</b> = nullptr</td></tr>
+<tr class="memdesc:a81bd8e971d3cc2ee8de0f91455ef0a76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current instruction pointer. <br /></td></tr>
 <tr class="separator:a81bd8e971d3cc2ee8de0f91455ef0a76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab19a2e0fec0a69aa3cd45094afe2055b" id="r_ab19a2e0fec0a69aa3cd45094afe2055b"><td class="memItemLeft" align="right" valign="top"><a id="ab19a2e0fec0a69aa3cd45094afe2055b" name="ab19a2e0fec0a69aa3cd45094afe2055b"></a>
 <a class="el" href="structvia_1_1Instruction.html">Instruction</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>labels</b></td></tr>
+<tr class="memdesc:ab19a2e0fec0a69aa3cd45094afe2055b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Jump target label array. <br /></td></tr>
 <tr class="separator:ab19a2e0fec0a69aa3cd45094afe2055b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f2ec338bd909545738e9765fbbcf81b" id="r_a2f2ec338bd909545738e9765fbbcf81b"><td class="memItemLeft" align="right" valign="top"><a id="a2f2ec338bd909545738e9765fbbcf81b" name="a2f2ec338bd909545738e9765fbbcf81b"></a>
 <a class="el" href="structvia_1_1Dict.html">Dict</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>globals</b></td></tr>
+<tr class="memdesc:a2f2ec338bd909545738e9765fbbcf81b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Global variable dictionary. <br /></td></tr>
 <tr class="separator:a2f2ec338bd909545738e9765fbbcf81b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a867bbeaf5f8f95597662d97b3d7c8b46" id="r_a867bbeaf5f8f95597662d97b3d7c8b46"><td class="memItemLeft" align="right" valign="top"><a id="a867bbeaf5f8f95597662d97b3d7c8b46" name="a867bbeaf5f8f95597662d97b3d7c8b46"></a>
 <a class="el" href="structvia_1_1CallStack.html">CallStack</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>callstack</b></td></tr>
+<tr class="memdesc:a867bbeaf5f8f95597662d97b3d7c8b46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call stack of function frames. <br /></td></tr>
 <tr class="separator:a867bbeaf5f8f95597662d97b3d7c8b46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ab5252a2dfb3e0fc507ecc053e86436" id="r_a0ab5252a2dfb3e0fc507ecc053e86436"><td class="memItemLeft" align="right" valign="top"><a id="a0ab5252a2dfb3e0fc507ecc053e86436" name="a0ab5252a2dfb3e0fc507ecc053e86436"></a>
 <a class="el" href="structvia_1_1ErrorState.html">ErrorState</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>err</b></td></tr>
+<tr class="memdesc:a0ab5252a2dfb3e0fc507ecc053e86436"><td class="mdescLeft">&#160;</td><td class="mdescRight">Active error state, if any. <br /></td></tr>
 <tr class="separator:a0ab5252a2dfb3e0fc507ecc053e86436"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1684cdb01028aa5c417e201dec8e9ab7" id="r_a1684cdb01028aa5c417e201dec8e9ab7"><td class="memItemLeft" align="right" valign="top"><a id="a1684cdb01028aa5c417e201dec8e9ab7" name="a1684cdb01028aa5c417e201dec8e9ab7"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>main</b></td></tr>
+<tr class="memdesc:a1684cdb01028aa5c417e201dec8e9ab7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference to the main function. <br /></td></tr>
 <tr class="separator:a1684cdb01028aa5c417e201dec8e9ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6684dd3a8a6ec87f408b33edb0f89345" id="r_a6684dd3a8a6ec87f408b33edb0f89345"><td class="memItemLeft" align="right" valign="top"><a id="a6684dd3a8a6ec87f408b33edb0f89345" name="a6684dd3a8a6ec87f408b33edb0f89345"></a>
 register_t&#160;</td><td class="memItemRight" valign="bottom"><b>ret</b></td></tr>
+<tr class="memdesc:a6684dd3a8a6ec87f408b33edb0f89345"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return register index. <br /></td></tr>
 <tr class="separator:a6684dd3a8a6ec87f408b33edb0f89345"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32f49386f9e16d0b41dc1f7e3a726764" id="r_a32f49386f9e16d0b41dc1f7e3a726764"><td class="memItemLeft" align="right" valign="top"><a id="a32f49386f9e16d0b41dc1f7e3a726764" name="a32f49386f9e16d0b41dc1f7e3a726764"></a>
 register_t&#160;</td><td class="memItemRight" valign="bottom"><b>args</b></td></tr>
+<tr class="memdesc:a32f49386f9e16d0b41dc1f7e3a726764"><td class="mdescLeft">&#160;</td><td class="mdescRight">First argument register index. <br /></td></tr>
 <tr class="separator:a32f49386f9e16d0b41dc1f7e3a726764"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdae6236fd92b4d5954fbef758937c8d" id="r_acdae6236fd92b4d5954fbef758937c8d"><td class="memItemLeft" align="right" valign="top"><a id="acdae6236fd92b4d5954fbef758937c8d" name="acdae6236fd92b4d5954fbef758937c8d"></a>
-<a class="el" href="structvia_1_1RegisterHolder.html">StkRegHolder</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>stack_registers</b></td></tr>
+<a class="el" href="namespacevia.html#ab1d173fbe7db8d544b07f656b5cbbdb6">StkRegHolder</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>stack_registers</b></td></tr>
+<tr class="memdesc:acdae6236fd92b4d5954fbef758937c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stack register block. <br /></td></tr>
 <tr class="separator:acdae6236fd92b4d5954fbef758937c8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a144b1e6643e0c2f2e2ed8969edf288c0" id="r_a144b1e6643e0c2f2e2ed8969edf288c0"><td class="memItemLeft" align="right" valign="top"><a id="a144b1e6643e0c2f2e2ed8969edf288c0" name="a144b1e6643e0c2f2e2ed8969edf288c0"></a>
-<a class="el" href="structvia_1_1RegisterHolder.html">HeapRegHolder</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>spill_registers</b></td></tr>
+<a class="el" href="namespacevia.html#a75a6478aadfde59a7fe15bdcdc8741e6">HeapRegHolder</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>spill_registers</b></td></tr>
+<tr class="memdesc:a144b1e6643e0c2f2e2ed8969edf288c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Heap (spill) register block. <br /></td></tr>
 <tr class="separator:a144b1e6643e0c2f2e2ed8969edf288c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d1d7c7a62afa0de44f4e49964f66152" id="r_a5d1d7c7a62afa0de44f4e49964f66152"><td class="memItemLeft" align="right" valign="top"><a id="a5d1d7c7a62afa0de44f4e49964f66152" name="a5d1d7c7a62afa0de44f4e49964f66152"></a>
 <a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>unit_ctx</b></td></tr>
+<tr class="memdesc:a5d1d7c7a62afa0de44f4e49964f66152"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translation unit compilation context. <br /></td></tr>
 <tr class="separator:a5d1d7c7a62afa0de44f4e49964f66152"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interpreter state object. Manages things like registers, stack, heap of the VM. 64-byte aligned for maximum cache friendliness. </p>
-</div><hr/>The documentation for this struct was generated from the following files:<ul>
+<div class="textblock"><p>Represents the complete virtual machine execution state. </p>
+<p>This object owns and manages the program counter, call stack, register file, globals, error reporting, and runtime execution loop. The structure is aligned to 64 bytes to ensure optimal CPU cache usage during high-frequency access. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a8590f98ccefc6a0388cb32335234a2b1" name="a8590f98ccefc6a0388cb32335234a2b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8590f98ccefc6a0388cb32335234a2b1">&#9670;&#160;</a></span>State()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">via::State::State </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacevia.html#ab1d173fbe7db8d544b07f656b5cbbdb6">StkRegHolder</a> &amp;&#160;</td>
+          <td class="paramname"><em>stack_regs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classvia_1_1TransUnitContext.html">TransUnitContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>unit_ctx</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs a new <a class="el" href="structvia_1_1State.html" title="Represents the complete virtual machine execution state.">State</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stack_regs</td><td>Reference to the stack register block. </td></tr>
+    <tr><td class="paramname">unit_ctx</td><td>Reference to the translation unit's compilation context. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>src/interpreter/<a class="el" href="state_8h_source.html">state.h</a></li>
 <li>src/interpreter/<b>api-execute.cpp</b></li>
 <li>src/interpreter/<b>api.cpp</b></li>

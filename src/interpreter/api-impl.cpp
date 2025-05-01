@@ -316,13 +316,56 @@ bool __compare(const Value& val0, const Value& val1) {
   case String:
     return !std::strcmp(val0.u.str->data, val1.u.str->data);
   default:
-    return __to_pointer(val0) == __to_pointer(val1);
+    return false;
   }
 
   VIA_UNREACHABLE();
   return false;
 };
 
+
+bool __compare_deep(const Value& val0, const Value& val1) {
+  using enum Value::Tag;
+
+  if (val0.type != val1.type) {
+    return false;
+  }
+
+  switch (val0.type) {
+  case Int:
+    return val0.u.i == val1.u.i;
+  case Float:
+    return val0.u.f == val1.u.f;
+  case Bool:
+    return val0.u.b == val1.u.b;
+  case Nil:
+    return true;
+  case String:
+    return !std::strcmp(val0.u.str->data, val1.u.str->data);
+  case Array: {
+    if (__array_size(val0.u.arr) != __array_size(val1.u.arr)) {
+      return false;
+    }
+
+    for (size_t i = 0; i < __array_size(val0.u.arr); i++) {
+      Value* val = __array_get(val0.u.arr, i);
+      Value* other = __array_get(val1.u.arr, i);
+
+      if (!val->compare(*other)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  // TODO: IMPLEMENT OTHER DATA TYPES
+  default:
+    return false;
+  }
+
+  VIA_UNREACHABLE();
+  return false;
+}
 
 // Automatically resizes UpValue vector of closure by VIA_UPV_RESIZE_FACTOR.
 void __closure_upvs_resize(Closure* closure) {

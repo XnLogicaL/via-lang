@@ -24,10 +24,10 @@ namespace via {
 // [ Expression Nodes ]
 //  ==================
 
-#define VIA_DECLASTFUNCS()                                                                         \
-  std::string to_string(uint32_t&) override;                                                       \
-  TypeNodeBase* infer_type(TransUnitContext&) override;                                            \
-  void accept(NodeVisitorBase&, uint32_t) override;
+#define DECLARE_NODE_METHODS()                                                                     \
+  std::string to_string(uint32_t& depth) override;                                                 \
+  TypeNodeBase* infer_type(TransUnitContext& unit_ctx) override;                                   \
+  void accept(NodeVisitorBase& visitor, operand_t dst) override;
 
 /**
  * Literal Expression Node
@@ -46,7 +46,7 @@ struct LitExprNode : public ExprNodeBase {
   Token value_token;
   variant value;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   LitExprNode(Token value_token, variant value)
     : value_token(value_token),
@@ -71,7 +71,7 @@ struct LitExprNode : public ExprNodeBase {
 struct SymExprNode : public ExprNodeBase {
   Token identifier;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   SymExprNode(Token identifier)
     : identifier(identifier) {
@@ -91,7 +91,7 @@ struct UnaryExprNode : public ExprNodeBase {
   Token op;
   ExprNodeBase* expression;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   UnaryExprNode(Token op, ExprNodeBase* expression)
     : op(op),
@@ -111,7 +111,7 @@ struct UnaryExprNode : public ExprNodeBase {
 struct GroupExprNode : public ExprNodeBase {
   ExprNodeBase* expression;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   int precedence() const override;
 
   GroupExprNode(ExprNodeBase* expression)
@@ -134,7 +134,7 @@ struct CallExprNode : public ExprNodeBase {
   ExprNodeBase* callee;
   argument_vector arguments;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   CallExprNode(ExprNodeBase* callee, argument_vector arguments)
     : callee(callee),
@@ -165,7 +165,7 @@ struct IndexExprNode : public ExprNodeBase {
   ExprNodeBase* object;
   ExprNodeBase* index;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   IndexExprNode(ExprNodeBase* object, ExprNodeBase* index)
     : object(object),
@@ -180,7 +180,7 @@ struct BinExprNode : public ExprNodeBase {
   ExprNodeBase* lhs_expression;
   ExprNodeBase* rhs_expression;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   BinExprNode(Token op, ExprNodeBase* lhs, ExprNodeBase* rhs)
     : op(op),
@@ -195,7 +195,7 @@ struct CastExprNode : public ExprNodeBase {
   ExprNodeBase* expression;
   TypeNodeBase* type;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   CastExprNode(ExprNodeBase* expression, TypeNodeBase* type)
     : expression(expression),
@@ -209,7 +209,7 @@ struct StepExprNode : public ExprNodeBase {
   bool is_increment;
   ExprNodeBase* target;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   StepExprNode(ExprNodeBase* target, bool is_increment)
     : is_increment(is_increment),
@@ -223,7 +223,7 @@ struct ArrayExprNode : public ExprNodeBase {
   using values_t = std::vector<ExprNodeBase*>;
   values_t values;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   ArrayExprNode(size_t begin, size_t end, values_t values)
     : values(values) {
@@ -234,15 +234,15 @@ struct ArrayExprNode : public ExprNodeBase {
 
 struct IntrinsicExprNode : public ExprNodeBase {
   Token intrinsic;
-  ExprNodeBase* expr;
+  std::vector<ExprNodeBase*> exprs;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
-  IntrinsicExprNode(Token intrinsic, ExprNodeBase* expr)
+  IntrinsicExprNode(Token intrinsic, std::vector<ExprNodeBase*> exprs)
     : intrinsic(intrinsic),
-      expr(expr) {
+      exprs(exprs) {
     this->begin = intrinsic.position;
-    this->end = expr->end + 1; // Account for ')'
+    this->end = exprs.empty() ? intrinsic.position + intrinsic.lexeme.length() : exprs.back()->end;
   }
 };
 
@@ -250,14 +250,14 @@ struct IntrinsicExprNode : public ExprNodeBase {
 // Type Nodes
 //
 
-#undef VIA_DECLASTFUNCS
+#undef DECLARE_NODE_METHODS
 #define VIA_DECLDECAY() void decay(NodeVisitorBase&, TypeNodeBase*&) override;
-#define VIA_DECLASTFUNCS()                                                                         \
+#define DECLARE_NODE_METHODS()                                                                     \
   std::string to_string(uint32_t&) override;                                                       \
   std::string to_output_string() override;
 
 struct AutoTypeNode : public TypeNodeBase {
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   VIA_DECLDECAY();
 
   AutoTypeNode(size_t begin, size_t end) {
@@ -270,7 +270,7 @@ struct PrimTypeNode : public TypeNodeBase {
   Token identifier;
   Value::Tag type;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   PrimTypeNode(Token id, Value::Tag valty)
     : identifier(id),
@@ -287,7 +287,7 @@ struct GenericTypeNode : public TypeNodeBase {
   generics_t generics;
   StmtModifiers modifs;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   VIA_DECLDECAY();
 
   GenericTypeNode(Token id, generics_t gens, StmtModifiers modifs)
@@ -303,7 +303,7 @@ struct UnionTypeNode : public TypeNodeBase {
   TypeNodeBase* lhs;
   TypeNodeBase* rhs;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   VIA_DECLDECAY();
 
   UnionTypeNode(TypeNodeBase* lhs, TypeNodeBase* rhs)
@@ -334,7 +334,7 @@ struct FunctionTypeNode : public TypeNodeBase {
   parameter_vector parameters;
   TypeNodeBase* returns;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   VIA_DECLDECAY();
 
   FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
@@ -348,7 +348,7 @@ struct FunctionTypeNode : public TypeNodeBase {
 struct ArrayTypeNode : public TypeNodeBase {
   TypeNodeBase* type;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
   VIA_DECLDECAY();
 
   ArrayTypeNode(TypeNodeBase* type)
@@ -362,9 +362,9 @@ struct ArrayTypeNode : public TypeNodeBase {
 // Statement Nodes
 //
 
-#undef VIA_DECLASTFUNCS
+#undef DECLARE_NODE_METHODS
 #undef VIA_DECLDECAY
-#define VIA_DECLASTFUNCS()                                                                         \
+#define DECLARE_NODE_METHODS()                                                                     \
   std::string to_string(uint32_t&) override;                                                       \
   void accept(NodeVisitorBase&) override;
 
@@ -375,7 +375,7 @@ struct DeclStmtNode : public StmtNodeBase {
   ExprNodeBase* rvalue;
   TypeNodeBase* type;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   DeclStmtNode(
     size_t begin,
@@ -400,7 +400,7 @@ struct ScopeStmtNode : public StmtNodeBase {
   using Statements = std::vector<StmtNodeBase*>;
   Statements statements;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   ScopeStmtNode(size_t begin, size_t end, Statements statements)
     : statements(statements) {
@@ -419,7 +419,7 @@ struct FuncDeclStmtNode : public StmtNodeBase {
   TypeNodeBase* returns;
   parameters_t parameters;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   FuncDeclStmtNode(
     size_t begin,
@@ -447,7 +447,7 @@ struct AssignStmtNode : public StmtNodeBase {
   ExprNodeBase* lvalue;
   ExprNodeBase* rvalue;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   AssignStmtNode(ExprNodeBase* lvalue, Token augmentation_operator, ExprNodeBase* rvalue)
     : augmentation_operator(augmentation_operator),
@@ -481,7 +481,7 @@ struct IfStmtNode : public StmtNodeBase {
   StmtNodeBase* else_node;
   elseif_nodes_t elseif_nodes;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   IfStmtNode(
     size_t begin,
@@ -503,7 +503,7 @@ struct IfStmtNode : public StmtNodeBase {
 struct ReturnStmtNode : public StmtNodeBase {
   ExprNodeBase* expression;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   ReturnStmtNode(size_t begin, size_t end, ExprNodeBase* expression)
     : expression(expression) {
@@ -513,7 +513,7 @@ struct ReturnStmtNode : public StmtNodeBase {
 };
 
 struct BreakStmtNode : public StmtNodeBase {
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   BreakStmtNode(size_t begin, size_t end) {
     this->begin = begin;
@@ -522,7 +522,7 @@ struct BreakStmtNode : public StmtNodeBase {
 };
 
 struct ContinueStmtNode : public StmtNodeBase {
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   ContinueStmtNode(size_t begin, size_t end) {
     this->begin = begin;
@@ -534,7 +534,7 @@ struct WhileStmtNode : public StmtNodeBase {
   ExprNodeBase* condition;
   StmtNodeBase* body;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   WhileStmtNode(size_t begin, size_t end, ExprNodeBase* condition, StmtNodeBase* body)
     : condition(condition),
@@ -547,7 +547,7 @@ struct WhileStmtNode : public StmtNodeBase {
 struct DeferStmtNode : public StmtNodeBase {
   StmtNodeBase* stmt;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   DeferStmtNode(size_t begin, size_t end, StmtNodeBase* stmt)
     : stmt(stmt) {
@@ -559,7 +559,7 @@ struct DeferStmtNode : public StmtNodeBase {
 struct ExprStmtNode : public StmtNodeBase {
   ExprNodeBase* expression;
 
-  VIA_DECLASTFUNCS();
+  DECLARE_NODE_METHODS();
 
   ExprStmtNode(ExprNodeBase* expression)
     : expression(expression) {

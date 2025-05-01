@@ -111,6 +111,11 @@ $(function() {
   <div class="headertitle"><div class="title">via::UpValue Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Represents a captured variable in a closure.  
+ <a href="structvia_1_1UpValue.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="tfunction_8h_source.html">tfunction.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for via::UpValue:</div>
 <div class="dyncontent">
@@ -121,18 +126,25 @@ Collaboration diagram for via::UpValue:</div>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a7241f59c995dbc25c16be65c5438acf8" id="r_a7241f59c995dbc25c16be65c5438acf8"><td class="memItemLeft" align="right" valign="top"><a id="a7241f59c995dbc25c16be65c5438acf8" name="a7241f59c995dbc25c16be65c5438acf8"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_open</b> = true</td></tr>
+<tr class="memdesc:a7241f59c995dbc25c16be65c5438acf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the upvalue is open (points to stack). <br /></td></tr>
 <tr class="separator:a7241f59c995dbc25c16be65c5438acf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2161745342ab682859a1da6254ce52fb" id="r_a2161745342ab682859a1da6254ce52fb"><td class="memItemLeft" align="right" valign="top"><a id="a2161745342ab682859a1da6254ce52fb" name="a2161745342ab682859a1da6254ce52fb"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_valid</b> = false</td></tr>
+<tr class="memdesc:a2161745342ab682859a1da6254ce52fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the upvalue has been properly initialized. <br /></td></tr>
 <tr class="separator:a2161745342ab682859a1da6254ce52fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83fd4ebc33c2e1c482fb20fc1e2d583e" id="r_a83fd4ebc33c2e1c482fb20fc1e2d583e"><td class="memItemLeft" align="right" valign="top"><a id="a83fd4ebc33c2e1c482fb20fc1e2d583e" name="a83fd4ebc33c2e1c482fb20fc1e2d583e"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>value</b> = nullptr</td></tr>
+<tr class="memdesc:a83fd4ebc33c2e1c482fb20fc1e2d583e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the actual value, or null. <br /></td></tr>
 <tr class="separator:a83fd4ebc33c2e1c482fb20fc1e2d583e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6580eaf8e316a50877652c899acf843d" id="r_a6580eaf8e316a50877652c899acf843d"><td class="memItemLeft" align="right" valign="top"><a id="a6580eaf8e316a50877652c899acf843d" name="a6580eaf8e316a50877652c899acf843d"></a>
 <a class="el" href="structvia_1_1Value.html">Value</a>&#160;</td><td class="memItemRight" valign="bottom"><b>heap_value</b> = <a class="el" href="structvia_1_1Value.html">Value</a>()</td></tr>
+<tr class="memdesc:a6580eaf8e316a50877652c899acf843d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used to store the value when closed. <br /></td></tr>
 <tr class="separator:a6580eaf8e316a50877652c899acf843d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a captured variable in a closure. </p>
+<p>An <a class="el" href="structvia_1_1UpValue.html" title="Represents a captured variable in a closure.">UpValue</a> can either point directly to a value still on the stack (open), or contain a heap-allocated copy of the value (closed). </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/interpreter/<a class="el" href="tfunction_8h_source.html">tfunction.h</a></li>
 </ul>
 </div><!-- contents -->

@@ -3,6 +3,9 @@
 
 #include "visitor.h"
 #include "bytecode-builder.h"
+#include <interpreter/tarray.h>
+#include <interpreter/tdict.h>
+#include <interpreter/api-impl.h>
 #include <cmath>
 
 // ==========================================================================================
@@ -434,25 +437,40 @@ void ExprNodeVisitor::visit(StepExprNode& step_expr, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
-  bytecode_emit(ctx, LOADARR, {dst});
-
-  register_t key_reg = alloc_register(ctx);
-  register_t val_reg = alloc_register(ctx);
-
-  for (uint32_t i = 0; ExprNodeBase * expr : array_expr.values) {
-    u16result result = ubit_u32to2u16(i++);
-    resolve_rvalue(this, expr, val_reg);
-    bytecode_emit(ctx, LOADI, {key_reg, result.high, result.low});
-    bytecode_emit(ctx, SETARR, {val_reg, dst, key_reg});
+  if (array_expr.values.empty()) {
+    bytecode_emit(ctx, LOADARR, {dst});
+    return;
   }
 
-  free_register(ctx, val_reg);
-  free_register(ctx, key_reg);
+  if (is_constant_expression(ctx.unit_ctx, &array_expr)) {
+    struct Array* arr = new struct Array();
+    struct Value val = Value(arr);
+
+    for (size_t idx = 0; ExprNodeBase * kexpr : array_expr.values) {
+      LitExprNode literal = fold_constant(ctx, kexpr);
+      Value kval = construct_constant(literal);
+      impl::__array_set(arr, idx++, std::move(kval));
+    }
+
+    operand_t kid = push_constant(ctx, std::move(val));
+    bytecode_emit(ctx, LOADK, {dst, kid});
+  }
+  else {
+    compiler_error(ctx, "TODO: IMPLEMENT NON-CONSTANT ARRAY CONSTRUCTION");
+    compiler_output_end(ctx);
+  }
 }
 
 void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
   if (intrinsic_expr.intrinsic.lexeme == "nameof") {
-    if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(intrinsic_expr.expr)) {
+    if (intrinsic_expr.exprs.empty()) {
+      compiler_error(ctx, intrinsic_expr.intrinsic, "Expected 1 argument for intrinsic 'nameof'");
+      compiler_output_end(ctx);
+      return;
+    }
+
+    ExprNodeBase* target = intrinsic_expr.exprs.front();
+    if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(target)) {
       LitExprNode literal_expr = LitExprNode(Token(), sym_expr->identifier.lexeme);
 
       Value constant = construct_constant(literal_expr);
@@ -462,20 +480,22 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       bytecode_emit(ctx, LOADK, {dst, constant_id}, comment);
     }
     else {
-      compiler_error(
-        ctx,
-        intrinsic_expr.expr->begin,
-        intrinsic_expr.expr->end,
-        "Expected lvalue expression for 'nameof'"
-      );
+      compiler_error(ctx, target->begin, target->end, "Expected lvalue expression for 'nameof'");
       compiler_output_end(ctx);
     }
   }
   else if (intrinsic_expr.intrinsic.lexeme == "type") {
-    TypeNodeBase* infered_type = intrinsic_expr.expr->infer_type(ctx.unit_ctx);
+    if (intrinsic_expr.exprs.empty()) {
+      compiler_error(ctx, intrinsic_expr.intrinsic, "Expected 1 argument for intrinsic 'type'");
+      compiler_output_end(ctx);
+      return;
+    }
+
+    ExprNodeBase* target = intrinsic_expr.exprs.front();
+    TypeNodeBase* infered_type = target->infer_type(ctx.unit_ctx);
     LitExprNode literal_expr(Token(), {});
 
-    VIA_CHECK_INFERED(infered_type, intrinsic_expr.expr);
+    VIA_CHECK_INFERED(infered_type, target);
 
     if (PrimTypeNode* prim_type = dynamic_cast<PrimTypeNode*>(infered_type)) {
       std::string type_name = std::string(magic_enum::enum_name(prim_type->type));
@@ -497,6 +517,23 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
 
     // TODO: Add expression as raw string when applicable
     bytecode_emit(ctx, LOADK, {dst, constant_id}, "typeof(...)");
+  }
+  else if (intrinsic_expr.intrinsic.lexeme == "deep_eq") {
+    if (intrinsic_expr.exprs.size() < 2) {
+      compiler_error(ctx, intrinsic_expr.intrinsic, "Expected 2 arguments for intrinsic 'deep_eq'");
+      compiler_output_end(ctx);
+      return;
+    }
+
+    ExprNodeBase *left = intrinsic_expr.exprs[0], *right = intrinsic_expr.exprs[1];
+    register_t lreg = alloc_register(ctx), rreg = alloc_register(ctx);
+
+    left->accept(*this, lreg);
+    right->accept(*this, rreg);
+
+    bytecode_emit(ctx, DEQ, {dst, lreg, rreg}, "deep_eq(...)");
+    free_register(ctx, lreg);
+    free_register(ctx, rreg);
   }
   else {
     compiler_error(
