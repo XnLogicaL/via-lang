@@ -228,7 +228,7 @@ bad_fold:
  */
 operand_t push_constant(VisitorContext& ctx, Value&& constant) {
   for (size_t constant_id = 0; const Value& existing_constant : ctx.unit_ctx.constants) {
-    if (constant.compare(existing_constant)) {
+    if (constant.deep_compare(existing_constant)) {
       return constant_id;
     }
     ++constant_id;
