@@ -93,6 +93,9 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
     {OP_DIV, [](int a, int b) { return a / b; }},
     {OP_EXP, [](int a, int b) { return std::pow(a, b); }},
     {OP_MOD, [](int a, int b) { return a % b; }},
+    {OP_EQ, [](int a, int b) { return a == b; }},
+    {OP_NEQ, [](int a, int b) { return a != b; }},
+    {KW_AND, [](int a, int b) { return a && b; }},
   };
 
   static const std::unordered_map<TokenType, evaluator_2f_t> evaluators_2f = {
@@ -102,6 +105,9 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
     {OP_DIV, [](float a, float b) { return a / b; }},
     {OP_EXP, [](float a, float b) { return std::pow(a, b); }},
     {OP_MOD, [](float a, float b) { return std::fmod(a, b); }},
+    {OP_EQ, [](float a, float b) { return a == b; }},
+    {OP_NEQ, [](float a, float b) { return a != b; }},
+    {KW_AND, [](float a, float b) { return a && b; }},
   };
 
   static const std::unordered_map<TokenType, evaluator_fi_t> evaluators_fi = {
@@ -111,22 +117,32 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
     {OP_DIV, [](float a, int b) { return a / b; }},
     {OP_EXP, [](float a, int b) { return std::pow(a, b); }},
     {OP_MOD, [](float a, int b) { return std::fmod(a, b); }},
+    {OP_EQ, [](float a, int b) { return a == b; }},
+    {OP_NEQ, [](float a, int b) { return a != b; }},
+    {KW_AND, [](float a, int b) { return a && b; }},
   };
 
   if (LitExprNode* lit_expr = dynamic_cast<LitExprNode*>(expr))
     return *lit_expr;
-  if (BinExprNode* bin_expr = dynamic_cast<BinExprNode*>(expr)) {
+  else if (BinExprNode* bin_expr = dynamic_cast<BinExprNode*>(expr)) {
+    bool is_cond = (int)bin_expr->op.type >= (int)OP_EQ && (int)bin_expr->op.type <= (int)OP_GEQ;
     LitExprNode left = fold_constant(ctx, bin_expr->lhs_expression, fold_depth + 1);
     LitExprNode right = fold_constant(ctx, bin_expr->rhs_expression, fold_depth + 1);
 
     if (int* int_left = std::get_if<int>(&left.value)) {
       if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_2i_t evaluator = evaluators_2i.at(bin_expr->op.type);
-        return LitExprNode(Token(), evaluator(*int_left, *int_right));
+        if (is_cond)
+          return LitExprNode(Token(), (bool)evaluator(*int_left, *int_right));
+        else
+          return LitExprNode(Token(), evaluator(*int_left, *int_right));
       }
       else if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
-        return LitExprNode(Token(), evaluator(*float_right, *int_left));
+        if (is_cond)
+          return LitExprNode(Token(), (bool)evaluator(*int_left, *float_right));
+        else
+          return LitExprNode(Token(), evaluator(*int_left, *float_right));
       }
 
       TypeNodeBase* left_type = left.infer_type(ctx.unit_ctx);
@@ -150,17 +166,23 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
     else if (float* float_left = std::get_if<float>(&left.value)) {
       if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_2f_t evaluator = evaluators_2f.at(bin_expr->op.type);
-        return LitExprNode(Token(), evaluator(*float_left, *float_right));
+        if (is_cond)
+          return LitExprNode(Token(), (bool)evaluator(*float_left, *float_right));
+        else
+          return LitExprNode(Token(), evaluator(*float_left, *float_right));
       }
       else if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
-        return LitExprNode(Token(), evaluator(*float_left, *int_right));
+        if (is_cond)
+          return LitExprNode(Token(), (bool)evaluator(*float_left, *int_right));
+        else
+          return LitExprNode(Token(), evaluator(*float_left, *int_right));
       }
 
       TypeNodeBase* left_type = left.infer_type(ctx.unit_ctx);
       TypeNodeBase* right_type = right.infer_type(ctx.unit_ctx);
 
-      VIA_ASSERT(left_type && right_type, "!!tmp!! inference failed");
+      VIA_ASSERT(left_type && right_type, "TODO: FOLD CONSTANT FAILURE");
 
       compiler_error(
         ctx,

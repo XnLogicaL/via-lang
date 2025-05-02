@@ -353,23 +353,43 @@ void StmtNodeVisitor::visit(ContinueStmtNode& continue_node) {
 }
 
 void StmtNodeVisitor::visit(IfStmtNode& if_node) {
-  /*
+  // Handle attributes
+  for (const StmtAttribute& attr : if_node.attributes) {
+    if (attr.identifier.lexeme == "compile_time") {
+      if (!is_constant_expression(ctx.unit_ctx, if_node.condition)) {
+        auto message = "Attribute 'compile_time' on if statement requires constant condition";
+        compiler_error(ctx, if_node.condition->begin, if_node.condition->end, message);
+        compiler_info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
+        compiler_output_end(ctx);
+        return;
+      }
 
-  0000 jumplabelif    0, 0    ; if
-  0001 jumplabelif    1, 1    ; elseif #1
-  0002 jumplabel      2       ; else
-  ...
-  0003 label          0       ; if
-  ...
-  0004 jumplabel      3
-  0005 label          1       ; elseif #1
-  ...
-  0006 jumplabel      3
-  0007 label          2       ; else
-  ...
-  0008 label          3       ; escape
+      goto evaluate_if;
+    }
+    else {
+      // Warning: "unused-attribute"
+      auto message = std::format("Unused attribute '{}'", attr.identifier.lexeme);
+      compiler_warning(ctx, attr.identifier, message);
+      compiler_output_end(ctx);
+    }
+  }
 
-  */
+  // Compile-time if-statement evaluation is an O1 optimization unless explicitly specified with
+  // @compile_time
+  if (ctx.unit_ctx.optimization_level >= 1) {
+  evaluate_if:
+    LitExprNode lit = fold_constant(ctx, if_node.condition);
+    if (bool* bool_val = std::get_if<bool>(&lit.value)) {
+      if (!(*bool_val))
+        return;
+    }
+    else if (std::holds_alternative<std::monostate>(lit.value))
+      return;
+
+    if_node.scope->accept(*this);
+    return;
+  }
+
   operand_t cond_reg = alloc_register(ctx);
   operand_t if_label = ctx.unit_ctx.internal.label_count++;
 
