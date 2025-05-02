@@ -387,7 +387,7 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
 
   // Compile-time if-statement evaluation is an O1 optimization unless explicitly specified with
   // attribute '@compile_time'
-  if (ctx.unit_ctx.optimization_level >= 1) {
+  if (ctx.unit_ctx.optimization_level >= 1 && is_constant_expression(ctx.unit_ctx, if_node.condition)) {
   evaluate_if:
     LitExprNode lit = fold_constant(ctx, if_node.condition);
     if (bool* bool_val = std::get_if<bool>(&lit.value)) {
