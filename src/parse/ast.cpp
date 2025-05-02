@@ -104,12 +104,10 @@ TypeNodeBase* UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
     return nullptr;
   }
 
-  if (op.type == TokenType::OP_LEN) {
+  if (op.type == TokenType::OP_LEN)
     return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(Token(), Int);
-  }
-  else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC || op.type == TokenType::OP_SUB) {
+  else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC || op.type == TokenType::OP_SUB)
     return inner;
-  }
 
   return nullptr;
 }

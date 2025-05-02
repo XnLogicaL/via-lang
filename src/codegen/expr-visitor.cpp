@@ -108,8 +108,8 @@ void ExprNodeVisitor::visit(SymExprNode& sym_expr, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
-  TypeNodeBase* type = resolve_type(ctx, &unary_node);
-  resolve_rvalue(this, &unary_node, dst);
+  TypeNodeBase* type = resolve_type(ctx, unary_node.expression);
+  resolve_rvalue(this, unary_node.expression, dst);
 
   if (unary_node.op.type == TokenType::OP_SUB) {
     if (is_arithmetic(type))
@@ -165,8 +165,6 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
   operand_t argc = call_node.arguments.size();
   operand_t callee_reg = alloc_register(ctx);
 
-  VIA_CHECK_INFERED(callee_type, callee);
-
   if (FunctionTypeNode* fn_ty = dynamic_cast<FunctionTypeNode*>(callee_type)) {
     size_t expected_argc = fn_ty->parameters.size();
     if (argc != static_cast<operand_t>(fn_ty->parameters.size())) {
@@ -197,12 +195,9 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
-  TypeNodeBase* object_type = index_node.object->infer_type(ctx.unit_ctx);
-  TypeNodeBase* index_type = index_node.index->infer_type(ctx.unit_ctx);
+  TypeNodeBase* object_type = resolve_type(ctx, index_node.object);
+  TypeNodeBase* index_type = resolve_type(ctx, index_node.index);
   operand_t obj_reg = alloc_register(ctx);
-
-  VIA_CHECK_INFERED(object_type, index_node.object);
-  VIA_CHECK_INFERED(index_type, index_node.object);
 
   resolve_rvalue(this, index_node.object, obj_reg);
 
@@ -268,9 +263,6 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   // Infer types
   TypeNodeBase* left_type = resolve_type(ctx, lhs);
   TypeNodeBase* right_type = resolve_type(ctx, rhs);
-
-  VIA_CHECK_INFERED(left_type, binary_node.lhs_expression);
-  VIA_CHECK_INFERED(right_type, binary_node.rhs_expression);
 
   if (!is_compatible(left_type, right_type)) {
     // Error: "bin-op-incompatible-types"
@@ -395,9 +387,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(CastExprNode& type_cast, operand_t dst) {
-  TypeNodeBase* left_type = type_cast.expression->infer_type(ctx.unit_ctx);
-
-  VIA_CHECK_INFERED(left_type, type_cast.expression);
+  TypeNodeBase* left_type = resolve_type(ctx, type_cast.expression);
 
   if (!is_castable(left_type, type_cast.type)) {
     // Error: "ill-explicit-cast"
@@ -493,10 +483,8 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
     }
 
     ExprNodeBase* target = intrinsic_expr.exprs.front();
-    TypeNodeBase* infered_type = target->infer_type(ctx.unit_ctx);
+    TypeNodeBase* infered_type = resolve_type(ctx, target);
     LitExprNode literal_expr(Token(), {});
-
-    VIA_CHECK_INFERED(infered_type, target);
 
     if (PrimTypeNode* prim_type = dynamic_cast<PrimTypeNode*>(infered_type)) {
       std::string type_name = std::string(magic_enum::enum_name(prim_type->type));

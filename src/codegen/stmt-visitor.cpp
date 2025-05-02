@@ -133,6 +133,15 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         bc.instruct.op = PUSHK;
         bc.instruct.a = bc.instruct.b;
         bc.instruct.b = OPERAND_INVALID;
+
+        current_closure.locals.push_back({
+          .is_const = is_const,
+          .is_constexpr = false,
+          .symbol = symbol,
+          .decl = &declaration_node,
+          .type = resolve_type(ctx, val),
+          .value = declaration_node.rvalue,
+        });
       }
       else {
         // Constant folding is an O1 optimization.
@@ -429,16 +438,6 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
 }
 
 void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
-  /*
-
-  0000 label          0
-  0001 jumplabelifnot 0, 1
-  ...
-  0002 jumplabel      0
-  0003 label          1
-
-  */
-
   operand_t repeat_label = ctx.unit_ctx.internal.label_count++;
   operand_t escape_label = ctx.unit_ctx.internal.label_count++;
   operand_t cond_reg = alloc_register(ctx);
@@ -474,11 +473,7 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
   resolve_rvalue(&expression_visitor, expr, reg);
 
   if (CallExprNode* call_node = dynamic_cast<CallExprNode*>(expr)) {
-    TypeNodeBase* callee_ty = resolve_type(ctx, call_node->callee);
     TypeNodeBase* ret_ty = resolve_type(ctx, call_node);
-
-    VIA_CHECK_INFERED(callee_ty, expr);
-    VIA_CHECK_INFERED(ret_ty, expr);
 
     if (PrimTypeNode* prim_ty = dynamic_cast<PrimTypeNode*>(ret_ty)) {
       if (prim_ty->type != Nil) {

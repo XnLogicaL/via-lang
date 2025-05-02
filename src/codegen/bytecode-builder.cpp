@@ -391,7 +391,18 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
 }
 
 TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
-  return expr->infer_type(ctx.unit_ctx);
+  TypeNodeBase* type = expr->infer_type(ctx.unit_ctx);
+  if (!type) {
+    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be inferred");
+    compiler_info(
+      ctx,
+      "This message indicates a likely internal compiler bug. Please report it at "
+      "https://github.com/XnLogicaL/via-lang"
+    );
+    return nullptr;
+  }
+
+  return type;
 }
 
 void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::string com) {
