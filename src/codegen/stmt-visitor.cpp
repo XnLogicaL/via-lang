@@ -356,15 +356,17 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   // Handle attributes
   for (const StmtAttribute& attr : if_node.attributes) {
     if (attr.identifier.lexeme == "compile_time") {
-      if (!is_constant_expression(ctx.unit_ctx, if_node.condition)) {
-        auto message = "Attribute 'compile_time' on if statement requires constant condition";
-        compiler_error(ctx, if_node.condition->begin, if_node.condition->end, message);
-        compiler_info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
-        compiler_output_end(ctx);
-        return;
+      if (is_constant_expression(ctx.unit_ctx, if_node.condition)) {
+        goto evaluate_if;
       }
 
-      goto evaluate_if;
+      // Error: "if-explicit-eval-on-non-constexpr"
+      auto message =
+        "Attribute 'compile_time' on if statement requires condition to be a constant expression";
+      compiler_error(ctx, if_node.condition->begin, if_node.condition->end, message);
+      compiler_info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
+      compiler_output_end(ctx);
+      return;
     }
     else {
       // Warning: "unused-attribute"
@@ -375,7 +377,7 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   }
 
   // Compile-time if-statement evaluation is an O1 optimization unless explicitly specified with
-  // @compile_time
+  // attribute '@compile_time'
   if (ctx.unit_ctx.optimization_level >= 1) {
   evaluate_if:
     LitExprNode lit = fold_constant(ctx, if_node.condition);
