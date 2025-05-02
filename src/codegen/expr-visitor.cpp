@@ -232,6 +232,7 @@ void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
   }
 }
 
+// TODO: Fix bug where constants are folded even when optimization level is O0
 void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   using enum TokenType;
 

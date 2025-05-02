@@ -367,6 +367,9 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
         return true;
       }
 
+      auto& var_repr = current_closure.locals[*stack_id];
+      var_repr.value = lvalue;
+
       bytecode_emit(ctx, SETLOCAL, {src, *stack_id}, symbol);
       return false;
     }
