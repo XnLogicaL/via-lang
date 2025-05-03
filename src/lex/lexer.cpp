@@ -123,10 +123,10 @@ Token Lexer::read_ident(size_t position) {
 
   static const std::unordered_map<std::string, TokenType> keyword_map = {
     {"do", KW_DO},           {"in", KW_IN},         {"var", KW_LOCAL},
-    {"glb", KW_GLOBAL},      {"as", KW_AS},         {"const", KW_CONST},
+    {"global", KW_GLOBAL},   {"as", KW_AS},         {"const", KW_CONST},
     {"if", KW_IF},           {"else", KW_ELSE},     {"elseif", KW_ELIF},
     {"while", KW_WHILE},     {"for", KW_FOR},       {"return", KW_RETURN},
-    {"fn", KW_FUNC},         {"break", KW_BREAK},   {"continue", KW_CONTINUE},
+    {"func", KW_FUNC},       {"break", KW_BREAK},   {"continue", KW_CONTINUE},
     {"match", KW_MATCH},     {"case", KW_CASE},     {"default", KW_DEFAULT},
     {"new", KW_NEW},         {"and", KW_AND},       {"not", KW_NOT},
     {"or", KW_OR},           {"struct", KW_STRUCT}, {"import", KW_IMPORT},

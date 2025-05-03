@@ -751,7 +751,7 @@ result<StmtNodeBase*> Parser::parse_if() {
       break;
     }
 
-    size_t begin = curr->position;
+    consume();
 
     result<ExprNodeBase*> elseif_condition = parse_expr();
     result<StmtNodeBase*> elseif_scope = parse_scope();
@@ -760,9 +760,8 @@ result<StmtNodeBase*> Parser::parse_if() {
     CHECK_RESULT(elseif_scope);
 
     ElseIfNode* elseif = unit_ctx.internal.ast_allocator.emplace<ElseIfNode>(
-      begin, (*elseif_scope)->end, *elseif_condition, *elseif_scope
+      curr->position, (*elseif_scope)->end, *elseif_condition, *elseif_scope
     );
-
     elseif_nodes.emplace_back(elseif);
   }
 
@@ -781,7 +780,6 @@ result<StmtNodeBase*> Parser::parse_if() {
   else {
     else_scope = nullptr;
 
-    // Determine statement end
     if (!elseif_nodes.empty()) {
       ElseIfNode*& last = elseif_nodes.back();
       end = last->end;
@@ -791,6 +789,7 @@ result<StmtNodeBase*> Parser::parse_if() {
     }
   }
 
+  // Return the IfStmtNode
   return unit_ctx.internal.ast_allocator.emplace<IfStmtNode>(
     begin, end, *condition, *scope, *else_scope, elseif_nodes
   );

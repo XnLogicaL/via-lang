@@ -365,14 +365,25 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   // Handle attributes
   for (const StmtAttribute& attr : if_node.attributes) {
     if (attr.identifier.lexeme == "compile_time") {
-      if (is_constant_expression(ctx.unit_ctx, if_node.condition)) {
-        goto evaluate_if;
+      size_t begin, end;
+
+      if (!is_constant_expression(ctx.unit_ctx, if_node.condition)) {
+        begin = if_node.condition->begin, end = if_node.condition->end;
+        goto conditions_not_constexpr;
       }
 
-      // Error: "if-explicit-eval-on-non-constexpr"
-      auto message =
-        "Attribute 'compile_time' on if statement requires condition to be a constant expression";
-      compiler_error(ctx, if_node.condition->begin, if_node.condition->end, message);
+      for (const ElseIfNode* elif : if_node.elseif_nodes) {
+        if (!is_constant_expression(ctx.unit_ctx, elif->condition)) {
+          begin = elif->condition->begin, end = elif->condition->end;
+          goto conditions_not_constexpr;
+        }
+      }
+
+      goto evaluate_if;
+    conditions_not_constexpr:
+      auto message = "Attribute 'compile_time' on if statement requires all conditions to be a "
+                     "constant expression";
+      compiler_error(ctx, begin, end, message);
       compiler_info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
       compiler_output_end(ctx);
       return;
@@ -389,15 +400,29 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   // attribute '@compile_time'
   if (ctx.unit_ctx.optimization_level >= 1 && is_constant_expression(ctx.unit_ctx, if_node.condition)) {
   evaluate_if:
-    LitExprNode lit = fold_constant(ctx, if_node.condition);
-    if (bool* bool_val = std::get_if<bool>(&lit.value)) {
-      if (!(*bool_val))
-        return;
-    }
-    else if (std::holds_alternative<std::monostate>(lit.value))
-      return;
+    auto evaluate_case = [this](ExprNodeBase* condition, StmtNodeBase* scope) -> bool {
+      LitExprNode lit = fold_constant(ctx, condition);
 
-    if_node.scope->accept(*this);
+      if (std::holds_alternative<std::monostate>(lit.value))
+        return false;
+      else if (bool* bool_val = std::get_if<bool>(&lit.value))
+        if (!(*bool_val))
+          return false;
+
+      scope->accept(*this);
+      return true;
+    };
+
+    if (!evaluate_case(if_node.condition, if_node.scope)) {
+      for (const ElseIfNode* elif : if_node.elseif_nodes) {
+        if (!evaluate_case(elif->condition, elif->scope))
+          continue;
+        return;
+      }
+
+      if_node.else_node->accept(*this);
+    }
+
     return;
   }
 
