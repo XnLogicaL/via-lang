@@ -307,12 +307,11 @@ std::string IntrinsicExprNode::to_string(uint32_t& depth) {
 TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
   if (intrinsic.lexeme == "type" || intrinsic.lexeme == "typeof" || intrinsic.lexeme == "nameof") {
     return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-      Token(TokenType::IDENTIFIER, "string", 0, 0, 0), Value::Tag::String
+      Token(TokenType::IDENTIFIER, "string", 0, 0, 0), String
     );
   }
-  else {
-    return nullptr;
-  }
+
+  return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(Token(), Nil);
 }
 
 void IntrinsicExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {

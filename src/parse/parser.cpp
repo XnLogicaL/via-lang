@@ -370,7 +370,9 @@ result<ExprNodeBase*> Parser::parse_primary() {
   }
   case KW_TYPE:
   case KW_TYPEOF:
-  case KW_NAMEOF: {
+  case KW_NAMEOF:
+  case KW_PRINT:
+  case KW_ERROR: {
     result<Token> intrinsic = consume();
     result<ExprNodeBase*> expr = parse_expr();
 

@@ -132,8 +132,8 @@ Token Lexer::read_ident(size_t position) {
     {"or", KW_OR},           {"struct", KW_STRUCT}, {"import", KW_IMPORT},
     {"export", KW_EXPORT},   {"macro", KW_MACRO},   {"define", KW_DEFINE},
     {"defined", KW_DEFINED}, {"type", KW_TYPE},     {"pragma", KW_PRAGMA},
-    {"enum", KW_ENUM},       {"try", KW_TRY},       {"catch", KW_CATCH},
-    {"raise", KW_RAISE},     {"trait", KW_TRAIT},   {"auto", KW_AUTO},
+    {"enum", KW_ENUM},       {"try", KW_TRY},       {"print", KW_PRINT},
+    {"error", KW_ERROR},     {"trait", KW_TRAIT},   {"auto", KW_AUTO},
     {"defer", KW_DEFER},     {"typeof", KW_TYPEOF}, {"nameof", KW_NAMEOF},
   };
 

@@ -453,6 +453,37 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
 }
 
 void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
+  static const std::unordered_map<TokenType, std::string> intrinsic_functions = {
+    {TokenType::KW_PRINT, "__print"},
+    {TokenType::KW_ERROR, "__error"},
+  };
+
+  auto it = intrinsic_functions.find(intrinsic_expr.intrinsic.type);
+  if (it != intrinsic_functions.end()) {
+    auto intr_name = intrinsic_expr.intrinsic.lexeme;
+
+    if (intrinsic_expr.exprs.empty()) {
+      auto message = std::format("Intrinsic '{}' expects 1 argument(s), got 0", intr_name);
+      compiler_error(ctx, intrinsic_expr.intrinsic, message);
+      compiler_output_end(ctx);
+      return;
+    }
+
+    LitExprNode literal(Token(), it->second);
+    Value constant = construct_constant(literal);
+    operand_t constant_id = push_constant(ctx, std::move(constant));
+    operand_t fn_reg = alloc_register(ctx);
+    operand_t arg_reg = alloc_register(ctx);
+
+    bytecode_emit(ctx, LOADK, {fn_reg, constant_id});
+    bytecode_emit(ctx, GETGLOBAL, {fn_reg, fn_reg});
+    resolve_rvalue(this, intrinsic_expr.exprs[0], arg_reg);
+    bytecode_emit(ctx, CALL, {fn_reg, arg_reg, fn_reg}, std::format("Intrinsic '{}'", intr_name));
+    free_register(ctx, fn_reg);
+    free_register(ctx, arg_reg);
+    return;
+  }
+
   if (intrinsic_expr.intrinsic.lexeme == "nameof") {
     if (intrinsic_expr.exprs.empty()) {
       compiler_error(ctx, intrinsic_expr.intrinsic, "Expected 1 argument for intrinsic 'nameof'");

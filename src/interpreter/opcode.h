@@ -294,10 +294,6 @@ enum class Opcode : uint16_t {
   RETBF,
   RETNIL,
 
-  RAISE,
-  TRY,
-  CATCH,
-
   GETARR,
   SETARR,
   NEXTARR,

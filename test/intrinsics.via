@@ -4,15 +4,18 @@
 var x: int = 10
 var y = [1,2,3,]
 
+## print
+print x
+
 ## type
-print(type x)
+print type x
 
 ## TODO: ADD `typeof`
 
 ## nameof
-print(nameof x)
+print nameof x
 
 ## deep_eq
-print(deep_eq(x, 10))
-print(deep_eq(y, [1,2,3,]))
-print(deep_eq(y, []))
+print deep_eq(x, 10)
+print deep_eq(y, [1,2,3,])
+print deep_eq(y, [])

@@ -3,40 +3,40 @@
 
 ## Variable declaration
 var x = 10
-print(x)
+print x
 
 ## Variable assignment
 x = 20
-print(x)
+print x
 
 ## Variable arithmetics
 var y = 5
 var result = x + y
-print(result)
+print result
 
 ## Scoped variables
 do {
   var n = 15
-  print(n)
+  print n
 }
 
 ## Variable types
 var intVar: int = 10
-print(type intVar)
-print(intVar)
+print type intVar
+print intVar
 
 var floatVar: float = 1.0
-print(type floatVar)
-print(floatVar)
+print type floatVar
+print floatVar
 
 var boolVar: bool = true
-print(type boolVar)
-print(boolVar)
+print type boolVar
+print boolVar
 
 var stringVar: string = "Hello"
-print(type stringVar)
-print(stringVar)
+print type stringVar
+print stringVar
 
 ## nameof
 var thisIsACoolName = 10
-print(nameof thisIsACoolName)
+print nameof thisIsACoolName

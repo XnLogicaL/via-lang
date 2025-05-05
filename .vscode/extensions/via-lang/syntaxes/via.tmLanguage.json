@@ -5,7 +5,7 @@
   "patterns": [
     {
       "name": "keyword.control",
-      "match": "\\b(nameof|typeof|type|defer|const|func|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
+      "match": "\\b(nameof|typeof|type|defer|const|func|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|error|print|enum|pragma)\\b"
     },
     {
       "name": "storage.modifier",
@@ -14,10 +14,6 @@
     {
       "name": "variable.language.self",
       "match": "\\bself\\b"
-    },
-    {
-      "name": "support.function.builtin",
-      "match": "\\b(print|println)\\b"
     },
     {
       "name": "constant.language.boolean",

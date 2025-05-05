@@ -505,7 +505,9 @@ void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
 
   resolve_rvalue(&expression_visitor, expr, reg);
 
-  if (CallExprNode* call_node = dynamic_cast<CallExprNode*>(expr)) {
+  if (is_nil(expr->infer_type(ctx.unit_ctx)))
+    return;
+  else if (CallExprNode* call_node = dynamic_cast<CallExprNode*>(expr)) {
     TypeNodeBase* ret_ty = resolve_type(ctx, call_node);
 
     if (PrimTypeNode* prim_ty = dynamic_cast<PrimTypeNode*>(ret_ty)) {

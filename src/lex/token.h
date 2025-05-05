@@ -58,12 +58,12 @@ enum class TokenType {
   KW_PRAGMA,   // pragma
   KW_ENUM,     // enum
   KW_TRY,      // try
-  KW_CATCH,    // catch
-  KW_RAISE,    // raise
+  KW_ERROR,    // error
+  KW_PRINT,    // print
   KW_AUTO,     // auto
   KW_DEFER,    // defer
-  KW_TYPEOF,
-  KW_NAMEOF,
+  KW_TYPEOF,   // typeof
+  KW_NAMEOF,   // nameof
 
   // Operators
   OP_ADD, // +

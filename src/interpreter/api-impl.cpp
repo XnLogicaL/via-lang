@@ -27,7 +27,7 @@ bool __handle_error(const State* state) {
   const size_t frame_count = callstack->frames_count;
   const CallFrame* error_frame = state->err->frame;
 
-  auto get_callable_string = [](const Callable& callee) -> std::string {
+  auto function_signature = [](const Callable& callee) -> std::string {
     return callee.type == Callable::Tag::Function
       ? std::string(callee.u.fn->id)
       : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
@@ -53,13 +53,13 @@ bool __handle_error(const State* state) {
   else {
     // Unhandled error, print traceback
     std::ostringstream oss;
-    oss << get_callable_string(error_frame->closure->callee) << ": " << state->err->message << "\n";
+    oss << function_signature(error_frame->closure->callee) << ": " << state->err->message << "\n";
     oss << "callstack begin\n";
 
     for (size_t i = visited.size(); i-- > 0;) {
       const CallFrame* visited_frame = visited[i];
       const Callable& callee = visited_frame->closure->callee;
-      oss << "  #" << visited.size() - i - 1 << " function " << get_callable_string(callee) << "\n";
+      oss << "  #" << visited.size() - i - 1 << " function " << function_signature(callee) << "\n";
     }
 
     oss << "callstack end\n";
@@ -728,15 +728,22 @@ Closure* __create_main_function(TransUnitContext& unit_ctx) {
 }
 
 void __declare_core_lib(State* state) {
-#define MAKE_VALUE(fn, argc) Value(new Closure({core_print, argc}))
+#define MAKE_VALUE(func, argc) Value(new Closure({func, argc}))
 
-  NativeFn core_print = [](State* state) -> Value {
+  static NativeFn core_print = [](State* state) -> Value {
     Value* arg0 = __get_register(state, state->args);
     std::cout << arg0->to_cxx_string() << "\n";
     return Value();
   };
 
-  __dict_set(state->globals, "print", MAKE_VALUE(core_print, 1));
+  static NativeFn core_error = [](State* state) -> Value {
+    Value* arg0 = __get_register(state, state->args);
+    __set_error_state(state, arg0->to_cxx_string());
+    return Value();
+  };
+
+  __dict_set(state->globals, "__print", MAKE_VALUE(core_print, 1));
+  __dict_set(state->globals, "__error", MAKE_VALUE(core_error, 1));
 #undef MAKE_VALUE
 }
 

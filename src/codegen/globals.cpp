@@ -71,35 +71,40 @@ const global_vector& GlobalHolder::get() {
 }
 
 void GlobalHolder::declare_builtins() {
-  Token tok = Token(TokenType::IDENTIFIER, "", 0, 0, 0);
+#define TYPE(type, ...)           allocator.emplace<type>(__VA_ARGS__)
+#define DEF_TYPE(name, type, ...) TypeNodeBase* name = TYPE(type, __VA_ARGS__)
+#define DEF_ARGS(name)            std::vector<ParamStmtNode> name;
+#define DEF_FUNC(name, args, ret)                                                                  \
+  CompilerGlobal name{__id_dummy__, #name, TYPE(FunctionTypeNode, args, ret)};
+#define ADD_ARG(args, name, type)                                                                  \
+  args.push_back(ParamStmtNode{                                                                    \
+    Token(TokenType::IDENTIFIER, #name, 0, 0, 0), StmtModifiers{}, std::move(type)});
+#define ADD_FUNC(name) globals.emplace_back(std::move(name));
 
-  TypeNodeBase* nil_type = allocator.emplace<PrimTypeNode>(tok, Value::Tag::Nil);
-  TypeNodeBase* str_type = allocator.emplace<PrimTypeNode>(tok, Value::Tag::String);
+  using enum Value::Tag;
 
-  auto make_argument = [](const std::string& id, TypeNodeBase* type) -> ParamStmtNode {
-    return {Token(TokenType::IDENTIFIER, id, 0, 0, 0), StmtModifiers{}, std::move(type)};
-  };
+  static const Token __id_dummy__ = Token(TokenType::IDENTIFIER, "<internal-identifier>", 0, 0, 0);
+  DEF_TYPE(nil_type, PrimTypeNode, __id_dummy__, Nil);
+  DEF_TYPE(str_type, PrimTypeNode, __id_dummy__, String);
 
-  std::vector<ParamStmtNode> print_args;
-  print_args.push_back(make_argument("arg0", str_type));
+  // print
+  DEF_ARGS(print_args);
+  ADD_ARG(print_args, arg0, str_type);
+  DEF_FUNC(__print, print_args, nil_type);
+  ADD_FUNC(__print);
 
-  CompilerGlobal print = {
-    tok,
-    "print",
-    allocator.emplace<FunctionTypeNode>(print_args, nil_type),
-  };
+  // error
+  DEF_ARGS(error_args);
+  ADD_ARG(print_args, arg0, str_type);
+  DEF_FUNC(__error, error_args, nil_type);
+  ADD_FUNC(__error);
 
-  std::vector<ParamStmtNode> println_args;
-  println_args.push_back(make_argument("arg0", str_type));
-
-  CompilerGlobal println = {
-    tok,
-    "println",
-    allocator.emplace<FunctionTypeNode>(println_args, nil_type),
-  };
-
-  globals.emplace_back(std::move(print));
-  globals.emplace_back(std::move(println));
-}
+#undef TYPE
+#undef DEF_TYPE
+#undef DEF_ARGS
+#undef DEF_FUNC
+#undef ADD_ARG
+#undef ADD_FUNC
+} // namespace via
 
 } // namespace via
