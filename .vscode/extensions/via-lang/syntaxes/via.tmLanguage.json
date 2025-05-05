@@ -5,7 +5,7 @@
   "patterns": [
     {
       "name": "keyword.control",
-      "match": "\\b(nameof|typeof|type|defer|const|fn|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|glb|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
+      "match": "\\b(nameof|typeof|type|defer|const|func|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|catch|raise|enum|pragma)\\b"
     },
     {
       "name": "storage.modifier",
@@ -48,7 +48,7 @@
       "match": "\\b(and|or|not)\\b"
     },
     {
-      "match": "(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "(func)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
           "name": "keyword.control"

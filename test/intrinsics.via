@@ -1,0 +1,18 @@
+## This file is a part of the via Programming Language project
+## Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
+var x: int = 10
+var y = [1,2,3,]
+
+## type
+print(type x)
+
+## TODO: ADD `typeof`
+
+## nameof
+print(nameof x)
+
+## deep_eq
+print(deep_eq(x, 10))
+print(deep_eq(y, [1,2,3,]))
+print(deep_eq(y, []))

@@ -577,7 +577,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     consume();
 
   parse_function:
-    result<Token> identifier = expect_consume(IDENTIFIER, "Expected function name after 'fn'");
+    result<Token> identifier = expect_consume(IDENTIFIER, "Expected function name after 'func'");
     result<Token> expect_par =
       expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
 

@@ -30,15 +30,20 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       compiler_output_end(ctx);
     }
     else {
+      LitExprNode literal(Token(), symbol);
+      Value constant = construct_constant(literal);
+      operand_t constant_id = push_constant(ctx, std::move(constant));
       operand_t value_reg = alloc_register(ctx);
-      operand_t symbol_hash = ustrhash(symbol.c_str());
+      operand_t tmp_reg = alloc_register(ctx);
 
       CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
       ctx.unit_ctx.internal.globals.declare_global(std::move(global));
 
       resolve_rvalue(&expression_visitor, declaration_node.rvalue, value_reg);
-      bytecode_emit(ctx, SETGLOBAL, {value_reg, symbol_hash}, symbol);
+      bytecode_emit(ctx, LOADK, {tmp_reg, constant_id});
+      bytecode_emit(ctx, SETGLOBAL, {value_reg, tmp_reg}, symbol);
       free_register(ctx, value_reg);
+      free_register(ctx, tmp_reg);
     }
   }
   else {
@@ -280,20 +285,23 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   Bytecode& new_closure = ctx.unit_ctx.bytecode.at(new_closure_point - 1);
   new_closure.instruct.b = ctx.unit_ctx.bytecode.size() - new_closure_point;
 
-  Token symbol_token = function_node.identifier;
-  uint32_t symbol_hash = ustrhash(symbol.c_str());
-
   if (function_node.is_global) {
     if (ctx.unit_ctx.internal.globals.was_declared(symbol)) {
       // Error: "global-redecl"
       auto message = std::format("Redeclaring global '{}'", symbol);
-      compiler_error(ctx, symbol_token, message);
+      compiler_error(ctx, function_node.identifier, message);
       compiler_output_end(ctx);
       return;
     }
 
-    auto operands = ubit_u32to2u16(symbol_hash);
-    bytecode_emit(ctx, SETGLOBAL, {function_reg, operands.high, operands.low});
+    LitExprNode literal(Token(), symbol);
+    Value constant = construct_constant(literal);
+    operand_t constant_id = push_constant(ctx, std::move(constant));
+    operand_t tmp_reg = alloc_register(ctx);
+
+    bytecode_emit(ctx, LOADK, {tmp_reg, constant_id});
+    bytecode_emit(ctx, SETGLOBAL, {function_reg, tmp_reg});
+    free_register(ctx, tmp_reg);
   }
   else {
     bytecode_emit(ctx, PUSH, {function_reg});
