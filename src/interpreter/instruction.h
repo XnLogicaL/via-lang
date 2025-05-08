@@ -69,25 +69,13 @@ struct alignas(8) Instruction {
 };
 
 /**
- * @struct Bytecode
- * @brief A higher-level structure representing a complete instruction unit.
- *
- * Combines the executable `Instruction` with optional `InstructionData` metadata.
- * Used to facilitate debugging, annotation, and serialization of code.
- */
-struct Bytecode {
-  Instruction instruct; ///< Executable instruction.
-  InstructionData meta; ///< Optional metadata (e.g., comments).
-};
-
-/**
  * @brief Converts a `Bytecode` instruction into a string representation.
  *
  * @param bytecode The bytecode instruction to stringify.
  * @param include_metadata If true, include metadata (such as comments) in the output.
  * @return A human-readable string representation of the instruction.
  */
-std::string to_string(const Bytecode&, bool include_metadata);
+std::string to_string(const Instruction& insn, const InstructionData& data, bool cap_opcodes);
 
 } // namespace via
 

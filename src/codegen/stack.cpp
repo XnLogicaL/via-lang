@@ -11,13 +11,13 @@ std::optional<StackVariable*> CompilerVariableStack::get_local_by_id(size_t pos)
     return std::nullopt;
   }
 
-  return &this->operator[](pos);
+  return &this->at(pos);
 }
 
 std::optional<StackVariable*> CompilerVariableStack::get_local_by_symbol(const symbol_t& symbol) {
-  for (int i = this->size() - 1; i >= 0; --i) {
-    if (this->operator[](i).symbol == symbol) {
-      return &this->operator[](i);
+  for (StackVariable& var : *this) {
+    if (var.symbol == symbol) {
+      return &var;
     }
   }
 
@@ -25,10 +25,11 @@ std::optional<StackVariable*> CompilerVariableStack::get_local_by_symbol(const s
 }
 
 std::optional<operand_t> CompilerVariableStack::find_local_id(const symbol_t& symbol) {
-  for (int i = this->size() - 1; i >= 0; --i) {
-    if (this->operator[](i).symbol == symbol) {
+  for (size_t i = 0; StackVariable & var : *this) {
+    if (var.symbol == symbol) {
       return i;
     }
+    ++i;
   }
 
   return std::nullopt;
@@ -39,15 +40,15 @@ void CompilerVariableStack::restore_stack_pointer(size_t sp) {
 }
 
 void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
-  ScopeStmtNode* scope = unit_ctx.internal.ast_allocator.emplace<ScopeStmtNode>(
+  ScopeStmtNode* scope = unit_ctx.ast_allocator.emplace<ScopeStmtNode>(
     size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
   );
 
-  PrimTypeNode* ret = unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+  PrimTypeNode* ret = unit_ctx.ast_allocator.emplace<PrimTypeNode>(
     Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
   );
 
-  FuncDeclStmtNode* func = unit_ctx.internal.ast_allocator.emplace<FuncDeclStmtNode>(
+  FuncDeclStmtNode* func = unit_ctx.ast_allocator.emplace<FuncDeclStmtNode>(
     size_t(0),
     size_t(0),
     false,

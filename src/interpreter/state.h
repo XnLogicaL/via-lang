@@ -49,8 +49,9 @@ inline constexpr size_t REGISTER_SPILL_COUNT = REGISTER_COUNT - REGISTER_STACK_C
  * @brief Represents an active runtime error during VM execution.
  */
 struct ErrorState {
-  CallFrame* frame = nullptr; ///< Call frame where the error occurred.
-  std::string message = "";   ///< Human-readable error message.
+  bool has_error = false;
+  std::string funcsig = ""; ///< Function signature of where the error occurred.
+  std::string message = ""; ///< Human-readable error message.
 };
 
 /**
@@ -58,15 +59,15 @@ struct ErrorState {
  * @tparam Size The number of registers in the holder.
  */
 template<const size_t Size>
-struct alignas(64) RegisterHolder {
+struct alignas(64) RegFile {
   Value registers[Size];
 };
 
 /// Type alias for stack-based register block.
-using StkRegHolder = RegisterHolder<REGISTER_STACK_COUNT>;
+using StkRegFile = RegFile<REGISTER_STACK_COUNT>;
 
 /// Type alias for heap/spill register block.
-using HeapRegHolder = RegisterHolder<REGISTER_SPILL_COUNT>;
+using SpillRegFile = RegFile<REGISTER_SPILL_COUNT>;
 
 /**
  * @class State
@@ -86,7 +87,7 @@ public:
    * @param stack_regs Reference to the stack register block.
    * @param unit_ctx Reference to the translation unit's compilation context.
    */
-  explicit State(StkRegHolder& stack_regs, TransUnitContext& unit_ctx);
+  explicit State(StkRegFile& stack_regs, TransUnitContext& unit_ctx);
   ~State();
 
   /// Begins executing instructions starting at the current program counter (`pc`).
@@ -153,17 +154,20 @@ public:
   void call(const Closure& callee, size_t argc);
 
 public:
-  Instruction* pc = nullptr;      ///< Current instruction pointer.
-  Instruction** labels;           ///< Jump target label array.
-  Dict* globals;                  ///< Global variable dictionary.
-  CallStack* callstack;           ///< Call stack of function frames.
-  ErrorState* err;                ///< Active error state, if any.
-  Value main;                     ///< Reference to the main function.
-  register_t ret;                 ///< Return register index.
-  register_t args;                ///< First argument register index.
-  StkRegHolder& stack_registers;  ///< Stack register block.
-  HeapRegHolder* spill_registers; ///< Heap (spill) register block.
-  TransUnitContext& unit_ctx;     ///< Translation unit compilation context.
+  Instruction* pc = nullptr; ///< Current instruction pointer.
+  Instruction** labels;      ///< Jump target label array.
+
+  Dict* globals;        ///< Global variable dictionary.
+  CallStack* callstack; ///< Call stack of function frames.
+  ErrorState* err;      ///< Active error state, if any.
+
+  Value main;      ///< Reference to the main function.
+  register_t ret;  ///< Return register index.
+  register_t args; ///< First argument register index.
+
+  StkRegFile& stack_registers;   ///< Stack register block.
+  SpillRegFile* spill_registers; ///< Heap (spill) register block.
+  TransUnitContext& unit_ctx;    ///< Translation unit compilation context.
 };
 
 } // namespace via

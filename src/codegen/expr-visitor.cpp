@@ -33,9 +33,9 @@
 //  It first checks the stack for the symbol, if found, emits a `STKGET` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPV`. Next,
 //  it checks for arguments by traversing the parameters of the top function in
-//  `unit_ctx::internal.variable_stack::function_stack` and looking for the symbol. If found, emits
+//  `unit_ctx::variable_stack::function_stack` and looking for the symbol. If found, emits
 //  `ARGGET`. Finally, looks for the variable in the global scope by querying
-//  `unit_ctx::internal::globals` and if found emits GGET. If all of these queries fail, throws
+//  `unit_ctx:::globals` and if found emits GGET. If all of these queries fail, throws
 //  a "Use of undeclared variable" compilation error.
 //
 // - UnaryExprNode compilation:

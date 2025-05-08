@@ -55,17 +55,6 @@ struct Function {
   size_t code_size = 0;           ///< Total number of instructions.
   size_t line_number = 0;         ///< Line number where function was defined (for debugging).
   const char* id = "<anonymous>"; ///< Identifier string or default name.
-
-  VIA_IMPLCOPY(Function); ///< Enables copy constructor and assignment.
-  VIA_IMPLMOVE(Function); ///< Enables move constructor and assignment.
-
-  /**
-   * @brief Constructs a new Function with preallocated bytecode capacity.
-   * @param code_size Number of instructions to allocate.
-   */
-  Function(size_t code_size);
-  Function() = default;
-  ~Function();
 };
 
 /**
@@ -96,35 +85,14 @@ struct Callable {
    * @brief Stores either a pointer to a `Function` or a `NativeFn`.
    */
   union Un {
-    Function* fn = nullptr;
+    Function fn;
     NativeFn ntv;
-  } u;
+  } u = {.ntv = nullptr};
 
-  size_t arity = 0; ///< Number of arguments expected.
-
-  VIA_IMPLCOPY(Callable); ///< Enables copy constructor and assignment.
-  VIA_IMPLMOVE(Callable); ///< Enables move constructor and assignment.
+  size_t arity = 0;              ///< Number of arguments expected.
+  bool is_error_handler = false; ///< Whether if the function is an error handler.
 
   Callable() = default;
-
-  /**
-   * @brief Constructs a Callable for a user-defined function.
-   * @param fn Pointer to the `Function` object.
-   * @param arity Expected argument count.
-   */
-  Callable(Function* fn, size_t arity);
-
-  /**
-   * @brief Constructs a Callable for a native function.
-   * @param fn Pointer to the native function.
-   * @param arity Expected argument count.
-   */
-  Callable(NativeFn fn, size_t arity);
-
-  /**
-   * @brief Destructor (does not delete the function pointer).
-   */
-  ~Callable();
 };
 
 /**
@@ -138,8 +106,8 @@ struct Closure {
   UpValue* upvs = nullptr; ///< Array of upvalue pointers.
   size_t upv_count = 0;    ///< Number of captured upvalues.
 
-  VIA_IMPLCOPY(Closure); ///< Enables copy constructor and assignment.
-  VIA_IMPLMOVE(Closure); ///< Enables move constructor and assignment.
+  VIA_IMPLCOPY(Closure);
+  VIA_IMPLMOVE(Closure);
 
   Closure();
 

@@ -210,7 +210,7 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
       compiler_error(ctx, expr->begin, expr->end, "Constant fold variable depth exceeded");
       compiler_info(
         ctx,
-        "This error message likely indicates an internal compiler bug. Please create "
+        "This error message likely indicates an compiler bug. Please create "
         "an issue at https://github.com/XnLogicaL/via-lang."
       );
       goto bad_fold;
@@ -297,7 +297,7 @@ void compiler_output_end(VisitorContext& ctx) {
 }
 
 StackFunction& get_current_closure(VisitorContext& ctx) {
-  return ctx.unit_ctx.internal.function_stack.back();
+  return ctx.unit_ctx.function_stack.back();
 }
 
 bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
@@ -317,7 +317,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
         ++i;
       }
     }
-    else if (ctx.unit_ctx.internal.globals.was_declared(symbol)) {
+    else if (ctx.unit_ctx.globals.was_declared(symbol)) {
       LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
       Value const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
@@ -326,8 +326,8 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       bytecode_emit(ctx, GETGLOBAL, {dst, dst}, symbol);
       return false;
     }
-    else if (ctx.unit_ctx.internal.function_stack.size() > 0) {
-      auto& top = ctx.unit_ctx.internal.function_stack.back();
+    else if (ctx.unit_ctx.function_stack.size() > 0) {
+      auto& top = ctx.unit_ctx.function_stack.back();
 
       for (operand_t index = 0; const auto& parameter : top.decl->parameters) {
         if (parameter.identifier.lexeme == symbol) {
@@ -393,10 +393,10 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
 TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
   TypeNodeBase* type = expr->infer_type(ctx.unit_ctx);
   if (!type) {
-    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be inferred");
+    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");
     compiler_info(
       ctx,
-      "This message indicates a likely internal compiler bug. Please report it at "
+      "This message indicates a likely compiler bug. Please report it at "
       "https://github.com/XnLogicaL/via-lang"
     );
     return nullptr;
@@ -406,20 +406,13 @@ TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
 }
 
 void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::string com) {
-  ctx.unit_ctx.bytecode.push_back({
-    {
-      opc,
-      ops.data.at(0),
-      ops.data.at(1),
-      ops.data.at(2),
-    },
-    {com},
-  });
+  ctx.unit_ctx.bytecode.push_back({opc, ops.data.at(0), ops.data.at(1), ops.data.at(2)});
+  ctx.unit_ctx.bytecode_data.push_back({com});
 }
 
 void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.back();
-  ctx.unit_ctx.internal.defered_stmts.pop_back();
+  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
+  ctx.unit_ctx.defered_stmts.pop_back();
 
   // Emit defered statements
   for (StmtNodeBase* stmt : defered_stmts) {
@@ -430,8 +423,8 @@ void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
 } // namespace compiler_util
 
 void BytecodeBuilder::codegen_prep() {
-  ctx.unit_ctx.internal.globals.declare_builtins();
-  ctx.unit_ctx.internal.function_stack.push_main_function(ctx.unit_ctx);
+  ctx.unit_ctx.globals.declare_builtins();
+  ctx.unit_ctx.function_stack.push_main_function(ctx.unit_ctx);
 }
 
 void BytecodeBuilder::insert_exit0_instruction() {

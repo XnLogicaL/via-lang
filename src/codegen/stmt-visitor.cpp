@@ -16,12 +16,15 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 
   ExprNodeBase* val = declaration_node.rvalue;
   TypeNodeBase* val_ty = resolve_type(ctx, val);
+  TypeNodeBase* target_ty =
+    dynamic_cast<AutoTypeNode*>(declaration_node.type) ? val_ty : declaration_node.type;
+
   auto& current_closure = get_current_closure(ctx);
   Token ident = declaration_node.identifier;
   symbol_t symbol = ident.lexeme;
 
   if (is_global) {
-    auto previously_declared = ctx.unit_ctx.internal.globals.get_global(symbol);
+    auto previously_declared = ctx.unit_ctx.globals.get_global(symbol);
 
     if (previously_declared.has_value()) {
       // Error: "global-redeclaration"
@@ -37,7 +40,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       operand_t tmp_reg = alloc_register(ctx);
 
       CompilerGlobal global{.tok = ident, .symbol = symbol, .type = std::move(val_ty)};
-      ctx.unit_ctx.internal.globals.declare_global(std::move(global));
+      ctx.unit_ctx.globals.declare_global(std::move(global));
 
       resolve_rvalue(&expression_visitor, declaration_node.rvalue, value_reg);
       bytecode_emit(ctx, LOADK, {tmp_reg, constant_id});
@@ -48,7 +51,9 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   }
   else {
     auto emit_constant =
-      [this, &symbol, &current_closure, &declaration_node, &is_const, &val](LitExprNode& literal) {
+      [this, &target_ty, &symbol, &current_closure, &declaration_node, &is_const, &val](
+        LitExprNode& literal
+      ) {
         // Check for Nil
         if (std::get_if<std::monostate>(&literal.value)) {
           bytecode_emit(ctx, PUSHNIL, {}, symbol);
@@ -57,8 +62,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
             .is_constexpr = true,
             .symbol = symbol,
             .decl = &declaration_node,
-            .type =
-              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Nil),
+            .type = target_ty,
             .value = &literal,
           });
         }
@@ -73,8 +77,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
             .is_constexpr = true,
             .symbol = symbol,
             .decl = &declaration_node,
-            .type =
-              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Int),
+            .type = target_ty,
             .value = &literal,
           });
         }
@@ -89,8 +92,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
             .is_constexpr = true,
             .symbol = symbol,
             .decl = &declaration_node,
-            .type =
-              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Float),
+            .type = target_ty,
             .value = &literal,
           });
         }
@@ -102,15 +104,13 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
             .is_constexpr = true,
             .symbol = symbol,
             .decl = &declaration_node,
-            .type =
-              ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(literal.value_token, Bool),
+            .type = target_ty,
             .value = &literal,
           });
         }
         // Other constant
         else {
           Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
-          Value::Tag constant_ty = constant.type;
           operand_t const_id = push_constant(ctx, std::move(constant));
 
           bytecode_emit(ctx, PUSHK, {const_id}, symbol);
@@ -119,9 +119,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
             .is_constexpr = true,
             .symbol = symbol,
             .decl = &declaration_node,
-            .type = ctx.unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-              literal.value_token, constant_ty
-            ),
+            .type = target_ty,
             .value = &literal,
           });
         }
@@ -134,17 +132,17 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       else if (dynamic_cast<ArrayExprNode*>(val) != nullptr) {
         val->accept(expression_visitor, OPERAND_INVALID);
 
-        Bytecode& bc = ctx.unit_ctx.bytecode.back();
-        bc.instruct.op = PUSHK;
-        bc.instruct.a = bc.instruct.b;
-        bc.instruct.b = OPERAND_INVALID;
+        Instruction& bc = ctx.unit_ctx.bytecode.back();
+        bc.op = PUSHK;
+        bc.a = bc.b;
+        bc.b = OPERAND_INVALID;
 
         current_closure.locals.push_back({
           .is_const = is_const,
           .is_constexpr = false,
           .symbol = symbol,
           .decl = &declaration_node,
-          .type = resolve_type(ctx, val),
+          .type = target_ty,
           .value = declaration_node.rvalue,
         });
       }
@@ -171,13 +169,12 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         .is_constexpr = false,
         .symbol = symbol,
         .decl = &declaration_node,
-        .type = std::move(val_ty),
+        .type = target_ty,
         .value = declaration_node.rvalue,
       });
     }
   }
 
-  // Decay statement type before type checking
   declaration_node.type->decay(decay_visitor, declaration_node.type);
 
   // Only do type checking if statement successfully compiled
@@ -189,14 +186,14 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
 void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   auto& current_closure = get_current_closure(ctx);
   operand_t stack_pointer = current_closure.locals.size();
-  ctx.unit_ctx.internal.defered_stmts.push_back({});
+  ctx.unit_ctx.defered_stmts.push_back({});
 
   for (StmtNodeBase* stmt : scope_node.statements) {
     stmt->accept(*this);
   }
 
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.internal.defered_stmts.back();
-  ctx.unit_ctx.internal.defered_stmts.pop_back();
+  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
+  ctx.unit_ctx.defered_stmts.pop_back();
 
   // Emit defered statements
   for (StmtNodeBase* stmt : defered_stmts) {
@@ -222,11 +219,11 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   auto* decl = &function_node;
 
   // Create the function type node before any potential invalidation
-  auto* function_type = ctx.unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(
+  auto* function_type = ctx.unit_ctx.ast_allocator.emplace<FunctionTypeNode>(
     function_node.parameters, function_node.returns
   );
 
-  ctx.unit_ctx.internal.function_stack.push_back({
+  ctx.unit_ctx.function_stack.push_back({
     .stack_pointer = current_closure.locals.size(),
     .decl = &function_node,
     .locals = {},
@@ -235,7 +232,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   function_node.returns->decay(decay_visitor, function_node.returns);
   function_node.accept(type_visitor);
 
-  ctx.unit_ctx.internal.defered_stmts.push_back({});
+  ctx.unit_ctx.defered_stmts.push_back({});
   bytecode_emit(
     ctx,
     CLOSURE,
@@ -275,18 +272,18 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
 
   close_defer_statements(ctx, this);
 
-  Bytecode& last_bytecode = ctx.unit_ctx.bytecode.back();
-  Opcode last_opcode = last_bytecode.instruct.op;
+  Instruction& last_bytecode = ctx.unit_ctx.bytecode.back();
+  Opcode last_opcode = last_bytecode.op;
 
   if (last_opcode != RET && last_opcode != RETNIL) {
     bytecode_emit(ctx, RETNIL);
   }
 
-  Bytecode& new_closure = ctx.unit_ctx.bytecode.at(new_closure_point - 1);
-  new_closure.instruct.b = ctx.unit_ctx.bytecode.size() - new_closure_point;
+  Instruction& new_closure = ctx.unit_ctx.bytecode.at(new_closure_point - 1);
+  new_closure.b = ctx.unit_ctx.bytecode.size() - new_closure_point;
 
   if (function_node.is_global) {
-    if (ctx.unit_ctx.internal.globals.was_declared(symbol)) {
+    if (ctx.unit_ctx.globals.was_declared(symbol)) {
       // Error: "global-redecl"
       auto message = std::format("Redeclaring global '{}'", symbol);
       compiler_error(ctx, function_node.identifier, message);
@@ -307,7 +304,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
     bytecode_emit(ctx, PUSH, {function_reg});
   }
 
-  ctx.unit_ctx.internal.function_stack.pop_back();
+  ctx.unit_ctx.function_stack.pop_back();
   auto& updated_closure = get_current_closure(ctx);
   updated_closure.locals.push_back({
     .is_const = is_const,
@@ -435,20 +432,20 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   }
 
   operand_t cond_reg = alloc_register(ctx);
-  operand_t if_label = ctx.unit_ctx.internal.label_count++;
+  operand_t if_label = ctx.unit_ctx.label_count++;
 
   resolve_rvalue(&expression_visitor, if_node.condition, cond_reg);
   bytecode_emit(ctx, LJMPIF, {cond_reg, if_label}, "if");
 
   for (const ElseIfNode* else_if : if_node.elseif_nodes) {
-    operand_t label = ctx.unit_ctx.internal.label_count++;
+    operand_t label = ctx.unit_ctx.label_count++;
     resolve_rvalue(&expression_visitor, else_if->condition, cond_reg);
     bytecode_emit(ctx, LJMPIF, {cond_reg, label}, std::format("elseif #{}", label - if_label));
   }
 
   free_register(ctx, cond_reg);
 
-  operand_t escape_label = ctx.unit_ctx.internal.label_count++;
+  operand_t escape_label = ctx.unit_ctx.label_count++;
 
   bytecode_emit(ctx, LJMP, {escape_label}, "else");
   bytecode_emit(ctx, LBL, {if_label});
@@ -471,8 +468,8 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
 }
 
 void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
-  operand_t repeat_label = ctx.unit_ctx.internal.label_count++;
-  operand_t escape_label = ctx.unit_ctx.internal.label_count++;
+  operand_t repeat_label = ctx.unit_ctx.label_count++;
+  operand_t escape_label = ctx.unit_ctx.label_count++;
   operand_t cond_reg = alloc_register(ctx);
 
   ctx.lrep = repeat_label;
@@ -493,8 +490,8 @@ void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
 }
 
 void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
-  if (!ctx.unit_ctx.internal.defered_stmts.empty()) {
-    auto& top = ctx.unit_ctx.internal.defered_stmts.back();
+  if (!ctx.unit_ctx.defered_stmts.empty()) {
+    auto& top = ctx.unit_ctx.defered_stmts.back();
     top.push_back(defer_stmt.stmt);
   }
 }

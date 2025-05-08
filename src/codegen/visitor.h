@@ -29,16 +29,16 @@
 #include <utility/color.h>
 
 /**
- * @brief Fails with an internal compiler error if type inference fails.
+ * @brief Fails with an compiler error if type inference fails.
  * @internal
  * @todo Remove this once type inference is fully stable.
  */
 #define VIA_CHECK_INFERED(type, expr)                                                              \
   if (!type) {                                                                                     \
-    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be inferred");          \
+    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");           \
     compiler_info(                                                                                 \
       ctx,                                                                                         \
-      "This message indicates a likely internal compiler bug. Please report it at "                \
+      "This message indicates a likely compiler bug. Please report it at "                         \
       "https://github.com/XnLogicaL/via-lang"                                                      \
     );                                                                                             \
     return;                                                                                        \

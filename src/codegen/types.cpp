@@ -16,7 +16,7 @@ bool is_constant_expression(TransUnitContext& unit_ctx, const ExprNodeBase* expr
       && is_constant_expression(unit_ctx, bin_expr->rhs_expression, variable_depth + 1);
   }
   else if (const SymExprNode* sym_expr = dynamic_cast<const SymExprNode*>(expression)) {
-    auto& current_closure = unit_ctx.internal.function_stack.back();
+    auto& current_closure = unit_ctx.function_stack.back();
     auto var_obj = current_closure.locals.get_local_by_symbol(sym_expr->identifier.lexeme);
     if (!var_obj.has_value()) {
       return false;
@@ -123,25 +123,35 @@ bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
 }
 
 bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right) {
-  if (const PrimTypeNode* primitive_left = dynamic_cast<const PrimTypeNode*>(left)) {
-    if (const PrimTypeNode* primitive_right = dynamic_cast<const PrimTypeNode*>(right)) {
-
+  if (is_same(left, right))
+    return true;
+  else if (const PrimTypeNode* primitive_left = dynamic_cast<const PrimTypeNode*>(left)) {
+    if (const PrimTypeNode* primitive_right = dynamic_cast<const PrimTypeNode*>(right))
       return primitive_left->type == primitive_right->type;
-    }
   }
 
-  return is_same(left, right);
+  if (const NullableTypeNode* nullable_right = dynamic_cast<const NullableTypeNode*>(right))
+    return is_same(left, nullable_right->type) || is_nil(left);
+
+  return false;
 }
 
 bool is_castable(const TypeNodeBase* from, const TypeNodeBase* into) {
-  if (const PrimTypeNode* primitive_right = dynamic_cast<const PrimTypeNode*>(into)) {
+  if (is_same(from, into))
+    return true;
+
+  if (const NullableTypeNode* nullable_left = dynamic_cast<const NullableTypeNode*>(from)) {
+    return is_same(nullable_left->type, into) || is_nil(into);
+  }
+
+  if (const NullableTypeNode* nullable_right = dynamic_cast<const NullableTypeNode*>(into))
+    return nullable_right->type == from || is_nil(from);
+  else if (const PrimTypeNode* primitive_right = dynamic_cast<const PrimTypeNode*>(into)) {
     if (dynamic_cast<const PrimTypeNode*>(from)) {
-      if (primitive_right->type == Value::Tag::String) {
+      if (primitive_right->type == Value::Tag::String)
         return true;
-      }
-      else if (is_arithmetic(into)) {
+      else if (is_arithmetic(into))
         return is_arithmetic(from);
-      }
     }
   }
 

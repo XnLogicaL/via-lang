@@ -83,7 +83,7 @@ void GlobalHolder::declare_builtins() {
 
   using enum Value::Tag;
 
-  static const Token __id_dummy__ = Token(TokenType::IDENTIFIER, "<internal-identifier>", 0, 0, 0);
+  static const Token __id_dummy__ = Token(TokenType::IDENTIFIER, "<identifier>", 0, 0, 0);
   DEF_TYPE(nil_type, PrimTypeNode, __id_dummy__, Nil);
   DEF_TYPE(str_type, PrimTypeNode, __id_dummy__, String);
 

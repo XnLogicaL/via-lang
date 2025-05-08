@@ -163,9 +163,7 @@ result<TypeNodeBase*> Parser::parse_generic() {
   result<Token> expect_gt = expect_consume(OP_GT, "Expected '>' to close type generic");
   CHECK_RESULT(expect_gt);
 
-  return unit_ctx.internal.ast_allocator.emplace<GenericTypeNode>(
-    *identifier, generics, *modifiers
-  );
+  return unit_ctx.ast_allocator.emplace<GenericTypeNode>(*identifier, generics, *modifiers);
 }
 
 result<TypeNodeBase*> Parser::parse_type_primary() {
@@ -182,17 +180,14 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
 
   switch (tok->type) {
   case KW_AUTO:
-    if (tok->lexeme == "auto") {
-      return unit_ctx.internal.ast_allocator.emplace<AutoTypeNode>(
-        tok->position, tok->position + tok->lexeme.length()
-      );
-    }
-    [[fallthrough]];
+    return unit_ctx.ast_allocator.emplace<AutoTypeNode>(
+      tok->position, tok->position + tok->lexeme.length()
+    );
   case IDENTIFIER:
   case LIT_NIL: {
     auto it = primitive_map.find(tok->lexeme);
     if (it != primitive_map.end()) {
-      return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(consume().value(), it->second);
+      return unit_ctx.ast_allocator.emplace<PrimTypeNode>(consume().value(), it->second);
     }
 
     return parse_generic();
@@ -210,13 +205,13 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
 
       if (tok->type == PAREN_CLOSE) {
         consume();
-        return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(*tok, Value::Tag::Nil);
+        return unit_ctx.ast_allocator.emplace<PrimTypeNode>(*tok, Value::Tag::Nil);
       }
 
       result<TypeNodeBase*> type_result = parse_type();
       CHECK_RESULT(type_result);
 
-      ParamStmtNode* param = unit_ctx.internal.ast_allocator.emplace<ParamStmtNode>(
+      ParamStmtNode* param = unit_ctx.ast_allocator.emplace<ParamStmtNode>(
         Token(TokenType::IDENTIFIER, "", 0, 0, 0), StmtModifiers{}, *type_result
       );
 
@@ -240,7 +235,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
     CHECK_RESULT(expect_rt);
     CHECK_RESULT(return_type);
 
-    return unit_ctx.internal.ast_allocator.emplace<FunctionTypeNode>(params, return_type.value());
+    return unit_ctx.ast_allocator.emplace<FunctionTypeNode>(params, return_type.value());
   }
   case BRACKET_OPEN: {
     consume();
@@ -251,7 +246,7 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
     CHECK_RESULT(inner_type);
     CHECK_RESULT(expect_br);
 
-    return unit_ctx.internal.ast_allocator.emplace<ArrayTypeNode>(*inner_type);
+    return unit_ctx.ast_allocator.emplace<ArrayTypeNode>(*inner_type);
   }
   default: {
     break;
@@ -264,8 +259,28 @@ result<TypeNodeBase*> Parser::parse_type_primary() {
   });
 }
 
+result<TypeNodeBase*> Parser::parse_type_postfix() {
+  using enum TokenType;
+
+  result<TypeNodeBase*> type = parse_type_primary();
+  result<Token> tok = current();
+
+  CHECK_RESULT(type);
+  CHECK_RESULT(tok);
+
+  switch (tok->type) {
+  case QUESTION:
+    consume();
+    return unit_ctx.ast_allocator.emplace<NullableTypeNode>(*type);
+  default:
+    break;
+  }
+
+  return type;
+}
+
 result<TypeNodeBase*> Parser::parse_type() {
-  return parse_type_primary();
+  return parse_type_postfix();
 }
 
 result<ExprNodeBase*> Parser::parse_primary() {
@@ -278,26 +293,26 @@ result<ExprNodeBase*> Parser::parse_primary() {
   case LIT_HEX: {
     consume();
     int value = std::stoi(tok->lexeme);
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, value);
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(*tok, value);
   }
   case LIT_FLOAT: {
     consume();
     float value = std::stof(tok->lexeme);
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, value);
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(*tok, value);
   }
   case LIT_BINARY: {
     consume();
     // Skip the "0b" prefix before converting.
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(
       *tok, static_cast<int>(std::bitset<64>(tok->lexeme.substr(2)).to_ullong())
     );
   }
   case LIT_NIL:
     consume();
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, std::monostate());
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(*tok, std::monostate());
   case LIT_BOOL:
     consume();
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme == "true");
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme == "true");
   case IDENTIFIER: {
     result<Token> id = consume();
 
@@ -318,16 +333,16 @@ result<ExprNodeBase*> Parser::parse_primary() {
       CHECK_RESULT(right);
       CHECK_RESULT(expect_parc);
 
-      return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(
+      return unit_ctx.ast_allocator.emplace<IntrinsicExprNode>(
         *id, std::vector<ExprNodeBase*>{*left, *right}
       );
     }
 
-    return unit_ctx.internal.ast_allocator.emplace<SymExprNode>(*tok);
+    return unit_ctx.ast_allocator.emplace<SymExprNode>(*tok);
   }
   case LIT_STRING:
     consume();
-    return unit_ctx.internal.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme);
+    return unit_ctx.ast_allocator.emplace<LitExprNode>(*tok, tok->lexeme);
   case OP_INC:
   case OP_DEC:
   case OP_LEN:
@@ -338,7 +353,7 @@ result<ExprNodeBase*> Parser::parse_primary() {
     CHECK_RESULT(op);
     CHECK_RESULT(expr);
 
-    return unit_ctx.internal.ast_allocator.emplace<UnaryExprNode>(*op, *expr);
+    return unit_ctx.ast_allocator.emplace<UnaryExprNode>(*op, *expr);
   }
   case BRACKET_OPEN: {
     result<Token> br_open = consume();
@@ -364,7 +379,7 @@ result<ExprNodeBase*> Parser::parse_primary() {
     result<Token> br_close = consume();
     CHECK_RESULT(br_close);
 
-    return unit_ctx.internal.ast_allocator.emplace<ArrayExprNode>(
+    return unit_ctx.ast_allocator.emplace<ArrayExprNode>(
       br_open->position, br_close->position, values
     );
   }
@@ -372,14 +387,15 @@ result<ExprNodeBase*> Parser::parse_primary() {
   case KW_TYPEOF:
   case KW_NAMEOF:
   case KW_PRINT:
-  case KW_ERROR: {
+  case KW_ERROR:
+  case KW_TRY: {
     result<Token> intrinsic = consume();
     result<ExprNodeBase*> expr = parse_expr();
 
     CHECK_RESULT(intrinsic);
     CHECK_RESULT(expr);
 
-    return unit_ctx.internal.ast_allocator.emplace<IntrinsicExprNode>(
+    return unit_ctx.ast_allocator.emplace<IntrinsicExprNode>(
       *intrinsic, std::vector<ExprNodeBase*>{*expr}
     );
   }
@@ -393,7 +409,7 @@ result<ExprNodeBase*> Parser::parse_primary() {
     CHECK_RESULT(expr);
     CHECK_RESULT(expect_par);
 
-    return unit_ctx.internal.ast_allocator.emplace<GroupExprNode>(*expr);
+    return unit_ctx.ast_allocator.emplace<GroupExprNode>(*expr);
   }
   default:
     break;
@@ -420,8 +436,8 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
         expect_consume(IDENTIFIER, "Expected identifier while parsing index");
       CHECK_RESULT(index_token);
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<IndexExprNode>(
-        lhs, unit_ctx.internal.ast_allocator.emplace<SymExprNode>(*index_token)
+      lhs = unit_ctx.ast_allocator.emplace<IndexExprNode>(
+        lhs, unit_ctx.ast_allocator.emplace<SymExprNode>(*index_token)
       );
 
       continue;
@@ -436,7 +452,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       CHECK_RESULT(index);
       CHECK_RESULT(expect_br);
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<IndexExprNode>(lhs, *index);
+      lhs = unit_ctx.ast_allocator.emplace<IndexExprNode>(lhs, *index);
       continue;
     }
     case PAREN_OPEN: { // Function calls: func(arg1, ...)
@@ -473,19 +489,19 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
         expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
       CHECK_RESULT(expect_par);
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<CallExprNode>(lhs, arguments);
+      lhs = unit_ctx.ast_allocator.emplace<CallExprNode>(lhs, arguments);
       continue;
     }
     case OP_INC: {
       consume();
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<StepExprNode>(lhs, true);
+      lhs = unit_ctx.ast_allocator.emplace<StepExprNode>(lhs, true);
       continue;
     }
     case OP_DEC: {
       consume();
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<StepExprNode>(lhs, false);
+      lhs = unit_ctx.ast_allocator.emplace<StepExprNode>(lhs, false);
       continue;
     }
     case KW_AS: { // Type casting: expr as Type
@@ -494,7 +510,7 @@ result<ExprNodeBase*> Parser::parse_postfix(ExprNodeBase* lhs) {
       result<TypeNodeBase*> type_result = parse_type();
       CHECK_RESULT(type_result);
 
-      lhs = unit_ctx.internal.ast_allocator.emplace<CastExprNode>(lhs, *type_result);
+      lhs = unit_ctx.ast_allocator.emplace<CastExprNode>(lhs, *type_result);
       continue;
     }
     default:
@@ -533,7 +549,7 @@ result<ExprNodeBase*> Parser::parse_binary(int precedence) {
     result<ExprNodeBase*> rhs = parse_binary(op_prec + 1);
     CHECK_RESULT(rhs);
 
-    lhs = unit_ctx.internal.ast_allocator.emplace<BinExprNode>(*op, *lhs, *rhs);
+    lhs = unit_ctx.ast_allocator.emplace<BinExprNode>(*op, *lhs, *rhs);
   }
 
   return lhs;
@@ -634,7 +650,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     CHECK_RESULT(returns);
     CHECK_RESULT(body_scope);
 
-    return unit_ctx.internal.ast_allocator.emplace<FuncDeclStmtNode>(
+    return unit_ctx.ast_allocator.emplace<FuncDeclStmtNode>(
       begin,
       (*body_scope)->end,
       is_global,
@@ -663,7 +679,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
     type = *temp;
   }
   else {
-    type = unit_ctx.internal.ast_allocator.emplace<AutoTypeNode>(
+    type = unit_ctx.ast_allocator.emplace<AutoTypeNode>(
       curr->position, curr->position + curr->lexeme.length()
     );
   }
@@ -676,7 +692,7 @@ result<StmtNodeBase*> Parser::parse_declaration() {
 
   type->expression = *value; // Attach expression reference to type
 
-  return unit_ctx.internal.ast_allocator.emplace<DeclStmtNode>(
+  return unit_ctx.ast_allocator.emplace<DeclStmtNode>(
     begin, (*value)->end, is_global, StmtModifiers{is_const}, *identifier, *value, type
   );
 }
@@ -728,7 +744,7 @@ result<StmtNodeBase*> Parser::parse_scope() {
     );
   }
 
-  return unit_ctx.internal.ast_allocator.emplace<ScopeStmtNode>(begin, end, scope_statements);
+  return unit_ctx.ast_allocator.emplace<ScopeStmtNode>(begin, end, scope_statements);
 }
 
 result<StmtNodeBase*> Parser::parse_if() {
@@ -761,7 +777,7 @@ result<StmtNodeBase*> Parser::parse_if() {
     CHECK_RESULT(elseif_condition);
     CHECK_RESULT(elseif_scope);
 
-    ElseIfNode* elseif = unit_ctx.internal.ast_allocator.emplace<ElseIfNode>(
+    ElseIfNode* elseif = unit_ctx.ast_allocator.emplace<ElseIfNode>(
       curr->position, (*elseif_scope)->end, *elseif_condition, *elseif_scope
     );
     elseif_nodes.emplace_back(elseif);
@@ -792,7 +808,7 @@ result<StmtNodeBase*> Parser::parse_if() {
   }
 
   // Return the IfStmtNode
-  return unit_ctx.internal.ast_allocator.emplace<IfStmtNode>(
+  return unit_ctx.ast_allocator.emplace<IfStmtNode>(
     begin, end, *condition, *scope, *else_scope, elseif_nodes
   );
 }
@@ -803,7 +819,7 @@ result<StmtNodeBase*> Parser::parse_return() {
   CHECK_RESULT(kw);
   CHECK_RESULT(expr);
 
-  return unit_ctx.internal.ast_allocator.emplace<ReturnStmtNode>(kw->position, (*expr)->end, *expr);
+  return unit_ctx.ast_allocator.emplace<ReturnStmtNode>(kw->position, (*expr)->end, *expr);
 }
 
 result<StmtNodeBase*> Parser::parse_while() {
@@ -815,7 +831,7 @@ result<StmtNodeBase*> Parser::parse_while() {
   CHECK_RESULT(condition);
   CHECK_RESULT(body);
 
-  return unit_ctx.internal.ast_allocator.emplace<WhileStmtNode>(
+  return unit_ctx.ast_allocator.emplace<WhileStmtNode>(
     kw->position, (*body)->end, *condition, *body
   );
 }
@@ -846,15 +862,13 @@ result<StmtNodeBase*> Parser::parse_stmt() {
     CHECK_RESULT(con);
     CHECK_RESULT(stmt);
 
-    return unit_ctx.internal.ast_allocator.emplace<DeferStmtNode>(
-      con->position, (*stmt)->end, *stmt
-    );
+    return unit_ctx.ast_allocator.emplace<DeferStmtNode>(con->position, (*stmt)->end, *stmt);
   }
   case KW_BREAK: {
     result<Token> con = consume();
     CHECK_RESULT(con);
 
-    return unit_ctx.internal.ast_allocator.emplace<BreakStmtNode>(
+    return unit_ctx.ast_allocator.emplace<BreakStmtNode>(
       con->position, con->position + con->lexeme.length()
     );
   }
@@ -862,7 +876,7 @@ result<StmtNodeBase*> Parser::parse_stmt() {
     result<Token> con = consume();
     CHECK_RESULT(con);
 
-    return unit_ctx.internal.ast_allocator.emplace<ContinueStmtNode>(
+    return unit_ctx.ast_allocator.emplace<ContinueStmtNode>(
       con->position, con->position + con->lexeme.length()
     );
   }
@@ -874,7 +888,7 @@ result<StmtNodeBase*> Parser::parse_stmt() {
     CHECK_RESULT(curr);
 
     if (curr->type == EOF_) {
-      return unit_ctx.internal.ast_allocator.emplace<ExprStmtNode>(*lvalue);
+      return unit_ctx.ast_allocator.emplace<ExprStmtNode>(*lvalue);
     }
 
     result<Token> pk = peek();
@@ -889,12 +903,10 @@ result<StmtNodeBase*> Parser::parse_stmt() {
       }
 
       result<ExprNodeBase*> rvalue = parse_expr();
-      return unit_ctx.internal.ast_allocator.emplace<AssignStmtNode>(
-        *lvalue, *possible_augment, *rvalue
-      );
+      return unit_ctx.ast_allocator.emplace<AssignStmtNode>(*lvalue, *possible_augment, *rvalue);
     }
 
-    return unit_ctx.internal.ast_allocator.emplace<ExprStmtNode>(*lvalue);
+    return unit_ctx.ast_allocator.emplace<ExprStmtNode>(*lvalue);
   }
 
   VIA_UNREACHABLE();

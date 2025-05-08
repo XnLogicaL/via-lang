@@ -6,7 +6,7 @@
  * @brief Defines the `String` type used within the virtual machine and runtime.
  *
  * This is a constant-sized, heap-allocated, hash-cached string structure
- * designed for performance in dictionary lookups and language runtime internals.
+ * designed for performance in dictionary lookups and language runtime .
  */
 #ifndef VIA_HAS_HEADER_STRING_H
 #define VIA_HAS_HEADER_STRING_H

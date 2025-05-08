@@ -251,14 +251,14 @@ struct IntrinsicExprNode : public ExprNodeBase {
 //
 
 #undef DECLARE_NODE_METHODS
-#define VIA_DECLDECAY() void decay(NodeVisitorBase&, TypeNodeBase*&) override;
+#define DECLARE_DECAY() void decay(NodeVisitorBase&, TypeNodeBase*&) override;
 #define DECLARE_NODE_METHODS()                                                                     \
   std::string to_string(uint32_t&) override;                                                       \
   std::string to_output_string() override;
 
 struct AutoTypeNode : public TypeNodeBase {
   DECLARE_NODE_METHODS();
-  VIA_DECLDECAY();
+  DECLARE_DECAY();
 
   AutoTypeNode(size_t begin, size_t end) {
     this->begin = begin;
@@ -288,7 +288,7 @@ struct GenericTypeNode : public TypeNodeBase {
   StmtModifiers modifs;
 
   DECLARE_NODE_METHODS();
-  VIA_DECLDECAY();
+  DECLARE_DECAY();
 
   GenericTypeNode(Token id, generics_t gens, StmtModifiers modifs)
     : identifier(id),
@@ -299,12 +299,24 @@ struct GenericTypeNode : public TypeNodeBase {
   }
 };
 
+struct NullableTypeNode : public TypeNodeBase {
+  TypeNodeBase* type;
+
+  DECLARE_NODE_METHODS();
+
+  NullableTypeNode(TypeNodeBase* type)
+    : type(type) {
+    this->begin = type->begin;
+    this->end = type->end + 1;
+  }
+};
+
 struct UnionTypeNode : public TypeNodeBase {
   TypeNodeBase* lhs;
   TypeNodeBase* rhs;
 
   DECLARE_NODE_METHODS();
-  VIA_DECLDECAY();
+  DECLARE_DECAY();
 
   UnionTypeNode(TypeNodeBase* lhs, TypeNodeBase* rhs)
     : lhs(lhs),
@@ -335,7 +347,7 @@ struct FunctionTypeNode : public TypeNodeBase {
   TypeNodeBase* returns;
 
   DECLARE_NODE_METHODS();
-  VIA_DECLDECAY();
+  DECLARE_DECAY();
 
   FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
     : parameters(std::move(args)),
@@ -349,7 +361,7 @@ struct ArrayTypeNode : public TypeNodeBase {
   TypeNodeBase* type;
 
   DECLARE_NODE_METHODS();
-  VIA_DECLDECAY();
+  DECLARE_DECAY();
 
   ArrayTypeNode(TypeNodeBase* type)
     : type(type) {
@@ -358,12 +370,27 @@ struct ArrayTypeNode : public TypeNodeBase {
   }
 };
 
+struct DictTypeNode : public TypeNodeBase {
+  TypeNodeBase* type;
+
+  DECLARE_NODE_METHODS();
+  DECLARE_DECAY();
+
+  DictTypeNode(TypeNodeBase* type)
+    : type(type) {
+    this->begin = type->begin - 1;
+    this->end = type->end + 1;
+  }
+};
+
+struct ObjectTypeNode : public TypeNodeBase {};
+
 // =========================================================================================
 // Statement Nodes
 //
 
 #undef DECLARE_NODE_METHODS
-#undef VIA_DECLDECAY
+#undef DECLARE_DECAY
 #define DECLARE_NODE_METHODS()                                                                     \
   std::string to_string(uint32_t&) override;                                                       \
   void accept(NodeVisitorBase&) override;

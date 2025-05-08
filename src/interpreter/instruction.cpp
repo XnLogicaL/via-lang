@@ -7,10 +7,8 @@ namespace via {
 
 using enum Opcode;
 
-std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
-  const auto& instr = bc.instruct;
-  const auto& meta = bc.meta;
-  const Opcode op = instr.op;
+std::string to_string(const Instruction& insn, const InstructionData& data, bool cap_opcodes) {
+  const Opcode op = insn.op;
 
   constexpr int opcode_column_width = 12;
   constexpr int operand_column_width = 8;
@@ -23,9 +21,7 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
     raw_opcode_str.begin(),
     raw_opcode_str.end(),
     raw_opcode_str.begin(),
-    [capitalize_opcodes](unsigned char c) {
-      return capitalize_opcodes ? std::toupper(c) : std::tolower(c);
-    }
+    [cap_opcodes](unsigned char c) { return cap_opcodes ? std::toupper(c) : std::tolower(c); }
   );
 
   // Pad raw Opcode String before applying color
@@ -36,24 +32,24 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
 
   // Build operand String
   std::string operand_str;
-  if (is_operand_valid(instr.a)) {
+  if (is_operand_valid(insn.a)) {
     if (op == PUSHI) {
-      uint32_t result = ubit_2u16tou32(instr.a, instr.b);
+      uint32_t result = ubit_2u16tou32(insn.a, insn.b);
       operand_str += std::to_string(result);
     }
     else {
-      operand_str += std::to_string(instr.a);
+      operand_str += std::to_string(insn.a);
 
       if (op == ADDI || op == SUBI || op == MULI || op == DIVI || op == POWI || op == MODI || op == LOADI) {
-        uint32_t result = ubit_2u16tou32(instr.b, instr.c);
+        uint32_t result = ubit_2u16tou32(insn.b, insn.c);
         operand_str += ", " + std::to_string(result);
       }
       else {
-        if (is_operand_valid(instr.b)) {
-          operand_str += ", " + std::to_string(instr.b);
+        if (is_operand_valid(insn.b)) {
+          operand_str += ", " + std::to_string(insn.b);
 
-          if (is_operand_valid(instr.c)) {
-            operand_str += ", " + std::to_string(instr.c);
+          if (is_operand_valid(insn.c)) {
+            operand_str += ", " + std::to_string(insn.c);
           }
         }
       }
@@ -68,8 +64,8 @@ std::string to_string(const Bytecode& bc, bool capitalize_opcodes) {
   std::ostringstream oss;
   oss << colored_opcode_str << ' ' << operand_buf.str();
 
-  if (!meta.comment.empty()) {
-    std::string full_comment = std::format(" ; {}", meta.comment);
+  if (!data.comment.empty()) {
+    std::string full_comment = std::format(" ; {}", data.comment);
     oss << apply_color(full_comment, fg_color::green, bg_color::black, style::italic);
   }
 

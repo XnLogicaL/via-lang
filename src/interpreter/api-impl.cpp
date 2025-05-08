@@ -7,65 +7,69 @@
 
 namespace via::impl {
 
+static std::unordered_map<NativeFn, std::string> native_fn_ids{};
+
+const InstructionData& __pcdata(const State* state, const Instruction* const pc) {
+  Instruction* basepc = state->unit_ctx.bytecode.data();
+  size_t offset = pc - basepc;
+  return state->unit_ctx.bytecode_data[offset];
+}
+
+std::string __funcsig(const Callable& func) {
+  return func.type == Callable::Tag::Function ? std::format("function {}", func.u.fn.id)
+                                              : __nativeid(func.u.ntv);
+}
+
+std::string __nativeid(NativeFn fn) {
+  auto it = native_fn_ids.find(fn);
+  if (it != native_fn_ids.end())
+    return std::format("function {}", it->second);
+  else
+    return std::format("function <native@0x{:x}>", reinterpret_cast<uintptr_t>(fn));
+}
+
 void __set_error_state(const State* state, const std::string& message) {
-  state->err->frame = state->callstack->frames + state->callstack->frames_count;
-  state->err->message = std::move(message);
+  const Callable& func = __current_callframe(const_cast<State*>(state))->closure->callee;
+  state->err->has_error = true;
+  state->err->funcsig = __funcsig(func);
+  state->err->message = message;
 }
 
 void __clear_error_state(const State* state) {
-  state->err->frame = nullptr;
-  state->err->message = "";
+  state->err->has_error = false;
 }
 
 bool __has_error(const State* state) {
-  return state->err->frame != nullptr;
+  return state->err->has_error;
 }
 
-bool __handle_error(const State* state) {
+bool __handle_error(State* state) {
   CallStack* callstack = state->callstack;
-  CallFrame* frames = callstack->frames;
-  const size_t frame_count = callstack->frames_count;
-  const CallFrame* error_frame = state->err->frame;
+  std::vector<std::string> funcsigs;
 
-  auto function_signature = [](const Callable& callee) -> std::string {
-    return callee.type == Callable::Tag::Function
-      ? std::string(callee.u.fn->id)
-      : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
-  };
+  for (int i = callstack->frames_count - 1; i >= 0; i--) {
+    CallFrame* frame = &callstack->frames[i];
+    if (frame->closure->callee.is_error_handler) {
+      if (frame->closure->callee.type == Callable::Tag::Function) {
+        state->pc = frame->savedpc;
+      }
 
-  std::vector<CallFrame*> visited;
-
-  // Traverse call frames from most recent to oldest
-  for (size_t i = frame_count; i-- > 0;) {
-    CallFrame* frame = &frames[i];
-    bool can_handle_error = false; // TODO: Check if this frame can handle the error
-    if (can_handle_error) {
-      break;
-    }
-    visited.push_back(frame);
-  }
-
-  // Error can be handled
-  if (!visited.empty() && visited.back() != &frames[0]) {
-    // TODO: Actual error recovery here (e.g., jump to handler)
-    return true;
-  }
-  else {
-    // Unhandled error, print traceback
-    std::ostringstream oss;
-    oss << function_signature(error_frame->closure->callee) << ": " << state->err->message << "\n";
-    oss << "callstack begin\n";
-
-    for (size_t i = visited.size(); i-- > 0;) {
-      const CallFrame* visited_frame = visited[i];
-      const Callable& callee = visited_frame->closure->callee;
-      oss << "  #" << visited.size() - i - 1 << " function " << function_signature(callee) << "\n";
+      return true;
     }
 
-    oss << "callstack end\n";
-    std::cout << oss.str();
-    return false;
+    funcsigs.push_back(__funcsig(frame->closure->callee));
+    __pop_callframe(state);
   }
+
+  std::ostringstream oss;
+  oss << state->err->funcsig << ": " << state->err->message << "\n";
+
+  for (size_t i = 0; const std::string& funcsig : funcsigs) {
+    oss << " #" << i++ << ' ' << funcsig << "\n";
+  }
+
+  std::cout << oss.str();
+  return false;
 }
 
 Value __get_constant(const State* state, size_t index) {
@@ -121,15 +125,14 @@ void __pop_callframe(State* state) {
 }
 
 void __call(State* state, Closure* closure) {
-  CallFrame frame;
-  frame.closure = closure;
-  frame.savedpc = state->pc;
+  CallFrame cf;
+  cf.closure = new Closure(*closure);
+  cf.savedpc = state->pc;
 
-  __push_callframe(state, std::move(frame));
+  __push_callframe(state, std::move(cf));
 
-  if (closure->callee.type == Callable::Tag::Function) {
-    state->pc = closure->callee.u.fn->code;
-  }
+  if (closure->callee.type == Callable::Tag::Function)
+    state->pc = closure->callee.u.fn.code;
   else {
     Value val = closure->callee.u.ntv(state);
     __return(state, std::move(val));
@@ -196,7 +199,7 @@ Value __to_string(const Value& val) {
 
     if (val.u.clsr->callee.type == Callable::Tag::Function) {
       fnty = "function ";
-      fnn = val.u.clsr->callee.u.fn->id;
+      fnn = val.u.clsr->callee.u.fn.id;
     }
 
     std::string final_str = std::format("<{}{}@0x{:x}>", fnty, fnn, (uintptr_t)val.u.clsr);
@@ -253,7 +256,7 @@ Value __to_int(const State* V, const Value& val) {
       return Value(int_result);
     }
 
-    __set_error_state(V, "String -> Int cast failed");
+    __set_error_state(V, "Failed to cast String into Int");
     return Value();
   }
   case Bool:
@@ -262,6 +265,7 @@ Value __to_int(const State* V, const Value& val) {
     break;
   }
 
+  __set_error_state(V, std::format("Failed to cast {} into Int", magic_enum::enum_name(val.type)));
   return Value();
 }
 
@@ -285,7 +289,7 @@ Value __to_float(const State* V, const Value& val) {
       return Value(float_result);
     }
 
-    __set_error_state(V, "String -> float cast failed");
+    __set_error_state(V, "Failed to cast string to float");
     return Value();
   }
   case Bool:
@@ -294,6 +298,7 @@ Value __to_float(const State* V, const Value& val) {
     break;
   }
 
+  __set_error_state(V, std::format("Failed to cast {} to float", magic_enum::enum_name(val.type)));
   return Value();
 }
 
@@ -375,13 +380,11 @@ void __closure_upvs_resize(Closure* closure) {
 
   // Check if upvalues are initialized
   if (current_size != 0) {
-    // Move upvalues to new location
     for (UpValue* ptr = closure->upvs; ptr < closure->upvs + current_size; ptr++) {
       uint32_t offset = ptr - closure->upvs;
       new_location[offset] = std::move(*ptr);
     }
 
-    // Free old location
     delete[] closure->upvs;
   }
 
@@ -421,36 +424,25 @@ void __closure_upv_set(Closure* closure, size_t upv_id, Value& val) {
   }
 }
 
-#if VIA_COMPILER == C_CLANG
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wvla-cxx-extension"
-#endif
-
 // Loads closure bytecode by iterating over the Instruction pipeline.
 // Handles sentinel/special opcodes like RET or CAPTURE while assembling closure.
-void __closure_bytecode_load(State* state, Closure* closure, size_t len) {
-  // Skip CLOSURE instruction
+void __closure_init(State* state, Closure* closure, size_t len) {
+  // Skip `CLOSURE` instruction
   state->pc++;
 
-  // Copy instructions from PC
-#if VIA_COMPILER == C_MSVC // MSVC does not support VLA's
-#include <malloc.h>        // For _alloca
-  Instruction* buffer = static_cast<Instruction*>(_alloca(len * sizeof(Instruction)));
-#else
-  Instruction buffer[len];
-#endif
+  Instruction* initpc = state->pc;
   size_t upvalues = 0;
+
   for (size_t i = 0; i < len; ++i) {
-    if (state->pc->op == Opcode::CAPTURE) {
-      if (__closure_upvs_range_check(closure, upvalues++)) {
+    if ((state->pc++)->op == Opcode::CAPTURE) {
+      if (__closure_upvs_range_check(closure, upvalues)) {
         __closure_upvs_resize(closure);
       }
 
       operand_t idx = state->pc->b;
       Value* value;
-      if (state->pc->a == 0) { // Capture local
+      if (state->pc->a == 0)
         value = &__current_callframe(state)->locals[idx];
-      }
       else { // Upvalue is captured twice; automatically close it.
         UpValue* upv = &__current_callframe(state)->closure->upvs[idx];
         if (upv->is_valid && upv->is_open) {
@@ -461,32 +453,19 @@ void __closure_bytecode_load(State* state, Closure* closure, size_t len) {
         value = upv->value;
       }
 
-      closure->upvs[upvalues] = {
+      closure->upvs[upvalues++] = {
         .is_open = true,
         .is_valid = true,
         .value = value,
         .heap_value = Value(),
       };
-
-      continue;
     }
-
-    buffer[i] = *(state->pc++);
   }
 
-  Function* fn = closure->callee.u.fn;
-  // Means the function was default initialized, therefore manual allocation is needed.
-  if (fn->code == nullptr) {
-    fn->code = new Instruction[len];
-    fn->code_size = len;
-  }
-
-  std::memcpy(fn->code, buffer, len * sizeof(Instruction));
+  Function& fn = closure->callee.u.fn;
+  fn.code = initpc;
+  fn.code_size = len;
 }
-
-#if VIA_COMPILER == C_CLANG
-#pragma clang diagnostic pop
-#endif
 
 // Moves upvalues of the current closure into the heap, "closing" them.
 void __closure_close_upvalues(const Closure* closure) {
@@ -682,7 +661,7 @@ void __set_local(State* VIA_RESTRICT state, size_t offset, Value&& val) {
 // ==========================================================
 // Register handling
 void __register_allocate(State* state) {
-  state->spill_registers = new HeapRegHolder();
+  state->spill_registers = new SpillRegFile();
 }
 
 void __register_deallocate(const State* state) {
@@ -713,22 +692,37 @@ Value* __get_register(const State* state, operand_t reg) {
 // [ Main function handling ]
 //  ========================
 Closure* __create_main_function(TransUnitContext& unit_ctx) {
-  Function* fn = new Function(unit_ctx.bytecode.size());
-  fn->id = "main";
-  fn->line_number = 0;
+  Function fn;
+  fn.id = "main";
+  fn.line_number = 0;
+  fn.code = unit_ctx.bytecode.data();
+  fn.code_size = unit_ctx.bytecode.size();
 
-  for (size_t i = 0; const Bytecode& data : unit_ctx.bytecode) {
-    fn->code[i++] = data.instruct;
-  }
+  Callable c;
+  c.type = Callable::Tag::Function;
+  c.u = {.fn = fn};
+  c.arity = 1;
+  c.is_error_handler = false;
 
-  Closure* main = new Closure;
-  main->callee = Callable(fn, 0);
-
-  return main;
+  return new Closure(std::move(c));
 }
 
 void __declare_core_lib(State* state) {
-#define MAKE_VALUE(func, argc) Value(new Closure({func, argc}))
+#define MAKE_VALUE(func, argc, eh)                                                                 \
+  ({                                                                                               \
+    Callable c;                                                                                    \
+    c.type = Callable::Tag::Native;                                                                \
+    c.u = {.ntv = func};                                                                           \
+    c.arity = 1;                                                                                   \
+    c.is_error_handler = eh;                                                                       \
+    Value(new Closure(std::move(c)));                                                              \
+  })
+
+#define DECL_VALUE(name, func, arity, eh)                                                          \
+  do {                                                                                             \
+    __dict_set(state->globals, #name, MAKE_VALUE(func, arity, eh));                                \
+    native_fn_ids[func] = #name;                                                                   \
+  } while (0)
 
   static NativeFn core_print = [](State* state) -> Value {
     Value* arg0 = __get_register(state, state->args);
@@ -742,9 +736,11 @@ void __declare_core_lib(State* state) {
     return Value();
   };
 
-  __dict_set(state->globals, "__print", MAKE_VALUE(core_print, 1));
-  __dict_set(state->globals, "__error", MAKE_VALUE(core_error, 1));
+  DECL_VALUE(__print, core_print, 1, false);
+  DECL_VALUE(__error, core_error, 1, false);
+
 #undef MAKE_VALUE
-}
+#undef DECL_VALUE
+} // namespace via::impl
 
 } // namespace via::impl

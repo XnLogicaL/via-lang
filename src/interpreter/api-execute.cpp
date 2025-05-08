@@ -24,12 +24,10 @@
 #define VM_NEXT()                                                                                  \
   do {                                                                                             \
     if constexpr (SingleStep) {                                                                    \
-      if constexpr (OverrideProgramCounter) {                                                      \
+      if constexpr (OverrideProgramCounter)                                                        \
         state->pc = savedpc;                                                                       \
-      }                                                                                            \
-      else {                                                                                       \
+      else                                                                                         \
         state->pc++;                                                                               \
-      }                                                                                            \
       goto exit;                                                                                   \
     }                                                                                              \
     state->pc++;                                                                                   \
@@ -120,7 +118,7 @@ dispatch:
   switch (state->pc->op)
 #endif
   {
-    // Handle special/internal opcodes
+    // Handle special/opcodes
     VM_CASE(NOP)
     VM_CASE(GETDICT)
     VM_CASE(SETDICT)
@@ -645,14 +643,29 @@ dispatch:
       operand_t len = state->pc->b;
       operand_t argc = state->pc->c;
 
-      auto* func = new struct Function(len);
-      Closure* closure = new Closure();
-      closure->callee = Callable(func, argc);
+      const InstructionData& data = __pcdata(state, state->pc);
+      const std::string& comment = data.comment;
 
-      __closure_bytecode_load(state, closure, len);
+      size_t idlen = comment.size();
+      void* buffer = state->unit_ctx.string_allocator.alloc_bytes(len + 1);
+      std::memcpy(buffer, comment.c_str(), idlen + 1);
+
+      struct Function f;
+      f.id = (char*)buffer;
+
+      struct Callable c;
+      c.arity = argc;
+      c.is_error_handler = false;
+      c.type = Callable::Tag::Function;
+      c.u = {.fn = f};
+
+      Closure* closure = new Closure();
+      closure->callee = c;
+
+      __closure_init(state, closure, len);
       __set_register(state, dst, Value(closure));
 
-      // Do not increment program counter, as __closure_bytecode_load automatically positions it
+      // Do not increment program counter, as __closure_init automatically positions it
       // to the correct instruction.
       if constexpr (SingleStep)
         goto exit;
@@ -1690,16 +1703,14 @@ exit:;
 }
 
 void State::execute() {
-  __execute(this);
+  __execute<false, false>(this);
 }
 
 void State::execute_step(std::optional<Instruction> insn) {
-  if (insn.has_value()) {
+  if (insn.has_value())
     __execute<true, true>(this, *insn);
-  }
-  else {
+  else
     __execute<true, false>(this, *insn);
-  }
 }
 
 } // namespace via

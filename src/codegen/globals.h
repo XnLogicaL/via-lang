@@ -88,7 +88,7 @@ public:
   global_query_result get_global(size_t global_index);
 
   /**
-   * @brief Returns a constant reference to the internal global container.
+   * @brief Returns a constant reference to the global container.
    * @return Global vector reference
    */
   const global_vector& get();

@@ -28,6 +28,12 @@ namespace via {
 inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 1024 * 8;
 
 /**
+ * @brief String allocator size in bytes
+ * @ingroup via_namespace
+ */
+inline constexpr size_t STRING_ALLOCATOR_SIZE = 1024 * 64;
+
+/**
  * @brief Dynamic container that holds a sequence of bytes.
  * @ingroup via_namespace
  * @details Used for constructing translation unit context objects from binary files.
@@ -64,22 +70,21 @@ public:
 
   // Optimization level: 0-3
   size_t optimization_level = 0;
+  size_t label_count = 0;
 
   std::vector<Token> tokens{};
   std::vector<StmtNodeBase*> ast{};
-  std::vector<Bytecode> bytecode{};
+  std::vector<Instruction> bytecode{};
+  std::vector<InstructionData> bytecode_data{};
   std::vector<Value> constants{};
+  std::vector<std::vector<StmtNodeBase*>> defered_stmts;
 
-  struct {
-    size_t label_count = 0;
+  // Allocators
+  ArenaAllocator ast_allocator{AST_ALLOCATOR_SIZE};
+  ArenaAllocator string_allocator{STRING_ALLOCATOR_SIZE};
 
-    // Allocators
-    ArenaAllocator ast_allocator{AST_ALLOCATOR_SIZE};
-
-    GlobalHolder globals;
-    CompilerFunctionStack function_stack;
-    std::vector<std::vector<StmtNodeBase*>> defered_stmts;
-  } internal;
+  GlobalHolder globals;
+  CompilerFunctionStack function_stack;
 };
 
 } // namespace via

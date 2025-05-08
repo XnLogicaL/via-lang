@@ -26,7 +26,7 @@ std::unique_ptr<ArgumentParser> get_standard_parser(std::string name) {
     .default_value(size_t(1));
   command->add_argument("--verbose", "-v").help("Enables verbosity").flag();
   command->add_argument("--Bcapitalize-opcodes")
-    .help("Whether to capitalize opcodes inside bytecode dumps")
+    .help("Whether to capitalize opcodes inside insn dumps")
     .flag();
 
   command->add_argument("--allow-direct-bin-execution")
@@ -142,7 +142,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-assembly");
 
       std::stack<std::string> clsr_disas_stk;
-      std::stack<size_t> clsr_bcc_stk; // Stack to track the bytecode count of each closure
+      std::stack<size_t> clsr_bcc_stk; // Stack to track the insn count of each closure
 
       std::cout << apply_color(
         "[disassembly of function main (section<text>)]",
@@ -152,28 +152,28 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       ) << "\n";
 
       for (size_t i = 0; i < unit_ctx.bytecode.size(); ++i) {
-        const Bytecode& bytecode = unit_ctx.bytecode[i];
+        const Instruction& insn = unit_ctx.bytecode[i];
+        const InstructionData& data = unit_ctx.bytecode_data[i];
         std::string curr_disas;
 
-        if (bytecode.instruct.op == Opcode::LBL) {
-          std::cout << std::format(" L{}{}:\n", bytecode.meta.comment, bytecode.instruct.a);
+        if (insn.op == Opcode::LBL) {
+          std::cout << std::format(" L{}{}:\n", data.comment, insn.a);
           continue;
         }
-        else if (bytecode.instruct.op == Opcode::CLOSURE) {
-          // Push the closure name and bytecode count to the stack
-          clsr_disas_stk.push(bytecode.meta.comment);
-          clsr_bcc_stk.push(i + bytecode.instruct.b); // Operand1 is the bytecode count
+        else if (insn.op == Opcode::CLOSURE) {
+          // Push the closure name and insn count to the stack
+          clsr_disas_stk.push(data.comment);
+          clsr_bcc_stk.push(i + insn.b); // Operand1 is the insn count
 
-          std::cout << " [disassembly of function " << bytecode.meta.comment << ' '
-                    << "<r=" << bytecode.instruct.a << ">, <ic=" << bytecode.instruct.b
-                    << ">, <argc=" << bytecode.instruct.c << ">]:\n";
+          std::cout << " [disassembly of function " << data.comment << ' ' << "<r=" << insn.a
+                    << ">, <ic=" << insn.b << ">, <argc=" << insn.c << ">]:\n";
           continue;
         }
 
-        // Print disassembly of the bytecode instruction
-        std::cout << "  " << via::to_string(bytecode, get_flag("--Bcapitalize-opcodes")) << "\n";
+        // Print disassembly of the insn instruction
+        std::cout << "  " << via::to_string(insn, data, get_flag("--Bcapitalize-opcodes")) << "\n";
 
-        if (bytecode.instruct.op == Opcode::RET || bytecode.instruct.op == Opcode::RETNIL) {
+        if (insn.op == Opcode::RET || insn.op == Opcode::RETNIL) {
           // Check if we are at the last RET Opcode for the current closure
           if (!clsr_disas_stk.empty() && i >= clsr_bcc_stk.top()) {
             // Pop the function from the stack
@@ -209,10 +209,9 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-machine-code")) {
       print_flag_label("--dump-machine-code");
 
-      for (const Bytecode& bytecode : unit_ctx.bytecode) {
-        const Instruction& instr = bytecode.instruct;
+      for (const Instruction& insn : unit_ctx.bytecode) {
         const size_t size = sizeof(Instruction);
-        const uint8_t* data = reinterpret_cast<const uint8_t*>(&instr);
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(&insn);
 
         for (size_t i = 0; i < size; i++) {
           std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex
@@ -282,7 +281,7 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
     SET_PROFILER_POINT(runtime_begin);
     SET_PROFILER_POINT(state_init_begin);
 
-    StkRegHolder stk_registers;
+    StkRegFile stk_registers;
     State state(stk_registers, result.unit);
 
     if (verbosity_flag) {
@@ -388,7 +387,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
 
   auto get_callable_string = [](const Callable& callee) -> std::string {
     return callee.type == Callable::Tag::Function
-      ? std::string(callee.u.fn->id)
+      ? std::string(callee.u.fn.id)
       : std::format("<nativefn@0x{:x}>", reinterpret_cast<uintptr_t>(callee.u.ntv));
   };
 
@@ -398,7 +397,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
     return;
   }
 
-  StkRegHolder regs;
+  StkRegFile regs;
   State state(regs, result.unit);
 
   while (true) {

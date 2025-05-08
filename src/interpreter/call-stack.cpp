@@ -34,6 +34,7 @@ CallFrame& CallFrame::operator=(CallFrame&& other) {
 }
 
 CallFrame::~CallFrame() {
+  delete closure;
   delete[] locals;
 }
 

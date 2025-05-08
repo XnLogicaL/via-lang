@@ -49,10 +49,10 @@ inline constexpr size_t CALLFRAME_MAX_LOCALS = 200;
  * Copy operations are disabled via `VIA_NOCOPY`, but move semantics are allowed via `VIA_IMPLMOVE`.
  */
 struct CallFrame {
-  Closure* closure;        ///< Function closure being invoked.
-  Value* locals = nullptr; ///< Pointer to local variable storage.
-  size_t locals_size = 0;  ///< Number of allocated local variables.
-  Instruction* savedpc;    ///< Instruction pointer saved for return.
+  Closure* closure = nullptr;     ///< Function closure being invoked.
+  Value* locals = nullptr;        ///< Pointer to local variable storage.
+  size_t locals_size = 0;         ///< Number of allocated local variables.
+  Instruction* savedpc = nullptr; ///< Instruction pointer saved for return.
 
   VIA_NOCOPY(CallFrame);   ///< Disable copy constructor and copy assignment.
   VIA_IMPLMOVE(CallFrame); ///< Enable move constructor and move assignment.
@@ -69,8 +69,8 @@ struct CallFrame {
  * Used to manage the execution of nested or recursive function calls.
  */
 struct CallStack {
-  CallFrame frames[CALLSTACK_MAX_FRAMES]; ///< Stack-allocated array of call frames.
   size_t frames_count = 0;                ///< Number of currently active frames.
+  CallFrame frames[CALLSTACK_MAX_FRAMES]; ///< Stack-allocated array of call frames.
 };
 
 } // namespace via

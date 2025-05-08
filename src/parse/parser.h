@@ -54,6 +54,7 @@ private:
   // Type parsing.
   result<TypeNodeBase*> parse_generic();
   result<TypeNodeBase*> parse_type_primary();
+  result<TypeNodeBase*> parse_type_postfix();
   result<TypeNodeBase*> parse_type();
 
   // Expression parsing.

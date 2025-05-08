@@ -4,7 +4,7 @@
 /**
  * @file api-impl.h
  * @brief Internal interpreter API implementation
- * @details Contains internal functions used by the via interpreter engine, including stack
+ * @details Contains functions used by the via interpreter engine, including stack
  *          operations, value conversion, function calling, error propagation, closure management,
  *          dictionary/array manipulation, and register management.
  */
@@ -35,6 +35,10 @@ namespace via {
  */
 namespace impl {
 
+const InstructionData& __pcdata(const State* state, const Instruction* const pc);
+std::string __funcsig(const Callable& func);
+std::string __nativeid(NativeFn fn);
+
 /**
  * @brief Sets the interpreter into an error state with a given message.
  * @param state Interpreter state.
@@ -61,7 +65,7 @@ bool __has_error(const State* state);
  * @param state Interpreter state.
  * @return true if the error was successfully handled; false otherwise.
  */
-bool __handle_error(const State* state);
+bool __handle_error(State* state);
 
 /**
  * @brief Retrieves a constant value from the constant pool.
@@ -298,7 +302,7 @@ void __closure_upv_set(Closure* closure, size_t upv_id, Value& val);
  * @param closure Target closure.
  * @param len Length of bytecode stream.
  */
-void __closure_bytecode_load(State* state, Closure* closure, size_t len);
+void __closure_init(State* state, Closure* closure, size_t len);
 
 /**
  * @brief Closes the closure’s upvalues and moves them to the heap.
@@ -358,7 +362,7 @@ bool __array_range_check(const Array* array, size_t index);
 /**
  * @brief Resizes the array component of the table.
  *
- * Grows internal capacity to accommodate more elements.
+ * Grows capacity to accommodate more elements.
  *
  * @param array Pointer to array.
  */

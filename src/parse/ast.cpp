@@ -50,7 +50,7 @@ TypeNodeBase* LitExprNode::infer_type(TransUnitContext& unit_ctx) {
     value
   );
 
-  return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(value_token, val_ty);
+  return unit_ctx.ast_allocator.emplace<PrimTypeNode>(value_token, val_ty);
 }
 
 // ===============================
@@ -64,24 +64,22 @@ void SymExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
 }
 
 TypeNodeBase* SymExprNode::infer_type(TransUnitContext& unit_ctx) {
-  auto& current_closure = unit_ctx.internal.function_stack.back();
+  auto& current_closure = unit_ctx.function_stack.back();
   auto stk_id = current_closure.locals.get_local_by_symbol(identifier.lexeme);
   if (stk_id.has_value()) {
     return (*stk_id)->type;
   }
 
-  auto global = unit_ctx.internal.globals.get_global(identifier.lexeme);
+  auto global = unit_ctx.globals.get_global(identifier.lexeme);
   if (global.has_value()) {
     return global->type;
   }
 
-  if (unit_ctx.internal.function_stack.size() > 0) {
-    auto& top_function = unit_ctx.internal.function_stack.back();
-    for (size_t i = 0; i < top_function.decl->parameters.size(); i++) {
-      const ParamStmtNode& param = top_function.decl->parameters[i];
-      if (param.identifier.lexeme == identifier.lexeme) {
-        return param.type;
-      }
+  auto& top_function = unit_ctx.function_stack.back();
+  for (size_t i = 0; i < top_function.decl->parameters.size(); i++) {
+    const ParamStmtNode& param = top_function.decl->parameters[i];
+    if (param.identifier.lexeme == identifier.lexeme) {
+      return param.type;
     }
   }
 
@@ -105,7 +103,7 @@ TypeNodeBase* UnaryExprNode::infer_type(TransUnitContext& unit_ctx) {
   }
 
   if (op.type == TokenType::OP_LEN)
-    return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(Token(), Int);
+    return unit_ctx.ast_allocator.emplace<PrimTypeNode>(Token(), Int);
   else if (op.type == TokenType::OP_INC || op.type == TokenType::OP_DEC || op.type == TokenType::OP_SUB)
     return inner;
 
@@ -170,7 +168,7 @@ void IndexExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
 }
 
 TypeNodeBase* IndexExprNode::infer_type(TransUnitContext& unit_ctx) {
-  auto& current_closure = unit_ctx.internal.function_stack.back();
+  auto& current_closure = unit_ctx.function_stack.back();
   if (SymExprNode* symbol = dynamic_cast<SymExprNode*>(object)) {
     auto stk_id = current_closure.locals.get_local_by_symbol(symbol->identifier.lexeme);
     if (!stk_id.has_value()) {
@@ -212,15 +210,11 @@ TypeNodeBase* BinExprNode::infer_type(TransUnitContext& unit_ctx) {
     if (PrimTypeNode* rhs_primitive = dynamic_cast<PrimTypeNode*>(rhs)) {
       // Check for floating-point types
       if (lhs_primitive->type == Float || rhs_primitive->type == Float) {
-        return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-          lhs_primitive->identifier, Float
-        );
+        return unit_ctx.ast_allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Float);
       }
       // Check for Int types
       else if (lhs_primitive->type == Int && rhs_primitive->type == Int) {
-        return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
-          lhs_primitive->identifier, Int
-        );
+        return unit_ctx.ast_allocator.emplace<PrimTypeNode>(lhs_primitive->identifier, Int);
       }
     }
   }
@@ -241,12 +235,7 @@ void CastExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
   visitor.visit(*this, dst);
 }
 
-TypeNodeBase* CastExprNode::infer_type(TransUnitContext& unit_ctx) {
-  TypeNodeBase* expr_type = expression->infer_type(unit_ctx);
-  if (!is_castable(expr_type, type)) {
-    return nullptr;
-  }
-
+TypeNodeBase* CastExprNode::infer_type(TransUnitContext&) {
   return type;
 }
 
@@ -287,7 +276,7 @@ TypeNodeBase* ArrayExprNode::infer_type(TransUnitContext& unit_ctx) {
     }
   }
 
-  return unit_ctx.internal.ast_allocator.emplace<ArrayTypeNode>(first_type);
+  return unit_ctx.ast_allocator.emplace<ArrayTypeNode>(first_type);
 }
 
 void ArrayExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
@@ -306,12 +295,14 @@ std::string IntrinsicExprNode::to_string(uint32_t& depth) {
 
 TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
   if (intrinsic.lexeme == "type" || intrinsic.lexeme == "typeof" || intrinsic.lexeme == "nameof") {
-    return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(
+    return unit_ctx.ast_allocator.emplace<PrimTypeNode>(
       Token(TokenType::IDENTIFIER, "string", 0, 0, 0), String
     );
   }
+  else if (intrinsic.lexeme == "try") {
+  }
 
-  return unit_ctx.internal.ast_allocator.emplace<PrimTypeNode>(Token(), Nil);
+  return unit_ctx.ast_allocator.emplace<PrimTypeNode>(Token(), Nil);
 }
 
 void IntrinsicExprNode::accept(NodeVisitorBase& visitor, operand_t dst) {
@@ -361,6 +352,14 @@ std::string GenericTypeNode::to_output_string() {
 
 void GenericTypeNode::decay(NodeVisitorBase& visitor, TypeNodeBase*& self) {
   self = visitor.visit(*this);
+}
+
+std::string NullableTypeNode::to_string(uint32_t& depth) {
+  return std::format("NullableTypeNode<{}>", type->to_string(depth));
+}
+
+std::string NullableTypeNode::to_output_string() {
+  return std::format("{}{}", type->to_output_string(), apply_color("?", fg_color::yellow));
 }
 
 // ===============================
