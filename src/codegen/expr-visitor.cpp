@@ -555,6 +555,31 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
     free_register(ctx, lreg);
     free_register(ctx, rreg);
   }
+  else if (intrinsic_expr.intrinsic.lexeme == "try") {
+    if (intrinsic_expr.exprs.empty()) {
+      compiler_error(ctx, intrinsic_expr.intrinsic, "Expected 1 argument for intrinsic 'try'");
+      compiler_output_end(ctx);
+      return;
+    }
+
+    ExprNodeBase* target = intrinsic_expr.exprs[0];
+    if (CallExprNode* call_expr = dynamic_cast<CallExprNode*>(target)) {
+      call_expr->accept(*this, dst);
+
+      // Modify CALL instruction to PCALL
+      Instruction& call_insn = ctx.unit_ctx.bytecode.back();
+      call_insn.op = PCALL;
+    }
+    else {
+      compiler_error(
+        ctx,
+        target->begin,
+        target->end,
+        "Intrinsic 'try' expects a function call expression as argument 0"
+      );
+      compiler_output_end(ctx);
+    }
+  }
   else {
     compiler_error(
       ctx,

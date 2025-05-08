@@ -72,13 +72,13 @@
     VM_DISPATCH_OP(JMPIFGTEQ), VM_DISPATCH_OP(LJMP), VM_DISPATCH_OP(LJMPIF),                       \
     VM_DISPATCH_OP(LJMPIFN), VM_DISPATCH_OP(LJMPIFEQ), VM_DISPATCH_OP(LJMPIFNEQ),                  \
     VM_DISPATCH_OP(LJMPIFLT), VM_DISPATCH_OP(LJMPIFGT), VM_DISPATCH_OP(LJMPIFLTEQ),                \
-    VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(RET), VM_DISPATCH_OP(RETBT),  \
-    VM_DISPATCH_OP(RETBF), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(GETARR), VM_DISPATCH_OP(SETARR), \
-    VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR), VM_DISPATCH_OP(GETDICT),                      \
-    VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(NEXTDICT), VM_DISPATCH_OP(LENDICT),                    \
-    VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR), VM_DISPATCH_OP(SETSTR),                        \
-    VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST), VM_DISPATCH_OP(STRCAST), \
-    VM_DISPATCH_OP(BCAST)
+    VM_DISPATCH_OP(LJMPIFGTEQ), VM_DISPATCH_OP(CALL), VM_DISPATCH_OP(PCALL), VM_DISPATCH_OP(RET),  \
+    VM_DISPATCH_OP(RETBT), VM_DISPATCH_OP(RETBF), VM_DISPATCH_OP(RETNIL), VM_DISPATCH_OP(GETARR),  \
+    VM_DISPATCH_OP(SETARR), VM_DISPATCH_OP(NEXTARR), VM_DISPATCH_OP(LENARR),                       \
+    VM_DISPATCH_OP(GETDICT), VM_DISPATCH_OP(SETDICT), VM_DISPATCH_OP(NEXTDICT),                    \
+    VM_DISPATCH_OP(LENDICT), VM_DISPATCH_OP(CONSTR), VM_DISPATCH_OP(GETSTR),                       \
+    VM_DISPATCH_OP(SETSTR), VM_DISPATCH_OP(LENSTR), VM_DISPATCH_OP(ICAST), VM_DISPATCH_OP(FCAST),  \
+    VM_DISPATCH_OP(STRCAST), VM_DISPATCH_OP(BCAST)
 
 namespace via {
 
@@ -655,7 +655,6 @@ dispatch:
 
       struct Callable c;
       c.arity = argc;
-      c.is_error_handler = false;
       c.type = Callable::Tag::Function;
       c.u = {.fn = f};
 
@@ -1491,6 +1490,24 @@ dispatch:
       state->ret = rr;
 
       __call(state, fn_val->u.clsr);
+
+      if constexpr (SingleStep)
+        goto exit;
+      else
+        goto dispatch;
+    }
+
+    VM_CASE(PCALL) {
+      operand_t fn = state->pc->a;
+      operand_t ap = state->pc->b;
+      operand_t rr = state->pc->c;
+
+      Value* fn_val = __get_register(state, fn);
+
+      state->args = ap;
+      state->ret = rr;
+
+      __pcall(state, fn_val->u.clsr);
 
       if constexpr (SingleStep)
         goto exit;

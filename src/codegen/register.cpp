@@ -6,7 +6,7 @@
 namespace via {
 
 register_t RegisterAllocator::allocate_register() {
-  for (size_t i = 0; i < REGISTER_COUNT; i++) {
+  for (size_t i = 0; i < (REGISTER_COUNT - 1024); i++) {
     if (registers[i] == true) {
       registers[i] = false;
       return i;

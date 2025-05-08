@@ -95,6 +95,7 @@ enum class Opcode : uint16_t {
   LJMPIFLTEQ,
   LJMPIFGTEQ,
   CALL,
+  PCALL,
   RET,
   RETBT,
   RETBF,

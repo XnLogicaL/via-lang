@@ -47,16 +47,15 @@ bool __handle_error(State* state) {
   CallStack* callstack = state->callstack;
   std::vector<std::string> funcsigs;
 
+  if (state->is_pcall) {
+    Value v(new String(state->err->message.c_str()));
+    __clear_error_state(state);
+    __return(state, std::move(v));
+    return true;
+  }
+
   for (int i = callstack->frames_count - 1; i >= 0; i--) {
     CallFrame* frame = &callstack->frames[i];
-    if (frame->closure->callee.is_error_handler) {
-      if (frame->closure->callee.type == Callable::Tag::Function) {
-        state->pc = frame->savedpc;
-      }
-
-      return true;
-    }
-
     funcsigs.push_back(__funcsig(frame->closure->callee));
     __pop_callframe(state);
   }
@@ -125,6 +124,25 @@ void __pop_callframe(State* state) {
 }
 
 void __call(State* state, Closure* closure) {
+  state->is_pcall = false;
+
+  CallFrame cf;
+  cf.closure = new Closure(*closure);
+  cf.savedpc = state->pc;
+
+  __push_callframe(state, std::move(cf));
+
+  if (closure->callee.type == Callable::Tag::Function)
+    state->pc = closure->callee.u.fn.code;
+  else {
+    Value val = closure->callee.u.ntv(state);
+    __return(state, std::move(val));
+  }
+}
+
+void __pcall(State* state, Closure* closure) {
+  state->is_pcall = true;
+
   CallFrame cf;
   cf.closure = new Closure(*closure);
   cf.savedpc = state->pc;
@@ -702,25 +720,23 @@ Closure* __create_main_function(TransUnitContext& unit_ctx) {
   c.type = Callable::Tag::Function;
   c.u = {.fn = fn};
   c.arity = 1;
-  c.is_error_handler = false;
 
   return new Closure(std::move(c));
 }
 
 void __declare_core_lib(State* state) {
-#define MAKE_VALUE(func, argc, eh)                                                                 \
+#define MAKE_VALUE(func, argc)                                                                     \
   ({                                                                                               \
     Callable c;                                                                                    \
     c.type = Callable::Tag::Native;                                                                \
     c.u = {.ntv = func};                                                                           \
     c.arity = 1;                                                                                   \
-    c.is_error_handler = eh;                                                                       \
     Value(new Closure(std::move(c)));                                                              \
   })
 
-#define DECL_VALUE(name, func, arity, eh)                                                          \
+#define DECL_VALUE(name, func, arity)                                                              \
   do {                                                                                             \
-    __dict_set(state->globals, #name, MAKE_VALUE(func, arity, eh));                                \
+    __dict_set(state->globals, #name, MAKE_VALUE(func, arity));                                    \
     native_fn_ids[func] = #name;                                                                   \
   } while (0)
 
@@ -736,8 +752,8 @@ void __declare_core_lib(State* state) {
     return Value();
   };
 
-  DECL_VALUE(__print, core_print, 1, false);
-  DECL_VALUE(__error, core_error, 1, false);
+  DECL_VALUE(__print, core_print, 1);
+  DECL_VALUE(__error, core_error, 1);
 
 #undef MAKE_VALUE
 #undef DECL_VALUE

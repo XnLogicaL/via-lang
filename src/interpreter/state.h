@@ -30,13 +30,13 @@ namespace via {
  * @brief Total number of general-purpose registers available.
  * Matches the operand range (2^16).
  */
-inline constexpr size_t REGISTER_COUNT = 65536;
+inline constexpr size_t REGISTER_COUNT = 0xFFFF + 1;
 
 /**
  * @brief Number of registers reserved for stack-based usage.
  * These are backed by fast C++ stack memory.
  */
-inline constexpr size_t REGISTER_STACK_COUNT = 256;
+inline constexpr size_t REGISTER_STACK_COUNT = 0x00FF + 1;
 
 /**
  * @brief Number of registers reserved for heap-based spilling.
@@ -154,6 +154,8 @@ public:
   void call(const Closure& callee, size_t argc);
 
 public:
+  bool is_pcall = false;
+
   Instruction* pc = nullptr; ///< Current instruction pointer.
   Instruction** labels;      ///< Jump target label array.
 

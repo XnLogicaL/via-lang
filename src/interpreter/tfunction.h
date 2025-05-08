@@ -89,8 +89,7 @@ struct Callable {
     NativeFn ntv;
   } u = {.ntv = nullptr};
 
-  size_t arity = 0;              ///< Number of arguments expected.
-  bool is_error_handler = false; ///< Whether if the function is an error handler.
+  size_t arity = 0; ///< Number of arguments expected.
 
   Callable() = default;
 };

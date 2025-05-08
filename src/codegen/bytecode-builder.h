@@ -234,8 +234,19 @@ void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor);
  * @param ctx Visitor context
  * @return Register id
  */
-inline operand_t alloc_register(VisitorContext& ctx) {
-  return ctx.reg_alloc.allocate_register();
+inline register_t alloc_register(VisitorContext& ctx) {
+  register_t reg = ctx.reg_alloc.allocate_register();
+  if (reg == 0xFFFF) {
+    compiler_error(ctx, "Register allocation failure");
+    compiler_info(
+      ctx,
+      "This likely indicates an internal compiler bug. Please report this issue in the official "
+      "via language github repository."
+    );
+    compiler_output_end(ctx);
+  }
+
+  return reg;
 }
 
 /**

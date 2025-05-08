@@ -92,6 +92,11 @@ bool is_same(const TypeNodeBase* left, const TypeNodeBase* right) {
       return primitive_left->type == primitive_right->type;
     }
   }
+  else if (const NullableTypeNode* nullable_left = dynamic_cast<const NullableTypeNode*>(left)) {
+    if (const NullableTypeNode* nullable_right = dynamic_cast<const NullableTypeNode*>(right)) {
+      return is_same(nullable_left->type, nullable_right->type);
+    }
+  }
   else if (const GenericTypeNode* generic_left = dynamic_cast<const GenericTypeNode*>(left)) {
     if (const GenericTypeNode* generic_right = dynamic_cast<const GenericTypeNode*>(right)) {
       if (generic_left->identifier.lexeme != generic_right->identifier.lexeme) {

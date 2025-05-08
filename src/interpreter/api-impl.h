@@ -35,6 +35,9 @@ namespace via {
  */
 namespace impl {
 
+constexpr inline register_t BACKEND_REGS_START = REGISTER_COUNT - 1024;
+constexpr inline register_t BACKEND_REGS_END = REGISTER_COUNT - 1;
+
 const InstructionData& __pcdata(const State* state, const Instruction* const pc);
 std::string __funcsig(const Callable& func);
 std::string __nativeid(NativeFn fn);
@@ -123,6 +126,14 @@ void __pop_callframe(State* state);
  * @param callee Function to call.
  */
 void __call(State* state, Closure* callee);
+
+/**
+ * @brief Calls a function in a protected manner using a dynamic dispatch system.
+ * @details Supports native and external function types.
+ * @param state Interpreter state.
+ * @param callee Function to call.
+ */
+void __pcall(State* state, Closure* callee);
 
 /**
  * @brief Performs a return from a function.

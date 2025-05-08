@@ -300,6 +300,9 @@ TypeNodeBase* IntrinsicExprNode::infer_type(TransUnitContext& unit_ctx) {
     );
   }
   else if (intrinsic.lexeme == "try") {
+    return unit_ctx.ast_allocator.emplace<NullableTypeNode>(
+      unit_ctx.ast_allocator.emplace<PrimTypeNode>(Token(), String)
+    );
   }
 
   return unit_ctx.ast_allocator.emplace<PrimTypeNode>(Token(), Nil);
