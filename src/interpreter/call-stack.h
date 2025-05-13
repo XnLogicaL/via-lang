@@ -49,6 +49,7 @@ inline constexpr size_t CALLFRAME_MAX_LOCALS = 200;
  * Copy operations are disabled via `VIA_NOCOPY`, but move semantics are allowed via `VIA_IMPLMOVE`.
  */
 struct CallFrame {
+  bool is_protected = false;
   Closure* closure = nullptr;     ///< Function closure being invoked.
   Value* locals = nullptr;        ///< Pointer to local variable storage.
   size_t locals_size = 0;         ///< Number of allocated local variables.

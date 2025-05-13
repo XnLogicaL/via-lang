@@ -78,7 +78,7 @@ struct Callable {
     None,     ///< No function.
     Function, ///< User-defined function.
     Native,   ///< Native function.
-  } type = Tag::Function;
+  } type = Tag::None;
 
   /**
    * @union Un

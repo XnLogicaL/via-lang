@@ -63,6 +63,7 @@ enum class Opcode : uint16_t {
   GETUPV,
   GETLOCAL,
   SETLOCAL,
+  GETARG,
   CAPTURE,
   INC,
   DEC,

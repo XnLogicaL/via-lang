@@ -154,8 +154,6 @@ public:
   void call(const Closure& callee, size_t argc);
 
 public:
-  bool is_pcall = false;
-
   Instruction* pc = nullptr; ///< Current instruction pointer.
   Instruction** labels;      ///< Jump target label array.
 

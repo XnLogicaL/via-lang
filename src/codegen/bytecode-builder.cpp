@@ -326,17 +326,15 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       bytecode_emit(ctx, GETGLOBAL, {dst, dst}, symbol);
       return false;
     }
-    else if (ctx.unit_ctx.function_stack.size() > 0) {
-      auto& top = ctx.unit_ctx.function_stack.back();
 
-      for (operand_t index = 0; const auto& parameter : top.decl->parameters) {
-        if (parameter.identifier.lexeme == symbol) {
-          bytecode_emit(ctx, MOV, {dst, static_cast<operand_t>(ctx.args + index)});
-          return false;
-        }
-
-        ++index;
+    auto& top = ctx.unit_ctx.function_stack.back();
+    for (operand_t index = 0; const auto& parameter : top.decl->parameters) {
+      if (parameter.identifier.lexeme == symbol) {
+        bytecode_emit(ctx, GETARG, {dst, index});
+        return false;
       }
+
+      ++index;
     }
   }
 

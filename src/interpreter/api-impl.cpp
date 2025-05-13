@@ -47,15 +47,15 @@ bool __handle_error(State* state) {
   CallStack* callstack = state->callstack;
   std::vector<std::string> funcsigs;
 
-  if (state->is_pcall) {
-    Value v(new String(state->err->message.c_str()));
-    __clear_error_state(state);
-    __return(state, std::move(v));
-    return true;
-  }
-
   for (int i = callstack->frames_count - 1; i >= 0; i--) {
     CallFrame* frame = &callstack->frames[i];
+    if (frame->is_protected) {
+      Value errv(new String(state->err->message.c_str()));
+      __clear_error_state(state);
+      __return(state, std::move(errv));
+      return true;
+    }
+
     funcsigs.push_back(__funcsig(frame->closure->callee));
     __pop_callframe(state);
   }
@@ -123,55 +123,48 @@ void __pop_callframe(State* state) {
   callstack->frames_count--;
 }
 
-void __call(State* state, Closure* closure) {
-  state->is_pcall = false;
-
+template<const bool IsProtected>
+void __call_base(State* state, Closure* closure) {
   CallFrame cf;
+  cf.is_protected = IsProtected;
   cf.closure = new Closure(*closure);
-  cf.savedpc = state->pc;
 
-  __push_callframe(state, std::move(cf));
+  if (closure->callee.type == Callable::Tag::Function) {
+    // Functions are automatically positioned by RET instructions; no need to increment saved
+    // program counter.
+    cf.savedpc = state->pc;
+    __push_callframe(state, std::move(cf));
 
-  if (closure->callee.type == Callable::Tag::Function)
     state->pc = closure->callee.u.fn.code;
-  else {
-    Value val = closure->callee.u.ntv(state);
-    __return(state, std::move(val));
+  }
+  else if (closure->callee.type == Callable::Tag::Native) {
+    // Native functions require manual positioning as they don't increment program counter with a
+    // RET instruction or similar.
+    cf.savedpc = state->pc + 1;
+    __push_callframe(state, std::move(cf));
+    __return(state, closure->callee.u.ntv(state));
   }
 }
 
+void __call(State* state, Closure* closure) {
+  __call_base<false>(state, closure);
+}
+
 void __pcall(State* state, Closure* closure) {
-  state->is_pcall = true;
-
-  CallFrame cf;
-  cf.closure = new Closure(*closure);
-  cf.savedpc = state->pc;
-
-  __push_callframe(state, std::move(cf));
-
-  if (closure->callee.type == Callable::Tag::Function)
-    state->pc = closure->callee.u.fn.code;
-  else {
-    Value val = closure->callee.u.ntv(state);
-    __return(state, std::move(val));
-  }
+  __call_base<true>(state, closure);
 }
 
 void __return(State* VIA_RESTRICT state, Value&& retv) {
   CallFrame* current_frame = __current_callframe(state);
-  if (current_frame->savedpc != nullptr)
-    state->pc = current_frame->savedpc + 1;
-  else
-    state->pc = nullptr;
+  state->pc = current_frame->savedpc;
 
   __set_register(state, state->ret, std::move(retv));
   __pop_callframe(state);
 }
 
 Value __length(Value& val) {
-  if (val.is_string()) {
+  if (val.is_string())
     return Value(static_cast<int>(val.u.str->data_size));
-  }
   else if (val.is_array() || val.is_dict()) {
     size_t len = val.is_array() ? __array_size(val.u.arr) : __dict_size(val.u.dict);
     return Value(static_cast<int>(len));
@@ -445,12 +438,7 @@ void __closure_upv_set(Closure* closure, size_t upv_id, Value& val) {
 // Loads closure bytecode by iterating over the Instruction pipeline.
 // Handles sentinel/special opcodes like RET or CAPTURE while assembling closure.
 void __closure_init(State* state, Closure* closure, size_t len) {
-  // Skip `CLOSURE` instruction
-  state->pc++;
-
-  Instruction* initpc = state->pc;
   size_t upvalues = 0;
-
   for (size_t i = 0; i < len; ++i) {
     if ((state->pc++)->op == Opcode::CAPTURE) {
       if (__closure_upvs_range_check(closure, upvalues)) {
@@ -479,10 +467,6 @@ void __closure_init(State* state, Closure* closure, size_t len) {
       };
     }
   }
-
-  Function& fn = closure->callee.u.fn;
-  fn.code = initpc;
-  fn.code_size = len;
 }
 
 // Moves upvalues of the current closure into the heap, "closing" them.
@@ -730,7 +714,7 @@ void __declare_core_lib(State* state) {
     Callable c;                                                                                    \
     c.type = Callable::Tag::Native;                                                                \
     c.u = {.ntv = func};                                                                           \
-    c.arity = 1;                                                                                   \
+    c.arity = argc;                                                                                \
     Value(new Closure(std::move(c)));                                                              \
   })
 
