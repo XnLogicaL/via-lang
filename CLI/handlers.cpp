@@ -133,7 +133,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-ast");
       uint32_t depth = 0;
 
-      for (StmtNodeBase* pstmt : unit_ctx.ast) {
+      for (StmtNode* pstmt : unit_ctx.ast) {
         std::cout << pstmt->to_string(depth) << "\n";
       }
     }

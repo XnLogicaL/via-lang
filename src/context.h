@@ -9,7 +9,7 @@
 
 #include <arena.h>
 #include <lex/token.h>
-#include <parse/ast-base.h>
+#include <lex/lexloc.h>
 #include <codegen/globals.h>
 #include <codegen/stack.h>
 #include <interpreter/tvalue.h>
@@ -73,11 +73,11 @@ public:
   size_t label_count = 0;
 
   std::vector<Token> tokens{};
-  std::vector<StmtNodeBase*> ast{};
+  std::vector<Node*> ast{};
   std::vector<Instruction> bytecode{};
   std::vector<InstructionData> bytecode_data{};
   std::vector<Value> constants{};
-  std::vector<std::vector<StmtNodeBase*>> defered_stmts;
+  std::vector<std::vector<Node*>> defered_stmts;
 
   // Allocators
   ArenaAllocator ast_allocator{AST_ALLOCATOR_SIZE};

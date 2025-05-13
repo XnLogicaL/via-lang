@@ -11,7 +11,8 @@
 #include "common-defs.h"
 
 #include <lex/token.h>
-#include <parse/ast-base.h>
+#include <lex/lexloc.h>
+#include <parse/ast.h>
 #include <interpreter/tvalue.h>
 
 /**
@@ -29,7 +30,7 @@ namespace via {
 struct CompilerGlobal {
   Token tok;
   std::string symbol;
-  TypeNodeBase* type;
+  TypeNode* type;
 };
 
 /**

@@ -98,30 +98,30 @@ public:
   virtual ~NodeVisitorBase() = default;
 
   // --- Expression Visitors ---
-  virtual void visit(LitExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(SymExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(UnaryExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(GroupExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(CallExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(IndexExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(BinExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(CastExprNode&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeLitExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeSymExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeUnExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeGroupExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeCallExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeIndexExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeBinExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeCastExpr&, operand_t) INVALID_VISIT;
   virtual void visit(StepExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(ArrayExprNode&, operand_t) INVALID_VISIT;
-  virtual void visit(IntrinsicExprNode&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeArrExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeIntrExpr&, operand_t) INVALID_VISIT;
 
   // --- Type Visitors ---
-  virtual TypeNodeBase* visit(AutoTypeNode&) INVALID_VISIT;
-  virtual TypeNodeBase* visit(GenericTypeNode&) INVALID_VISIT;
-  virtual TypeNodeBase* visit(UnionTypeNode&) INVALID_VISIT;
-  virtual TypeNodeBase* visit(FunctionTypeNode&) INVALID_VISIT;
-  virtual TypeNodeBase* visit(ArrayTypeNode&) INVALID_VISIT;
+  virtual TypeNode* visit(AutoTypeNode&) INVALID_VISIT;
+  virtual TypeNode* visit(NodeGenType&) INVALID_VISIT;
+  virtual TypeNode* visit(NodeUnionType&) INVALID_VISIT;
+  virtual TypeNode* visit(NodeFuncType&) INVALID_VISIT;
+  virtual TypeNode* visit(NodeArrType&) INVALID_VISIT;
 
   // --- Statement Visitors ---
-  virtual void visit(DeclStmtNode&) INVALID_VISIT;
-  virtual void visit(ScopeStmtNode&) INVALID_VISIT;
-  virtual void visit(FuncDeclStmtNode&) INVALID_VISIT;
-  virtual void visit(AssignStmtNode&) INVALID_VISIT;
+  virtual void visit(NodeDeclStmt&) INVALID_VISIT;
+  virtual void visit(NodeScopeStmt&) INVALID_VISIT;
+  virtual void visit(NodeFuncDeclStmt&) INVALID_VISIT;
+  virtual void visit(NodeAsgnStmt&) INVALID_VISIT;
   virtual void visit(IfStmtNode&) INVALID_VISIT;
   virtual void visit(ReturnStmtNode&) INVALID_VISIT;
   virtual void visit(BreakStmtNode&) INVALID_VISIT;
@@ -149,17 +149,17 @@ class ExprNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  void visit(LitExprNode&, operand_t) override;
-  void visit(SymExprNode&, operand_t) override;
-  void visit(UnaryExprNode&, operand_t) override;
-  void visit(GroupExprNode&, operand_t) override;
-  void visit(CallExprNode&, operand_t) override;
-  void visit(IndexExprNode&, operand_t) override;
-  void visit(BinExprNode&, operand_t) override;
-  void visit(CastExprNode&, operand_t) override;
+  void visit(NodeLitExpr&, operand_t) override;
+  void visit(NodeSymExpr&, operand_t) override;
+  void visit(NodeUnExpr&, operand_t) override;
+  void visit(NodeGroupExpr&, operand_t) override;
+  void visit(NodeCallExpr&, operand_t) override;
+  void visit(NodeIndexExpr&, operand_t) override;
+  void visit(NodeBinExpr&, operand_t) override;
+  void visit(NodeCastExpr&, operand_t) override;
   void visit(StepExprNode&, operand_t) override;
-  void visit(ArrayExprNode&, operand_t) override;
-  void visit(IntrinsicExprNode&, operand_t) override;
+  void visit(NodeArrExpr&, operand_t) override;
+  void visit(NodeIntrExpr&, operand_t) override;
 };
 
 /**
@@ -170,11 +170,11 @@ class DecayNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  TypeNodeBase* visit(AutoTypeNode&) override;
-  TypeNodeBase* visit(GenericTypeNode&) override;
-  TypeNodeBase* visit(UnionTypeNode&) override;
-  TypeNodeBase* visit(FunctionTypeNode&) override;
-  TypeNodeBase* visit(ArrayTypeNode&) override;
+  TypeNode* visit(AutoTypeNode&) override;
+  TypeNode* visit(NodeGenType&) override;
+  TypeNode* visit(NodeUnionType&) override;
+  TypeNode* visit(NodeFuncType&) override;
+  TypeNode* visit(NodeArrType&) override;
 };
 
 /**
@@ -185,9 +185,9 @@ class TypeNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  void visit(DeclStmtNode&) override;
-  void visit(AssignStmtNode&) override;
-  void visit(FuncDeclStmtNode&) override;
+  void visit(NodeDeclStmt&) override;
+  void visit(NodeAsgnStmt&) override;
+  void visit(NodeFuncDeclStmt&) override;
 };
 
 /**
@@ -202,10 +202,10 @@ public:
       decay_visitor(ctx),
       type_visitor(ctx) {}
 
-  void visit(DeclStmtNode&) override;
-  void visit(ScopeStmtNode&) override;
-  void visit(FuncDeclStmtNode&) override;
-  void visit(AssignStmtNode&) override;
+  void visit(NodeDeclStmt&) override;
+  void visit(NodeScopeStmt&) override;
+  void visit(NodeFuncDeclStmt&) override;
+  void visit(NodeAsgnStmt&) override;
   void visit(IfStmtNode&) override;
   void visit(ReturnStmtNode&) override;
   void visit(BreakStmtNode&) override;

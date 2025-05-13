@@ -3,13 +3,14 @@
 
 #include "lexer.h"
 
-#define TOKEN(a, b) Token(a, b, line, start_offset, position)
-#define IN_RANGE()  pos < source_size()
+#define IN_RANGE() pos < source_size()
+#define TOKEN(type, lexeme)                                                                        \
+  { type, {line, start_offset, position}, lexeme }
 #define NEXT_CHAR()                                                                                \
-  {                                                                                                \
+  do {                                                                                             \
     offset++;                                                                                      \
     pos++;                                                                                         \
-  }
+  } while (0)
 
 namespace via {
 
@@ -253,7 +254,7 @@ Token Lexer::get_token() {
   // Check if the position is at the end of the unit_ctx.file_source String
   // If so, return an EOF Token meant as a sentinel
   if (pos >= source_size()) {
-    return Token(EOF_, "\0", line, offset, position);
+    return Token(EOF_, {position, line, offset}, "\0");
   }
 
   size_t start_offset = offset; // Record starting offset of each Token
@@ -365,10 +366,10 @@ Token Lexer::get_token() {
   case '#':
     return TOKEN(OP_LEN, "#");
   default:
-    return TOKEN(UNKNOWN, std::string(1, chr));
+    return TOKEN(ILLEGAL, std::string(1, chr));
   }
 
-  return TOKEN(UNKNOWN, "\0");
+  return TOKEN(ILLEGAL, "\0");
 }
 
 void Lexer::tokenize() {

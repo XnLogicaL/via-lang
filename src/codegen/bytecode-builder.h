@@ -147,7 +147,7 @@ StackFunction& get_current_closure(VisitorContext& ctx);
  * @param literal_node The literal node of which the constant value is generated from
  * @return Interpreter value
  */
-Value construct_constant(LitExprNode& constant);
+Value construct_constant(NodeLitExpr& constant);
 
 /**
  * @brief Folds an expression into a constant if possible.
@@ -156,7 +156,7 @@ Value construct_constant(LitExprNode& constant);
  * @param fold_depth The maximum fold depth for symbolic expression
  * @return Literal expression node
  */
-LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* constant, size_t fold_depth = 0);
+NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* constant, size_t fold_depth = 0);
 
 /**
  * @brief Pushes a constant onto the constant table.
@@ -169,11 +169,11 @@ operand_t push_constant(VisitorContext& ctx, Value&& constant);
 /**
  * @brief Resolves the given lvalue and loads the result into the given register.
  * @param ctx Visitor context
- * @param lvalue lvalue expression; SymExprNode, IndexExprNode, etc.
+ * @param lvalue lvalue expression; NodeSymExpr, NodeIndexExpr, etc.
  * @param dst Destination register
  * @return Fail status
  */
-bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst);
+bool resolve_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t dst);
 
 /**
  * @brief Resolves the given rvalue and loads the result into the given register.
@@ -182,7 +182,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst);
  * @param dst Destination register
  * @return Fail status
  */
-bool resolve_rvalue(NodeVisitorBase* visitor, ExprNodeBase* rvalue, operand_t dst);
+bool resolve_rvalue(NodeVisitorBase* visitor, ExprNode* rvalue, operand_t dst);
 
 /**
  * @brief Binds the value in the given register to the given lvalue.
@@ -191,7 +191,7 @@ bool resolve_rvalue(NodeVisitorBase* visitor, ExprNodeBase* rvalue, operand_t ds
  * @param src Register to the get the value to bind
  * @return Fail status
  */
-bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src);
+bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src);
 
 /**
  * @brief Resolves the type of the given expression
@@ -200,7 +200,7 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src);
  * @return Resolved type, current can hold the value of nullptr because the type system is
  * incomplete
  */
-TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr);
+TypeNode* resolve_type(VisitorContext& ctx, ExprNode* expr);
 
 /**
  * @typedef operand_init_t OperandsArrat<operand_t, 3, OPERAND_INVALID>

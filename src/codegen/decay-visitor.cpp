@@ -5,23 +5,23 @@
 
 namespace via {
 
-TypeNodeBase* DecayNodeVisitor::visit(AutoTypeNode& auto_node) {
+TypeNode* DecayNodeVisitor::visit(AutoTypeNode& auto_node) {
   return auto_node.expression->infer_type(ctx.unit_ctx);
 }
 
-TypeNodeBase* DecayNodeVisitor::visit(GenericTypeNode&) {
+TypeNode* DecayNodeVisitor::visit(NodeGenType&) {
   return nullptr;
 }
 
-TypeNodeBase* DecayNodeVisitor::visit(UnionTypeNode&) {
+TypeNode* DecayNodeVisitor::visit(NodeUnionType&) {
   return nullptr;
 }
 
-TypeNodeBase* DecayNodeVisitor::visit(FunctionTypeNode&) {
+TypeNode* DecayNodeVisitor::visit(NodeFuncType&) {
   return nullptr;
 }
 
-TypeNodeBase* DecayNodeVisitor::visit(ArrayTypeNode&) {
+TypeNode* DecayNodeVisitor::visit(NodeArrType&) {
   return nullptr;
 }
 

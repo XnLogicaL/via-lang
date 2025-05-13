@@ -4,30 +4,26 @@
 #ifndef VIA_HAS_HEADER_AST_H
 #define VIA_HAS_HEADER_AST_H
 
-#include "tvalue.h"
-#include "token.h"
-#include "ast-base.h"
-
+#include <lex/lexloc.h>
+#include <lex/token.h>
 #include <utility/color.h>
 #include <utility/format-vector.h>
+#include <interpreter/tvalue.h>
 
-//  =======
-// [ ast.h ]
-//  =======
-//
-// This file declares the derived abstract syntax tree node classes,
-// see `ast-base.h` for base class definitions.
-//
 namespace via {
 
-//  ==================
-// [ Expression Nodes ]
-//  ==================
+struct Node;
 
-#define DECLARE_NODE_METHODS()                                                                     \
-  std::string to_string(uint32_t& depth) override;                                                 \
-  TypeNodeBase* infer_type(TransUnitContext& unit_ctx) override;                                   \
-  void accept(NodeVisitorBase& visitor, operand_t dst) override;
+struct Attribute {
+  size_t argc;
+  const char* ident;
+  const char** args;
+};
+
+struct Parameter {
+  const char* id;
+  struct Node* type;
+};
 
 /**
  * Literal Expression Node
@@ -40,25 +36,9 @@ namespace via {
  * <String>  ::= "\"" <characters> "\""
  * <Bool> ::= "true" | "false"
  */
-struct LitExprNode : public ExprNodeBase {
+struct NodeLitExpr {
   using variant = std::variant<std::monostate, int, float, bool, std::string>;
-
-  Token value_token;
   variant value;
-
-  DECLARE_NODE_METHODS();
-
-  LitExprNode(Token value_token, variant value)
-    : value_token(value_token),
-      value(value) {
-    this->begin = this->value_token.position;
-    this->end = this->value_token.position + value_token.lexeme.length();
-
-    if (value_token.type == TokenType::LIT_STRING) {
-      // Shift end position by 2 to account for quotes
-      this->end += 2;
-    }
-  }
 };
 
 /**
@@ -68,16 +48,8 @@ struct LitExprNode : public ExprNodeBase {
  * <identifier>  ::= [A-Za-z_][A-Za-z0-9_]+
  * <symbol_expr> ::= <identifier>
  */
-struct SymExprNode : public ExprNodeBase {
-  Token identifier;
-
-  DECLARE_NODE_METHODS();
-
-  SymExprNode(Token identifier)
-    : identifier(identifier) {
-    this->begin = this->identifier.position;
-    this->end = this->identifier.position + identifier.lexeme.length();
-  }
+struct NodeSymExpr {
+  const char* symbol;
 };
 
 /**
@@ -87,18 +59,9 @@ struct SymExprNode : public ExprNodeBase {
  * <operator>   ::= "+" | "-" | "*" | "/" | "++" | "--" | "#" | "^" | "%"
  * <unary_expr> ::= <operator> <expression>
  */
-struct UnaryExprNode : public ExprNodeBase {
-  Token op;
-  ExprNodeBase* expression;
-
-  DECLARE_NODE_METHODS();
-
-  UnaryExprNode(Token op, ExprNodeBase* expression)
-    : op(op),
-      expression(expression) {
-    this->begin = this->expression->begin - 1; // Account for '-'
-    this->end = this->expression->end;
-  }
+struct NodeUnExpr {
+  enum TokenType op;
+  struct Node* expr;
 };
 
 /**
@@ -108,17 +71,8 @@ struct UnaryExprNode : public ExprNodeBase {
  *
  * <group_expr> ::= "(" <expression> ")"
  */
-struct GroupExprNode : public ExprNodeBase {
-  ExprNodeBase* expression;
-
-  DECLARE_NODE_METHODS();
-  int precedence() const override;
-
-  GroupExprNode(ExprNodeBase* expression)
-    : expression(expression) {
-    this->begin = this->expression->begin - 1; // Account for '('
-    this->end = this->expression->end + 1;     // Account for ')'
-  }
+struct NodeGroupExpr {
+  struct Node* expr;
 };
 
 /**
@@ -128,29 +82,10 @@ struct GroupExprNode : public ExprNodeBase {
  * <call_expr> ::= <expression> "(" <arg_list>? ")"
  * <arg_list>  ::= <expression> ("," <expression>)*
  */
-struct CallExprNode : public ExprNodeBase {
-  using argument_vector = std::vector<ExprNodeBase*>;
-
-  ExprNodeBase* callee;
-  argument_vector arguments;
-
-  DECLARE_NODE_METHODS();
-
-  CallExprNode(ExprNodeBase* callee, argument_vector arguments)
-    : callee(callee),
-      arguments(arguments) {
-
-    if (!this->arguments.empty()) {
-      ExprNodeBase*& last_arg = this->arguments.back();
-
-      this->begin = this->callee->begin;
-      this->end = last_arg->end + 1; // Account for ')'
-    }
-    else {
-      this->begin = this->callee->begin;
-      this->end = this->callee->end + 2; // Account for '()'
-    }
-  }
+struct NodeCallExpr {
+  size_t argc;
+  struct Node* callee;
+  struct Node** args;
 };
 
 /**
@@ -161,447 +96,203 @@ struct CallExprNode : public ExprNodeBase {
  * <accessor>     ::= "[" <expression> "]" | "." <identifier>
  * <primary_expr> ::= <identifier> | <literal> | "(" <expression> ")"
  */
-struct IndexExprNode : public ExprNodeBase {
-  ExprNodeBase* object;
-  ExprNodeBase* index;
-
-  DECLARE_NODE_METHODS();
-
-  IndexExprNode(ExprNodeBase* object, ExprNodeBase* index)
-    : object(object),
-      index(index) {
-    this->begin = this->object->begin;
-    this->end = this->index->end;
-  }
+struct NodeIndexExpr {
+  struct Node* obj;
+  struct Node* idx;
 };
 
-struct BinExprNode : public ExprNodeBase {
-  Token op;
-  ExprNodeBase* lhs_expression;
-  ExprNodeBase* rhs_expression;
-
-  DECLARE_NODE_METHODS();
-
-  BinExprNode(Token op, ExprNodeBase* lhs, ExprNodeBase* rhs)
-    : op(op),
-      lhs_expression(lhs),
-      rhs_expression(rhs) {
-    this->begin = this->lhs_expression->begin;
-    this->end = this->rhs_expression->end;
-  }
+struct NodeBinExpr {
+  enum TokenType op;
+  struct Node* lhs;
+  struct Node* rhs;
 };
 
-struct CastExprNode : public ExprNodeBase {
-  ExprNodeBase* expression;
-  TypeNodeBase* type;
-
-  DECLARE_NODE_METHODS();
-
-  CastExprNode(ExprNodeBase* expression, TypeNodeBase* type)
-    : expression(expression),
-      type(type) {
-    this->begin = this->expression->begin;
-    this->end = this->expression->end;
-  }
+struct NodeCastExpr {
+  struct Node* expr;
+  struct Node* ty;
 };
 
-struct StepExprNode : public ExprNodeBase {
-  bool is_increment;
-  ExprNodeBase* target;
-
-  DECLARE_NODE_METHODS();
-
-  StepExprNode(ExprNodeBase* target, bool is_increment)
-    : is_increment(is_increment),
-      target(target) {
-    this->begin = this->target->begin;
-    this->end = this->target->end + 2;
-  }
+struct StepExprNode {
+  enum TokenType op;
+  struct Node* expr;
 };
 
-struct ArrayExprNode : public ExprNodeBase {
-  using values_t = std::vector<ExprNodeBase*>;
-  values_t values;
-
-  DECLARE_NODE_METHODS();
-
-  ArrayExprNode(size_t begin, size_t end, values_t values)
-    : values(values) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct NodeArrExpr {
+  size_t valc;
+  struct Node** vals;
 };
 
-struct IntrinsicExprNode : public ExprNodeBase {
-  Token intrinsic;
-  std::vector<ExprNodeBase*> exprs;
-
-  DECLARE_NODE_METHODS();
-
-  IntrinsicExprNode(Token intrinsic, std::vector<ExprNodeBase*> exprs)
-    : intrinsic(intrinsic),
-      exprs(exprs) {
-    this->begin = intrinsic.position;
-    this->end = exprs.empty() ? intrinsic.position + intrinsic.lexeme.length() : exprs.back()->end;
-  }
+struct NodeIntrExpr {
+  size_t exprc;
+  const char* id;
+  struct Node** exprs;
 };
 
-// =========================================================================================
-// Type Nodes
-//
-
-#undef DECLARE_NODE_METHODS
-#define DECLARE_DECAY() void decay(NodeVisitorBase&, TypeNodeBase*&) override;
-#define DECLARE_NODE_METHODS()                                                                     \
-  std::string to_string(uint32_t&) override;                                                       \
-  std::string to_output_string() override;
-
-struct AutoTypeNode : public TypeNodeBase {
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  AutoTypeNode(size_t begin, size_t end) {
-    this->begin = begin;
-    this->end = end;
-  }
-};
-
-struct PrimTypeNode : public TypeNodeBase {
-  Token identifier;
+struct NodePrimType {
+  const char* id;
   Value::Tag type;
-
-  DECLARE_NODE_METHODS();
-
-  PrimTypeNode(Token id, Value::Tag valty)
-    : identifier(id),
-      type(valty) {
-    this->begin = id.position;
-    this->end = id.position + id.lexeme.length();
-  }
 };
 
-struct GenericTypeNode : public TypeNodeBase {
-  using generics_t = std::vector<TypeNodeBase*>;
-
-  Token identifier;
-  generics_t generics;
-  StmtModifiers modifs;
-
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  GenericTypeNode(Token id, generics_t gens, StmtModifiers modifs)
-    : identifier(id),
-      generics(gens),
-      modifs(modifs) {
-    this->begin = id.position;
-    this->end = id.position + id.lexeme.length();
-  }
+struct NodeGenType {
+  size_t genc;
+  const char* id;
+  struct Node** generics;
 };
 
-struct NullableTypeNode : public TypeNodeBase {
-  TypeNodeBase* type;
-
-  DECLARE_NODE_METHODS();
-
-  NullableTypeNode(TypeNodeBase* type)
-    : type(type) {
-    this->begin = type->begin;
-    this->end = type->end + 1;
-  }
+struct NodeOptType {
+  struct Node* type;
 };
 
-struct UnionTypeNode : public TypeNodeBase {
-  TypeNodeBase* lhs;
-  TypeNodeBase* rhs;
-
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  UnionTypeNode(TypeNodeBase* lhs, TypeNodeBase* rhs)
-    : lhs(lhs),
-      rhs(rhs) {
-    this->begin = this->lhs->begin;
-    this->end = this->rhs->end;
-  }
+struct NodeUnionType {
+  struct Node* lhs;
+  struct Node* rhs;
 };
 
-struct ParamStmtNode : public StmtNodeBase {
-  Token identifier;
-  StmtModifiers modifs;
-  TypeNodeBase* type;
-
-  std::string to_string(uint32_t& depth) override;
-  void accept(NodeVisitorBase& visitor) override;
-
-  ParamStmtNode(Token identifier, StmtModifiers modifs, TypeNodeBase* type)
-    : identifier(identifier),
-      modifs(modifs),
-      type(type) {}
+struct NodeFuncType {
+  size_t paramc;
+  struct Node* rets;
+  struct Node** params;
 };
 
-struct FunctionTypeNode : public TypeNodeBase {
-  using parameter_vector = std::vector<ParamStmtNode>;
-
-  parameter_vector parameters;
-  TypeNodeBase* returns;
-
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  FunctionTypeNode(parameter_vector args, TypeNodeBase* rets)
-    : parameters(std::move(args)),
-      returns(rets) {
-    this->begin = this->returns->begin;
-    this->end = this->returns->end;
-  }
+struct NodeArrType {
+  struct Node* type;
 };
 
-struct ArrayTypeNode : public TypeNodeBase {
-  TypeNodeBase* type;
-
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  ArrayTypeNode(TypeNodeBase* type)
-    : type(type) {
-    this->begin = type->begin - 1;
-    this->end = type->end + 1;
-  }
+struct NodeDictType {
+  struct Node* type;
 };
 
-struct DictTypeNode : public TypeNodeBase {
-  TypeNodeBase* type;
+struct NodeObjType {};
 
-  DECLARE_NODE_METHODS();
-  DECLARE_DECAY();
-
-  DictTypeNode(TypeNodeBase* type)
-    : type(type) {
-    this->begin = type->begin - 1;
-    this->end = type->end + 1;
-  }
+struct NodeDeclStmt {
+  bool glb;
+  struct Token id;
+  struct Node* rval;
+  struct Node* type;
 };
 
-struct ObjectTypeNode : public TypeNodeBase {};
-
-// =========================================================================================
-// Statement Nodes
-//
-
-#undef DECLARE_NODE_METHODS
-#undef DECLARE_DECAY
-#define DECLARE_NODE_METHODS()                                                                     \
-  std::string to_string(uint32_t&) override;                                                       \
-  void accept(NodeVisitorBase&) override;
-
-struct DeclStmtNode : public StmtNodeBase {
-  bool is_global;
-  Token identifier;
-  StmtModifiers modifs;
-  ExprNodeBase* rvalue;
-  TypeNodeBase* type;
-
-  DECLARE_NODE_METHODS();
-
-  DeclStmtNode(
-    size_t begin,
-    size_t end,
-    bool is_global,
-    StmtModifiers modifiers,
-    Token identifier,
-    ExprNodeBase* rvalue,
-    TypeNodeBase* type
-  )
-    : is_global(is_global),
-      identifier(identifier),
-      modifs(modifiers),
-      rvalue(rvalue),
-      type(type) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct NodeScopeStmt {
+  size_t stmtc;
+  struct Node** stmts;
 };
 
-struct ScopeStmtNode : public StmtNodeBase {
-  using Statements = std::vector<StmtNodeBase*>;
-  Statements statements;
-
-  DECLARE_NODE_METHODS();
-
-  ScopeStmtNode(size_t begin, size_t end, Statements statements)
-    : statements(statements) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct NodeFuncDeclStmt {
+  bool glb;
+  size_t paramc;
+  const char* id;
+  struct Node* body;
+  struct Node* rets;
+  struct Parameter* params;
 };
 
-struct FuncDeclStmtNode : public StmtNodeBase {
-  using parameters_t = std::vector<ParamStmtNode>;
-
-  bool is_global;
-  StmtModifiers modifs;
-  Token identifier;
-  StmtNodeBase* body;
-  TypeNodeBase* returns;
-  parameters_t parameters;
-
-  DECLARE_NODE_METHODS();
-
-  FuncDeclStmtNode(
-    size_t begin,
-    size_t end,
-    bool is_global,
-    StmtModifiers modifs,
-    Token identifier,
-    StmtNodeBase* body,
-    TypeNodeBase* returns,
-    parameters_t parameters
-  )
-    : is_global(is_global),
-      modifs(modifs),
-      identifier(identifier),
-      body(body),
-      returns(returns),
-      parameters(std::move(parameters)) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct NodeAsgnStmt {
+  enum TokenType aug;
+  struct Node* lval;
+  struct Node* rval;
 };
 
-struct AssignStmtNode : public StmtNodeBase {
-  Token augmentation_operator;
-  ExprNodeBase* lvalue;
-  ExprNodeBase* rvalue;
+struct IfStmtNode {
+  struct Elif {
+    size_t len;
+    struct LexLocation loc;
+    struct Node* cond;
+    struct Node* scp;
+  };
 
-  DECLARE_NODE_METHODS();
-
-  AssignStmtNode(ExprNodeBase* lvalue, Token augmentation_operator, ExprNodeBase* rvalue)
-    : augmentation_operator(augmentation_operator),
-      lvalue(lvalue),
-      rvalue(rvalue) {
-    this->begin = lvalue->begin;
-    this->end = rvalue->end;
-  }
+  size_t elifc;
+  struct Node* cond;
+  struct Node* scp;
+  struct Node* els;
+  struct Elif* elifs;
 };
 
-struct ElseIfNode {
-  size_t begin;
-  size_t end;
-
-  ExprNodeBase* condition;
-  StmtNodeBase* scope;
-
-  ElseIfNode(size_t begin, size_t end, ExprNodeBase* condition, StmtNodeBase* scope)
-    : condition(condition),
-      scope(scope) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct ReturnStmtNode {
+  struct Node* expr;
 };
 
-struct IfStmtNode : public StmtNodeBase {
-  using elseif_nodes_t = std::vector<ElseIfNode*>;
-
-  ExprNodeBase* condition;
-  StmtNodeBase* scope;
-  StmtNodeBase* else_node;
-  elseif_nodes_t elseif_nodes;
-
-  DECLARE_NODE_METHODS();
-
-  IfStmtNode(
-    size_t begin,
-    size_t end,
-    ExprNodeBase* condition,
-    StmtNodeBase* scope,
-    StmtNodeBase* else_node,
-    elseif_nodes_t elseif_nodes
-  )
-    : condition(condition),
-      scope(scope),
-      else_node(else_node),
-      elseif_nodes(std::move(elseif_nodes)) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct WhileStmtNode {
+  struct Node* cond;
+  struct Node* body;
 };
 
-struct ReturnStmtNode : public StmtNodeBase {
-  ExprNodeBase* expression;
-
-  DECLARE_NODE_METHODS();
-
-  ReturnStmtNode(size_t begin, size_t end, ExprNodeBase* expression)
-    : expression(expression) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct DeferStmtNode {
+  struct Node* stmt;
 };
 
-struct BreakStmtNode : public StmtNodeBase {
-  DECLARE_NODE_METHODS();
-
-  BreakStmtNode(size_t begin, size_t end) {
-    this->begin = begin;
-    this->end = end;
-  }
+struct ExprStmtNode {
+  struct Node* expression;
 };
 
-struct ContinueStmtNode : public StmtNodeBase {
-  DECLARE_NODE_METHODS();
+struct Node {
+  enum class Type {
+    EXPR_Lit,
+    EXPR_Sym,
+    EXPR_Un,
+    EXPR_Bin,
+    EXPR_Call,
+    EXPR_Group,
+    EXPR_Cast,
+    EXPR_Idx,
+    EXPR_Step,
+    EXPR_Arr,
+    EXPR_Intr,
 
-  ContinueStmtNode(size_t begin, size_t end) {
-    this->begin = begin;
-    this->end = end;
-  }
-};
+    TYPE_Auto,
+    TYPE_Prim,
+    TYPE_Gen,
+    TYPE_Uni,
+    TYPE_Opt,
+    TYPE_Fun,
+    TYPE_Arr,
+    TYPE_Dict,
+    TYPE_Obj,
 
-struct WhileStmtNode : public StmtNodeBase {
-  ExprNodeBase* condition;
-  StmtNodeBase* body;
+    STMT_Decl,
+    STMT_Scope,
+    STMT_Func,
+    STMT_Asgn,
+    STMT_If,
+    STMT_Ret,
+    STMT_Brk,
+    STMT_Cont,
+    STMT_Def,
+    STMT_Expr,
+  } type;
 
-  DECLARE_NODE_METHODS();
+  union Un {
+    NodeLitExpr e_lit;
+    NodeSymExpr e_sym;
+    NodeUnExpr e_un;
+    NodeBinExpr e_bin;
+    NodeCallExpr e_call;
+    NodeGroupExpr e_grp;
+    NodeCastExpr e_cast;
+    NodeIndexExpr e_idx;
+    NodeFuncDeclStmt e_step;
+    NodeArrExpr e_arr;
+    NodeIntrExpr e_intr;
 
-  WhileStmtNode(size_t begin, size_t end, ExprNodeBase* condition, StmtNodeBase* body)
-    : condition(condition),
-      body(body) {
-    this->begin = begin;
-    this->end = end;
-  }
-};
+    NodePrimType t_prim;
+    NodeGenType t_gen;
+    NodeUnionType t_un;
+    NodeOptType t_opt;
+    NodeFuncType t_fun;
+    NodeArrType t_arr;
+    NodeDictType t_dict;
+    NodeObjType t_obj;
 
-struct DeferStmtNode : public StmtNodeBase {
-  StmtNodeBase* stmt;
+    NodeDeclStmt s_decl;
+    NodeScopeStmt s_scope;
+    NodeFuncDeclStmt s_func;
+    NodeAsgnStmt s_asgn;
+    IfStmtNode s_if;
+    ReturnStmtNode s_ret;
+    DeferStmtNode s_def;
+    ExprStmtNode s_expr;
+  } u;
 
-  DECLARE_NODE_METHODS();
-
-  DeferStmtNode(size_t begin, size_t end, StmtNodeBase* stmt)
-    : stmt(stmt) {
-    this->begin = begin;
-    this->end = end;
-  }
-};
-
-struct ExprStmtNode : public StmtNodeBase {
-  ExprNodeBase* expression;
-
-  DECLARE_NODE_METHODS();
-
-  ExprStmtNode(ExprNodeBase* expression)
-    : expression(expression) {
-    this->begin = expression->begin;
-    this->end = expression->end;
-  }
-};
-
-class SyntaxTree {
-public:
-  inline SyntaxTree()
-    : allocator(64 * 1024 * 1024) {}
-
-  ArenaAllocator allocator;
-  std::vector<StmtNodeBase*> statements;
+  size_t len;
+  LexLocation loc;
 };
 
 } // namespace via

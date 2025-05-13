@@ -9,6 +9,7 @@
 #define VIA_HAS_HEADER_TOKEN_H
 
 #include "common.h"
+#include "lexloc.h"
 
 #include <arena.h>
 
@@ -121,8 +122,8 @@ enum class TokenType {
   EXCLAMATION,  // !
   QUESTION,     // ?
 
-  EOF_,   // End of file
-  UNKNOWN // Unknown Token
+  EOF_,    // End of file
+  ILLEGAL, // Unknown Token
 };
 
 /**
@@ -130,17 +131,9 @@ enum class TokenType {
  * @brief Token structure that contains a lexeme and location.
  */
 struct Token {
-  TokenType type = TokenType::UNKNOWN;       ///< Type of the token's lexeme
-  std::string lexeme;                        ///< The token's lexeme
-  size_t line = 0, offset = 0, position = 0; ///< Location of the token
-
-  explicit Token() = default;
-  explicit Token(TokenType type, std::string lexeme, size_t line, size_t offset, size_t position)
-    : type(type),
-      lexeme(lexeme),
-      line(line),
-      offset(offset),
-      position(position) {}
+  TokenType type;     ///< Type of the token's lexeme
+  LexLocation loc;    ///< Location of the token
+  std::string lexeme; ///< The token's lexeme
 
   /**
    * @brief Returns the token represented as an std::string.

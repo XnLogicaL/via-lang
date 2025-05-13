@@ -12,9 +12,9 @@ std::string Token::to_string() const {
     "Token(type: {}, value: '{}', line: {}, offset: {}, position: {})",
     magic_enum::enum_name(type),
     lexeme,
-    line,
-    offset,
-    position
+    loc.line,
+    loc.offset,
+    loc.position
   );
 }
 

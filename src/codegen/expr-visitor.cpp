@@ -22,13 +22,13 @@
 // Visitor functions compile each type of expression node by first converting it into
 // corresponding Opcode(s), and then determining the operands via the built-in node parameters.
 //
-// - LitExprNode compilation:
+// - NodeLitExpr compilation:
 //  This node only emits `LOAD` opcodes, and is considered a constant expression.
 //  It first checks for primitive data types within the node, and emits corresponding bytecode based
 //  on that. If it finds complex data types like strings, tables, etc., it loads them into the
 //  constant table and emits a `LOADK` instruction with the corresponding constant id.
 //
-// - SymExprNode compilation:
+// - NodeSymExpr compilation:
 //  This node represents a "symbol" that is either a local, global, argument or UpValue.
 //  It first checks the stack for the symbol, if found, emits a `STKGET` instruction with the
 //  stack id of the symbol. After that, it checks for upvalues, if found emits `GETUPV`. Next,
@@ -38,18 +38,18 @@
 //  `unit_ctx:::globals` and if found emits GGET. If all of these queries fail, throws
 //  a "Use of undeclared variable" compilation error.
 //
-// - UnaryExprNode compilation:
+// - NodeUnExpr compilation:
 //
 //
-// - GroupExprNode compilation:
+// - NodeGroupExpr compilation:
 //  Compiles the inner expression into dst.
 //
-// - CallExprNode compilation:
+// - NodeCallExpr compilation:
 //  This node represents a function call expression, which first loads the arguments onto the stack
 //  (LIFO), loads the callee object, and calls it. And finally, emits a POP instruction to retrieve
 //  the return value.
 //
-// - IndexExprNode compilation:
+// - NodeIndexExpr compilation:
 //  This node represents a member access, which could follow either of these patterns:
 //    -> Direct table member access: table.index
 //      This pattern compiles into a TBLGET instruction that uses the hashed version of the index.
@@ -75,7 +75,7 @@ using enum Value::Tag;
 using namespace compiler_util;
 using OpCodeId = std::underlying_type_t<Opcode>;
 
-void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
+void ExprNodeVisitor::visit(NodeLitExpr& lit_expr, operand_t dst) {
   if (int* integer_value = std::get_if<int>(&lit_expr.value)) {
     uint32_t final_value = *integer_value;
     auto operands = ubit_u32to2u16(final_value);
@@ -96,7 +96,7 @@ void ExprNodeVisitor::visit(LitExprNode& lit_expr, operand_t dst) {
   }
 }
 
-void ExprNodeVisitor::visit(SymExprNode& sym_expr, operand_t dst) {
+void ExprNodeVisitor::visit(NodeSymExpr& sym_expr, operand_t dst) {
   Token& id = sym_expr.identifier;
 
   if (resolve_lvalue(ctx, &sym_expr, dst)) {
@@ -107,8 +107,8 @@ void ExprNodeVisitor::visit(SymExprNode& sym_expr, operand_t dst) {
   }
 }
 
-void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
-  TypeNodeBase* type = resolve_type(ctx, unary_node.expression);
+void ExprNodeVisitor::visit(NodeUnExpr& unary_node, operand_t dst) {
+  TypeNode* type = resolve_type(ctx, unary_node.expression);
   resolve_rvalue(this, unary_node.expression, dst);
 
   if (unary_node.op.type == TokenType::OP_SUB) {
@@ -122,7 +122,7 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
     }
   }
   else if (unary_node.op.type == TokenType::OP_LEN) {
-    if (dynamic_cast<ArrayTypeNode*>(type) != nullptr) {
+    if (dynamic_cast<NodeArrType*>(type) != nullptr) {
       register_t reg = alloc_register(ctx);
       bytecode_emit(ctx, MOV, {reg, dst});
       bytecode_emit(ctx, LENARR, {dst, reg});
@@ -155,17 +155,17 @@ void ExprNodeVisitor::visit(UnaryExprNode& unary_node, operand_t dst) {
   }
 }
 
-void ExprNodeVisitor::visit(GroupExprNode& group_node, operand_t dst) {
+void ExprNodeVisitor::visit(NodeGroupExpr& group_node, operand_t dst) {
   resolve_rvalue(this, group_node.expression, dst);
 }
 
-void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
-  ExprNodeBase* callee = call_node.callee;
-  TypeNodeBase* callee_type = resolve_type(ctx, callee);
+void ExprNodeVisitor::visit(NodeCallExpr& call_node, operand_t dst) {
+  ExprNode* callee = call_node.callee;
+  TypeNode* callee_type = resolve_type(ctx, callee);
   operand_t argc = call_node.arguments.size();
   operand_t callee_reg = alloc_register(ctx);
 
-  if (FunctionTypeNode* fn_ty = dynamic_cast<FunctionTypeNode*>(callee_type)) {
+  if (NodeFuncType* fn_ty = dynamic_cast<NodeFuncType*>(callee_type)) {
     size_t expected_argc = fn_ty->parameters.size();
     if (argc != static_cast<operand_t>(fn_ty->parameters.size())) {
       // Error: "function-call-argc-mismatch"
@@ -185,7 +185,7 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
   resolve_rvalue(this, callee, callee_reg);
 
   ctx.args = alloc_register(ctx);
-  for (size_t idx = 0; ExprNodeBase * argument : call_node.arguments) {
+  for (size_t idx = 0; ExprNode * argument : call_node.arguments) {
     resolve_rvalue(this, argument, ctx.args + (idx++));
   }
 
@@ -194,15 +194,15 @@ void ExprNodeVisitor::visit(CallExprNode& call_node, operand_t dst) {
   free_register(ctx, ctx.args);
 }
 
-void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
-  TypeNodeBase* object_type = resolve_type(ctx, index_node.object);
-  TypeNodeBase* index_type = resolve_type(ctx, index_node.index);
+void ExprNodeVisitor::visit(NodeIndexExpr& index_node, operand_t dst) {
+  TypeNode* object_type = resolve_type(ctx, index_node.object);
+  TypeNode* index_type = resolve_type(ctx, index_node.index);
   operand_t obj_reg = alloc_register(ctx);
 
   resolve_rvalue(this, index_node.object, obj_reg);
 
-  if (dynamic_cast<ArrayTypeNode*>(object_type) != nullptr) {
-    if (PrimTypeNode* primitive = dynamic_cast<PrimTypeNode*>(index_type)) {
+  if (dynamic_cast<NodeArrType*>(object_type) != nullptr) {
+    if (NodePrimType* primitive = dynamic_cast<NodePrimType*>(index_type)) {
       if (primitive->type == Int) {
         register_t reg = alloc_register(ctx);
         resolve_rvalue(this, index_node.index, reg);
@@ -228,7 +228,7 @@ void ExprNodeVisitor::visit(IndexExprNode& index_node, operand_t dst) {
 }
 
 // TODO: Fix bug where constants are folded even when optimization level is O0
-void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
+void ExprNodeVisitor::visit(NodeBinExpr& binary_node, operand_t dst) {
   using enum TokenType;
 
   static const std::unordered_map<TokenType, Opcode> operator_map = {
@@ -248,8 +248,8 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
     {KW_OR, Opcode::OR},
   };
 
-  ExprNodeBase* lhs = binary_node.lhs_expression;
-  ExprNodeBase* rhs = binary_node.rhs_expression;
+  ExprNode* lhs = binary_node.lhs_expression;
+  ExprNode* rhs = binary_node.rhs_expression;
 
   auto op_it = operator_map.find(binary_node.op.type);
   if (op_it == operator_map.end()) {
@@ -261,8 +261,8 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   }
 
   // Infer types
-  TypeNodeBase* left_type = resolve_type(ctx, lhs);
-  TypeNodeBase* right_type = resolve_type(ctx, rhs);
+  TypeNode* left_type = resolve_type(ctx, lhs);
+  TypeNode* right_type = resolve_type(ctx, rhs);
 
   if (!is_compatible(left_type, right_type)) {
     // Error: "bin-op-incompatible-types"
@@ -293,7 +293,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
       goto non_constexpr;
     }
 
-    LitExprNode folded_constant = fold_constant(ctx, &binary_node);
+    NodeLitExpr folded_constant = fold_constant(ctx, &binary_node);
     resolve_rvalue(this, &folded_constant, dst);
   }
   else if (is_right_constexpr && !is_bool_or_relational) {
@@ -301,7 +301,7 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
       goto non_constexpr;
     }
 
-    LitExprNode literal = fold_constant(ctx, rhs);
+    NodeLitExpr literal = fold_constant(ctx, rhs);
 
     // Special handling for DIV: check for division by zero.
     if (base_opcode == DIV) {
@@ -386,8 +386,8 @@ void ExprNodeVisitor::visit(BinExprNode& binary_node, operand_t dst) {
   }
 }
 
-void ExprNodeVisitor::visit(CastExprNode& type_cast, operand_t dst) {
-  TypeNodeBase* left_type = resolve_type(ctx, type_cast.expression);
+void ExprNodeVisitor::visit(NodeCastExpr& type_cast, operand_t dst) {
+  TypeNode* left_type = resolve_type(ctx, type_cast.expression);
 
   if (!is_castable(left_type, type_cast.type)) {
     // Error: "ill-explicit-cast"
@@ -403,7 +403,7 @@ void ExprNodeVisitor::visit(CastExprNode& type_cast, operand_t dst) {
   operand_t temp = alloc_register(ctx);
   resolve_rvalue(this, type_cast.expression, temp);
 
-  if (PrimTypeNode* primitive = dynamic_cast<PrimTypeNode*>(type_cast.type)) {
+  if (NodePrimType* primitive = dynamic_cast<NodePrimType*>(type_cast.type)) {
     if (primitive->type == Int)
       bytecode_emit(ctx, ICAST, {dst, temp});
     else if (primitive->type == Float)
@@ -427,7 +427,7 @@ void ExprNodeVisitor::visit(StepExprNode& step_expr, operand_t dst) {
   free_register(ctx, temp);
 }
 
-void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
+void ExprNodeVisitor::visit(NodeArrExpr& array_expr, operand_t dst) {
   if (array_expr.values.empty()) {
     bytecode_emit(ctx, LOADARR, {dst});
     return;
@@ -437,8 +437,8 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
     struct Array* arr = new struct Array();
     struct Value val = Value(arr);
 
-    for (size_t idx = 0; ExprNodeBase * kexpr : array_expr.values) {
-      LitExprNode literal = fold_constant(ctx, kexpr);
+    for (size_t idx = 0; ExprNode * kexpr : array_expr.values) {
+      NodeLitExpr literal = fold_constant(ctx, kexpr);
       Value kval = construct_constant(literal);
       impl::__array_set(arr, idx++, std::move(kval));
     }
@@ -452,7 +452,7 @@ void ExprNodeVisitor::visit(ArrayExprNode& array_expr, operand_t dst) {
   }
 }
 
-void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
+void ExprNodeVisitor::visit(NodeIntrExpr& intrinsic_expr, operand_t dst) {
   static const std::unordered_map<TokenType, std::string> intrinsic_functions = {
     {TokenType::KW_PRINT, "__print"},
     {TokenType::KW_ERROR, "__error"},
@@ -469,7 +469,7 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       return;
     }
 
-    LitExprNode literal(Token(), it->second);
+    NodeLitExpr literal(Token(), it->second);
     Value constant = construct_constant(literal);
     operand_t constant_id = push_constant(ctx, std::move(constant));
     operand_t fn_reg = alloc_register(ctx);
@@ -491,9 +491,9 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       return;
     }
 
-    ExprNodeBase* target = intrinsic_expr.exprs.front();
-    if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(target)) {
-      LitExprNode literal_expr = LitExprNode(Token(), sym_expr->identifier.lexeme);
+    ExprNode* target = intrinsic_expr.exprs.front();
+    if (NodeSymExpr* sym_expr = dynamic_cast<NodeSymExpr*>(target)) {
+      NodeLitExpr literal_expr = NodeLitExpr(Token(), sym_expr->identifier.lexeme);
 
       Value constant = construct_constant(literal_expr);
       operand_t constant_id = push_constant(ctx, std::move(constant));
@@ -513,20 +513,20 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       return;
     }
 
-    ExprNodeBase* target = intrinsic_expr.exprs.front();
-    TypeNodeBase* infered_type = resolve_type(ctx, target);
-    LitExprNode literal_expr(Token(), {});
+    ExprNode* target = intrinsic_expr.exprs.front();
+    TypeNode* infered_type = resolve_type(ctx, target);
+    NodeLitExpr literal_expr(Token(), {});
 
-    if (PrimTypeNode* prim_type = dynamic_cast<PrimTypeNode*>(infered_type)) {
+    if (NodePrimType* prim_type = dynamic_cast<NodePrimType*>(infered_type)) {
       std::string type_name = std::string(magic_enum::enum_name(prim_type->type));
       std::transform(type_name.begin(), type_name.end(), type_name.begin(), [](unsigned char chr) {
         return std::tolower(chr);
       });
 
-      literal_expr = LitExprNode(Token(), type_name);
+      literal_expr = NodeLitExpr(Token(), type_name);
     }
-    else if (dynamic_cast<FunctionTypeNode*>(infered_type) != nullptr)
-      literal_expr = LitExprNode(Token(), "function");
+    else if (dynamic_cast<NodeFuncType*>(infered_type) != nullptr)
+      literal_expr = NodeLitExpr(Token(), "function");
     else {
       compiler_error(ctx, "TODO: Implement rest of intrinsic: type()");
       compiler_output_end(ctx);
@@ -545,7 +545,7 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       return;
     }
 
-    ExprNodeBase *left = intrinsic_expr.exprs[0], *right = intrinsic_expr.exprs[1];
+    ExprNode *left = intrinsic_expr.exprs[0], *right = intrinsic_expr.exprs[1];
     register_t lreg = alloc_register(ctx), rreg = alloc_register(ctx);
 
     left->accept(*this, lreg);
@@ -562,8 +562,8 @@ void ExprNodeVisitor::visit(IntrinsicExprNode& intrinsic_expr, operand_t dst) {
       return;
     }
 
-    ExprNodeBase* target = intrinsic_expr.exprs[0];
-    if (CallExprNode* call_expr = dynamic_cast<CallExprNode*>(target)) {
+    ExprNode* target = intrinsic_expr.exprs[0];
+    if (NodeCallExpr* call_expr = dynamic_cast<NodeCallExpr*>(target)) {
       call_expr->accept(*this, dst);
 
       // Modify CALL instruction to PCALL

@@ -72,10 +72,10 @@ const global_vector& GlobalHolder::get() {
 
 void GlobalHolder::declare_builtins() {
 #define TYPE(type, ...)           allocator.emplace<type>(__VA_ARGS__)
-#define DEF_TYPE(name, type, ...) TypeNodeBase* name = TYPE(type, __VA_ARGS__)
+#define DEF_TYPE(name, type, ...) TypeNode* name = TYPE(type, __VA_ARGS__)
 #define DEF_ARGS(name)            std::vector<ParamStmtNode> name;
 #define DEF_FUNC(name, args, ret)                                                                  \
-  CompilerGlobal name{__id_dummy__, #name, TYPE(FunctionTypeNode, args, ret)};
+  CompilerGlobal name{__id_dummy__, #name, TYPE(NodeFuncType, args, ret)};
 #define ADD_ARG(args, name, type)                                                                  \
   args.push_back(ParamStmtNode{                                                                    \
     Token(TokenType::IDENTIFIER, #name, 0, 0, 0), StmtModifiers{}, std::move(type)});
@@ -84,8 +84,8 @@ void GlobalHolder::declare_builtins() {
   using enum Value::Tag;
 
   static const Token __id_dummy__ = Token(TokenType::IDENTIFIER, "<identifier>", 0, 0, 0);
-  DEF_TYPE(nil_type, PrimTypeNode, __id_dummy__, Nil);
-  DEF_TYPE(str_type, PrimTypeNode, __id_dummy__, String);
+  DEF_TYPE(nil_type, NodePrimType, __id_dummy__, Nil);
+  DEF_TYPE(str_type, NodePrimType, __id_dummy__, String);
 
   // print
   DEF_ARGS(print_args);

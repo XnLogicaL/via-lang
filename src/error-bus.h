@@ -8,6 +8,7 @@
 #include "context.h"
 
 #include <lex/token.h>
+#include <lex/lexloc.h>
 #include <utility/color.h>
 
 //  =============
@@ -22,51 +23,17 @@ enum class CErrorLevel : uint8_t {
   ERROR_,
 };
 
-// Error location info. Holds line, column and absolute offset information.
-struct CErrorLocation {
-  const size_t line = 0;
-  const size_t column = 0;
-  const size_t begin = 0;
-  const size_t end = 0;
-
-  constexpr CErrorLocation() = default;
-  constexpr CErrorLocation(size_t l, size_t c, size_t b, size_t e)
-    : line(l),
-      column(c),
-      begin(b),
-      end(e) {}
-
-  constexpr CErrorLocation(const Token& tok)
-    : line(tok.line),
-      column(tok.offset),
-      begin(tok.position),
-      end(tok.position + tok.lexeme.length()) {}
-};
-
 /**
  * Error object. Includes error level, error location, error message, a reference to the appropriate
  * translation unit context, and a flag that decides whether if the error bus should print inline
  * information.
  */
-class CError final {
-public:
-  // Returns the error as a String.
-  std::string to_string() const;
-
-  CError(
-    bool flt, const std::string& msg, TransUnitContext& ctx, CErrorLevel lvl, CErrorLocation pos
-  )
-    : is_flat(flt),
-      message(msg),
-      level(lvl),
-      position(pos),
-      ctx(ctx) {}
-
-public:
+struct CError {
+  size_t len;
   bool is_flat;
   std::string message;
   CErrorLevel level;
-  CErrorLocation position;
+  LexLocation loc;
   TransUnitContext& ctx;
 };
 

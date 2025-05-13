@@ -7,7 +7,6 @@
 #include "common.h"
 #include "error-bus.h"
 #include "ast.h"
-#include "ast-base.h"
 
 namespace via {
 
@@ -37,7 +36,7 @@ private:
   TransUnitContext& unit_ctx;
   // Attribute buffer, holds attributes of statements and gets cleared every time a new statement is
   // parsed.
-  std::vector<StmtAttribute> attrib_buffer;
+  std::vector<Attribute> attrib_buffer;
 
 private:
   // Returns the current Token in the Token buffer.
@@ -48,28 +47,28 @@ private:
   result<Token> expect_consume(TokenType type, const std::string& what);
 
   // Meta parsing.
-  result<StmtModifiers> parse_modifiers();
-  result<StmtAttribute> parse_attribute();
+  result<int> parse_modifiers();
+  result<Attribute> parse_attribute();
 
   // Type parsing.
-  result<TypeNodeBase*> parse_generic();
-  result<TypeNodeBase*> parse_type_primary();
-  result<TypeNodeBase*> parse_type_postfix();
-  result<TypeNodeBase*> parse_type();
+  result<TypeNode*> parse_generic();
+  result<TypeNode*> parse_type_primary();
+  result<TypeNode*> parse_type_postfix();
+  result<TypeNode*> parse_type();
 
   // Expression parsing.
-  result<ExprNodeBase*> parse_primary();
-  result<ExprNodeBase*> parse_postfix(ExprNodeBase*);
-  result<ExprNodeBase*> parse_binary(int);
-  result<ExprNodeBase*> parse_expr();
+  result<ExprNode*> parse_primary();
+  result<ExprNode*> parse_postfix(ExprNode*);
+  result<ExprNode*> parse_binary(int);
+  result<ExprNode*> parse_expr();
 
   // Statement parsing.
-  result<StmtNodeBase*> parse_declaration();
-  result<StmtNodeBase*> parse_scope();
-  result<StmtNodeBase*> parse_if();
-  result<StmtNodeBase*> parse_return();
-  result<StmtNodeBase*> parse_while();
-  result<StmtNodeBase*> parse_stmt();
+  result<StmtNode*> parse_declaration();
+  result<StmtNode*> parse_scope();
+  result<StmtNode*> parse_if();
+  result<StmtNode*> parse_return();
+  result<StmtNode*> parse_while();
+  result<StmtNode*> parse_stmt();
 };
 
 } // namespace via

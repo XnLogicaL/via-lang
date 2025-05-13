@@ -66,42 +66,42 @@ struct DataType<std::string> {
  * @param depth Max depth for variables
  * @return Is constant
  */
-bool is_constant_expression(TransUnitContext& ctx, const ExprNodeBase* expr, size_t depth = 0);
+bool is_constant_expression(TransUnitContext& ctx, const ExprNode* expr, size_t depth = 0);
 
 /**
  * @brief Returns whether if the given type is or can decay into `nil`
  * @param type Target type
  * @return Is nil
  */
-bool is_nil(const TypeNodeBase* type);
+bool is_nil(const TypeNode* type);
 
 /**
  * @brief Returns whether if the given type is or can decay into `int`
  * @param type Target type
  * @return Is integral
  */
-bool is_integral(const TypeNodeBase* type);
+bool is_integral(const TypeNode* type);
 
 /**
  * @brief Returns whether if the given type is or can decay into `float`
  * @param type Target type
  * @return Is floating point
  */
-bool is_floating_point(const TypeNodeBase* type);
+bool is_floating_point(const TypeNode* type);
 
 /**
  * @brief Returns whether if the given type is or can decay into a number
  * @param type Target type
  * @return Is arithmetic
  */
-bool is_arithmetic(const TypeNodeBase* type);
+bool is_arithmetic(const TypeNode* type);
 
 /**
  * @brief Returns whether if the given type is a callable
  * @param type Target type
  * @return Is callable
  */
-bool is_callable(const TypeNodeBase* type);
+bool is_callable(const TypeNode* type);
 
 /**
  * @brief Returns whether if the two given types are the same
@@ -109,7 +109,7 @@ bool is_callable(const TypeNodeBase* type);
  * @param right Second type
  * @return Is same
  */
-bool is_same(const TypeNodeBase* left, const TypeNodeBase* right);
+bool is_same(const TypeNode* left, const TypeNode* right);
 
 /**
  * @brief Returns whether if the two given types are compatible (e.g. `int` and `float`)
@@ -117,7 +117,7 @@ bool is_same(const TypeNodeBase* left, const TypeNodeBase* right);
  * @param right Second type
  * @return Is compatible
  */
-bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right);
+bool is_compatible(const TypeNode* left, const TypeNode* right);
 
 /**
  * @brief Returns whether if the first type is castable into the second type
@@ -125,7 +125,7 @@ bool is_compatible(const TypeNodeBase* left, const TypeNodeBase* right);
  * @param right Second type
  * @return Is castable
  */
-bool is_castable(const TypeNodeBase* from, const TypeNodeBase* to);
+bool is_castable(const TypeNode* from, const TypeNode* to);
 
 } // namespace via
 

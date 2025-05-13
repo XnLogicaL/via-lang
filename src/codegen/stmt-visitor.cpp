@@ -10,13 +10,13 @@ using enum Opcode;
 using enum Value::Tag;
 using namespace compiler_util;
 
-void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
+void StmtNodeVisitor::visit(NodeDeclStmt& declaration_node) {
   bool is_global = declaration_node.is_global;
   bool is_const = declaration_node.modifs.is_const;
 
-  ExprNodeBase* val = declaration_node.rvalue;
-  TypeNodeBase* val_ty = resolve_type(ctx, val);
-  TypeNodeBase* target_ty =
+  ExprNode* val = declaration_node.rvalue;
+  TypeNode* val_ty = resolve_type(ctx, val);
+  TypeNode* target_ty =
     dynamic_cast<AutoTypeNode*>(declaration_node.type) ? val_ty : declaration_node.type;
 
   auto& current_closure = get_current_closure(ctx);
@@ -33,7 +33,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       compiler_output_end(ctx);
     }
     else {
-      LitExprNode literal(Token(), symbol);
+      NodeLitExpr literal(Token(), symbol);
       Value constant = construct_constant(literal);
       operand_t constant_id = push_constant(ctx, std::move(constant));
       operand_t value_reg = alloc_register(ctx);
@@ -52,7 +52,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   else {
     auto emit_constant =
       [this, &target_ty, &symbol, &current_closure, &declaration_node, &is_const, &val](
-        LitExprNode& literal
+        NodeLitExpr& literal
       ) {
         // Check for Nil
         if (std::get_if<std::monostate>(&literal.value)) {
@@ -110,7 +110,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
         }
         // Other constant
         else {
-          Value constant = construct_constant(dynamic_cast<LitExprNode&>(*val));
+          Value constant = construct_constant(dynamic_cast<NodeLitExpr&>(*val));
           operand_t const_id = push_constant(ctx, std::move(constant));
 
           bytecode_emit(ctx, PUSHK, {const_id}, symbol);
@@ -126,10 +126,10 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
       };
 
     if (is_constant_expression(ctx.unit_ctx, val)) {
-      if (LitExprNode* lit_expr = dynamic_cast<LitExprNode*>(val))
+      if (NodeLitExpr* lit_expr = dynamic_cast<NodeLitExpr*>(val))
         emit_constant(*lit_expr);
-      // Special case: Arrays cannot be represented as LitExprNode.
-      else if (dynamic_cast<ArrayExprNode*>(val) != nullptr) {
+      // Special case: Arrays cannot be represented as NodeLitExpr.
+      else if (dynamic_cast<NodeArrExpr*>(val) != nullptr) {
         val->accept(expression_visitor, OPERAND_INVALID);
 
         Instruction& bc = ctx.unit_ctx.bytecode.back();
@@ -152,7 +152,7 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
           goto non_constexpr;
         }
 
-        LitExprNode literal = fold_constant(ctx, val);
+        NodeLitExpr literal = fold_constant(ctx, val);
         emit_constant(literal);
       }
     }
@@ -183,20 +183,20 @@ void StmtNodeVisitor::visit(DeclStmtNode& declaration_node) {
   }
 }
 
-void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
+void StmtNodeVisitor::visit(NodeScopeStmt& scope_node) {
   auto& current_closure = get_current_closure(ctx);
   operand_t stack_pointer = current_closure.locals.size();
   ctx.unit_ctx.defered_stmts.push_back({});
 
-  for (StmtNodeBase* stmt : scope_node.statements) {
+  for (StmtNode* stmt : scope_node.statements) {
     stmt->accept(*this);
   }
 
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
+  std::vector<StmtNode*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
   ctx.unit_ctx.defered_stmts.pop_back();
 
   // Emit defered statements
-  for (StmtNodeBase* stmt : defered_stmts) {
+  for (StmtNode* stmt : defered_stmts) {
     stmt->accept(*this);
   }
 
@@ -208,7 +208,7 @@ void StmtNodeVisitor::visit(ScopeStmtNode& scope_node) {
   current_closure.locals.restore_stack_pointer(stack_pointer);
 }
 
-void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
+void StmtNodeVisitor::visit(NodeFuncDeclStmt& function_node) {
   auto& current_closure = get_current_closure(ctx);
   operand_t function_reg = alloc_register(ctx);
 
@@ -219,7 +219,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   auto* decl = &function_node;
 
   // Create the function type node before any potential invalidation
-  auto* function_type = ctx.unit_ctx.ast_allocator.emplace<FunctionTypeNode>(
+  auto* function_type = ctx.unit_ctx.ast_allocator.emplace<NodeFuncType>(
     function_node.parameters, function_node.returns
   );
 
@@ -241,12 +241,12 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   );
 
   size_t new_closure_point = ctx.unit_ctx.bytecode.size();
-  ScopeStmtNode& scope = dynamic_cast<ScopeStmtNode&>(*function_node.body);
+  NodeScopeStmt& scope = dynamic_cast<NodeScopeStmt&>(*function_node.body);
 
-  for (StmtNodeBase*& pstmt : scope.statements) {
-    const StmtNodeBase& stmt = *pstmt;
-    const DeclStmtNode* declaration_node = dynamic_cast<const DeclStmtNode*>(&stmt);
-    const FuncDeclStmtNode* function_node = dynamic_cast<const FuncDeclStmtNode*>(&stmt);
+  for (StmtNode*& pstmt : scope.statements) {
+    const StmtNode& stmt = *pstmt;
+    const NodeDeclStmt* declaration_node = dynamic_cast<const NodeDeclStmt*>(&stmt);
+    const NodeFuncDeclStmt* function_node = dynamic_cast<const NodeFuncDeclStmt*>(&stmt);
 
     if (declaration_node || function_node) {
       bool is_global = declaration_node ? declaration_node->is_global : function_node->is_global;
@@ -291,7 +291,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
       return;
     }
 
-    LitExprNode literal(Token(), symbol);
+    NodeLitExpr literal(Token(), symbol);
     Value constant = construct_constant(literal);
     operand_t constant_id = push_constant(ctx, std::move(constant));
     operand_t tmp_reg = alloc_register(ctx);
@@ -318,7 +318,7 @@ void StmtNodeVisitor::visit(FuncDeclStmtNode& function_node) {
   free_register(ctx, function_reg);
 }
 
-void StmtNodeVisitor::visit(AssignStmtNode& assign_node) {
+void StmtNodeVisitor::visit(NodeAsgnStmt& assign_node) {
   register_t temp = alloc_register(ctx);
   resolve_rvalue(&expression_visitor, assign_node.rvalue, temp);
   bind_lvalue(ctx, assign_node.lvalue, temp);
@@ -405,8 +405,8 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   // attribute '@compile_time'
   if (ctx.unit_ctx.optimization_level >= 1 && is_constant_expression(ctx.unit_ctx, if_node.condition)) {
   evaluate_if:
-    auto evaluate_case = [this](ExprNodeBase* condition, StmtNodeBase* scope) -> bool {
-      LitExprNode lit = fold_constant(ctx, condition);
+    auto evaluate_case = [this](ExprNode* condition, StmtNode* scope) -> bool {
+      NodeLitExpr lit = fold_constant(ctx, condition);
 
       if (std::holds_alternative<std::monostate>(lit.value))
         return false;
@@ -497,17 +497,17 @@ void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
 }
 
 void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
-  ExprNodeBase* expr = expr_stmt.expression;
+  ExprNode* expr = expr_stmt.expression;
   operand_t reg = alloc_register(ctx);
 
   resolve_rvalue(&expression_visitor, expr, reg);
 
   if (is_nil(expr->infer_type(ctx.unit_ctx)))
     return;
-  else if (CallExprNode* call_node = dynamic_cast<CallExprNode*>(expr)) {
-    TypeNodeBase* ret_ty = resolve_type(ctx, call_node);
+  else if (NodeCallExpr* call_node = dynamic_cast<NodeCallExpr*>(expr)) {
+    TypeNode* ret_ty = resolve_type(ctx, call_node);
 
-    if (PrimTypeNode* prim_ty = dynamic_cast<PrimTypeNode*>(ret_ty)) {
+    if (NodePrimType* prim_ty = dynamic_cast<NodePrimType*>(ret_ty)) {
       if (prim_ty->type != Nil) {
         goto return_value_ignored;
       }

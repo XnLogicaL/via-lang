@@ -10,7 +10,6 @@
 
 #include "common.h"
 
-#include <parse/ast-base.h>
 #include <parse/ast.h>
 #include <interpreter/instruction.h>
 
@@ -20,6 +19,8 @@
  * @{
  */
 namespace via {
+
+class TransUnitContext;
 
 /**
  * @typedef symbol_t std::string
@@ -38,12 +39,12 @@ struct StackVariable {
   bool is_constexpr = false;
   /// @brief Symbol of the variable
   symbol_t symbol;
-  /// @brief Declaration of the variable, is DeclStmtNode/FuncDeclStmtNode
-  StmtNodeBase* decl;
+  /// @brief Declaration of the variable, is NodeDeclStmt/NodeFuncDeclStmt
+  StmtNode* decl;
   /// @brief Type of the variable
-  TypeNodeBase* type;
+  TypeNode* type;
   /// @brief Value of the variable
-  ExprNodeBase* value;
+  ExprNode* value;
 };
 
 /**
@@ -88,7 +89,7 @@ struct StackFunction {
   /// @brief Stack pointer value before entering the function.
   size_t stack_pointer = 0;
   /// @brief Function declaration associated with the stack frame.
-  FuncDeclStmtNode* decl;
+  NodeFuncDeclStmt* decl;
   /// @brief Local variables declared within the function.
   CompilerVariableStack locals;
 };

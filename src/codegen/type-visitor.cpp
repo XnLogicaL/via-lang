@@ -8,9 +8,9 @@ namespace via {
 
 using namespace compiler_util;
 
-void TypeNodeVisitor::visit(DeclStmtNode& declaration_node) {
-  TypeNodeBase* infered_type = resolve_type(ctx, declaration_node.rvalue);
-  TypeNodeBase* annotated_type = declaration_node.type;
+void TypeNodeVisitor::visit(NodeDeclStmt& declaration_node) {
+  TypeNode* infered_type = resolve_type(ctx, declaration_node.rvalue);
+  TypeNode* annotated_type = declaration_node.type;
 
   VIA_CHECK_INFERED(infered_type, declaration_node.rvalue);
   VIA_CHECK_INFERED(annotated_type, declaration_node.rvalue);
@@ -35,9 +35,9 @@ void TypeNodeVisitor::visit(DeclStmtNode& declaration_node) {
   }
 }
 
-void TypeNodeVisitor::visit(AssignStmtNode& assign_node) {
-  TypeNodeBase* infered_type = resolve_type(ctx, assign_node.lvalue);
-  TypeNodeBase* assigned_type = resolve_type(ctx, assign_node.rvalue);
+void TypeNodeVisitor::visit(NodeAsgnStmt& assign_node) {
+  TypeNode* infered_type = resolve_type(ctx, assign_node.lvalue);
+  TypeNode* assigned_type = resolve_type(ctx, assign_node.rvalue);
 
   VIA_CHECK_INFERED(infered_type, assign_node.lvalue);
   VIA_CHECK_INFERED(assigned_type, assign_node.rvalue);
@@ -54,6 +54,6 @@ void TypeNodeVisitor::visit(AssignStmtNode& assign_node) {
   }
 }
 
-void TypeNodeVisitor::visit(FuncDeclStmtNode&) {}
+void TypeNodeVisitor::visit(NodeFuncDeclStmt&) {}
 
 } // namespace via

@@ -40,15 +40,14 @@ void CompilerVariableStack::restore_stack_pointer(size_t sp) {
 }
 
 void CompilerFunctionStack::push_main_function(TransUnitContext& unit_ctx) {
-  ScopeStmtNode* scope = unit_ctx.ast_allocator.emplace<ScopeStmtNode>(
-    size_t(0), size_t(0), std::vector<StmtNodeBase*>{}
-  );
+  NodeScopeStmt* scope =
+    unit_ctx.ast_allocator.emplace<NodeScopeStmt>(size_t(0), size_t(0), std::vector<StmtNode*>{});
 
-  PrimTypeNode* ret = unit_ctx.ast_allocator.emplace<PrimTypeNode>(
+  NodePrimType* ret = unit_ctx.ast_allocator.emplace<NodePrimType>(
     Token(TokenType::IDENTIFIER, "Nil", 0, 0, 0), Value::Tag::Nil
   );
 
-  FuncDeclStmtNode* func = unit_ctx.ast_allocator.emplace<FuncDeclStmtNode>(
+  NodeFuncDeclStmt* func = unit_ctx.ast_allocator.emplace<NodeFuncDeclStmt>(
     size_t(0),
     size_t(0),
     false,

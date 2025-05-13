@@ -55,7 +55,7 @@ namespace compiler_util {
 /**
  * @brief Constructs a constant value from the given literal expression node.
  */
-Value construct_constant(LitExprNode& literal_node) {
+Value construct_constant(NodeLitExpr& literal_node) {
   using enum Value::Tag;
   return std::visit(
     [](auto&& val) -> Value {
@@ -80,7 +80,7 @@ Value construct_constant(LitExprNode& literal_node) {
 /**
  * @brief Folds an expression into a constant if possible.
  */
-LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_depth) {
+NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth) {
   using enum TokenType;
   using evaluator_2i_t = std::function<int(int, int)>;
   using evaluator_2f_t = std::function<float(float, float)>;
@@ -122,31 +122,31 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
     {KW_AND, [](float a, int b) { return a && b; }},
   };
 
-  if (LitExprNode* lit_expr = dynamic_cast<LitExprNode*>(expr))
+  if (NodeLitExpr* lit_expr = dynamic_cast<NodeLitExpr*>(expr))
     return *lit_expr;
-  else if (BinExprNode* bin_expr = dynamic_cast<BinExprNode*>(expr)) {
+  else if (NodeBinExpr* bin_expr = dynamic_cast<NodeBinExpr*>(expr)) {
     bool is_cond = (int)bin_expr->op.type >= (int)OP_EQ && (int)bin_expr->op.type <= (int)OP_GEQ;
-    LitExprNode left = fold_constant(ctx, bin_expr->lhs_expression, fold_depth + 1);
-    LitExprNode right = fold_constant(ctx, bin_expr->rhs_expression, fold_depth + 1);
+    NodeLitExpr left = fold_constant(ctx, bin_expr->lhs_expression, fold_depth + 1);
+    NodeLitExpr right = fold_constant(ctx, bin_expr->rhs_expression, fold_depth + 1);
 
     if (int* int_left = std::get_if<int>(&left.value)) {
       if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_2i_t evaluator = evaluators_2i.at(bin_expr->op.type);
         if (is_cond)
-          return LitExprNode(Token(), (bool)evaluator(*int_left, *int_right));
+          return NodeLitExpr(Token(), (bool)evaluator(*int_left, *int_right));
         else
-          return LitExprNode(Token(), evaluator(*int_left, *int_right));
+          return NodeLitExpr(Token(), evaluator(*int_left, *int_right));
       }
       else if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
         if (is_cond)
-          return LitExprNode(Token(), (bool)evaluator(*int_left, *float_right));
+          return NodeLitExpr(Token(), (bool)evaluator(*int_left, *float_right));
         else
-          return LitExprNode(Token(), evaluator(*int_left, *float_right));
+          return NodeLitExpr(Token(), evaluator(*int_left, *float_right));
       }
 
-      TypeNodeBase* left_type = left.infer_type(ctx.unit_ctx);
-      TypeNodeBase* right_type = right.infer_type(ctx.unit_ctx);
+      TypeNode* left_type = left.infer_type(ctx.unit_ctx);
+      TypeNode* right_type = right.infer_type(ctx.unit_ctx);
 
       VIA_ASSERT(left_type && right_type, "!!tmp!! inference failed");
 
@@ -167,20 +167,20 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
       if (float* float_right = std::get_if<float>(&right.value)) {
         evaluator_2f_t evaluator = evaluators_2f.at(bin_expr->op.type);
         if (is_cond)
-          return LitExprNode(Token(), (bool)evaluator(*float_left, *float_right));
+          return NodeLitExpr(Token(), (bool)evaluator(*float_left, *float_right));
         else
-          return LitExprNode(Token(), evaluator(*float_left, *float_right));
+          return NodeLitExpr(Token(), evaluator(*float_left, *float_right));
       }
       else if (int* int_right = std::get_if<int>(&right.value)) {
         evaluator_fi_t evaluator = evaluators_fi.at(bin_expr->op.type);
         if (is_cond)
-          return LitExprNode(Token(), (bool)evaluator(*float_left, *int_right));
+          return NodeLitExpr(Token(), (bool)evaluator(*float_left, *int_right));
         else
-          return LitExprNode(Token(), evaluator(*float_left, *int_right));
+          return NodeLitExpr(Token(), evaluator(*float_left, *int_right));
       }
 
-      TypeNodeBase* left_type = left.infer_type(ctx.unit_ctx);
-      TypeNodeBase* right_type = right.infer_type(ctx.unit_ctx);
+      TypeNode* left_type = left.infer_type(ctx.unit_ctx);
+      TypeNode* right_type = right.infer_type(ctx.unit_ctx);
 
       VIA_ASSERT(left_type && right_type, "TODO: FOLD CONSTANT FAILURE");
 
@@ -198,7 +198,7 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
       goto bad_fold;
     }
   }
-  else if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(expr)) {
+  else if (NodeSymExpr* sym_expr = dynamic_cast<NodeSymExpr*>(expr)) {
     auto closure = get_current_closure(ctx);
     auto stk_id = closure.locals.get_local_by_symbol(sym_expr->identifier.lexeme);
     if (!stk_id.has_value()) {
@@ -220,7 +220,7 @@ LitExprNode fold_constant(VisitorContext& ctx, ExprNodeBase* expr, size_t fold_d
   }
 
 bad_fold:
-  return LitExprNode(Token(), std::monostate());
+  return NodeLitExpr(Token(), std::monostate());
 }
 
 /**
@@ -300,10 +300,10 @@ StackFunction& get_current_closure(VisitorContext& ctx) {
   return ctx.unit_ctx.function_stack.back();
 }
 
-bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
+bool resolve_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t dst) {
   auto& current_closure = get_current_closure(ctx);
 
-  if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(lvalue)) {
+  if (NodeSymExpr* sym_expr = dynamic_cast<NodeSymExpr*>(lvalue)) {
     Token var_id = sym_expr->identifier;
     symbol_t symbol = var_id.lexeme;
 
@@ -318,7 +318,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
       }
     }
     else if (ctx.unit_ctx.globals.was_declared(symbol)) {
-      LitExprNode lit_translation = LitExprNode(sym_expr->identifier, symbol);
+      NodeLitExpr lit_translation = NodeLitExpr(sym_expr->identifier, symbol);
       Value const_val = construct_constant(lit_translation);
       operand_t const_id = push_constant(ctx, std::move(const_val));
 
@@ -341,13 +341,13 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t dst) {
   return true;
 }
 
-bool resolve_rvalue(NodeVisitorBase* visitor, ExprNodeBase* rvalue, operand_t dst) {
+bool resolve_rvalue(NodeVisitorBase* visitor, ExprNode* rvalue, operand_t dst) {
   rvalue->accept(*visitor, dst);
   return visitor->failed();
 }
 
-bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
-  if (SymExprNode* sym_expr = dynamic_cast<SymExprNode*>(lvalue)) {
+bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src) {
+  if (NodeSymExpr* sym_expr = dynamic_cast<NodeSymExpr*>(lvalue)) {
     Token symbol_token = sym_expr->identifier;
     symbol_t symbol = symbol_token.lexeme;
     auto& current_closure = get_current_closure(ctx);
@@ -388,8 +388,8 @@ bool bind_lvalue(VisitorContext& ctx, ExprNodeBase* lvalue, operand_t src) {
   return true;
 }
 
-TypeNodeBase* resolve_type(VisitorContext& ctx, ExprNodeBase* expr) {
-  TypeNodeBase* type = expr->infer_type(ctx.unit_ctx);
+TypeNode* resolve_type(VisitorContext& ctx, ExprNode* expr) {
+  TypeNode* type = expr->infer_type(ctx.unit_ctx);
   if (!type) {
     compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");
     compiler_info(
@@ -409,11 +409,11 @@ void bytecode_emit(VisitorContext& ctx, Opcode opc, operands_init_t&& ops, std::
 }
 
 void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
-  std::vector<StmtNodeBase*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
+  std::vector<StmtNode*> defered_stmts = ctx.unit_ctx.defered_stmts.back();
   ctx.unit_ctx.defered_stmts.pop_back();
 
   // Emit defered statements
-  for (StmtNodeBase* stmt : defered_stmts) {
+  for (StmtNode* stmt : defered_stmts) {
     stmt->accept(*visitor);
   }
 }
@@ -434,7 +434,7 @@ bool BytecodeBuilder::generate() {
 
   codegen_prep();
 
-  for (StmtNodeBase* stmt : ctx.unit_ctx.ast) {
+  for (StmtNode* stmt : ctx.unit_ctx.ast) {
     if (DeferStmtNode* defer_stmt = dynamic_cast<DeferStmtNode*>(stmt)) {
       auto message = "Defer statements not allowed in global scope";
       compiler_util::compiler_error(ctx, defer_stmt->begin, defer_stmt->end, message);
