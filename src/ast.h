@@ -41,6 +41,7 @@ enum class AstKind {
   STMT_Asgn,
   STMT_If,
   STMT_Ret,
+  STMT_Whi,
   STMT_Brk,
   STMT_Cont,
   STMT_Def,
@@ -152,7 +153,7 @@ struct NodeCastExpr {
   AstNode* ty;
 };
 
-struct StepExprNode {
+struct NodeStepExpr {
   TokenType op;
   AstNode* expr;
 };
@@ -231,9 +232,8 @@ struct NodeAsgnStmt {
   AstNode* rval;
 };
 
-struct IfStmtNode {
+struct NodeIfStmt {
   struct Elif {
-    size_t len;
     LexLocation loc;
     AstNode* cond;
     AstNode* scp;
@@ -246,21 +246,21 @@ struct IfStmtNode {
   Elif* elifs;
 };
 
-struct ReturnStmtNode {
+struct NodeRetStmt {
   AstNode* expr;
 };
 
-struct WhileStmtNode {
+struct NodeWhileStmt {
   AstNode* cond;
   AstNode* body;
 };
 
-struct DeferStmtNode {
+struct NodeDeferStmt {
   AstNode* stmt;
 };
 
-struct ExprStmtNode {
-  AstNode* expression;
+struct NodeExprStmt {
+  AstNode* expr;
 };
 
 struct AstNode {
@@ -276,7 +276,7 @@ struct AstNode {
     NodeGroupExpr e_grp;
     NodeCastExpr e_cast;
     NodeIndexExpr e_idx;
-    NodeFuncDeclStmt e_step;
+    NodeStepExpr e_step;
     NodeArrExpr e_arr;
     NodeIntrExpr e_intr;
 
@@ -293,10 +293,11 @@ struct AstNode {
     NodeScopeStmt s_scope;
     NodeFuncDeclStmt s_func;
     NodeAsgnStmt s_asgn;
-    IfStmtNode s_if;
-    ReturnStmtNode s_ret;
-    DeferStmtNode s_def;
-    ExprStmtNode s_expr;
+    NodeIfStmt s_if;
+    NodeRetStmt s_ret;
+    NodeWhileStmt s_whi;
+    NodeDeferStmt s_def;
+    NodeExprStmt s_expr;
   } u;
 };
 

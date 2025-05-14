@@ -29,7 +29,6 @@ enum class CErrorLevel : uint8_t {
  * information.
  */
 struct CError {
-  size_t len;
   LexLocation loc;
   bool is_flat;
   std::string message;

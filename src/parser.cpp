@@ -22,7 +22,7 @@ Token* Parser::current() {
 
 Token* Parser::peek(int32_t ahead) {
   if (position + ahead >= lctx.tokens.size()) {
-    return nullptr;
+    throw ParserError{true, {}, "Unexpected end of file"};
   }
 
   return &lctx.tokens.at(position + ahead);
@@ -55,7 +55,6 @@ int* Parser::parse_modifiers() {
     if (curr->type == KW_CONST) {
       if (*modfs & F_SEMA_CONST)
         err_bus.log({
-          curr->lexeme.length(),
           curr->loc,
           false,
           "Modifier 'const' found multiple times",
@@ -105,10 +104,9 @@ Attribute* Parser::parse_attribute() {
 
 AstNode* Parser::parse_generic() {
   Token* ident = consume();
+  std::vector<AstNode*> buf;
 
   expect_consume(OP_LT, "Expected '<' to open type generic");
-
-  std::vector<AstNode*> buf;
 
   while (current()->type != OP_GT) {
     buf.push_back(parse_type());
@@ -188,6 +186,7 @@ AstNode* Parser::parse_type_primary() {
     NodeFuncType fnty;
     fnty.rets = parse_type();
     fnty.params = sema::alloc_array(lctx.astalloc, buf);
+    fnty.paramc = buf.size();
 
     return alloc_node(tok->loc, AstKind::TYPE_Fun, {.t_fun = fnty});
   }
@@ -198,7 +197,6 @@ AstNode* Parser::parse_type_primary() {
     arrt.type = parse_type();
 
     expect_consume(BRACKET_CLOSE, "Expected ']' to close array type");
-
     return alloc_node(tok->loc, AstKind::TYPE_Arr, {.t_arr = arrt});
   }
   default: {
@@ -314,46 +312,46 @@ AstNode* Parser::parse_primary() {
 
     return alloc_node(tok->loc, AstKind::EXPR_Sym, {.e_sym = sym});
   }
-  case LIT_STRING:
+  case LIT_STRING: {
     consume();
-    return lctx.astalloc.emplace<NodeLitExpr>(*tok, tok->lexeme);
+
+    NodeLitExpr lit;
+    lit.kind = Value::Tag::String;
+    lit.u = {.s = sema::alloc_string(lctx.stralloc, tok->lexeme)};
+
+    return alloc_node(tok->loc, AstKind::EXPR_Lit, {.e_lit = lit});
+  }
   case OP_INC:
   case OP_DEC:
   case OP_LEN:
   case OP_SUB: {
-    Token* op = consume();
-    ParseResult<ExprNode*> expr = parse_primary();
+    consume();
+    AstNode* expr = parse_primary();
 
-    CHECK_RESULT(op);
-    CHECK_RESULT(expr);
+    NodeUnExpr un;
+    un.expr = expr;
+    un.op = tok->type;
 
-    return lctx.astalloc.emplace<NodeUnExpr>(*op, *expr);
+    return alloc_node(tok->loc, AstKind::EXPR_Un, {.e_un = un});
   }
   case BRACKET_OPEN: {
-    Token* br_open = consume();
-    NodeArrExpr::values_t values;
+    consume();
+    std::vector<AstNode*> buf;
 
     while (true) {
-      Token* curr = current();
-      CHECK_RESULT(curr);
-
-      if (curr->type == BRACKET_CLOSE) {
+      if (current()->type == BRACKET_CLOSE) {
         break;
       }
 
-      ParseResult<ExprNode*> expr = parse_expr();
-      CHECK_RESULT(expr);
-
-      values.emplace_back(*expr);
-
-      curr = expect_consume(COMMA, "Expected ',' to seperate list elements");
-      CHECK_RESULT(curr);
+      buf.push_back(parse_expr());
+      expect_consume(COMMA, "Expected ',' to seperate list elements");
     }
 
-    Token* br_close = consume();
-    CHECK_RESULT(br_close);
+    NodeArrExpr arr;
+    arr.vals = sema::alloc_array(lctx.astalloc, buf);
+    arr.valc = buf.size();
 
-    return lctx.astalloc.emplace<NodeArrExpr>(br_open->position, br_close->position, values);
+    return alloc_node(tok->loc, AstKind::EXPR_Arr, {.e_arr = arr});
   }
   case KW_TYPE:
   case KW_TYPEOF:
@@ -361,122 +359,115 @@ AstNode* Parser::parse_primary() {
   case KW_PRINT:
   case KW_ERROR:
   case KW_TRY: {
-    Token* intrinsic = consume();
-    ParseResult<ExprNode*> expr = parse_expr();
+    consume();
 
-    CHECK_RESULT(intrinsic);
-    CHECK_RESULT(expr);
+    NodeIntrExpr intr;
+    intr.id = sema::alloc_string(lctx.stralloc, tok->lexeme);
+    intr.exprs = sema::alloc_array<AstNode*>(lctx.astalloc, 1);
+    intr.exprc = 1;
+    intr.exprs[0] = parse_expr();
 
-    return lctx.astalloc.emplace<NodeIntrExpr>(*intrinsic, std::vector<ExprNode*>{*expr});
+    return alloc_node(tok->loc, AstKind::EXPR_Intr, {.e_intr = intr});
   }
   case PAREN_OPEN: {
     consume();
 
-    ParseResult<ExprNode*> expr = parse_expr();
-    Token* expect_par = expect_consume(PAREN_CLOSE, "Expected ')' to close grouping expression");
+    AstNode* expr = parse_expr();
+    expect_consume(PAREN_CLOSE, "Expected ')' to close grouping expression");
 
-    CHECK_RESULT(expr);
-    CHECK_RESULT(expect_par);
+    NodeGroupExpr grp;
+    grp.expr = expr;
 
-    return lctx.astalloc.emplace<NodeGroupExpr>(*expr);
+    return alloc_node(tok->loc, AstKind::EXPR_Group, {.e_grp = grp});
   }
   default:
-    break;
+    throw ParserError{
+      false,
+      tok->loc,
+      std::format("Unexpected token '{}' while parsing expression", tok->lexeme),
+    };
   }
 
-  // If none of the valid Token types were matched, return an error.
-  return tl::unexpected<ParseError>(
-    {position, std::format("Unexpected Token '{}' while parsing primary expression", tok->lexeme)}
-  );
+  VIA_UNREACHABLE();
 }
 
-ParseResult<ExprNode*> Parser::parse_postfix(ExprNode* lhs) {
+AstNode* Parser::parse_postfix(AstNode* lhs) {
   // Process all postfix expressions (member access, array indexing, function calls, type casts)
   while (true) {
     Token* curr = current();
-    if (!curr.has_value()) {
-      return lhs;
-    }
-
     switch (curr->type) {
-    case DOT: { // Member access: obj.property
+      // non-static member access: obj.property
+    case DOT: {
       consume();
-      Token* index_token = expect_consume(IDENTIFIER, "Expected identifier while parsing index");
-      CHECK_RESULT(index_token);
+      Token* id = expect_consume(IDENTIFIER, "Expected identifier while parsing index expression");
 
-      lhs =
-        lctx.astalloc.emplace<NodeIndexExpr>(lhs, lctx.astalloc.emplace<NodeSymExpr>(*index_token));
+      NodeSymExpr sym;
+      sym.symbol = sema::alloc_string(lctx.stralloc, id->lexeme);
 
+      NodeIndexExpr idx;
+      idx.obj = lhs;
+      idx.idx = alloc_node(id->loc, AstKind::EXPR_Sym, {.e_sym = sym});
+
+      lhs = alloc_node(lhs->loc, AstKind::EXPR_Idx, {.e_idx = idx});
       continue;
     }
-    case BRACKET_OPEN: { // Array indexing: obj[expr]
+      // Array indexing: obj[expr]
+    case BRACKET_OPEN: {
       consume();
 
-      ParseResult<ExprNode*> index = parse_expr();
-      Token* expect_br = expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
+      AstNode* expr = parse_expr();
+      expect_consume(BRACKET_CLOSE, "Expected ']' to close index expression");
 
-      CHECK_RESULT(index);
-      CHECK_RESULT(expect_br);
+      NodeIndexExpr idx;
+      idx.obj = lhs;
+      idx.idx = expr;
 
-      lhs = lctx.astalloc.emplace<NodeIndexExpr>(lhs, *index);
+      lhs = alloc_node(lhs->loc, AstKind::EXPR_Idx, {.e_idx = idx});
       continue;
     }
-    case PAREN_OPEN: { // Function calls: func(arg1, ...)
+    // Function calls: func(arg1, ...)
+    case PAREN_OPEN: {
       consume();
-      std::vector<ExprNode*> arguments;
+      std::vector<AstNode*> buf;
 
       while (true) {
-        Token* curr = current();
-        CHECK_RESULT(curr);
-
-        if (curr->type == PAREN_CLOSE) {
+        if (current()->type == PAREN_CLOSE) {
           break;
         }
 
-        ParseResult<ExprNode*> expr = parse_expr();
-        CHECK_RESULT(expr);
-
-        arguments.emplace_back(*expr);
-
-        // After an argument, check for a comma.
-        curr = current();
-        CHECK_RESULT(curr);
-
-        if (curr->type == COMMA) {
-          consume();
-        }
-        else {
-          break;
-        }
+        buf.push_back(parse_expr());
+        expect_consume(COMMA, "Expected ',' after function call argument");
       }
 
-      // Expect the closing parenthesis.
-      Token* expect_par =
-        expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
-      CHECK_RESULT(expect_par);
+      expect_consume(PAREN_CLOSE, "Expected ')' to close function call arguments");
 
-      lhs = lctx.astalloc.emplace<NodeCallExpr>(lhs, arguments);
+      NodeCallExpr call;
+      call.callee = lhs;
+      call.args = sema::alloc_array(lctx.astalloc, buf);
+      call.argc = buf.size();
+
+      lhs = alloc_node(lhs->loc, AstKind::EXPR_Call, {.e_call = call});
       continue;
     }
-    case OP_INC: {
-      consume();
-
-      lhs = lctx.astalloc.emplace<StepExprNode>(lhs, true);
-      continue;
-    }
+    case OP_INC:
     case OP_DEC: {
       consume();
 
-      lhs = lctx.astalloc.emplace<StepExprNode>(lhs, false);
+      NodeStepExpr step;
+      step.op = curr->type;
+      step.expr = parse_expr();
+
+      lhs = alloc_node(curr->loc, AstKind::EXPR_Step, {.e_step = step});
       continue;
     }
-    case KW_AS: { // Type casting: expr as Type
+    case KW_AS: { // Type casting: expr as T
       consume();
 
-      ParseResult<TypeNode*> type_result = parse_type();
-      CHECK_RESULT(type_result);
+      NodeCastExpr cast;
+      cast.expr = lhs;
+      cast.ty = parse_type();
 
-      lhs = lctx.astalloc.emplace<NodeCastExpr>(lhs, *type_result);
+      lhs = alloc_node(curr->loc, AstKind::EXPR_Cast, {.e_cast = cast});
       continue;
     }
     default:
@@ -486,21 +477,13 @@ ParseResult<ExprNode*> Parser::parse_postfix(ExprNode* lhs) {
   }
 }
 
-ParseResult<ExprNode*> Parser::parse_binary(int precedence) {
-  // Parse the primary expression first.
-  ParseResult<ExprNode*> prim = parse_primary();
-  CHECK_RESULT(prim);
-
-  // Parse any postfix operations that apply to the primary expression.
-  ParseResult<ExprNode*> lhs = parse_postfix(*prim);
-  CHECK_RESULT(lhs);
+AstNode* Parser::parse_binary(int precedence) {
+  AstNode* prim = parse_primary();
+  AstNode* lhs = parse_postfix(prim);
 
   // Parse binary operators according to precedence.
-  while (position < lctx.tokens.size()) {
+  while (true) {
     Token* op = current();
-    CHECK_RESULT(op);
-
-    // Stop if the Token is not an operator.
     if (!op->is_operator()) {
       break;
     }
@@ -512,24 +495,23 @@ ParseResult<ExprNode*> Parser::parse_binary(int precedence) {
 
     consume();
 
-    ParseResult<ExprNode*> rhs = parse_binary(op_prec + 1);
-    CHECK_RESULT(rhs);
+    NodeBinExpr bin;
+    bin.op = op->type;
+    bin.lhs = lhs;
+    bin.rhs = parse_expr();
 
-    lhs = lctx.astalloc.emplace<NodeBinExpr>(*op, *lhs, *rhs);
+    lhs = alloc_node(lhs->loc, AstKind::EXPR_Bin, {.e_bin = bin});
   }
 
   return lhs;
 }
 
-ParseResult<ExprNode*> Parser::parse_expr() {
+AstNode* Parser::parse_expr() {
   return parse_binary(0);
 }
 
-ParseResult<StmtNode*> Parser::parse_declaration() {
+AstNode* Parser::parse_declaration() {
   Token* first = consume();
-  CHECK_RESULT(first);
-
-  size_t begin = first->position;
   TokenType first_type = first->type;
 
   bool is_local = false;
@@ -541,264 +523,179 @@ ParseResult<StmtNode*> Parser::parse_declaration() {
   is_global = first_type == KW_GLOBAL;
   is_const = first_type == KW_CONST;
 
-  Token* curr = current();
-  CHECK_RESULT(curr);
-
   // Detect `fn` at the start (fn name())
   if (first_type == KW_FUNC) {
     goto parse_function;
   }
 
-  if (is_local && curr->type == KW_CONST) {
+  if (is_local && current()->type == KW_CONST) {
     is_const = true;
     consume();
   }
 
-  curr = current();
-  CHECK_RESULT(curr);
-
-  if (curr->type == KW_FUNC) {
+  if (current()->type == KW_FUNC) {
     consume();
 
   parse_function:
     Token* identifier = expect_consume(IDENTIFIER, "Expected function name after 'func'");
-    Token* expect_par = expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
+    expect_consume(PAREN_OPEN, "Expected '(' to open function parameters");
 
-    CHECK_RESULT(identifier);
-    CHECK_RESULT(expect_par);
-
-    std::vector<ParamStmtNode> parameters;
+    std::vector<Parameter> buf;
 
     while (true) {
-      curr = current();
-      if (curr.has_value() && curr->type == PAREN_CLOSE) {
+      if (current()->type == PAREN_CLOSE) {
         break;
       }
 
-      ParseResult<StmtModifiers> StmtModifiers = parse_modifiers();
+      [[maybe_unused]] int* modfs = parse_modifiers();
       Token* param_name =
         expect_consume(IDENTIFIER, "Expected identifier for function parameter name");
-      Token* expect_col = expect_consume(COLON, "Expected ':' between parameter and type");
-      ParseResult<TypeNode*> param_type = parse_type();
+      expect_consume(COLON, "Expected ':' between parameter and type");
 
-      CHECK_RESULT(StmtModifiers);
-      CHECK_RESULT(param_name);
-      CHECK_RESULT(expect_col);
-      CHECK_RESULT(param_type);
+      Parameter par;
+      par.id = sema::alloc_string(lctx.stralloc, param_name->lexeme);
+      par.type = parse_type();
+      buf.push_back(par);
 
-      parameters.emplace_back(*param_name, *StmtModifiers, *param_type);
-
-      curr = current();
-      CHECK_RESULT(curr);
-
-      if (curr->type != PAREN_CLOSE) {
-        Token* expect_comma = expect_consume(COMMA, "Expected ',' between function parameters");
-        CHECK_RESULT(expect_comma);
-      }
-      else {
-        break;
+      if (current()->type != PAREN_CLOSE) {
+        expect_consume(COMMA, "Expected ',' to seperate function parameters");
       }
     }
 
-    StmtModifiers StmtModifiers{is_const};
+    [[maybe_unused]] int modfs = 0;
+    if (is_const) {
+      modfs |= F_SEMA_CONST;
+    }
 
-    Token* expect_rpar = expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
-    Token* expect_rets = expect_consume(RETURNS, "Expected '->' to denote function return type");
-    ParseResult<TypeNode*> returns = parse_type();
-    ParseResult<StmtNode*> body_scope = parse_scope();
+    expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
+    expect_consume(RETURNS, "Expected '->' to denote function return type");
 
-    CHECK_RESULT(expect_rpar);
-    CHECK_RESULT(expect_rets);
-    CHECK_RESULT(returns);
-    CHECK_RESULT(body_scope);
+    NodeFuncDeclStmt func;
+    func.id = sema::alloc_string(lctx.stralloc, identifier->lexeme);
+    func.glb = is_global;
+    func.rets = parse_type();
+    func.body = parse_scope();
+    func.params = sema::alloc_array(lctx.astalloc, buf);
+    func.paramc = buf.size();
 
-    return lctx.astalloc.emplace<NodeFuncDeclStmt>(
-      begin,
-      (*body_scope)->end,
-      is_global,
-      StmtModifiers,
-      *identifier,
-      *body_scope,
-      *returns,
-      parameters
-    );
+    return alloc_node(first->loc, AstKind::STMT_Func, {.s_func = func});
   }
 
   // If not a function, continue parsing as a variable declaration
-  TypeNode* type;
+  AstNode* type;
   Token* identifier = expect_consume(IDENTIFIER, "Expected identifier for variable declaration");
-  curr = current();
 
-  CHECK_RESULT(identifier);
-  CHECK_RESULT(curr);
-
-  if (curr->type == COLON) {
+  if (current()->type == COLON) {
     consume();
-
-    ParseResult<TypeNode*> temp = parse_type();
-    CHECK_RESULT(temp);
-    type = *temp;
+    type = parse_type();
   }
   else {
-    type =
-      lctx.astalloc.emplace<AutoTypeNode>(curr->position, curr->position + curr->lexeme.length());
+    type = alloc_node(identifier->loc, AstKind::TYPE_Auto, {});
   }
 
-  Token* expect_eq = expect_consume(EQ, "Expected '=' for variable declaration");
-  ParseResult<ExprNode*> value = parse_expr();
+  expect_consume(EQ, "Expected '=' for variable declaration");
 
-  CHECK_RESULT(expect_eq);
-  CHECK_RESULT(value);
+  NodeDeclStmt decl;
+  decl.id = sema::alloc_string(lctx.stralloc, identifier->lexeme);
+  decl.glb = is_global;
+  decl.type = type;
+  decl.rval = parse_expr();
 
-  type->expression = *value; // Attach expression reference to type
-
-  return lctx.astalloc.emplace<NodeDeclStmt>(
-    begin, (*value)->end, is_global, StmtModifiers{is_const}, *identifier, *value, type
-  );
+  return alloc_node(first->loc, AstKind::STMT_Decl, {.s_decl = decl});
 }
 
-ParseResult<StmtNode*> Parser::parse_scope() {
-  std::vector<StmtNode*> scope_statements;
+AstNode* Parser::parse_scope() {
+  Token* tok = current();
+  std::vector<AstNode*> buf;
 
-  Token* curr = current();
-  CHECK_RESULT(curr);
-
-  size_t begin = curr->position;
-  size_t end;
-
-  if (curr->type == BRACE_OPEN) {
-    Token* expect_br = expect_consume(BRACE_OPEN, "Expected '{' to open scope");
-    CHECK_RESULT(expect_br);
+  if (tok->type == BRACE_OPEN) {
+    expect_consume(BRACE_OPEN, "Expected '{' to open scope");
 
     while (true) {
-      Token* curr = current();
-      CHECK_RESULT(curr);
-
-      if (curr->type == BRACE_CLOSE) {
+      if (current()->type == BRACE_CLOSE) {
         break;
       }
-
-      ParseResult<StmtNode*> stmt = parse_stmt();
-      CHECK_RESULT(stmt);
-
-      scope_statements.emplace_back(*stmt);
+      buf.push_back(parse_stmt());
     }
 
-    expect_br = expect_consume(BRACE_CLOSE, "Expected '}' to close scope");
-    CHECK_RESULT(expect_br);
-    end = expect_br->position;
+    expect_consume(BRACE_CLOSE, "Expected '}' to close scope");
   }
-  else if (curr->type == COLON) {
-    Token* expect_col = expect_consume(COLON, "Expected ':' to open single-statment scope");
-    CHECK_RESULT(expect_col);
-
-    ParseResult<StmtNode*> stmt = parse_stmt();
-    CHECK_RESULT(stmt);
-
-    scope_statements.emplace_back(*stmt);
-    end = (*stmt)->end;
+  else if (tok->type == COLON) {
+    expect_consume(COLON, "Expected ':' to open single-statment scope");
+    buf.push_back(parse_stmt());
   }
   else {
-    return tl::unexpected<ParseError>(
-      {position, "Expected '{' or ':' to open scope or single-statement scope"}
-    );
+    throw ParserError{false, tok->loc, "Expected '{' or ':' to start scope"};
   }
 
-  return lctx.astalloc.emplace<NodeScopeStmt>(begin, end, scope_statements);
+  NodeScopeStmt scope;
+  scope.stmts = sema::alloc_array(lctx.astalloc, buf);
+  scope.stmtc = buf.size();
+
+  return alloc_node(tok->loc, AstKind::STMT_Scope, {.s_scope = scope});
 }
 
-ParseResult<StmtNode*> Parser::parse_if() {
-  Token* kw = consume();
-  ParseResult<ExprNode*> condition = parse_expr();
-  ParseResult<StmtNode*> scope = parse_scope();
+AstNode* Parser::parse_if() {
+  Token* tok = consume();
+  AstNode* cond = parse_expr();
+  AstNode* scope = parse_scope();
+  AstNode* els = nullptr;
 
-  CHECK_RESULT(kw);
-  CHECK_RESULT(condition);
-  CHECK_RESULT(scope);
-
-  size_t begin = kw->position;
-  size_t end;
-  std::optional<StmtNode*> else_scope;
-  std::vector<ElseIfNode*> elseif_nodes;
+  std::vector<NodeIfStmt::Elif> buf;
 
   while (true) {
-    Token* curr = current();
-    CHECK_RESULT(curr);
-
-    if (curr->type != KW_ELIF) {
+    if (current()->type != KW_ELIF) {
       break;
     }
 
+    Token* elif_kw = consume();
+
+    NodeIfStmt::Elif elif;
+    elif.cond = parse_expr();
+    elif.scp = parse_scope();
+    elif.loc = elif_kw->loc;
+
+    buf.push_back(elif);
+  }
+
+  if (current()->type == KW_ELSE) {
     consume();
-
-    ParseResult<ExprNode*> elseif_condition = parse_expr();
-    ParseResult<StmtNode*> elseif_scope = parse_scope();
-
-    CHECK_RESULT(elseif_condition);
-    CHECK_RESULT(elseif_scope);
-
-    ElseIfNode* elseif = lctx.astalloc.emplace<ElseIfNode>(
-      curr->position, (*elseif_scope)->end, *elseif_condition, *elseif_scope
-    );
-    elseif_nodes.emplace_back(elseif);
+    els = parse_scope();
   }
 
-  Token* curr = current();
-  CHECK_RESULT(curr);
+  NodeIfStmt ifs;
+  ifs.cond = cond;
+  ifs.scp = scope;
+  ifs.els = els;
+  ifs.elifs = sema::alloc_array(lctx.astalloc, buf);
+  ifs.elifc = buf.size();
 
-  if (curr->type == KW_ELSE) {
-    consume();
-
-    ParseResult<StmtNode*> else_scope_inner = parse_scope();
-    CHECK_RESULT(else_scope_inner);
-
-    else_scope = *else_scope_inner;
-    end = (*else_scope_inner)->end;
-  }
-  else {
-    else_scope = nullptr;
-
-    if (!elseif_nodes.empty()) {
-      ElseIfNode*& last = elseif_nodes.back();
-      end = last->end;
-    }
-    else {
-      end = (*scope)->end;
-    }
-  }
-
-  // Return the IfStmtNode
-  return lctx.astalloc.emplace<IfStmtNode>(
-    begin, end, *condition, *scope, *else_scope, elseif_nodes
-  );
+  return alloc_node(tok->loc, AstKind::STMT_If, {.s_if = ifs});
 }
 
-ParseResult<StmtNode*> Parser::parse_return() {
-  Token* kw = consume();
-  ParseResult<ExprNode*> expr = parse_expr();
-  CHECK_RESULT(kw);
-  CHECK_RESULT(expr);
+AstNode* Parser::parse_return() {
+  Token* tok = consume();
 
-  return lctx.astalloc.emplace<ReturnStmtNode>(kw->position, (*expr)->end, *expr);
+  NodeRetStmt ret;
+  ret.expr = parse_expr();
+
+  return alloc_node(tok->loc, AstKind::STMT_Ret, {.s_ret = ret});
 }
 
-ParseResult<StmtNode*> Parser::parse_while() {
-  Token* kw = consume();
-  ParseResult<ExprNode*> condition = parse_expr();
-  ParseResult<StmtNode*> body = parse_scope();
+AstNode* Parser::parse_while() {
+  Token* tok = consume();
 
-  CHECK_RESULT(kw);
-  CHECK_RESULT(condition);
-  CHECK_RESULT(body);
+  NodeWhileStmt whil;
+  whil.cond = parse_expr();
+  whil.body = parse_scope();
 
-  return lctx.astalloc.emplace<WhileStmtNode>(kw->position, (*body)->end, *condition, *body);
+  return alloc_node(tok->loc, AstKind::STMT_Whi, {.s_whi = whil});
 }
 
-ParseResult<StmtNode*> Parser::parse_stmt() {
-  Token* initial_token = current();
-  CHECK_RESULT(initial_token);
+AstNode* Parser::parse_stmt() {
+  Token* tok = current();
 
-  switch (initial_token->type) {
+  switch (tok->type) {
   case KW_LOCAL:
   case KW_GLOBAL:
   case KW_FUNC:
@@ -814,57 +711,41 @@ ParseResult<StmtNode*> Parser::parse_stmt() {
   case KW_WHILE:
     return parse_while();
   case KW_DEFER: {
-    Token* con = consume();
-    ParseResult<StmtNode*> stmt = parse_stmt();
+    consume();
 
-    CHECK_RESULT(con);
-    CHECK_RESULT(stmt);
+    NodeDeferStmt def;
+    def.stmt = parse_stmt();
 
-    return lctx.astalloc.emplace<DeferStmtNode>(con->position, (*stmt)->end, *stmt);
+    return alloc_node(tok->loc, AstKind::STMT_Def, {.s_def = def});
   }
-  case KW_BREAK: {
-    Token* con = consume();
-    CHECK_RESULT(con);
-
-    return lctx.astalloc.emplace<BreakStmtNode>(
-      con->position, con->position + con->lexeme.length()
-    );
-  }
+  case KW_BREAK:
   case KW_CONTINUE: {
-    Token* con = consume();
-    CHECK_RESULT(con);
-
-    return lctx.astalloc.emplace<ContinueStmtNode>(
-      con->position, con->position + con->lexeme.length()
-    );
+    consume();
+    return alloc_node(tok->loc, tok->type == KW_BREAK ? AstKind::STMT_Brk : AstKind::STMT_Cont, {});
   }
   default:
-    ParseResult<ExprNode*> lvalue = parse_expr();
-    Token* curr = current();
+    AstNode* lval = parse_expr();
 
-    CHECK_RESULT(lvalue);
-    CHECK_RESULT(curr);
+    if (current()->type != EOF_) {
+      if (current()->lexeme == "=" || (current()->is_operator() && peek()->lexeme == "=")) {
+        Token* aug = consume();
+        if (aug->lexeme != "=") {
+          consume();
+        }
 
-    if (curr->type == EOF_) {
-      return lctx.astalloc.emplace<ExprStmtNode>(*lvalue);
-    }
+        NodeAsgnStmt asgn;
+        asgn.aug = aug->type;
+        asgn.lval = lval;
+        asgn.rval = parse_expr();
 
-    Token* pk = peek();
-    CHECK_RESULT(pk);
-
-    if (curr->lexeme == "=" || (curr->is_operator() && pk->lexeme == "=")) {
-      Token* possible_augment = consume();
-      CHECK_RESULT(possible_augment);
-
-      if (possible_augment->lexeme != "=") {
-        consume();
+        return alloc_node(tok->loc, AstKind::STMT_Asgn, {.s_asgn = asgn});
       }
-
-      ParseResult<ExprNode*> rvalue = parse_expr();
-      return lctx.astalloc.emplace<NodeAsgnStmt>(*lvalue, *possible_augment, *rvalue);
     }
 
-    return lctx.astalloc.emplace<ExprStmtNode>(*lvalue);
+    NodeExprStmt expr;
+    expr.expr = lval;
+
+    return alloc_node(tok->loc, AstKind::STMT_Expr, {.s_expr = expr});
   }
 
   VIA_UNREACHABLE();
@@ -872,42 +753,30 @@ ParseResult<StmtNode*> Parser::parse_stmt() {
 }
 
 bool Parser::parse() {
-  while (true) {
-    Token* curr = current();
-    CHECK_RESULT_MAINFN(curr);
-
-    if (curr->type == EOF_) {
-      break;
-    }
-
+  try {
     while (true) {
-      curr = current();
-      CHECK_RESULT_MAINFN(curr);
-
-      if (curr->type != AT) {
+      if (current()->type == EOF_) {
         break;
       }
 
-      ParseResult<StmtAttribute> attrib = parse_attribute();
-      CHECK_RESULT_MAINFN(attrib);
+      while (true) {
+        if (current()->type != AT) {
+          break;
+        }
 
-      attrib_buffer.push_back(*attrib);
+        attrib_buffer.push_back(*parse_attribute());
+      }
+
+      lctx.ast.push_back(parse_stmt());
+      attrib_buffer.clear();
     }
-
-    ParseResult<StmtNode*> stmt = parse_stmt();
-    CHECK_RESULT_MAINFN(stmt);
-
-    stmt.value()->attributes = attrib_buffer;
-    attrib_buffer.clear();
-
-    lctx.ast.emplace_back(*stmt);
+  }
+  catch (const ParserError& err) {
+    err_bus.log({err.loc, err.flat, err.message, ERROR_, lctx});
+    return true;
   }
 
   return false;
 }
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 } // namespace via

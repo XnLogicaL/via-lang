@@ -328,7 +328,7 @@ void StmtNodeVisitor::visit(NodeAsgnStmt& assign_node) {
   }
 }
 
-void StmtNodeVisitor::visit(ReturnStmtNode& return_node) {
+void StmtNodeVisitor::visit(NodeRetStmt& return_node) {
   auto& this_function = get_current_closure(ctx);
   if (return_node.expression) {
     operand_t expr_reg = alloc_register(ctx);
@@ -365,7 +365,7 @@ void StmtNodeVisitor::visit(ContinueStmtNode& continue_node) {
   }
 }
 
-void StmtNodeVisitor::visit(IfStmtNode& if_node) {
+void StmtNodeVisitor::visit(NodeIfStmt& if_node) {
   // Handle attributes
   for (const StmtAttribute& attr : if_node.attributes) {
     if (attr.identifier.lexeme == "compile_time") {
@@ -466,7 +466,7 @@ void StmtNodeVisitor::visit(IfStmtNode& if_node) {
   }
 }
 
-void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
+void StmtNodeVisitor::visit(NodeWhileStmt& while_node) {
   operand_t repeat_label = ctx.lctx.label_count++;
   operand_t escape_label = ctx.lctx.label_count++;
   operand_t cond_reg = alloc_register(ctx);
@@ -488,14 +488,14 @@ void StmtNodeVisitor::visit(WhileStmtNode& while_node) {
   ctx.lesc = std::nullopt;
 }
 
-void StmtNodeVisitor::visit(DeferStmtNode& defer_stmt) {
+void StmtNodeVisitor::visit(NodeDeferStmt& defer_stmt) {
   if (!ctx.lctx.defered_stmts.empty()) {
     auto& top = ctx.lctx.defered_stmts.back();
     top.push_back(defer_stmt.stmt);
   }
 }
 
-void StmtNodeVisitor::visit(ExprStmtNode& expr_stmt) {
+void StmtNodeVisitor::visit(NodeExprStmt& expr_stmt) {
   ExprNode* expr = expr_stmt.expression;
   operand_t reg = alloc_register(ctx);
 

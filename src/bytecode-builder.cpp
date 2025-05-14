@@ -430,7 +430,7 @@ bool BytecodeBuilder::generate() {
   codegen_prep();
 
   for (StmtNode* stmt : ctx.lctx.ast) {
-    if (DeferStmtNode* defer_stmt = dynamic_cast<DeferStmtNode*>(stmt)) {
+    if (NodeDeferStmt* defer_stmt = dynamic_cast<NodeDeferStmt*>(stmt)) {
       auto message = "Defer statements not allowed in global scope";
       compiler_util::compiler_error(ctx, defer_stmt->begin, defer_stmt->end, message);
       compiler_util::compiler_output_end(ctx);

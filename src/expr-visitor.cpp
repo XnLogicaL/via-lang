@@ -417,7 +417,7 @@ void ExprNodeVisitor::visit(NodeCastExpr& type_cast, operand_t dst) {
   free_register(ctx, temp);
 }
 
-void ExprNodeVisitor::visit(StepExprNode& step_expr, operand_t dst) {
+void ExprNodeVisitor::visit(NodeStepExpr& step_expr, operand_t dst) {
   auto opcode = step_expr.is_increment ? INC : DEC;
   operand_t temp = alloc_register(ctx);
   resolve_lvalue(ctx, step_expr.target, dst);

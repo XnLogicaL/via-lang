@@ -106,7 +106,7 @@ public:
   virtual void visit(NodeIndexExpr&, operand_t) INVALID_VISIT;
   virtual void visit(NodeBinExpr&, operand_t) INVALID_VISIT;
   virtual void visit(NodeCastExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(StepExprNode&, operand_t) INVALID_VISIT;
+  virtual void visit(NodeStepExpr&, operand_t) INVALID_VISIT;
   virtual void visit(NodeArrExpr&, operand_t) INVALID_VISIT;
   virtual void visit(NodeIntrExpr&, operand_t) INVALID_VISIT;
 
@@ -122,13 +122,13 @@ public:
   virtual void visit(NodeScopeStmt&) INVALID_VISIT;
   virtual void visit(NodeFuncDeclStmt&) INVALID_VISIT;
   virtual void visit(NodeAsgnStmt&) INVALID_VISIT;
-  virtual void visit(IfStmtNode&) INVALID_VISIT;
-  virtual void visit(ReturnStmtNode&) INVALID_VISIT;
+  virtual void visit(NodeIfStmt&) INVALID_VISIT;
+  virtual void visit(NodeRetStmt&) INVALID_VISIT;
   virtual void visit(BreakStmtNode&) INVALID_VISIT;
   virtual void visit(ContinueStmtNode&) INVALID_VISIT;
-  virtual void visit(WhileStmtNode&) INVALID_VISIT;
-  virtual void visit(DeferStmtNode&) INVALID_VISIT;
-  virtual void visit(ExprStmtNode&) INVALID_VISIT;
+  virtual void visit(NodeWhileStmt&) INVALID_VISIT;
+  virtual void visit(NodeDeferStmt&) INVALID_VISIT;
+  virtual void visit(NodeExprStmt&) INVALID_VISIT;
 
   /// @brief Indicates if the visitor has failed.
   virtual inline bool failed() {
@@ -157,7 +157,7 @@ public:
   void visit(NodeIndexExpr&, operand_t) override;
   void visit(NodeBinExpr&, operand_t) override;
   void visit(NodeCastExpr&, operand_t) override;
-  void visit(StepExprNode&, operand_t) override;
+  void visit(NodeStepExpr&, operand_t) override;
   void visit(NodeArrExpr&, operand_t) override;
   void visit(NodeIntrExpr&, operand_t) override;
 };
@@ -206,13 +206,13 @@ public:
   void visit(NodeScopeStmt&) override;
   void visit(NodeFuncDeclStmt&) override;
   void visit(NodeAsgnStmt&) override;
-  void visit(IfStmtNode&) override;
-  void visit(ReturnStmtNode&) override;
+  void visit(NodeIfStmt&) override;
+  void visit(NodeRetStmt&) override;
   void visit(BreakStmtNode&) override;
   void visit(ContinueStmtNode&) override;
-  void visit(WhileStmtNode&) override;
-  void visit(DeferStmtNode&) override;
-  void visit(ExprStmtNode&) override;
+  void visit(NodeWhileStmt&) override;
+  void visit(NodeDeferStmt&) override;
+  void visit(NodeExprStmt&) override;
 
   /// @brief Checks whether any of the sub-visitors encountered a failure.
   inline bool failed() override {
