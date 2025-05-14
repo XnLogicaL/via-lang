@@ -9,16 +9,16 @@
 #include <context.h>
 
 // Lexer
-#include <lex/lexer.h>
+#include <lexer.h>
 
 // Parser
-#include <parse/parser.h>
-#include <parse/ast.h>
+#include <parser.h>
+#include <ast.h>
 
 // Compiler
-#include <codegen/bytecode-builder.h>
+#include <bytecode-builder.h>
 
 // State
-#include <interpreter/state.h>
+#include <state.h>
 
 #endif

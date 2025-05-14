@@ -4,7 +4,7 @@
 #include <linenoise.hpp>
 #include <argparse/argparse.hpp>
 #include <via/via.h>
-#include <utility/file-io.h>
+#include <file-io.h>
 
 #define SET_PROFILER_POINT(id)     [[maybe_unused]] const auto id = std::chrono::steady_clock::now();
 #define GET_PROFILER_DIFF_MS(l, r) std::chrono::duration<double, std::milli>(r - l).count()
@@ -16,11 +16,11 @@ using namespace via;
 
 struct CompileResult {
   bool failed;
-  TransUnitContext unit;
+  Context unit;
 };
 
 static inline CErrorBus err_bus;
-static inline TransUnitContext dummy_unit_ctx("<unavailable>", "");
+static inline Context dummy_unit_ctx("<unavailable>", "");
 
 std::unique_ptr<ArgumentParser> get_standard_parser(std::string name);
 

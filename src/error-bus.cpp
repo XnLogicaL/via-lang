@@ -83,8 +83,8 @@ std::string CError::to_string() const {
   oss << header << message << '\n';
 
   // Localize absolute offsets into (line, offset) values.
-  LocalOffset local_begin = localize_offset(ctx.file_source, position.begin);
-  LocalOffset local_end = localize_offset(ctx.file_source, position.end);
+  LocalOffset local_begin = localize_offset(ctx.file_source, loc.position.begin);
+  LocalOffset local_end = localize_offset(ctx.file_source, loc.position.end);
 
   // Adjust line indices: our get_lines_in_range expects 0-indexed line numbers.
   // Note: local_begin.line and local_end.line are 1-indexed.

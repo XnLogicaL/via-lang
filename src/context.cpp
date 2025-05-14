@@ -6,16 +6,16 @@
 namespace via {
 
 // ==========================================================================================
-// TransUnitContext
-TransUnitContext::TransUnitContext(const std::string& file_path, const std::string& file_source)
+// Context
+Context::Context(const std::string& file_path, const std::string& file_source)
   : file_path(file_path),
     file_source(file_source) {}
 
-TransUnitContext::TransUnitContext(const byte_stream_t&) {}
+Context::Context(const byte_stream_t&) {}
 
-void TransUnitContext::clear() {}
+void Context::clear() {}
 
-const char* TransUnitContext::get_platform_info() {
+const char* Context::get_platform_info() {
   static char buffer[32];
   static bool fetched = false;
 
@@ -45,7 +45,7 @@ const char* TransUnitContext::get_platform_info() {
   return buffer;
 }
 
-byte_stream_t TransUnitContext::encode() {
+byte_stream_t Context::encode() {
   return {};
 }
 

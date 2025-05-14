@@ -7,9 +7,9 @@
 #include "common.h"
 #include "context.h"
 
-#include <lex/token.h>
-#include <lex/lexloc.h>
-#include <utility/color.h>
+#include <token.h>
+#include <lexloc.h>
+#include <color.h>
 
 //  =============
 // [ error-bus.h ]
@@ -30,11 +30,11 @@ enum class CErrorLevel : uint8_t {
  */
 struct CError {
   size_t len;
+  LexLocation loc;
   bool is_flat;
   std::string message;
   CErrorLevel level;
-  LexLocation loc;
-  TransUnitContext& ctx;
+  Context& ctx;
 };
 
 /**

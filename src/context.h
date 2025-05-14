@@ -8,11 +8,11 @@
 #include "common-macros.h"
 
 #include <arena.h>
-#include <lex/token.h>
-#include <lex/lexloc.h>
-#include <codegen/globals.h>
-#include <codegen/stack.h>
-#include <interpreter/tvalue.h>
+#include <token.h>
+#include <lexloc.h>
+#include <sema_glob.h>
+#include <sema_var.h>
+#include <tvalue.h>
 
 /**
  * @namespace via
@@ -31,7 +31,9 @@ inline constexpr size_t AST_ALLOCATOR_SIZE = 1024 * 1024 * 8;
  * @brief String allocator size in bytes
  * @ingroup via_namespace
  */
-inline constexpr size_t STRING_ALLOCATOR_SIZE = 1024 * 64;
+inline constexpr size_t STRING_ALLOCATOR_SIZE = 1024 * 1024 * 8;
+
+inline constexpr size_t SEMA_ALLOCATOR_SIZE = 1024 * 1024 * 8;
 
 /**
  * @brief Dynamic container that holds a sequence of bytes.
@@ -46,21 +48,15 @@ class CompilerFunctionStack;
 class GlobalHolder;
 
 // Per translation unit context.
-class TransUnitContext final {
+struct Context {
 public:
-  // Resets the translation unit context.
-  void clear();
-
-  // Encodes the translation unit onto a binary byte stream.
-  byte_stream_t encode();
-
   // Returns platform info as a String in a static buffer.
   const char* get_platform_info();
 
   // Plain text file constructor.
-  TransUnitContext(const std::string& file_path, const std::string& file_source);
+  Context(const std::string& file_path, const std::string& file_source);
   // Binary file constructor.
-  TransUnitContext(const byte_stream_t& bytes);
+  Context(const byte_stream_t& bytes);
 
 public:
   // Relative path of the target file.
@@ -73,18 +69,15 @@ public:
   size_t label_count = 0;
 
   std::vector<Token> tokens{};
-  std::vector<Node*> ast{};
+  std::vector<AstNode*> ast{};
   std::vector<Instruction> bytecode{};
   std::vector<InstructionData> bytecode_data{};
   std::vector<Value> constants{};
-  std::vector<std::vector<Node*>> defered_stmts;
 
   // Allocators
-  ArenaAllocator ast_allocator{AST_ALLOCATOR_SIZE};
-  ArenaAllocator string_allocator{STRING_ALLOCATOR_SIZE};
-
-  GlobalHolder globals;
-  CompilerFunctionStack function_stack;
+  ArenaAllocator astalloc{AST_ALLOCATOR_SIZE};
+  ArenaAllocator stralloc{STRING_ALLOCATOR_SIZE};
+  ArenaAllocator semalloc{SEMA_ALLOCATOR_SIZE};
 };
 
 } // namespace via

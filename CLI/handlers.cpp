@@ -53,8 +53,8 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
   std::string file = subcommand_parser.get<std::string>("target");
 
   rd_result_t source_result = read_from_file(file);
-  TransUnitContext unit_ctx(file, *source_result);
-  unit_ctx.optimization_level = subcommand_parser.get<size_t>("--optimize");
+  Context lctx(file, *source_result);
+  lctx.optimization_level = subcommand_parser.get<size_t>("--optimize");
 
   // Record compilation start time
   SET_PROFILER_POINT(compilation_start)
@@ -64,9 +64,9 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     return {true, std::move(dummy_unit_ctx)};
   }
 
-  Lexer Lexer(unit_ctx);
-  Parser Parser(unit_ctx);
-  BytecodeBuilder BytecodeBuilder(unit_ctx);
+  Lexer Lexer(lctx);
+  Parser Parser(lctx);
+  BytecodeBuilder BytecodeBuilder(lctx);
 
   SET_PROFILER_POINT(lex_start);
   Lexer.tokenize();
@@ -78,7 +78,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       "Tokenization completed in {:0.9f}s", GET_PROFILER_DIFF_MS(lex_start, lex_end) / 1000
     );
 
-    err_bus.log({true, message, unit_ctx, INFO, {}});
+    err_bus.log({true, message, lctx, INFO, {}});
   }
 
   SET_PROFILER_POINT(parser_start);
@@ -86,8 +86,8 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
   if (verbosity_flag) {
     if (parser_failed) {
-      err_bus.log({true, "Parsing failed", unit_ctx, ERROR_, {}});
-      return {true, std::move(unit_ctx)};
+      err_bus.log({true, "Parsing failed", lctx, ERROR_, {}});
+      return {true, std::move(lctx)};
     }
 
     SET_PROFILER_POINT(parser_end);
@@ -96,7 +96,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       "Parsing completed in {:0.9f}s", GET_PROFILER_DIFF_MS(parser_start, parser_end) / 1000
     );
 
-    err_bus.log({true, message, unit_ctx, INFO, {}});
+    err_bus.log({true, message, lctx, INFO, {}});
   }
 
   SET_PROFILER_POINT(codegen_start);
@@ -104,8 +104,8 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
   if (verbosity_flag) {
     if (compiler_failed) {
-      err_bus.log({true, "Bytecode generation failed", unit_ctx, ERROR_, {}});
-      return {true, std::move(unit_ctx)};
+      err_bus.log({true, "Bytecode generation failed", lctx, ERROR_, {}});
+      return {true, std::move(lctx)};
     }
 
     SET_PROFILER_POINT(codegen_end);
@@ -115,7 +115,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       GET_PROFILER_DIFF_MS(codegen_start, codegen_end) / 1000
     );
 
-    err_bus.log({true, message, unit_ctx, INFO, {}});
+    err_bus.log({true, message, lctx, INFO, {}});
   }
 
   bool failed = parser_failed || compiler_failed;
@@ -124,7 +124,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-tokens")) {
       print_flag_label("--dump-tokens");
 
-      for (const Token& Token : unit_ctx.tokens) {
+      for (const Token& Token : lctx.tokens) {
         std::cout << Token.to_string() << "\n";
       }
     }
@@ -133,7 +133,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       print_flag_label("--dump-ast");
       uint32_t depth = 0;
 
-      for (StmtNode* pstmt : unit_ctx.ast) {
+      for (StmtNode* pstmt : lctx.ast) {
         std::cout << pstmt->to_string(depth) << "\n";
       }
     }
@@ -151,9 +151,9 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
         style::underline
       ) << "\n";
 
-      for (size_t i = 0; i < unit_ctx.bytecode.size(); ++i) {
-        const Instruction& insn = unit_ctx.bytecode[i];
-        const InstructionData& data = unit_ctx.bytecode_data[i];
+      for (size_t i = 0; i < lctx.bytecode.size(); ++i) {
+        const Instruction& insn = lctx.bytecode[i];
+        const InstructionData& data = lctx.bytecode_data[i];
         std::string curr_disas;
 
         if (insn.op == Opcode::LBL) {
@@ -192,10 +192,10 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
       // Platform info
       std::cout << apply_color("  platform_info ", fg_color::magenta, bg_color::black, style::bold)
-                << unit_ctx.get_platform_info() << "\n";
+                << lctx.get_platform_info() << "\n";
 
       size_t const_position = 0;
-      for (const Value& constant : unit_ctx.constants) {
+      for (const Value& constant : lctx.constants) {
         std::cout << apply_color("  constant", fg_color::magenta, bg_color::black, style::bold)
                   << ' ' << const_position++ << ": '"
                   << apply_color(constant.to_literal_cxx_string(), fg_color::green) << "' "
@@ -209,7 +209,7 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
     if (get_flag("--dump-machine-code")) {
       print_flag_label("--dump-machine-code");
 
-      for (const Instruction& insn : unit_ctx.bytecode) {
+      for (const Instruction& insn : lctx.bytecode) {
         const size_t size = sizeof(Instruction);
         const uint8_t* data = reinterpret_cast<const uint8_t*>(&insn);
 
@@ -225,8 +225,8 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
 
   if (verbosity_flag) {
     if (failed) {
-      err_bus.log({true, "Compilation failed", unit_ctx, ERROR_, {}});
-      return {true, std::move(unit_ctx)};
+      err_bus.log({true, "Compilation failed", lctx, ERROR_, {}});
+      return {true, std::move(lctx)};
     }
 
     SET_PROFILER_POINT(compilation_end);
@@ -236,10 +236,10 @@ CompileResult handle_compile(argparse::ArgumentParser& subcommand_parser) {
       GET_PROFILER_DIFF_MS(compilation_start, compilation_end) / 1000
     );
 
-    err_bus.log({true, message, unit_ctx, INFO, {}});
+    err_bus.log({true, message, lctx, INFO, {}});
   }
 
-  return {failed, std::move(unit_ctx)};
+  return {failed, std::move(lctx)};
 }
 
 CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
@@ -255,7 +255,7 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
 
   // Binary file check
   if (source_result->starts_with("%viac%")) {
-    TransUnitContext unit_ctx({});
+    Context lctx({});
 
     if (!get_flag("--allow-direct-bin-execution")) {
       err_bus.log({
@@ -269,11 +269,11 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
       });
     }
 
-    return {false, std::move(unit_ctx)};
+    return {false, std::move(lctx)};
   }
 
   CompileResult result = handle_compile(subcommand_parser);
-  TransUnitContext& unit_ctx = result.unit;
+  Context& lctx = result.unit;
 
   bool verbosity_flag = get_flag("--verbose");
 
@@ -292,7 +292,7 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
         GET_PROFILER_DIFF_MS(state_init_begin, state_init_end) / 1000
       );
 
-      err_bus.log({true, message, unit_ctx, INFO, {}});
+      err_bus.log({true, message, lctx, INFO, {}});
     }
 
     SET_PROFILER_POINT(execution_begin);
@@ -306,7 +306,7 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
         GET_PROFILER_DIFF_MS(execution_begin, execution_end) / 1000
       );
 
-      err_bus.log({true, message, unit_ctx, INFO, {}});
+      err_bus.log({true, message, lctx, INFO, {}});
     }
 
     if (verbosity_flag) {
@@ -316,7 +316,7 @@ CompileResult handle_run(argparse::ArgumentParser& subcommand_parser) {
         "Runtime completed in {:0.9f}s", GET_PROFILER_DIFF_MS(runtime_begin, runtime_end) / 1000
       );
 
-      err_bus.log({true, message, unit_ctx, INFO, {}});
+      err_bus.log({true, message, lctx, INFO, {}});
     }
   }
 
@@ -344,7 +344,7 @@ void handle_repl(argparse::ArgumentParser&) {
 
   constexpr const char REPL_HEAD[] = "$> ";
 
-  TransUnitContext unit_ctx("<repl>", "");
+  Context lctx("<repl>", "");
 
   std::cout << REPL_WELCOME;
 

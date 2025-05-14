@@ -2,7 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "handlers.h"
-#include <interpreter/cabi.h> // For C ABI testing
+#include <cabi.h> // For C ABI testing
 
 using namespace via;
 
