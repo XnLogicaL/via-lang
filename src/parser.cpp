@@ -53,7 +53,7 @@ int* Parser::parse_modifiers() {
   while (true) {
     Token* curr = current();
     if (curr->type == KW_CONST) {
-      if (*modfs & F_SEMA_CONST)
+      if (*modfs & sema::F_SEMA_CONST)
         err_bus.log({
           curr->loc,
           false,
@@ -62,7 +62,7 @@ int* Parser::parse_modifiers() {
           lctx,
         });
 
-      *modfs |= F_SEMA_CONST;
+      *modfs |= sema::F_SEMA_CONST;
       consume();
     }
     else
@@ -564,7 +564,7 @@ AstNode* Parser::parse_declaration() {
 
     [[maybe_unused]] int modfs = 0;
     if (is_const) {
-      modfs |= F_SEMA_CONST;
+      modfs |= sema::F_SEMA_CONST;
     }
 
     expect_consume(PAREN_CLOSE, "Expected ')' to close function parameters");
@@ -593,7 +593,7 @@ AstNode* Parser::parse_declaration() {
     type = alloc_node(identifier->loc, AstKind::TYPE_Auto, {});
   }
 
-  expect_consume(EQ, "Expected '=' for variable declaration");
+  expect_consume(EQUALS, "Expected '=' for variable declaration");
 
   NodeDeclStmt decl;
   decl.id = sema::alloc_string(lctx.stralloc, identifier->lexeme);

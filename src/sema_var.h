@@ -22,6 +22,8 @@ namespace via {
 
 struct Context;
 
+namespace sema {
+
 inline constexpr int F_SEMA_CONST = 32 >> 1;
 
 struct SemaVar {
@@ -32,15 +34,17 @@ struct SemaVar {
   AstNode* val;
 };
 
-struct SemaStkFrame {
+struct SemaFunc {
   const char* id;
-  SemaVar* vars;
+  const AstNode* const decl;
 };
 
 struct SemaStk {
   size_t sp;
-  SemaStkFrame* frames;
+  SemaFunc* frames;
 };
+
+} // namespace sema
 
 } // namespace via
 

@@ -8,7 +8,7 @@ namespace via {
 
 using enum Opcode;
 using enum Value::Tag;
-using namespace compiler_util;
+using namespace sema;
 
 void StmtNodeVisitor::visit(NodeDeclStmt& declaration_node) {
   bool is_global = declaration_node.is_global;
@@ -29,8 +29,8 @@ void StmtNodeVisitor::visit(NodeDeclStmt& declaration_node) {
     if (previously_declared.has_value()) {
       // Error: "global-redeclaration"
       auto message = std::format("Attempt to redeclare global '{}'", symbol);
-      compiler_error(ctx, ident, message);
-      compiler_output_end(ctx);
+      error(ctx, ident, message);
+      flush(ctx);
     }
     else {
       NodeLitExpr literal(Token(), symbol);
@@ -125,7 +125,7 @@ void StmtNodeVisitor::visit(NodeDeclStmt& declaration_node) {
         }
       };
 
-    if (is_constant_expression(ctx.lctx, val)) {
+    if (is_constexpr(ctx.lctx, val)) {
       if (NodeLitExpr* lit_expr = dynamic_cast<NodeLitExpr*>(val))
         emit_constant(*lit_expr);
       // Special case: Arrays cannot be represented as NodeLitExpr.
@@ -255,13 +255,13 @@ void StmtNodeVisitor::visit(NodeFuncDeclStmt& function_node) {
       if (is_global) {
         // Error: "global-decl-within-function"
         auto message = "Function scopes cannot declare globals";
-        compiler_error(ctx, identifier, message);
-        compiler_info(
+        error(ctx, identifier, message);
+        info(
           ctx,
           "Function scopes containing global declarations may cause previously declared "
           "globals to be re-declared, therefore are not allowed."
         );
-        compiler_output_end(ctx);
+        flush(ctx);
         break;
       }
     }
@@ -285,8 +285,8 @@ void StmtNodeVisitor::visit(NodeFuncDeclStmt& function_node) {
     if (ctx.lctx.globals.was_declared(symbol)) {
       // Error: "global-redecl"
       auto message = std::format("Redeclaring global '{}'", symbol);
-      compiler_error(ctx, function_node.identifier, message);
-      compiler_output_end(ctx);
+      error(ctx, function_node.identifier, message);
+      flush(ctx);
       return;
     }
 
@@ -345,8 +345,8 @@ void StmtNodeVisitor::visit(BreakStmtNode& break_node) {
   if (!ctx.lesc.has_value()) {
     // Error: "ill-break"
     auto message = "'break' statement not within loop or switch";
-    compiler_error(ctx, break_node.begin, break_node.end, message);
-    compiler_output_end(ctx);
+    error(ctx, break_node.begin, break_node.end, message);
+    flush(ctx);
   }
   else {
     bytecode_emit(ctx, LJMP, {*ctx.lesc}, "break");
@@ -357,8 +357,8 @@ void StmtNodeVisitor::visit(ContinueStmtNode& continue_node) {
   if (!ctx.lesc.has_value()) {
     // Error: "ill-continue"
     auto message = "'continue' statement not within loop or switch";
-    compiler_error(ctx, continue_node.begin, continue_node.end, message);
-    compiler_output_end(ctx);
+    error(ctx, continue_node.begin, continue_node.end, message);
+    flush(ctx);
   }
   else {
     bytecode_emit(ctx, LJMP, {*ctx.lrep}, "continue");
@@ -371,13 +371,13 @@ void StmtNodeVisitor::visit(NodeIfStmt& if_node) {
     if (attr.identifier.lexeme == "compile_time") {
       size_t begin, end;
 
-      if (!is_constant_expression(ctx.lctx, if_node.condition)) {
+      if (!is_constexpr(ctx.lctx, if_node.condition)) {
         begin = if_node.condition->begin, end = if_node.condition->end;
         goto conditions_not_constexpr;
       }
 
       for (const ElseIfNode* elif : if_node.elseif_nodes) {
-        if (!is_constant_expression(ctx.lctx, elif->condition)) {
+        if (!is_constexpr(ctx.lctx, elif->condition)) {
           begin = elif->condition->begin, end = elif->condition->end;
           goto conditions_not_constexpr;
         }
@@ -387,22 +387,22 @@ void StmtNodeVisitor::visit(NodeIfStmt& if_node) {
     conditions_not_constexpr:
       auto message = "Attribute 'compile_time' on if statement requires all conditions to be a "
                      "constant expression";
-      compiler_error(ctx, begin, end, message);
-      compiler_info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
-      compiler_output_end(ctx);
+      error(ctx, begin, end, message);
+      info(ctx, attr.identifier, "Attribute 'compile_time' passed here");
+      flush(ctx);
       return;
     }
     else {
       // Warning: "unused-attribute"
       auto message = std::format("Unused attribute '{}'", attr.identifier.lexeme);
-      compiler_warning(ctx, attr.identifier, message);
-      compiler_output_end(ctx);
+      warning(ctx, attr.identifier, message);
+      flush(ctx);
     }
   }
 
   // Compile-time if-statement evaluation is an O1 optimization unless explicitly specified with
   // attribute '@compile_time'
-  if (ctx.lctx.optimization_level >= 1 && is_constant_expression(ctx.lctx, if_node.condition)) {
+  if (ctx.lctx.optimization_level >= 1 && is_constexpr(ctx.lctx, if_node.condition)) {
   evaluate_if:
     auto evaluate_case = [this](ExprNode* condition, StmtNode* scope) -> bool {
       NodeLitExpr lit = fold_constant(ctx, condition);
@@ -515,16 +515,16 @@ void StmtNodeVisitor::visit(NodeExprStmt& expr_stmt) {
     return_value_ignored:
       // Warning: "return-value-ignored"
       auto message = "Function return value ignored";
-      compiler_warning(ctx, call_node->begin, call_node->end, message);
-      compiler_info(ctx, std::format("Function returns type {}", ret_ty->to_output_string()));
-      compiler_output_end(ctx);
+      warning(ctx, call_node->begin, call_node->end, message);
+      info(ctx, std::format("Function returns type {}", ret_ty->to_output_string()));
+      flush(ctx);
     }
   }
   else {
     // Warning: "expr-result-unused"
     auto message = "Expression result unused";
-    compiler_warning(ctx, expr->begin, expr->end, message);
-    compiler_output_end(ctx);
+    warning(ctx, expr->begin, expr->end, message);
+    flush(ctx);
   }
 
   free_register(ctx, reg);

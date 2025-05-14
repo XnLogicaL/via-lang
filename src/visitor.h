@@ -15,18 +15,16 @@
 #define VIA_HAS_HEADER_VISITOR_H
 
 #include "common.h"
-#include "error-bus.h"
+#include "error_bus.h"
 #include "context.h"
-#include "register.h"
-#include "stack.h"
-
-#include <token.h>
-#include <ast.h>
-#include <state.h>
-#include <bits.h>
-#include <memory.h>
-#include <ustring.h>
-#include <color.h>
+#include "token.h"
+#include "ast.h"
+#include "state.h"
+#include "bits.h"
+#include "memory.h"
+#include "ustring.h"
+#include "color.h"
+#include "sema.h"
 
 /**
  * @brief Fails with an compiler error if type inference fails.
@@ -35,8 +33,8 @@
  */
 #define VIA_CHECK_INFERED(type, expr)                                                              \
   if (!type) {                                                                                     \
-    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");           \
-    compiler_info(                                                                                 \
+    error(ctx, expr->begin, expr->end, "Expression type could not be infered");                    \
+    info(                                                                                          \
       ctx,                                                                                         \
       "This message indicates a likely compiler bug. Please report it at "                         \
       "https://github.com/XnLogicaL/via-lang"                                                      \
@@ -98,37 +96,34 @@ public:
   virtual ~NodeVisitorBase() = default;
 
   // --- Expression Visitors ---
-  virtual void visit(NodeLitExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeSymExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeUnExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeGroupExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeCallExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeIndexExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeBinExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeCastExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeStepExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeArrExpr&, operand_t) INVALID_VISIT;
-  virtual void visit(NodeIntrExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeLitExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeSymExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeUnExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeGroupExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeCallExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeIndexExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeBinExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeCastExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeStepExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeArrExpr&, operand_t) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeIntrExpr&, operand_t) INVALID_VISIT;
 
   // --- Type Visitors ---
-  virtual TypeNode* visit(AutoTypeNode&) INVALID_VISIT;
-  virtual TypeNode* visit(NodeGenType&) INVALID_VISIT;
-  virtual TypeNode* visit(NodeUnionType&) INVALID_VISIT;
-  virtual TypeNode* visit(NodeFuncType&) INVALID_VISIT;
-  virtual TypeNode* visit(NodeArrType&) INVALID_VISIT;
+  virtual AstNode* visit(AstNode*, NodeGenType&) INVALID_VISIT;
+  virtual AstNode* visit(AstNode*, NodeUnionType&) INVALID_VISIT;
+  virtual AstNode* visit(AstNode*, NodeFuncType&) INVALID_VISIT;
+  virtual AstNode* visit(AstNode*, NodeArrType&) INVALID_VISIT;
 
   // --- Statement Visitors ---
-  virtual void visit(NodeDeclStmt&) INVALID_VISIT;
-  virtual void visit(NodeScopeStmt&) INVALID_VISIT;
-  virtual void visit(NodeFuncDeclStmt&) INVALID_VISIT;
-  virtual void visit(NodeAsgnStmt&) INVALID_VISIT;
-  virtual void visit(NodeIfStmt&) INVALID_VISIT;
-  virtual void visit(NodeRetStmt&) INVALID_VISIT;
-  virtual void visit(BreakStmtNode&) INVALID_VISIT;
-  virtual void visit(ContinueStmtNode&) INVALID_VISIT;
-  virtual void visit(NodeWhileStmt&) INVALID_VISIT;
-  virtual void visit(NodeDeferStmt&) INVALID_VISIT;
-  virtual void visit(NodeExprStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeDeclStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeScopeStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeFuncDeclStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeAsgnStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeIfStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeRetStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeWhileStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeDeferStmt&) INVALID_VISIT;
+  virtual void visit(AstNode*, NodeExprStmt&) INVALID_VISIT;
 
   /// @brief Indicates if the visitor has failed.
   virtual inline bool failed() {
@@ -149,17 +144,17 @@ class ExprNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  void visit(NodeLitExpr&, operand_t) override;
-  void visit(NodeSymExpr&, operand_t) override;
-  void visit(NodeUnExpr&, operand_t) override;
-  void visit(NodeGroupExpr&, operand_t) override;
-  void visit(NodeCallExpr&, operand_t) override;
-  void visit(NodeIndexExpr&, operand_t) override;
-  void visit(NodeBinExpr&, operand_t) override;
-  void visit(NodeCastExpr&, operand_t) override;
-  void visit(NodeStepExpr&, operand_t) override;
-  void visit(NodeArrExpr&, operand_t) override;
-  void visit(NodeIntrExpr&, operand_t) override;
+  void visit(AstNode*, NodeLitExpr&, operand_t) override;
+  void visit(AstNode*, NodeSymExpr&, operand_t) override;
+  void visit(AstNode*, NodeUnExpr&, operand_t) override;
+  void visit(AstNode*, NodeGroupExpr&, operand_t) override;
+  void visit(AstNode*, NodeCallExpr&, operand_t) override;
+  void visit(AstNode*, NodeIndexExpr&, operand_t) override;
+  void visit(AstNode*, NodeBinExpr&, operand_t) override;
+  void visit(AstNode*, NodeCastExpr&, operand_t) override;
+  void visit(AstNode*, NodeStepExpr&, operand_t) override;
+  void visit(AstNode*, NodeArrExpr&, operand_t) override;
+  void visit(AstNode*, NodeIntrExpr&, operand_t) override;
 };
 
 /**
@@ -170,11 +165,10 @@ class DecayNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  TypeNode* visit(AutoTypeNode&) override;
-  TypeNode* visit(NodeGenType&) override;
-  TypeNode* visit(NodeUnionType&) override;
-  TypeNode* visit(NodeFuncType&) override;
-  TypeNode* visit(NodeArrType&) override;
+  AstNode* visit(AstNode*, NodeGenType&) override;
+  AstNode* visit(AstNode*, NodeUnionType&) override;
+  AstNode* visit(AstNode*, NodeFuncType&) override;
+  AstNode* visit(AstNode*, NodeArrType&) override;
 };
 
 /**
@@ -185,9 +179,9 @@ class TypeNodeVisitor : public NodeVisitorBase {
 public:
   using NodeVisitorBase::NodeVisitorBase;
 
-  void visit(NodeDeclStmt&) override;
-  void visit(NodeAsgnStmt&) override;
-  void visit(NodeFuncDeclStmt&) override;
+  void visit(AstNode*, NodeDeclStmt&) override;
+  void visit(AstNode*, NodeAsgnStmt&) override;
+  void visit(AstNode*, NodeFuncDeclStmt&) override;
 };
 
 /**
@@ -202,17 +196,15 @@ public:
       decay_visitor(ctx),
       type_visitor(ctx) {}
 
-  void visit(NodeDeclStmt&) override;
-  void visit(NodeScopeStmt&) override;
-  void visit(NodeFuncDeclStmt&) override;
-  void visit(NodeAsgnStmt&) override;
-  void visit(NodeIfStmt&) override;
-  void visit(NodeRetStmt&) override;
-  void visit(BreakStmtNode&) override;
-  void visit(ContinueStmtNode&) override;
-  void visit(NodeWhileStmt&) override;
-  void visit(NodeDeferStmt&) override;
-  void visit(NodeExprStmt&) override;
+  void visit(AstNode*, NodeDeclStmt&) override;
+  void visit(AstNode*, NodeScopeStmt&) override;
+  void visit(AstNode*, NodeFuncDeclStmt&) override;
+  void visit(AstNode*, NodeAsgnStmt&) override;
+  void visit(AstNode*, NodeIfStmt&) override;
+  void visit(AstNode*, NodeRetStmt&) override;
+  void visit(AstNode*, NodeWhileStmt&) override;
+  void visit(AstNode*, NodeDeferStmt&) override;
+  void visit(AstNode*, NodeExprStmt&) override;
 
   /// @brief Checks whether any of the sub-visitors encountered a failure.
   inline bool failed() override {

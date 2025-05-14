@@ -83,7 +83,7 @@ enum class TokenType {
   OP_DEC, // --
   OP_LEN,
   // Pseudo-operators
-  EQ,      // =
+  EQUALS,  // =
   RETURNS, // ->
 
   // Literals

@@ -315,7 +315,7 @@ Token Lexer::get_token() {
       return TOKEN(OP_EQ, "==", 2);
     }
 
-    return TOKEN(EQ, "=", 1);
+    return TOKEN(EQUALS, "=", 1);
   case '!':
     if (IN_RANGE() && peek() == '=') {
       NEXT_CHAR();

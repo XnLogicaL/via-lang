@@ -47,10 +47,10 @@ std::pair<size_t, size_t> get_line_and_column(const std::string& source, size_t 
 }
 
 /**
- * @namespace compiler_util
+ * @namespace sema
  * @brief Contains compiler utility functions.
  */
-namespace compiler_util {
+namespace sema {
 
 /**
  * @brief Constructs a constant value from the given literal expression node.
@@ -150,7 +150,7 @@ NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth
 
       VIA_ASSERT(left_type && right_type, "!!tmp!! inference failed");
 
-      compiler_error(
+      error(
         ctx,
         expr->begin,
         expr->end,
@@ -160,7 +160,7 @@ NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth
           right_type->to_output_string()
         )
       );
-      compiler_output_end(ctx);
+      flush(ctx);
       goto bad_fold;
     }
     else if (float* float_left = std::get_if<float>(&left.value)) {
@@ -184,7 +184,7 @@ NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth
 
       VIA_ASSERT(left_type && right_type, "TODO: FOLD CONSTANT FAILURE");
 
-      compiler_error(
+      error(
         ctx,
         expr->begin,
         expr->end,
@@ -194,7 +194,7 @@ NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth
           right_type->to_output_string()
         )
       );
-      compiler_output_end(ctx);
+      flush(ctx);
       goto bad_fold;
     }
   }
@@ -207,8 +207,8 @@ NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* expr, size_t fold_depth
 
     // Check if call exceeds variable depth limit
     if (fold_depth > 5) {
-      compiler_error(ctx, expr->begin, expr->end, "Constant fold variable depth exceeded");
-      compiler_info(
+      error(ctx, expr->begin, expr->end, "Constant fold variable depth exceeded");
+      info(
         ctx,
         "This error message likely indicates an compiler bug. Please create "
         "an issue at https://github.com/XnLogicaL/via-lang."
@@ -242,52 +242,52 @@ operand_t push_constant(VisitorContext& ctx, Value&& constant) {
 #pragma GCC diagnostic pop
 #endif
 
-void compiler_error(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
+void error(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(ctx.lctx.file_source, begin);
   ctx.errc++;
   ctx.failed = true;
   ctx.err_bus.log({false, message, ctx.lctx, ERROR_, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void compiler_error(VisitorContext& ctx, const Token& Token, const std::string& message) {
+void error(VisitorContext& ctx, const Token& Token, const std::string& message) {
   ctx.errc++;
   ctx.failed = true;
   ctx.err_bus.log({false, message, ctx.lctx, ERROR_, Token});
 }
 
-void compiler_error(VisitorContext& ctx, const std::string& message) {
+void error(VisitorContext& ctx, const std::string& message) {
   ctx.errc++;
   ctx.failed = true;
   ctx.err_bus.log({true, message, ctx.lctx, ERROR_, {}});
 }
 
-void compiler_warning(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
+void warning(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(ctx.lctx.file_source, begin);
   ctx.err_bus.log({false, message, ctx.lctx, WARNING, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void compiler_warning(VisitorContext& ctx, const Token& Token, const std::string& message) {
+void warning(VisitorContext& ctx, const Token& Token, const std::string& message) {
   ctx.err_bus.log({false, message, ctx.lctx, WARNING, Token});
 }
 
-void compiler_warning(VisitorContext& ctx, const std::string& message) {
+void warning(VisitorContext& ctx, const std::string& message) {
   ctx.err_bus.log({true, message, ctx.lctx, WARNING, {}});
 }
 
-void compiler_info(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
+void info(VisitorContext& ctx, size_t begin, size_t end, const std::string& message) {
   auto lc_info = get_line_and_column(ctx.lctx.file_source, begin);
   ctx.err_bus.log({false, message, ctx.lctx, INFO, {lc_info.first, lc_info.second, begin, end}});
 }
 
-void compiler_info(VisitorContext& ctx, const Token& Token, const std::string& message) {
+void info(VisitorContext& ctx, const Token& Token, const std::string& message) {
   ctx.err_bus.log({false, message, ctx.lctx, INFO, Token});
 }
 
-void compiler_info(VisitorContext& ctx, const std::string& message) {
+void info(VisitorContext& ctx, const std::string& message) {
   ctx.err_bus.log({true, message, ctx.lctx, INFO, {}});
 }
 
-void compiler_output_end(VisitorContext& ctx) {
+void flush(VisitorContext& ctx) {
   ctx.err_bus.new_line();
 }
 
@@ -355,8 +355,8 @@ bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src) {
       if (stack_obj.has_value() && (*stack_obj)->is_const) {
         // Error: "constant-lvalue-assignment"
         auto message = std::format("Assignment to constant lvalue '{}'", symbol);
-        compiler_error(ctx, symbol_token, message);
-        compiler_output_end(ctx);
+        error(ctx, symbol_token, message);
+        flush(ctx);
         return true;
       }
 
@@ -369,15 +369,15 @@ bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src) {
     else {
       // Error: "unknown-lvalue-assignment"
       auto message = std::format("Assignment to unknown lvalue '{}'", symbol);
-      compiler_error(ctx, symbol_token, message);
-      compiler_output_end(ctx);
+      error(ctx, symbol_token, message);
+      flush(ctx);
     }
   }
   else {
     // Error: "invalid-lvalue-assignment"
     auto message = "Assignment to invalid lvalue";
-    compiler_error(ctx, lvalue->begin, lvalue->end, message);
-    compiler_output_end(ctx);
+    error(ctx, lvalue->begin, lvalue->end, message);
+    flush(ctx);
   }
 
   return true;
@@ -386,8 +386,8 @@ bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src) {
 TypeNode* resolve_type(VisitorContext& ctx, ExprNode* expr) {
   TypeNode* type = expr->infer_type(ctx.lctx);
   if (!type) {
-    compiler_error(ctx, expr->begin, expr->end, "Expression type could not be infered");
-    compiler_info(
+    error(ctx, expr->begin, expr->end, "Expression type could not be infered");
+    info(
       ctx,
       "This message indicates a likely compiler bug. Please report it at "
       "https://github.com/XnLogicaL/via-lang"
@@ -413,7 +413,7 @@ void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor) {
   }
 }
 
-} // namespace compiler_util
+} // namespace sema
 
 void BytecodeBuilder::codegen_prep() {
   ctx.lctx.globals.declare_builtins();
@@ -421,7 +421,7 @@ void BytecodeBuilder::codegen_prep() {
 }
 
 void BytecodeBuilder::insert_exit0_instruction() {
-  compiler_util::bytecode_emit(ctx, Opcode::RETBF, {});
+  sema::bytecode_emit(ctx, Opcode::RETBF, {});
 }
 
 bool BytecodeBuilder::generate() {
@@ -432,8 +432,8 @@ bool BytecodeBuilder::generate() {
   for (StmtNode* stmt : ctx.lctx.ast) {
     if (NodeDeferStmt* defer_stmt = dynamic_cast<NodeDeferStmt*>(stmt)) {
       auto message = "Defer statements not allowed in global scope";
-      compiler_util::compiler_error(ctx, defer_stmt->begin, defer_stmt->end, message);
-      compiler_util::compiler_output_end(ctx);
+      sema::error(ctx, defer_stmt->begin, defer_stmt->end, message);
+      sema::flush(ctx);
       continue;
     }
 
@@ -444,7 +444,7 @@ bool BytecodeBuilder::generate() {
 
   if (ctx.errc > 0) {
     auto message = std::format("{} error(s) generated.", ctx.errc);
-    compiler_util::compiler_error(ctx, message);
+    sema::error(ctx, message);
   }
 
   return visitor.failed();

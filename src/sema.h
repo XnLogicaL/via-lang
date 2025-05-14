@@ -1,35 +1,28 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-/**
- * @file bytecode-builder.h
- * @brief Declares the BytecodeBuilder class along with utility
- */
-#ifndef VIA_HAS_HEADER_COMPILER_H
-#define VIA_HAS_HEADER_COMPILER_H
+#ifndef VIA_HAS_HEADER_SEMA_H
+#define VIA_HAS_HEADER_SEMA_H
 
 #include "common.h"
+#include "sema_utils.h"
+#include "sema_var.h"
+#include "sema_glob.h"
+#include "sema_reg.h"
+#include "sema_types.h"
 
-#include <ast.h>
-#include <visitor.h>
-#include <types.h>
-#include <instruction.h>
-#include <state.h>
-
-/**
- * @namespace via
- * @ingroup via_namespace
- * @{
- */
 namespace via {
 
+struct VisitorContext;
+class NodeVisitorBase;
+
 /**
- * @namespace compiler_util
+ * @namespace sema
  * @brief Contains compiler utility functions.
  * @defgroup compiler_util_namespace
  * @{
  */
-namespace compiler_util {
+namespace sema {
 
 /**
  * @class OperandsArray
@@ -60,87 +53,60 @@ struct OperandsArray {
 /**
  * @brief Emits a compiler error with a highlighted source range.
  * @param ctx Visitor context
- * @param begin Start offset of source
- * @param end End offset of source
+ * @param loc Lex location
  * @param message Error message
  */
-void compiler_error(VisitorContext& ctx, size_t begin, size_t end, const std::string& message);
-
-/**
- * @brief Emits a compiler error associated with a specific token.
- * @param ctx Visitor context
- * @param token Token associated with the error
- * @param message Error message
- */
-void compiler_error(VisitorContext& ctx, const Token& token, const std::string& message);
+void error(VisitorContext& ctx, LexLocation loc, const std::string& message);
 
 /**
  * @brief Emits a general compiler error without location info.
  * @param ctx Visitor context
  * @param message Error message
  */
-void compiler_error(VisitorContext& ctx, const std::string& message);
+void error(VisitorContext& ctx, const std::string& message);
 
 /**
  * @brief Emits a compiler warning with a highlighted source range.
  * @param ctx Visitor context
- * @param begin Start offset of source
- * @param end End offset of source
+ * @param loc Lex location
  * @param message Warning message
  */
-void compiler_warning(VisitorContext& ctx, size_t begin, size_t end, const std::string&);
-
-/**
- * @brief Emits a compiler warning associated with a specific token.
- * @param ctx Visitor context
- * @param token Token associated with the warning
- * @param message Warning message
- */
-void compiler_warning(VisitorContext& ctx, const Token&, const std::string&);
+void warning(VisitorContext& ctx, LexLocation loc, const std::string& message);
 
 /**
  * @brief Emits a general compiler info without location info.
  * @param ctx Visitor context
  * @param message Info message
  */
-void compiler_warning(VisitorContext& ctx, const std::string&);
+void warning(VisitorContext& ctx, const std::string&);
 
 /**
  * @brief Emits a compiler info with a highlighted source range.
  * @param ctx Visitor context
- * @param begin Start offset of source
- * @param end End offset of source
+ * @param loc Lex location
  * @param message Info message
  */
-void compiler_info(VisitorContext& ctx, size_t begin, size_t end, const std::string&);
-
-/**
- * @brief Emits a compiler info associated with a specific token.
- * @param ctx Visitor context
- * @param token Token associated with the info
- * @param message Error message
- */
-void compiler_info(VisitorContext& ctx, const Token&, const std::string&);
+void info(VisitorContext& ctx, LexLocation loc, const std::string& message);
 
 /**
  * @brief Emits a general compiler info without location info.
  * @param ctx Visitor context
  * @param message Error info
  */
-void compiler_info(VisitorContext& ctx, const std::string&);
+void info(VisitorContext& ctx, const std::string&);
 
 /**
  * @brief Signifies the end of compiler output. Currently does nothing
  * @param ctx Visitor context
  */
-void compiler_output_end(VisitorContext& ctx);
+void flush(VisitorContext& ctx);
 
 /**
  * @brief Returns the top-most closure on the function stack.
  * @param ctx Visitor context
  * @return Reference to top-most closure on the stack.
  */
-StackFunction& get_current_closure(VisitorContext& ctx);
+SemaFunc& get_current_closure(VisitorContext& ctx);
 
 /**
  * @brief Constructs a constant value from the given literal expression node.
@@ -156,7 +122,7 @@ Value construct_constant(NodeLitExpr& constant);
  * @param fold_depth The maximum fold depth for symbolic expression
  * @return Literal expression node
  */
-NodeLitExpr fold_constant(VisitorContext& ctx, ExprNode* constant, size_t fold_depth = 0);
+NodeLitExpr fold_constant(VisitorContext& ctx, AstNode* constant, size_t fold_depth = 0);
 
 /**
  * @brief Pushes a constant onto the constant table.
@@ -173,7 +139,7 @@ operand_t push_constant(VisitorContext& ctx, Value&& constant);
  * @param dst Destination register
  * @return Fail status
  */
-bool resolve_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t dst);
+bool resolve_lvalue(VisitorContext& ctx, AstNode* lvalue, operand_t dst);
 
 /**
  * @brief Resolves the given rvalue and loads the result into the given register.
@@ -182,7 +148,7 @@ bool resolve_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t dst);
  * @param dst Destination register
  * @return Fail status
  */
-bool resolve_rvalue(NodeVisitorBase* visitor, ExprNode* rvalue, operand_t dst);
+bool resolve_rvalue(NodeVisitorBase* visitor, AstNode* rvalue, operand_t dst);
 
 /**
  * @brief Binds the value in the given register to the given lvalue.
@@ -191,7 +157,7 @@ bool resolve_rvalue(NodeVisitorBase* visitor, ExprNode* rvalue, operand_t dst);
  * @param src Register to the get the value to bind
  * @return Fail status
  */
-bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src);
+bool bind_lvalue(VisitorContext& ctx, AstNode* lvalue, operand_t src);
 
 /**
  * @brief Resolves the type of the given expression
@@ -200,7 +166,7 @@ bool bind_lvalue(VisitorContext& ctx, ExprNode* lvalue, operand_t src);
  * @return Resolved type, current can hold the value of nullptr because the type system is
  * incomplete
  */
-TypeNode* resolve_type(VisitorContext& ctx, ExprNode* expr);
+AstNode* resolve_type(VisitorContext& ctx, AstNode* expr);
 
 /**
  * @typedef operand_init_t OperandsArrat<operand_t, 3, OPERAND_INVALID>
@@ -234,20 +200,7 @@ void close_defer_statements(VisitorContext& ctx, NodeVisitorBase* visitor);
  * @param ctx Visitor context
  * @return Register id
  */
-inline register_t alloc_register(VisitorContext& ctx) {
-  register_t reg = ctx.reg_alloc.allocate_register();
-  if (reg == 0xFFFF) {
-    compiler_error(ctx, "Register allocation failure");
-    compiler_info(
-      ctx,
-      "This likely indicates an internal compiler bug. Please report this issue in the official "
-      "via language github repository."
-    );
-    compiler_output_end(ctx);
-  }
-
-  return reg;
-}
+register_t alloc_register(VisitorContext& ctx);
 
 /**
  * @brief Fress the given registers that was previously allocated with `alloc_register`
@@ -255,46 +208,10 @@ inline register_t alloc_register(VisitorContext& ctx) {
  * @param ctx Visitor context
  * @param reg Register id
  */
-inline void free_register(VisitorContext& ctx, operand_t reg) {
-  ctx.reg_alloc.free_register(reg);
-}
+void free_register(VisitorContext& ctx, operand_t reg);
 
-} // namespace compiler_util
-
-/** @} */
-
-/**
- * @class BytecodeBuilder
- * @brief Builds bytecode from the abstract syntax tree found inside the translation unit context.
- */
-class BytecodeBuilder final {
-public:
-  BytecodeBuilder(Context& lctx)
-    : ctx(lctx) {}
-
-  /**
-   * @brief Bytecode building entry point
-   * @return Fail status
-   */
-  bool generate();
-
-private:
-  /**
-   * @brief Prepares the builder and contexts for code generation
-   */
-  void codegen_prep();
-
-  /**
-   * @brief Emits a "successful exit" instruction to guarantee that the program exits safely
-   */
-  void insert_exit0_instruction();
-
-private:
-  VisitorContext ctx;
-};
+} // namespace sema
 
 } // namespace via
-
-/** @} */
 
 #endif

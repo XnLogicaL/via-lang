@@ -12,7 +12,7 @@
 #include <color.h>
 
 //  =============
-// [ error-bus.h ]
+// [ error_bus.h ]
 //  =============
 namespace via {
 

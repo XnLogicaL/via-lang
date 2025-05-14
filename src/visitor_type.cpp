@@ -6,7 +6,7 @@
 
 namespace via {
 
-using namespace compiler_util;
+using namespace sema;
 
 void TypeNodeVisitor::visit(NodeDeclStmt& declaration_node) {
   TypeNode* infered_type = resolve_type(ctx, declaration_node.rvalue);
@@ -18,9 +18,9 @@ void TypeNodeVisitor::visit(NodeDeclStmt& declaration_node) {
   if (is_nil(annotated_type)) {
     // Warning: "Nil-typed-variable"
     auto message = std::format("Variable typed as {}", apply_color("Nil", fg_color::magenta));
-    compiler_warning(ctx, declaration_node.type->begin, declaration_node.type->end, message);
-    compiler_info(ctx, "'Nil' typed variables are incapable of holding more than one value");
-    compiler_output_end(ctx);
+    warning(ctx, declaration_node.type->begin, declaration_node.type->end, message);
+    info(ctx, "'Nil' typed variables are incapable of holding more than one value");
+    flush(ctx);
   }
 
   if (!is_compatible(infered_type, annotated_type)) {
@@ -30,8 +30,8 @@ void TypeNodeVisitor::visit(NodeDeclStmt& declaration_node) {
       infered_type->to_output_string(),
       annotated_type->to_output_string()
     );
-    compiler_error(ctx, declaration_node.rvalue->begin, declaration_node.rvalue->end, message);
-    compiler_output_end(ctx);
+    error(ctx, declaration_node.rvalue->begin, declaration_node.rvalue->end, message);
+    flush(ctx);
   }
 }
 
@@ -49,8 +49,8 @@ void TypeNodeVisitor::visit(NodeAsgnStmt& assign_node) {
       assigned_type->to_output_string(),
       infered_type->to_output_string()
     );
-    compiler_error(ctx, assign_node.rvalue->begin, assign_node.rvalue->end, message);
-    compiler_output_end(ctx);
+    error(ctx, assign_node.rvalue->begin, assign_node.rvalue->end, message);
+    flush(ctx);
   }
 }
 

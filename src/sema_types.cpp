@@ -6,14 +6,14 @@
 namespace via {
 
 // clang-format off
-bool is_constant_expression(Context& lctx, const ExprNode* expression, size_t variable_depth) {
+bool is_constexpr(Context& lctx, const ExprNode* expression, size_t variable_depth) {
   // clang-format on
   if (dynamic_cast<const NodeLitExpr*>(expression) != nullptr) {
     return true;
   }
   else if (const NodeBinExpr* bin_expr = dynamic_cast<const NodeBinExpr*>(expression)) {
-    return is_constant_expression(lctx, bin_expr->lhs_expression, variable_depth + 1)
-      && is_constant_expression(lctx, bin_expr->rhs_expression, variable_depth + 1);
+    return is_constexpr(lctx, bin_expr->lhs_expression, variable_depth + 1)
+      && is_constexpr(lctx, bin_expr->rhs_expression, variable_depth + 1);
   }
   else if (const NodeSymExpr* sym_expr = dynamic_cast<const NodeSymExpr*>(expression)) {
     auto& current_closure = lctx.function_stack.back();
@@ -27,11 +27,11 @@ bool is_constant_expression(Context& lctx, const ExprNode* expression, size_t va
       return false;
     }
 
-    return is_constant_expression(lctx, (*var_obj)->value, ++variable_depth);
+    return is_constexpr(lctx, (*var_obj)->value, ++variable_depth);
   }
   else if (const NodeArrExpr* arr_expr = dynamic_cast<const NodeArrExpr*>(expression)) {
     for (ExprNode* arr_val : arr_expr->values) {
-      if (!is_constant_expression(lctx, arr_val, variable_depth + 1)) {
+      if (!is_constexpr(lctx, arr_val, variable_depth + 1)) {
         return false;
       }
     }

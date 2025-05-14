@@ -5,7 +5,7 @@
 #define VIA_HAS_HEADER_PARSER_H
 
 #include "common.h"
-#include "error-bus.h"
+#include "error_bus.h"
 #include "sema_utils.h"
 #include "ast.h"
 

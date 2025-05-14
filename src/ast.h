@@ -78,7 +78,7 @@ struct NodeLitExpr {
     bool b;
     int i;
     float f;
-    char* s;
+    const char* s;
   } u;
 };
 
