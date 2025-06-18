@@ -49,12 +49,17 @@ struct alignas(8) Value {
 };
 
 Value value_new(State* S);
+Value value_new(State* S, int i);
+Value value_new(State* S, float f);
+Value value_new(State* S, bool b);
 Value value_new(State* S, ValueKind kind, ValueData* data);
 void value_close(State* S, Value* value);
 Value value_clone(State* S, const Value* other);
 Value value_ref(State* S, const Value* other);
 void value_reset(State* S, Value* value);
 bool value_cmp(State* S, const Value* left, const Value* right);
+
+inline const Value nil;
 
 } // namespace vm
 

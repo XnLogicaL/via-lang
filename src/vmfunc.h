@@ -14,7 +14,6 @@ namespace via {
 namespace vm {
 
 using NativeFn = Value (*)(State*);
-using CodeBuf = HeapBuffer<Instruction>;
 
 struct State;
 struct Value;
@@ -37,7 +36,8 @@ struct UpValue {
 using UpvBuf = HeapBuffer<UpValue>;
 
 struct Function {
-  CodeBuf code;
+  const Instruction* code;
+  size_t code_size = 0;
   size_t line = 0;
   const char* id = "<anonymous>";
 };

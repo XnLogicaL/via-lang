@@ -3,31 +3,24 @@
 
 #include "vmerr.h"
 #include "vmstate.h"
+#include "vmapi.h"
 
 namespace via {
 
 namespace vm {
 
-void error_fatal(const char* msg) {
-  std::fprintf(stderr, "Fatal error: %s\n", msg);
-  std::abort();
+[[noreturn]] void error_fatal(const char* msg) {
+  fprintf(stderr, "Fatal error: %s\n", msg);
+  abort();
 }
 
 void error(const State* S, const char* msg) {
-  if (!S->ectx) {
+  // check for empty stack:
+  if (stack_size(S) == 0)
     error_fatal(msg);
-  }
 
+  S->ectx->interrupt = true;
   S->ectx->msg = msg;
-  std::longjmp(S->ectx->env, 1);
-}
-
-void error_toobig(State* S) {
-  error(S, "memory allocation error: block too big");
-}
-
-void error_outofbounds(State* S) {
-  error(S, "mutation error: out of bounds");
 }
 
 } // namespace vm

@@ -10,37 +10,44 @@ namespace vm {
 
 String string_new(State* S, const char* str) {
   size_t len = std::strlen(str);
-  if (len > VIA_MAXSSIZE)
-    error_toobig(S);
+  if (len > VIA_MAXSSIZE) {
+    error(S, "memory allocation failed: block too large");
+    return {};
+  }
 
   String lstr;
-  lstr.data = StrBuf(len + 1);
+  lstr.size = len;
+  lstr.data = (char*)S->ator.alloc_bytes(len + 1);
   lstr.hash = ustrhash(str);
 
-  std::strcpy(lstr.data.data, str);
+  std::strcpy(lstr.data, str);
 
   return lstr;
 }
 
 char string_get(State* S, String* str, size_t pos) {
-  if (pos > str->data.size)
-    error_outofbounds(S);
+  if (pos > str->size) {
+    error(S, "string index out of range");
+    return -1;
+  }
 
-  return str->data.data[pos];
+  return str->data[pos];
 }
 
 void string_set(State* S, String* str, size_t pos, char chr) {
-  if (pos > str->data.size)
-    error_outofbounds(S);
+  if (pos > str->size) {
+    error(S, "string index out of range");
+    return;
+  }
 
-  str->data.data[pos] = chr;
+  str->data[pos] = chr;
 }
 
 bool string_cmp(State*, String* left, String* right) {
-  if (left->data.size != right->data.size)
+  if (left->size != right->size)
     return false;
 
-  return std::strcmp(left->data.data, right->data.data);
+  return std::strcmp(left->data, right->data);
 }
 
 } // namespace vm

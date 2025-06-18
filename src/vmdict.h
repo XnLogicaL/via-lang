@@ -12,14 +12,19 @@ namespace via {
 
 namespace vm {
 
-struct DictHashNode {
+struct HashNode {
   const char* key;
   Value value;
 };
 
 struct Dict {
-  DictHashNode* nodes;
+  HashNode** nodes;
+  size_t capacity;
 };
+
+size_t dict_size(State* S, Dict* D);
+void dict_set(State* S, Dict* D, const char* key, Value&& val);
+Value* dict_get(State* S, Dict* D, const char* key);
 
 } // namespace vm
 

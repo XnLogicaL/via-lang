@@ -435,7 +435,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
         }
         else if (tokens[cursor].type == TokenType::LIT_INT) {
           try {
-            operand_t opi = std::stoul(tokens[cursor].lexeme);
+            uint16_t opi = std::stoul(tokens[cursor].lexeme);
             if (operand_cursor == 0) {
               insn.a = opi;
             }
@@ -541,7 +541,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
       }
 
       try {
-        operand_t reg = std::stoul(tokens[1].lexeme);
+        uint16_t reg = std::stoul(tokens[1].lexeme);
         Value& atreg = state.get_register(reg);
 
         std::cout << 'r' << reg << ": " << magic_enum::enum_name(atreg.type) << ' '

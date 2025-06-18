@@ -5,29 +5,44 @@
 #define VIA_STATE_H
 
 #include <csetjmp>
+#include <arena.h>
 #include "common.h"
 #include "heapbuf.h"
-#include "vmcstk.h"
 #include "vminstr.h"
 #include "vmval.h"
 #include "vmerr.h"
+#include "vmheader.h"
 
 namespace via {
 
 namespace vm {
 
+struct CallInfo {
+  int nargs = 0;
+  bool protect = false;
+  Value* base = NULL;
+  Closure* closure = NULL;
+  const Instruction* savedpc = NULL;
+};
+
 struct alignas(64) State {
-  ErrorContext* ectx = NULL;
+  const Header H;
 
   Dict* gt = NULL;
+
+  HeapBuffer<Value> rf;
   HeapBuffer<Value> stk;
   HeapBuffer<CallInfo> ci_stk;
   HeapBuffer<Instruction*> lt;
 
   const Instruction* pc = NULL;
 
+  ErrorContext* ectx = NULL;
+
   Value* top;
   CallInfo* ci_top;
+
+  ArenaAllocator ator;
 
   VIA_NOCOPY(State);
   VIA_NOMOVE(State);

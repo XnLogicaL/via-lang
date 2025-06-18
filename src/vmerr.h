@@ -4,8 +4,8 @@
 #ifndef VIA_ERR_H
 #define VIA_ERR_H
 
-#include <csetjmp>
 #include "common.h"
+#include "vmstr.h"
 
 namespace via {
 
@@ -14,16 +14,23 @@ namespace vm {
 struct State;
 
 struct ErrorContext {
-  jmp_buf env;
+  bool interrupt;
   const char* msg;
-  ErrorContext* prev;
 };
 
-void error_fatal(const char* msg);
+[[noreturn]] void error_fatal(const char* msg);
 
 void error(State* S, const char* msg);
-void error_toobig(State* S);
-void error_outofbounds(State* S);
+
+template<typename... Args>
+void errorf(State* S, const char* fmt, Args... args) {
+  int size = snprintf(NULL, 0, fmt, args...);
+
+  StrBuf buf(size + 1);
+
+  snprintf(buf.data, size + 1, fmt, args...);
+  error(S, buf.data);
+}
 
 } // namespace vm
 

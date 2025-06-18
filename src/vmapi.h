@@ -17,78 +17,53 @@ namespace via {
 
 namespace vm {
 
-const InstructionData& pcdata(const State* state, const Instruction* const pc);
-std::string funcsig(const Callable& func);
-std::string nativeid(NativeFn fn);
+inline int stack_size(const State* S) {
+  return S->ci_top - S->ci_stk.data;
+}
 
-Value get_constant(const State* state, size_t index);
+const InstructionData& pcdata(State* S, const Instruction* pc);
 
-const char* type(const Value& val);
-const void* to_pointer(const Value& val);
+Value get_constant(State* S, size_t index);
 
-void call(State* state, Closure* callee);
-void pcall(State* state, Closure* callee);
-void ret(State* VIA_RESTRICT state, Value&& retv);
+void set_register(State* S, uint16_t reg, Value&& val);
 
-int length(const Value& val);
+Value* get_register(State* S, uint16_t reg);
 
-const char* to_string(const Value& val);
+void push(State* S, Value&& val);
 
-bool to_bool(const Value& val);
+void pop(State* S);
 
-int to_int(const State* V, const Value& val);
+Value* get_local(State* S, size_t offset);
 
-float to_float(const State* V, const Value& val);
+void set_local(State* S, size_t offset, Value&& val);
 
-void closure_upvs_resize(Closure* closure);
+Value* get_argument(State* S, size_t offset);
 
-bool closure_upvs_range_check(Closure* closure, size_t index);
+Value* get_global(State* S, const char* name);
 
-UpValue* closure_upv_get(Closure* closure, size_t upv_id);
+void set_global(State* S, const char* name, Value&& val);
 
-void closure_upvs_resize(Closure* closure);
+const char* type(State* S, Value* val);
 
-bool closure_upvs_range_check(Closure* closure, size_t index);
+const void* to_pointer(State* S, Value* val);
 
-UpValue* closure_upv_get(Closure* closure, size_t upv_id);
+void call(State* S, Closure* callee);
 
-void closure_upv_set(Closure* closure, size_t upv_id, Value& val);
+void pcall(State* S, Closure* callee);
 
-void closure_init(State* state, Closure* closure, size_t len);
+void ret(State* S, Value&& retv);
 
-void closure_close_upvalues(const Closure* closure);
+int length(State* S, Value* val);
 
-size_t dict_hash_key(const Dict* dict, const char* key);
+const char* to_string(State* S, Value* val);
 
-void dict_set(const Dict* dict, const char* key, Value val);
+bool to_bool(State* S, Value* val);
 
-Value* dict_get(const Dict* dict, const char* key);
+int to_int(State* S, Value* val);
 
-size_t dict_size(const Dict* dict);
+float to_float(State* S, Value* val);
 
-bool array_range_check(const Array* array, size_t index);
-
-void array_resize(Array* array);
-
-void array_set(Array* array, size_t index, Value val);
-
-Value* array_get(const Array* array, size_t index);
-
-size_t array_size(const Array* array);
-
-void label_load(const State* state);
-
-void push(State* state, Value&& val);
-
-void drop(State* state);
-
-Value* get_local(State* VIA_RESTRICT state, size_t offset);
-
-void set_local(State* VIA_RESTRICT state, size_t offset, Value&& val);
-
-void set_register(const State* state, operand_t reg, Value&& val);
-
-Value* get_register(const State* state, operand_t reg);
+void label_load(State* S);
 
 } // namespace vm
 

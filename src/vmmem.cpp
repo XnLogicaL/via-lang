@@ -1,7 +1,10 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "vmdict.h"
-#include "vmapi.h"
+#include "vmmem.h"
 
-namespace via {} // namespace via
+namespace via {
+
+namespace vm {}
+
+} // namespace via

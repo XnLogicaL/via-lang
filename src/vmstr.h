@@ -6,7 +6,6 @@
 
 #include "common.h"
 #include "ustring.h"
-#include "heapbuf.h"
 
 #define VIA_MAXSSIZE (1 << 16)
 
@@ -14,12 +13,11 @@ namespace via {
 
 namespace vm {
 
-using StrBuf = HeapBuffer<char>;
-
 struct State;
 
 struct String {
-  StrBuf data;
+  char* data = NULL;
+  size_t size;
   uint32_t hash;
 };
 

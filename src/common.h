@@ -5,7 +5,6 @@
 #define VIA_COMMON_H
 
 // External imports
-#include "tl/expected.hpp"
 #include "magic_enum/magic_enum.hpp"
 // Internal imports
 #include "common-defs.h"

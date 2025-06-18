@@ -13,7 +13,7 @@ std::string to_string(const Instruction& insn, const InstructionData& data, bool
   constexpr int opcode_column_width = 12;
   constexpr int operand_column_width = 8;
 
-  auto is_operand_valid = [](const operand_t& operand) { return operand != OPERAND_INVALID; };
+  auto is_operand_valid = [](const uint16_t& operand) { return operand != OPERAND_INVALID; };
 
   // Generate raw Opcode String and transform case
   std::string raw_opcode_str = std::string(magic_enum::enum_name(op));
