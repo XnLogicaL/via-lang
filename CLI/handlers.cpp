@@ -501,7 +501,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
         continue;
       }
 
-      const CallFrame* frame = impl::__current_callframe(&state);
+      const CallInfo* frame = impl::__current_callframe(&state);
       std::cout << "in callframe #" << state.callstack->frames_count << " function "
                 << get_callable_string(frame->closure->callee) << "\n";
       std::cout << "local count: " << frame->locals_size << "\n";
@@ -529,7 +529,7 @@ void handle_debugger(argparse::ArgumentParser& parser) {
       }
 
       for (size_t i = state.callstack->frames_count; i > 0; i--) {
-        const CallFrame& visited_frame = state.callstack->frames[i - 1];
+        const CallInfo& visited_frame = state.callstack->frames[i - 1];
         const Callable& callee = visited_frame.closure->callee;
         std::cout << "#" << state.callstack->frames_count - i << " function "
                   << get_callable_string(callee) << "\n";

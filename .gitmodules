@@ -16,6 +16,3 @@
 [submodule "ArenaAllocator"]
 	path = ArenaAllocator
 	url = https://github.com/XnLogicaL/ArenaAllocator.git
-[submodule "doxygen-awesome-css"]
-	path = doxygen-awesome-css
-    url = https://github.com/jothepro/doxygen-awesome-css.git
