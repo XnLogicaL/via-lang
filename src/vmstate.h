@@ -37,12 +37,11 @@ struct alignas(64) State {
 
   const Instruction* pc = NULL;
 
+  ArenaAllocator ator;
   ErrorContext* ectx = NULL;
 
   Value* top;
   CallInfo* ci_top;
-
-  ArenaAllocator ator;
 
   VIA_NOCOPY(State);
   VIA_NOMOVE(State);
