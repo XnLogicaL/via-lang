@@ -2,3 +2,5 @@
 	path = thirdparty/ArenaAllocator
 [submodule "thirdparty/argparse"]
 	path = thirdparty/argparse
+[submodule "thirdparty/mimalloc"]
+	path = thirdparty/mimalloc
