@@ -1,6 +1,3 @@
-[submodule "SHA256"]
-	path = SHA256
-	url = https://github.com/System-Glitch/SHA256.git
 [submodule "cpp-linenoise"]
 	path = cpp-linenoise
 	url = https://github.com/yhirose/cpp-linenoise.git
