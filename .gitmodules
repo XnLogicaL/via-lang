@@ -1,6 +1,3 @@
-[submodule "cpp-linenoise"]
-	path = cpp-linenoise
-	url = https://github.com/yhirose/cpp-linenoise.git
 [submodule "argparse"]
 	path = argparse
 	url = https://github.com/p-ranav/argparse.git
