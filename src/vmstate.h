@@ -4,14 +4,18 @@
 #ifndef VIA_STATE_H
 #define VIA_STATE_H
 
-#include <csetjmp>
-#include <arena.h>
 #include "common.h"
 #include "heapbuf.h"
 #include "vminstr.h"
 #include "vmval.h"
 #include "vmerr.h"
 #include "vmheader.h"
+#include <arena/arena.h>
+#include <mimalloc.h>
+
+#define VIA_MAXSTACK 200
+#define VIA_MAXCSTACK 200
+#define VIA_STATICMEM 1024*1024*8
 
 namespace via {
 
@@ -26,7 +30,7 @@ struct CallInfo {
 };
 
 struct alignas(64) State {
-  const Header H;
+  const Header& H;
 
   Dict* gt = NULL;
 
@@ -37,6 +41,7 @@ struct alignas(64) State {
 
   const Instruction* pc = NULL;
 
+  mi_heap_t* heap;
   ArenaAllocator ator;
   ErrorContext* ectx = NULL;
 
@@ -46,7 +51,7 @@ struct alignas(64) State {
   VIA_NOCOPY(State);
   VIA_NOMOVE(State);
 
-  State();
+  State(const Header& H);
   ~State();
 };
 

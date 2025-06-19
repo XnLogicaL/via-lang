@@ -9,18 +9,19 @@ namespace via {
 namespace vm {
 
 // Initializes and returns a new state object
-State::State()
-  : globals(new Dict),
-    lctx(lctx),
-    stk(sizeof(Value) * 200),
-    main(Value()),
-    ci_stk(sizeof(CallInfo) * 200) {
-  __call(this, main.u.clsr);
-  __label_load(this);
-}
+State::State(const Header& H)
+  : H(H),
+    gt(new Dict),
+    stk(sizeof(Value) * VIA_MAXSTACK),
+    ci_stk(sizeof(CallInfo) * VIA_MAXCSTACK),
+    ator(VIA_STATICMEM),
+    heap(mi_heap_new()),
+    top(stk.data),
+    ci_top(ci_stk.data) {}
 
 State::~State() {
   delete gt;
+  mi_heap_delete(heap);
 }
 
 } // namespace vm

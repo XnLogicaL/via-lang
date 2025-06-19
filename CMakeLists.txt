@@ -8,13 +8,26 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 23)
 
+# Convenient for LSPs
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Debug option
+option(DEBUG_MODE "Enable debug build" OFF)
+
+# Set build type based on DEBUG_MODE
+if (DEBUG_MODE)
+  set(CMAKE_BUILD_TYPE Debug)
+else()
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# mimalloc stuff
+set(MI_OVERRIDE OFF)
+
 # Add dependencies
 add_subdirectory(thirdparty/ArenaAllocator)
 add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
-
-# Debug option
-option(DEBUG_MODE "Enabled debug build mode" OFF)
 
 # ----------------------------------------------------------------------------------------------------
 # LIBRARY CONFIG
@@ -30,18 +43,11 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 add_library(libvia STATIC ${SOURCES})
 
 # Add dependencies
-target_link_libraries(libvia PUBLIC libmimalloc)
+target_link_libraries(libvia PUBLIC mimalloc)
 target_link_libraries(libvia PUBLIC ArenaAllocator)
 
 # Include dirs
-target_include_directories(libvia include)
-
-# Set build type based on DEBUG_MODE
-if (DEBUG_MODE)
-  set(CMAKE_BUILD_TYPE Debug)
-else()
-  set(CMAKE_BUILD_TYPE Release)
-endif()
+target_include_directories(libvia PUBLIC include)
 
 # Compiler options
 target_compile_options(libvia PUBLIC
@@ -65,12 +71,12 @@ project(via CXX)
 file(GLOB_RECURSE CLI_SOURCES CLI/*.cpp)
 
 # Declare executable
-add_executable(via STATIC "CLI/main.cpp" ${CLI_SOURCES})
+add_executable(via "CLI/main.cpp" ${CLI_SOURCES})
 
 # Add dependencies
 target_link_libraries(via PUBLIC argparse)
 target_link_libraries(via PUBLIC libvia)
 
 # Include dirs
-target_include_directories(via include)
+target_include_directories(via PUBLIC include)
 

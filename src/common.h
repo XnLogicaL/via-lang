@@ -4,8 +4,6 @@
 #ifndef VIA_COMMON_H
 #define VIA_COMMON_H
 
-// External imports
-#include "magic_enum/magic_enum.hpp"
 // Internal imports
 #include "common-defs.h"
 #include "common-macros.h"
