@@ -26,6 +26,14 @@ static bool isnumeric(TokenKind* kind, char c) {
   std::unreachable();
 }
 
+static bool isidentifierinitial(char c) {
+  return isalpha(c) || c == '_';
+}
+
+static bool isidentifier(char c) {
+  return isalnum(c) || c == '_';
+}
+
 static Token* read_number(State* L) {
   Token* token = L->tok_ator.emplace<Token>();
   token->kind = TK_INT;
@@ -87,12 +95,8 @@ static Token* read_identifier(State* L) {
   token->lexeme = L->cursor;
   token->size = 0;
 
-  auto is_legal = [L](char c) constexpr->bool {
-    return isalnum(c) || c == '_';
-  };
-
   char c;
-  while ((c = advance(L)), is_legal(c))
+  while ((c = advance(L)), isidentifier(c))
     token->size++;
 
   if (c == '!') {
@@ -121,7 +125,7 @@ TokenBuf lex(State* L) {
 
     if (isdigit(c))
       token = read_number(L);
-    else if (isalnum(c))
+    else if (isidentifierinitial(c))
       token = read_identifier(L);
     else if (c == '"' || c == '\'')
       token = read_string(L);
