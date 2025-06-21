@@ -30,7 +30,7 @@ int32_t ubit_2u16toi32(uint16_t high, uint16_t low);
  * Casts a high 16-bit unsigned Int and a low 16-bit unsigned Int into a 32-bit floating
  * point.
  */
-float32_t ubit_2u16tof32(uint16_t high, uint16_t low);
+float ubit_2u16tof32(uint16_t high, uint16_t low);
 
 // Casts an unsigned 32-bit Int into two unsigned 16-bit integers in the form a struct.
 u16result ubit_u32to2u16(uint32_t data);

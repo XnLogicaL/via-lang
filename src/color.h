@@ -9,7 +9,7 @@
 namespace via {
 
 // ANSI text foreground color codes.
-enum class fg_color {
+enum class FGColor {
   red = 31,
   green = 32,
   blue = 34,
@@ -21,7 +21,7 @@ enum class fg_color {
 };
 
 // ANSI text background color codes.
-enum class bg_color {
+enum class BGColor {
   red = 41,
   green = 42,
   blue = 44,
@@ -33,7 +33,7 @@ enum class bg_color {
 };
 
 // ANSI text style color codes.
-enum class style {
+enum class Style {
   reset = 0,
   bold = 1,
   faint = 2,
@@ -43,11 +43,15 @@ enum class style {
 
 // Function to wrap a String with ANSI escape codes
 inline std::string apply_color(
-  const std::string& text, fg_color fg, bg_color bg = bg_color::black, style s = style::reset
+  const std::string& text,
+  FGColor foreground,
+  BGColor background = BGColor::black,
+  Style style = Style::reset
 ) {
   // Construct ANSI escape code and apply the color formatting to the text
-  return "\033[" + std::to_string(static_cast<int>(s)) + ";" + std::to_string(static_cast<int>(fg))
-    + ";" + std::to_string(static_cast<int>(bg)) + "m" + text + "\033[0m";
+  return "\033[" + std::to_string(static_cast<int>(style)) + ";"
+    + std::to_string(static_cast<int>(foreground)) + ";"
+    + std::to_string(static_cast<int>(background)) + "m" + text + "\033[0m";
 }
 
 } // namespace via

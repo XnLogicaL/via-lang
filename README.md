@@ -9,6 +9,29 @@
 
 *"An evolution, not a revolution. -C3"*
 
+```go
+type funcType<T> = (T) -> (T)
+
+namespace util {
+  macro ismain() { __main__!() }
+}
+
+func cursed(callback: funcType<string>) -> void {
+  var chars = [ 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!' ]
+  var msg: string?
+
+  for (_, c) in chars:
+    msg ..= callback(c)
+
+  printn(msg)
+}
+
+if util::ismain!() {
+  var process = func(c: string): (c .. c)[0]
+  cusred(process)
+}
+```
+
 A performant, minimal, modern alternative to **Lua**.
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
