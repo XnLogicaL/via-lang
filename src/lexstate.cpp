@@ -8,12 +8,12 @@ namespace via {
 namespace lex {
 
 // max 3-char symbol lookahead
-struct TokenMatchEntry {
+struct TokenReprPair {
   const char* str;
   TokenKind kind;
 };
 
-static constexpr TokenMatchEntry KEYWORDS[] = {
+static constexpr TokenReprPair KEYWORDS[] = {
   {"var", TK_KW_VAR},
   {"macro", TK_KW_MACRO},
   {"func", TK_KW_FUNC},
@@ -24,7 +24,7 @@ static constexpr TokenMatchEntry KEYWORDS[] = {
   {"else", TK_KW_ELSE},
 };
 
-static constexpr TokenMatchEntry SYMBOLS[] = {
+static constexpr TokenReprPair SYMBOLS[] = {
   {".", TK_DOT},
   {";", TK_SEMICOLON},
   {":", TK_COLON},
