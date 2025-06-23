@@ -13,6 +13,17 @@ struct TokenMatchEntry {
   TokenKind kind;
 };
 
+static constexpr TokenMatchEntry KEYWORDS[] = {
+  {"var", TK_KW_VAR},
+  {"macro", TK_KW_MACRO},
+  {"func", TK_KW_FUNC},
+  {"type", TK_KW_TYPE},
+  {"while", TK_KW_WHILE},
+  {"for", TK_KW_FOR},
+  {"if", TK_KW_IF},
+  {"else", TK_KW_ELSE},
+};
+
 static constexpr TokenMatchEntry SYMBOLS[] = {
   {".", TK_DOT},
   {";", TK_SEMICOLON},
@@ -152,7 +163,17 @@ static Token* read_identifier(State* L) {
   while ((c = advance(L)), isidentifier(c))
     token->size++;
 
-  if (c == '!') {
+  for (const auto& kw : KEYWORDS) {
+    if (strlen(kw.str) != token->size)
+      continue;
+
+    if (strncmp(kw.str, token->lexeme, token->size) == 0) {
+      token->kind = kw.kind;
+      break;
+    }
+  }
+
+  if (token->kind == TK_IDENT && c == '!') {
     token->size++;
     token->kind = TK_MIDENT;
     advance(L);

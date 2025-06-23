@@ -25,13 +25,14 @@ enum TokenKind {
   TK_XINT,   // hexadecimal integer literal
   TK_FP,     // floating point literal
 
-  TK_KW_VAR,
-  TK_KW_MACRO,
-  TK_KW_FUNC,
-  TK_KW_TYPE,
-  TK_KW_WHILE,
-  TK_KW_FOR,
-  TK_KW_IF, // if
+  TK_KW_VAR,   // var
+  TK_KW_MACRO, // macro
+  TK_KW_FUNC,  // func
+  TK_KW_TYPE,  // type
+  TK_KW_WHILE, // while
+  TK_KW_FOR,   // for
+  TK_KW_IF,    // if
+  TK_KW_ELSE,  // else
 
   TK_DOT,               // .
   TK_SEMICOLON,         // ;
