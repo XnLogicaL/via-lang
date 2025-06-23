@@ -28,7 +28,7 @@ func cursed(callback: funcType<string>) -> void {
 
 if util::ismain!() {
   var process = func(c: string): (c .. c)[0]
-  cusred(process)
+  cursed(process)
 }
 ```
 

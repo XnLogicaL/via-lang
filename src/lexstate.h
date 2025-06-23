@@ -9,14 +9,20 @@
 #include "heapbuf.h"
 #include <arena/arena.h>
 
+#define VIA_MAXLEXSIZE 1024 * 1024 * 8
+
 namespace via {
 
 namespace lex {
 
+using FileBuf = HeapBuffer<char>;
+
 struct State {
-  const char* cursor = NULL;
-  HeapBuffer<char> file;
-  ArenaAllocator tok_ator; // Token allocator
+  const FileBuf& file;
+  ArenaAllocator ator{VIA_MAXLEXSIZE};
+
+  inline State(const FileBuf& file)
+    : file(file) {}
 };
 
 char advance(State* L);

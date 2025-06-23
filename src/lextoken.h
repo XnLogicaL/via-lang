@@ -25,7 +25,59 @@ enum TokenKind {
   TK_XINT,   // hexadecimal integer literal
   TK_FP,     // floating point literal
 
-  TK_DOT, // .
+  TK_KW_VAR,
+  TK_KW_MACRO,
+  TK_KW_FUNC,
+  TK_KW_TYPE,
+  TK_KW_WHILE,
+  TK_KW_FOR,
+  TK_KW_IF, // if
+
+  TK_DOT,               // .
+  TK_SEMICOLON,         // ;
+  TK_COLON,             // :
+  TK_DBCOLON,           // ::
+  TK_ARROW,             // ->
+  TK_QUESTION,          // ?
+  TK_PLUS,              // +
+  TK_MINUS,             // -
+  TK_ASTERISK,          // *
+  TK_FSLASH,            // /
+  TK_POW,               // **
+  TK_PERCENT,           // %
+  TK_AMPERSAND,         // &
+  TK_TILDE,             // ~
+  TK_CARET,             // ^
+  TK_PIPE,              // |
+  TK_BANG,              // !
+  TK_INC,               // ++
+  TK_DEC,               // --
+  TK_AND,               // &&
+  TK_OR,                // ||
+  TK_LESSTHAN,          // <
+  TK_GREATERTHAN,       // >
+  TK_CONCAT,            // ..
+  TK_LPAREN,            // (
+  TK_RPAREN,            // )
+  TK_LBRACKET,          // [
+  TK_RBRACKET,          // ]
+  TK_LCURLY,            // {
+  TK_RCURLY,            // }
+  TK_EQUALS,            // =
+  TK_DBEQUALS,          // ==
+  TK_PLUSEQUALS,        // +=
+  TK_MINUSEQUALS,       // -=
+  TK_ASTERISKEQUALS,    // *=
+  TK_FSLASHEQUALS,      // /=
+  TK_POWEQUALS,         // **=
+  TK_PERCENTEQUALS,     // %=
+  TK_AMPERSANDEQUALS,   // &=
+  TK_CARETEQUALS,       // ^=
+  TK_PIPEEQUALS,        // |=
+  TK_BANGEQUALS,        // !=
+  TK_LESSTHANEQUALS,    // <=
+  TK_GREATERTHANEQUALS, // >=
+  TK_CONCATEQUALS,      // ..=
 };
 
 struct Location {
