@@ -16,9 +16,11 @@ void token_dump(const Token& T) {
   std::cout << '(' << T.kind << ", " << lexeme << ")\n";
 }
 
-Location token_location(LexState* L, Token& token) {
-  const size_t pos = token.lexeme - L->file.data;
-  return {pos, pos + token.size};
+const Location token_location(const LexState& L, Token& T) {
+  const size_t begin = T.lexeme - L.file.data;
+  const size_t end = begin + T.size;
+
+  return {begin, end};
 }
 
 } // namespace via

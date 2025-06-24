@@ -90,10 +90,14 @@ struct Token {
   size_t size;
 };
 
+// Buffer of arena allocated token pointers owned by LexState.
 using TokenBuf = HeapBuffer<Token*>;
 
+// Dumps token T into standard output.
 void token_dump(const Token& T);
-Location token_location(LexState* L, Token& token);
+
+// Returns the location of token T.
+const Location token_location(const LexState& L, Token& T);
 
 } // namespace via
 

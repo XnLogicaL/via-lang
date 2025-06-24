@@ -56,14 +56,13 @@ int main(int argc, char* argv[]) {
   while (std::getline(ifs, line))
     input += line + '\n';
 
-  std::cout << input << "\n";
+  FileBuf file_buf(input.size() + 1);
+  strcpy(file_buf.data, input.c_str());
 
-  FileBuf B(input.size() + 1);
-  strcpy(B.data, input.c_str());
+  LexState L(file_buf);
+  TokenBuf token_buf = lexer_tokenize(L);
 
-  LexState L(B);
-  TokenBuf buf = tokenize(&L);
-  dump_ttree(buf);
+  dump_ttree(token_buf);
 
   return 0;
 }

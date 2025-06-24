@@ -96,27 +96,27 @@ static bool isidentifier(char c) {
   return isalnum(c) || c == '_';
 }
 
-static Token* read_number(LexState* L) {
-  Token* token = L->ator.emplace<Token>();
+static Token* read_number(LexState& L) {
+  Token* token = L.ator.emplace<Token>();
   token->kind = TK_INT;
-  token->lexeme = L->file.cursor;
+  token->lexeme = L.file.cursor;
   token->size = 0;
 
-  if (peek(L, 0) == '0') {
-    if (peek(L, 1) == 'x')
+  if (lexer_peek(L, 0) == '0') {
+    if (lexer_peek(L, 1) == 'x')
       token->kind = TK_XINT;
-    else if (peek(L, 1) == 'b')
+    else if (lexer_peek(L, 1) == 'b')
       token->kind = TK_BINT;
     else
       goto decimal;
 
-    advance(L); // 0
-    advance(L); // b/x
+    lexer_advance(L); // 0
+    lexer_advance(L); // b/x
   decimal:
   }
 
   char c;
-  while ((c = advance(L)), isnumeric(&token->kind, c)) {
+  while ((c = lexer_advance(L)), isnumeric(&token->kind, c)) {
     if (c == '.')
       token->kind = TK_FP;
     token->size++;
@@ -125,17 +125,17 @@ static Token* read_number(LexState* L) {
   return token;
 }
 
-static Token* read_string(LexState* L) {
-  Token* token = L->ator.emplace<Token>();
+static Token* read_string(LexState& L) {
+  Token* token = L.ator.emplace<Token>();
   token->kind = TK_STRING;
-  token->lexeme = L->file.cursor;
+  token->lexeme = L.file.cursor;
   token->size = 1; // for opening quote
 
-  char oq = advance(L); // opening quote
+  char oq = lexer_advance(L); // opening quote
 
   char c;
   bool closed = false;
-  while ((c = advance(L)) != '\0') {
+  while ((c = lexer_advance(L)) != '\0') {
     token->size++;
     if (c == oq) {
       closed = true;
@@ -151,15 +151,15 @@ static Token* read_string(LexState* L) {
   return token;
 }
 
-static Token* read_identifier(LexState* L) {
-  Token* token = L->ator.emplace<Token>();
+static Token* read_identifier(LexState& L) {
+  Token* token = L.ator.emplace<Token>();
   token->kind = TK_IDENT;
-  token->lexeme = L->file.cursor;
+  token->lexeme = L.file.cursor;
   token->size = 0;
 
   char c;
-  while ((c = peek(L, 0)), isidentifier(c)) {
-    advance(L);
+  while ((c = lexer_peek(L, 0)), isidentifier(c)) {
+    lexer_advance(L);
     token->size++;
   }
 
@@ -176,20 +176,20 @@ static Token* read_identifier(LexState* L) {
   if (token->kind == TK_IDENT && c == '!') {
     token->size++;
     token->kind = TK_MIDENT;
-    advance(L);
+    lexer_advance(L);
   }
 
   return token;
 }
 
-static Token* read_symbol(LexState* L) {
-  Token* token = L->ator.emplace<Token>();
-  token->lexeme = L->file.cursor;
+static Token* read_symbol(LexState& L) {
+  Token* token = L.ator.emplace<Token>();
+  token->lexeme = L.file.cursor;
 
   // Try to match longest symbol
   char buf[4] = {};
   for (int i = 0; i < 3; ++i) {
-    buf[i] = L->file.cursor[i];
+    buf[i] = L.file.cursor[i];
     buf[i + 1] = '\0'; // Null terminate
 
     for (const auto& sym : SYMBOLS) {
@@ -197,7 +197,7 @@ static Token* read_symbol(LexState* L) {
         token->kind = sym.kind;
         token->size = strlen(sym.str);
         for (int j = 0; j < token->size; ++j)
-          advance(L);
+          lexer_advance(L);
         return token;
       }
     }
@@ -205,25 +205,25 @@ static Token* read_symbol(LexState* L) {
 
   token->kind = TK_ILLEGAL;
   token->size = 1;
-  advance(L);
+  lexer_advance(L);
   return token;
 }
 
-char advance(LexState* L) {
-  return *(L->file.cursor++);
+char lexer_advance(LexState& L) {
+  return *(L.file.cursor++);
 }
 
-char peek(LexState* L, int count) {
-  return *(L->file.cursor + count);
+char lexer_peek(const LexState& L, int count) {
+  return *(L.file.cursor + count);
 }
 
-TokenBuf tokenize(LexState* L) {
+TokenBuf lexer_tokenize(LexState& L) {
   std::vector<Token*> toks;
 
   char c;
-  while ((c = peek(L, 0)), c != '\0') {
+  while ((c = lexer_peek(L, 0)), c != '\0') {
     if (isspace(c)) {
-      advance(L);
+      lexer_advance(L);
       continue;
     }
 
@@ -241,9 +241,9 @@ TokenBuf tokenize(LexState* L) {
     toks.push_back(token);
   }
 
-  Token* eof_ = L->ator.emplace<Token>();
+  Token* eof_ = L.ator.emplace<Token>();
   eof_->kind = TK_EOF;
-  eof_->lexeme = L->file.cursor;
+  eof_->lexeme = L.file.cursor;
   eof_->size = 0;
 
   toks.push_back(eof_);

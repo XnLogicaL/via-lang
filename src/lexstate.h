@@ -6,26 +6,35 @@
 
 #include <common/common.h>
 #include <common/heapbuf.h>
-#include "lextoken.h"
 #include <arena/arena.h>
+#include "lextoken.h"
 
-#define VIA_MAXLEXSIZE 1024 * 1024 * 8
+#define VIA_MAXTOKENS (1024 * 16)
 
 namespace via {
 
+// Null terminated buffer of characters.
 using FileBuf = HeapBuffer<char>;
 
+// Lexical analysis state.
 struct LexState {
   const FileBuf& file;
-  ArenaAllocator ator{VIA_MAXLEXSIZE};
+  ArenaAllocator ator{VIA_MAXTOKENS * sizeof(Token)};
 
   inline LexState(const FileBuf& file)
     : file(file) {}
 };
 
-char advance(LexState* L);
-char peek(LexState* L, int count);
-TokenBuf tokenize(LexState* L);
+// Advances the file cursor by one and returns the character it started on.
+char lexer_advance(LexState& L);
+
+// Returns the character at a given offset from the file cursor.
+char lexer_peek(const LexState& L, int count);
+
+// Tokenizes `LexState::file` and returns it as a buffer of token pointers owned by LexState.
+TokenBuf lexer_tokenize(LexState& L);
+
+// Dumps the given token buffer into standard output.
 void dump_ttree(const TokenBuf& B);
 
 } // namespace via
