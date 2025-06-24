@@ -5,7 +5,6 @@
 #define VIA_INSTRUCTION_H
 
 #include "common.h"
-#include "vmopc.h"
 
 #include "sbits.h"
 #include "color.h"
@@ -14,7 +13,25 @@ namespace via {
 
 namespace vm {
 
-inline constexpr size_t OPERAND_INVALID = 0xFFFF;
+enum Opcode : uint16_t {
+  VOP_NOP,
+
+  VOP_IADDII,
+  VOP_IADDIIK,
+  VOP_FADDIF,
+  VOP_FADDIFK,
+  VOP_FADDFIK,
+  VOP_FADDFF,
+  VOP_FADDFFK,
+
+  VOP_MOV,
+  VOP_LOADK,
+  VOP_LOADNIL,
+  VOP_LOADINT,
+  VOP_LOADFP,
+  VOP_LOADTRUE,
+  VOP_LOADFALSE,
+};
 
 struct InstructionData {
   std::string comment = "";

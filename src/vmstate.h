@@ -13,13 +13,18 @@
 #include <arena/arena.h>
 #include <mimalloc.h>
 
-#define VIA_MAXSTACK 200
+#define VIA_MAXSTACK  200
 #define VIA_MAXCSTACK 200
-#define VIA_STATICMEM 1024*1024*8
+#define VIA_STATICMEM 1024 * 1024 * 8
 
 namespace via {
 
 namespace vm {
+
+enum Interrupt {
+  INT_NONE,
+  INT_HALT,
+};
 
 struct CallInfo {
   int nargs = 0;
@@ -43,7 +48,9 @@ struct alignas(64) State {
 
   mi_heap_t* heap;
   ArenaAllocator ator;
-  ErrorContext* ectx = NULL;
+
+  Interrupt it = INT_NONE;
+  ErrorContext* e = NULL;
 
   Value* top;
   CallInfo* ci_top;

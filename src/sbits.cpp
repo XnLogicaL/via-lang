@@ -1,7 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "bits.h"
+#include "sbits.h"
 
 namespace via {
 
@@ -14,9 +14,9 @@ int32_t ubit_2u16toi32(uint16_t high, uint16_t low) {
   return static_cast<int32_t>(unsign);
 }
 
-float32_t ubit_2u16tof32(uint16_t high, uint16_t low) {
+float ubit_2u16tof32(uint16_t high, uint16_t low) {
   uint32_t combined = (static_cast<uint32_t>(low) << 16) | high;
-  return std::bit_cast<float32_t>(combined);
+  return std::bit_cast<float>(combined);
 }
 
 u16result ubit_u32to2u16(uint32_t data) {

@@ -24,7 +24,7 @@ struct Header {
   Header() = default;
 
   VIA_NOCOPY(Header);
-  VIA_NOMOVE(Header);
+  VIA_IMPLMOVE(Header);
 };
 
 using FileBuf = HeapBuffer<uint8_t>;

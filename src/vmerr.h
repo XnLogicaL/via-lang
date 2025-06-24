@@ -5,6 +5,7 @@
 #define VIA_ERR_H
 
 #include "common.h"
+#include "heapbuf.h"
 #include "vmstr.h"
 
 namespace via {
@@ -26,7 +27,7 @@ template<typename... Args>
 void errorf(State* S, const char* fmt, Args... args) {
   int size = snprintf(NULL, 0, fmt, args...);
 
-  StrBuf buf(size + 1);
+  HeapBuffer<char> buf(size + 1);
 
   snprintf(buf.data, size + 1, fmt, args...);
   error(S, buf.data);

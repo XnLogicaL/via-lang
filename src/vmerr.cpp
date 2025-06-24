@@ -19,8 +19,8 @@ void error(const State* S, const char* msg) {
   if (stack_size(S) == 0)
     error_fatal(msg);
 
-  S->ectx->interrupt = true;
-  S->ectx->msg = msg;
+  S->e->interrupt = true;
+  S->e->msg = msg;
 }
 
 } // namespace vm

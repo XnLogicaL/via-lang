@@ -5,10 +5,8 @@
 #define VIA_API_IMPL_H
 
 #include "common.h"
-#include "vmopc.h"
+#include "vminstr.h"
 #include "vmstate.h"
-#include "vmdict.h"
-#include "vmarr.h"
 #include "vmfunc.h"
 #include "ustring.h"
 #include "memory.h"

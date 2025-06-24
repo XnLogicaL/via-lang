@@ -137,11 +137,7 @@ void ret(State* S, Value&& retv) {
 
 Value length(State* S, Value& val) {
   if (val.kind == VLK_STRING)
-    return value_new(S, (int)val.data->u.str->data.size);
-  else if (val.kind == VLK_ARRAY)
-    return value_new(S, (int)array_size(S, val.data->u.arr));
-  else if (val.kind == VLK_DICT)
-    return value_new(S, (int)dict_size(S, val.data->u.dict));
+    return value_new(S, (int)val.data->u.str->size);
 
   return nil;
 }
@@ -156,7 +152,7 @@ const char* to_string(State* S, Value* val) {
 
   switch (val->kind) {
   case VLK_STRING:
-    return val->data->u.str->data.data;
+    return val->data->u.str->data;
   case VLK_INT:
     return ALLOC(std::to_string(val->data->u.i));
   case VLK_FLOAT:
@@ -201,7 +197,7 @@ int to_int(State* S, Value* val) {
     return val->data->u.b;
   case VLK_STRING: {
     int res;
-    const char* str = val->data->u.str->data.data;
+    const char* str = val->data->u.str->data;
     if (sscanf(str, "%d", &res) != 0)
       return res;
 
@@ -226,7 +222,7 @@ float to_float(State* S, Value* val) {
     return val->data->u.b;
   case VLK_STRING: {
     float res;
-    const char* str = val->data->u.str->data.data;
+    const char* str = val->data->u.str->data;
     if (sscanf(str, "%f", &res) != 0)
       return res;
 
@@ -239,192 +235,6 @@ float to_float(State* S, Value* val) {
 
   errorf(S, "could not cast {} into float", type(val));
   return -1;
-}
-
-// Hashes a dictionary key using the FNV-1a hashing algorithm.
-size_t dict_hash_key(const Dict* dict, const char* key) {
-  constexpr size_t BASE = 2166136261u;
-  constexpr size_t MOD = 16777619;
-
-  size_t hash = BASE;
-
-  while (*key)
-    hash = (hash ^ *key++) * MOD;
-
-  return hash % dict;
-}
-
-// Inserts a key-value pair into the hash table component of a given table_obj object.
-void dict_set(const Dict* dict, const char* key, Value val) {
-  size_t index = dict_hash_key(dict, key);
-  if (index > dict->data_capacity) {
-    // Handle relocation
-  }
-
-  Dict::HNode& node = dict->data[index];
-  node.key = key;
-  node.value = std::move(val);
-  dict->csize.is_valid = false;
-}
-
-// Performs a look-up on the given table with a given key. Returns nullptr upon lookup failure.
-Value* dict_get(const Dict* dict, const char* key) {
-  size_t index = dict_hash_key(dict, key);
-  if (index > dict->data_capacity) {
-    return nullptr;
-  }
-
-  return &dict->data[index].value;
-}
-
-// Returns the real size_t of the hashtable component of the given table object.
-size_t dict_size(const Dict* dict) {
-  if (dict->csize.is_valid) {
-    return dict->csize.cache;
-  }
-
-  size_t index = 0;
-  for (; index < dict->data_capacity; index++) {
-    Dict::HNode& obj = dict->data[index];
-    if (obj.value.is_nil()) {
-      break;
-    }
-  }
-
-  dict->csize.cache = index;
-  dict->csize.is_valid = true;
-
-  return index;
-}
-
-// Checks if the given index is out of bounds of a given tables array component.
-bool array_range_check(const Array* array, size_t index) {
-  return array->data_capacity > index;
-}
-
-// Dynamically grows and relocates the array component of a given table_obj object.
-void array_resize(Array* array) {
-  size_t old_capacity = array->data_capacity;
-  size_t new_capacity = old_capacity * 2;
-
-  Value* old_location = array->data;
-  Value* new_location = new Value[new_capacity];
-
-  for (Value* ptr = old_location; ptr < old_location + old_capacity; ptr++) {
-    size_t position = ptr - old_location;
-    new_location[position] = std::move(*ptr);
-  }
-
-  array->data = new_location;
-  array->data_capacity = new_capacity;
-
-  delete[] old_location;
-}
-
-// Sets the given index of a table to a given value. Resizes the array component of the table_obj
-// object if necessary.
-void array_set(Array* array, size_t index, Value val) {
-  if (!array_range_check(array, index)) {
-    array_resize(array);
-  }
-
-  array->csize.is_valid = false;
-  array->data[index] = std::move(val);
-}
-
-// Attempts to get the value at the given index of the array component of the table. Returns nullptr
-// if the index is out of array capacity range.
-Value* array_get(const Array* array, size_t index) {
-  if (!array_range_check(array, index)) {
-    return nullptr;
-  }
-
-  return &array->data[index];
-}
-
-// Returns the real size_t of the given tables array component.
-size_t array_size(const Array* array) {
-  if (array->csize.is_valid) {
-    return array->csize.cache;
-  }
-
-  size_t size = 0;
-  for (Value* ptr = array->data; ptr < array->data + array->data_capacity; ptr++) {
-    if (!ptr->is_nil()) {
-      size++;
-    }
-  }
-
-  array->csize.cache = size;
-  array->csize.is_valid = true;
-
-  return size;
-}
-
-Instruction* label_get(State* S, size_t index) {
-  return S->labels[index];
-}
-
-void label_load(State* S) {
-  using enum Opcode;
-
-  size_t index = 0;
-  for (Instruction* pc = S->pc; 1; pc++) {
-    if (pc->op == VOP_LBL)
-      S->labels[index++] = pc;
-    else if (pc->op == VOP_RET || pc->op == VOP_RETBF || pc->op == VOP_RETBT)
-      break;
-  }
-}
-
-Closure* create_main_function(Context& lctx) {
-  Function fn;
-  fn.id = "main";
-  fn.line_number = 0;
-  fn.code = lctx.bytecode.data();
-  fn.code_size = lctx.bytecode.size();
-
-  Callable c;
-  c.type = Callable::Tag::Function;
-  c.u = {.fn = fn};
-  c.arity = 1;
-
-  return new Closure(std::move(c));
-}
-
-void declare_core_lib(State* S) {
-#define MAKE_VALUE(func, argc)                                                                     \
-  ({                                                                                               \
-    Callable c;                                                                                    \
-    c.type = Callable::Tag::Native;                                                                \
-    c.u = {.ntv = func};                                                                           \
-    c.arity = argc;                                                                                \
-    Value(new Closure(std::move(c)));                                                              \
-  })
-
-#define DECL_VALUE(name, func, arity)                                                              \
-  do {                                                                                             \
-    dict_set(S->globals, #name, MAKE_VALUE(func, arity));                                          \
-    native_fn_ids[func] = #name;                                                                   \
-  } while (0)
-
-  static NativeFn core_print = [](State* S) -> Value {
-    Value* arg0 = get_register(S, S->args);
-    std::cout << arg0->to_cxx_string() << "\n";
-    return Value();
-  };
-
-  static NativeFn core_error = [](State* S) -> Value {
-    Value* arg0 = get_register(S, S->args);
-    set_error_state(S, arg0->to_cxx_string());
-    return Value();
-  };
-
-  DECL_VALUE(print, core_print, 1);
-  DECL_VALUE(error, core_error, 1);
-
-#undef MAKE_VALUE
-#undef DECL_VALUE
 }
 
 } // namespace vm

@@ -4,21 +4,10 @@
 #ifndef VIA_H
 #define VIA_H
 
-// Common
 #include <common.h>
-#include <context.h>
-
-// Lexer
-#include <lexer.h>
-
-// Parser
-#include <parser.h>
-#include <ast.h>
-
-// Compiler
-#include <bytecode-builder.h>
-
-// State
-#include <state.h>
+#include <vmstate.h>
+#include <vmapi.h>
+#include <lextoken.h>
+#include <lexstate.h>
 
 #endif

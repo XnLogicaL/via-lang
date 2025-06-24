@@ -28,6 +28,7 @@ set(MI_OVERRIDE OFF)
 add_subdirectory(thirdparty/ArenaAllocator)
 add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
+add_subdirectory(thirdparty/spdlog)
 
 # ----------------------------------------------------------------------------------------------------
 # LIBRARY CONFIG
@@ -45,9 +46,10 @@ add_library(libvia STATIC ${SOURCES})
 # Add dependencies
 target_link_libraries(libvia PUBLIC mimalloc)
 target_link_libraries(libvia PUBLIC ArenaAllocator)
+target_link_libraries(libvia PUBLIC spdlog)
 
 # Include dirs
-target_include_directories(libvia PUBLIC include)
+target_include_directories(libvia PUBLIC include src)
 
 # Compiler options
 target_compile_options(libvia PUBLIC
@@ -75,6 +77,7 @@ add_executable(via "CLI/main.cpp" ${CLI_SOURCES})
 
 # Add dependencies
 target_link_libraries(via PUBLIC argparse)
+target_link_libraries(via PUBLIC spdlog)
 target_link_libraries(via PUBLIC libvia)
 
 # Include dirs

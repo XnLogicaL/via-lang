@@ -19,7 +19,7 @@ Value value_new(State* S) {
   val.data = new ValueData;
   val.S = S;
 
-  val.data->refcount++;
+  val.data->rc++;
 
   return val;
 }
@@ -30,16 +30,16 @@ Value value_new(State* S, ValueKind kind, ValueData* data) {
   val.data = data;
   val.S = S;
 
-  data->refcount++;
+  data->rc++;
 
   return val;
 }
 
 void value_close(State*, Value* value) {
   value->kind = VLK_NIL;
-  value->data->refcount--;
+  value->data->rc--;
 
-  if (value->data->refcount == 0)
+  if (value->data->rc == 0)
     delete value->data;
 }
 
@@ -53,8 +53,8 @@ Value value_ref(State*, const Value* value) {
 
 void value_reset(State*, Value* value) {
   value->kind = VLK_NIL;
-  value->data->refcount--;
-  if (value->data->refcount == 0) {
+  value->data->rc--;
+  if (value->data->rc == 0) {
     delete value->data;
   }
 }
@@ -83,12 +83,6 @@ bool value_cmp(State* S, const Value* left, const Value* right) {
     return left->data->u.f == right->data->u.f;
   case VLK_STRING:
     return string_cmp(S, left->data->u.str, right->data->u.str);
-  case VLK_ARRAY:
-    return array_cmp(S, left->data->u.arr, right->data->u.arr);
-  case VLK_DICT:
-    return dict_cmp(S, left->data->u.dict, right->data->u.dict);
-  case VLK_FUNCTION:
-    return closure_cmp(S, left->data->u.clsr, right->data->u.clsr);
   default:
     break;
   }

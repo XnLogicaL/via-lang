@@ -7,20 +7,20 @@ namespace via {
 
 namespace vm {
 
-Closure closure_new(State*, NativeFn fn, size_t upvc) {
+Closure closure_new(State*, NativeFn fun, size_t upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
   C.native = true;
-  C.u = {.nat = fn};
+  C.u = {.nat = fun};
 
   return C;
 }
 
-Closure closure_new(State*, Function* fn, size_t upvc) {
+Closure closure_new(State*, Function* fun, size_t upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
   C.native = true;
-  C.u = {.fun = fn};
+  C.u = {.fun = fun};
 
   return C;
 }

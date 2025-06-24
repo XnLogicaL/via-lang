@@ -15,6 +15,7 @@ struct String;
 struct Array;
 struct Dict;
 struct Closure;
+struct Function;
 
 enum ValueKind : uint8_t {
   VLK_NIL,
@@ -32,13 +33,11 @@ union ValueUn {
   float f;
   bool b;
   String* str;
-  Array* arr;
-  Dict* dict;
   Closure* clsr;
 };
 
 struct ValueData {
-  int refcount;
+  int rc;
   ValueUn u;
 };
 
@@ -52,7 +51,10 @@ Value value_new(State* S);
 Value value_new(State* S, int i);
 Value value_new(State* S, float f);
 Value value_new(State* S, bool b);
+Value value_new(State* S, const char* str);
+Value value_new(State* S, Function* F);
 Value value_new(State* S, ValueKind kind, ValueData* data);
+
 void value_close(State* S, Value* value);
 Value value_clone(State* S, const Value* other);
 Value value_ref(State* S, const Value* other);

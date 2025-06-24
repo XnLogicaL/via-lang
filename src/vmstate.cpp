@@ -2,7 +2,6 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "vmstate.h"
-#include "vmdict.h"
 
 namespace via {
 
@@ -11,7 +10,6 @@ namespace vm {
 // Initializes and returns a new state object
 State::State(const Header& H)
   : H(H),
-    gt(new Dict),
     stk(sizeof(Value) * VIA_MAXSTACK),
     ci_stk(sizeof(CallInfo) * VIA_MAXCSTACK),
     ator(VIA_STATICMEM),

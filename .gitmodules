@@ -4,3 +4,5 @@
 	path = thirdparty/argparse
 [submodule "thirdparty/mimalloc"]
 	path = thirdparty/mimalloc
+[submodule "thirdparty/spdlog"]
+	path = thirdparty/spdlog

@@ -34,7 +34,7 @@
 #endif
 
 // Version information. Should match with git commit version.
-#define VIA_VERSION "1.0.1"
+#define VIA_VERSION "0.0.2"
 
 #if VIA_COMPILER == C_MSVC
 #define VIA_RESTRICT      __restrict
@@ -102,6 +102,7 @@
 
 // ====================================================================================================
 // Utility macros
+// ====================================================================================================
 
 /**
  * Custom assertion macro that contains debug information like condition, file, line, message and
