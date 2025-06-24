@@ -8,8 +8,6 @@
 
 namespace via {
 
-namespace vm {
-
 struct State;
 struct String;
 struct Array;
@@ -62,8 +60,6 @@ void value_reset(State* S, Value* value);
 bool value_cmp(State* S, const Value* left, const Value* right);
 
 inline const Value nil;
-
-} // namespace vm
 
 } // namespace via
 

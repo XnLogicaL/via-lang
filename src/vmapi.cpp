@@ -7,8 +7,6 @@
 
 namespace via {
 
-namespace vm {
-
 static std::unordered_map<NativeFn, std::string> native_fn_ids{};
 
 static std::string nativeid(NativeFn fn) {
@@ -236,7 +234,5 @@ float to_float(State* S, Value* val) {
   errorf(S, "could not cast {} into float", type(val));
   return -1;
 }
-
-} // namespace vm
 
 } // namespace via

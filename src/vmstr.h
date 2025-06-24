@@ -11,8 +11,6 @@
 
 namespace via {
 
-namespace vm {
-
 struct State;
 
 struct String {
@@ -25,8 +23,6 @@ String string_new(State* S, const char* str);
 char string_get(State* S, String* str, size_t pos);
 void string_set(State* S, String* str, size_t pos, char chr);
 bool string_cmp(State* S, String* left, String* right);
-
-} // namespace vm
 
 } // namespace via
 

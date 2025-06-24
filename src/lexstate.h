@@ -13,24 +13,20 @@
 
 namespace via {
 
-namespace lex {
-
 using FileBuf = HeapBuffer<char>;
 
-struct State {
+struct LexState {
   const FileBuf& file;
   ArenaAllocator ator{VIA_MAXLEXSIZE};
 
-  inline State(const FileBuf& file)
+  inline LexState(const FileBuf& file)
     : file(file) {}
 };
 
-char advance(State* L);
-char peek(State* L, int count);
-TokenBuf lex(State* L);
+char advance(LexState* L);
+char peek(LexState* L, int count);
+TokenBuf tokenize(LexState* L);
 void dump_ttree(const TokenBuf& B);
-
-} // namespace lex
 
 } // namespace via
 

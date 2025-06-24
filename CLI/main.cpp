@@ -58,12 +58,12 @@ int main(int argc, char* argv[]) {
 
   std::cout << input << "\n";
 
-  lex::FileBuf B(input.size() + 1);
+  FileBuf B(input.size() + 1);
   strcpy(B.data, input.c_str());
 
-  lex::State L(B);
-  lex::TokenBuf buf = lex::lex(&L);
-  lex::dump_ttree(buf);
+  LexState L(B);
+  TokenBuf buf = tokenize(&L);
+  dump_ttree(buf);
 
   return 0;
 }

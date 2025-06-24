@@ -13,8 +13,6 @@
 
 namespace via {
 
-namespace vm {
-
 inline int stack_size(const State* S) {
   return S->ci_top - S->ci_stk.data;
 }
@@ -62,8 +60,6 @@ int to_int(State* S, Value* val);
 float to_float(State* S, Value* val);
 
 void label_load(State* S);
-
-} // namespace vm
 
 } // namespace via
 

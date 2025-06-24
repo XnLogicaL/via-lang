@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace vm {
-
 Closure closure_new(State*, NativeFn fun, size_t upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
@@ -33,7 +31,5 @@ void closure_close(State*, Closure* C) {
 bool closure_cmp(State*, Closure* left, Closure* right) {
   return left == right;
 }
-
-} // namespace vm
 
 } // namespace via

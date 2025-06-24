@@ -19,8 +19,6 @@
 
 namespace via {
 
-namespace vm {
-
 enum Interrupt {
   INT_NONE,
   INT_HALT,
@@ -61,8 +59,6 @@ struct alignas(64) State {
   State(const Header& H);
   ~State();
 };
-
-} // namespace vm
 
 } // namespace via
 

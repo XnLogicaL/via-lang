@@ -7,8 +7,6 @@
 
 namespace via {
 
-namespace vm {
-
 [[noreturn]] void error_fatal(const char* msg) {
   fprintf(stderr, "Fatal error: %s\n", msg);
   abort();
@@ -22,7 +20,5 @@ void error(const State* S, const char* msg) {
   S->e->interrupt = true;
   S->e->msg = msg;
 }
-
-} // namespace vm
 
 } // namespace via

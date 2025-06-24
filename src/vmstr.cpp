@@ -6,8 +6,6 @@
 
 namespace via {
 
-namespace vm {
-
 String string_new(State* S, const char* str) {
   size_t len = std::strlen(str);
   if (len > VIA_MAXSSIZE) {
@@ -49,7 +47,5 @@ bool string_cmp(State*, String* left, String* right) {
 
   return std::strcmp(left->data, right->data);
 }
-
-} // namespace vm
 
 } // namespace via

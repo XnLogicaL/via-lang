@@ -6,8 +6,6 @@
 
 namespace via {
 
-namespace lex {
-
 void token_dump(const Token& T) {
   size_t len = T.size;
   char lexeme[len + 1];
@@ -18,11 +16,9 @@ void token_dump(const Token& T) {
   std::cout << '(' << T.kind << ", " << lexeme << ")\n";
 }
 
-Location token_location(State* L, Token& token) {
+Location token_location(LexState* L, Token& token) {
   const size_t pos = token.lexeme - L->file.data;
   return {pos, pos + token.size};
 }
-
-} // namespace lex
 
 } // namespace via

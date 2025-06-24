@@ -7,8 +7,6 @@
 
 namespace via {
 
-namespace vm {
-
 static ValueData* clone_data(const ValueData&) {
   return NULL;
 }
@@ -89,7 +87,5 @@ bool value_cmp(State* S, const Value* left, const Value* right) {
 
   return false;
 }
-
-} // namespace vm
 
 } // namespace via

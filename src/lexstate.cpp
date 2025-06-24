@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace lex {
-
 // max 3-char symbol lookahead
 struct TokenReprPair {
   const char* str;
@@ -98,7 +96,7 @@ static bool isidentifier(char c) {
   return isalnum(c) || c == '_';
 }
 
-static Token* read_number(State* L) {
+static Token* read_number(LexState* L) {
   Token* token = L->ator.emplace<Token>();
   token->kind = TK_INT;
   token->lexeme = L->file.cursor;
@@ -127,7 +125,7 @@ static Token* read_number(State* L) {
   return token;
 }
 
-static Token* read_string(State* L) {
+static Token* read_string(LexState* L) {
   Token* token = L->ator.emplace<Token>();
   token->kind = TK_STRING;
   token->lexeme = L->file.cursor;
@@ -153,7 +151,7 @@ static Token* read_string(State* L) {
   return token;
 }
 
-static Token* read_identifier(State* L) {
+static Token* read_identifier(LexState* L) {
   Token* token = L->ator.emplace<Token>();
   token->kind = TK_IDENT;
   token->lexeme = L->file.cursor;
@@ -184,7 +182,7 @@ static Token* read_identifier(State* L) {
   return token;
 }
 
-static Token* read_symbol(State* L) {
+static Token* read_symbol(LexState* L) {
   Token* token = L->ator.emplace<Token>();
   token->lexeme = L->file.cursor;
 
@@ -211,15 +209,15 @@ static Token* read_symbol(State* L) {
   return token;
 }
 
-char advance(State* L) {
+char advance(LexState* L) {
   return *(L->file.cursor++);
 }
 
-char peek(State* L, int count) {
+char peek(LexState* L, int count) {
   return *(L->file.cursor + count);
 }
 
-TokenBuf lex(State* L) {
+TokenBuf tokenize(LexState* L) {
   std::vector<Token*> toks;
 
   char c;
@@ -259,7 +257,5 @@ void dump_ttree(const TokenBuf& B) {
   for (Token** p = B.data; p < B.data + B.size; p++)
     token_dump(**p);
 }
-
-} // namespace lex
 
 } // namespace via

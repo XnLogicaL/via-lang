@@ -11,8 +11,6 @@
 
 namespace via {
 
-namespace vm {
-
 using NativeFn = Value (*)(State*);
 
 struct State;
@@ -57,8 +55,6 @@ Closure closure_new(State* S, NativeFn fun, size_t upvc);
 Closure closure_new(State* S, Function* fun, size_t upvc);
 void closure_close(State* S, Closure* C);
 bool closure_cmp(State* S, Closure* left, Closure* right);
-
-} // namespace vm
 
 } // namespace via
 

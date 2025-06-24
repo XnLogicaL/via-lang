@@ -9,8 +9,6 @@
 
 namespace via {
 
-namespace vm {
-
 enum Opcode : uint16_t {
   VOP_NOP,
 
@@ -39,8 +37,6 @@ struct Instruction {
   Opcode op = VOP_NOP;
   uint16_t a, b, c;
 };
-
-} // namespace vm
 
 } // namespace via
 

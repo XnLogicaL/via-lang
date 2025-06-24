@@ -12,8 +12,6 @@
 
 namespace via {
 
-namespace vm {
-
 struct Header {
   uint32_t magic = 0xDEADCAFE;
   uint64_t flags;
@@ -27,13 +25,11 @@ struct Header {
   VIA_IMPLMOVE(Header);
 };
 
-using FileBuf = HeapBuffer<uint8_t>;
+using FileBuf = HeapBuffer<char>;
 
 size_t header_size(const Header& H);
 FileBuf header_encode(const Header& H);
 Header header_decode(const FileBuf& buf);
-
-} // namespace vm
 
 } // namespace via
 

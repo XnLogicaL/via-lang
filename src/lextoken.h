@@ -9,9 +9,7 @@
 
 namespace via {
 
-namespace lex {
-
-struct State;
+struct LexState;
 
 enum TokenKind {
   TK_EOF = 0, // end of file
@@ -95,9 +93,7 @@ struct Token {
 using TokenBuf = HeapBuffer<Token*>;
 
 void token_dump(const Token& T);
-Location token_location(State* L, Token& token);
-
-} // namespace lex
+Location token_location(LexState* L, Token& token);
 
 } // namespace via
 

@@ -10,8 +10,6 @@
 
 namespace via {
 
-namespace vm {
-
 struct State;
 
 struct ErrorContext {
@@ -32,8 +30,6 @@ void errorf(State* S, const char* fmt, Args... args) {
   snprintf(buf.data, size + 1, fmt, args...);
   error(S, buf.data);
 }
-
-} // namespace vm
 
 } // namespace via
 

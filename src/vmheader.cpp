@@ -8,8 +8,6 @@
 
 namespace via {
 
-namespace vm {
-
 static void write8(FileBuf* B, uint8_t data) {
   *B->cursor = data;
   ++B->cursor;
@@ -175,7 +173,5 @@ Header header_decode(State* S, const FileBuf& buf) {
 
   return H;
 }
-
-} // namespace vm
 
 } // namespace via

@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace vm {
-
 // Initializes and returns a new state object
 State::State(const Header& H)
   : H(H),
@@ -21,7 +19,5 @@ State::~State() {
   delete gt;
   mi_heap_delete(heap);
 }
-
-} // namespace vm
 
 } // namespace via
