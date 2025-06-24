@@ -4,9 +4,9 @@
 #ifndef VIA_LEXSTATE_H
 #define VIA_LEXSTATE_H
 
-#include "common.h"
+#include <common/common.h>
+#include <common/heapbuf.h>
 #include "lextoken.h"
-#include "heapbuf.h"
 #include <arena/arena.h>
 
 #define VIA_MAXLEXSIZE 1024 * 1024 * 8
@@ -28,6 +28,8 @@ struct State {
 char advance(State* L);
 char peek(State* L, int count);
 TokenBuf lex(State* L);
+
+void dump_ttree(State* L);
 
 } // namespace lex
 

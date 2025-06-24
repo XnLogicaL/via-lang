@@ -4,7 +4,7 @@
 #ifndef VIA_MEMORY_H
 #define VIA_MEMORY_H
 
-#include "common.h"
+#include <common/common.h>
 
 namespace via {
 

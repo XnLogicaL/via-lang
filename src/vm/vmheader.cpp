@@ -2,7 +2,7 @@
 // Licensed under GNU GPLv3.0 Copyright (C) 2025 XnLogicaL
 
 #include "vmheader.h"
-#include "heapbuf.h"
+#include <common/heapbuf.h>
 #include "vminstr.h"
 #include "vmval.h"
 

@@ -4,8 +4,8 @@
 #ifndef VIA_FUNCTION_H
 #define VIA_FUNCTION_H
 
-#include "common.h"
-#include "heapbuf.h"
+#include <common/common.h>
+#include <common/heapbuf.h>
 #include "vminstr.h"
 #include "vmval.h"
 

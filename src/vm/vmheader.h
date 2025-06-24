@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "heapbuf.h"
+#include <common/heapbuf.h>
 #include "vminstr.h"
 #include "vmval.h"
 

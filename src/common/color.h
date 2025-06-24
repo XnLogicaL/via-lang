@@ -4,7 +4,7 @@
 #ifndef VIA_COLOR_H
 #define VIA_COLOR_H
 
-#include "common.h"
+#include <common/common.h>
 
 namespace via {
 

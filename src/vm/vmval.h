@@ -4,7 +4,7 @@
 #ifndef VIA_VAL_H
 #define VIA_VAL_H
 
-#include "common.h"
+#include <common/common.h>
 
 namespace via {
 

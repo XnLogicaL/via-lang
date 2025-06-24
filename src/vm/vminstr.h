@@ -4,10 +4,8 @@
 #ifndef VIA_INSTRUCTION_H
 #define VIA_INSTRUCTION_H
 
-#include "common.h"
-
-#include "sbits.h"
-#include "color.h"
+#include <common/common.h>
+#include <common/bitutils.h>
 
 namespace via {
 

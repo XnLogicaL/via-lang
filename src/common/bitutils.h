@@ -4,7 +4,7 @@
 #ifndef VIA_BITS_H
 #define VIA_BITS_H
 
-#include "common.h"
+#include <common/common.h>
 
 namespace via {
 
