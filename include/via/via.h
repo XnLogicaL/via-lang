@@ -4,9 +4,9 @@
 #ifndef VIA_H
 #define VIA_H
 
-#include <vm/vmstate.h>
-#include <vm/vmapi.h>
-#include <lex/lextoken.h>
-#include <lex/lexstate.h>
+#include <vmstate.h>
+#include <vmapi.h>
+#include <lextoken.h>
+#include <lexstate.h>
 
 #endif

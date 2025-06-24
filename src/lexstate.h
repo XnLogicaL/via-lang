@@ -28,8 +28,7 @@ struct State {
 char advance(State* L);
 char peek(State* L, int count);
 TokenBuf lex(State* L);
-
-void dump_ttree(State* L);
+void dump_ttree(const TokenBuf& B);
 
 } // namespace lex
 

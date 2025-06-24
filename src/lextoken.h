@@ -94,7 +94,8 @@ struct Token {
 
 using TokenBuf = HeapBuffer<Token*>;
 
-Location location(State* L, Token* token);
+void token_dump(const Token& T);
+Location token_location(State* L, Token& token);
 
 } // namespace lex
 

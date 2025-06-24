@@ -62,7 +62,8 @@ int main(int argc, char* argv[]) {
   strcpy(B.data, input.c_str());
 
   lex::State L(B);
-  auto token_buf = lex::lex(&L);
+  lex::TokenBuf buf = lex::lex(&L);
+  lex::dump_ttree(buf);
 
   return 0;
 }

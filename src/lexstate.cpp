@@ -160,8 +160,10 @@ static Token* read_identifier(State* L) {
   token->size = 0;
 
   char c;
-  while ((c = advance(L)), isidentifier(c))
+  while ((c = peek(L, 0)), isidentifier(c)) {
+    advance(L);
     token->size++;
+  }
 
   for (const auto& kw : KEYWORDS) {
     if (strlen(kw.str) != token->size)
@@ -222,6 +224,11 @@ TokenBuf lex(State* L) {
 
   char c;
   while ((c = peek(L, 0)), c != '\0') {
+    if (isspace(c)) {
+      advance(L);
+      continue;
+    }
+
     Token* token;
 
     if (isdigit(c))
@@ -244,8 +251,13 @@ TokenBuf lex(State* L) {
   toks.push_back(eof_);
 
   TokenBuf buf(toks.size());
-  memcpy(buf.data, toks.data(), toks.size());
+  memcpy(buf.data, toks.data(), toks.size() * sizeof(Token*));
   return buf;
+}
+
+void dump_ttree(const TokenBuf& B) {
+  for (Token** p = B.data; p < B.data + B.size; p++)
+    token_dump(**p);
 }
 
 } // namespace lex
