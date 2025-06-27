@@ -241,12 +241,12 @@ TokenBuf lexer_tokenize(LexState& L) {
     toks.push_back(token);
   }
 
-  Token* eof_ = L.ator.emplace<Token>();
-  eof_->kind = TK_EOF;
-  eof_->lexeme = L.file.cursor;
-  eof_->size = 0;
+  Token* eof = L.ator.emplace<Token>();
+  eof->kind = TK_EOF;
+  eof->lexeme = L.file.cursor;
+  eof->size = 0;
 
-  toks.push_back(eof_);
+  toks.push_back(eof);
 
   TokenBuf buf(toks.size());
   memcpy(buf.data, toks.data(), toks.size() * sizeof(Token*));
