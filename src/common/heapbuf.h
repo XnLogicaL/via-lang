@@ -34,7 +34,7 @@ struct HeapBuffer {
     data = new T[size];
     cursor = data;
 
-    std::memcpy(this->begin(), begin, size);
+    std::memcpy(data, begin, offset);
   }
 
   inline ~HeapBuffer() {

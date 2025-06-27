@@ -250,7 +250,7 @@ TokenBuf lexer_tokenize(LexState& L) {
 
   toks.push_back(eof);
 
-  return TokenBuf(toks.data(), toks.data() + toks.size() * VIA_WORDSIZE);
+  return TokenBuf(toks.data(), toks.data() + toks.size() * sizeof(Token*));
 }
 
 void dump_ttree(const TokenBuf& B) {

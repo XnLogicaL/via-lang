@@ -11,12 +11,11 @@ void token_dump(const Token& T) {
   char lexeme[len + 1];
   lexeme[len] = '\0';
 
-  memcpy(&lexeme, T.lexeme, len);
-
+  std::memcpy(&lexeme, T.lexeme, len);
   std::cout << '(' << T.kind << ", " << lexeme << ")\n";
 }
 
-const Location token_location(const LexState& L, Token& T) {
+const Location token_location(const LexState& L, const Token& T) {
   const size_t begin = T.lexeme - L.file.data;
   const size_t end = begin + T.size;
 

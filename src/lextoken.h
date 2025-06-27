@@ -99,7 +99,7 @@ using TokenBuf = HeapBuffer<Token*>;
 void token_dump(const Token& T);
 
 // Returns the location of token T.
-const Location token_location(const LexState& L, Token& T);
+const Location token_location(const LexState& L, const Token& T);
 
 } // namespace via
 
