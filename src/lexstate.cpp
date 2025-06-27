@@ -249,7 +249,7 @@ TokenBuf lexer_tokenize(LexState& L) {
   toks.push_back(eof);
 
   TokenBuf buf(toks.size());
-  memcpy(buf.data, toks.data(), toks.size() * sizeof(Token*));
+  std::memcpy(buf.data, toks.data(), toks.size() * sizeof(Token*));
   return buf;
 }
 

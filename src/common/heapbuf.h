@@ -14,25 +14,41 @@ struct HeapBuffer {
   mutable T* cursor = NULL;
   size_t size = 0;
 
-  HeapBuffer() = default;
+  // clang-format off
+  inline T* begin() { return data; }
+  inline const T* begin() const { return data; }
 
+  inline T* end() { return data + (size * sizeof(T)); }
+  inline const T* end() const { return data + (size * sizeof(T)); }
+  // clang-format on
+
+  inline HeapBuffer() = default;
   inline HeapBuffer(const size_t size)
     : data(new T[size]),
       cursor(data),
       size(size) {}
 
+  inline HeapBuffer(T* begin, T* end) {
+    size_t offset = end - begin;
+    size = offset / sizeof(T);
+    data = new T[size];
+    cursor = data;
+
+    std::memcpy(this->begin(), begin, size);
+  }
+
   inline ~HeapBuffer() {
     delete[] data;
   }
 
-  inline HeapBuffer(const HeapBuffer<T>& other)
+  inline HeapBuffer(const HeapBuffer& other)
     : data(new T[other.size]),
       cursor(data),
       size(other.size) {
     std::memcpy(data, other.data, size);
   }
 
-  inline HeapBuffer(HeapBuffer<T>&& other)
+  inline HeapBuffer(HeapBuffer&& other)
     : data(other.data),
       cursor(data),
       size(other.size) {
@@ -41,7 +57,7 @@ struct HeapBuffer {
     other.size = 0;
   }
 
-  HeapBuffer& operator=(const HeapBuffer<T>& other) {
+  inline HeapBuffer& operator=(const HeapBuffer& other) {
     if (this != &other) {
       delete[] data;
       data = new T[other.size];
@@ -53,7 +69,7 @@ struct HeapBuffer {
     return *this;
   }
 
-  HeapBuffer& operator=(HeapBuffer<T>&& other) {
+  inline HeapBuffer& operator=(HeapBuffer&& other) {
     if (this != &other) {
       delete[] data;
       data = other.data;
