@@ -62,6 +62,8 @@
 #define VIA_UNLIKELY(a)   (__builtin_expect(!!(a), 0))
 #endif
 
+#define VIA_WORDSIZE sizeof(void*)
+
 /**
  * Makes the target class or struct uncopyable in terms of copy semantics.
  * Must be used inside class or struct clause.

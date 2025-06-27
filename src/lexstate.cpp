@@ -37,6 +37,8 @@ static constexpr TokenReprPair SYMBOLS[] = {
   {"%", TK_PERCENT},
   {"&", TK_AMPERSAND},
   {"~", TK_TILDE},
+  {"<<", TK_LSHIFT},
+  {">>", TK_RSHIFT},
   {"^", TK_CARET},
   {"|", TK_PIPE},
   {"!", TK_BANG},
@@ -248,9 +250,7 @@ TokenBuf lexer_tokenize(LexState& L) {
 
   toks.push_back(eof);
 
-  TokenBuf buf(toks.size());
-  std::memcpy(buf.data, toks.data(), toks.size() * sizeof(Token*));
-  return buf;
+  return TokenBuf(toks.data(), toks.data() + toks.size() * VIA_WORDSIZE);
 }
 
 void dump_ttree(const TokenBuf& B) {

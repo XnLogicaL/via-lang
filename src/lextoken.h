@@ -46,6 +46,8 @@ enum TokenKind {
   TK_PERCENT,           // %
   TK_AMPERSAND,         // &
   TK_TILDE,             // ~
+  TK_LSHIFT,            // <<
+  TK_RSHIFT,            // >>
   TK_CARET,             // ^
   TK_PIPE,              // |
   TK_BANG,              // !
