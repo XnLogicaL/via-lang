@@ -62,9 +62,7 @@ int main(int argc, char* argv[]) {
       while (std::getline(ifs, line))
         input += line + '\n';
 
-      FileBuf file_buf(input.size() + 1);
-      strcpy(file_buf.data, input.c_str());
-
+      FileBuf file_buf(input.data(), input.data() + input.size());
       LexState L(file_buf);
       TokenBuf token_buf = lexer_tokenize(L);
 
