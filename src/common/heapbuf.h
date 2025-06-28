@@ -28,7 +28,7 @@ struct HeapBuffer {
       cursor(data),
       size(size) {}
 
-  inline HeapBuffer(T* begin, T* end) {
+  inline HeapBuffer(const T* begin, const T* end) {
     size_t offset = end - begin;
     size = offset / sizeof(T);
     data = new T[size];
