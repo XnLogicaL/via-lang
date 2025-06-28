@@ -13,14 +13,23 @@ using namespace argparse;
 
 enum EmitKind {
   EK_NONE,
+  EK_LIST,
   EK_TTREE,
 };
 
 static EmitKind get_emit_kind(const char* str) {
-  if (std::strcmp(str, "ttree") == 0)
+  if (std::strcmp(str, "list") == 0)
+    return EK_LIST;
+  else if (std::strcmp(str, "ttree") == 0)
     return EK_TTREE;
 
   return EK_NONE;
+}
+
+static void list_emit_kinds() {
+  spdlog::info("available emit targets:");
+  std::cout << "  -e list          opens this menu\n";
+  std::cout << "  -e ttree         dumps token tree\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -29,9 +38,9 @@ int main(int argc, char* argv[]) {
   ArgumentParser cli("via", VIA_VERSION);
 
   cli.add_argument("input").default_value("").help("Target source file");
-  cli.add_argument("-e", "--emit")
+  cli.add_argument("--emit", "-e")
     .nargs(1)
-    .choices("list", "none", "ttree")
+    .choices("none", "list", "ttree")
     .default_value("none")
     .help("Emission type");
 
@@ -59,6 +68,7 @@ int main(int argc, char* argv[]) {
     {
       std::string input;
       std::string line;
+
       while (std::getline(ifs, line))
         input += line + '\n';
 
@@ -66,7 +76,19 @@ int main(int argc, char* argv[]) {
       LexState L(file_buf);
       TokenBuf token_buf = lexer_tokenize(L);
 
-      dump_ttree(token_buf);
+      auto ek_raw = cli.get("--emit");
+      auto ek = get_emit_kind(ek_raw.c_str());
+
+      switch (ek) {
+      case EK_LIST:
+        list_emit_kinds();
+        break;
+      case EK_TTREE:
+        dump_ttree(token_buf);
+        break;
+      default:
+        break;
+      }
     }
   }
 
