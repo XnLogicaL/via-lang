@@ -40,29 +40,41 @@ int main(int argc, char* argv[]) {
   }
   catch (const std::exception& err) {
     spdlog::error(err.what());
+    return 1;
   }
 
   auto input_path = cli.get("input");
   auto emit_type = cli.get("--emit");
 
-  std::ifstream ifs(input_path);
-  if (!ifs.is_open()) {
-    spdlog::error("failed to open input path '{}': no such file or directory", input_path);
-    return 1;
+  if (input_path.empty())
+    goto no_input_files;
+
+  {
+    std::ifstream ifs(input_path);
+    if (!ifs.is_open()) {
+      spdlog::error("no such file or directory: '{}'", input_path);
+      goto no_input_files;
+    }
+
+    {
+      std::string input;
+      std::string line;
+      while (std::getline(ifs, line))
+        input += line + '\n';
+
+      FileBuf file_buf(input.size() + 1);
+      strcpy(file_buf.data, input.c_str());
+
+      LexState L(file_buf);
+      TokenBuf token_buf = lexer_tokenize(L);
+
+      dump_ttree(token_buf);
+    }
   }
 
-  std::string input;
-  std::string line;
-  while (std::getline(ifs, line))
-    input += line + '\n';
-
-  FileBuf file_buf(input.size() + 1);
-  strcpy(file_buf.data, input.c_str());
-
-  LexState L(file_buf);
-  TokenBuf token_buf = lexer_tokenize(L);
-
-  dump_ttree(token_buf);
-
   return 0;
+
+no_input_files:
+  spdlog::error("no input files");
+  return 1;
 }

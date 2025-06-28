@@ -16,10 +16,10 @@ struct HeapBuffer {
 
   // clang-format off
   inline T* begin() { return data; }
-  inline const T* begin() const { return data; }
+  inline T* end() { return data + size * sizeof(T); }
 
-  inline T* end() { return data + (size * sizeof(T)); }
-  inline const T* end() const { return data + (size * sizeof(T)); }
+  inline const T* begin() const { return data; }
+  inline const T* end() const { return data + size * sizeof(T); }
   // clang-format on
 
   inline HeapBuffer() = default;
@@ -60,9 +60,11 @@ struct HeapBuffer {
   inline HeapBuffer& operator=(const HeapBuffer& other) {
     if (this != &other) {
       delete[] data;
+
       data = new T[other.size];
       cursor = data;
       size = other.size;
+
       std::memcpy(data, other.data, size);
     }
 
@@ -72,9 +74,11 @@ struct HeapBuffer {
   inline HeapBuffer& operator=(HeapBuffer&& other) {
     if (this != &other) {
       delete[] data;
+
       data = other.data;
       cursor = data;
       size = other.size;
+
       other.data = NULL;
       other.cursor = NULL;
       other.size = 0;
