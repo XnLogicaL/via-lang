@@ -16,19 +16,21 @@ namespace util {
   macro ismain() { __main__!() }
 }
 
-func cursed(callback: funcType<string>) -> void {
-  var chars = [ 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!' ]
-  var msg: string?
+namespace main {
+  func cursed(callback: funcType<string>) {
+    var chars = ['H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!']
+    var msg: string?
 
-  for (_, c) in chars:
-    msg ..= callback(c)
+    for (_, c) in chars:
+      msg ..= callback(c)
 
-  printn(msg)
+    printn(msg)
+  }
 }
 
 if util::ismain!() {
   var process = func(c: string): (c .. c)[0]
-  cursed(process)
+  main::cursed(process)
 }
 ```
 
