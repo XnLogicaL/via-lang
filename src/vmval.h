@@ -4,7 +4,7 @@
 #ifndef VIA_VAL_H
 #define VIA_VAL_H
 
-#include <common/common.h>
+#include "common.h"
 
 namespace via {
 
@@ -24,25 +24,18 @@ enum ValueKind : uint8_t {
   VLK_FUNCTION,
   VLK_ARRAY,
   VLK_DICT,
-};
-
-union ValueUn {
-  int i;
-  float f;
-  bool b;
-  String* str;
-  Closure* clsr;
-};
-
-struct ValueData {
-  int rc;
-  ValueUn u;
+  VLK_USERDATA,
 };
 
 struct alignas(8) Value {
   ValueKind kind = VLK_NIL;
-  ValueData* data = NULL;
-  State* S = NULL;
+  union {
+    int i;
+    float f;
+    bool b;
+    String* str;
+    Closure* clsr;
+  } u{};
 };
 
 Value value_new(State* S);
@@ -51,7 +44,6 @@ Value value_new(State* S, float f);
 Value value_new(State* S, bool b);
 Value value_new(State* S, const char* str);
 Value value_new(State* S, Function* F);
-Value value_new(State* S, ValueKind kind, ValueData* data);
 
 void value_close(State* S, Value* value);
 Value value_clone(State* S, const Value* other);

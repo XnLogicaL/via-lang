@@ -4,7 +4,7 @@
 #ifndef VIA_AST_H
 #define VIA_AST_H
 
-#include "common/common.h"
+#include "common.h"
 #include "lextoken.h"
 #include <arena/arena.h>
 

@@ -4,8 +4,8 @@
 #ifndef VIA_STRING_H
 #define VIA_STRING_H
 
-#include <common/common.h>
-#include <common/strutils.h>
+#include "common.h"
+#include "strutils.h"
 
 #define VIA_MAXSSIZE (1 << 16)
 

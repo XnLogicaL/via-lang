@@ -4,8 +4,8 @@
 #ifndef VIA_LEXSTATE_H
 #define VIA_LEXSTATE_H
 
-#include <common/common.h>
-#include <common/heapbuf.h>
+#include "common.h"
+#include "heapbuf.h"
 #include <arena/arena.h>
 #include "lextoken.h"
 

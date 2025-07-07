@@ -4,7 +4,7 @@
 #ifndef VIA_BUFVIEW_H
 #define VIA_BUFVIEW_H
 
-#include <common/common.h>
+#include "common.h"
 
 namespace via {
 

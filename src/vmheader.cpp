@@ -2,7 +2,7 @@
 // Licensed under GNU GPLv3.0 Copyright (C) 2025 XnLogicaL
 
 #include "vmheader.h"
-#include <common/heapbuf.h>
+#include "heapbuf.h"
 #include "vminstr.h"
 #include "vmval.h"
 
@@ -33,13 +33,13 @@ static void writevalue(FileBuf* B, const Value& val) {
 
   switch (val.kind) {
   case VLK_BOOLEAN:
-    write8(B, val.data->u.b);
+    write8(B, val.u.b);
     break;
   case VLK_INT:
-    write32(B, val.data->u.i);
+    write32(B, val.u.i);
     break;
   case VLK_FLOAT: {
-    uint32_t data = std::bit_cast<uint32_t>(val.data->u.f);
+    uint32_t data = std::bit_cast<uint32_t>(val.u.f);
     write32(B, data);
   } break;
   default:

@@ -4,12 +4,12 @@
 #ifndef VIA_API_IMPL_H
 #define VIA_API_IMPL_H
 
-#include <common/common.h>
+#include "common.h"
 #include "vminstr.h"
 #include "vmstate.h"
 #include "vmfunc.h"
-#include <common/strutils.h>
-#include <common/memutils.h>
+#include "strutils.h"
+#include "memutils.h"
 
 namespace via {
 

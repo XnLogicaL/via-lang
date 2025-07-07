@@ -4,8 +4,8 @@
 #ifndef VIA_ERR_H
 #define VIA_ERR_H
 
-#include <common/common.h>
-#include <common/heapbuf.h>
+#include "common.h"
+#include "heapbuf.h"
 #include "vmstr.h"
 
 namespace via {

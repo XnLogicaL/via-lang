@@ -4,8 +4,8 @@
 #ifndef VIA_LEXTOKEN_H
 #define VIA_LEXTOKEN_H
 
-#include <common/common.h>
-#include <common/heapbuf.h>
+#include "common.h"
+#include "heapbuf.h"
 
 namespace via {
 

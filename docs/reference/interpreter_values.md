@@ -43,7 +43,6 @@ struct Value {
 struct ValueRef {
   int rc;
   Value val;
-  ValueAllocator* al;
 };
 ```
 
