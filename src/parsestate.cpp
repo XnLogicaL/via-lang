@@ -101,4 +101,31 @@ ExprNode* parse_primary(ParseState& P) {
   return NULL;
 }
 
+ExprNode* parse_expr(ParseState& P) {
+  return parse_binary(P);
+}
+
+ExprNode* parse_binary(ParseState& P, int prec) {
+  ExprNode* lhs = parse_unary(P);
+
+  while (true) {
+    TokenKind op = parser_peek(P)->kind;
+    int op_prec = bin_prec(op);
+    if (op_prec < prec)
+      break;
+
+    Token* oper = parser_advance(P);
+    ExprNode* rhs = parse_binary(P, op_prec + 1);
+
+    auto bin = heap_emplace<NodeExprBin>(P.al);
+    bin->op = oper;
+    bin->lhs = lhs;
+    bin->rhs = rhs;
+    bin->loc = {lhs->loc.begin, rhs->loc.end};
+    lhs = bin;
+  }
+
+  return lhs;
+}
+
 } // namespace via

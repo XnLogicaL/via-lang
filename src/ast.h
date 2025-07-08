@@ -11,59 +11,65 @@ namespace via {
 
 struct ExprNode {
   virtual ~ExprNode() = 0;
+
+  Location loc;
 };
 
 struct StmtNode {
   virtual ~StmtNode() = 0;
+
+  Location loc;
 };
 
 struct TypeNode {
   virtual ~TypeNode() = 0;
+
+  Location loc;
 };
 
 struct NodeExprSym;
 
 struct NodeExprLit : public ExprNode {
+  using ExprNode::loc;
   Token* tok;
-  Location loc;
 };
 
 struct NodeExprSym : public ExprNode {
+  using ExprNode::loc;
   Token* tok;
-  Location loc;
 };
 
 struct NodeExprUn : public ExprNode {
+  using ExprNode::loc;
   Token* op;
   ExprNode* expr;
-  Location loc;
 };
 
 struct NodeExprBin : public ExprNode {
+  using ExprNode::loc;
   Token* op;
   ExprNode *lhs, *rhs;
-  Location loc;
 };
 
 struct NodeExprGroup : public ExprNode {
+  using ExprNode::loc;
   ExprNode* expr;
-  Location loc;
 };
 
 struct NodeExprCall : public ExprNode {
+  using ExprNode::loc;
   ExprNode* lval;
   Vec<ExprNode*> args;
-  Location loc;
 };
 
 struct NodeExprSubs : public ExprNode {
+  using ExprNode::loc;
   ExprNode *lval, *idx;
-  Location loc;
 };
 
 struct NodeExprTuple : public ExprNode {
+  using ExprNode::loc;
   Vec<ExprNode*> vals;
-  Location loc;
 };
 
 struct Parameter {
@@ -75,20 +81,20 @@ struct Parameter {
 struct NodeStmtScope;
 
 struct NodeExprLambda : public ExprNode {
+  using ExprNode::loc;
   Vec<Parameter> pms;
   NodeStmtScope* scope;
-  Location loc;
 };
 
 struct NodeExprVar : public ExprNode {
+  using ExprNode::loc;
   NodeExprSym* sym;
   ExprNode* val;
-  Location loc;
 };
 
 struct NodeStmtScope : public StmtNode {
+  using StmtNode::loc;
   Vec<StmtNode*> stmts;
-  Location loc;
 };
 
 struct NodeStmtIf : public StmtNode {
@@ -97,8 +103,8 @@ struct NodeStmtIf : public StmtNode {
     NodeStmtScope* br;
   };
 
+  using StmtNode::loc;
   Vec<Branch> brs;
-  Location loc;
 };
 
 struct TupleBinding {
@@ -107,33 +113,33 @@ struct TupleBinding {
 };
 
 struct NodeStmtFor : public StmtNode {
+  using StmtNode::loc;
   NodeExprVar* idx;
   ExprNode* target;
   ExprNode* step;
-  Location loc;
 };
 
 struct NodeStmtForEach : public StmtNode {
+  using StmtNode::loc;
   TupleBinding bind;
   ExprNode* iter;
-  Location loc;
 };
 
 struct NodeStmtWhile : public StmtNode {
+  using StmtNode::loc;
   ExprNode* cnd;
   NodeStmtScope* br;
-  Location loc;
 };
 
 struct NodeStmtAssign : public StmtNode {
+  using StmtNode::loc;
   ExprNode* lval;
   ExprNode* rval;
-  Location loc;
 };
 
 struct NodeStmtExpr : public StmtNode {
+  using StmtNode::loc;
   ExprNode* expr;
-  Location loc;
 };
 
 } // namespace via
