@@ -5,24 +5,23 @@
 #define VIA_PARSER_H
 
 #include "common.h"
+#include "mem.h"
 #include "error.h"
 #include "ast.h"
-#include <arena/arena.h>
-
-#define VIA_MAXAST (4096 * 40) // [max node count] * [average size]
+#include <mimalloc.h>
 
 namespace via {
 
 struct ParseState {
   Token** cur;
-  ArenaAllocator al;
+  Heap al;
 
   inline explicit ParseState(const TokenBuf& B)
-    : cur(B.data),
-      al(VIA_MAXAST) {
-    al.register_handler([]() { error_fatal("out of memory: parsing aborted"); });
-  }
+    : cur(B.data) {}
 };
+
+Token* parser_peek(ParseState& P, const int ahead = 0);
+Token* parser_advance(ParseState& P);
 
 ExprNode* parse_expr(ParseState& P);
 ExprNode* parse_primary(ParseState& P);

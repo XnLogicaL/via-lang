@@ -10,7 +10,6 @@
 #include "vminstr.h"
 #include "vmval.h"
 #include "vmheader.h"
-#include <arena/arena.h>
 #include <mimalloc.h>
 
 #define VIA_MAXSTACK  200
@@ -22,6 +21,7 @@ namespace via {
 enum Interrupt {
   INT_NONE,
   INT_HALT,
+  INT_ERROR,
 };
 
 struct CallInfo {
@@ -45,19 +45,18 @@ struct alignas(64) State {
   const Instruction* pc = NULL;
 
   mi_heap_t* heap;
-  ArenaAllocator ator;
 
   Interrupt it = INT_NONE;
-  ErrorContext* e = NULL;
+  const char* err = "<error>";
 
   Value* top;
   CallInfo* ci_top;
 
-  VIA_NOCOPY(State);
-  VIA_NOMOVE(State);
-
   State(const Header& H);
   ~State();
+
+  VIA_NOCOPY(State);
+  VIA_NOMOVE(State);
 };
 
 } // namespace via

@@ -6,11 +6,10 @@
 
 #include "common.h"
 #include "error.h"
+#include "mem.h"
 #include "heapbuf.h"
 #include "lextoken.h"
-#include <arena/arena.h>
-
-#define VIA_MAXTOKENS (1024 * 16)
+#include <mimalloc.h>
 
 namespace via {
 
@@ -20,12 +19,10 @@ using FileBuf = HeapBuffer<char>;
 // Lexical analysis state.
 struct LexState {
   const FileBuf& file;
-  ArenaAllocator ator{VIA_MAXTOKENS * sizeof(Token)};
+  Heap al;
 
   inline LexState(const FileBuf& file)
-    : file(file) {
-    ator.register_handler([]() { error_fatal("out of memory: tokenization aborted"); });
-  }
+    : file(file) {}
 };
 
 // Advances the file cursor by one and returns the character it started on.

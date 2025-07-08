@@ -25,7 +25,6 @@ endif()
 set(MI_OVERRIDE OFF)
 
 # Add dependencies
-add_subdirectory(thirdparty/ArenaAllocator)
 add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
 add_subdirectory(thirdparty/spdlog)
@@ -45,7 +44,6 @@ add_library(libvia STATIC ${SOURCES})
 
 # Add dependencies
 target_link_libraries(libvia PUBLIC mimalloc)
-target_link_libraries(libvia PUBLIC ArenaAllocator)
 target_link_libraries(libvia PUBLIC spdlog)
 
 # Include dirs

@@ -99,7 +99,7 @@ static bool isidentifier(char c) {
 }
 
 static Token* read_number(LexState& L) {
-  Token* token = L.ator.emplace<Token>();
+  Token* token = heap_emplace<Token>(L.al);
   token->kind = TK_INT;
   token->lexeme = L.file.cursor;
   token->size = 0;
@@ -128,7 +128,7 @@ static Token* read_number(LexState& L) {
 }
 
 static Token* read_string(LexState& L) {
-  Token* token = L.ator.emplace<Token>();
+  Token* token = heap_emplace<Token>(L.al);
   token->kind = TK_STRING;
   token->lexeme = L.file.cursor;
   token->size = 1; // for opening quote
@@ -154,7 +154,7 @@ static Token* read_string(LexState& L) {
 }
 
 static Token* read_identifier(LexState& L) {
-  Token* token = L.ator.emplace<Token>();
+  Token* token = heap_emplace<Token>(L.al);
   token->kind = TK_IDENT;
   token->lexeme = L.file.cursor;
   token->size = 0;
@@ -185,7 +185,7 @@ static Token* read_identifier(LexState& L) {
 }
 
 static Token* read_symbol(LexState& L) {
-  Token* token = L.ator.emplace<Token>();
+  Token* token = heap_emplace<Token>(L.al);
   token->lexeme = L.file.cursor;
 
   // Try to match longest symbol
@@ -243,7 +243,7 @@ TokenBuf lexer_tokenize(LexState& L) {
     toks.push_back(token);
   }
 
-  Token* eof = L.ator.emplace<Token>();
+  Token* eof = heap_emplace<Token>(L.al);
   eof->kind = TK_EOF;
   eof->lexeme = L.file.cursor;
   eof->size = 0;
