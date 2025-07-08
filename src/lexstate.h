@@ -19,7 +19,7 @@ using FileBuf = HeapBuffer<char>;
 // Lexical analysis state.
 struct LexState {
   const FileBuf& file;
-  Heap al;
+  HeapAllocator al;
 
   inline LexState(const FileBuf& file)
     : file(file) {}

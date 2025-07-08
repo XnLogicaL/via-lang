@@ -14,7 +14,7 @@ namespace via {
 
 struct ParseState {
   Token** cur;
-  Heap al;
+  HeapAllocator al;
 
   inline explicit ParseState(const TokenBuf& B)
     : cur(B.data) {}
