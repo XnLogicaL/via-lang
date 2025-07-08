@@ -5,9 +5,10 @@
 #define VIA_LEXSTATE_H
 
 #include "common.h"
+#include "error.h"
 #include "heapbuf.h"
-#include <arena/arena.h>
 #include "lextoken.h"
+#include <arena/arena.h>
 
 #define VIA_MAXTOKENS (1024 * 16)
 
@@ -22,7 +23,9 @@ struct LexState {
   ArenaAllocator ator{VIA_MAXTOKENS * sizeof(Token)};
 
   inline LexState(const FileBuf& file)
-    : file(file) {}
+    : file(file) {
+    ator.register_handler([]() { error_fatal("out of memory: tokenization aborted"); });
+  }
 };
 
 // Advances the file cursor by one and returns the character it started on.

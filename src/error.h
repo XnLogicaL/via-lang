@@ -6,29 +6,24 @@
 
 #include "common.h"
 #include "heapbuf.h"
-#include "vmstr.h"
+#include <spdlog/spdlog.h>
 
 namespace via {
 
 struct State;
 
-struct ErrorContext {
-  bool interrupt;
-  const char* msg;
-};
-
 [[noreturn]] void error_fatal(const char* msg);
 
-void error(State* S, const char* msg);
+void vmerror(State* S, const char* msg);
 
 template<typename... Args>
-void errorf(State* S, const char* fmt, Args... args) {
+void vmerrorf(State* S, const char* fmt, Args... args) {
   int size = snprintf(NULL, 0, fmt, args...);
 
   HeapBuffer<char> buf(size + 1);
 
   snprintf(buf.data, size + 1, fmt, args...);
-  error(S, buf.data);
+  vmerror(S, buf.data);
 }
 
 } // namespace via

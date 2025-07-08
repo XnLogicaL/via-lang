@@ -5,7 +5,6 @@
 #define VIA_INSTRUCTION_H
 
 #include "common.h"
-#include "bitutils.h"
 
 namespace via {
 

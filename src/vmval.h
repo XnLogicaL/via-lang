@@ -9,9 +9,9 @@
 namespace via {
 
 struct State;
-struct String;
-struct Array;
-struct Dict;
+struct StringValue;
+struct ArrayValue;
+struct DictValue;
 struct Closure;
 struct Function;
 

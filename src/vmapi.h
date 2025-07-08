@@ -9,7 +9,6 @@
 #include "vmstate.h"
 #include "vmfunc.h"
 #include "strutils.h"
-#include "memutils.h"
 
 namespace via {
 

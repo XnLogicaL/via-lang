@@ -5,10 +5,10 @@
 #define VIA_STATE_H
 
 #include "common.h"
+#include "error.h"
 #include "heapbuf.h"
 #include "vminstr.h"
 #include "vmval.h"
-#include "vmerr.h"
 #include "vmheader.h"
 #include <arena/arena.h>
 #include <mimalloc.h>
@@ -35,7 +35,7 @@ struct CallInfo {
 struct alignas(64) State {
   const Header& H;
 
-  Dict* gt = NULL;
+  DictValue* gt = NULL;
 
   HeapBuffer<Value> rf;
   HeapBuffer<Value> stk;
