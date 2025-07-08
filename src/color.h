@@ -42,8 +42,8 @@ enum class Style {
 };
 
 // Function to wrap a String with ANSI escape codes
-inline std::string apply_color(
-  const std::string& text,
+inline String apply_color(
+  const String& text,
   FGColor foreground,
   BGColor background = BGColor::black,
   Style style = Style::reset

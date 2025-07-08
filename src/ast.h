@@ -6,52 +6,135 @@
 
 #include "common.h"
 #include "lextoken.h"
-#include <arena/arena.h>
 
 namespace via {
 
-enum AstKind {
-  AK_EXPR_LIT,
-  AK_EXPR_SYM,
-  AK_EXPR_UN,
-  AK_EXPR_BIN,
-  AK_EXPR_GROUP,
-  AK_EXPR_CALL,
-  AK_EXPR_SUBS,
-
-  AK_STMT_DECL,
-  AK_STMT_FUNC,
+struct ExprNode {
+  virtual ~ExprNode() = 0;
 };
 
-struct AstNode;
-
-struct NodeExprLit {
-  Token* token;
+struct StmtNode {
+  virtual ~StmtNode() = 0;
 };
 
-struct NodeExprSym {
-  Token* token;
+struct TypeNode {
+  virtual ~TypeNode() = 0;
 };
 
-struct NodeExprUn {
+struct NodeExprSym;
+
+struct NodeExprLit : public ExprNode {
+  Token* tok;
+  Location loc;
+};
+
+struct NodeExprSym : public ExprNode {
+  Token* tok;
+  Location loc;
+};
+
+struct NodeExprUn : public ExprNode {
   Token* op;
-  AstNode* expr;
+  ExprNode* expr;
+  Location loc;
 };
 
-struct NodeExprBin {
+struct NodeExprBin : public ExprNode {
   Token* op;
-  AstNode *lhs, *rhs;
+  ExprNode *lhs, *rhs;
+  Location loc;
 };
 
-struct AstNode {
-  AstKind kind;
-  union {
-    NodeExprLit expr_lit;
-    NodeExprSym expr_sym;
-  } u;
+struct NodeExprGroup : public ExprNode {
+  ExprNode* expr;
+  Location loc;
 };
 
-Location get_ast_location(AstNode* node);
+struct NodeExprCall : public ExprNode {
+  ExprNode* lval;
+  Vec<ExprNode*> args;
+  Location loc;
+};
+
+struct NodeExprSubs : public ExprNode {
+  ExprNode *lval, *idx;
+  Location loc;
+};
+
+struct NodeExprTuple : public ExprNode {
+  Vec<ExprNode*> vals;
+  Location loc;
+};
+
+struct Parameter {
+  NodeExprSym* sym;
+  TypeNode* type;
+  Location loc;
+};
+
+struct NodeStmtScope;
+
+struct NodeExprLambda : public ExprNode {
+  Vec<Parameter> pms;
+  NodeStmtScope* scope;
+  Location loc;
+};
+
+struct NodeExprVar : public ExprNode {
+  NodeExprSym* sym;
+  ExprNode* val;
+  Location loc;
+};
+
+struct NodeStmtScope : public StmtNode {
+  Vec<StmtNode*> stmts;
+  Location loc;
+};
+
+struct NodeStmtIf : public StmtNode {
+  struct Branch {
+    ExprNode* cnd;
+    NodeStmtScope* br;
+  };
+
+  Vec<Branch> brs;
+  Location loc;
+};
+
+struct TupleBinding {
+  Vec<NodeExprSym*> binds;
+  Location loc;
+};
+
+struct NodeStmtFor : public StmtNode {
+  NodeExprVar* idx;
+  ExprNode* target;
+  ExprNode* step;
+  Location loc;
+};
+
+struct NodeStmtForEach : public StmtNode {
+  TupleBinding bind;
+  ExprNode* iter;
+  Location loc;
+};
+
+struct NodeStmtWhile : public StmtNode {
+  ExprNode* cnd;
+  NodeStmtScope* br;
+  Location loc;
+};
+
+struct NodeStmtAssign : public StmtNode {
+  ExprNode* lval;
+  ExprNode* rval;
+  Location loc;
+};
+
+struct NodeStmtExpr : public StmtNode {
+  ExprNode* expr;
+  Location loc;
+};
 
 } // namespace via
 

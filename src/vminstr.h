@@ -30,7 +30,7 @@ enum Opcode : uint16_t {
 };
 
 struct InstructionData {
-  std::string comment = "";
+  String comment = "";
 };
 
 struct Instruction {

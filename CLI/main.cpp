@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  auto input_path = cli.get("input");
-  auto emit_type = cli.get("--emit");
+  String input_path = cli.get("input");
+  String emit_type = cli.get("--emit");
 
   if (input_path.empty())
     goto no_input_files;
@@ -66,8 +66,8 @@ int main(int argc, char* argv[]) {
     }
 
     {
-      std::string input;
-      std::string line;
+      String input;
+      String line;
 
       while (std::getline(ifs, line))
         input += line + '\n';

@@ -220,7 +220,7 @@ char lexer_peek(const LexState& L, int count) {
 }
 
 TokenBuf lexer_tokenize(LexState& L) {
-  std::vector<Token*> toks;
+  Vec<Token*> toks;
 
   char c;
   while ((c = lexer_peek(L, 0)), c != '\0') {

@@ -9,16 +9,16 @@
 namespace via {
 
 // Allocates a copy of the std::string object as a char*.
-char* ustrdup(const std::string& str);
+char* dupe_string(const String& str);
 
 // Allocates a copy of the given String as a char*.
-char* ustrdup(const char* str);
+char* dupe_string(const char* str);
 
 // Applies a general purpose hashing algorithm to the given String.
-uint32_t ustrhash(const char* str);
+uint32_t hash_string(const char* str);
 
 // Returns an escaped version of the given std::string.
-std::string ustresc(const std::string& str);
+String escape_string(const String& str);
 
 } // namespace via
 

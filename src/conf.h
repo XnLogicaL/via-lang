@@ -125,4 +125,43 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include <vector>
+#include <memory>
+#include <unordered_map>
+#include <unordered_set>
+
+namespace via {
+
+// Type aliases, the STL is planned to be substituted for custom implementations in the future.
+
+using Str = std::string_view;
+
+using String = std::string;
+
+template<typename K, typename V>
+using Map = std::unordered_map<K, V>;
+
+template<typename T>
+using Set = std::unordered_set<T>;
+
+template<typename T, const size_t Size>
+using Array = std::array<T, Size>;
+
+template<typename T>
+using Vec = std::vector<T>;
+
+template<typename T>
+using Box = std::unique_ptr<T>;
+
+template<typename T>
+using Atomic = std::atomic<T>;
+
+template<typename T>
+using Rc = std::shared_ptr<T>;
+
+template<typename T>
+using Arc = Atomic<Rc<T>>;
+
+} // namespace via
+
 #endif

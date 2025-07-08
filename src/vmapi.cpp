@@ -7,9 +7,9 @@
 
 namespace via {
 
-static std::unordered_map<NativeFn, std::string> native_fn_ids{};
+static Map<NativeFn, String> native_fn_ids{};
 
-static std::string nativeid(NativeFn fn) {
+static String nativeid(NativeFn fn) {
   auto it = native_fn_ids.find(fn);
   if (it != native_fn_ids.end())
     return std::format("function {}", it->second);

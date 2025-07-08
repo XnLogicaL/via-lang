@@ -5,19 +5,19 @@
 
 namespace via {
 
-char* ustrdup(const std::string& str) {
+char* dupe_string(const String& str) {
   char* chars = new char[str.size() + 1];
   std::strcpy(chars, str.c_str());
   return chars;
 }
 
-char* ustrdup(const char* str) {
+char* dupe_string(const char* str) {
   char* chars = new char[std::strlen(str) + 1];
   std::strcpy(chars, str);
   return chars;
 }
 
-uint32_t ustrhash(const char* str) {
+uint32_t hash_string(const char* str) {
   static constexpr uint32_t BASE = 31u; // Prime number
   static constexpr uint32_t MOD = 0xFFFFFFFFu;
 
@@ -29,7 +29,7 @@ uint32_t ustrhash(const char* str) {
   return hash;
 }
 
-std::string ustresc(const std::string& str) {
+String escape_string(const String& str) {
   std::ostringstream oss;
   for (unsigned char c : str) {
     switch (c) {
