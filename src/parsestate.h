@@ -13,15 +13,18 @@
 namespace via {
 
 struct ParseState {
-  Token** cur;
+  Token** cursor;
   HeapAllocator al;
 
   inline explicit ParseState(const TokenBuf& B)
-    : cur(B.data) {}
+    : cursor(B.data) {}
 };
 
 Token* parser_peek(ParseState& P, const int ahead = 0);
 Token* parser_advance(ParseState& P);
+
+bool parser_match(ParseState& P, const TokenKind kind);
+bool parser_expect(ParseState& P, const TokenKind kind);
 
 ExprNode* parse_expr(ParseState& P);
 ExprNode* parse_primary(ParseState& P);
@@ -34,8 +37,8 @@ StmtNode* parse_stmt(ParseState& P);
 NodeStmtScope* parse_scope(ParseState& P);
 NodeStmtIf* parse_if(ParseState& P);
 NodeStmtWhile* parse_while(ParseState& P);
-NodeStmtForEach* parse_foreach(ParseState& P);
 NodeStmtFor* parse_for(ParseState& P);
+NodeStmtForEach* parse_foreach(ParseState& P);
 
 // helpers
 bool is_expr_start(TokenKind kind);
