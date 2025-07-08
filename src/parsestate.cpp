@@ -128,4 +128,20 @@ ExprNode* parse_binary(ParseState& P, int prec) {
   return lhs;
 }
 
+ExprNode* parse_unary(ParseState& P) {
+  if (parser_match(P, TK_MINUS) || parser_match(P, TK_BANG)) {
+    Token* op = parser_peek(P);
+    ExprNode* rhs = parse_unary(P);
+    Location oploc = token_location(P.L, *op);
+
+    auto un = heap_emplace<NodeExprUn>(P.al);
+    un->op = op;
+    un->expr = rhs;
+    un->loc = {oploc.begin, rhs->loc.end};
+    return un;
+  }
+
+  return parse_primary(P);
+}
+
 } // namespace via
