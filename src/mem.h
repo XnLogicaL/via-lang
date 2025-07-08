@@ -23,9 +23,7 @@ struct HeapAllocator {
   VIA_NOMOVE(HeapAllocator);
 };
 
-inline void* heap_alloc(HeapAllocator& heap, const size_t size) {
-  return mi_heap_malloc(heap.heap, size);
-}
+void* heap_alloc(HeapAllocator& heap, const size_t size);
 
 template<typename T>
 inline T* heap_alloc(HeapAllocator& heap) {
