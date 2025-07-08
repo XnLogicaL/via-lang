@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "mem.h"
+#include "diag.h"
 #include "error.h"
 #include "ast.h"
 #include <mimalloc.h>
@@ -15,6 +16,7 @@ namespace via {
 struct ParseState {
   Token** cursor;
   HeapAllocator al;
+  DiagContext dctx;
 
   inline explicit ParseState(const TokenBuf& B)
     : cursor(B.data) {}
