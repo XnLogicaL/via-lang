@@ -15,9 +15,90 @@ Token* parser_advance(ParseState& P) {
 }
 
 bool parser_match(ParseState& P, const TokenKind kind) {
-  return parser_peek(P)->kind == kind;
+  Token* tok = parser_peek(P);
+  return tok->kind == kind || tok->kind == TK_EOF;
 }
 
+bool parser_expect(ParseState& P, const TokenKind kind) {
+  if (!parser_match(P, kind)) {
+    const Token& unexp = *parser_peek(P);
+    const Location loc = token_location(P.L, unexp);
 
+    diagf<DK_ERROR>(P.dctx, loc, "Unexpected token '{}'", String(unexp.lexeme, unexp.size));
+    return false;
+  }
+
+  return true;
+}
+
+ExprNode* parse_primary(ParseState& P) {
+  Token* tok = parser_peek(P);
+  Location loc = token_location(P.L, *tok);
+
+  if (parser_match(P, TK_INT)) {
+    parser_advance(P); // consume token
+    auto* lit = heap_emplace<NodeExprLit>(P.al);
+    lit->tok = tok;
+    lit->loc = loc;
+    return lit;
+  }
+
+  if (parser_match(P, TK_IDENT)) {
+    parser_advance(P); // consume token
+    auto* sym = heap_emplace<NodeExprSym>(P.al);
+    sym->tok = tok;
+    sym->loc = loc;
+    return sym;
+  }
+
+  if (parser_match(P, TK_LPAREN)) {
+    parser_advance(P); // consume '('
+    Location start = loc;
+    ExprNode* first = parse_expr(P);
+
+    if (parser_match(P, TK_COMMA)) {
+      // Tuple
+      Vec<ExprNode*> vals;
+      vals.push_back(first);
+
+      while (parser_match(P, TK_COMMA)) {
+        parser_advance(P); // consume comma
+        vals.push_back(parse_expr(P));
+      }
+
+      if (!parser_expect(P, TK_RPAREN))
+        return nullptr;
+
+      Token* last = parser_peek(P, -1);
+      Location end = token_location(P.L, *last);
+
+      auto* tup = heap_emplace<NodeExprTuple>(P.al);
+      tup->vals = std::move(vals);
+      tup->loc = {start.begin, end.end};
+      return tup;
+    }
+
+    // Otherwise: must be a grouped expression
+    if (!parser_expect(P, TK_RPAREN))
+      return NULL;
+
+    Token* last = parser_peek(P, -1);
+    Location end = token_location(P.L, *last);
+
+    auto* group = heap_emplace<NodeExprGroup>(P.al);
+    group->expr = first;
+    group->loc = {start.begin, end.end};
+    return group;
+  }
+
+  diagf<DK_ERROR>(
+    P.dctx,
+    loc,
+    "Unexpected token '{}' while parsing primary expression",
+    String(tok->lexeme, tok->size)
+  );
+
+  return NULL;
+}
 
 } // namespace via

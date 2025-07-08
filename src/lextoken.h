@@ -33,6 +33,7 @@ enum TokenKind {
   TK_KW_ELSE,  // else
 
   TK_DOT,               // .
+  TK_COMMA,             // ,
   TK_SEMICOLON,         // ;
   TK_COLON,             // :
   TK_DBCOLON,           // ::
@@ -82,8 +83,8 @@ enum TokenKind {
 };
 
 struct Location {
-  const size_t begin;
-  const size_t end;
+  size_t begin;
+  size_t end;
 };
 
 struct Token {

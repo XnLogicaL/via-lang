@@ -11,7 +11,19 @@ void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis) {
 
 void diag_emit(const DiagContext& ctx) {
   for (const Diagnosis& diagnosis : ctx.diags) {
-    spdlog::error(diagnosis.msg);
+    switch (diagnosis.kind) {
+    case DK_INFO:
+      spdlog::info(diagnosis.msg);
+      break;
+    case DK_WARN:
+      spdlog::warn(diagnosis.msg);
+      break;
+    case DK_ERROR:
+      spdlog::error(diagnosis.msg);
+      break;
+    default:
+      break;
+    }
   }
 }
 

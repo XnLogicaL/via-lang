@@ -14,12 +14,15 @@
 namespace via {
 
 struct ParseState {
+  const LexState& L;
+
   Token** cursor;
   HeapAllocator al;
   DiagContext dctx;
 
-  inline explicit ParseState(const TokenBuf& B)
-    : cursor(B.data) {}
+  inline explicit ParseState(const LexState& L, const TokenBuf& B)
+    : L(L),
+      cursor(B.data) {}
 };
 
 Token* parser_peek(ParseState& P, const int ahead = 0);

@@ -24,6 +24,7 @@ static constexpr TokenReprPair KEYWORDS[] = {
 
 static constexpr TokenReprPair SYMBOLS[] = {
   {".", TK_DOT},
+  {",", TK_COMMA},
   {";", TK_SEMICOLON},
   {":", TK_COLON},
   {"::", TK_DBCOLON},
