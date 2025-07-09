@@ -1,0 +1,65 @@
+var a: int = 10;
+var &b: int = a;
+
+func foo(x: int) -> nil {
+  // x is copied from the passed argument along with the stack frame,
+  // and is destroyed along with the function return,
+  // as its internal reference counter reaches 0.
+  x *= x;
+}
+
+func bar(&x: int) -> nil {
+  // x is on the stack, but points to the passed in argument.
+  // the original arguments reference counter is incremented upon acquisition,
+  // and decremented upon returning.
+  x *= x;
+}
+
+foo(a); // a is copied; therefore not modified
+bar(a); // a is referenced
+
+// since b is a reference to a
+print(a); // 100
+print(b); // 100
+
+/* bytecode dump
+** 
+** [section<text>]
+**   pushk      K0        ; a=10
+**   reflocal   R0 0      ; __tmp=&a
+**   pushref    R0        ; &b=a
+** 
+** [closure<foo> R0]
+**   refarg     R0 0      ; &x
+**   imul       R0 R0 R0  ; x=x*x
+**   retnil
+** [end<foo>]
+** 
+** [closure<bar> R1]
+**   refarg     R0 0      ; &x
+**   imul       R0 R0 R0  ; x=x*x
+**   retnil
+** [end<bar>]
+** 
+**   getlocal   R2 0      ; __tmp=a
+**   push       R2        ; __arg[0]=__tmp
+**   call       R0 1      ; call foo
+**   pop
+**   reflocal   R2        ; __tmp=&a 
+**   pushref    R2        ; arg[0]=&__tmp
+**   call       R1 1      ; call bar
+**   pop
+**   refglobal  R0 K1     ; __tmp=&__global["print"]
+**   reflocal   R1 0      ; __tmp1=&a
+**   pushref    R1        ; __arg[0]=&__tmp1
+**   call       R0 1      ; call __global["print"]
+**   reflocal   R1 1      ; __tmp1=&b
+**   pushref    R1        ; __arg[0]=&__tmp1 
+**   call       R0 1      ; call __global["print"]
+**   int        X1        ; halt
+**
+** [section<data>]
+**   [constant<0>] VLK_INT 10
+**   [constant<1>] VLK_STRING "print"
+** 
+*/

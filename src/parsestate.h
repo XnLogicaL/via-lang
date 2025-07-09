@@ -13,6 +13,8 @@
 
 namespace via {
 
+using AstBuf = HeapBuffer<StmtNode>;
+
 struct ParseState {
   const LexState& L;
 
@@ -44,6 +46,8 @@ NodeStmtIf* parse_if(ParseState& P);
 NodeStmtWhile* parse_while(ParseState& P);
 NodeStmtFor* parse_for(ParseState& P);
 NodeStmtForEach* parse_foreach(ParseState& P);
+
+AstBuf parse(ParseState& P);
 
 // helpers
 bool is_expr_start(TokenKind kind);

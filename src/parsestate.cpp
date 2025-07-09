@@ -67,7 +67,7 @@ ExprNode* parse_primary(ParseState& P) {
       }
 
       if (!parser_expect(P, TK_RPAREN))
-        return nullptr;
+        return NULL;
 
       Token* last = parser_peek(P, -1);
       Location end = token_location(P.L, *last);

@@ -8,5 +8,6 @@
 #include <vmapi.h>
 #include <lextoken.h>
 #include <lexstate.h>
+#include <parsestate.h>
 
 #endif

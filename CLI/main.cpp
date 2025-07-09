@@ -66,18 +66,20 @@ int main(int argc, char* argv[]) {
     }
 
     {
-      String input;
-      String line;
+      String input, line;
 
       while (std::getline(ifs, line))
         input += line + '\n';
 
       FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
       LexState L(file_buf);
-      TokenBuf token_buf = lexer_tokenize(L);
 
-      auto ek_raw = cli.get("--emit");
-      auto ek = get_emit_kind(ek_raw.c_str());
+      TokenBuf token_buf = lexer_tokenize(L);
+      ParseState P(L, token_buf);
+
+
+      String ek_raw = cli.get("--emit");
+      EmitKind ek = get_emit_kind(ek_raw.c_str());
 
       switch (ek) {
       case EK_LIST:

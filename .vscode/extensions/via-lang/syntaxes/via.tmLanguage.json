@@ -4,23 +4,34 @@
   "scopeName": "source.via",
   "patterns": [
     {
-      "name": "keyword.control",
-      "match": "\\b(nameof|typeof|type|defer|const|func|impl|trait|with|elseif|defined|namespace|define|macro|import|export|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|error|print|enum|pragma)\\b"
+      "name": "comment.line.double-slash.via",
+      "match": "//.*$"
     },
     {
-      "name": "storage.modifier",
-      "match": "\\bconst\\b"
+      "name": "comment.block.via",
+      "begin": "/\\*",
+      "end": "\\*/",
+      "patterns": [
+        {
+          "match": "/\\*",
+          "name": "invalid.illegal.nested-comment.via"
+        }
+      ]
     },
     {
-      "name": "variable.language.self",
+      "name": "keyword.control.via",
+      "match": "\\b(type|mut|defer|const|func|with|elseif|namespace|macro|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|try|enum)\\b"
+    },
+    {
+      "name": "variable.language.self.via",
       "match": "\\bself\\b"
     },
     {
-      "name": "constant.language.boolean",
+      "name": "constant.language.boolean.via",
       "match": "\\b(true|false)\\b"
     },
     {
-      "name": "constant.language.nil",
+      "name": "constant.language.nil.via",
       "match": "\\bnil\\b"
     },
     {
@@ -28,51 +39,37 @@
       "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
     },
     {
-      "name": "keyword.operator.arithmetic",
+      "name": "keyword.operator.arithmetic.via",
       "match": "[+\\-*/%]"
     },
     {
-      "name": "keyword.operator.comparison",
+      "name": "keyword.operator.comparison.via",
       "match": "==|!=|<=|>=|<|>"
     },
     {
-      "name": "keyword.operator.assignment",
+      "name": "keyword.operator.assignment.via",
       "match": "="
     },
     {
-      "name": "keyword.operator.logical",
+      "name": "keyword.operator.logical.via",
       "match": "\\b(and|or|not)\\b"
     },
     {
-      "match": "(func)\\s+([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "1": {
-          "name": "keyword.control"
-        },
-        "2": {
-          "name": "entity.name.function"
-        }
-      }
+      "match": "(?<=\\bfunc\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.function.via"
     },
     {
-      "match": "(struct)\\s+([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "1": {
-          "name": "keyword.control"
-        },
-        "2": {
-          "name": "entity.name.class"
-        }
-      }
+      "match": "(?<=\\bstruct\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.class.via"
     },
     {
       "match": "(->)\\s*([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
-          "name": "keyword.operator"
+          "name": "keyword.operator.via"
         },
         "2": {
-          "name": "entity.name.type"
+          "name": "entity.name.type.via"
         }
       }
     },
@@ -80,40 +77,40 @@
       "match": "(:)\\s*([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": {
-          "name": "keyword.operator"
+          "name": "keyword.operator.via"
         },
         "2": {
-          "name": "entity.name.type"
+          "name": "entity.name.type.via"
         }
       }
     },
     {
-      "match": "(as)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "\\bas\\s+([&]?[A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
-        "1": {
-          "name": "keyword.control"
+        "0": {
+          "name": "keyword.control.via"
         },
-        "2": {
-          "name": "entity.name.type"
+        "1": {
+          "name": "entity.name.type.via"
         }
       }
     },
     {
-      "name": "string.quoted.double",
+      "name": "string.quoted.double.via",
       "begin": "\"",
       "end": "\"",
       "patterns": [
         {
-          "name": "constant.character.escape",
+          "name": "constant.character.escape.via",
           "match": "\\\\."
         },
         {
-          "name": "string.interpolation",
+          "name": "string.interpolation.via",
           "begin": "\\$\\{",
           "end": "\\}",
           "patterns": [
             {
-              "name": "variable.other",
+              "name": "variable.other.via",
               "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
             }
           ]
@@ -121,31 +118,22 @@
       ]
     },
     {
-      "name": "comment.line.double-slash",
-      "match": "##.*"
+      "name": "entity.name.function.macro.via",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*!"
     },
     {
-      "name": "comment.block",
-      "begin": "#\\[",
-      "end": "\\]#"
-    },
-    {
-      "name": "entity.name.function",
-      "match": "[A-Za-z_][A-Za-z0-9_]*!"
-    },
-    {
-      "match": "([A-Za-z_][A-Za-z0-9_]*)\\.([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\.([A-Za-z_][A-Za-z0-9_]*)\\b",
       "captures": {
         "1": {
-          "name": "variable.name"
+          "name": "variable.name.object.via"
         },
         "2": {
-          "name": "variable.property"
+          "name": "variable.name.property.via"
         }
       }
     },
     {
-      "name": "variable.name",
+      "name": "variable.other.via",
       "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
     }
   ]
