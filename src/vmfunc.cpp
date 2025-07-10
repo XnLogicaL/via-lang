@@ -5,7 +5,7 @@
 
 namespace via {
 
-Closure closure_new(State*, NativeFn fun, size_t upvc) {
+Closure closure_new(State*, NativeFn fun, usize upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
   C.native = true;
@@ -14,7 +14,7 @@ Closure closure_new(State*, NativeFn fun, size_t upvc) {
   return C;
 }
 
-Closure closure_new(State*, Function* fun, size_t upvc) {
+Closure closure_new(State*, Function* fun, usize upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
   C.native = true;

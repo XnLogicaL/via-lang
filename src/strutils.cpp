@@ -17,13 +17,13 @@ char* dupe_string(const char* str) {
   return chars;
 }
 
-uint32_t hash_string(const char* str) {
-  static constexpr uint32_t BASE = 31u; // Prime number
-  static constexpr uint32_t MOD = 0xFFFFFFFFu;
+u32 hash_string(const char* str) {
+  static constexpr u32 BASE = 31u; // Prime number
+  static constexpr u32 MOD = 0xFFFFFFFFu;
 
-  uint32_t hash = 0;
+  u32 hash = 0;
   while (char chr = *str++) {
-    hash = (hash * BASE + static_cast<uint32_t>(chr)) % MOD;
+    hash = (hash * BASE + static_cast<u32>(chr)) % MOD;
   }
 
   return hash;

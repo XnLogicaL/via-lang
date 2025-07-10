@@ -7,7 +7,7 @@
 namespace via {
 
 String string_new(State* S, const char* str) {
-  size_t len = std::strlen(str);
+  usize len = std::strlen(str);
   if (len > VIA_MAXSSIZE) {
     error(S, "memory allocation failed: block too large");
     return {};
@@ -23,7 +23,7 @@ String string_new(State* S, const char* str) {
   return lstr;
 }
 
-char string_get(State* S, String* str, size_t pos) {
+char string_get(State* S, String* str, usize pos) {
   if (pos > str->size) {
     error(S, "string index out of range");
     return -1;
@@ -32,7 +32,7 @@ char string_get(State* S, String* str, size_t pos) {
   return str->data[pos];
 }
 
-void string_set(State* S, String* str, size_t pos, char chr) {
+void string_set(State* S, String* str, usize pos, char chr) {
   if (pos > str->size) {
     error(S, "string index out of range");
     return;

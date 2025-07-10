@@ -10,7 +10,7 @@
 namespace via {
 
 struct SemaRegisterState {
-  HeapBuffer<uint64_t> buf{1024};
+  HeapBuffer<u64> buf{1024};
 };
 
 int sema_alloc_register(const SemaRegisterState& S);

@@ -7,7 +7,7 @@
 namespace via {
 
 void token_dump(const Token& T) {
-  size_t len = T.size;
+  usize len = T.size;
   char lexeme[len + 1];
   lexeme[len] = '\0';
 
@@ -16,8 +16,8 @@ void token_dump(const Token& T) {
 }
 
 const Location token_location(const LexState& L, const Token& T) {
-  const size_t begin = T.lexeme - L.file.data;
-  const size_t end = begin + T.size;
+  const usize begin = T.lexeme - L.file.data;
+  const usize end = begin + T.size;
 
   return {begin, end};
 }

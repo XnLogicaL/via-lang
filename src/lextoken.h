@@ -83,14 +83,14 @@ enum TokenKind {
 };
 
 struct Location {
-  size_t begin;
-  size_t end;
+  usize begin;
+  usize end;
 };
 
 struct Token {
   TokenKind kind;
   const char* lexeme;
-  size_t size;
+  usize size;
 };
 
 // Buffer of arena allocated token pointers owned by LexState.

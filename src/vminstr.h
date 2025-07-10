@@ -9,7 +9,7 @@
 namespace via {
 
 // oh boy
-enum Opcode : uint16_t {
+enum Opcode : u16 {
   // meta opcodes
   VOP_NOP,
   VOP_HALT,
@@ -190,7 +190,7 @@ struct InstructionData {
 
 struct Instruction {
   Opcode op = VOP_NOP;
-  uint16_t a, b, c;
+  u16 a, b, c;
 };
 
 } // namespace via

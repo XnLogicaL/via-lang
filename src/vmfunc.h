@@ -35,8 +35,8 @@ using UpvBuf = HeapBuffer<UpValue>;
 
 struct Function {
   const Instruction* code = NULL;
-  size_t code_size = 0;
-  size_t line = 0;
+  usize code_size = 0;
+  usize line = 0;
   const char* id = "<anonymous>";
 };
 
@@ -51,8 +51,8 @@ struct Closure {
   bool native = false;
 };
 
-Closure closure_new(State* S, NativeFn fun, size_t upvc);
-Closure closure_new(State* S, Function* fun, size_t upvc);
+Closure closure_new(State* S, NativeFn fun, usize upvc);
+Closure closure_new(State* S, Function* fun, usize upvc);
 void closure_close(State* S, Closure* C);
 bool closure_cmp(State* S, Closure* left, Closure* right);
 

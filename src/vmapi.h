@@ -18,21 +18,21 @@ inline int stack_size(const State* S) {
 
 const InstructionData& pcdata(State* S, const Instruction* pc);
 
-Value get_constant(State* S, size_t index);
+Value get_constant(State* S, usize index);
 
-void set_register(State* S, uint16_t reg, Value&& val);
+void set_register(State* S, u16 reg, Value&& val);
 
-Value* get_register(State* S, uint16_t reg);
+Value* get_register(State* S, u16 reg);
 
 void push(State* S, Value&& val);
 
 void pop(State* S);
 
-Value* get_local(State* S, size_t offset);
+Value* get_local(State* S, usize offset);
 
-void set_local(State* S, size_t offset, Value&& val);
+void set_local(State* S, usize offset, Value&& val);
 
-Value* get_argument(State* S, size_t offset);
+Value* get_argument(State* S, usize offset);
 
 Value* get_global(State* S, const char* name);
 

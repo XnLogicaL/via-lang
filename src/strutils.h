@@ -15,7 +15,7 @@ char* dupe_string(const String& str);
 char* dupe_string(const char* str);
 
 // Applies a general purpose hashing algorithm to the given String.
-uint32_t hash_string(const char* str);
+u32 hash_string(const char* str);
 
 // Returns an escaped version of the given std::string.
 String escape_string(const String& str);

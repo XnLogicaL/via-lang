@@ -15,13 +15,13 @@ struct State;
 
 struct String {
   char* data = NULL;
-  size_t size;
-  uint32_t hash;
+  usize size;
+  u32 hash;
 };
 
 String string_new(State* S, const char* str);
-char string_get(State* S, String* str, size_t pos);
-void string_set(State* S, String* str, size_t pos, char chr);
+char string_get(State* S, String* str, usize pos);
+void string_set(State* S, String* str, usize pos, char chr);
 bool string_cmp(State* S, String* left, String* right);
 
 } // namespace via

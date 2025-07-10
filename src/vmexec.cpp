@@ -56,7 +56,7 @@ dispatch:
   }
 
 #if VM_USE_CGOTO
-  goto* dispatch_table[(uint16_t)S->pc->op];
+  goto* dispatch_table[(u16)S->pc->op];
 #else
   switch (S->pc->op)
 #endif
@@ -66,9 +66,9 @@ dispatch:
     }
 
     VM_CASE(VOP_IADDII) {
-      uint16_t ra = insn->a;
-      uint16_t rb = insn->b;
-      uint16_t rc = insn->c;
+      u16 ra = insn->a;
+      u16 rb = insn->b;
+      u16 rc = insn->c;
 
       Value* vb = get_register(S, rb);
       Value* vc = get_register(S, rc);

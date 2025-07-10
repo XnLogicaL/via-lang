@@ -12,7 +12,7 @@ template<typename T>
 struct HeapBuffer {
   T* data = NULL;
   mutable T* cursor = NULL;
-  size_t size = 0;
+  usize size = 0;
 
   // clang-format off
   inline T* begin() { return data; }
@@ -23,13 +23,13 @@ struct HeapBuffer {
   // clang-format on
 
   inline HeapBuffer() = default;
-  inline HeapBuffer(const size_t size)
+  inline HeapBuffer(const usize size)
     : data(new T[size]),
       cursor(data),
       size(size) {}
 
   inline HeapBuffer(const T* begin, const T* end) {
-    size_t offset = end - begin;
+    usize offset = end - begin;
     size = offset / sizeof(T);
     data = new T[size];
     cursor = data;

@@ -15,7 +15,7 @@ struct DictValue;
 struct Closure;
 struct Function;
 
-enum ValueKind : uint8_t {
+enum ValueKind : u8 {
   VLK_NIL,
   VLK_INT,
   VLK_FLOAT,

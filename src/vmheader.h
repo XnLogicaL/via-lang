@@ -13,8 +13,8 @@
 namespace via {
 
 struct Header {
-  uint32_t magic = 0xDEADCAFE;
-  uint64_t flags;
+  u32 magic = 0xDEADCAFE;
+  u64 flags;
 
   HeapBuffer<Value> consts;
   HeapBuffer<Instruction> bytecode;
@@ -27,7 +27,7 @@ struct Header {
 
 using FileBuf = HeapBuffer<char>;
 
-size_t header_size(const Header& H);
+usize header_size(const Header& H);
 FileBuf header_encode(const Header& H);
 Header header_decode(const FileBuf& buf);
 

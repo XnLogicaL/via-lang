@@ -5,7 +5,7 @@
 
 namespace via {
 
-void* heap_alloc(HeapAllocator& heap, const size_t size) {
+void* heap_alloc(HeapAllocator& heap, const usize size) {
   return mi_heap_malloc(heap.heap, size);
 }
 

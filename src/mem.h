@@ -23,7 +23,7 @@ struct HeapAllocator {
   VIA_NOMOVE(HeapAllocator);
 };
 
-void* heap_alloc(HeapAllocator& heap, const size_t size);
+void* heap_alloc(HeapAllocator& heap, const usize size);
 
 template<typename T>
 inline T* heap_alloc(HeapAllocator& heap) {
@@ -31,7 +31,7 @@ inline T* heap_alloc(HeapAllocator& heap) {
 }
 
 template<typename T>
-inline T* heap_alloc(HeapAllocator& heap, const size_t count) {
+inline T* heap_alloc(HeapAllocator& heap, const usize count) {
   return (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
 }
 
@@ -42,9 +42,9 @@ inline T* heap_emplace(HeapAllocator& heap, Args... args) {
 }
 
 template<typename T, typename... Args>
-inline T* heap_emplace_array(HeapAllocator& heap, size_t count, Args&&... args) {
+inline T* heap_emplace_array(HeapAllocator& heap, usize count, Args&&... args) {
   T* ptr = (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
-  for (size_t i = 0; i < count; ++i)
+  for (usize i = 0; i < count; ++i)
     new (&ptr[i]) T(std::forward<Args>(args)...);
   return ptr;
 }

@@ -14,7 +14,7 @@ static String nativeid(NativeFn fn) {
   if (it != native_fn_ids.end())
     return std::format("function {}", it->second);
   else
-    return std::format("function <native@0x{:x}>", reinterpret_cast<uintptr_t>(fn));
+    return std::format("function <native@0x{:x}>", reinterpret_cast<uptr>(fn));
 }
 
 static std::string funcsig(const Closure* func) {
@@ -29,24 +29,24 @@ void pop(State* S) {
   S->top--;
 }
 
-Value* get_local(State* S, size_t offset) {
+Value* get_local(State* S, usize offset) {
   CallInfo* ci = S->ci_top - 1;
   return (ci->base + offset - 1);
 }
 
-void set_local(State* VIA_RESTRICT S, size_t offset, Value&& val) {
+void set_local(State* VIA_RESTRICT S, usize offset, Value&& val) {
   *get_local(S, offset) = std::move(val);
 }
 
-void set_register(State* S, uint16_t reg, Value&& val) {
+void set_register(State* S, u16 reg, Value&& val) {
   S->rf.data[reg] = std::move(val);
 }
 
-Value* get_register(State* S, uint16_t reg) {
+Value* get_register(State* S, u16 reg) {
   return &S->rf.data[reg];
 }
 
-Value get_constant(State* S, size_t index) {
+Value get_constant(State* S, usize index) {
   if (index >= S->H.consts.size)
     return nil;
 
@@ -92,7 +92,7 @@ const void* to_pointer(Value* val) {
 }
 
 template<const bool IsProtected>
-void call_base(State* S, Closure* closure, size_t nargs) {
+void call_base(State* S, Closure* closure, usize nargs) {
   CallInfo ci;
   ci.base = S->top;
   ci.nargs = nargs;
@@ -116,11 +116,11 @@ void call_base(State* S, Closure* closure, size_t nargs) {
   }
 }
 
-void call(State* S, Closure* closure, size_t nargs) {
+void call(State* S, Closure* closure, usize nargs) {
   call_base<false>(S, closure, nargs);
 }
 
-void pcall(State* S, Closure* closure, size_t nargs) {
+void pcall(State* S, Closure* closure, usize nargs) {
   call_base<true>(S, closure, nargs);
 }
 
@@ -165,7 +165,7 @@ const char* to_string(State* S, Value* val) {
       std::format(
         "<{}@0x{:x}>",
         type(val),
-        (uintptr_t)to_pointer(val)
+        (uptr)to_pointer(val)
       )
     ); // clang-format on
 
