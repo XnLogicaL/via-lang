@@ -10,56 +10,6 @@
 #include "vmfunc.h"
 #include "strutils.h"
 
-namespace via {
-
-inline int stack_size(const State* S) {
-  return S->ci_top - S->ci_stk.data;
-}
-
-const InstructionData& pcdata(State* S, const Instruction* pc);
-
-Value get_constant(State* S, usize index);
-
-void set_register(State* S, u16 reg, Value&& val);
-
-Value* get_register(State* S, u16 reg);
-
-void push(State* S, Value&& val);
-
-void pop(State* S);
-
-Value* get_local(State* S, usize offset);
-
-void set_local(State* S, usize offset, Value&& val);
-
-Value* get_argument(State* S, usize offset);
-
-Value* get_global(State* S, const char* name);
-
-void set_global(State* S, const char* name, Value&& val);
-
-const char* type(State* S, Value* val);
-
-const void* to_pointer(State* S, Value* val);
-
-void call(State* S, Closure* callee);
-
-void pcall(State* S, Closure* callee);
-
-void ret(State* S, Value&& retv);
-
-int length(State* S, Value* val);
-
-const char* to_string(State* S, Value* val);
-
-bool to_bool(State* S, Value* val);
-
-int to_int(State* S, Value* val);
-
-float to_float(State* S, Value* val);
-
-void label_load(State* S);
-
-} // namespace via
+namespace via {} // namespace via
 
 #endif

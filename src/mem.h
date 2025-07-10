@@ -42,7 +42,7 @@ inline T* heap_emplace(HeapAllocator& heap, Args... args) {
 }
 
 template<typename T, typename... Args>
-inline T* heap_emplace_array(HeapAllocator& heap, usize count, Args&&... args) {
+inline T* heap_emplace(HeapAllocator& heap, usize count, Args&&... args) {
   T* ptr = (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
   for (usize i = 0; i < count; ++i)
     new (&ptr[i]) T(std::forward<Args>(args)...);

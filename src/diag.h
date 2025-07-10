@@ -47,10 +47,9 @@ template<typename T = std::function<bool(const Diagnosis&)>>
 Vec<const Diagnosis*> diag_filter(const DiagContext& ctx, T callback) {
   Vec<const Diagnosis*> filtered;
 
-  for (const Diagnosis& diag : ctx.diags) {
+  for (const Diagnosis& diag : ctx.diags)
     if (callback(diag))
       filtered.push_back(&diag);
-  }
 
   return filtered;
 }
