@@ -1,5 +1,5 @@
 var a: int = 10;
-var &b: int = a;
+var b: int = &a;
 
 func foo(x: int) -> nil {
   // x is copied from the passed argument along with the stack frame,
@@ -8,15 +8,20 @@ func foo(x: int) -> nil {
   x *= x;
 }
 
-func bar(&x: int) -> nil {
+func bar(x: int) -> nil {
   // x is on the stack, but points to the passed in argument.
   // the original arguments reference counter is incremented upon acquisition,
   // and decremented upon returning.
   x *= x;
 }
 
+func baz(x: int) -> nil {
+  bar(&x);
+  var y: float = x * 3.333;
+}
+
 foo(a); // a is copied; therefore not modified
-bar(a); // a is referenced
+bar(&a); // a is referenced
 
 // since b is a reference to a
 print(a); // 100
@@ -25,41 +30,49 @@ print(b); // 100
 /* bytecode dump
 ** 
 ** [section<text>]
-**   pushk      K0        ; a=10
-**   reflocal   R0 0      ; __tmp=&a
-**   pushref    R0        ; &b=a
+**   pushk        K0        ; a=10
+**   duplocalref  0         ; &b=a
 ** 
 ** [closure<foo> R0]
-**   refarg     R0 0      ; &x
-**   imul       R0 R0 R0  ; x=x*x
+**   getargref    R0 0      ; &x
+**   imul1        R0 R0     ; x*=x
 **   retnil
-** [end<foo>]
 ** 
 ** [closure<bar> R1]
-**   refarg     R0 0      ; &x
-**   imul       R0 R0 R0  ; x=x*x
+**   getargref    R0 0      ; &x
+**   imul1        R0 R0     ; x*=x
 **   retnil
-** [end<bar>]
+**
+** [closure<baz> R2]
+**   capture      3
+**   getupvref    R0 0
+**   pushargref   R1 0
+**   call         R0
+**   drop
+**   getargref    R0 0      ; &x
+**   pushfmulxk   R0 K1     ; y=&x*3.333
+**   retnil
 ** 
-**   getlocal   R2 0      ; __tmp=a
-**   push       R2        ; __arg[0]=__tmp
-**   call       R0 1      ; call foo
-**   pop
-**   reflocal   R2        ; __tmp=&a 
-**   pushref    R2        ; arg[0]=&__tmp
-**   call       R1 1      ; call bar
-**   pop
-**   refglobal  R0 K1     ; __tmp=&__global["print"]
-**   reflocal   R1 0      ; __tmp1=&a
-**   pushref    R1        ; __arg[0]=&__tmp1
-**   call       R0 1      ; call __global["print"]
-**   reflocal   R1 1      ; __tmp1=&b
-**   pushref    R1        ; __arg[0]=&__tmp1 
-**   call       R0 1      ; call __global["print"]
-**   int        X1        ; halt
+**   getlocalref  R0 2      ; foo
+**   duplocal     0         ; arg[0]=a
+**   call         R0 1
+**   drop
+**   getlocalref  R0 3      ; bar
+**   duplocalref  0         ; arg[0]=&a
+**   call         R0 1
+**   drop
+**   refglobal    R0 K3     ; &global["print"]
+**   duplocalref  0         ; arg[0]=&a
+**   call         R0 1
+**   duplocalref  1         ; arg[0]=&b
+**   call         R0 1
+**   halt
 **
 ** [section<data>]
 **   [constant<0>] VLK_INT 10
-**   [constant<1>] VLK_STRING "print"
+**   [constant<1>] VLK_FLOAT 3.333
+**   [constant<2>] VLK_STRING "foo"
+**   [constant<3>] VLK_STRING "bar"
+**   [constant<4>] VLK_STRING "print"
 ** 
 */

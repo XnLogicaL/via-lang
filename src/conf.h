@@ -163,6 +163,8 @@ using Rc = std::shared_ptr<T>;
 template<typename T>
 using Arc = Atomic<Rc<T>>;
 
+namespace conf {} // namespace conf
+
 } // namespace via
 
 #endif

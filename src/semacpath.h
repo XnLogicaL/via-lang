@@ -17,7 +17,7 @@ enum ControlPathResult {
   CPR_UNREACHABLE, // statement is never reached
 };
 
-ControlPathResult sema_cpath_analyze(const AstNode* stmt);
+ControlPathResult sema_cpath_analyze(const StmtNode* stmt);
 
 } // namespace via
 
