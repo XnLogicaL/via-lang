@@ -65,14 +65,7 @@ dispatch:
       VM_NEXT();
     }
 
-    VM_CASE(VOP_IADDII) {
-      u16 ra = insn->a;
-      u16 rb = insn->b;
-      u16 rc = insn->c;
 
-      Value* vb = get_register(S, rb);
-      Value* vc = get_register(S, rc);
-    }
 
 #ifndef VM_USE_CGOTO
   default:

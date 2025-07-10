@@ -39,7 +39,7 @@ static void writevalue(FileBuf* B, const Value& val) {
     write32(B, val.u.i);
     break;
   case VLK_FLOAT: {
-    u32_t data = std::bit_cast<uint32>(val.u.f);
+    u32 data = std::bit_cast<u32>(val.u.f);
     write32(B, data);
   } break;
   default:
@@ -139,7 +139,7 @@ FileBuf header_encode(const Header& H) {
 
   Instruction* lastinsn = H.bytecode.data + H.bytecode.size;
   for (const Instruction* insn = H.bytecode.data; insn < lastinsn; ++insn) {
-    u64_t data = std::bit_cast<uint64>(*insn);
+    u64 data = std::bit_cast<u64>(*insn);
     write64(&buf, data);
   }
 

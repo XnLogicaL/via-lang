@@ -172,26 +172,29 @@ enum Opcode : u16 {
   VOP_PUSHFMODXY,  // pushfmodxy <ra: int> <rb: float>
   VOP_PUSHFMODXYK, // pushfmodxyk <ra: float> <k0: int>
 
-  // calling opcodes
+  // function opcodes
+  VOP_CAPTURE,
   VOP_CALL,
   VOP_PCALL,
   VOP_RET,
-  VOP_RET0,
-  VOP_RET1,
   VOP_RETNIL,
   VOP_RETTRUE,
   VOP_RETFALSE,
   VOP_RETK,
+  VOP_GETUPV,
+  VOP_GETUPVREF,
+  VOP_SETUPV,
 };
 
-struct InstructionData {
-  const char* comment = NULL;
-};
+Opcode opcode_from_string(const char* str);
+String opcode_to_string(Opcode opc);
 
 struct Instruction {
   Opcode op = VOP_NOP;
   u16 a, b, c;
 };
+
+String instruction_format(Instruction insn);
 
 } // namespace via
 
