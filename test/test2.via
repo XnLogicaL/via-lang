@@ -62,7 +62,7 @@ print(b); // 100
 **   call         R0 1
 **   drop
 **   refglobal    R0 K3     ; &global["print"]
-**   duplocalref  0         ; arg[0]=&a
+**   duplocalref  0         ; arg[0]=&a""
 **   call         R0 1
 **   duplocalref  1         ; arg[0]=&b
 **   call         R0 1
