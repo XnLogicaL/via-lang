@@ -11,13 +11,13 @@ namespace via {
   std::abort();
 }
 
-void vmerror(const State* S, const char* msg) {
+void vmerror(State* S, const char* msg) {
   // check for empty stack:
-  if (stack_size(S) == 0)
+  if (S->top == S->stk.data)
     error_fatal(msg);
 
-  S->e->interrupt = true;
-  S->e->msg = msg;
+  S->it = INT_ERROR;
+  S->err = msg;
 }
 
 } // namespace via

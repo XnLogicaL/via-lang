@@ -40,7 +40,7 @@ void diag(DiagContext& ctx, AbsLocation loc, String msg) {
 
 template<const DiagnosisKind Kind, typename... Args>
 void diagf(DiagContext& ctx, AbsLocation loc, Fmt<Args...> fmt, Args... args) {
-  diag_raw(ctx, {Kind, loc, std::vformat(fmt, std::forward<Args>(args)...)});
+  diag_raw(ctx, {Kind, loc, std::format(fmt, std::forward<Args>(args)...)});
 }
 
 template<typename T = std::function<bool(const Diagnosis&)>>

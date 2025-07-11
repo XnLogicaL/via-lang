@@ -7,6 +7,7 @@
 #include "common.h"
 #include "error.h"
 #include "heapbuf.h"
+#include "mem.h"
 #include "vminstr.h"
 #include "vmval.h"
 #include "vmheader.h"
@@ -44,7 +45,7 @@ struct alignas(64) State {
 
   const Instruction* pc = NULL;
 
-  mi_heap_t* heap;
+  HeapAllocator heap;
 
   Interrupt it = INT_NONE;
   const char* err = "<error>";

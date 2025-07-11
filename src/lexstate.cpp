@@ -88,7 +88,7 @@ static bool isnumeric(TokenKind* kind, char c) {
     break;
   }
 
-  std::unreachable();
+  return false;
 }
 
 static bool isidentifierinitial(char c) {
@@ -119,9 +119,10 @@ static Token* read_number(LexState& L) {
   }
 
   char c;
-  while ((c = lexer_advance(L)), isnumeric(&token->kind, c)) {
+  while ((c = lexer_peek(L, 0)), isnumeric(&token->kind, c)) {
     if (c == '.')
       token->kind = TK_FP;
+    lexer_advance(L);
     token->size++;
   }
 
@@ -251,7 +252,7 @@ TokenBuf lexer_tokenize(LexState& L) {
 
   toks.push_back(eof);
 
-  return TokenBuf(toks.data(), toks.data() + toks.size() * sizeof(Token*));
+  return TokenBuf(toks.data(), toks.data() + (toks.size() * sizeof(Token*)));
 }
 
 void dump_ttree(const TokenBuf& B) {
