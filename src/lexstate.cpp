@@ -149,8 +149,6 @@ static Token* read_string(LexState& L) {
 
   if (!closed)
     token->kind = TK_ILLEGAL;
-  else
-    token->size++; // include closing quote
 
   return token;
 }
@@ -213,6 +211,49 @@ static Token* read_symbol(LexState& L) {
   return token;
 }
 
+static bool skip_comment(LexState& L) {
+  if (lexer_peek(L, 0) != '/')
+    return false;
+
+  char next = lexer_peek(L, 1);
+
+  if (next == '/') {
+    // Line comment: skip until newline or EOF
+    lexer_advance(L); // consume first '/'
+    lexer_advance(L); // consume second '/'
+
+    while (char c = lexer_peek(L, 0)) {
+      if (c == '\n' || c == '\0')
+        break;
+      lexer_advance(L);
+    }
+
+    return true;
+  }
+
+  if (next == '*') {
+    // Block comment: skip until closing */
+    lexer_advance(L); // consume '/'
+    lexer_advance(L); // consume '*'
+
+    while (true) {
+      char c = lexer_peek(L, 0);
+      if (c == '\0')
+        break; // EOF without closing */
+      if (c == '*' && lexer_peek(L, 1) == '/') {
+        lexer_advance(L); // consume '*'
+        lexer_advance(L); // consume '/'
+        break;
+      }
+      lexer_advance(L);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 char lexer_advance(LexState& L) {
   return *(L.file.cursor++);
 }
@@ -230,6 +271,9 @@ TokenBuf lexer_tokenize(LexState& L) {
       lexer_advance(L);
       continue;
     }
+
+    if (skip_comment(L))
+      continue;
 
     Token* token;
 
