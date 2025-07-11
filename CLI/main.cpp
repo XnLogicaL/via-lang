@@ -1,9 +1,6 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
-
 #include <via/via.h>
 #include <argparse/argparse.hpp>
 #include <spdlog/spdlog.h>
@@ -32,6 +29,48 @@ static void list_emit_kinds() {
   std::cout << "  -e ttree         dumps token tree\n";
 }
 
+static bool read_file(const String& path, String& out_content) {
+  std::ifstream ifs(path);
+  if (!ifs.is_open()) {
+    spdlog::error("no such file or directory: '{}'", path);
+    return false;
+  }
+
+  String line;
+  out_content.clear();
+
+  while (std::getline(ifs, line)) {
+    out_content += line + '\n';
+  }
+
+  return true;
+}
+
+static void process_file(const String& input_path, EmitKind emit_kind) {
+  String input;
+  if (!read_file(input_path, input)) {
+    spdlog::error("failed to read input file");
+    return;
+  }
+
+  FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
+  LexState L(file_buf);
+
+  TokenBuf token_buf = lexer_tokenize(L);
+  ParseState P(L, token_buf);
+
+  switch (emit_kind) {
+  case EK_LIST:
+    list_emit_kinds();
+    break;
+  case EK_TTREE:
+    dump_ttree(token_buf);
+    break;
+  default:
+    break;
+  }
+}
+
 int main(int argc, char* argv[]) {
   spdlog::set_pattern("%^%l:%$ %v");
 
@@ -55,48 +94,13 @@ int main(int argc, char* argv[]) {
   String input_path = cli.get("input");
   String emit_type = cli.get("--emit");
 
-  if (input_path.empty())
-    goto no_input_files;
-
-  {
-    std::ifstream ifs(input_path);
-    if (!ifs.is_open()) {
-      spdlog::error("no such file or directory: '{}'", input_path);
-      goto no_input_files;
-    }
-
-    {
-      String input, line;
-
-      while (std::getline(ifs, line))
-        input += line + '\n';
-
-      FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-      LexState L(file_buf);
-
-      TokenBuf token_buf = lexer_tokenize(L);
-      ParseState P(L, token_buf);
-
-
-      String ek_raw = cli.get("--emit");
-      EmitKind ek = get_emit_kind(ek_raw.c_str());
-
-      switch (ek) {
-      case EK_LIST:
-        list_emit_kinds();
-        break;
-      case EK_TTREE:
-        dump_ttree(token_buf);
-        break;
-      default:
-        break;
-      }
-    }
+  if (input_path.empty()) {
+    spdlog::error("no input files");
+    return 1;
   }
 
-  return 0;
+  EmitKind ek = get_emit_kind(emit_type.c_str());
+  process_file(input_path, ek);
 
-no_input_files:
-  spdlog::error("no input files");
-  return 1;
+  return 0;
 }

@@ -1,8 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_COMMON_MACROS_H
-#define VIA_COMMON_MACROS_H
+#ifndef VIA_CONF_H
+#define VIA_CONF_H
 
 #define C_GCC   0 // g++ compiler
 #define C_CLANG 1 // clang++ compiler
