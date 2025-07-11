@@ -22,11 +22,10 @@ int sema_alloc_register(SemaRegisterState& S) {
 }
 
 void sema_free_register(SemaRegisterState& S, int reg) {
-  u16 word_index = reg / 64;
-  u16 bit_index = reg % 64;
-
-  u64 mask = ~(1ULL << bit_index);
-  S.buf.data[word_index] &= mask; // mark bit as free
+  u16 wrd = reg / 64;
+  u16 bit = reg % 64;
+  u64 mask = ~(1ULL << bit);
+  S.buf.data[wrd] &= mask; // mark bit as free
 }
 
 } // namespace via

@@ -9,8 +9,16 @@
 
 namespace via {
 
+inline constexpr usize kSemaRegisterArraySize = UINT16_MAX / 64;
+inline constexpr usize kSemaRegisterArrayBytes = UINT16_MAX / 8;
+
 struct SemaRegisterState {
-  HeapBuffer<u64> buf{1024};
+  HeapBuffer<u64> buf;
+
+  inline explicit SemaRegisterState()
+    : buf(kSemaRegisterArraySize) {
+    std::memset(buf.data, 0x0, kSemaRegisterArrayBytes);
+  }
 };
 
 int sema_alloc_register(SemaRegisterState& S);
