@@ -13,8 +13,8 @@ struct SemaRegisterState {
   HeapBuffer<u64> buf{1024};
 };
 
-int sema_alloc_register(const SemaRegisterState& S);
-void sema_free_register(const SemaRegisterState& S, int reg);
+int sema_alloc_register(SemaRegisterState& S);
+void sema_free_register(SemaRegisterState& S, int reg);
 
 } // namespace via
 

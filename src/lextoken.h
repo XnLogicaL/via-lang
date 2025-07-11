@@ -82,9 +82,14 @@ enum TokenKind {
   TK_CONCATEQUALS,      // ..=
 };
 
-struct Location {
+struct AbsLocation {
   usize begin;
   usize end;
+};
+
+struct Location {
+  usize line;
+  usize offset;
 };
 
 struct Token {
@@ -96,11 +101,13 @@ struct Token {
 // Buffer of arena allocated token pointers owned by LexState.
 using TokenBuf = HeapBuffer<Token*>;
 
+const Location abs_location_translate(const StringView& buf, usize off);
+
+// Returns the absolute location of token T.
+const AbsLocation token_abs_location(const LexState& L, const Token& T);
+
 // Dumps token T into standard output.
 void token_dump(const Token& T);
-
-// Returns the location of token T.
-const Location token_location(const LexState& L, const Token& T);
 
 } // namespace via
 

@@ -5,7 +5,7 @@
 
 namespace via {
 
-int sema_alloc_register(const SemaRegisterState& S) {
+int sema_alloc_register(SemaRegisterState& S) {
   for (u16 i = 0; i < UINT16_MAX; i++) {
     for (u16 j = 0; j < 64; j++) {
       u64* reg = S.buf.data + i;
@@ -25,8 +25,8 @@ void sema_free_register(SemaRegisterState& S, int reg) {
   u16 word_index = reg / 64;
   u16 bit_index = reg % 64;
 
-  u64 mask = (0ULL << bit_index);
-  S.buf.data[word_index] |= mask; // mark bit as free
+  u64 mask = ~(1ULL << bit_index);
+  S.buf.data[word_index] &= mask; // mark bit as free
 }
 
 } // namespace via

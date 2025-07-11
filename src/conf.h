@@ -127,15 +127,18 @@
 
 #include <vector>
 #include <memory>
+#include <format>
 #include <unordered_map>
 #include <unordered_set>
 #include <mimalloc.h>
 
 namespace via {
 
-// Type aliases, the STL is planned to be substituted for custom implementations in the future.
-
 using String = std::string;
+using StringView = std::string_view;
+
+template<typename... Args>
+using Fmt = std::format_string<Args...>;
 
 template<typename K, typename V>
 using Map = std::unordered_map<K, V>;
@@ -160,6 +163,9 @@ using Rc = std::shared_ptr<T>;
 
 template<typename T>
 using Arc = Atomic<Rc<T>>;
+
+template<typename T, typename U>
+using Pair = std::pair<T, U>;
 
 using u8 = uint8_t;
 using u16 = uint16_t;

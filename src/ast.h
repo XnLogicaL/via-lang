@@ -12,19 +12,19 @@ namespace via {
 struct ExprNode {
   virtual ~ExprNode() = 0;
 
-  Location loc;
+  AbsLocation loc;
 };
 
 struct StmtNode {
   virtual ~StmtNode() = 0;
 
-  Location loc;
+  AbsLocation loc;
 };
 
 struct TypeNode {
   virtual ~TypeNode() = 0;
 
-  Location loc;
+  AbsLocation loc;
 };
 
 struct NodeExprSym;
@@ -75,7 +75,7 @@ struct NodeExprTuple : public ExprNode {
 struct Parameter {
   NodeExprSym* sym;
   TypeNode* type;
-  Location loc;
+  AbsLocation loc;
 };
 
 struct NodeStmtScope;
@@ -109,7 +109,7 @@ struct NodeStmtIf : public StmtNode {
 
 struct TupleBinding {
   Vec<NodeExprSym*> binds;
-  Location loc;
+  AbsLocation loc;
 };
 
 struct NodeStmtFor : public StmtNode {

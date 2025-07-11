@@ -21,7 +21,7 @@ enum DiagnosisKind {
 
 struct Diagnosis {
   DiagnosisKind kind;
-  Location loc;
+  AbsLocation loc;
   String msg;
 };
 
@@ -34,12 +34,12 @@ void diag_emit(const DiagContext& ctx);
 void diag_clear(DiagContext& ctx);
 
 template<const DiagnosisKind Kind>
-void diag(DiagContext& ctx, Location loc, String msg) {
+void diag(DiagContext& ctx, AbsLocation loc, String msg) {
   diag_raw(ctx, {Kind, loc, msg});
 }
 
 template<const DiagnosisKind Kind, typename... Args>
-void diagf(DiagContext& ctx, Location loc, Fmt<Args...> fmt, Args... args) {
+void diagf(DiagContext& ctx, AbsLocation loc, Fmt<Args...> fmt, Args... args) {
   diag_raw(ctx, {Kind, loc, std::vformat(fmt, std::forward<Args>(args)...)});
 }
 

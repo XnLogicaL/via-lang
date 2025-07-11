@@ -17,13 +17,9 @@ struct State;
 void vmerror(State* S, const char* msg);
 
 template<typename... Args>
-void vmerrorf(State* S, const char* fmt, Args... args) {
-  int size = snprintf(NULL, 0, fmt, args...);
-
-  HeapBuffer<char> buf(size + 1);
-
-  snprintf(buf.data, size + 1, fmt, args...);
-  vmerror(S, buf.data);
+void vmerrorf(State* S, Fmt<Args...> fmt, Args... args) {
+  String buf = std::vformat(fmt, std::forward<Args>(args)...);
+  vmerror(S, buf.c_str());
 }
 
 } // namespace via

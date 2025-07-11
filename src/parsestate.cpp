@@ -22,7 +22,7 @@ bool parser_match(ParseState& P, const TokenKind kind) {
 bool parser_expect(ParseState& P, const TokenKind kind) {
   if (!parser_match(P, kind)) {
     const Token& unexp = *parser_peek(P);
-    const Location loc = token_location(P.L, unexp);
+    const AbsLocation loc = token_abs_location(P.L, unexp);
 
     diagf<DK_ERROR>(P.dctx, loc, "Unexpected token '{}'", String(unexp.lexeme, unexp.size));
     return false;
@@ -33,7 +33,7 @@ bool parser_expect(ParseState& P, const TokenKind kind) {
 
 ExprNode* parse_primary(ParseState& P) {
   Token* tok = parser_peek(P);
-  Location loc = token_location(P.L, *tok);
+  AbsLocation loc = token_abs_location(P.L, *tok);
 
   if (parser_match(P, TK_INT)) {
     parser_advance(P); // consume token
@@ -53,7 +53,7 @@ ExprNode* parse_primary(ParseState& P) {
 
   if (parser_match(P, TK_LPAREN)) {
     parser_advance(P); // consume '('
-    Location start = loc;
+    AbsLocation start = loc;
     ExprNode* first = parse_expr(P);
 
     if (parser_match(P, TK_COMMA)) {
@@ -70,7 +70,7 @@ ExprNode* parse_primary(ParseState& P) {
         return NULL;
 
       Token* last = parser_peek(P, -1);
-      Location end = token_location(P.L, *last);
+      AbsLocation end = token_abs_location(P.L, *last);
 
       auto* tup = heap_emplace<NodeExprTuple>(P.al);
       tup->vals = std::move(vals);
@@ -83,7 +83,7 @@ ExprNode* parse_primary(ParseState& P) {
       return NULL;
 
     Token* last = parser_peek(P, -1);
-    Location end = token_location(P.L, *last);
+    AbsLocation end = token_abs_location(P.L, *last);
 
     auto* group = heap_emplace<NodeExprGroup>(P.al);
     group->expr = first;
@@ -132,7 +132,7 @@ ExprNode* parse_unary(ParseState& P) {
   if (parser_match(P, TK_MINUS) || parser_match(P, TK_BANG)) {
     Token* op = parser_peek(P);
     ExprNode* rhs = parse_unary(P);
-    Location oploc = token_location(P.L, *op);
+    AbsLocation oploc = token_abs_location(P.L, *op);
 
     auto un = heap_emplace<NodeExprUn>(P.al);
     un->op = op;
