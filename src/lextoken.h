@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "heapbuf.h"
+#include <magic_enum/magic_enum.hpp>
 
 namespace via {
 

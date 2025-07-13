@@ -34,7 +34,7 @@ void token_dump(const Token& T) {
   lexeme[len] = '\0';
 
   std::memcpy(&lexeme, T.lexeme, len);
-  std::cout << '(' << T.kind << ", " << lexeme << ")\n";
+  std::cout << '(' << magic_enum::enum_name(T.kind) << ", " << lexeme << ")\n";
 }
 
 } // namespace via

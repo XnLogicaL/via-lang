@@ -4,3 +4,5 @@
 	path = thirdparty/mimalloc
 [submodule "thirdparty/spdlog"]
 	path = thirdparty/spdlog
+[submodule "thirdparty/magic_enum"]
+	path = thirdparty/magic_enum

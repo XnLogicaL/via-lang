@@ -28,6 +28,7 @@ set(MI_OVERRIDE OFF)
 add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
 add_subdirectory(thirdparty/spdlog)
+add_subdirectory(thirdparty/magic_enum)
 
 # ----------------------------------------------------------------------------------------------------
 # LIBRARY CONFIG
@@ -45,6 +46,7 @@ add_library(libvia STATIC ${SOURCES})
 # Add dependencies
 target_link_libraries(libvia PUBLIC mimalloc)
 target_link_libraries(libvia PUBLIC spdlog)
+target_link_libraries(libvia PUBLIC magic_enum)
 
 # Include dirs
 target_include_directories(libvia PUBLIC include src)
@@ -78,6 +80,7 @@ add_executable(via "CLI/main.cpp" ${CLI_SOURCES})
 # Add dependencies
 target_link_libraries(via PUBLIC argparse)
 target_link_libraries(via PUBLIC spdlog)
+target_link_libraries(via PUBLIC magic_enum)
 target_link_libraries(via PUBLIC libvia)
 
 # Include dirs
