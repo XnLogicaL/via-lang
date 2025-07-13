@@ -175,6 +175,9 @@ static Token* read_identifier(LexState& L) {
     }
   }
 
+  if (strncmp(token->lexeme, "nil", token->size) == 0)
+    token->kind = TK_NIL;
+
   if (token->kind == TK_IDENT && c == '!') {
     token->size++;
     token->kind = TK_MIDENT;

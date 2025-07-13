@@ -18,6 +18,7 @@ enum TokenKind {
 
   TK_IDENT, // identifier
   TK_STRING,
+  TK_NIL,    // nil
   TK_MIDENT, // macro identifier
   TK_INT,    // integer literal
   TK_BINT,   // binary integer literal
