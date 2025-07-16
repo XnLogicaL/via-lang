@@ -10,27 +10,25 @@
 *"An evolution, not a revolution. -C3"*
 
 ```go
-type funcType<T> = (T) -> (T)
+type predicate<T> = func(T) -> bool
 
-namespace util {
-  macro ismain() { __main__!() }
-}
-
-namespace main {
-  func cursed(callback: funcType<string>) {
-    var chars = ['H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!']
-    var msg: string?
-
-    for (_, c) in chars:
-      msg ..= callback(c)
-
-    printn(msg)
+mod array_util {
+  func retain<T>(&list: [T], keep: predicate<T>) -> [T] {
+    for [i, item] in list:
+      if not keep(item):
+        list[i] = nil
   }
 }
 
-if util::ismain!() {
-  var process = func(c: string): (c .. c)[0]
-  main::cursed(process)
+@entrypoint
+func main() {
+  var nums = [1, 2, 3, 4, 5, 6]
+
+  array_util::retain(&nums, func(n: int) {
+      return n % 2 == 0
+  })
+
+  printn(nums) // [2, 4, 6]
 }
 ```
 
