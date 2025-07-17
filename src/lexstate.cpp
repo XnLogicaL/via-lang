@@ -20,6 +20,7 @@ static constexpr TokenReprPair KEYWORDS[] = {
   {"for", TK_KW_FOR},
   {"if", TK_KW_IF},
   {"else", TK_KW_ELSE},
+  {"do", TK_KW_DO},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {

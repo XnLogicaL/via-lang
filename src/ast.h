@@ -10,20 +10,14 @@
 namespace via {
 
 struct ExprNode {
-  virtual ~ExprNode() = 0;
-
   AbsLocation loc;
 };
 
 struct StmtNode {
-  virtual ~StmtNode() = 0;
-
   AbsLocation loc;
 };
 
 struct TypeNode {
-  virtual ~TypeNode() = 0;
-
   AbsLocation loc;
 };
 
@@ -135,6 +129,10 @@ struct NodeStmtAssign : public StmtNode {
   using StmtNode::loc;
   ExprNode* lval;
   ExprNode* rval;
+};
+
+struct NodeStmtEmpty : public StmtNode {
+  using StmtNode::loc;
 };
 
 struct NodeStmtExpr : public StmtNode {

@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "lextoken.h"
+#include "lexstate.h"
 #include <spdlog/spdlog.h>
 
 namespace via {
@@ -22,11 +23,13 @@ enum DiagnosisKind {
 struct Diagnosis {
   DiagnosisKind kind;
   AbsLocation loc;
+  String file;
   String msg;
 };
 
 struct DiagContext {
   Vec<Diagnosis> diags;
+  FileBuf& file;
 };
 
 void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis);

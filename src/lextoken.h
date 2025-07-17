@@ -33,6 +33,7 @@ enum TokenKind {
   TK_KW_FOR,   // for
   TK_KW_IF,    // if
   TK_KW_ELSE,  // else
+  TK_KW_DO,    // do
 
   TK_DOT,               // .
   TK_COMMA,             // ,
@@ -102,8 +103,9 @@ struct Token {
 
 // Buffer of arena allocated token pointers owned by LexState.
 using TokenBuf = HeapBuffer<Token*>;
+using FileBuf = HeapBuffer<char>;
 
-const Location abs_location_translate(const StringView& buf, usize off);
+const Location abs_location_translate(const FileBuf& buf, usize off);
 
 // Returns the absolute location of token T.
 const AbsLocation token_abs_location(const LexState& L, const Token& T);

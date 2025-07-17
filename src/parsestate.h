@@ -13,45 +13,22 @@
 
 namespace via {
 
-using AstBuf = HeapBuffer<StmtNode>;
+using AstBuf = HeapBuffer<StmtNode*>;
 
 struct ParseState {
   const LexState& L;
 
   Token** cursor;
   HeapAllocator al;
-  DiagContext dctx;
+  DiagContext& dctx;
 
-  inline explicit ParseState(const LexState& L, const TokenBuf& B)
+  inline explicit ParseState(const LexState& L, const TokenBuf& B, DiagContext& dctx)
     : L(L),
-      cursor(B.data) {}
+      cursor(B.data),
+      dctx(dctx) {}
 };
 
-Token* parser_peek(ParseState& P, const int ahead = 0);
-Token* parser_advance(ParseState& P);
-
-bool parser_match(ParseState& P, const TokenKind kind);
-bool parser_expect(ParseState& P, const TokenKind kind);
-
-ExprNode* parse_expr(ParseState& P);
-ExprNode* parse_primary(ParseState& P);
-ExprNode* parse_unary(ParseState& P);
-ExprNode* parse_binary(ParseState& P, int prec = 0);
-ExprNode* parse_group(ParseState& P);
-ExprNode* parse_postfix(ParseState& P, ExprNode* lhs);
-
-StmtNode* parse_stmt(ParseState& P);
-NodeStmtScope* parse_scope(ParseState& P);
-NodeStmtIf* parse_if(ParseState& P);
-NodeStmtWhile* parse_while(ParseState& P);
-NodeStmtFor* parse_for(ParseState& P);
-NodeStmtForEach* parse_foreach(ParseState& P);
-
-AstBuf parse(ParseState& P);
-
-// helpers
-bool is_expr_start(TokenKind kind);
-int bin_prec(TokenKind kind);
+AstBuf parser_parse(ParseState& P);
 
 } // namespace via
 

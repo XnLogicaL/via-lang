@@ -1,5 +1,4 @@
-func main() {
-  
+if 1 + 2 / 5 {
+  while true {
+  }
 }
-
-main();

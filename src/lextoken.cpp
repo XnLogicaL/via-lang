@@ -6,12 +6,12 @@
 
 namespace via {
 
-const Location abs_location_translate(const char* buf, usize off) {
+const Location abs_location_translate(const FileBuf& buf, usize off) {
   usize line = 0;
   usize line_start = 0;
 
   for (usize i = 0; i < off; ++i) {
-    if (buf[i] == '\n') {
+    if (buf.data[i] == '\n') {
       ++line;
       line_start = i + 1;
     }

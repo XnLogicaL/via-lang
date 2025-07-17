@@ -54,10 +54,16 @@ static void process_file(const String& input_path, EmitKind emit_kind) {
   }
 
   FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  LexState L(file_buf);
+  DiagContext dctx{{}, file_buf};
 
+  LexState L(file_buf);
   TokenBuf token_buf = lexer_tokenize(L);
-  ParseState P(L, token_buf);
+
+  ParseState P(L, token_buf, dctx);
+  AstBuf ast_buf = parser_parse(P);
+
+  diag_emit(P.dctx);
+  diag_clear(P.dctx);
 
   switch (emit_kind) {
   case EK_LIST:
