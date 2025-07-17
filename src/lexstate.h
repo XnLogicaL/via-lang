@@ -25,12 +25,6 @@ struct LexState {
     : file(file) {}
 };
 
-// Advances the file cursor by one and returns the character it started on.
-char lexer_advance(LexState& L);
-
-// Returns the character at a given offset from the file cursor.
-char lexer_peek(const LexState& L, int count);
-
 // Tokenizes `LexState::file` and returns it as a buffer of token pointers owned by LexState.
 TokenBuf lexer_tokenize(LexState& L);
 

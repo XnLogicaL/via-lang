@@ -100,6 +100,14 @@ static bool isidentifier(char c) {
   return isalnum(c) || c == '_';
 }
 
+static char lexer_advance(LexState& L) {
+  return *(L.file.cursor++);
+}
+
+static char lexer_peek(const LexState& L, int count) {
+  return *(L.file.cursor + count);
+}
+
 static Token* read_number(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
   token->kind = TK_INT;
@@ -256,14 +264,6 @@ static bool skip_comment(LexState& L) {
   }
 
   return false;
-}
-
-char lexer_advance(LexState& L) {
-  return *(L.file.cursor++);
-}
-
-char lexer_peek(const LexState& L, int count) {
-  return *(L.file.cursor + count);
 }
 
 TokenBuf lexer_tokenize(LexState& L) {
