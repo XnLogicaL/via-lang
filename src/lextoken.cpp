@@ -30,11 +30,16 @@ const AbsLocation token_abs_location(const LexState& L, const Token& T) {
 
 void token_dump(const Token& T) {
   usize len = T.size;
-  char lexeme[len + 1];
-  lexeme[len] = '\0';
+  String lexeme;
 
-  std::memcpy(&lexeme, T.lexeme, len);
-  std::cout << '(' << magic_enum::enum_name(T.kind) << ", " << lexeme << ")\n";
+  // check for eof token
+  if (strncmp("", T.lexeme, T.size) == 0)
+    lexeme = "<eof>";
+  else
+    lexeme = String(T.lexeme, T.size);
+
+  std::cout << "[" << std::left << std::setfill(' ') << std::setw(12)
+            << magic_enum::enum_name(T.kind) << " '" << lexeme << "']\n";
 }
 
 } // namespace via
