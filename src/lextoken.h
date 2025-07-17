@@ -24,6 +24,8 @@ enum TokenKind {
   TK_BINT,   // binary integer literal
   TK_XINT,   // hexadecimal integer literal
   TK_FP,     // floating point literal
+  TK_TRUE,   // true literal
+  TK_FALSE,  // false literal
 
   TK_KW_VAR,   // var
   TK_KW_MACRO, // macro
