@@ -62,8 +62,16 @@ static void process_file(const String& input_path, EmitKind emit_kind) {
   ParseState P(L, token_buf, dctx);
   AstBuf ast_buf = parser_parse(P);
 
-  diag_emit(P.dctx);
-  diag_clear(P.dctx);
+  Vec<const Diagnosis*> diags =
+    diag_filter(dctx, [](const Diagnosis& diag) { return diag.kind == DK_ERROR; });
+
+  // check for errors
+  if (!diags.empty())
+    goto end;
+
+end:
+  diag_emit(dctx);
+  diag_clear(dctx);
 
   switch (emit_kind) {
   case EK_LIST:
