@@ -8,8 +8,6 @@
 #include <bitset>
 #include <cassert>
 #include <cctype>
-#include <cstdbool>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>

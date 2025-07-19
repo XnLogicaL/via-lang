@@ -97,8 +97,9 @@ static bool parser_optional(ParseState& P, const TokenKind kind) {
 static void parser_expect(ParseState& P, const TokenKind kind) {
   if (!parser_match(P, kind)) {
     const Token& unexp = *parser_peek(P);
-    const AbsLocation loc = token_abs_location(P.L, unexp);
-    throw ParserError(loc, "Unexpected token '{}'", String(unexp.lexeme, unexp.size));
+    throw ParserError(
+      token_abs_location(P.L, unexp), "Unexpected token '{}'", String(unexp.lexeme, unexp.size)
+    );
   }
 }
 
@@ -114,6 +115,8 @@ static ExprNode* parse_primary(ParseState& P) {
   case TK_XINT:
   case TK_NIL:
   case TK_FP:
+  case TK_TRUE:
+  case TK_FALSE:
   case TK_STRING: {
     parser_advance(P);
 
@@ -316,7 +319,14 @@ AstBuf parser_parse(ParseState& P) {
     }
   }
 
-  return AstBuf(nodes.data(), nodes.data() + nodes.size());
+  return AstBuf(nodes.data(), nodes.data() + (nodes.size() * sizeof(StmtNode*)));
+}
+
+void dump_ast(const AstBuf& B) {
+  usize depth = 0;
+
+  for (StmtNode** stmt = B.data; stmt < B.data + B.size; stmt++)
+    dump_stmt(*stmt, depth);
 }
 
 } // namespace via

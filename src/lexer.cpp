@@ -203,6 +203,8 @@ static Token* read_identifier(LexState& L) {
 static Token* read_symbol(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
   token->lexeme = L.file.cursor;
+  token->kind = TK_ILLEGAL;
+  token->size = 1;
 
   // Try to match longest symbol
   char buf[4] = {};
@@ -214,15 +216,15 @@ static Token* read_symbol(LexState& L) {
       if (strcmp(buf, sym.str) == 0) {
         token->kind = sym.kind;
         token->size = strlen(sym.str);
+
         for (int j = 0; j < token->size; ++j)
           lexer_advance(L);
+
         return token;
       }
     }
   }
 
-  token->kind = TK_ILLEGAL;
-  token->size = 1;
   lexer_advance(L);
   return token;
 }
@@ -256,11 +258,13 @@ static bool skip_comment(LexState& L) {
       char c = lexer_peek(L, 0);
       if (c == '\0')
         break; // EOF without closing */
+
       if (c == '*' && lexer_peek(L, 1) == '/') {
         lexer_advance(L); // consume '*'
         lexer_advance(L); // consume '/'
         break;
       }
+
       lexer_advance(L);
     }
 

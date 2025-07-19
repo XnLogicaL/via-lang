@@ -128,6 +128,7 @@
 #include <vector>
 #include <memory>
 #include <format>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <mimalloc.h>
@@ -136,6 +137,9 @@ namespace via {
 
 using String = std::string;
 using StringView = std::string_view;
+
+template<typename Sig>
+using Function = std::function<Sig>;
 
 template<typename... Args>
 using Fmt = std::format_string<Args...>;

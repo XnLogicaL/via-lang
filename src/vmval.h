@@ -13,7 +13,7 @@ struct StringValue;
 struct ArrayValue;
 struct DictValue;
 struct Closure;
-struct Function;
+struct FunctionValue;
 
 enum ValueKind : u8 {
   VLK_NIL,
@@ -43,7 +43,7 @@ Value value_new(State* S, int i);
 Value value_new(State* S, float f);
 Value value_new(State* S, bool b);
 Value value_new(State* S, const char* str);
-Value value_new(State* S, Function* F);
+Value value_new(State* S, FunctionValue* F);
 
 void value_close(State* S, Value* value);
 Value value_clone(State* S, const Value* other);

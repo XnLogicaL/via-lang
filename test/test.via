@@ -1,4 +1,16 @@
 if 1 + 2 / 5 {
   while true {
+    
   }
 }
+
+/*
+
+NodeStmtIf()
+ Branch(NodeExprBin(+, NodeExprLit(TK_INT, 1), NodeExprBin(/, NodeExprLit(TK_INT, 2), NodeExprLit(TK_INT, 5))))
+  NodeStmtWhile(NodeExprLit(TK_TRUE, true))
+  End()
+ End()
+End()
+
+*/

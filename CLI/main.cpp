@@ -12,6 +12,7 @@ enum EmitKind {
   EK_NONE,
   EK_LIST,
   EK_TTREE,
+  EK_AST,
 };
 
 static EmitKind get_emit_kind(const char* str) {
@@ -19,6 +20,8 @@ static EmitKind get_emit_kind(const char* str) {
     return EK_LIST;
   else if (std::strcmp(str, "ttree") == 0)
     return EK_TTREE;
+  else if (std::strcmp(str, "ast") == 0)
+    return EK_AST;
 
   return EK_NONE;
 }
@@ -80,6 +83,9 @@ end:
   case EK_TTREE:
     dump_ttree(token_buf);
     break;
+  case EK_AST:
+    dump_ast(ast_buf);
+    break;
   default:
     break;
   }
@@ -93,7 +99,7 @@ int main(int argc, char* argv[]) {
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")
     .nargs(1)
-    .choices("none", "list", "ttree")
+    .choices("none", "list", "ttree", "ast")
     .default_value("none")
     .help("Emission type");
 
@@ -115,6 +121,5 @@ int main(int argc, char* argv[]) {
 
   EmitKind ek = get_emit_kind(emit_type.c_str());
   process_file(input_path, ek);
-
   return 0;
 }

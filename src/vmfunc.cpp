@@ -14,7 +14,7 @@ Closure closure_new(State*, NativeFn fun, usize upvc) {
   return C;
 }
 
-Closure closure_new(State*, Function* fun, usize upvc) {
+Closure closure_new(State*, FunctionValue* fun, usize upvc) {
   Closure C;
   C.buf = UpvBuf(upvc);
   C.native = true;

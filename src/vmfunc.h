@@ -33,7 +33,7 @@ struct UpValue {
 
 using UpvBuf = HeapBuffer<UpValue>;
 
-struct Function {
+struct FunctionValue {
   const Instruction* code = NULL;
   usize code_size = 0;
   usize line = 0;
@@ -41,7 +41,7 @@ struct Function {
 };
 
 union ClosureUn {
-  Function* fun;
+  FunctionValue* fun;
   NativeFn nat;
 };
 
@@ -52,7 +52,7 @@ struct Closure {
 };
 
 Closure closure_new(State* S, NativeFn fun, usize upvc);
-Closure closure_new(State* S, Function* fun, usize upvc);
+Closure closure_new(State* S, FunctionValue* fun, usize upvc);
 void closure_close(State* S, Closure* C);
 bool closure_cmp(State* S, Closure* left, Closure* right);
 

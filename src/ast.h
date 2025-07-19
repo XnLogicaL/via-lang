@@ -11,14 +11,17 @@ namespace via {
 
 struct ExprNode {
   AbsLocation loc;
+  virtual ~ExprNode() = default;
 };
 
 struct StmtNode {
   AbsLocation loc;
+  virtual ~StmtNode() = default;
 };
 
 struct TypeNode {
   AbsLocation loc;
+  virtual ~TypeNode() = default;
 };
 
 struct NodeExprSym;
@@ -139,6 +142,29 @@ struct NodeStmtExpr : public StmtNode {
   using StmtNode::loc;
   ExprNode* expr;
 };
+
+namespace detail {
+
+// Shitty location, but works for now
+template<typename T>
+inline String __vec_to_string(const Vec<T>& __v, Function<String(const T& __t)> __f) {
+  std::ostringstream oss;
+  oss << "{";
+
+  for (const T& __t : __v)
+    oss << __f(__t);
+
+  oss << "}";
+  return oss.str();
+}
+
+String __ast_to_string_expr(const ExprNode* __e, usize& __depth);
+String __ast_to_string_stmt(const StmtNode* __s, usize& __depth);
+String __ast_to_string_type(const TypeNode* __t, usize& __depth);
+
+} // namespace detail
+
+void dump_stmt(StmtNode* stmt, usize& depth);
 
 } // namespace via
 

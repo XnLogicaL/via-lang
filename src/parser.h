@@ -30,6 +30,8 @@ struct ParseState {
 
 AstBuf parser_parse(ParseState& P);
 
+void dump_ast(const AstBuf& B);
+
 } // namespace via
 
 #endif

@@ -11,9 +11,6 @@
 
 namespace via {
 
-template<typename... Args>
-using Fmt = std::format_string<Args...>;
-
 enum DiagnosisKind {
   DK_INFO,
   DK_WARN,
