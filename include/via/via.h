@@ -6,8 +6,8 @@
 
 #include <vmstate.h>
 #include <vmapi.h>
-#include <lextoken.h>
-#include <lexstate.h>
-#include <parsestate.h>
+#include <token.h>
+#include <lexer.h>
+#include <parser.h>
 
 #endif

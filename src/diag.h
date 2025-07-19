@@ -5,8 +5,8 @@
 #define VIA_DIAG_H
 
 #include "common.h"
-#include "lextoken.h"
-#include "lexstate.h"
+#include "token.h"
+#include "lexer.h"
 #include <spdlog/spdlog.h>
 
 namespace via {

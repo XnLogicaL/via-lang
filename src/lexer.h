@@ -8,7 +8,7 @@
 #include "error.h"
 #include "mem.h"
 #include "heapbuf.h"
-#include "lextoken.h"
+#include "token.h"
 #include <mimalloc.h>
 
 namespace via {

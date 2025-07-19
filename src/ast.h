@@ -5,7 +5,7 @@
 #define VIA_AST_H
 
 #include "common.h"
-#include "lextoken.h"
+#include "token.h"
 
 namespace via {
 
