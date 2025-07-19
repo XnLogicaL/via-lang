@@ -90,6 +90,7 @@ static bool parser_optional(ParseState& P, const TokenKind kind) {
     parser_advance(P);
     return true;
   }
+
   return false;
 }
 
@@ -115,43 +116,58 @@ static ExprNode* parse_primary(ParseState& P) {
   case TK_FP:
   case TK_STRING: {
     parser_advance(P);
+
     auto* lit = heap_emplace<NodeExprLit>(P.al);
     lit->tok = tok;
     lit->loc = loc;
+
     return lit;
   }
   case TK_IDENT: {
     parser_advance(P);
+
     auto* sym = heap_emplace<NodeExprSym>(P.al);
     sym->tok = tok;
     sym->loc = loc;
+
     return sym;
   }
   case TK_LPAREN: {
     parser_advance(P);
+
     AbsLocation start = loc;
     ExprNode* first = parse_expr(P);
+
     if (parser_match(P, TK_COMMA)) {
       Vec<ExprNode*> vals;
       vals.push_back(first);
+
       while (parser_match(P, TK_COMMA)) {
         parser_advance(P);
         vals.push_back(parse_expr(P));
       }
+
       parser_expect(P, TK_RPAREN);
+
       Token* last = parser_peek(P, -1);
       AbsLocation end = token_abs_location(P.L, *last);
+
       auto* tup = heap_emplace<NodeExprTuple>(P.al);
       tup->vals = std::move(vals);
       tup->loc = {start.begin, end.end};
+
       return tup;
     }
+
     parser_expect(P, TK_RPAREN);
+
     Token* last = parser_peek(P, -1);
     AbsLocation end = token_abs_location(P.L, *last);
+
     auto* group = heap_emplace<NodeExprGroup>(P.al);
     group->expr = first;
     group->loc = {start.begin, end.end};
+
     return group;
   }
   default:
@@ -166,31 +182,35 @@ static ExprNode* parse_unary_or_primary(ParseState& P) {
     Token* op = parser_advance(P);
     ExprNode* rhs = parse_unary_or_primary(P);
     AbsLocation oploc = token_abs_location(P.L, *op);
+
     auto* un = heap_emplace<NodeExprUn>(P.al);
     un->op = op;
     un->expr = rhs;
     un->loc = {oploc.begin, rhs->loc.end};
+
     return un;
   }
+
   return parse_primary(P);
 }
 
 ExprNode* parse_expr(ParseState& P, int min_prec) {
   ExprNode* lhs = parse_unary_or_primary(P);
-  while (true) {
-    Token* peek = parser_peek(P);
-    int prec = bin_prec(peek->kind);
-    if (prec < min_prec)
-      break;
+
+  int prec;
+  while ((prec = bin_prec(parser_peek(P)->kind), prec >= min_prec)) {
     Token* op = parser_advance(P);
     ExprNode* rhs = parse_expr(P, prec + 1);
-    auto* bin = heap_emplace<NodeExprBin>(P.al);
+
+    auto bin = heap_emplace<NodeExprBin>(P.al);
     bin->op = op;
     bin->lhs = lhs;
     bin->rhs = rhs;
     bin->loc = {lhs->loc.begin, rhs->loc.end};
+
     lhs = bin;
   }
+
   return lhs;
 }
 
@@ -209,6 +229,7 @@ static NodeStmtScope* parse_scope(ParseState& P) {
   else if (tok->kind == TK_LCURLY) {
     while (!parser_match(P, TK_RCURLY))
       scope->stmts.push_back(parse_stmt(P));
+
     parser_advance(P);
   }
   else
@@ -221,12 +242,19 @@ static NodeStmtScope* parse_scope(ParseState& P) {
 }
 
 static NodeStmtIf* parse_if(ParseState& P) {
+  using Branch = NodeStmtIf::Branch;
+
   Token* tok = parser_advance(P);
   AbsLocation loc = token_abs_location(P.L, *tok);
+
+  Branch br;
+  br.cnd = parse_expr(P);
+  br.br = parse_scope(P);
+
   auto ifs = heap_emplace<NodeStmtIf>(P.al);
-  NodeStmtIf::Branch br{parse_expr(P), parse_scope(P)};
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
+
   parser_optional(P, TK_SEMICOLON);
   return ifs;
 }
@@ -234,11 +262,13 @@ static NodeStmtIf* parse_if(ParseState& P) {
 static NodeStmtWhile* parse_while(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = token_abs_location(P.L, *tok);
-  auto whiles = heap_emplace<NodeStmtWhile>(P.al);
-  whiles->cnd = parse_expr(P);
-  whiles->br = parse_scope(P);
-  whiles->loc = {loc.begin, whiles->br->loc.end};
-  return whiles;
+
+  auto whs = heap_emplace<NodeStmtWhile>(P.al);
+  whs->cnd = parse_expr(P);
+  whs->br = parse_scope(P);
+  whs->loc = {loc.begin, whs->br->loc.end};
+
+  return whs;
 }
 
 StmtNode* parse_stmt(ParseState& P) {
@@ -257,8 +287,8 @@ StmtNode* parse_stmt(ParseState& P) {
     return empty;
   }
 
-  Token* tok = parser_peek(P);
-  if (!is_expr_start(tok->kind))
+  Token* tok;
+  if ((tok = parser_peek(P), !is_expr_start(tok->kind)))
     throw ParserError(
       token_abs_location(P.L, *tok),
       "Unexpected token '{}' while parsing statement",
@@ -275,6 +305,7 @@ StmtNode* parse_stmt(ParseState& P) {
 
 AstBuf parser_parse(ParseState& P) {
   Vec<StmtNode*> nodes;
+
   while (!parser_match(P, TK_EOF)) {
     try {
       nodes.push_back(parse_stmt(P));
@@ -284,6 +315,7 @@ AstBuf parser_parse(ParseState& P) {
       break;
     }
   }
+
   return AstBuf(nodes.data(), nodes.data() + nodes.size());
 }
 
