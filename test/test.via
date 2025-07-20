@@ -5,10 +5,33 @@ if 1 + 2 / 5 {
     }
 
     var [a, b] = (0x10, 10)
-      for [b, c] in a {
-        for var d = c, 50, 10 {;
-          var e = d * c + ((a, b)) % ab();
-        }
+    for [b, c] in a {
+      for var d = c, 50, 10 {;
+        var e = d * c + ((a, b)) % ab();
       }
+    }
   }
 }
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+/* AST dump
+
+NodeStmtIf()
+ Branch(NodeExprBin(+, NodeExprLit(TK_INT, 1), NodeExprBin(/, NodeExprLit(TK_INT, 2), NodeExprLit(TK_INT, 5))))
+  NodeStmtWhile(NodeExprLit(TK_TRUE, true))
+   NodeStmtScope()
+    NodeStmtVar(NodeExprSym(a), NodeExprLit(TK_INT, 10))
+   End()
+   NodeStmtVar(TupleBinding[{NodeExprSym(a), NodeExprSym(b), }], NodeExprTuple({NodeExprLit(TK_XINT, 0x), NodeExprLit(TK_INT, 10), }))
+   NodeStmtForEach(TupleBinding[{NodeExprSym(b), NodeExprSym(c), }], NodeExprSym(a))
+    NodeStmtFor(NodeStmtVar(NodeExprSym(d), NodeExprSym(c)), NodeExprLit(TK_INT, 50), NodeExprLit(TK_INT, 10))
+     <unknown-stmt>
+     NodeStmtVar(NodeExprSym(e), NodeExprBin(+, NodeExprBin(*, NodeExprSym(d), NodeExprSym(c)), NodeExprBin(%, NodeExprGroup(NodeExprTuple({NodeExprSym(a), NodeExprSym(b), })), NodeExprCall(NodeExprSym(ab), {}))))
+    End()
+   End()
+  End()
+ End()
+End()
+
+*/

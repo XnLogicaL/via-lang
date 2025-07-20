@@ -9,7 +9,7 @@ namespace detail {
 
 inline usize DEFAULT_DEPTH = 0;
 
-#define TAB                 String(depth, ' ')
+#define TAB                 String(depth * 4, ' ')
 #define FORMAT(...)         TAB + std::format(__VA_ARGS__)
 #define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
@@ -155,6 +155,8 @@ String __ast_to_string_stmt(StmtNode* s, usize& depth) {
     oss << FORMAT("End()");
     return oss.str();
   }
+  else if TRY_COERCE (NodeStmtEmpty, _, s)
+    return FORMAT("NodeStmtEmpty()");
 
   return FORMAT("<unknown-stmt>");
 }
