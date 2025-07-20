@@ -9,35 +9,42 @@ namespace detail {
 
 inline usize DEFAULT_DEPTH = 0;
 
-#define TAB                 String(__depth, ' ')
+#define TAB                 String(depth, ' ')
 #define FORMAT(...)         TAB + std::format(__VA_ARGS__)
 #define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
-String __ast_to_string_expr(const ExprNode* __e, usize& __depth) {
-  if TRY_COERCE (NodeExprLit, lit, __e)
+static String tpb_to_string(const TupleBinding* tpb) {
+  usize depth = 0;
+  return FORMAT("TupleBinding[{}]", __vec_to_string(tpb->binds, [](const auto& e) {
+                  return __ast_to_string_expr(e, DEFAULT_DEPTH);
+                }));
+}
+
+String __ast_to_string_expr(const ExprNode* e, usize& depth) {
+  if TRY_COERCE (NodeExprLit, lit, e)
     return FORMAT(
       "NodeExprLit({}, {})",
       magic_enum::enum_name(lit->tok->kind),
       String(lit->tok->lexeme, lit->tok->size)
     );
-  else if TRY_COERCE (NodeExprSym, sym, __e)
+  else if TRY_COERCE (NodeExprSym, sym, e)
     return FORMAT("NodeExprSym({})", String(sym->tok->lexeme, sym->tok->size));
-  else if TRY_COERCE (NodeExprUn, un, __e)
+  else if TRY_COERCE (NodeExprUn, un, e)
     return FORMAT(
       "NodeExprUn({}, {})",
       String(un->op->lexeme, un->op->size),
       __ast_to_string_expr(un->expr, DEFAULT_DEPTH)
     );
-  else if TRY_COERCE (NodeExprBin, bin, __e)
+  else if TRY_COERCE (NodeExprBin, bin, e)
     return FORMAT(
       "NodeExprBin({}, {}, {})",
       String(bin->op->lexeme, bin->op->size),
       __ast_to_string_expr(bin->lhs, DEFAULT_DEPTH),
       __ast_to_string_expr(bin->rhs, DEFAULT_DEPTH)
     );
-  else if TRY_COERCE (NodeExprGroup, grp, __e)
+  else if TRY_COERCE (NodeExprGroup, grp, e)
     return FORMAT("NodeExprGroup({})", __ast_to_string_expr(grp->expr, DEFAULT_DEPTH));
-  else if TRY_COERCE (NodeExprCall, call, __e)
+  else if TRY_COERCE (NodeExprCall, call, e)
     return FORMAT(
       "NodeExprCall({}, {})",
       __ast_to_string_expr(call->lval, DEFAULT_DEPTH),
@@ -45,48 +52,70 @@ String __ast_to_string_expr(const ExprNode* __e, usize& __depth) {
         call->args, [](ExprNode* const& val) { return __ast_to_string_expr(val, DEFAULT_DEPTH); }
       )
     );
+  else if TRY_COERCE (NodeExprTuple, tup, e)
+    return FORMAT("NodeExprTuple({})", __vec_to_string(tup->vals, [](const auto& expr) {
+                    return __ast_to_string_expr(expr, DEFAULT_DEPTH);
+                  }));
 
   return FORMAT("<unknown-expr>");
 }
 
-String __ast_to_string_stmt(StmtNode* __s, usize& __depth) {
-  // if TRY_COERCE (NodeStmtScope, scope, __s)
-  //   return FORMAT("NodeStmtScope({})", __vec_to_string(scope->stmts, [](StmtNode* const& stmt) {
-  //                   return __ast_to_string_stmt(stmt, DEFAULT_DEPTH);
-  //                 }));
-  if TRY_COERCE (NodeStmtIf, ifs, __s) {
+String __ast_to_string_stmt(StmtNode* s, usize& depth) {
+  if TRY_COERCE (NodeStmtScope, scope, s) {
     std::ostringstream oss;
-    oss << "NodeStmtIf()\n";
+    oss << FORMAT("NodeStmtScope()\n");
 
-    __depth++;
+    depth++;
 
-    for (const auto& br : ifs->brs) {
-      oss << FORMAT("Branch({})\n", __ast_to_string_expr(br.cnd, DEFAULT_DEPTH));
+    for (const auto& stmt : scope->stmts)
+      oss << __ast_to_string_stmt(stmt, depth) << "\n";
 
-      __depth++;
-
-      for (StmtNode* const& stmt : br.br->stmts)
-        oss << __ast_to_string_stmt(stmt, __depth) << "\n";
-
-      __depth--;
-      oss << FORMAT("End()\n");
-    }
-
-    __depth--;
+    depth--;
 
     oss << FORMAT("End()");
     return oss.str();
   }
-  else if TRY_COERCE (NodeStmtWhile, whs, __s) {
+  else if TRY_COERCE (NodeStmtVar, var, s) {
+    String rvalue = __ast_to_string_expr(var->rval, DEFAULT_DEPTH);
+    String lvalue = var->lval.kind == LValue::LVK_SYM
+      ? __ast_to_string_expr(var->lval.sym, DEFAULT_DEPTH)
+      : tpb_to_string(var->lval.tpb);
+
+    return FORMAT("NodeStmtVar({}, {})", lvalue, rvalue);
+  }
+  else if TRY_COERCE (NodeStmtIf, ifs, s) {
+    std::ostringstream oss;
+    oss << "NodeStmtIf()\n";
+
+    depth++;
+
+    for (const auto& br : ifs->brs) {
+      oss << FORMAT("Branch({})\n", __ast_to_string_expr(br.cnd, DEFAULT_DEPTH));
+
+      depth++;
+
+      for (StmtNode* const& stmt : br.br->stmts)
+        oss << __ast_to_string_stmt(stmt, depth) << "\n";
+
+      depth--;
+      oss << FORMAT("End()\n");
+    }
+
+    depth--;
+
+    oss << FORMAT("End()");
+    return oss.str();
+  }
+  else if TRY_COERCE (NodeStmtWhile, whs, s) {
     std::ostringstream oss;
     oss << FORMAT("NodeStmtWhile({})\n", __ast_to_string_expr(whs->cnd, DEFAULT_DEPTH));
 
-    __depth++;
+    depth++;
 
     for (StmtNode* const& stmt : whs->br->stmts)
-      oss << __ast_to_string_stmt(stmt, __depth) << "\n";
+      oss << __ast_to_string_stmt(stmt, depth) << "\n";
 
-    __depth--;
+    depth--;
 
     oss << FORMAT("End()");
     return oss.str();
@@ -95,7 +124,7 @@ String __ast_to_string_stmt(StmtNode* __s, usize& __depth) {
   return FORMAT("<unknown-stmt>");
 }
 
-String __ast_to_string_type(TypeNode* __t, usize& __depth) {
+String __ast_to_string_type(TypeNode* t, usize& depth) {
   return FORMAT("<unknown-type>");
 }
 

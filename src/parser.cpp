@@ -94,13 +94,15 @@ static bool parser_optional(ParseState& P, const TokenKind kind) {
   return false;
 }
 
-static void parser_expect(ParseState& P, const TokenKind kind) {
+static Token* parser_expect(ParseState& P, const TokenKind kind) {
   if (!parser_match(P, kind)) {
     const Token& unexp = *parser_peek(P);
     throw ParserError(
       token_abs_location(P.L, unexp), "Unexpected token '{}'", String(unexp.lexeme, unexp.size)
     );
   }
+
+  return parser_advance(P);
 }
 
 ExprNode* parse_expr(ParseState& P, int min_prec = 0);
@@ -217,6 +219,40 @@ ExprNode* parse_expr(ParseState& P, int min_prec) {
   return lhs;
 }
 
+static TupleBinding* parse_tuple_binding(ParseState& P) {
+  Token* tok = parser_advance(P);
+  AbsLocation loc = token_abs_location(P.L, *tok);
+
+  auto tpb = heap_emplace<TupleBinding>(P.al);
+
+  while (!parser_match(P, TK_RBRACKET)) {
+    Token* id = parser_advance(P);
+    AbsLocation id_location = token_abs_location(P.L, *id);
+
+    if (id->kind != TK_IDENT)
+      throw ParserError(
+        id_location,
+        "Unexpected tone '{}' while parsing tuple binding",
+        String(id->lexeme, id->size)
+      );
+
+    auto sym = heap_emplace<NodeExprSym>(P.al);
+    sym->loc = id_location;
+    sym->tok = id;
+
+    tpb->binds.push_back(sym);
+
+    if (!parser_match(P, TK_RBRACKET))
+      parser_expect(P, TK_COMMA);
+  }
+
+  Token* rb = parser_advance(P);
+  AbsLocation rbloc = token_abs_location(P.L, *rb);
+
+  tpb->loc = {loc.begin, rbloc.end};
+  return tpb;
+}
+
 StmtNode* parse_stmt(ParseState& P);
 
 static NodeStmtScope* parse_scope(ParseState& P) {
@@ -242,6 +278,47 @@ static NodeStmtScope* parse_scope(ParseState& P) {
 
   parser_optional(P, TK_SEMICOLON);
   return scope;
+}
+
+static NodeStmtVar* parse_var(ParseState& P) {
+  Token* tok = parser_advance(P);
+  AbsLocation loc = token_abs_location(P.L, *tok);
+
+  auto vars = heap_emplace<NodeStmtVar>(P.al);
+
+  if (parser_match(P, TK_IDENT)) {
+    Token* id = parser_advance(P);
+
+    auto sym = heap_emplace<NodeExprSym>(P.al);
+    sym->loc = token_abs_location(P.L, *id);
+    sym->tok = id;
+
+    vars->lval.kind = LValue::LVK_SYM;
+    vars->lval.sym = sym;
+  }
+  else if (parser_match(P, TK_LBRACKET)) {
+    auto tpb = parse_tuple_binding(P);
+
+    vars->lval.kind = LValue::LVK_TPB;
+    vars->lval.tpb = tpb;
+  }
+  else {
+    Token* bad = parser_peek(P);
+    throw ParserError(
+      token_abs_location(P.L, *bad),
+      "Unexpected token '{}' while parsing 'var' statement",
+      String(bad->lexeme, bad->size)
+    );
+  }
+
+  parser_expect(P, TK_EQUALS);
+
+  ExprNode* rval = parse_expr(P);
+  vars->rval = rval;
+  vars->loc = {loc.begin, rval->loc.end};
+
+  parser_optional(P, TK_SEMICOLON);
+  return vars;
 }
 
 static NodeStmtIf* parse_if(ParseState& P) {
@@ -277,9 +354,11 @@ static NodeStmtWhile* parse_while(ParseState& P) {
 StmtNode* parse_stmt(ParseState& P) {
   if (parser_match(P, TK_KW_IF))
     return parse_if(P);
-  if (parser_match(P, TK_KW_WHILE))
+  else if (parser_match(P, TK_KW_WHILE))
     return parse_while(P);
-  if (parser_match(P, TK_KW_DO)) {
+  else if (parser_match(P, TK_KW_VAR))
+    return parse_var(P);
+  else if (parser_match(P, TK_KW_DO)) {
     parser_advance(P);
     return parse_scope(P);
   }

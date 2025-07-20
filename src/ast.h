@@ -26,6 +26,29 @@ struct TypeNode {
 
 struct NodeExprSym;
 
+struct TupleBinding {
+  Vec<NodeExprSym*> binds;
+  AbsLocation loc;
+};
+
+struct LValue {
+  enum {
+    LVK_SYM,
+    LVK_TPB,
+  } kind;
+
+  union {
+    TupleBinding* tpb;
+    NodeExprSym* sym;
+  };
+};
+
+struct Parameter {
+  NodeExprSym* sym;
+  TypeNode* type;
+  AbsLocation loc;
+};
+
 struct NodeExprLit : public ExprNode {
   using ExprNode::loc;
   Token* tok;
@@ -69,12 +92,6 @@ struct NodeExprTuple : public ExprNode {
   Vec<ExprNode*> vals;
 };
 
-struct Parameter {
-  NodeExprSym* sym;
-  TypeNode* type;
-  AbsLocation loc;
-};
-
 struct NodeStmtScope;
 
 struct NodeExprLambda : public ExprNode {
@@ -83,10 +100,11 @@ struct NodeExprLambda : public ExprNode {
   NodeStmtScope* scope;
 };
 
-struct NodeExprVar : public ExprNode {
-  using ExprNode::loc;
-  NodeExprSym* sym;
-  ExprNode* val;
+struct NodeStmtVar : public StmtNode {
+  using StmtNode::loc;
+
+  LValue lval;
+  ExprNode* rval;
 };
 
 struct NodeStmtScope : public StmtNode {
@@ -104,14 +122,9 @@ struct NodeStmtIf : public StmtNode {
   Vec<Branch> brs;
 };
 
-struct TupleBinding {
-  Vec<NodeExprSym*> binds;
-  AbsLocation loc;
-};
-
 struct NodeStmtFor : public StmtNode {
   using StmtNode::loc;
-  NodeExprVar* idx;
+  NodeStmtVar* init;
   ExprNode* target;
   ExprNode* step;
 };
@@ -146,13 +159,13 @@ struct NodeStmtExpr : public StmtNode {
 namespace detail {
 
 // Shitty location, but works for now
-template<typename T>
-inline String __vec_to_string(const Vec<T>& __v, Function<String(const T& __t)> __f) {
+template<typename T, typename F = Function<String(const T& __t)>>
+inline String __vec_to_string(const Vec<T>& __v, F __f) {
   std::ostringstream oss;
   oss << "{";
 
   for (const T& __t : __v)
-    oss << __f(__t);
+    oss << __f(__t) << ", ";
 
   oss << "}";
   return oss.str();
