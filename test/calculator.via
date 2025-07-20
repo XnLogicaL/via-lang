@@ -2,16 +2,16 @@
 import ascii
 
 func eval(str: string) -> float {
-  func skip_whitespace(i: int) -> nil:
+  func skip_whitespace(&i: int) -> nil:
     while str[i] == ' ':
       i += 1
 
-  func is_digit(chr: str) -> bool {
+  func is_digit(&chr: str) -> bool {
     const code = ascii.decode(chr)
     return code >= 0x30 and code <= 0x39
   }
 
-  func parse_float(i: int) -> (float, int) {
+  func parse_float(&i: int) -> (float, int) {
     skip_whitespace(i)
 
     var start = i
@@ -21,7 +21,7 @@ func eval(str: string) -> float {
     return (str[start:i] as float, i)
   }
 
-  func parse_factor(i: int) -> (float, int) {
+  func parse_factor(&i: int) -> (float, int) {
     skip_whitespace(i)
 
     if str[i] == '-' {
@@ -34,13 +34,14 @@ func eval(str: string) -> float {
       var [val, i] = parse_expr(i)
       if str[i] != ')':
         error("expected )")
+
       return (val, i + 1)
     }
     else:
       return parse_float(i)
   }
 
-  func parse_term(i: int) -> (float, int) {
+  func parse_term(&i: int) -> (float, int) {
     var [val, i] = parse_factor(i)
 
     while true {
@@ -61,7 +62,7 @@ func eval(str: string) -> float {
     return (val, i)
   }
 
-  func parse_expr(i: int) -> (float, int) {
+  func parse_expr(i: int) -> float {
     var [val, i] = parse_term(i)
 
     while true {
@@ -79,10 +80,10 @@ func eval(str: string) -> float {
         break
     }
 
-    return (val, i)
+    return val
   }
 
-  return parse_expr(0)[0]
+  return parse_expr(0)
 }
 
 func display_menu() {
