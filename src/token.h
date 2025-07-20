@@ -34,6 +34,7 @@ enum TokenKind {
   TK_KW_WHILE, // while
   TK_KW_FOR,   // for
   TK_KW_IF,    // if
+  TK_KW_IN,    // in
   TK_KW_ELSE,  // else
   TK_KW_DO,    // do
 

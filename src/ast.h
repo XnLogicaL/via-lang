@@ -103,7 +103,7 @@ struct NodeExprLambda : public ExprNode {
 struct NodeStmtVar : public StmtNode {
   using StmtNode::loc;
 
-  LValue lval;
+  LValue* lval;
   ExprNode* rval;
 };
 
@@ -127,12 +127,14 @@ struct NodeStmtFor : public StmtNode {
   NodeStmtVar* init;
   ExprNode* target;
   ExprNode* step;
+  NodeStmtScope* br;
 };
 
 struct NodeStmtForEach : public StmtNode {
   using StmtNode::loc;
-  TupleBinding bind;
+  LValue* lval;
   ExprNode* iter;
+  NodeStmtScope* br;
 };
 
 struct NodeStmtWhile : public StmtNode {

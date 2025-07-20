@@ -19,6 +19,7 @@ static constexpr TokenReprPair KEYWORDS[] = {
   {"while", TK_KW_WHILE},
   {"for", TK_KW_FOR},
   {"if", TK_KW_IF},
+  {"in", TK_KW_IN},
   {"else", TK_KW_ELSE},
   {"do", TK_KW_DO},
 };
