@@ -20,19 +20,17 @@ mod array_util {
   }
 }
 
-@entrypoint
-func main() {
-  var nums = [1, 2, 3, 4, 5, 6]
+var nums = [1, 2, 3, 4, 5, 6]
+array_util::retain(&nums, func(n: int) {
+    return n % 2 == 0
+})
 
-  array_util::retain(&nums, func(n: int) {
-      return n % 2 == 0
-  })
-
-  printn(nums) // [2, 4, 6]
-}
+printn(nums) // [2, 4, 6]
 ```
 
 A performant, minimal, modern alternative to **Lua**.
+
+[Skip to installation <sub>(if you wish to not listen to this yap)</sub>](README.md#installation)
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
@@ -42,9 +40,9 @@ It takes good features from all respected and established languages and carefull
 
 After using Lua for many projects, you come to realize that the language has many flaws that drive you away from it in a lot of cases.
 
-One of these flaws is the **identity crisis** and **ambigiouty** when it comes to **what is a core feature** and what is a **standard library feature**.
+One of these flaws is the **identity crisis** and **ambiguity** when it comes to **what is a core feature** and what is a **standard library feature**.
 
-via solves this problem by only abstracting what is necessary. All of the languages features are within the scope of the capabilities of the syntax and semantics of the language. It only abstracts things like IO and OS level interactions to the C++ backend standard library, which is otherwise impossible to implement due to how interpreted languages work.
+via solves this problem by only abstracting what is necessary. All of the languages features are within the scope of the capabilities of the syntax and semantics of the language. It only abstracts things like IO and OS level operations to the C++ backend standard library, which is otherwise impossible to implement due to how interpreted languages work.
 
 **However**, this does not imply that Lua is a bad language in any way. In fact I would consider it the father of many modern interpreted languages. It is a brilliant piece of engineering and the intention of this project is not to replace it, but to build upon its **best features** and not fall into the pitfalls of its **mistakes**.
 
@@ -70,17 +68,9 @@ via is a statically typed language. However, the type system is implemented in a
 
 - Static typing also has another massive benefit, which significant runtime performance improvements over dynamic typing, at the very cheap cost of more compile-time checks. In a lot of cases, via outperforms Lua by 1.5-2x, simply because the interpreter does not have to check types and trusts the compiler.
 
-#### Simplicity
-
-Much like its predecessor, via treats simplicity as a core design principle.
-
-- via does **not** and will **never** have things like **async**, **inheritance**, and among other things that introduce a unfavorable amount of complexity/ambigiouty to the language that either conceal too much behavior, or outright exist to conceal bad language design.
-
 #### Performance
 
 via has an **extremely fast** runtime, often outperforming reputably fast interpreted languages like Lua, without stepping into **JIT** territory.
-
-- It is bytecode interpreted, which means that it will always have fundemental overhead that puts it behind compiled languages.
 
 - It uses a C++ backend that provides an interpreter along with many standard library functions that require ABI calls.
 
@@ -108,7 +98,7 @@ To install pre-built binaries, simply go to the [GitHub Releases]() page and pic
 
 If pre-built installation is not available to you for whatever reason, or you just want to mess around with the source code, you're more than welcome.
 
-**Linux** is recommended for this process.
+A [UNIX compliant]() operating system is recommended for this process.
 
 ##### Preperation: Installing dependencies
 via uses [CMake]() to generate build files. Compilers and other tools are preference-based, here are supported compilers:
@@ -159,5 +149,5 @@ via XX.XX.XX
 
 ## Credits
 
-**XnLogicaL** - Lead maintainer
-**Prismic (Kasen L. Daniels)** - Name and banner
+- **@XnLogicaL** - Lead maintainer
+- **@KasenDaniels** - Name and banner
