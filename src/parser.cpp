@@ -240,21 +240,70 @@ static ExprNode* parse_primary(ParseState& P) {
   }
 }
 
-static ExprNode* parse_unary_or_primary(ParseState& P) {
+static ExprNode* parse_unary_or_postfix(ParseState& P) {
+  ExprNode* expr;
+
   if (parser_match(P, TK_MINUS) || parser_match(P, TK_BANG)) {
     auto* un = heap_emplace<NodeExprUn>(P.al);
     un->op = parser_advance(P);
-    un->expr = parse_unary_or_primary(P);
+    un->expr = parse_unary_or_postfix(P);
     un->loc = {token_abs_location(P.L, *un->op).begin, un->expr->loc.end};
-
-    return un;
+    expr = un;
+  }
+  else {
+    expr = parse_primary(P);
   }
 
-  return parse_primary(P);
+  while (true) {
+    Token* tok = parser_peek(P);
+
+    switch (tok->kind) {
+    case TK_LPAREN: {    // Function call
+      parser_advance(P); // consume '('
+
+      Vec<ExprNode*> args;
+
+      if (!parser_match(P, TK_RPAREN)) {
+        do
+          args.push_back(parse_expr(P));
+        while (parser_match(P, TK_COMMA) && parser_advance(P));
+
+        parser_expect(P, TK_RPAREN);
+      }
+      else
+        parser_advance(P); // consume ')'
+
+      auto* call = heap_emplace<NodeExprCall>(P.al);
+      call->lval = expr;
+      call->args = std::move(args);
+      call->loc = {expr->loc.begin, token_abs_location(P.L, *parser_peek(P, -1)).end};
+      expr = call;
+      break;
+    }
+
+    case TK_LBRACKET: {  // Subscript
+      parser_advance(P); // consume '['
+
+      ExprNode* idx = parse_expr(P);
+
+      parser_expect(P, TK_RBRACKET);
+
+      auto* subs = heap_emplace<NodeExprSubs>(P.al);
+      subs->lval = expr;
+      subs->idx = idx;
+      subs->loc = {expr->loc.begin, token_abs_location(P.L, *parser_peek(P, -1)).end};
+      expr = subs;
+      break;
+    }
+
+    default:
+      return expr;
+    }
+  }
 }
 
 ExprNode* parse_expr(ParseState& P, int min_prec) {
-  ExprNode* lhs = parse_unary_or_primary(P);
+  ExprNode* lhs = parse_unary_or_postfix(P);
 
   int prec;
   while ((prec = bin_prec(parser_peek(P)->kind), prec >= min_prec)) {

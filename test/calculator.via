@@ -6,7 +6,7 @@ func eval(str: string) -> float {
     while str[i] == ' ':
       i += 1
 
-  func is_digit(&chr: str) -> bool {
+  func is_digit(&chr: string) -> bool {
     const code = ascii.decode(chr)
     return code >= 0x30 and code <= 0x39
   }
