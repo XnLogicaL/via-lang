@@ -37,6 +37,8 @@ enum TokenKind {
   TK_KW_IN,    // in
   TK_KW_ELSE,  // else
   TK_KW_DO,    // do
+  TK_KW_AND,   // and
+  TK_KW_OR,    // or
 
   TK_DOT,               // .
   TK_COMMA,             // ,
@@ -60,8 +62,6 @@ enum TokenKind {
   TK_BANG,              // !
   TK_INC,               // ++
   TK_DEC,               // --
-  TK_AND,               // &&
-  TK_OR,                // ||
   TK_LESSTHAN,          // <
   TK_GREATERTHAN,       // >
   TK_CONCAT,            // ..

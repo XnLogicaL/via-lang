@@ -32,6 +32,7 @@ static bool is_expr_start(TokenKind kind) {
   case TK_LPAREN:
   case TK_MINUS:
   case TK_BANG:
+  case TK_TILDE:
     return true;
   default:
     return false;
@@ -40,9 +41,9 @@ static bool is_expr_start(TokenKind kind) {
 
 static int bin_prec(TokenKind kind) {
   switch (kind) {
-  case TK_OR:
+  case TK_KW_OR:
     return 0;
-  case TK_AND:
+  case TK_KW_AND:
     return 1;
   case TK_DBEQUALS:
   case TK_BANGEQUALS:
@@ -243,15 +244,20 @@ static ExprNode* parse_primary(ParseState& P) {
 static ExprNode* parse_unary_or_postfix(ParseState& P) {
   ExprNode* expr;
 
-  if (parser_match(P, TK_MINUS) || parser_match(P, TK_BANG)) {
+  switch (parser_peek(P)->kind) {
+  case TK_BANG:
+  case TK_MINUS:
+  case TK_TILDE: {
     auto* un = heap_emplace<NodeExprUn>(P.al);
     un->op = parser_advance(P);
     un->expr = parse_unary_or_postfix(P);
     un->loc = {token_abs_location(P.L, *un->op).begin, un->expr->loc.end};
     expr = un;
+    break;
   }
-  else {
-    expr = parse_primary(P);
+  default:
+    expr = parse_expr(P);
+    break;
   }
 
   while (true) {

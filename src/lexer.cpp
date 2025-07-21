@@ -22,6 +22,8 @@ static constexpr TokenReprPair KEYWORDS[] = {
   {"in", TK_KW_IN},
   {"else", TK_KW_ELSE},
   {"do", TK_KW_DO},
+  {"and", TK_KW_AND},
+  {"or", TK_KW_OR},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
@@ -47,8 +49,6 @@ static constexpr TokenReprPair SYMBOLS[] = {
   {"!", TK_BANG},
   {"++", TK_INC},
   {"--", TK_DEC},
-  {"&&", TK_AND},
-  {"||", TK_OR},
   {"<", TK_LESSTHAN},
   {">", TK_GREATERTHAN},
   {"..", TK_CONCAT},
