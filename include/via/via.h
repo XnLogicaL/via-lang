@@ -4,8 +4,6 @@
 #ifndef VIA_H
 #define VIA_H
 
-#include <vmstate.h>
-#include <vmapi.h>
 #include <token.h>
 #include <lexer.h>
 #include <parser.h>
