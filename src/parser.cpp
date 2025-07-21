@@ -31,7 +31,7 @@ static bool is_expr_start(TokenKind kind) {
   case TK_IDENT:
   case TK_LPAREN:
   case TK_MINUS:
-  case TK_BANG:
+  case TK_KW_NOT:
   case TK_TILDE:
     return true;
   default:
@@ -245,7 +245,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
   ExprNode* expr;
 
   switch (parser_peek(P)->kind) {
-  case TK_BANG:
+  case TK_KW_NOT:
   case TK_MINUS:
   case TK_TILDE: {
     auto* un = heap_emplace<NodeExprUn>(P.al);

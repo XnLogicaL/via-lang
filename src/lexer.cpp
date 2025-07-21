@@ -24,6 +24,7 @@ static constexpr TokenReprPair KEYWORDS[] = {
   {"do", TK_KW_DO},
   {"and", TK_KW_AND},
   {"or", TK_KW_OR},
+  {"not", TK_KW_NOT},
   {"shl", TK_KW_SHL},
   {"shr", TK_KW_SHR},
 };
@@ -215,7 +216,6 @@ static Token* read_symbol(LexState& L) {
   token->kind = TK_ILLEGAL;
   token->size = 1;
 
-  // Try to match the longest possible symbol first
   int max_len = 3;
   TokenKind matched_kind = TK_ILLEGAL;
   int matched_size = 0;
@@ -232,7 +232,7 @@ static Token* read_symbol(LexState& L) {
       if (strcmp(buf, sym.str) == 0) {
         matched_kind = sym.kind;
         matched_size = len;
-        goto found; // Found longest match
+        goto found;
       }
     }
   }
@@ -245,9 +245,8 @@ found:
     for (int i = 0; i < matched_size; ++i)
       lexer_advance(L);
   }
-  else {
+  else
     lexer_advance(L); // advance one char if no match
-  }
 
   return token;
 }

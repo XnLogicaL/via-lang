@@ -39,6 +39,7 @@ enum TokenKind {
   TK_KW_DO,    // do
   TK_KW_AND,   // and
   TK_KW_OR,    // or
+  TK_KW_NOT,   // not
   TK_KW_SHL,   // shl
   TK_KW_SHR,   // shr
 
