@@ -10,27 +10,29 @@
 *"An evolution, not a revolution. -C3"*
 
 ```go
-type predicate<T> = func(T) -> bool
+type predicate<T> = func(k: int, v: T) -> bool
 
-mod array_util {
+mod util {
   func retain<T>(&list: [T], keep: predicate<T>) -> [T] {
-    for [i, item] in list:
-      if not keep(item):
+    for [k, v] in list:
+      if not keep(k, v):
         list[i] = nil
+
+    return list
   }
 }
 
 var nums = [1, 2, 3, 4, 5, 6]
-array_util::retain(&nums, func(n: int) {
-    return n % 2 == 0
+var ref = util::retain(&nums, func(k: int, v: int) {
+    return v % 2 == 0;
 })
 
-printn(nums) // [2, 4, 6]
+printn(ref, ref is nums) // [2, 4, 6] true
 ```
 
 A performant, minimal, modern alternative to **Lua**.
 
-[Skip to installation <sub>(if you wish to not listen to this yap)</sub>](README.md#installation)
+[Skip to installation](README.md#installation)<sub>(if you wish to not read the following yap)</sub>
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
