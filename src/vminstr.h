@@ -103,6 +103,17 @@ enum Opcode : u16 {
   VOP_FMOD1XYK, // fmod1xyk <ra: register<float>> <k: constant<int>>
   VOP_FMOD2XYK, // fmod2xyk <ra: register<float>> <rb: register<float>> <k: constant<int>>
 
+  // bitwise opcodes
+  VOP_BAND1,
+  VOP_BAND2,
+  VOP_BOR1,
+  VOP_BOR2,
+  VOP_BXOR1,
+  VOP_BXOR2,
+  VOP_BNOT,
+  VOP_BSHL,
+  VOP_BSHR,
+
   // register opcodes
   VOP_MOVE,       // move <dst: register> <src: register>
   VOP_XCHG,       // xchg <r0: register> <r1: register>
@@ -118,6 +129,29 @@ enum Opcode : u16 {
   VOP_NEWTUPLE,   // newtuple <dst: register> <presize: id> ...extraarg1<val: register>
   VOP_NEWCLOSURE, // newclosure <dst: register> <id: constant>
 
+  // comparison opcodes
+  VOP_NOT,  // not <dst: register> <src: register>
+  VOP_AND,  // and <dst: register> <lhs: register> <rhs: register>
+  VOP_OR,   // or <dst: register> <lhs: register> <rhs: register>
+  VOP_EQ,   // eq <dst: register> <lhs: register> <rhs: register>
+  VOP_NEQ,  // neq <dst: register> <lhs: register> <rhs: register>
+  VOP_IS,   // is <dst: register> <lhs: register> <rhs: register>
+  VOP_LT,   // lt <dst: register> <lhs: register> <rhs: register>
+  VOP_GT,   // gt <dst: register> <lhs: register> <rhs: register>
+  VOP_LTEQ, // lteq <dst: register> <lhs: register> <rhs: register>
+  VOP_GTEQ, // gteq <dst: register> <lhs: register> <rhs: register>
+
+  // control flow opcodes
+  VOP_JMP,       // jmp <lbl: id>
+  VOP_JMPIF,     // jmpif <cnd: register> <lbl: id>
+  VOP_JMPIFNOT,  // jmpifnot <cnd: register> <lbl: id>
+  VOP_JMPIFEQ,   // jmpifeq <lhs: register> <rhs: register> <lbl: id>
+  VOP_JMPIFIS,   // jmpifis <lhs: register> <rhs: register> <lbl: id>
+  VOP_JMPIFLT,   // jmpiflt <lhs: register<number>> <rhs: register<number>> <lbl: id>
+  VOP_JMPIFGT,   // jmpifgt <lhs: register<number>> <rhs: register<number>> <lbl: id>
+  VOP_JMPIFLTEQ, // jmpiflteq <lhs: register<number>> <rhs: register<number>> <lbl: id>
+  VOP_JMPIFGTEQ, // jmpifgteq <lhs: register<number>> <rhs: register<number>> <lbl: id>
+
   // stack opcodes
   VOP_PUSH,        // push <src: register>
   VOP_PUSHK,       // pushk <val: constant>
@@ -129,50 +163,6 @@ enum Opcode : u16 {
   VOP_SETLOCAL,    // setlocal <src: register> <idx: id>
   VOP_DUPLOCAL,    // duplocal <id: id>
   VOP_DUPLOCALREF, // duplocalref <id: id>
-
-  // stack-arithmetic opcodes
-  VOP_PUSHIADD,    // pushiadd <ra: register<int>> <rb: register<int>>
-  VOP_PUSHIADDK,   // pushiaddk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFADD,    // pushfadd <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFADDK,   // pushfaddk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFADDX,   // pushfaddx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFADDXK,  // pushfaddxk <ra: register<int>> <k: register<float>>
-  VOP_PUSHISUB,    // pushisub <ra: register<int>> <rb: register<int>>
-  VOP_PUSHISUBK,   // pushisubk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFSUB,    // pushfsub <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFSUBK,   // pushfsubk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFSUBX,   // pushfsubx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFSUBXK,  // pushfsubxk <ra: register<int>> <k: register<float>>
-  VOP_PUSHIMUL,    // pushimul <ra: register<int>> <rb: register<int>>
-  VOP_PUSHIMULK,   // pushimulk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFMUL,    // pushfmul <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFMULK,   // pushfmulk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFMULX,   // pushfmulx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFMULXK,  // pushfmulxk <ra: register<int>> <k: register<float>>
-  VOP_PUSHIDIV,    // pushidiv <ra: register<int>> <rb: register<int>>
-  VOP_PUSHIDIVK,   // pushidivk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFDIV,    // pushfdiv <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFDIVK,   // pushfdivk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFDIVX,   // pushfdivx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFDIVXY,  // pushfdivxk <ra: register<float>> <k: constant<int>>
-  VOP_PUSHFDIVXK,  // pushfdivxy <ra: register<int>> <rb: register<float>>
-  VOP_PUSHFDIVXYK, // pushfdivxyk <ra: register<float>> <k: constant<int>>
-  VOP_PUSHIPOW,    // pushipow <ra: register<int>> <rb: register<int>>
-  VOP_PUSHIPOWK,   // pushipowk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFPOW,    // pushfpow <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFPOWK,   // pushfpowk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFPOWX,   // pushfpowx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFPOWXK,  // pushfpowxk <ra: register<float>> <k: constant<int>>
-  VOP_PUSHFPOWXY,  // pushfpowxy <ra: register<int>> <rb: register<float>>
-  VOP_PUSHFPOWXYK, // pushfpowxyk <ra: register<float>> <k: constant<int>>
-  VOP_PUSHIMOD,    // pushimod <ra: register<int>> <rb: register<int>>
-  VOP_PUSHIMODK,   // pushimodk <ra: register<int>> <k: constant<int>>
-  VOP_PUSHFMOD,    // pushfmod <ra: register<float>> <rb: register<float>>
-  VOP_PUSHFMODK,   // pushfmodk <ra: register<float>> <k: register<float>>
-  VOP_PUSHFMODX,   // pushfmodx <ra: register<float>> <rb: register<int>>
-  VOP_PUSHFMODXK,  // pushfmodxk <ra: register<float>> <k: constant<int>>
-  VOP_PUSHFMODXY,  // pushfmodxy <ra: register<int>> <rb: register<float>>
-  VOP_PUSHFMODXYK, // pushfmodxyk <ra: register<float>> <k: constant<int>>
 
   // cast opcodes
   VOP_ICASTB,      // icastb <dst: register> <bool: register>
