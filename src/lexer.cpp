@@ -123,15 +123,23 @@ static Token* read_number(LexState& L) {
     else
       goto decimal;
 
+    token->size = 2;
     lexer_advance(L); // 0
     lexer_advance(L); // b/x
-  decimal:
   }
 
+decimal:
   char c;
   while ((c = lexer_peek(L, 0)), isnumeric(&token->kind, c)) {
-    if (c == '.')
-      token->kind = TK_FP;
+    if (c == '.') {
+      if (token->kind == TK_INT)
+        token->kind = TK_FP;
+      else {
+        token->kind = TK_ILLEGAL;
+        break;
+      }
+    }
+
     lexer_advance(L);
     token->size++;
   }
