@@ -24,6 +24,8 @@ static constexpr TokenReprPair KEYWORDS[] = {
   {"do", TK_KW_DO},
   {"and", TK_KW_AND},
   {"or", TK_KW_OR},
+  {"shl", TK_KW_SHL},
+  {"shr", TK_KW_SHR},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
@@ -42,8 +44,6 @@ static constexpr TokenReprPair SYMBOLS[] = {
   {"%", TK_PERCENT},
   {"&", TK_AMPERSAND},
   {"~", TK_TILDE},
-  {"<<", TK_LSHIFT},
-  {">>", TK_RSHIFT},
   {"^", TK_CARET},
   {"|", TK_PIPE},
   {"!", TK_BANG},
@@ -215,26 +215,40 @@ static Token* read_symbol(LexState& L) {
   token->kind = TK_ILLEGAL;
   token->size = 1;
 
-  // Try to match longest symbol
+  // Try to match the longest possible symbol first
+  int max_len = 3;
+  TokenKind matched_kind = TK_ILLEGAL;
+  int matched_size = 0;
+
   char buf[4] = {};
-  for (int i = 0; i < 3; ++i) {
-    buf[i] = L.file.cursor[i];
-    buf[i + 1] = '\0'; // Null terminate
+
+  for (int len = max_len; len >= 1; --len) {
+    for (int i = 0; i < len; ++i)
+      buf[i] = L.file.cursor[i];
+
+    buf[len] = '\0';
 
     for (const auto& sym : SYMBOLS) {
       if (strcmp(buf, sym.str) == 0) {
-        token->kind = sym.kind;
-        token->size = strlen(sym.str);
-
-        for (int j = 0; j < token->size; ++j)
-          lexer_advance(L);
-
-        return token;
+        matched_kind = sym.kind;
+        matched_size = len;
+        goto found; // Found longest match
       }
     }
   }
 
-  lexer_advance(L);
+found:
+  if (matched_kind != TK_ILLEGAL) {
+    token->kind = matched_kind;
+    token->size = matched_size;
+
+    for (int i = 0; i < matched_size; ++i)
+      lexer_advance(L);
+  }
+  else {
+    lexer_advance(L); // advance one char if no match
+  }
+
   return token;
 }
 

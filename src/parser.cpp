@@ -58,8 +58,8 @@ static int bin_prec(TokenKind kind) {
     return 4;
   case TK_PIPE:
     return 5;
-  case TK_LSHIFT:
-  case TK_RSHIFT:
+  case TK_KW_SHL:
+  case TK_KW_SHR:
     return 6;
   case TK_PLUS:
   case TK_MINUS:

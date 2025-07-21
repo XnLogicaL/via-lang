@@ -39,6 +39,8 @@ enum TokenKind {
   TK_KW_DO,    // do
   TK_KW_AND,   // and
   TK_KW_OR,    // or
+  TK_KW_SHL,   // shl
+  TK_KW_SHR,   // shr
 
   TK_DOT,               // .
   TK_COMMA,             // ,
@@ -55,8 +57,6 @@ enum TokenKind {
   TK_PERCENT,           // %
   TK_AMPERSAND,         // &
   TK_TILDE,             // ~
-  TK_LSHIFT,            // <<
-  TK_RSHIFT,            // >>
   TK_CARET,             // ^
   TK_PIPE,              // |
   TK_BANG,              // !
