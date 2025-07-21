@@ -7,7 +7,7 @@
 namespace via {
 
 const Location abs_location_translate(const FileBuf& buf, usize off) {
-  usize line = 0;
+  usize line = 1;
   usize line_start = 0;
 
   for (usize i = 0; i < off; ++i) {
