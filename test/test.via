@@ -1,7 +1,8 @@
-if 1 + 2 / 5 {
-  while true {
+if (1 + 2 / 5) and ~(1 << 24) {
+  while true or (~(1 ^ ~(1 >> 4)) & (1 | 0b00000000000000000000000000000000)) as bool && (!false) {
     do {
-      var a = 10;
+      var a = 10 + (0b011001001000000000111001001000100 ^ ~(1 << 31)) as float;
+      var [_, __, ___] = (a, a, a)
     }
 
     var [a, b] = (0x10, 10)
@@ -12,25 +13,3 @@ if 1 + 2 / 5 {
     }
   }
 }
-
-;
-/* AST dump
-
-NodeStmtIf()
- Branch(NodeExprBin(+, NodeExprLit(TK_INT, 1), NodeExprBin(/, NodeExprLit(TK_INT, 2), NodeExprLit(TK_INT, 5))))
-  NodeStmtWhile(NodeExprLit(TK_TRUE, true))
-   NodeStmtScope()
-    NodeStmtVar(NodeExprSym(a), NodeExprLit(TK_INT, 10))
-   End()
-   NodeStmtVar(TupleBinding[{NodeExprSym(a), NodeExprSym(b), }], NodeExprTuple({NodeExprLit(TK_XINT, 0x), NodeExprLit(TK_INT, 10), }))
-   NodeStmtForEach(TupleBinding[{NodeExprSym(b), NodeExprSym(c), }], NodeExprSym(a))
-    NodeStmtFor(NodeStmtVar(NodeExprSym(d), NodeExprSym(c)), NodeExprLit(TK_INT, 50), NodeExprLit(TK_INT, 10))
-     <unknown-stmt>
-     NodeStmtVar(NodeExprSym(e), NodeExprBin(+, NodeExprBin(*, NodeExprSym(d), NodeExprSym(c)), NodeExprBin(%, NodeExprGroup(NodeExprTuple({NodeExprSym(a), NodeExprSym(b), })), NodeExprCall(NodeExprSym(ab), {}))))
-    End()
-   End()
-  End()
- End()
-End()
-
-*/

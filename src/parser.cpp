@@ -256,7 +256,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
     break;
   }
   default:
-    expr = parse_expr(P);
+    expr = parse_primary(P);
     break;
   }
 
