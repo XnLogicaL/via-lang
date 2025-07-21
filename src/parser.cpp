@@ -68,6 +68,8 @@ static int bin_prec(TokenKind kind) {
   case TK_FSLASH:
   case TK_PERCENT:
     return 8;
+  case TK_POW:
+    return 9;
   default:
     return -1;
   }
