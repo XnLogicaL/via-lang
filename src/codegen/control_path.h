@@ -5,7 +5,7 @@
 #define VIA_SEMACPATH_H
 
 #include "common.h"
-#include "ast.h"
+#include <parser/ast.h>
 
 namespace via {
 

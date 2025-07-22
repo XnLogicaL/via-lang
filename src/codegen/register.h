@@ -5,7 +5,7 @@
 #define VIA_SEMAREG_H
 
 #include "common.h"
-#include "heapbuf.h"
+#include "buffer.h"
 
 namespace via {
 

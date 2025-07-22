@@ -5,9 +5,8 @@
 #define VIA_PARSER_H
 
 #include "common.h"
-#include "mem.h"
+#include "memory.h"
 #include "diag.h"
-#include "error.h"
 #include "ast.h"
 #include <mimalloc.h>
 

@@ -5,7 +5,7 @@
 #define VIA_LEXTOKEN_H
 
 #include "common.h"
-#include "heapbuf.h"
+#include "buffer.h"
 #include <magic_enum/magic_enum.hpp>
 
 namespace via {

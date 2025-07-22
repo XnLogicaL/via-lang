@@ -34,6 +34,6 @@
 #include <variant>
 #include <vector>
 
-#include "conf.h"
+#include "config.h"
 
 #endif

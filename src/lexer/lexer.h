@@ -5,18 +5,15 @@
 #define VIA_LEXSTATE_H
 
 #include "common.h"
-#include "error.h"
-#include "mem.h"
-#include "heapbuf.h"
-#include "token.h"
+#include "memory.h"
+#include "buffer.h"
+#include <lexer/token.h>
 #include <mimalloc.h>
 
 namespace via {
 
-// Null terminated buffer of characters.
 using FileBuf = HeapBuffer<char>;
 
-// Lexical analysis state.
 struct LexState {
   const FileBuf& file;
   HeapAllocator al;
@@ -25,10 +22,8 @@ struct LexState {
     : file(file) {}
 };
 
-// Tokenizes `LexState::file` and returns it as a buffer of token pointers owned by LexState.
 TokenBuf lexer_tokenize(LexState& L);
 
-// Dumps the given token buffer into standard output.
 void dump_ttree(const TokenBuf& B);
 
 } // namespace via

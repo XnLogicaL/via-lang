@@ -4,8 +4,9 @@
 #ifndef VIA_H
 #define VIA_H
 
-#include <token.h>
-#include <lexer.h>
-#include <parser.h>
+#include <lexer/token.h>
+#include <lexer/lexer.h>
+#include <parser/ast.h>
+#include <parser/parser.h>
 
 #endif

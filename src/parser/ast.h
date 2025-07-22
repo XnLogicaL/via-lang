@@ -5,7 +5,7 @@
 #define VIA_AST_H
 
 #include "common.h"
-#include "token.h"
+#include <lexer/token.h>
 
 namespace via {
 
