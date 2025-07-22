@@ -9,49 +9,44 @@
 namespace via {
 
 // ANSI text foreground color codes.
-enum class FGColor {
-  red = 31,
-  green = 32,
-  blue = 34,
-  yellow = 33,
-  magenta = 35,
-  cyan = 36,
-  white = 37,
-  black = 30
+enum FGColor {
+  FG_RED = 31,
+  FG_GREEN = 32,
+  FG_BLUE = 34,
+  FG_YELLOW = 33,
+  FG_MAGENTA = 35,
+  FG_CYAN = 36,
+  FG_WHITE = 37,
+  FG_BLACK = 30
 };
 
 // ANSI text background color codes.
-enum class BGColor {
-  red = 41,
-  green = 42,
-  blue = 44,
-  yellow = 43,
-  magenta = 45,
-  cyan = 46,
-  white = 47,
-  black = 40
+enum BGColor {
+  BG_RED = 41,
+  BG_GREEN = 42,
+  BG_BLUE = 44,
+  BG_YELLOW = 43,
+  BG_MAGENTA = 45,
+  BG_CYAN = 46,
+  BG_WHITE = 47,
+  BG_BLACK = 40
 };
 
 // ANSI text style color codes.
-enum class Style {
-  reset = 0,
-  bold = 1,
-  faint = 2,
-  italic = 3,
-  underline = 4,
+enum Style {
+  ST_RESET = 0,
+  ST_BOLD = 1,
+  ST_FAINT = 2,
+  ST_ITALIC = 3,
+  ST_UNDERLINE = 4,
 };
 
 // Function to wrap a String with ANSI escape codes
-inline String apply_color(
-  const String& text,
-  FGColor foreground,
-  BGColor background = BGColor::black,
-  Style style = Style::reset
-) {
+inline String apply_color(String str, FGColor fg, BGColor bg = BG_BLACK, Style style = ST_RESET) {
   // Construct ANSI escape code and apply the color formatting to the text
   return "\033[" + std::to_string(static_cast<int>(style)) + ";"
-    + std::to_string(static_cast<int>(foreground)) + ";"
-    + std::to_string(static_cast<int>(background)) + "m" + text + "\033[0m";
+    + std::to_string(static_cast<int>(fg)) + ";" + std::to_string(static_cast<int>(bg)) + "m" + str
+    + "\033[0m";
 }
 
 } // namespace via
