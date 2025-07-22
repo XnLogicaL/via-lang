@@ -11,16 +11,6 @@ set(CMAKE_CXX_STANDARD 23)
 # Convenient for LSPs
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Debug option
-option(DEBUG_MODE "Enable debug build" OFF)
-
-# Set build type based on DEBUG_MODE
-if (DEBUG_MODE)
-  set(CMAKE_BUILD_TYPE Debug)
-else()
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 # mimalloc stuff
 set(MI_OVERRIDE OFF)
 
@@ -55,14 +45,19 @@ target_include_directories(libvia PUBLIC include src)
 target_compile_options(libvia PUBLIC
   $<$<AND:$<CONFIG:Release>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-Ofast -march=native -flto>
   $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Ox>
-  # $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
+  $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
 )
 
 # Linker options
 target_link_options(libvia PUBLIC
   $<$<AND:$<CONFIG:Release>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-flto>
-  # $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
+  $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
 )
+
+message(STATUS "")
+message(STATUS "> Generating libvia")
+message(STATUS "> C++ compiler      : ${CMAKE_CXX_COMPILER}")
+message(STATUS "")
 
 # ----------------------------------------------------------------------------------------------------
 # STANDALONE CONFIG
