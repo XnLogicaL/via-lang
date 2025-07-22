@@ -105,16 +105,12 @@ struct Token {
   usize size;
 };
 
-// Buffer of arena allocated token pointers owned by LexState.
 using TokenBuf = Buffer<Token*>;
 using FileBuf = Buffer<char>;
 
 const Location abs_location_translate(const FileBuf& buf, usize off);
-
-// Returns the absolute location of token T.
 const AbsLocation token_abs_location(const LexState& L, const Token& T);
 
-// Dumps token T into standard output.
 void token_dump(const Token& T);
 
 } // namespace via
