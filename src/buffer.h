@@ -9,7 +9,27 @@
 namespace via {
 
 template<typename T>
-struct HeapBuffer {
+using Allocator = T* (*)(usize);
+
+template<typename T>
+using Deleter = void (*)(T*);
+
+namespace detail {
+
+template<typename T>
+inline T* calloc(usize size) noexcept {
+  return (T*)::calloc(size, sizeof(T));
+}
+
+template<typename T>
+inline void free(T* ptr) noexcept {
+  ::free((void*)ptr);
+}
+
+} // namespace detail
+
+template<typename T, Allocator<T> At = detail::calloc, Deleter<T> Dt = detail::free>
+struct Buffer {
   T* data = NULL;
   mutable T* cursor = NULL;
   usize size = 0;
@@ -22,33 +42,33 @@ struct HeapBuffer {
   inline const T* end() const { return data + size * sizeof(T); }
   // clang-format on
 
-  inline HeapBuffer() = default;
-  inline HeapBuffer(const usize size)
-    : data(new T[size]),
+  inline Buffer() = default;
+  inline Buffer(const usize size)
+    : data(At(size)),
       cursor(data),
       size(size) {}
 
-  inline HeapBuffer(const T* begin, const T* end) {
+  inline Buffer(const T* begin, const T* end) {
     usize offset = end - begin;
     size = offset / sizeof(T);
-    data = new T[size];
+    data = At(size);
     cursor = data;
 
     std::memcpy(data, begin, offset);
   }
 
-  inline ~HeapBuffer() {
-    delete[] data;
+  inline ~Buffer() {
+    Dt(data);
   }
 
-  inline HeapBuffer(const HeapBuffer& other)
-    : data(new T[other.size]),
+  inline Buffer(const Buffer& other)
+    : data(At(other.size)),
       cursor(data),
       size(other.size) {
     std::memcpy(data, other.data, size);
   }
 
-  inline HeapBuffer(HeapBuffer&& other)
+  inline Buffer(Buffer&& other)
     : data(other.data),
       cursor(data),
       size(other.size) {
@@ -57,11 +77,11 @@ struct HeapBuffer {
     other.size = 0;
   }
 
-  inline HeapBuffer& operator=(const HeapBuffer& other) {
+  inline Buffer& operator=(const Buffer& other) {
     if (this != &other) {
-      delete[] data;
+      Dt(data);
 
-      data = new T[other.size];
+      data = At(other.size);
       cursor = data;
       size = other.size;
 
@@ -71,9 +91,9 @@ struct HeapBuffer {
     return *this;
   }
 
-  inline HeapBuffer& operator=(HeapBuffer&& other) {
+  inline Buffer& operator=(Buffer&& other) {
     if (this != &other) {
-      delete[] data;
+      Dt(data);
 
       data = other.data;
       cursor = data;

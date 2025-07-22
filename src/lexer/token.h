@@ -106,8 +106,8 @@ struct Token {
 };
 
 // Buffer of arena allocated token pointers owned by LexState.
-using TokenBuf = HeapBuffer<Token*>;
-using FileBuf = HeapBuffer<char>;
+using TokenBuf = Buffer<Token*>;
+using FileBuf = Buffer<char>;
 
 const Location abs_location_translate(const FileBuf& buf, usize off);
 

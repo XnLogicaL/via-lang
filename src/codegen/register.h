@@ -13,7 +13,7 @@ inline constexpr usize kSemaRegisterArraySize = UINT16_MAX / 64;
 inline constexpr usize kSemaRegisterArrayBytes = UINT16_MAX / 8;
 
 struct SemaRegisterState {
-  HeapBuffer<u64> buf;
+  Buffer<u64> buf;
 
   inline explicit SemaRegisterState()
     : buf(kSemaRegisterArraySize) {

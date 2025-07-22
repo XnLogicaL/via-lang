@@ -12,7 +12,7 @@
 
 namespace via {
 
-using FileBuf = HeapBuffer<char>;
+using FileBuf = Buffer<char>;
 
 struct LexState {
   const FileBuf& file;

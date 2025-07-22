@@ -12,7 +12,7 @@
 
 namespace via {
 
-using AstBuf = HeapBuffer<StmtNode*>;
+using AstBuf = Buffer<StmtNode*>;
 
 struct ParseState {
   const LexState& L;
