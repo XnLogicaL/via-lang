@@ -98,7 +98,7 @@ struct Buffer {
 
   inline Buffer& operator=(Buffer&& other) {
     if (this != &other) {
-      Dt(data);
+      Free(data);
 
       data = other.data;
       cursor = data;
