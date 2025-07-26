@@ -17,18 +17,23 @@ using Deleter = void (*)(T*);
 namespace detail {
 
 template<typename T>
-inline T* calloc(usize size) noexcept {
-  return (T*)::calloc(size, sizeof(T));
+inline T* std_calloc(usize size) noexcept {
+  return (T*)std::calloc(size, sizeof(T));
 }
 
 template<typename T>
-inline void free(T* ptr) noexcept {
-  ::free((void*)ptr);
+inline void std_free(T* ptr) noexcept {
+  std::free((void*)ptr);
 }
 
 } // namespace detail
 
-template<typename T, Allocator<T> At = detail::calloc, Deleter<T> Dt = detail::free>
+// clang-format off
+template<
+  typename T,
+  const Allocator<T> Alloc = detail::std_calloc,
+  const Deleter<T> Free = detail::std_free
+> // clang-format on
 struct Buffer {
   T* data = NULL;
   mutable T* cursor = NULL;
@@ -44,25 +49,25 @@ struct Buffer {
 
   inline Buffer() = default;
   inline Buffer(const usize size)
-    : data(At(size)),
+    : data(Alloc(size)),
       cursor(data),
       size(size) {}
 
   inline Buffer(const T* begin, const T* end) {
     usize offset = end - begin;
     size = offset / sizeof(T);
-    data = At(size);
+    data = Alloc(size);
     cursor = data;
 
     std::memcpy(data, begin, offset);
   }
 
   inline ~Buffer() {
-    Dt(data);
+    Free(data);
   }
 
   inline Buffer(const Buffer& other)
-    : data(At(other.size)),
+    : data(Alloc(other.size)),
       cursor(data),
       size(other.size) {
     std::memcpy(data, other.data, size);
@@ -79,9 +84,9 @@ struct Buffer {
 
   inline Buffer& operator=(const Buffer& other) {
     if (this != &other) {
-      Dt(data);
+      Free(data);
 
-      data = At(other.size);
+      data = Alloc(other.size);
       cursor = data;
       size = other.size;
 
