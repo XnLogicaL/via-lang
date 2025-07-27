@@ -97,11 +97,14 @@ static bool parser_optional(ParseState& P, const TokenKind kind) {
   return false;
 }
 
-static Token* parser_expect(ParseState& P, const TokenKind kind) {
+static Token* parser_expect(ParseState& P, const TokenKind kind, const String&& task) {
   if (!parser_match(P, kind)) {
     const Token& unexp = *parser_peek(P);
     throw ParserError(
-      token_abs_location(P.L, unexp), "Unexpected token '{}'", String(unexp.lexeme, unexp.size)
+      token_abs_location(P.L, unexp),
+      "Unexpected token '{}' while {}",
+      String(unexp.lexeme, unexp.size),
+      task
     );
   }
 
@@ -116,29 +119,24 @@ static TupleBinding* parse_tuple_binding(ParseState& P) {
 
   while (!parser_match(P, TK_RBRACKET)) {
     Token* id = parser_advance(P);
-    AbsLocation id_location = token_abs_location(P.L, *id);
+    AbsLocation id_loc = token_abs_location(P.L, *id);
 
     if (id->kind != TK_IDENT)
       throw ParserError(
-        id_location,
-        "Unexpected tone '{}' while parsing tuple binding",
-        String(id->lexeme, id->size)
+        id_loc, "Unexpected token '{}' while parsing tuple binding", String(id->lexeme, id->size)
       );
 
     auto sym = heap_emplace<NodeExprSym>(P.al);
-    sym->loc = id_location;
+    sym->loc = id_loc;
     sym->tok = id;
 
     tpb->binds.push_back(sym);
 
     if (!parser_match(P, TK_RBRACKET))
-      parser_expect(P, TK_COMMA);
+      parser_expect(P, TK_COMMA, "parsing tuple binding");
   }
 
-  Token* rb = parser_advance(P);
-  AbsLocation rbloc = token_abs_location(P.L, *rb);
-
-  tpb->loc = {loc.begin, rbloc.end};
+  tpb->loc = {loc.begin, token_abs_location(P.L, *parser_advance(P)).end};
   return tpb;
 }
 
@@ -219,7 +217,7 @@ static ExprNode* parse_primary(ParseState& P) {
         vals.push_back(parse_expr(P));
       }
 
-      parser_expect(P, TK_RPAREN);
+      parser_expect(P, TK_RPAREN, "parsing tuple expression");
 
       auto* tup = heap_emplace<NodeExprTuple>(P.al);
       tup->vals = std::move(vals);
@@ -228,7 +226,7 @@ static ExprNode* parse_primary(ParseState& P) {
       return tup;
     }
 
-    parser_expect(P, TK_RPAREN);
+    parser_expect(P, TK_RPAREN, "parsing grouping expression");
 
     auto* group = heap_emplace<NodeExprGroup>(P.al);
     group->expr = first;
@@ -276,7 +274,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
           args.push_back(parse_expr(P));
         while (parser_match(P, TK_COMMA) && parser_advance(P));
 
-        parser_expect(P, TK_RPAREN);
+        parser_expect(P, TK_RPAREN, "parsing function call");
       }
       else
         parser_advance(P); // consume ')'
@@ -294,7 +292,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
 
       ExprNode* idx = parse_expr(P);
 
-      parser_expect(P, TK_RBRACKET);
+      parser_expect(P, TK_RBRACKET, "parsing subscript expression");
 
       auto* subs = heap_emplace<NodeExprSubs>(P.al);
       subs->lval = expr;
@@ -360,7 +358,7 @@ static NodeStmtVar* parse_var(ParseState& P) {
   auto vars = heap_emplace<NodeStmtVar>(P.al);
   vars->lval = parse_lvalue(P);
 
-  parser_expect(P, TK_EQUALS);
+  parser_expect(P, TK_EQUALS, "parsing variable declaration");
 
   ExprNode* rval = parse_expr(P);
   vars->rval = rval;
@@ -377,11 +375,11 @@ static NodeStmtFor* parse_for(ParseState& P) {
   auto fors = heap_emplace<NodeStmtFor>(P.al);
   fors->init = parse_var(P);
 
-  parser_expect(P, TK_COMMA);
+  parser_expect(P, TK_COMMA, "parsing for statement");
 
   fors->target = parse_expr(P);
 
-  parser_expect(P, TK_COMMA);
+  parser_expect(P, TK_COMMA, "parsing for statement");
 
   fors->step = parse_expr(P);
   fors->br = parse_scope(P);
@@ -397,7 +395,7 @@ static NodeStmtForEach* parse_foreach(ParseState& P) {
   auto fors = heap_emplace<NodeStmtForEach>(P.al);
   fors->lval = parse_lvalue(P);
 
-  parser_expect(P, TK_KW_IN);
+  parser_expect(P, TK_KW_IN, "parsing for each statement");
 
   fors->iter = parse_expr(P);
   fors->br = parse_scope(P);
