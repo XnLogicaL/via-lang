@@ -57,24 +57,23 @@ static void process_file(const String& input_path, EmitKind emit_kind) {
   }
 
   FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  DiagContext dctx{{}, file_buf};
+  DiagContext diag_ctx{input_path, file_buf};
 
-  LexState L(file_buf);
-  TokenBuf token_buf = lexer_tokenize(L);
+  LexState lex_state(file_buf);
+  TokenBuf token_buf = lexer_tokenize(lex_state);
 
-  ParseState P(L, token_buf, dctx);
-  AstBuf ast_buf = parser_parse(P);
-
-  Vec<const Diagnosis*> diags =
-    diag_filter(dctx, [](const Diagnosis& diag) { return diag.kind == DK_ERROR; });
+  ParseState parse_state(lex_state, token_buf, diag_ctx);
+  AstBuf ast_buf = parser_parse(parse_state);
 
   // check for errors
-  if (!diags.empty())
+  Vec<const Diagnosis*> diags;
+  if ((diags = diag_filter(diag_ctx, [](const Diagnosis& diag) { return diag.kind == DK_ERROR; }),
+       diags.empty()))
     goto end;
 
 end:
-  diag_emit(dctx);
-  diag_clear(dctx);
+  diag_emit(diag_ctx);
+  diag_clear(diag_ctx);
 
   switch (emit_kind) {
   case EK_LIST:
