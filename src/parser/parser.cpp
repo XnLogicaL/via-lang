@@ -162,7 +162,7 @@ static LValue* parse_lvalue(ParseState& P) {
     Token* bad = parser_peek(P);
     throw ParserError(
       token_abs_location(P.L, *bad),
-      "Unexpected token '{}' while parsing 'var' statement",
+      "Unexpected token '{}' while parsing variable declaration statement",
       String(bad->lexeme, bad->size)
     );
   }
