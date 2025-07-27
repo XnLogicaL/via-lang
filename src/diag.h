@@ -5,7 +5,8 @@
 #define VIA_DIAG_H
 
 #include "common.h"
-#include <lexer/token.h>
+#include "color.h"
+#include "lexer/token.h"
 #include <spdlog/spdlog.h>
 
 namespace via {
@@ -19,13 +20,13 @@ enum DiagnosisKind {
 struct Diagnosis {
   DiagnosisKind kind;
   AbsLocation loc;
-  String file;
   String msg;
 };
 
 struct DiagContext {
+  const String& path;
+  const FileBuf& file;
   Vec<Diagnosis> diags;
-  FileBuf& file;
 };
 
 void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis);
