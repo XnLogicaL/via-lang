@@ -24,7 +24,6 @@ using core::parser::ParseState;
 
 enum class EmitType {
   none,
-  list,
   ttree,
   ast,
 };
@@ -32,12 +31,6 @@ enum class EmitType {
 static EmitType get_emit_kind(const char* str) {
   auto emit = magic_enum::enum_cast<EmitType>(str);
   return emit.value_or(EmitType::none);
-}
-
-static void list_emit_kinds() {
-  spdlog::info("available emit targets:");
-  std::cout << "  -e list          opens this menu\n";
-  std::cout << "  -e ttree         dumps token tree\n";
 }
 
 static bool read_file(const String& path, String& out_content) {
@@ -74,7 +67,8 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 
   // check for errors
   Vec<const core::Diagnosis*> diags;
-  if ((diags = diag_filter(diag_ctx, [](const auto& diag) { return diag.kind == core::DK_ERROR; }),
+  if ((diags =
+         diag_filter(diag_ctx, [](const auto& diag) { return diag.kind == core::Diag::Error; }),
        diags.empty()))
     return;
 
@@ -82,9 +76,6 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   diag_clear(diag_ctx);
 
   switch (emit_kind) {
-  case EmitType::list:
-    list_emit_kinds();
-    break;
   case EmitType::ttree:
     core::lex::dump_ttree(token_buf);
     break;

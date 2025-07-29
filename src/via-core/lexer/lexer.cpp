@@ -18,67 +18,67 @@ struct TokenReprPair {
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-  {"var", TK_KW_VAR},
-  {"macro", TK_KW_MACRO},
-  {"func", TK_KW_FUNC},
-  {"type", TK_KW_TYPE},
-  {"while", TK_KW_WHILE},
-  {"for", TK_KW_FOR},
-  {"if", TK_KW_IF},
-  {"in", TK_KW_IN},
-  {"else", TK_KW_ELSE},
-  {"do", TK_KW_DO},
-  {"and", TK_KW_AND},
-  {"or", TK_KW_OR},
-  {"not", TK_KW_NOT},
-  {"shl", TK_KW_SHL},
-  {"shr", TK_KW_SHR},
+  {"var", TokenKind::KW_VAR},
+  {"macro", TokenKind::KW_MACRO},
+  {"func", TokenKind::KW_FUNC},
+  {"type", TokenKind::KW_TYPE},
+  {"while", TokenKind::KW_WHILE},
+  {"for", TokenKind::KW_FOR},
+  {"if", TokenKind::KW_IF},
+  {"in", TokenKind::KW_IN},
+  {"else", TokenKind::KW_ELSE},
+  {"do", TokenKind::KW_DO},
+  {"and", TokenKind::KW_AND},
+  {"or", TokenKind::KW_OR},
+  {"not", TokenKind::KW_NOT},
+  {"shl", TokenKind::KW_SHL},
+  {"shr", TokenKind::KW_SHR},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
-  {".", TK_DOT},
-  {",", TK_COMMA},
-  {";", TK_SEMICOLON},
-  {":", TK_COLON},
-  {"::", TK_DBCOLON},
-  {"->", TK_ARROW},
-  {"?", TK_QUESTION},
-  {"+", TK_PLUS},
-  {"-", TK_MINUS},
-  {"*", TK_ASTERISK},
-  {"/", TK_FSLASH},
-  {"**", TK_POW},
-  {"%", TK_PERCENT},
-  {"&", TK_AMPERSAND},
-  {"~", TK_TILDE},
-  {"^", TK_CARET},
-  {"|", TK_PIPE},
-  {"!", TK_BANG},
-  {"++", TK_INC},
-  {"--", TK_DEC},
-  {"<", TK_LESSTHAN},
-  {">", TK_GREATERTHAN},
-  {"..", TK_CONCAT},
-  {"(", TK_LPAREN},
-  {")", TK_RPAREN},
-  {"[", TK_LBRACKET},
-  {"]", TK_RBRACKET},
-  {"{", TK_LCURLY},
-  {"}", TK_RCURLY},
-  {"=", TK_EQUALS},
-  {"==", TK_DBEQUALS},
-  {"+=", TK_PLUSEQUALS},
-  {"*=", TK_ASTERISKEQUALS},
-  {"/=", TK_FSLASHEQUALS},
-  {"**=", TK_POWEQUALS},
-  {"%=", TK_PERCENTEQUALS},
-  {"&=", TK_AMPERSANDEQUALS},
-  {"^=", TK_CARETEQUALS},
-  {"|=", TK_PIPEEQUALS},
-  {"!=", TK_BANGEQUALS},
-  {"<=", TK_LESSTHANEQUALS},
-  {">=", TK_GREATERTHANEQUALS},
-  {"..=", TK_CONCATEQUALS},
+  {".", TokenKind::DOT},
+  {",", TokenKind::COMMA},
+  {";", TokenKind::SEMICOLON},
+  {":", TokenKind::COLON},
+  {"::", TokenKind::DBCOLON},
+  {"->", TokenKind::ARROW},
+  {"?", TokenKind::QUESTION},
+  {"+", TokenKind::PLUS},
+  {"-", TokenKind::MINUS},
+  {"*", TokenKind::ASTERISK},
+  {"/", TokenKind::FSLASH},
+  {"**", TokenKind::POW},
+  {"%", TokenKind::PERCENT},
+  {"&", TokenKind::AMPERSAND},
+  {"~", TokenKind::TILDE},
+  {"^", TokenKind::CARET},
+  {"|", TokenKind::PIPE},
+  {"!", TokenKind::BANG},
+  {"++", TokenKind::INC},
+  {"--", TokenKind::DEC},
+  {"<", TokenKind::LESSTHAN},
+  {">", TokenKind::GREATERTHAN},
+  {"..", TokenKind::CONCAT},
+  {"(", TokenKind::LPAREN},
+  {")", TokenKind::RPAREN},
+  {"[", TokenKind::LBRACKET},
+  {"]", TokenKind::RBRACKET},
+  {"{", TokenKind::LCURLY},
+  {"}", TokenKind::RCURLY},
+  {"=", TokenKind::EQUALS},
+  {"==", TokenKind::DBEQUALS},
+  {"+=", TokenKind::PLUSEQUALS},
+  {"*=", TokenKind::ASTERISKEQUALS},
+  {"/=", TokenKind::FSLASHEQUALS},
+  {"**=", TokenKind::POWEQUALS},
+  {"%=", TokenKind::PERCENTEQUALS},
+  {"&=", TokenKind::AMPERSANDEQUALS},
+  {"^=", TokenKind::CARETEQUALS},
+  {"|=", TokenKind::PIPEEQUALS},
+  {"!=", TokenKind::BANGEQUALS},
+  {"<=", TokenKind::LESSTHANEQUALS},
+  {">=", TokenKind::GREATERTHANEQUALS},
+  {"..=", TokenKind::CONCATEQUALS},
 };
 
 // why does the C standard library not have this??
@@ -89,9 +89,9 @@ static bool isbdigit(char c) {
 static bool isnumeric(TokenKind* kind, char c) {
   switch (*kind) {
   // clang-format off
-  case TK_INT:  return isdigit(c) || (c == '.' && *kind != TK_FP); // decimal
-  case TK_XINT: return isxdigit(c); // hexadecimal
-  case TK_BINT: return isbdigit(c); // binary
+  case TokenKind::INT:  return isdigit(c) || (c == '.' && *kind != TokenKind::FP); // decimal
+  case TokenKind::XINT: return isxdigit(c); // hexadecimal
+  case TokenKind::BINT: return isbdigit(c); // binary
   // clang-format on
   default:
     break;
@@ -118,15 +118,15 @@ static char lexer_peek(const LexState& L, int count) {
 
 static Token* read_number(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
-  token->kind = TK_INT;
+  token->kind = TokenKind::INT;
   token->lexeme = L.file.cursor;
   token->size = 0;
 
   if (lexer_peek(L, 0) == '0') {
     if (lexer_peek(L, 1) == 'x')
-      token->kind = TK_XINT;
+      token->kind = TokenKind::XINT;
     else if (lexer_peek(L, 1) == 'b')
-      token->kind = TK_BINT;
+      token->kind = TokenKind::BINT;
     else
       goto decimal;
 
@@ -139,10 +139,10 @@ decimal:
   char c;
   while ((c = lexer_peek(L, 0)), isnumeric(&token->kind, c)) {
     if (c == '.') {
-      if (token->kind == TK_INT)
-        token->kind = TK_FP;
+      if (token->kind == TokenKind::INT)
+        token->kind = TokenKind::FP;
       else {
-        token->kind = TK_ILLEGAL;
+        token->kind = TokenKind::ILLEGAL;
         break;
       }
     }
@@ -156,7 +156,7 @@ decimal:
 
 static Token* read_string(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
-  token->kind = TK_STRING;
+  token->kind = TokenKind::STRING;
   token->lexeme = L.file.cursor;
   token->size = 1; // for opening quote
 
@@ -173,14 +173,14 @@ static Token* read_string(LexState& L) {
   }
 
   if (!closed)
-    token->kind = TK_ILLEGAL;
+    token->kind = TokenKind::ILLEGAL;
 
   return token;
 }
 
 static Token* read_identifier(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
-  token->kind = TK_IDENT;
+  token->kind = TokenKind::IDENT;
   token->lexeme = L.file.cursor;
   token->size = 0;
 
@@ -201,15 +201,15 @@ static Token* read_identifier(LexState& L) {
   }
 
   if (strncmp(token->lexeme, "nil", token->size) == 0)
-    token->kind = TK_NIL;
+    token->kind = TokenKind::NIL;
   else if (strncmp(token->lexeme, "true", token->size) == 0)
-    token->kind = TK_TRUE;
+    token->kind = TokenKind::TRUE;
   else if (strncmp(token->lexeme, "false", token->size) == 0)
-    token->kind = TK_FALSE;
+    token->kind = TokenKind::FALSE;
 
-  if (token->kind == TK_IDENT && c == '!') {
+  if (token->kind == TokenKind::IDENT && c == '!') {
     token->size++;
-    token->kind = TK_MIDENT;
+    token->kind = TokenKind::MIDENT;
     lexer_advance(L);
   }
 
@@ -219,11 +219,11 @@ static Token* read_identifier(LexState& L) {
 static Token* read_symbol(LexState& L) {
   Token* token = heap_emplace<Token>(L.al);
   token->lexeme = L.file.cursor;
-  token->kind = TK_ILLEGAL;
+  token->kind = TokenKind::ILLEGAL;
   token->size = 1;
 
   int max_len = 3;
-  TokenKind matched_kind = TK_ILLEGAL;
+  TokenKind matched_kind = TokenKind::ILLEGAL;
   int matched_size = 0;
 
   char buf[4] = {};
@@ -244,7 +244,7 @@ static Token* read_symbol(LexState& L) {
   }
 
 found:
-  if (matched_kind != TK_ILLEGAL) {
+  if (matched_kind != TokenKind::ILLEGAL) {
     token->kind = matched_kind;
     token->size = matched_size;
 
@@ -330,7 +330,7 @@ TokenBuf lexer_tokenize(LexState& L) {
   }
 
   Token* eof = heap_emplace<Token>(L.al);
-  eof->kind = TK_EOF;
+  eof->kind = TokenKind::EOF_;
   eof->lexeme = L.file.cursor;
   eof->size = 0;
 

@@ -17,14 +17,14 @@ namespace core {
 using lex::AbsLocation;
 using lex::Location;
 
-enum DiagnosisKind {
-  DK_INFO,
-  DK_WARN,
-  DK_ERROR,
+enum class Diag {
+  Info,
+  Warn,
+  Error,
 };
 
 struct Diagnosis {
-  DiagnosisKind kind;
+  Diag kind;
   AbsLocation loc;
   String msg;
 };
@@ -39,12 +39,12 @@ void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis);
 void diag_emit(const DiagContext& ctx);
 void diag_clear(DiagContext& ctx);
 
-template<const DiagnosisKind Kind>
+template<const Diag Kind>
 void diag(DiagContext& ctx, AbsLocation loc, String msg) {
   diag_raw(ctx, {Kind, loc, msg});
 }
 
-template<const DiagnosisKind Kind, typename... Args>
+template<const Diag Kind, typename... Args>
 void diagf(DiagContext& ctx, AbsLocation loc, Fmt<Args...> fmt, Args... args) {
   diag_raw(ctx, {Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
 }

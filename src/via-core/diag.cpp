@@ -15,16 +15,17 @@ void diag_emit(const DiagContext& ctx) {
   for (const Diagnosis& diag : ctx.diags) {
     Location loc = diag.loc.to_relative(ctx.file);
     String addr = fmt::format("{}:{}:{}", ctx.path, loc.line, loc.offset);
-    String msg = fmt::format("{} {}", diag.msg, apply_color(addr, FG_CYAN, BG_BLACK, ST_BOLD));
+    String msg =
+      fmt::format("{} {}", diag.msg, apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
 
     switch (diag.kind) {
-    case DK_INFO:
+    case Diag::Info:
       spdlog::info(msg);
       break;
-    case DK_WARN:
+    case Diag::Warn:
       spdlog::warn(msg);
       break;
-    case DK_ERROR:
+    case Diag::Error:
       spdlog::error(msg);
       break;
     default:

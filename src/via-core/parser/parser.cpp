@@ -31,17 +31,17 @@ public:
 
 static bool is_expr_start(TokenKind kind) {
   switch (kind) {
-  case TK_INT:
-  case TK_BINT:
-  case TK_XINT:
-  case TK_NIL:
-  case TK_FP:
-  case TK_STRING:
-  case TK_IDENT:
-  case TK_LPAREN:
-  case TK_MINUS:
-  case TK_KW_NOT:
-  case TK_TILDE:
+  case TokenKind::INT:
+  case TokenKind::BINT:
+  case TokenKind::XINT:
+  case TokenKind::NIL:
+  case TokenKind::FP:
+  case TokenKind::STRING:
+  case TokenKind::IDENT:
+  case TokenKind::LPAREN:
+  case TokenKind::MINUS:
+  case TokenKind::KW_NOT:
+  case TokenKind::TILDE:
     return true;
   default:
     return false;
@@ -50,34 +50,34 @@ static bool is_expr_start(TokenKind kind) {
 
 static int bin_prec(TokenKind kind) {
   switch (kind) {
-  case TK_KW_OR:
+  case TokenKind::KW_OR:
     return 0;
-  case TK_KW_AND:
+  case TokenKind::KW_AND:
     return 1;
-  case TK_DBEQUALS:
-  case TK_BANGEQUALS:
-  case TK_LESSTHAN:
-  case TK_LESSTHANEQUALS:
-  case TK_GREATERTHAN:
-  case TK_GREATERTHANEQUALS:
+  case TokenKind::DBEQUALS:
+  case TokenKind::BANGEQUALS:
+  case TokenKind::LESSTHAN:
+  case TokenKind::LESSTHANEQUALS:
+  case TokenKind::GREATERTHAN:
+  case TokenKind::GREATERTHANEQUALS:
     return 2;
-  case TK_AMPERSAND:
+  case TokenKind::AMPERSAND:
     return 3;
-  case TK_CARET:
+  case TokenKind::CARET:
     return 4;
-  case TK_PIPE:
+  case TokenKind::PIPE:
     return 5;
-  case TK_KW_SHL:
-  case TK_KW_SHR:
+  case TokenKind::KW_SHL:
+  case TokenKind::KW_SHR:
     return 6;
-  case TK_PLUS:
-  case TK_MINUS:
+  case TokenKind::PLUS:
+  case TokenKind::MINUS:
     return 7;
-  case TK_ASTERISK:
-  case TK_FSLASH:
-  case TK_PERCENT:
+  case TokenKind::ASTERISK:
+  case TokenKind::FSLASH:
+  case TokenKind::PERCENT:
     return 8;
-  case TK_POW:
+  case TokenKind::POW:
     return 9;
   default:
     return -1;
@@ -126,11 +126,11 @@ static ast::TupleBinding* parse_tuple_binding(ParseState& P) {
 
   auto tpb = heap_emplace<ast::TupleBinding>(P.al);
 
-  while (!parser_match(P, TK_RBRACKET)) {
+  while (!parser_match(P, TokenKind::RBRACKET)) {
     Token* id = parser_advance(P);
     AbsLocation id_loc = id->location(P.L.file);
 
-    if (id->kind != TK_IDENT)
+    if (id->kind != TokenKind::IDENT)
       throw ParserError(
         id_loc, "Unexpected token '{}' while parsing tuple binding", String(id->lexeme, id->size)
       );
@@ -141,8 +141,8 @@ static ast::TupleBinding* parse_tuple_binding(ParseState& P) {
 
     tpb->binds.push_back(sym);
 
-    if (!parser_match(P, TK_RBRACKET))
-      parser_expect(P, TK_COMMA, "parsing tuple binding");
+    if (!parser_match(P, TokenKind::RBRACKET))
+      parser_expect(P, TokenKind::COMMA, "parsing tuple binding");
   }
 
   tpb->loc = {loc.begin, parser_advance(P)->location(P.L.file).end};
@@ -152,7 +152,7 @@ static ast::TupleBinding* parse_tuple_binding(ParseState& P) {
 static ast::LValue* parse_lvalue(ParseState& P) {
   auto lval = heap_emplace<ast::LValue>(P.al);
 
-  if (parser_match(P, TK_IDENT)) {
+  if (parser_match(P, TokenKind::IDENT)) {
     Token* id = parser_advance(P);
 
     auto sym = heap_emplace<ast::NodeExprSym>(P.al);
@@ -162,7 +162,7 @@ static ast::LValue* parse_lvalue(ParseState& P) {
     lval->kind = ast::LValue::Symbol;
     lval->sym = sym;
   }
-  else if (parser_match(P, TK_LBRACKET)) {
+  else if (parser_match(P, TokenKind::LBRACKET)) {
     auto tpb = parse_tuple_binding(P);
     lval->kind = ast::LValue::Tpb;
     lval->tpb = tpb;
@@ -186,14 +186,14 @@ static ast::ExprNode* parse_primary(ParseState& P) {
   AbsLocation loc = tok->location(P.L.file);
 
   switch (tok->kind) {
-  case TK_INT:
-  case TK_BINT:
-  case TK_XINT:
-  case TK_NIL:
-  case TK_FP:
-  case TK_TRUE:
-  case TK_FALSE:
-  case TK_STRING: {
+  case TokenKind::INT:
+  case TokenKind::BINT:
+  case TokenKind::XINT:
+  case TokenKind::NIL:
+  case TokenKind::FP:
+  case TokenKind::TRUE:
+  case TokenKind::FALSE:
+  case TokenKind::STRING: {
     parser_advance(P);
 
     auto* lit = heap_emplace<ast::NodeExprLit>(P.al);
@@ -202,7 +202,7 @@ static ast::ExprNode* parse_primary(ParseState& P) {
 
     return lit;
   }
-  case TK_IDENT: {
+  case TokenKind::IDENT: {
     parser_advance(P);
 
     auto* sym = heap_emplace<ast::NodeExprSym>(P.al);
@@ -211,22 +211,22 @@ static ast::ExprNode* parse_primary(ParseState& P) {
 
     return sym;
   }
-  case TK_LPAREN: {
+  case TokenKind::LPAREN: {
     parser_advance(P);
 
     AbsLocation start = loc;
     ast::ExprNode* first = parse_expr(P);
 
-    if (parser_match(P, TK_COMMA)) {
+    if (parser_match(P, TokenKind::COMMA)) {
       Vec<ast::ExprNode*> vals;
       vals.push_back(first);
 
-      while (parser_match(P, TK_COMMA)) {
+      while (parser_match(P, TokenKind::COMMA)) {
         parser_advance(P);
         vals.push_back(parse_expr(P));
       }
 
-      parser_expect(P, TK_RPAREN, "parsing tuple expression");
+      parser_expect(P, TokenKind::RPAREN, "parsing tuple expression");
 
       auto* tup = heap_emplace<ast::NodeExprTuple>(P.al);
       tup->vals = std::move(vals);
@@ -235,7 +235,7 @@ static ast::ExprNode* parse_primary(ParseState& P) {
       return tup;
     }
 
-    parser_expect(P, TK_RPAREN, "parsing grouping expression");
+    parser_expect(P, TokenKind::RPAREN, "parsing grouping expression");
 
     auto* group = heap_emplace<ast::NodeExprGroup>(P.al);
     group->expr = first;
@@ -254,9 +254,9 @@ static ast::ExprNode* parse_unary_or_postfix(ParseState& P) {
   ast::ExprNode* expr;
 
   switch (parser_peek(P)->kind) {
-  case TK_KW_NOT:
-  case TK_MINUS:
-  case TK_TILDE: {
+  case TokenKind::KW_NOT:
+  case TokenKind::MINUS:
+  case TokenKind::TILDE: {
     auto* un = heap_emplace<ast::NodeExprUn>(P.al);
     un->op = parser_advance(P);
     un->expr = parse_unary_or_postfix(P);
@@ -273,17 +273,17 @@ static ast::ExprNode* parse_unary_or_postfix(ParseState& P) {
     Token* tok = parser_peek(P);
 
     switch (tok->kind) {
-    case TK_LPAREN: {    // Function call
-      parser_advance(P); // consume '('
+    case TokenKind::LPAREN: { // Function call
+      parser_advance(P);      // consume '('
 
       Vec<ast::ExprNode*> args;
 
-      if (!parser_match(P, TK_RPAREN)) {
+      if (!parser_match(P, TokenKind::RPAREN)) {
         do
           args.push_back(parse_expr(P));
-        while (parser_match(P, TK_COMMA) && parser_advance(P));
+        while (parser_match(P, TokenKind::COMMA) && parser_advance(P));
 
-        parser_expect(P, TK_RPAREN, "parsing function call");
+        parser_expect(P, TokenKind::RPAREN, "parsing function call");
       }
       else
         parser_advance(P); // consume ')'
@@ -296,12 +296,12 @@ static ast::ExprNode* parse_unary_or_postfix(ParseState& P) {
       break;
     }
 
-    case TK_LBRACKET: {  // Subscript
-      parser_advance(P); // consume '['
+    case TokenKind::LBRACKET: { // Subscript
+      parser_advance(P);        // consume '['
 
       ast::ExprNode* idx = parse_expr(P);
 
-      parser_expect(P, TK_RBRACKET, "parsing subscript expression");
+      parser_expect(P, TokenKind::RBRACKET, "parsing subscript expression");
 
       auto* subs = heap_emplace<ast::NodeExprSubs>(P.al);
       subs->lval = expr;
@@ -341,12 +341,12 @@ static ast::NodeStmtScope* parse_scope(ParseState& P) {
 
   auto scope = heap_emplace<ast::NodeStmtScope>(P.al);
 
-  if (tok->kind == TK_COLON) {
+  if (tok->kind == TokenKind::COLON) {
     scope->stmts.push_back(parse_stmt(P));
     scope->loc = {loc.begin, scope->stmts.back()->loc.end};
   }
-  else if (tok->kind == TK_LCURLY) {
-    while (!parser_match(P, TK_RCURLY))
+  else if (tok->kind == TokenKind::LCURLY) {
+    while (!parser_match(P, TokenKind::RCURLY))
       scope->stmts.push_back(parse_stmt(P));
 
     parser_advance(P);
@@ -356,7 +356,7 @@ static ast::NodeStmtScope* parse_scope(ParseState& P) {
       loc, "Expected ':' or '{{' while parsing scope, got '{}'", String(tok->lexeme, tok->size)
     );
 
-  parser_optional(P, TK_SEMICOLON);
+  parser_optional(P, TokenKind::SEMICOLON);
   return scope;
 }
 
@@ -367,13 +367,13 @@ static ast::NodeStmtVar* parse_var(ParseState& P) {
   auto vars = heap_emplace<ast::NodeStmtVar>(P.al);
   vars->lval = parse_lvalue(P);
 
-  parser_expect(P, TK_EQUALS, "parsing variable declaration");
+  parser_expect(P, TokenKind::EQUALS, "parsing variable declaration");
 
   ast::ExprNode* rval = parse_expr(P);
   vars->rval = rval;
   vars->loc = {loc.begin, rval->loc.end};
 
-  parser_optional(P, TK_SEMICOLON);
+  parser_optional(P, TokenKind::SEMICOLON);
   return vars;
 }
 
@@ -384,11 +384,11 @@ static ast::NodeStmtFor* parse_for(ParseState& P) {
   auto fors = heap_emplace<ast::NodeStmtFor>(P.al);
   fors->init = parse_var(P);
 
-  parser_expect(P, TK_COMMA, "parsing for statement");
+  parser_expect(P, TokenKind::COMMA, "parsing for statement");
 
   fors->target = parse_expr(P);
 
-  parser_expect(P, TK_COMMA, "parsing for statement");
+  parser_expect(P, TokenKind::COMMA, "parsing for statement");
 
   fors->step = parse_expr(P);
   fors->br = parse_scope(P);
@@ -404,7 +404,7 @@ static ast::NodeStmtForEach* parse_foreach(ParseState& P) {
   auto fors = heap_emplace<ast::NodeStmtForEach>(P.al);
   fors->lval = parse_lvalue(P);
 
-  parser_expect(P, TK_KW_IN, "parsing for each statement");
+  parser_expect(P, TokenKind::KW_IN, "parsing for each statement");
 
   fors->iter = parse_expr(P);
   fors->br = parse_scope(P);
@@ -427,7 +427,7 @@ static ast::NodeStmtIf* parse_if(ParseState& P) {
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
-  parser_optional(P, TK_SEMICOLON);
+  parser_optional(P, TokenKind::SEMICOLON);
   return ifs;
 }
 
@@ -444,26 +444,26 @@ static ast::NodeStmtWhile* parse_while(ParseState& P) {
 }
 
 ast::StmtNode* parse_stmt(ParseState& P) {
-  if (parser_match(P, TK_KW_IF))
+  if (parser_match(P, TokenKind::KW_IF))
     return parse_if(P);
-  else if (parser_match(P, TK_KW_WHILE))
+  else if (parser_match(P, TokenKind::KW_WHILE))
     return parse_while(P);
-  else if (parser_match(P, TK_KW_VAR))
+  else if (parser_match(P, TokenKind::KW_VAR))
     return parse_var(P);
-  else if (parser_match(P, TK_KW_DO)) {
+  else if (parser_match(P, TokenKind::KW_DO)) {
     parser_advance(P);
     return parse_scope(P);
   }
-  else if (parser_match(P, TK_KW_FOR)) {
+  else if (parser_match(P, TokenKind::KW_FOR)) {
     // generic for loop
-    if (parser_match(P, TK_KW_VAR, 1))
+    if (parser_match(P, TokenKind::KW_VAR, 1))
       return parse_for(P);
 
     // for each loop
     return parse_foreach(P);
   }
 
-  if (parser_match(P, TK_SEMICOLON)) {
+  if (parser_match(P, TokenKind::SEMICOLON)) {
     auto empty = heap_emplace<ast::NodeStmtEmpty>(P.al);
     empty->loc = parser_advance(P)->location(P.L.file);
     return empty;
@@ -481,19 +481,19 @@ ast::StmtNode* parse_stmt(ParseState& P) {
   es->expr = parse_expr(P);
   es->loc = es->expr->loc;
 
-  parser_optional(P, TK_SEMICOLON);
+  parser_optional(P, TokenKind::SEMICOLON);
   return es;
 }
 
 AstBuf parser_parse(ParseState& P) {
   Vec<ast::StmtNode*> nodes;
 
-  while (!parser_match(P, TK_EOF)) {
+  while (!parser_match(P, TokenKind::EOF_)) {
     try {
       nodes.push_back(parse_stmt(P));
     }
     catch (const ParserError& e) {
-      diag<DK_ERROR>(P.dctx, e.loc, e.msg);
+      diag<Diag::Error>(P.dctx, e.loc, e.msg);
       break;
     }
   }

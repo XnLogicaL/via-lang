@@ -23,81 +23,81 @@ namespace lex {
 
 struct LexState;
 
-enum TokenKind {
-  TK_EOF = 0, // end of file
-  TK_ILLEGAL, // unrecognized lexeme
+enum class TokenKind {
+  EOF_ = 0, // end of file
+  ILLEGAL,  // unrecognized lexeme
 
-  TK_IDENT, // identifier
-  TK_STRING,
-  TK_NIL,    // nil
-  TK_MIDENT, // macro identifier
-  TK_INT,    // integer literal
-  TK_BINT,   // binary integer literal
-  TK_XINT,   // hexadecimal integer literal
-  TK_FP,     // floating point literal
-  TK_TRUE,   // true literal
-  TK_FALSE,  // false literal
+  IDENT, // identifier
+  STRING,
+  NIL,    // nil
+  MIDENT, // macro identifier
+  INT,    // integer literal
+  BINT,   // binary integer literal
+  XINT,   // hexadecimal integer literal
+  FP,     // floating point literal
+  TRUE,   // true literal
+  FALSE,  // false literal
 
-  TK_KW_VAR,   // var
-  TK_KW_MACRO, // macro
-  TK_KW_FUNC,  // func
-  TK_KW_TYPE,  // type
-  TK_KW_WHILE, // while
-  TK_KW_FOR,   // for
-  TK_KW_IF,    // if
-  TK_KW_IN,    // in
-  TK_KW_ELSE,  // else
-  TK_KW_DO,    // do
-  TK_KW_AND,   // and
-  TK_KW_OR,    // or
-  TK_KW_NOT,   // not
-  TK_KW_SHL,   // shl
-  TK_KW_SHR,   // shr
+  KW_VAR,   // var
+  KW_MACRO, // macro
+  KW_FUNC,  // func
+  KW_TYPE,  // type
+  KW_WHILE, // while
+  KW_FOR,   // for
+  KW_IF,    // if
+  KW_IN,    // in
+  KW_ELSE,  // else
+  KW_DO,    // do
+  KW_AND,   // and
+  KW_OR,    // or
+  KW_NOT,   // not
+  KW_SHL,   // shl
+  KW_SHR,   // shr
 
-  TK_DOT,               // .
-  TK_COMMA,             // ,
-  TK_SEMICOLON,         // ;
-  TK_COLON,             // :
-  TK_DBCOLON,           // ::
-  TK_ARROW,             // ->
-  TK_QUESTION,          // ?
-  TK_PLUS,              // +
-  TK_MINUS,             // -
-  TK_ASTERISK,          // *
-  TK_FSLASH,            // /
-  TK_POW,               // **
-  TK_PERCENT,           // %
-  TK_AMPERSAND,         // &
-  TK_TILDE,             // ~
-  TK_CARET,             // ^
-  TK_PIPE,              // |
-  TK_BANG,              // !
-  TK_INC,               // ++
-  TK_DEC,               // --
-  TK_LESSTHAN,          // <
-  TK_GREATERTHAN,       // >
-  TK_CONCAT,            // ..
-  TK_LPAREN,            // (
-  TK_RPAREN,            // )
-  TK_LBRACKET,          // [
-  TK_RBRACKET,          // ]
-  TK_LCURLY,            // {
-  TK_RCURLY,            // }
-  TK_EQUALS,            // =
-  TK_DBEQUALS,          // ==
-  TK_PLUSEQUALS,        // +=
-  TK_MINUSEQUALS,       // -=
-  TK_ASTERISKEQUALS,    // *=
-  TK_FSLASHEQUALS,      // /=
-  TK_POWEQUALS,         // **=
-  TK_PERCENTEQUALS,     // %=
-  TK_AMPERSANDEQUALS,   // &=
-  TK_CARETEQUALS,       // ^=
-  TK_PIPEEQUALS,        // |=
-  TK_BANGEQUALS,        // !=
-  TK_LESSTHANEQUALS,    // <=
-  TK_GREATERTHANEQUALS, // >=
-  TK_CONCATEQUALS,      // ..=
+  DOT,               // .
+  COMMA,             // ,
+  SEMICOLON,         // ;
+  COLON,             // :
+  DBCOLON,           // ::
+  ARROW,             // ->
+  QUESTION,          // ?
+  PLUS,              // +
+  MINUS,             // -
+  ASTERISK,          // *
+  FSLASH,            // /
+  POW,               // **
+  PERCENT,           // %
+  AMPERSAND,         // &
+  TILDE,             // ~
+  CARET,             // ^
+  PIPE,              // |
+  BANG,              // !
+  INC,               // ++
+  DEC,               // --
+  LESSTHAN,          // <
+  GREATERTHAN,       // >
+  CONCAT,            // ..
+  LPAREN,            // (
+  RPAREN,            // )
+  LBRACKET,          // [
+  RBRACKET,          // ]
+  LCURLY,            // {
+  RCURLY,            // }
+  EQUALS,            // =
+  DBEQUALS,          // ==
+  PLUSEQUALS,        // +=
+  MINUSEQUALS,       // -=
+  ASTERISKEQUALS,    // *=
+  FSLASHEQUALS,      // /=
+  POWEQUALS,         // **=
+  PERCENTEQUALS,     // %=
+  AMPERSANDEQUALS,   // &=
+  CARETEQUALS,       // ^=
+  PIPEEQUALS,        // |=
+  BANGEQUALS,        // !=
+  LESSTHANEQUALS,    // <=
+  GREATERTHANEQUALS, // >=
+  CONCATEQUALS,      // ..=
 };
 
 struct Token {

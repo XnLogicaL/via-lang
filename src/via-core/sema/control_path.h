@@ -13,15 +13,15 @@ namespace core {
 
 namespace sema {
 
-enum ControlPathResult {
-  CPR_NONE,        // uninterrupted flow
-  CPR_RETURN,      // returns from function
-  CPR_BREAK,       // breaks a loop/switch
-  CPR_CONTINUE,    // continues a loop
-  CPR_UNREACHABLE, // statement is never reached
+enum class ControlPath {
+  None,        // uninterrupted flow
+  Return,      // returns from function
+  Break,       // breaks a loop/switch
+  Continue,    // continues a loop
+  Unreachable, // statement is never reached
 };
 
-ControlPathResult sema_cpath_analyze(const parser::ast::StmtNode* stmt);
+ControlPath sema_cpath_analyze(const parser::ast::StmtNode* stmt);
 
 } // namespace sema
 
