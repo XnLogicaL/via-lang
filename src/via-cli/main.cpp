@@ -1,9 +1,13 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include <via/core.h>
+// thirdparty
 #include <argparse/argparse.hpp>
 #include <spdlog/spdlog.h>
+
+// via
+#include <lexer/lexer.h>
+#include <parser/parser.h>
 
 using namespace via;
 using namespace argparse;
