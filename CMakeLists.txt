@@ -21,63 +21,75 @@ add_subdirectory(thirdparty/spdlog)
 add_subdirectory(thirdparty/magic_enum)
 
 # ----------------------------------------------------------------------------------------------------
-# LIBRARY CONFIG
+# CORE CONFIG
 # ----------------------------------------------------------------------------------------------------
 
 # Declare project
-project(libvia CXX)
+project(via-core CXX)
 
-# Fetch sources
-file(GLOB_RECURSE SOURCES src/*.cpp)
+# Fetch core sources
+file(GLOB_RECURSE SOURCES src/via-core/*.cpp)
 
 # Declare library
-add_library(libvia STATIC ${SOURCES})
+add_library(via-core STATIC ${SOURCES})
 
-# Add dependencies
-target_link_libraries(libvia PUBLIC mimalloc)
-target_link_libraries(libvia PUBLIC spdlog)
-target_link_libraries(libvia PUBLIC magic_enum)
+# Public interface: only headers from `include/`
+target_include_directories(via-core
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/via-core
+)
 
-# Include dirs
-target_include_directories(libvia PUBLIC include src)
+# Link dependencies
+target_link_libraries(via-core PUBLIC
+  mimalloc
+  spdlog
+  magic_enum
+)
 
 # Compiler options
-target_compile_options(libvia PUBLIC
+target_compile_options(via-core PUBLIC
   $<$<AND:$<CONFIG:Release>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-Ofast -march=native -flto>
   $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Ox>
    #$<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
 )
 
 # Linker options
-target_link_options(libvia PUBLIC
+target_link_options(via-core PUBLIC
   $<$<AND:$<CONFIG:Release>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-flto>
   # $<$<AND:$<CONFIG:Debug>,$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>>:-fsanitize=address,undefined>
 )
 
-message(STATUS "")
-message(STATUS "> Generating libvia")
-message(STATUS "> C++ compiler      : ${CMAKE_CXX_COMPILER}")
-message(STATUS "")
-
 # ----------------------------------------------------------------------------------------------------
-# STANDALONE CONFIG
+# CLI CONFIG
 # ----------------------------------------------------------------------------------------------------
 
 # Declare project
-project(via CXX)
+project(via-cli CXX)
 
 # Fetch sources
-file(GLOB_RECURSE CLI_SOURCES CLI/*.cpp)
+file(GLOB_RECURSE CLI_SOURCES src/via-cli/*.cpp)
 
-# Declare executable
-add_executable(via "CLI/main.cpp" ${CLI_SOURCES})
+# Executable sources
+add_executable(via-cli ${CLI_SOURCES})
 
-# Add dependencies
-target_link_libraries(via PUBLIC argparse)
-target_link_libraries(via PUBLIC spdlog)
-target_link_libraries(via PUBLIC magic_enum)
-target_link_libraries(via PUBLIC libvia)
+# Public interface for cli should be minimal
+target_include_directories(via-cli
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/via-core
+)
 
-# Include dirs
-target_include_directories(via PUBLIC include)
+# Link dependencies
+target_link_libraries(via-cli PUBLIC
+  argparse
+  spdlog
+  magic_enum
+  via-core
+)
 
+add_library(via::core ALIAS via-core)
+add_executable(via::cli ALIAS via-cli)
