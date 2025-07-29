@@ -11,6 +11,11 @@
 
 namespace via {
 
+namespace core {
+
+using lex::AbsLocation;
+using lex::Location;
+
 enum DiagnosisKind {
   DK_INFO,
   DK_WARN,
@@ -53,6 +58,8 @@ Vec<const Diagnosis*> diag_filter(const DiagContext& ctx, T callback) {
 
   return filtered;
 }
+
+} // namespace core
 
 } // namespace via
 

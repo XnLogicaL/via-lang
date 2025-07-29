@@ -60,18 +60,20 @@ static void process_file(const String& input_path, EmitKind emit_kind) {
     return;
   }
 
-  FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  DiagContext diag_ctx{input_path, file_buf};
+  core::FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
+  core::DiagContext diag_ctx{input_path, file_buf};
 
-  LexState lex_state(file_buf);
-  TokenBuf token_buf = lexer_tokenize(lex_state);
+  core::lex::LexState lex_state(file_buf);
+  core::TokenBuf token_buf = lexer_tokenize(lex_state);
 
-  ParseState parse_state(lex_state, token_buf, diag_ctx);
-  AstBuf ast_buf = parser_parse(parse_state);
+  core::parser::ParseState parse_state(lex_state, token_buf, diag_ctx);
+  core::AstBuf ast_buf = parser_parse(parse_state);
 
   // check for errors
-  Vec<const Diagnosis*> diags;
-  if ((diags = diag_filter(diag_ctx, [](const Diagnosis& diag) { return diag.kind == DK_ERROR; }),
+  Vec<const core::Diagnosis*> diags;
+  if ((diags = diag_filter(
+         diag_ctx, [](const core::Diagnosis& diag) { return diag.kind == core::DK_ERROR; }
+       ),
        diags.empty()))
     goto end;
 
@@ -84,10 +86,10 @@ end:
     list_emit_kinds();
     break;
   case EK_TTREE:
-    dump_ttree(token_buf);
+    core::lex::dump_ttree(token_buf);
     break;
   case EK_AST:
-    dump_ast(ast_buf);
+    core::parser::dump_ast(ast_buf);
     break;
   default:
     break;

@@ -5,6 +5,14 @@
 
 namespace via {
 
+namespace core {
+
+namespace parser {
+
+using lex::Token;
+using lex::TokenKind;
+using enum lex::TokenKind;
+
 struct ParserError {
 public:
   AbsLocation loc;
@@ -111,11 +119,11 @@ static Token* parser_expect(ParseState& P, const TokenKind kind, const String&& 
   return parser_advance(P);
 }
 
-static TupleBinding* parse_tuple_binding(ParseState& P) {
+static ast::TupleBinding* parse_tuple_binding(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto tpb = heap_emplace<TupleBinding>(P.al);
+  auto tpb = heap_emplace<ast::TupleBinding>(P.al);
 
   while (!parser_match(P, TK_RBRACKET)) {
     Token* id = parser_advance(P);
@@ -126,7 +134,7 @@ static TupleBinding* parse_tuple_binding(ParseState& P) {
         id_loc, "Unexpected token '{}' while parsing tuple binding", String(id->lexeme, id->size)
       );
 
-    auto sym = heap_emplace<NodeExprSym>(P.al);
+    auto sym = heap_emplace<ast::NodeExprSym>(P.al);
     sym->loc = id_loc;
     sym->tok = id;
 
@@ -140,22 +148,22 @@ static TupleBinding* parse_tuple_binding(ParseState& P) {
   return tpb;
 }
 
-static LValue* parse_lvalue(ParseState& P) {
-  auto lval = heap_emplace<LValue>(P.al);
+static ast::LValue* parse_lvalue(ParseState& P) {
+  auto lval = heap_emplace<ast::LValue>(P.al);
 
   if (parser_match(P, TK_IDENT)) {
     Token* id = parser_advance(P);
 
-    auto sym = heap_emplace<NodeExprSym>(P.al);
+    auto sym = heap_emplace<ast::NodeExprSym>(P.al);
     sym->loc = id->location(P.L.file);
     sym->tok = id;
 
-    lval->kind = LValue::Symbol;
+    lval->kind = ast::LValue::Symbol;
     lval->sym = sym;
   }
   else if (parser_match(P, TK_LBRACKET)) {
     auto tpb = parse_tuple_binding(P);
-    lval->kind = LValue::Tpb;
+    lval->kind = ast::LValue::Tpb;
     lval->tpb = tpb;
   }
   else {
@@ -170,9 +178,9 @@ static LValue* parse_lvalue(ParseState& P) {
   return lval;
 }
 
-ExprNode* parse_expr(ParseState& P, int min_prec = 0);
+ast::ExprNode* parse_expr(ParseState& P, int min_prec = 0);
 
-static ExprNode* parse_primary(ParseState& P) {
+static ast::ExprNode* parse_primary(ParseState& P) {
   Token* tok = parser_peek(P);
   AbsLocation loc = tok->location(P.L.file);
 
@@ -187,7 +195,7 @@ static ExprNode* parse_primary(ParseState& P) {
   case TK_STRING: {
     parser_advance(P);
 
-    auto* lit = heap_emplace<NodeExprLit>(P.al);
+    auto* lit = heap_emplace<ast::NodeExprLit>(P.al);
     lit->tok = tok;
     lit->loc = loc;
 
@@ -196,7 +204,7 @@ static ExprNode* parse_primary(ParseState& P) {
   case TK_IDENT: {
     parser_advance(P);
 
-    auto* sym = heap_emplace<NodeExprSym>(P.al);
+    auto* sym = heap_emplace<ast::NodeExprSym>(P.al);
     sym->tok = tok;
     sym->loc = loc;
 
@@ -206,10 +214,10 @@ static ExprNode* parse_primary(ParseState& P) {
     parser_advance(P);
 
     AbsLocation start = loc;
-    ExprNode* first = parse_expr(P);
+    ast::ExprNode* first = parse_expr(P);
 
     if (parser_match(P, TK_COMMA)) {
-      Vec<ExprNode*> vals;
+      Vec<ast::ExprNode*> vals;
       vals.push_back(first);
 
       while (parser_match(P, TK_COMMA)) {
@@ -219,7 +227,7 @@ static ExprNode* parse_primary(ParseState& P) {
 
       parser_expect(P, TK_RPAREN, "parsing tuple expression");
 
-      auto* tup = heap_emplace<NodeExprTuple>(P.al);
+      auto* tup = heap_emplace<ast::NodeExprTuple>(P.al);
       tup->vals = std::move(vals);
       tup->loc = {start.begin, parser_peek(P, -1)->location(P.L.file).end};
 
@@ -228,7 +236,7 @@ static ExprNode* parse_primary(ParseState& P) {
 
     parser_expect(P, TK_RPAREN, "parsing grouping expression");
 
-    auto* group = heap_emplace<NodeExprGroup>(P.al);
+    auto* group = heap_emplace<ast::NodeExprGroup>(P.al);
     group->expr = first;
     group->loc = {start.begin, parser_peek(P, -1)->location(P.L.file).end};
 
@@ -241,14 +249,14 @@ static ExprNode* parse_primary(ParseState& P) {
   }
 }
 
-static ExprNode* parse_unary_or_postfix(ParseState& P) {
-  ExprNode* expr;
+static ast::ExprNode* parse_unary_or_postfix(ParseState& P) {
+  ast::ExprNode* expr;
 
   switch (parser_peek(P)->kind) {
   case TK_KW_NOT:
   case TK_MINUS:
   case TK_TILDE: {
-    auto* un = heap_emplace<NodeExprUn>(P.al);
+    auto* un = heap_emplace<ast::NodeExprUn>(P.al);
     un->op = parser_advance(P);
     un->expr = parse_unary_or_postfix(P);
     un->loc = {un->op->location(P.L.file).begin, un->expr->loc.end};
@@ -267,7 +275,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
     case TK_LPAREN: {    // Function call
       parser_advance(P); // consume '('
 
-      Vec<ExprNode*> args;
+      Vec<ast::ExprNode*> args;
 
       if (!parser_match(P, TK_RPAREN)) {
         do
@@ -279,7 +287,7 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
       else
         parser_advance(P); // consume ')'
 
-      auto* call = heap_emplace<NodeExprCall>(P.al);
+      auto* call = heap_emplace<ast::NodeExprCall>(P.al);
       call->lval = expr;
       call->args = std::move(args);
       call->loc = {expr->loc.begin, parser_peek(P, -1)->location(P.L.file).end};
@@ -290,11 +298,11 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
     case TK_LBRACKET: {  // Subscript
       parser_advance(P); // consume '['
 
-      ExprNode* idx = parse_expr(P);
+      ast::ExprNode* idx = parse_expr(P);
 
       parser_expect(P, TK_RBRACKET, "parsing subscript expression");
 
-      auto* subs = heap_emplace<NodeExprSubs>(P.al);
+      auto* subs = heap_emplace<ast::NodeExprSubs>(P.al);
       subs->lval = expr;
       subs->idx = idx;
       subs->loc = {expr->loc.begin, parser_peek(P, -1)->location(P.L.file).end};
@@ -308,12 +316,12 @@ static ExprNode* parse_unary_or_postfix(ParseState& P) {
   }
 }
 
-ExprNode* parse_expr(ParseState& P, int min_prec) {
-  ExprNode* lhs = parse_unary_or_postfix(P);
+ast::ExprNode* parse_expr(ParseState& P, int min_prec) {
+  ast::ExprNode* lhs = parse_unary_or_postfix(P);
 
   int prec;
   while ((prec = bin_prec(parser_peek(P)->kind), prec >= min_prec)) {
-    auto bin = heap_emplace<NodeExprBin>(P.al);
+    auto bin = heap_emplace<ast::NodeExprBin>(P.al);
     bin->op = parser_advance(P);
     bin->lhs = lhs;
     bin->rhs = parse_expr(P, prec + 1);
@@ -324,13 +332,13 @@ ExprNode* parse_expr(ParseState& P, int min_prec) {
   return lhs;
 }
 
-StmtNode* parse_stmt(ParseState& P);
+ast::StmtNode* parse_stmt(ParseState& P);
 
-static NodeStmtScope* parse_scope(ParseState& P) {
+static ast::NodeStmtScope* parse_scope(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto scope = heap_emplace<NodeStmtScope>(P.al);
+  auto scope = heap_emplace<ast::NodeStmtScope>(P.al);
 
   if (tok->kind == TK_COLON) {
     scope->stmts.push_back(parse_stmt(P));
@@ -351,16 +359,16 @@ static NodeStmtScope* parse_scope(ParseState& P) {
   return scope;
 }
 
-static NodeStmtVar* parse_var(ParseState& P) {
+static ast::NodeStmtVar* parse_var(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto vars = heap_emplace<NodeStmtVar>(P.al);
+  auto vars = heap_emplace<ast::NodeStmtVar>(P.al);
   vars->lval = parse_lvalue(P);
 
   parser_expect(P, TK_EQUALS, "parsing variable declaration");
 
-  ExprNode* rval = parse_expr(P);
+  ast::ExprNode* rval = parse_expr(P);
   vars->rval = rval;
   vars->loc = {loc.begin, rval->loc.end};
 
@@ -368,11 +376,11 @@ static NodeStmtVar* parse_var(ParseState& P) {
   return vars;
 }
 
-static NodeStmtFor* parse_for(ParseState& P) {
+static ast::NodeStmtFor* parse_for(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto fors = heap_emplace<NodeStmtFor>(P.al);
+  auto fors = heap_emplace<ast::NodeStmtFor>(P.al);
   fors->init = parse_var(P);
 
   parser_expect(P, TK_COMMA, "parsing for statement");
@@ -388,11 +396,11 @@ static NodeStmtFor* parse_for(ParseState& P) {
   return fors;
 }
 
-static NodeStmtForEach* parse_foreach(ParseState& P) {
+static ast::NodeStmtForEach* parse_foreach(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto fors = heap_emplace<NodeStmtForEach>(P.al);
+  auto fors = heap_emplace<ast::NodeStmtForEach>(P.al);
   fors->lval = parse_lvalue(P);
 
   parser_expect(P, TK_KW_IN, "parsing for each statement");
@@ -404,8 +412,8 @@ static NodeStmtForEach* parse_foreach(ParseState& P) {
   return fors;
 }
 
-static NodeStmtIf* parse_if(ParseState& P) {
-  using Branch = NodeStmtIf::Branch;
+static ast::NodeStmtIf* parse_if(ParseState& P) {
+  using Branch = ast::NodeStmtIf::Branch;
 
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
@@ -414,7 +422,7 @@ static NodeStmtIf* parse_if(ParseState& P) {
   br.cnd = parse_expr(P);
   br.br = parse_scope(P);
 
-  auto ifs = heap_emplace<NodeStmtIf>(P.al);
+  auto ifs = heap_emplace<ast::NodeStmtIf>(P.al);
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
@@ -422,11 +430,11 @@ static NodeStmtIf* parse_if(ParseState& P) {
   return ifs;
 }
 
-static NodeStmtWhile* parse_while(ParseState& P) {
+static ast::NodeStmtWhile* parse_while(ParseState& P) {
   Token* tok = parser_advance(P);
   AbsLocation loc = tok->location(P.L.file);
 
-  auto whs = heap_emplace<NodeStmtWhile>(P.al);
+  auto whs = heap_emplace<ast::NodeStmtWhile>(P.al);
   whs->cnd = parse_expr(P);
   whs->br = parse_scope(P);
   whs->loc = {loc.begin, whs->br->loc.end};
@@ -434,7 +442,7 @@ static NodeStmtWhile* parse_while(ParseState& P) {
   return whs;
 }
 
-StmtNode* parse_stmt(ParseState& P) {
+ast::StmtNode* parse_stmt(ParseState& P) {
   if (parser_match(P, TK_KW_IF))
     return parse_if(P);
   else if (parser_match(P, TK_KW_WHILE))
@@ -455,7 +463,7 @@ StmtNode* parse_stmt(ParseState& P) {
   }
 
   if (parser_match(P, TK_SEMICOLON)) {
-    auto empty = heap_emplace<NodeStmtEmpty>(P.al);
+    auto empty = heap_emplace<ast::NodeStmtEmpty>(P.al);
     empty->loc = parser_advance(P)->location(P.L.file);
     return empty;
   }
@@ -468,7 +476,7 @@ StmtNode* parse_stmt(ParseState& P) {
       String(tok->lexeme, tok->size)
     );
 
-  auto es = heap_emplace<NodeStmtExpr>(P.al);
+  auto es = heap_emplace<ast::NodeStmtExpr>(P.al);
   es->expr = parse_expr(P);
   es->loc = es->expr->loc;
 
@@ -477,7 +485,7 @@ StmtNode* parse_stmt(ParseState& P) {
 }
 
 AstBuf parser_parse(ParseState& P) {
-  Vec<StmtNode*> nodes;
+  Vec<ast::StmtNode*> nodes;
 
   while (!parser_match(P, TK_EOF)) {
     try {
@@ -489,14 +497,18 @@ AstBuf parser_parse(ParseState& P) {
     }
   }
 
-  return AstBuf(nodes.data(), nodes.data() + (nodes.size() * sizeof(StmtNode*)));
+  return AstBuf(nodes.data(), nodes.data() + (nodes.size() * sizeof(ast::StmtNode*)));
 }
 
 void dump_ast(const AstBuf& B) {
   usize depth = 0;
 
-  for (StmtNode** stmt = B.data; stmt < B.data + B.size; stmt++)
+  for (ast::StmtNode** stmt = B.data; stmt < B.data + B.size; stmt++)
     dump_stmt(*stmt, depth);
 }
+
+} // namespace parser
+
+} // namespace core
 
 } // namespace via

@@ -5,6 +5,8 @@
 
 namespace via {
 
+namespace core {
+
 void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis) {
   ctx.diags.push_back(std::move(diagnosis));
 }
@@ -34,5 +36,7 @@ void diag_emit(const DiagContext& ctx) {
 void diag_clear(DiagContext& ctx) {
   ctx.diags.clear();
 }
+
+} // namespace core
 
 } // namespace via

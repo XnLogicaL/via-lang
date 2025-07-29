@@ -3,4 +3,12 @@
 
 #include "control_path.h"
 
-namespace via {}
+namespace via {
+
+namespace core {
+
+namespace sema {}
+
+} // namespace core
+
+} // namespace via

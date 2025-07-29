@@ -14,16 +14,20 @@
 
 namespace via {
 
-using AstBuf = Buffer<StmtNode*>;
+namespace core {
+
+using AstBuf = Buffer<parser::ast::StmtNode*>;
+
+namespace parser {
 
 struct ParseState {
-  const LexState& L;
+  const lex::LexState& L;
 
-  Token** cursor;
+  lex::Token** cursor;
   HeapAllocator al;
   DiagContext& dctx;
 
-  inline explicit ParseState(const LexState& L, const TokenBuf& B, DiagContext& dctx)
+  inline explicit ParseState(const lex::LexState& L, const TokenBuf& B, DiagContext& dctx)
     : L(L),
       cursor(B.data),
       dctx(dctx) {}
@@ -32,6 +36,10 @@ struct ParseState {
 AstBuf parser_parse(ParseState& P);
 
 void dump_ast(const AstBuf& B);
+
+} // namespace parser
+
+} // namespace core
 
 } // namespace via
 

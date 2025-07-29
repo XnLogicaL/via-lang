@@ -10,6 +10,17 @@
 
 namespace via {
 
+namespace core {
+
+namespace lex {
+struct Token;
+}
+
+using TokenBuf = Buffer<lex::Token*>;
+using FileBuf = Buffer<char>;
+
+namespace lex {
+
 struct LexState;
 
 enum TokenKind {
@@ -91,9 +102,6 @@ enum TokenKind {
 
 struct Token;
 
-using TokenBuf = Buffer<Token*>;
-using FileBuf = Buffer<char>;
-
 struct Location {
   usize line;
   usize offset;
@@ -121,6 +129,10 @@ struct Token {
   // Returns the absolute location of the token.
   AbsLocation location(const FileBuf& source) const;
 };
+
+} // namespace lex
+
+} // namespace core
 
 } // namespace via
 

@@ -5,6 +5,12 @@
 
 namespace via {
 
+namespace core {
+
+namespace parser {
+
+namespace ast {
+
 inline usize DEFAULT_DEPTH = 0;
 
 #define TAB                 String(depth * 4, ' ')
@@ -245,5 +251,11 @@ String NodeStmtExpr::get_dump(usize& depth) const {
 void dump_stmt(StmtNode* stmt, usize& depth) {
   std::cout << stmt->get_dump(depth) << "\n";
 }
+
+} // namespace ast
+
+} // namespace parser
+
+} // namespace core
 
 } // namespace via

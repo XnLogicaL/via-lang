@@ -9,6 +9,15 @@
 
 namespace via {
 
+namespace core {
+
+namespace parser {
+
+namespace ast {
+
+using lex::AbsLocation;
+using lex::Token;
+
 struct ExprNode {
   AbsLocation loc;
   virtual String get_dump(usize& depth) const = 0;
@@ -163,6 +172,12 @@ struct NodeStmtExpr : public StmtNode {
 void dump_stmt(StmtNode* stmt, usize& depth);
 
 #undef COMMON_HEADER
+
+} // namespace ast
+
+} // namespace parser
+
+} // namespace core
 
 } // namespace via
 

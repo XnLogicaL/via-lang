@@ -12,6 +12,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace lex {
+
 using FileBuf = Buffer<char>;
 
 struct LexState {
@@ -23,8 +27,11 @@ struct LexState {
 };
 
 TokenBuf lexer_tokenize(LexState& L);
-
 void dump_ttree(const TokenBuf& B);
+
+} // namespace lex
+
+} // namespace core
 
 } // namespace via
 

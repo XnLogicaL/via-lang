@@ -8,6 +8,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace vm {
+
 // oh boy
 enum Opcode : u16 {
   // meta opcodes
@@ -232,6 +236,10 @@ struct Instruction {
 };
 
 String instruction_format(Instruction insn);
+
+} // namespace vm
+
+} // namespace core
 
 } // namespace via
 

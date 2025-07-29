@@ -6,6 +6,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace lex {
+
 Location AbsLocation::to_relative(const FileBuf& source) const {
   usize line = 1;
   usize init = 0;
@@ -47,5 +51,9 @@ String Token::get_dump() const {
   oss << "']";
   return oss.str();
 }
+
+} // namespace lex
+
+} // namespace core
 
 } // namespace via

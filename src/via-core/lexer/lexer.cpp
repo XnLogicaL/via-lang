@@ -5,6 +5,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace lex {
+
 // max 3-char symbol lookahead
 struct TokenReprPair {
   const char* str;
@@ -337,5 +341,9 @@ void dump_ttree(const TokenBuf& B) {
   for (Token** p = B.data; p < B.data + B.size; p++)
     std::cout << (*p)->get_dump() << "\n";
 }
+
+} // namespace lex
+
+} // namespace core
 
 } // namespace via

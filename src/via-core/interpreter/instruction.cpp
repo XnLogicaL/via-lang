@@ -5,6 +5,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace vm {
+
 enum OperandKind : u8 {
   OK_NONE = 0x0,
   OK_GENERIC,
@@ -259,5 +263,9 @@ String instruction_format(Instruction insn) {
 
   return oss.str();
 }
+
+} // namespace vm
+
+} // namespace core
 
 } // namespace via

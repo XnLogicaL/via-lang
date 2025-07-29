@@ -5,10 +5,14 @@
 
 namespace via {
 
-int sema_alloc_register(SemaRegisterState& S) {
+namespace core {
+
+namespace sema {
+
+int sema_alloc_register(RegisterState& R) {
   for (u16 i = 0; i < UINT16_MAX; i++) {
     for (u16 j = 0; j < 64; j++) {
-      u64* addr = S.buf.data + i;
+      u64* addr = R.buf.data + i;
       u64 mask = (1ULL << j);
 
       if ((*addr & mask) == 0ULL) {
@@ -21,10 +25,14 @@ int sema_alloc_register(SemaRegisterState& S) {
   return -1;
 }
 
-void sema_free_register(SemaRegisterState& S, int reg) {
+void sema_free_register(RegisterState& R, int reg) {
   u16 wrd = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
-  S.buf.data[wrd] &= mask; // mark bit as free
+  R.buf.data[wrd] &= mask; // mark bit as free
 }
+
+} // namespace sema
+
+} // namespace core
 
 } // namespace via

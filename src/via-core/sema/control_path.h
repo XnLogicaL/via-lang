@@ -9,6 +9,10 @@
 
 namespace via {
 
+namespace core {
+
+namespace sema {
+
 enum ControlPathResult {
   CPR_NONE,        // uninterrupted flow
   CPR_RETURN,      // returns from function
@@ -17,7 +21,11 @@ enum ControlPathResult {
   CPR_UNREACHABLE, // statement is never reached
 };
 
-ControlPathResult sema_cpath_analyze(const StmtNode* stmt);
+ControlPathResult sema_cpath_analyze(const parser::ast::StmtNode* stmt);
+
+} // namespace sema
+
+} // namespace core
 
 } // namespace via
 

@@ -9,12 +9,20 @@
 
 namespace via {
 
-struct SemaRegisterState {
+namespace core {
+
+namespace sema {
+
+struct RegisterState {
   Buffer<u64> buf{UINT16_MAX / 8};
 };
 
-int sema_alloc_register(SemaRegisterState& S);
-void sema_free_register(SemaRegisterState& S, int reg);
+int sema_alloc_register(RegisterState& S);
+void sema_free_register(RegisterState& S, int reg);
+
+} // namespace sema
+
+} // namespace core
 
 } // namespace via
 
