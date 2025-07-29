@@ -1,8 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_CORE_H
-#define VIA_CORE_H
+#ifndef VIA_CORE_H_
+#define VIA_CORE_H_
 
 #include <lexer/token.h>
 #include <lexer/lexer.h>
