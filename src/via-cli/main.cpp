@@ -116,10 +116,10 @@ int main(int argc, char* argv[]) {
     emit = cli.get("--emit");
   }
   catch (const std::bad_any_cast&) {
-    emit = "";
+    CLI_ASSERT(false, "bad emission type")
   }
   catch (const std::exception& err) {
-    CLI_ASSERT(false, err.what());
+    CLI_ASSERT(false, err.what())
   }
 
   CLI_ASSERT(!path.empty(), "no input file");
