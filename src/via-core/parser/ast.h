@@ -4,8 +4,9 @@
 #ifndef VIA_CORE_AST_H_
 #define VIA_CORE_AST_H_
 
-#include "common.h"
-#include <lexer/token.h>
+#include <via/config.h>
+#include "lexer/location.h"
+#include "lexer/token.h"
 
 namespace via {
 

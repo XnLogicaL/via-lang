@@ -6,3 +6,5 @@
 	path = thirdparty/spdlog
 [submodule "thirdparty/magic_enum"]
 	path = thirdparty/magic_enum
+[submodule "thirdparty/fmt"]
+	path = thirdparty/fmt

@@ -4,7 +4,7 @@
 #ifndef VIA_CORE_INSTRUCTION_H_
 #define VIA_CORE_INSTRUCTION_H_
 
-#include "common.h"
+#include <via/config.h>
 
 namespace via {
 

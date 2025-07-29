@@ -1,10 +1,11 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_SHARED_BUFFER_H_
-#define VIA_SHARED_BUFFER_H_
+#ifndef VIA_BUFFER_H_
+#define VIA_BUFFER_H_
 
-#include "common.h"
+#include "via/config.h"
+#include <cstring>
 
 namespace via {
 

@@ -4,10 +4,10 @@
 #ifndef VIA_CORE_LEXER_H_
 #define VIA_CORE_LEXER_H_
 
-#include "common.h"
-#include "memory.h"
-#include "buffer.h"
-#include <lexer/token.h>
+#include <via/config.h>
+#include <via/util/memory.h>
+#include <via/util/buffer.h>
+#include "token.h"
 #include <mimalloc.h>
 
 namespace via {

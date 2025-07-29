@@ -2,7 +2,8 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "token.h"
-#include "lexer.h"
+#include <cstring>
+#include <iomanip>
 
 namespace via {
 

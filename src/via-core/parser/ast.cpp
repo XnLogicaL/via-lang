@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "ast.h"
+#include <iostream>
 
 namespace via {
 
@@ -249,7 +250,7 @@ String NodeStmtExpr::get_dump(usize& depth) const {
 }
 
 void dump_stmt(StmtNode* stmt, usize& depth) {
-  std::cout << stmt->get_dump(depth) << "\n";
+  std::println(std::cout, "{}", stmt->get_dump(depth));
 }
 
 } // namespace ast

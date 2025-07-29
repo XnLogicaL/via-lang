@@ -2,6 +2,9 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "lexer.h"
+#include <print>
+#include <cstring>
+#include <iostream>
 
 namespace via {
 
@@ -339,7 +342,7 @@ TokenBuf lexer_tokenize(LexState& L) {
 
 void dump_ttree(const TokenBuf& B) {
   for (Token** p = B.data; p < B.data + B.size; p++)
-    std::cout << (*p)->get_dump() << "\n";
+    std::println(std::cout, "{}", (*p)->get_dump());
 }
 
 } // namespace lex

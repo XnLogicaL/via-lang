@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_PARSER_H_
 #define VIA_CORE_PARSER_H_
 
-#include "common.h"
-#include "memory.h"
+#include <via/config.h>
+#include <via/util/memory.h>
 #include "common/diag.h"
 #include "ast.h"
 #include "lexer/token.h"

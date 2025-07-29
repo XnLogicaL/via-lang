@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_CONTROL_PATH_H_
 #define VIA_CORE_CONTROL_PATH_H_
 
-#include "common.h"
-#include <parser/ast.h>
+#include <via/config.h>
+#include "parser/ast.h"
 
 namespace via {
 

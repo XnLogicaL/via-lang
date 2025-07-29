@@ -4,9 +4,9 @@
 #ifndef VIA_CORE_DIAG_H_
 #define VIA_CORE_DIAG_H_
 
-#include "common.h"
-#include "color.h"
-#include "lexer/token.h"
+#include <via/config.h>
+#include <via/util/color.h>
+#include "lexer/location.h"
 #include <spdlog/spdlog.h>
 
 namespace via {

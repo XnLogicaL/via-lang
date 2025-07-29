@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_REGISTER_H_
 #define VIA_CORE_REGISTER_H_
 
-#include "common.h"
-#include "buffer.h"
+#include <via/config.h>
+#include <via/util/buffer.h>
 
 namespace via {
 

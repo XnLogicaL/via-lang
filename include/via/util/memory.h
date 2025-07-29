@@ -4,7 +4,7 @@
 #ifndef VIA_SHARED_MEMORY_H_
 #define VIA_SHARED_MEMORY_H_
 
-#include "common.h"
+#include "via/config.h"
 #include <mimalloc.h>
 
 namespace via {

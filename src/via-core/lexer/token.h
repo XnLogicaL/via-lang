@@ -4,8 +4,9 @@
 #ifndef VIA_CORE_TOKEN_H_
 #define VIA_CORE_TOKEN_H_
 
-#include "common.h"
-#include "buffer.h"
+#include <via/config.h>
+#include <via/util/buffer.h>
+#include "location.h"
 #include <magic_enum/magic_enum.hpp>
 
 namespace via {
@@ -17,7 +18,6 @@ struct Token;
 }
 
 using TokenBuf = Buffer<lex::Token*>;
-using FileBuf = Buffer<char>;
 
 namespace lex {
 
@@ -98,21 +98,6 @@ enum TokenKind {
   TK_LESSTHANEQUALS,    // <=
   TK_GREATERTHANEQUALS, // >=
   TK_CONCATEQUALS,      // ..=
-};
-
-struct Token;
-
-struct Location {
-  usize line;
-  usize offset;
-};
-
-struct AbsLocation {
-  usize begin;
-  usize end;
-
-  // Returns the absolute location as a relative location.
-  Location to_relative(const FileBuf& source) const;
 };
 
 struct Token {
