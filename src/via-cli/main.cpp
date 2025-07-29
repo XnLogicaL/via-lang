@@ -22,7 +22,7 @@ using core::Diagnostics;
 using core::FileBuf;
 using core::TokenBuf;
 using core::lex::Lexer;
-using core::parser::ParseState;
+using core::parser::Parser;
 
 enum class EmitType {
   none,
@@ -64,8 +64,8 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   Lexer lexer(file_buf);
   TokenBuf token_buf = lexer.tokenize();
 
-  ParseState parse_state(lex_state, token_buf, diag_ctx);
-  AstBuf ast_buf = parser_parse(parse_state);
+  Parser parser(file_buf, token_buf, diag_ctx);
+  AstBuf ast_buf = parser.parse();
 
   // check for errors
   Vec<Diagnosis> diags;

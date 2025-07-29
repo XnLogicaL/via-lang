@@ -20,20 +20,47 @@ using AstBuf = Buffer<parser::ast::StmtNode*>;
 
 namespace parser {
 
-struct ParseState {
-  const lex::LexState& L;
+class Parser final {
+public:
+  inline explicit Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
+    : source(source),
+      cursor(tokens.data),
+      diag(diag) {}
+
+  AstBuf parse();
+
+private:
+  bool match(lex::TokenKind kind, int ahead = 0);
+  bool optional(lex::TokenKind kind);
+  lex::Token* peek(int ahead = 0);
+  lex::Token* advance();
+  lex::Token* expect(lex::TokenKind kind, const char* task);
+
+  // Special
+  ast::TupleBinding* parse_tuple_binding();
+  ast::LValue* parse_lvalue();
+
+  // Expression
+  ast::ExprNode* parse_primary();
+  ast::ExprNode* parse_unary_or_postfix();
+  ast::ExprNode* parse_expr(int min_prec = 0);
+
+  // Statement
+  ast::NodeStmtScope* parse_scope();
+  ast::NodeStmtVar* parse_var();
+  ast::NodeStmtFor* parse_for();
+  ast::NodeStmtForEach* parse_foreach();
+  ast::NodeStmtIf* parse_if();
+  ast::NodeStmtWhile* parse_while();
+  ast::StmtNode* parse_stmt();
+
+private:
+  const FileBuf& source;
 
   lex::Token** cursor;
   HeapAllocator al;
-  Diagnostics& dctx;
-
-  inline explicit ParseState(const lex::LexState& L, const TokenBuf& B, Diagnostics& dctx)
-    : L(L),
-      cursor(B.data),
-      dctx(dctx) {}
+  Diagnostics& diag;
 };
-
-AstBuf parser_parse(ParseState& P);
 
 void dump_ast(const AstBuf& B);
 
