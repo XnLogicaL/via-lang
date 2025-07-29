@@ -108,36 +108,36 @@ static bool isidentifier(char c) {
   return isalnum(c) || c == '_';
 }
 
-static char lexer_advance(LexState& L) {
-  return *(L.file.cursor++);
+char Lexer::advance() {
+  return *(file.cursor++);
 }
 
-static char lexer_peek(const LexState& L, int count) {
-  return *(L.file.cursor + count);
+char Lexer::peek(int count) {
+  return *(file.cursor + count);
 }
 
-static Token* read_number(LexState& L) {
-  Token* token = heap_emplace<Token>(L.al);
+Token* Lexer::read_number() {
+  Token* token = heap_emplace<Token>(al);
   token->kind = TokenKind::INT;
-  token->lexeme = L.file.cursor;
+  token->lexeme = file.cursor;
   token->size = 0;
 
-  if (lexer_peek(L, 0) == '0') {
-    if (lexer_peek(L, 1) == 'x')
+  if (peek(0) == '0') {
+    if (peek(1) == 'x')
       token->kind = TokenKind::XINT;
-    else if (lexer_peek(L, 1) == 'b')
+    else if (peek(1) == 'b')
       token->kind = TokenKind::BINT;
     else
       goto decimal;
 
     token->size = 2;
-    lexer_advance(L); // 0
-    lexer_advance(L); // b/x
+    advance(); // 0
+    advance(); // b/x
   }
 
 decimal:
   char c;
-  while ((c = lexer_peek(L, 0)), isnumeric(&token->kind, c)) {
+  while ((c = peek(0)), isnumeric(&token->kind, c)) {
     if (c == '.') {
       if (token->kind == TokenKind::INT)
         token->kind = TokenKind::FP;
@@ -147,24 +147,24 @@ decimal:
       }
     }
 
-    lexer_advance(L);
+    advance();
     token->size++;
   }
 
   return token;
 }
 
-static Token* read_string(LexState& L) {
-  Token* token = heap_emplace<Token>(L.al);
+Token* Lexer::read_string() {
+  Token* token = heap_emplace<Token>(al);
   token->kind = TokenKind::STRING;
-  token->lexeme = L.file.cursor;
+  token->lexeme = file.cursor;
   token->size = 1; // for opening quote
 
-  char oq = lexer_advance(L); // opening quote
+  char oq = advance(); // opening quote
 
   char c;
   bool closed = false;
-  while ((c = lexer_advance(L)) != '\0') {
+  while ((c = advance()) != '\0') {
     token->size++;
     if (c == oq) {
       closed = true;
@@ -178,15 +178,15 @@ static Token* read_string(LexState& L) {
   return token;
 }
 
-static Token* read_identifier(LexState& L) {
-  Token* token = heap_emplace<Token>(L.al);
+Token* Lexer::read_identifier() {
+  Token* token = heap_emplace<Token>(al);
   token->kind = TokenKind::IDENT;
-  token->lexeme = L.file.cursor;
+  token->lexeme = file.cursor;
   token->size = 0;
 
   char c;
-  while ((c = lexer_peek(L, 0)), isidentifier(c)) {
-    lexer_advance(L);
+  while ((c = peek(0)), isidentifier(c)) {
+    advance();
     token->size++;
   }
 
@@ -210,15 +210,15 @@ static Token* read_identifier(LexState& L) {
   if (token->kind == TokenKind::IDENT && c == '!') {
     token->size++;
     token->kind = TokenKind::MIDENT;
-    lexer_advance(L);
+    advance();
   }
 
   return token;
 }
 
-static Token* read_symbol(LexState& L) {
-  Token* token = heap_emplace<Token>(L.al);
-  token->lexeme = L.file.cursor;
+Token* Lexer::read_symbol() {
+  Token* token = heap_emplace<Token>(al);
+  token->lexeme = file.cursor;
   token->kind = TokenKind::ILLEGAL;
   token->size = 1;
 
@@ -230,7 +230,7 @@ static Token* read_symbol(LexState& L) {
 
   for (int len = max_len; len >= 1; --len) {
     for (int i = 0; i < len; ++i)
-      buf[i] = L.file.cursor[i];
+      buf[i] = file.cursor[i];
 
     buf[len] = '\0';
 
@@ -249,29 +249,29 @@ found:
     token->size = matched_size;
 
     for (int i = 0; i < matched_size; ++i)
-      lexer_advance(L);
+      advance();
   }
   else
-    lexer_advance(L); // advance one char if no match
+    advance(); // advance one char if no match
 
   return token;
 }
 
-static bool skip_comment(LexState& L) {
-  if (lexer_peek(L, 0) != '/')
+bool Lexer::skip_comment() {
+  if (peek(0) != '/')
     return false;
 
-  char next = lexer_peek(L, 1);
+  char next = peek(1);
 
   if (next == '/') {
     // Line comment: skip until newline or EOF
-    lexer_advance(L); // consume first '/'
-    lexer_advance(L); // consume second '/'
+    advance(); // consume first '/'
+    advance(); // consume second '/'
 
-    while (char c = lexer_peek(L, 0)) {
+    while (char c = peek(0)) {
       if (c == '\n' || c == '\0')
         break;
-      lexer_advance(L);
+      advance();
     }
 
     return true;
@@ -279,21 +279,21 @@ static bool skip_comment(LexState& L) {
 
   if (next == '*') {
     // Block comment: skip until closing */
-    lexer_advance(L); // consume '/'
-    lexer_advance(L); // consume '*'
+    advance(); // consume '/'
+    advance(); // consume '*'
 
     while (true) {
-      char c = lexer_peek(L, 0);
+      char c = peek(0);
       if (c == '\0')
         break; // EOF without closing */
 
-      if (c == '*' && lexer_peek(L, 1) == '/') {
-        lexer_advance(L); // consume '*'
-        lexer_advance(L); // consume '/'
+      if (c == '*' && peek(1) == '/') {
+        advance(); // consume '*'
+        advance(); // consume '/'
         break;
       }
 
-      lexer_advance(L);
+      advance();
     }
 
     return true;
@@ -302,36 +302,36 @@ static bool skip_comment(LexState& L) {
   return false;
 }
 
-TokenBuf lexer_tokenize(LexState& L) {
+TokenBuf Lexer::tokenize() {
   Vec<Token*> toks;
 
   char c;
-  while ((c = lexer_peek(L, 0)), c != '\0') {
+  while ((c = peek(0)), c != '\0') {
     if (isspace(c)) {
-      lexer_advance(L);
+      advance();
       continue;
     }
 
-    if (skip_comment(L))
+    if (skip_comment())
       continue;
 
     Token* token;
 
     if (isdigit(c))
-      token = read_number(L);
+      token = read_number();
     else if (isidentifierinitial(c))
-      token = read_identifier(L);
+      token = read_identifier();
     else if (c == '"' || c == '\'')
-      token = read_string(L);
+      token = read_string();
     else
-      token = read_symbol(L);
+      token = read_symbol();
 
     toks.push_back(token);
   }
 
-  Token* eof = heap_emplace<Token>(L.al);
+  Token* eof = heap_emplace<Token>(al);
   eof->kind = TokenKind::EOF_;
-  eof->lexeme = L.file.cursor;
+  eof->lexeme = file.cursor;
   eof->size = 0;
 
   toks.push_back(eof);

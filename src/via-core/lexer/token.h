@@ -21,8 +21,6 @@ using TokenBuf = Buffer<lex::Token*>;
 
 namespace lex {
 
-struct LexState;
-
 enum class TokenKind {
   EOF_ = 0, // end of file
   ILLEGAL,  // unrecognized lexeme

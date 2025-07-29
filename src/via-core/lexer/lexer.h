@@ -18,15 +18,29 @@ namespace lex {
 
 using FileBuf = Buffer<char>;
 
-struct LexState {
+class Lexer final {
+public:
+  inline explicit Lexer(const FileBuf& file)
+    : file(file) {}
+
+  TokenBuf tokenize();
+
+private:
+  char advance();
+  char peek(int ahead);
+
+  Token* read_number();
+  Token* read_string();
+  Token* read_symbol();
+  Token* read_identifier();
+
+  bool skip_comment();
+
+private:
   const FileBuf& file;
   HeapAllocator al;
-
-  inline LexState(const FileBuf& file)
-    : file(file) {}
 };
 
-TokenBuf lexer_tokenize(LexState& L);
 void dump_ttree(const TokenBuf& B);
 
 } // namespace lex

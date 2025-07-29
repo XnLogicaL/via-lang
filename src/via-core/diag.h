@@ -29,7 +29,7 @@ struct Diagnosis {
   String msg;
 };
 
-class Diagnostics {
+class Diagnostics final {
 public:
   inline explicit Diagnostics(const String& path, const FileBuf& file)
     : path(path),
