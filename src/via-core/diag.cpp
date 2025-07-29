@@ -7,10 +7,6 @@ namespace via {
 
 namespace core {
 
-void DiagnosticManager::diagnose_raw(Diagnosis&& diagnosis) {
-  diags.push_back(std::move(diagnosis));
-}
-
 void DiagnosticManager::clear() {
   diags.clear();
 }

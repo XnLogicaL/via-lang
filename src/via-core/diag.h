@@ -40,7 +40,7 @@ public:
 
   template<const Diag Kind>
   void diagnose(AbsLocation loc, String msg) {
-    diagnose_raw({Kind, loc, msg});
+    diags.push_back({Kind, loc, msg});
   }
 
   template<const Diag Kind, typename... Args>
@@ -58,9 +58,6 @@ public:
 
     return filtered;
   }
-
-private:
-  void diagnose_raw(Diagnosis&& diagnosis);
 
 private:
   const String& path;
