@@ -493,7 +493,7 @@ AstBuf parser_parse(ParseState& P) {
       nodes.push_back(parse_stmt(P));
     }
     catch (const ParserError& e) {
-      diag<Diag::Error>(P.dctx, e.loc, e.msg);
+      P.dctx.diagnose<Diag::Error>(e.loc, e.msg);
       break;
     }
   }

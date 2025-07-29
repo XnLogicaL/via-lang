@@ -29,36 +29,44 @@ struct Diagnosis {
   String msg;
 };
 
-struct DiagContext {
+class DiagnosticManager {
+public:
+  inline explicit DiagnosticManager(const String& path, const FileBuf& file)
+    : path(path),
+      file(file) {}
+
+  void emit();
+  void clear();
+
+  template<const Diag Kind>
+  void diagnose(AbsLocation loc, String msg) {
+    diagnose_raw({Kind, loc, msg});
+  }
+
+  template<const Diag Kind, typename... Args>
+  void diagnosef(AbsLocation loc, Fmt<Args...> fmt, Args... args) {
+    diagnose_raw({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
+  }
+
+  template<typename T = std::function<bool(const Diagnosis&)>>
+  Vec<Diagnosis> collect(T callback) {
+    Vec<Diagnosis> filtered;
+
+    for (Diagnosis diag : diags)
+      if (callback(diag))
+        filtered.push_back(diag);
+
+    return filtered;
+  }
+
+private:
+  void diagnose_raw(Diagnosis&& diagnosis);
+
+private:
   const String& path;
   const FileBuf& file;
   Vec<Diagnosis> diags;
 };
-
-void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis);
-void diag_emit(const DiagContext& ctx);
-void diag_clear(DiagContext& ctx);
-
-template<const Diag Kind>
-void diag(DiagContext& ctx, AbsLocation loc, String msg) {
-  diag_raw(ctx, {Kind, loc, msg});
-}
-
-template<const Diag Kind, typename... Args>
-void diagf(DiagContext& ctx, AbsLocation loc, Fmt<Args...> fmt, Args... args) {
-  diag_raw(ctx, {Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
-}
-
-template<typename T = std::function<bool(const Diagnosis&)>>
-Vec<const Diagnosis*> diag_filter(const DiagContext& ctx, T callback) {
-  Vec<const Diagnosis*> filtered;
-
-  for (const Diagnosis& diag : ctx.diags)
-    if (callback(diag))
-      filtered.push_back(&diag);
-
-  return filtered;
-}
 
 } // namespace core
 

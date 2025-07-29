@@ -7,14 +7,18 @@ namespace via {
 
 namespace core {
 
-void diag_raw(DiagContext& ctx, Diagnosis&& diagnosis) {
-  ctx.diags.push_back(std::move(diagnosis));
+void DiagnosticManager::diagnose_raw(Diagnosis&& diagnosis) {
+  diags.push_back(std::move(diagnosis));
 }
 
-void diag_emit(const DiagContext& ctx) {
-  for (const Diagnosis& diag : ctx.diags) {
-    Location loc = diag.loc.to_relative(ctx.file);
-    String addr = fmt::format("{}:{}:{}", ctx.path, loc.line, loc.offset);
+void DiagnosticManager::clear() {
+  diags.clear();
+}
+
+void DiagnosticManager::emit() {
+  for (const Diagnosis& diag : diags) {
+    Location loc = diag.loc.to_relative(file);
+    String addr = fmt::format("{}:{}:{}", path, loc.line, loc.offset);
     String msg =
       fmt::format("{} {}", diag.msg, apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
 
@@ -32,10 +36,6 @@ void diag_emit(const DiagContext& ctx) {
       break;
     }
   }
-}
-
-void diag_clear(DiagContext& ctx) {
-  ctx.diags.clear();
 }
 
 } // namespace core

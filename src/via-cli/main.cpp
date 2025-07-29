@@ -16,7 +16,9 @@ using namespace via;
 using namespace argparse;
 
 using core::AstBuf;
-using core::DiagContext;
+using core::Diag;
+using core::Diagnosis;
+using core::DiagnosticManager;
 using core::FileBuf;
 using core::TokenBuf;
 using core::lex::LexState;
@@ -57,7 +59,7 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   }
 
   FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  DiagContext diag_ctx{input_path, file_buf};
+  DiagnosticManager diag_ctx{input_path, file_buf};
 
   LexState lex_state(file_buf);
   TokenBuf token_buf = lexer_tokenize(lex_state);
@@ -66,14 +68,13 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   AstBuf ast_buf = parser_parse(parse_state);
 
   // check for errors
-  Vec<const core::Diagnosis*> diags;
-  if ((diags =
-         diag_filter(diag_ctx, [](const auto& diag) { return diag.kind == core::Diag::Error; }),
+  Vec<Diagnosis> diags;
+  if ((diags = diag_ctx.collect([](const auto& diag) { return diag.kind == Diag::Error; }),
        diags.empty()))
     return;
 
-  diag_emit(diag_ctx);
-  diag_clear(diag_ctx);
+  diag_ctx.emit();
+  diag_ctx.clear();
 
   switch (emit_kind) {
   case EmitType::ttree:
