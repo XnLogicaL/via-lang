@@ -150,12 +150,12 @@ static LValue* parse_lvalue(ParseState& P) {
     sym->loc = id->location(P.L.file);
     sym->tok = id;
 
-    lval->kind = LValue::LVK_SYM;
+    lval->kind = LValue::Symbol;
     lval->sym = sym;
   }
   else if (parser_match(P, TK_LBRACKET)) {
     auto tpb = parse_tuple_binding(P);
-    lval->kind = LValue::LVK_TPB;
+    lval->kind = LValue::Tpb;
     lval->tpb = tpb;
   }
   else {

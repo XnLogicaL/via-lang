@@ -5,170 +5,245 @@
 
 namespace via {
 
-namespace detail {
-
 inline usize DEFAULT_DEPTH = 0;
 
 #define TAB                 String(depth * 4, ' ')
 #define FORMAT(...)         TAB + std::format(__VA_ARGS__)
 #define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
+template<typename T, typename F = Function<String(const T& __t)>>
+static String __vec_to_string(const Vec<T>& __v, F __f) {
+  std::ostringstream oss;
+  oss << "{";
+
+  for (const T& __t : __v)
+    oss << __f(__t) << ", ";
+
+  oss << "}";
+  return oss.str();
+}
+
 static String tpb_to_string(const TupleBinding* tpb) {
   usize depth = 0;
   return FORMAT("TupleBinding[{}]", __vec_to_string(tpb->binds, [](const auto& e) {
-                  return __ast_to_string_expr(e, DEFAULT_DEPTH);
+                  return e->get_dump(DEFAULT_DEPTH);
                 }));
 }
 
 static String lvalue_to_string(const LValue* lval) {
-  if (lval->kind == LValue::LVK_SYM)
-    return __ast_to_string_expr(lval->sym, DEFAULT_DEPTH);
-  else if (lval->kind == LValue::LVK_TPB)
+  if (lval->kind == LValue::Symbol)
+    return lval->sym->get_dump(DEFAULT_DEPTH);
+  else if (lval->kind == LValue::Tpb)
     return tpb_to_string(lval->tpb);
 
   std::unreachable();
 }
 
-String __ast_to_string_expr(const ExprNode* e, usize& depth) {
-  if TRY_COERCE (NodeExprLit, lit, e)
-    return FORMAT(
-      "NodeExprLit({}, {})",
-      magic_enum::enum_name(lit->tok->kind),
-      String(lit->tok->lexeme, lit->tok->size)
-    );
-  else if TRY_COERCE (NodeExprSym, sym, e)
-    return FORMAT("NodeExprSym({})", String(sym->tok->lexeme, sym->tok->size));
-  else if TRY_COERCE (NodeExprUn, un, e)
-    return FORMAT(
-      "NodeExprUn({}, {})",
-      String(un->op->lexeme, un->op->size),
-      __ast_to_string_expr(un->expr, DEFAULT_DEPTH)
-    );
-  else if TRY_COERCE (NodeExprBin, bin, e)
-    return FORMAT(
-      "NodeExprBin({}, {}, {})",
-      String(bin->op->lexeme, bin->op->size),
-      __ast_to_string_expr(bin->lhs, DEFAULT_DEPTH),
-      __ast_to_string_expr(bin->rhs, DEFAULT_DEPTH)
-    );
-  else if TRY_COERCE (NodeExprGroup, grp, e)
-    return FORMAT("NodeExprGroup({})", __ast_to_string_expr(grp->expr, DEFAULT_DEPTH));
-  else if TRY_COERCE (NodeExprCall, call, e)
-    return FORMAT(
-      "NodeExprCall({}, {})",
-      __ast_to_string_expr(call->lval, DEFAULT_DEPTH),
-      __vec_to_string<ExprNode*>(
-        call->args, [](ExprNode* const& val) { return __ast_to_string_expr(val, DEFAULT_DEPTH); }
-      )
-    );
-  else if TRY_COERCE (NodeExprTuple, tup, e)
-    return FORMAT("NodeExprTuple({})", __vec_to_string(tup->vals, [](const auto& expr) {
-                    return __ast_to_string_expr(expr, DEFAULT_DEPTH);
-                  }));
+// --------------------------------------------------
+// NodeExprLit
+// --------------------------------------------------
 
-  return FORMAT("<unknown-expr>");
+String NodeExprLit::get_dump(usize& depth) const {
+  return FORMAT("NodeExprLit({}, {})", magic_enum::enum_name(tok->kind), tok->to_string());
 }
 
-String __ast_to_string_stmt(StmtNode* s, usize& depth) {
-  if TRY_COERCE (NodeStmtScope, scope, s) {
-    std::ostringstream oss;
-    oss << FORMAT("NodeStmtScope()\n");
-    depth++;
+// --------------------------------------------------
+// NodeExprSym
+// --------------------------------------------------
 
-    for (const auto& stmt : scope->stmts)
-      oss << __ast_to_string_stmt(stmt, depth) << "\n";
-
-    depth--;
-    oss << FORMAT("End()");
-    return oss.str();
-  }
-  else if TRY_COERCE (NodeStmtVar, var, s) {
-    String rvalue = __ast_to_string_expr(var->rval, DEFAULT_DEPTH);
-    String lvalue = var->lval->kind == LValue::LVK_SYM
-      ? __ast_to_string_expr(var->lval->sym, DEFAULT_DEPTH)
-      : tpb_to_string(var->lval->tpb);
-
-    return FORMAT("NodeStmtVar({}, {})", lvalue, rvalue);
-  }
-  else if TRY_COERCE (NodeStmtIf, ifs, s) {
-    std::ostringstream oss;
-    oss << "NodeStmtIf()\n";
-    depth++;
-
-    for (const auto& br : ifs->brs) {
-      oss << FORMAT("Branch({})\n", __ast_to_string_expr(br.cnd, DEFAULT_DEPTH));
-      depth++;
-
-      for (StmtNode* const& stmt : br.br->stmts)
-        oss << __ast_to_string_stmt(stmt, depth) << "\n";
-
-      depth--;
-      oss << FORMAT("End()\n");
-    }
-
-    depth--;
-    oss << FORMAT("End()");
-    return oss.str();
-  }
-  else if TRY_COERCE (NodeStmtFor, fors, s) {
-    std::ostringstream oss;
-    oss << FORMAT(
-      "NodeStmtFor({}, {}, {})\n",
-      __ast_to_string_stmt(fors->init, DEFAULT_DEPTH),
-      __ast_to_string_expr(fors->target, DEFAULT_DEPTH),
-      __ast_to_string_expr(fors->step, DEFAULT_DEPTH)
-    );
-    depth++;
-
-    for (const auto& stmt : fors->br->stmts)
-      oss << __ast_to_string_stmt(stmt, depth) << "\n";
-
-    depth--;
-    oss << FORMAT("End()");
-    return oss.str();
-  }
-  else if TRY_COERCE (NodeStmtForEach, fors, s) {
-    std::ostringstream oss;
-    oss << FORMAT(
-      "NodeStmtForEach({}, {})\n",
-      lvalue_to_string(fors->lval),
-      __ast_to_string_expr(fors->iter, DEFAULT_DEPTH)
-    );
-    depth++;
-
-    for (const auto& stmt : fors->br->stmts)
-      oss << __ast_to_string_stmt(stmt, depth) << "\n";
-
-    depth--;
-    oss << FORMAT("End()");
-    return oss.str();
-  }
-  else if TRY_COERCE (NodeStmtWhile, whs, s) {
-    std::ostringstream oss;
-    oss << FORMAT("NodeStmtWhile({})\n", __ast_to_string_expr(whs->cnd, DEFAULT_DEPTH));
-    depth++;
-
-    for (StmtNode* const& stmt : whs->br->stmts)
-      oss << __ast_to_string_stmt(stmt, depth) << "\n";
-
-    depth--;
-    oss << FORMAT("End()");
-    return oss.str();
-  }
-  else if TRY_COERCE (NodeStmtEmpty, _, s)
-    return FORMAT("NodeStmtEmpty()");
-
-  return FORMAT("<unknown-stmt>");
+String NodeExprSym::get_dump(usize& depth) const {
+  return FORMAT("NodeExprSym({})", tok->to_string());
 }
 
-String __ast_to_string_type(TypeNode* t, usize& depth) {
-  return FORMAT("<unknown-type>");
+// --------------------------------------------------
+// NodeExprUn
+// --------------------------------------------------
+
+String NodeExprUn::get_dump(usize& depth) const {
+  return FORMAT("NodeExprUn({}, {})", op->to_string(), expr->get_dump(DEFAULT_DEPTH));
 }
 
-} // namespace detail
+// --------------------------------------------------
+// NodeExprBin
+// --------------------------------------------------
+
+String NodeExprBin::get_dump(usize& depth) const {
+  return FORMAT(
+    "NodeExprBin({}, {}, {})",
+    op->to_string(),
+    lhs->get_dump(DEFAULT_DEPTH),
+    rhs->get_dump(DEFAULT_DEPTH)
+  );
+}
+
+// --------------------------------------------------
+// NodeExprGroup
+// --------------------------------------------------
+
+String NodeExprGroup::get_dump(usize& depth) const {
+  return FORMAT("NodeExprGroup({})", expr->get_dump(DEFAULT_DEPTH));
+}
+
+// --------------------------------------------------
+// NodeExprCall
+// --------------------------------------------------
+
+String NodeExprCall::get_dump(usize& depth) const {
+  return FORMAT(
+    "NodeExprCall({}, {})",
+    lval->get_dump(DEFAULT_DEPTH),
+    __vec_to_string<ExprNode*>(
+      args, [](ExprNode* const& val) { return val->get_dump(DEFAULT_DEPTH); }
+    )
+  );
+}
+
+// --------------------------------------------------
+// NodeExprSubs
+// --------------------------------------------------
+
+String NodeExprSubs::get_dump(usize& depth) const {
+  return FORMAT("NodeExprSubs({}, {})", lval->get_dump(depth), idx->get_dump(depth));
+}
+
+// --------------------------------------------------
+// NodeExprTuple
+// --------------------------------------------------
+
+String NodeExprTuple::get_dump(usize& depth) const {
+  return FORMAT("NodeExprTuple({})", __vec_to_string(vals, [](const auto& expr) {
+                  return expr->get_dump(DEFAULT_DEPTH);
+                }));
+}
+
+// --------------------------------------------------
+// NodeStmtScope
+// --------------------------------------------------
+
+String NodeStmtScope::get_dump(usize& depth) const {
+  std::ostringstream oss;
+  oss << FORMAT("NodeStmtScope()\n");
+  depth++;
+
+  for (const auto& stmt : stmts)
+    oss << stmt->get_dump(depth) << "\n";
+
+  depth--;
+  oss << FORMAT("End()");
+  return oss.str();
+}
+
+// --------------------------------------------------
+// NodeStmtVar
+// --------------------------------------------------
+
+String NodeStmtVar::get_dump(usize& depth) const {
+  String rvalue = rval->get_dump(DEFAULT_DEPTH);
+  String lvalue =
+    lval->kind == LValue::Symbol ? lval->sym->get_dump(DEFAULT_DEPTH) : tpb_to_string(lval->tpb);
+
+  return FORMAT("NodeStmtVar({}, {})", lvalue, rvalue);
+}
+
+// --------------------------------------------------
+// NodeStmtIf
+// --------------------------------------------------
+
+String NodeStmtIf::get_dump(usize& depth) const {
+  std::ostringstream oss;
+  oss << "NodeStmtIf()\n";
+  depth++;
+
+  for (const auto& br : brs) {
+    oss << FORMAT("Branch({})\n", br.cnd->get_dump(DEFAULT_DEPTH));
+    depth++;
+
+    for (StmtNode* const& stmt : br.br->stmts)
+      oss << stmt->get_dump(depth) << "\n";
+
+    depth--;
+    oss << FORMAT("End()\n");
+  }
+
+  depth--;
+  oss << FORMAT("End()");
+  return oss.str();
+}
+
+// --------------------------------------------------
+// NodeStmtFor
+// --------------------------------------------------
+
+String NodeStmtFor::get_dump(usize& depth) const {
+  std::ostringstream oss;
+  oss << FORMAT(
+    "NodeStmtFor({}, {}, {})\n",
+    init->get_dump(DEFAULT_DEPTH),
+    target->get_dump(DEFAULT_DEPTH),
+    step->get_dump(DEFAULT_DEPTH)
+  );
+  depth++;
+
+  for (const auto& stmt : br->stmts)
+    oss << stmt->get_dump(depth) << "\n";
+
+  depth--;
+  oss << FORMAT("End()");
+  return oss.str();
+}
+
+// --------------------------------------------------
+// NodeStmtForEach
+// --------------------------------------------------
+
+String NodeStmtForEach::get_dump(usize& depth) const {
+  std::ostringstream oss;
+  oss << FORMAT("NodeStmtForEach({}, {})\n", lvalue_to_string(lval), iter->get_dump(DEFAULT_DEPTH));
+  depth++;
+
+  for (const auto& stmt : br->stmts)
+    oss << stmt->get_dump(depth) << "\n";
+
+  depth--;
+  oss << FORMAT("End()");
+  return oss.str();
+}
+
+// --------------------------------------------------
+// NodeStmtWhile
+// --------------------------------------------------
+
+String NodeStmtWhile::get_dump(usize& depth) const {
+  std::ostringstream oss;
+  oss << FORMAT("NodeStmtWhile({})\n", cnd->get_dump(DEFAULT_DEPTH));
+  depth++;
+
+  for (StmtNode* const& stmt : br->stmts)
+    oss << stmt->get_dump(depth) << "\n";
+
+  depth--;
+  oss << FORMAT("End()");
+  return oss.str();
+}
+
+// --------------------------------------------------
+// NodeStmtEmpty
+// --------------------------------------------------
+
+String NodeStmtEmpty::get_dump(usize& depth) const {
+  return FORMAT("NodeStmtEmpty()");
+}
+
+// --------------------------------------------------
+// NodeStmtExpr
+// --------------------------------------------------
+
+String NodeStmtExpr::get_dump(usize& depth) const {
+  return FORMAT("NodeStmtExpr({})", expr->get_dump(depth));
+}
 
 void dump_stmt(StmtNode* stmt, usize& depth) {
-  std::cout << detail::__ast_to_string_stmt(stmt, depth) << "\n";
+  std::cout << stmt->get_dump(depth) << "\n";
 }
 
 } // namespace via

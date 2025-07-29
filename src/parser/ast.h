@@ -11,17 +11,17 @@ namespace via {
 
 struct ExprNode {
   AbsLocation loc;
-  virtual ~ExprNode() = default;
+  virtual String get_dump(usize& depth) const = 0;
 };
 
 struct StmtNode {
   AbsLocation loc;
-  virtual ~StmtNode() = default;
+  virtual String get_dump(usize& depth) const = 0;
 };
 
 struct TypeNode {
   AbsLocation loc;
-  virtual ~TypeNode() = default;
+  virtual String get_dump(usize& depth) const = 0;
 };
 
 struct NodeExprSym;
@@ -33,8 +33,8 @@ struct TupleBinding {
 
 struct LValue {
   enum {
-    LVK_SYM,
-    LVK_TPB,
+    Symbol,
+    Tpb,
   } kind;
 
   union {
@@ -49,66 +49,69 @@ struct Parameter {
   AbsLocation loc;
 };
 
+#define COMMON_HEADER(klass)                                                                       \
+  using klass::loc;                                                                                \
+  String get_dump(usize& depth) const override;
+
 struct NodeExprLit : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Token* tok;
 };
 
 struct NodeExprSym : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Token* tok;
 };
 
 struct NodeExprUn : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Token* op;
   ExprNode* expr;
 };
 
 struct NodeExprBin : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Token* op;
   ExprNode *lhs, *rhs;
 };
 
 struct NodeExprGroup : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   ExprNode* expr;
 };
 
 struct NodeExprCall : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   ExprNode* lval;
   Vec<ExprNode*> args;
 };
 
 struct NodeExprSubs : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   ExprNode *lval, *idx;
 };
 
 struct NodeExprTuple : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Vec<ExprNode*> vals;
 };
 
 struct NodeStmtScope;
 
 struct NodeExprLambda : public ExprNode {
-  using ExprNode::loc;
+  COMMON_HEADER(ExprNode)
   Vec<Parameter> pms;
   NodeStmtScope* scope;
 };
 
 struct NodeStmtVar : public StmtNode {
-  using StmtNode::loc;
-
+  COMMON_HEADER(StmtNode)
   LValue* lval;
   ExprNode* rval;
 };
 
 struct NodeStmtScope : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   Vec<StmtNode*> stmts;
 };
 
@@ -118,12 +121,12 @@ struct NodeStmtIf : public StmtNode {
     NodeStmtScope* br;
   };
 
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   Vec<Branch> brs;
 };
 
 struct NodeStmtFor : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   NodeStmtVar* init;
   ExprNode* target;
   ExprNode* step;
@@ -131,55 +134,35 @@ struct NodeStmtFor : public StmtNode {
 };
 
 struct NodeStmtForEach : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   LValue* lval;
   ExprNode* iter;
   NodeStmtScope* br;
 };
 
 struct NodeStmtWhile : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   ExprNode* cnd;
   NodeStmtScope* br;
 };
 
 struct NodeStmtAssign : public StmtNode {
-  using StmtNode::loc;
-  ExprNode* lval;
-  ExprNode* rval;
+  COMMON_HEADER(StmtNode)
+  ExprNode *lval, *rval;
 };
 
 struct NodeStmtEmpty : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
 };
 
 struct NodeStmtExpr : public StmtNode {
-  using StmtNode::loc;
+  COMMON_HEADER(StmtNode)
   ExprNode* expr;
 };
 
-namespace detail {
-
-// Shitty location, but works for now
-template<typename T, typename F = Function<String(const T& __t)>>
-inline String __vec_to_string(const Vec<T>& __v, F __f) {
-  std::ostringstream oss;
-  oss << "{";
-
-  for (const T& __t : __v)
-    oss << __f(__t) << ", ";
-
-  oss << "}";
-  return oss.str();
-}
-
-String __ast_to_string_expr(const ExprNode* __e, usize& __depth);
-String __ast_to_string_stmt(const StmtNode* __s, usize& __depth);
-String __ast_to_string_type(const TypeNode* __t, usize& __depth);
-
-} // namespace detail
-
 void dump_stmt(StmtNode* stmt, usize& depth);
+
+#undef COMMON_HEADER
 
 } // namespace via
 

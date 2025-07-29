@@ -32,7 +32,7 @@ String Token::to_string() const {
   return String(lexeme, size);
 }
 
-String Token::to_dump() const {
+String Token::get_dump() const {
   std::ostringstream oss;
   oss << "[";
   oss << std::left << std::setfill(' ') << std::setw(12) << magic_enum::enum_name(kind);

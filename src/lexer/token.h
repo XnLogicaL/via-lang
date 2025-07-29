@@ -116,7 +116,7 @@ struct Token {
   String to_string() const;
 
   // Returns the token in a "dump" format. Primarily used for debugging.
-  String to_dump() const;
+  String get_dump() const;
 
   // Returns the absolute location of the token.
   AbsLocation location(const FileBuf& source) const;
