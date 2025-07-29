@@ -89,29 +89,38 @@ enum TokenKind {
   TK_CONCATEQUALS,      // ..=
 };
 
-struct AbsLocation {
-  usize begin;
-  usize end;
-};
+struct Token;
+
+using TokenBuf = Buffer<Token*>;
+using FileBuf = Buffer<char>;
 
 struct Location {
   usize line;
   usize offset;
 };
 
+struct AbsLocation {
+  usize begin;
+  usize end;
+
+  // Returns the absolute location as a relative location.
+  Location to_relative(const FileBuf& source) const;
+};
+
 struct Token {
   TokenKind kind;
   const char* lexeme;
   usize size;
+
+  // Returns the token lexeme as a proper null-terminated string as opposed to a view.
+  String to_string() const;
+
+  // Returns the token in a "dump" format. Primarily used for debugging.
+  String to_dump() const;
+
+  // Returns the absolute location of the token.
+  AbsLocation location(const FileBuf& source) const;
 };
-
-using TokenBuf = Buffer<Token*>;
-using FileBuf = Buffer<char>;
-
-const Location abs_location_translate(const FileBuf& buf, usize off);
-const AbsLocation token_abs_location(const LexState& L, const Token& T);
-
-void token_dump(const Token& T);
 
 } // namespace via
 

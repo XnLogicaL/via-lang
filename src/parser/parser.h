@@ -8,6 +8,8 @@
 #include "memory.h"
 #include "diag.h"
 #include "ast.h"
+#include "lexer/token.h"
+#include "lexer/lexer.h"
 #include <mimalloc.h>
 
 namespace via {

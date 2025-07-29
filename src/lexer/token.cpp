@@ -6,40 +6,46 @@
 
 namespace via {
 
-const Location abs_location_translate(const FileBuf& buf, usize off) {
+Location AbsLocation::to_relative(const FileBuf& source) const {
   usize line = 1;
-  usize line_start = 0;
+  usize init = 0;
 
-  for (usize i = 0; i < off; ++i) {
-    if (buf.data[i] == '\n') {
+  for (usize i = 0; i < begin; ++i) {
+    if (source.data[i] == '\n') {
       ++line;
-      line_start = i + 1;
+      init = i + 1;
     }
   }
 
-  usize column = off - line_start;
+  usize column = begin - init;
   return {line, column};
 }
 
-const AbsLocation token_abs_location(const LexState& L, const Token& T) {
-  const usize begin = T.lexeme - L.file.data;
-  const usize end = begin + T.size;
+AbsLocation Token::location(const FileBuf& source) const {
+  const usize begin = lexeme - source.data;
+  const usize end = begin + size;
 
   return {begin, end};
 }
 
-void token_dump(const Token& T) {
-  usize len = T.size;
-  String lexeme;
+String Token::to_string() const {
+  return String(lexeme, size);
+}
+
+String Token::to_dump() const {
+  std::ostringstream oss;
+  oss << "[";
+  oss << std::left << std::setfill(' ') << std::setw(12) << magic_enum::enum_name(kind);
+  oss << " '";
 
   // check for eof token
-  if (strncmp("", T.lexeme, T.size) == 0)
-    lexeme = "<eof>";
+  if (strncmp("", lexeme, size) == 0)
+    oss << "<eof>";
   else
-    lexeme = String(T.lexeme, T.size);
+    oss << to_string();
 
-  std::cout << "[" << std::left << std::setfill(' ') << std::setw(12)
-            << magic_enum::enum_name(T.kind) << " '" << lexeme << "']\n";
+  oss << "']";
+  return oss.str();
 }
 
 } // namespace via

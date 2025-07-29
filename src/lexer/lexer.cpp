@@ -335,7 +335,7 @@ TokenBuf lexer_tokenize(LexState& L) {
 
 void dump_ttree(const TokenBuf& B) {
   for (Token** p = B.data; p < B.data + B.size; p++)
-    token_dump(**p);
+    std::cout << (*p)->to_dump() << "\n";
 }
 
 } // namespace via
