@@ -97,8 +97,6 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
-namespace conf {} // namespace conf
-
 } // namespace via
 
 #endif
