@@ -6,7 +6,7 @@
 
 #include <via/config.h>
 #include <util/memory.h>
-#include "common/diag.h"
+#include "diag.h"
 #include "ast.h"
 #include "lexer/token.h"
 #include "lexer/lexer.h"
