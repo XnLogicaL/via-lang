@@ -14,7 +14,7 @@ target_link_libraries(via-core
     mimalloc
     spdlog
     magic_enum
-    FMT
+    fmt::fmt
 )
 
 add_library(via::core ALIAS via-core)

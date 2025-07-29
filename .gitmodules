@@ -8,3 +8,4 @@
 	path = thirdparty/magic_enum
 [submodule "thirdparty/fmt"]
 	path = thirdparty/fmt
+	url = https://github.com/fmtlib/fmt.git

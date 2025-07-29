@@ -15,7 +15,7 @@ target_link_libraries(via-cli
         argparse
         spdlog
         magic_enum
-        FMT
+        fmt::fmt
 )
 
 add_executable(via::cli ALIAS via-cli)
