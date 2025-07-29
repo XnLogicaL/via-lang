@@ -117,7 +117,7 @@ char Lexer::peek(int count) {
 }
 
 Token* Lexer::read_number() {
-  Token* token = heap_emplace<Token>(al);
+  Token* token = heap_emplace<Token>(alloc);
   token->kind = TokenKind::INT;
   token->lexeme = file.cursor;
   token->size = 0;
@@ -155,7 +155,7 @@ decimal:
 }
 
 Token* Lexer::read_string() {
-  Token* token = heap_emplace<Token>(al);
+  Token* token = heap_emplace<Token>(alloc);
   token->kind = TokenKind::STRING;
   token->lexeme = file.cursor;
   token->size = 1; // for opening quote
@@ -179,7 +179,7 @@ Token* Lexer::read_string() {
 }
 
 Token* Lexer::read_identifier() {
-  Token* token = heap_emplace<Token>(al);
+  Token* token = heap_emplace<Token>(alloc);
   token->kind = TokenKind::IDENT;
   token->lexeme = file.cursor;
   token->size = 0;
@@ -217,7 +217,7 @@ Token* Lexer::read_identifier() {
 }
 
 Token* Lexer::read_symbol() {
-  Token* token = heap_emplace<Token>(al);
+  Token* token = heap_emplace<Token>(alloc);
   token->lexeme = file.cursor;
   token->kind = TokenKind::ILLEGAL;
   token->size = 1;
@@ -329,7 +329,7 @@ TokenBuf Lexer::tokenize() {
     toks.push_back(token);
   }
 
-  Token* eof = heap_emplace<Token>(al);
+  Token* eof = heap_emplace<Token>(alloc);
   eof->kind = TokenKind::EOF_;
   eof->lexeme = file.cursor;
   eof->size = 0;

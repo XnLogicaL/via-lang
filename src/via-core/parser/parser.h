@@ -59,7 +59,7 @@ private:
   const FileBuf& source;
 
   lex::Token** cursor;
-  HeapAllocator al;
+  HeapAllocator alloc;
   Diagnostics& diag;
 };
 

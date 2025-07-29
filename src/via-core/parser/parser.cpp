@@ -121,7 +121,7 @@ ast::TupleBinding* Parser::parse_tuple_binding() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto tpb = heap_emplace<ast::TupleBinding>(al);
+  auto tpb = heap_emplace<ast::TupleBinding>(alloc);
 
   while (!match(TokenKind::RBRACKET)) {
     Token* id = advance();
@@ -132,7 +132,7 @@ ast::TupleBinding* Parser::parse_tuple_binding() {
         id_loc, "Unexpected token '{}' while parsing tuple binding", String(id->lexeme, id->size)
       );
 
-    auto sym = heap_emplace<ast::NodeExprSym>(al);
+    auto sym = heap_emplace<ast::NodeExprSym>(alloc);
     sym->loc = id_loc;
     sym->tok = id;
 
@@ -147,12 +147,12 @@ ast::TupleBinding* Parser::parse_tuple_binding() {
 }
 
 ast::LValue* Parser::parse_lvalue() {
-  auto lval = heap_emplace<ast::LValue>(al);
+  auto lval = heap_emplace<ast::LValue>(alloc);
 
   if (match(TokenKind::IDENT)) {
     Token* id = advance();
 
-    auto sym = heap_emplace<ast::NodeExprSym>(al);
+    auto sym = heap_emplace<ast::NodeExprSym>(alloc);
     sym->loc = id->location(source);
     sym->tok = id;
 
@@ -191,7 +191,7 @@ ast::ExprNode* Parser::parse_primary() {
   case TokenKind::STRING: {
     advance();
 
-    auto* lit = heap_emplace<ast::NodeExprLit>(al);
+    auto* lit = heap_emplace<ast::NodeExprLit>(alloc);
     lit->tok = tok;
     lit->loc = loc;
 
@@ -200,7 +200,7 @@ ast::ExprNode* Parser::parse_primary() {
   case TokenKind::IDENT: {
     advance();
 
-    auto* sym = heap_emplace<ast::NodeExprSym>(al);
+    auto* sym = heap_emplace<ast::NodeExprSym>(alloc);
     sym->tok = tok;
     sym->loc = loc;
 
@@ -223,7 +223,7 @@ ast::ExprNode* Parser::parse_primary() {
 
       expect(TokenKind::RPAREN, "parsing tuple expression");
 
-      auto* tup = heap_emplace<ast::NodeExprTuple>(al);
+      auto* tup = heap_emplace<ast::NodeExprTuple>(alloc);
       tup->vals = std::move(vals);
       tup->loc = {start.begin, peek(-1)->location(source).end};
 
@@ -232,7 +232,7 @@ ast::ExprNode* Parser::parse_primary() {
 
     expect(TokenKind::RPAREN, "parsing grouping expression");
 
-    auto* group = heap_emplace<ast::NodeExprGroup>(al);
+    auto* group = heap_emplace<ast::NodeExprGroup>(alloc);
     group->expr = first;
     group->loc = {start.begin, peek(-1)->location(source).end};
 
@@ -252,7 +252,7 @@ ast::ExprNode* Parser::parse_unary_or_postfix() {
   case TokenKind::KW_NOT:
   case TokenKind::MINUS:
   case TokenKind::TILDE: {
-    auto* un = heap_emplace<ast::NodeExprUn>(al);
+    auto* un = heap_emplace<ast::NodeExprUn>(alloc);
     un->op = advance();
     un->expr = parse_unary_or_postfix();
     un->loc = {un->op->location(source).begin, un->expr->loc.end};
@@ -283,7 +283,7 @@ ast::ExprNode* Parser::parse_unary_or_postfix() {
       else
         advance(); // consume ')'
 
-      auto* call = heap_emplace<ast::NodeExprCall>(al);
+      auto* call = heap_emplace<ast::NodeExprCall>(alloc);
       call->lval = expr;
       call->args = std::move(args);
       call->loc = {expr->loc.begin, peek(-1)->location(source).end};
@@ -298,7 +298,7 @@ ast::ExprNode* Parser::parse_unary_or_postfix() {
 
       expect(TokenKind::RBRACKET, "parsing subscript expression");
 
-      auto* subs = heap_emplace<ast::NodeExprSubs>(al);
+      auto* subs = heap_emplace<ast::NodeExprSubs>(alloc);
       subs->lval = expr;
       subs->idx = idx;
       subs->loc = {expr->loc.begin, peek(-1)->location(source).end};
@@ -317,7 +317,7 @@ ast::ExprNode* Parser::parse_expr(int min_prec) {
 
   int prec;
   while ((prec = bin_prec(peek()->kind), prec >= min_prec)) {
-    auto bin = heap_emplace<ast::NodeExprBin>(al);
+    auto bin = heap_emplace<ast::NodeExprBin>(alloc);
     bin->op = advance();
     bin->lhs = lhs;
     bin->rhs = parse_expr(prec + 1);
@@ -332,7 +332,7 @@ ast::NodeStmtScope* Parser::parse_scope() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto scope = heap_emplace<ast::NodeStmtScope>(al);
+  auto scope = heap_emplace<ast::NodeStmtScope>(alloc);
 
   if (tok->kind == TokenKind::COLON) {
     scope->stmts.push_back(parse_stmt());
@@ -357,7 +357,7 @@ ast::NodeStmtVar* Parser::parse_var() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto vars = heap_emplace<ast::NodeStmtVar>(al);
+  auto vars = heap_emplace<ast::NodeStmtVar>(alloc);
   vars->lval = parse_lvalue();
 
   expect(TokenKind::EQUALS, "parsing variable declaration");
@@ -374,7 +374,7 @@ ast::NodeStmtFor* Parser::parse_for() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto fors = heap_emplace<ast::NodeStmtFor>(al);
+  auto fors = heap_emplace<ast::NodeStmtFor>(alloc);
   fors->init = parse_var();
 
   expect(TokenKind::COMMA, "parsing for statement");
@@ -394,7 +394,7 @@ ast::NodeStmtForEach* Parser::parse_foreach() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto fors = heap_emplace<ast::NodeStmtForEach>(al);
+  auto fors = heap_emplace<ast::NodeStmtForEach>(alloc);
   fors->lval = parse_lvalue();
 
   expect(TokenKind::KW_IN, "parsing for each statement");
@@ -416,7 +416,7 @@ ast::NodeStmtIf* Parser::parse_if() {
   br.cnd = parse_expr();
   br.br = parse_scope();
 
-  auto ifs = heap_emplace<ast::NodeStmtIf>(al);
+  auto ifs = heap_emplace<ast::NodeStmtIf>(alloc);
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
@@ -428,7 +428,7 @@ ast::NodeStmtWhile* Parser::parse_while() {
   Token* tok = advance();
   AbsLocation loc = tok->location(source);
 
-  auto whs = heap_emplace<ast::NodeStmtWhile>(al);
+  auto whs = heap_emplace<ast::NodeStmtWhile>(alloc);
   whs->cnd = parse_expr();
   whs->br = parse_scope();
   whs->loc = {loc.begin, whs->br->loc.end};
@@ -457,7 +457,7 @@ ast::StmtNode* Parser::parse_stmt() {
   }
 
   if (match(TokenKind::SEMICOLON)) {
-    auto empty = heap_emplace<ast::NodeStmtEmpty>(al);
+    auto empty = heap_emplace<ast::NodeStmtEmpty>(alloc);
     empty->loc = advance()->location(source);
     return empty;
   }
@@ -470,7 +470,7 @@ ast::StmtNode* Parser::parse_stmt() {
       String(tok->lexeme, tok->size)
     );
 
-  auto es = heap_emplace<ast::NodeStmtExpr>(al);
+  auto es = heap_emplace<ast::NodeStmtExpr>(alloc);
   es->expr = parse_expr();
   es->loc = es->expr->loc;
 

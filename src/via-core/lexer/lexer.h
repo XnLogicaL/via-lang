@@ -38,7 +38,7 @@ private:
 
 private:
   const FileBuf& file;
-  HeapAllocator al;
+  HeapAllocator alloc;
 };
 
 void dump_ttree(const TokenBuf& B);
