@@ -6,25 +6,32 @@
 #include <spdlog/spdlog.h>
 #include <via/via.h>
 
+#define CLI_ASSERT(cond, msg)                                                                      \
+  if (!(cond)) {                                                                                   \
+    spdlog::error(msg);                                                                            \
+    return -1;                                                                                     \
+  }
+
 using namespace via;
 using namespace argparse;
 
-enum EmitKind {
-  EK_NONE,
-  EK_LIST,
-  EK_TTREE,
-  EK_AST,
+using core::AstBuf;
+using core::DiagContext;
+using core::FileBuf;
+using core::TokenBuf;
+using core::lex::LexState;
+using core::parser::ParseState;
+
+enum class EmitType {
+  none,
+  list,
+  ttree,
+  ast,
 };
 
-static EmitKind get_emit_kind(const char* str) {
-  if (std::strcmp(str, "list") == 0)
-    return EK_LIST;
-  else if (std::strcmp(str, "ttree") == 0)
-    return EK_TTREE;
-  else if (std::strcmp(str, "ast") == 0)
-    return EK_AST;
-
-  return EK_NONE;
+static EmitType get_emit_kind(const char* str) {
+  auto emit = magic_enum::enum_cast<EmitType>(str);
+  return emit.value_or(EmitType::none);
 }
 
 static void list_emit_kinds() {
@@ -43,49 +50,45 @@ static bool read_file(const String& path, String& out_content) {
   String line;
   out_content.clear();
 
-  while (std::getline(ifs, line)) {
+  while (std::getline(ifs, line))
     out_content += line + '\n';
-  }
 
   return true;
 }
 
-static void process_file(const String& input_path, EmitKind emit_kind) {
+static void process_file(const String& input_path, EmitType emit_kind) {
   String input;
   if (!read_file(input_path, input)) {
     spdlog::error("failed to read input file");
     return;
   }
 
-  core::FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  core::DiagContext diag_ctx{input_path, file_buf};
+  FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
+  DiagContext diag_ctx{input_path, file_buf};
 
-  core::lex::LexState lex_state(file_buf);
-  core::TokenBuf token_buf = lexer_tokenize(lex_state);
+  LexState lex_state(file_buf);
+  TokenBuf token_buf = lexer_tokenize(lex_state);
 
-  core::parser::ParseState parse_state(lex_state, token_buf, diag_ctx);
-  core::AstBuf ast_buf = parser_parse(parse_state);
+  ParseState parse_state(lex_state, token_buf, diag_ctx);
+  AstBuf ast_buf = parser_parse(parse_state);
 
   // check for errors
   Vec<const core::Diagnosis*> diags;
-  if ((diags = diag_filter(
-         diag_ctx, [](const core::Diagnosis& diag) { return diag.kind == core::DK_ERROR; }
-       ),
+  if ((diags = diag_filter(diag_ctx, [](const auto& diag) { return diag.kind == core::DK_ERROR; }),
        diags.empty()))
-    goto end;
+    return;
 
-end:
   diag_emit(diag_ctx);
   diag_clear(diag_ctx);
 
   switch (emit_kind) {
-  case EK_LIST:
+  case EmitType::list:
     list_emit_kinds();
     break;
-  case EK_TTREE:
+  case EmitType::ttree:
     core::lex::dump_ttree(token_buf);
     break;
-  case EK_AST:
+  case EmitType::ast:
     core::parser::dump_ast(ast_buf);
     break;
   default:
@@ -105,23 +108,21 @@ int main(int argc, char* argv[]) {
     .default_value("none")
     .help("Emission type");
 
+  String path, emit;
+
   try {
     cli.parse_args(argc, argv);
+    path = cli.get("input");
+    emit = cli.get("--emit");
+  }
+  catch (const std::bad_any_cast&) {
+    emit = "";
   }
   catch (const std::exception& err) {
-    spdlog::error(err.what());
-    return 1;
+    CLI_ASSERT(false, err.what());
   }
 
-  String input_path = cli.get("input");
-  String emit_type = cli.get("--emit");
-
-  if (input_path.empty()) {
-    spdlog::error("no input files");
-    return 1;
-  }
-
-  EmitKind ek = get_emit_kind(emit_type.c_str());
-  process_file(input_path, ek);
+  CLI_ASSERT(!path.empty(), "no input file");
+  process_file(path, get_emit_kind(emit.c_str()));
   return 0;
 }
