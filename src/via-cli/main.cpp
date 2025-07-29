@@ -18,7 +18,7 @@ using namespace argparse;
 using core::AstBuf;
 using core::Diag;
 using core::Diagnosis;
-using core::DiagnosticManager;
+using core::Diagnostics;
 using core::FileBuf;
 using core::TokenBuf;
 using core::lex::LexState;
@@ -59,7 +59,7 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   }
 
   FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  DiagnosticManager diag_ctx{input_path, file_buf};
+  Diagnostics diag_ctx{input_path, file_buf};
 
   LexState lex_state(file_buf);
   TokenBuf token_buf = lexer_tokenize(lex_state);

@@ -25,9 +25,9 @@ struct ParseState {
 
   lex::Token** cursor;
   HeapAllocator al;
-  DiagnosticManager& dctx;
+  Diagnostics& dctx;
 
-  inline explicit ParseState(const lex::LexState& L, const TokenBuf& B, DiagnosticManager& dctx)
+  inline explicit ParseState(const lex::LexState& L, const TokenBuf& B, Diagnostics& dctx)
     : L(L),
       cursor(B.data),
       dctx(dctx) {}

@@ -29,9 +29,9 @@ struct Diagnosis {
   String msg;
 };
 
-class DiagnosticManager {
+class Diagnostics {
 public:
-  inline explicit DiagnosticManager(const String& path, const FileBuf& file)
+  inline explicit Diagnostics(const String& path, const FileBuf& file)
     : path(path),
       file(file) {}
 

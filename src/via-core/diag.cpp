@@ -7,11 +7,11 @@ namespace via {
 
 namespace core {
 
-void DiagnosticManager::clear() {
+void Diagnostics::clear() {
   diags.clear();
 }
 
-void DiagnosticManager::emit() {
+void Diagnostics::emit() {
   for (const Diagnosis& diag : diags) {
     Location loc = diag.loc.to_relative(file);
     String addr = fmt::format("{}:{}:{}", path, loc.line, loc.offset);
