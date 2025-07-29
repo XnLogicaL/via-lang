@@ -20,7 +20,7 @@ using FileBuf = Buffer<char>;
 
 class Lexer final {
 public:
-  inline explicit Lexer(const FileBuf& file)
+  Lexer(const FileBuf& file)
     : file(file) {}
 
   TokenBuf tokenize();

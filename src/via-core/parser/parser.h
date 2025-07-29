@@ -22,7 +22,7 @@ namespace parser {
 
 class Parser final {
 public:
-  inline explicit Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
+  Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
     : source(source),
       cursor(tokens.data),
       diag(diag) {}
@@ -57,7 +57,6 @@ private:
 
 private:
   const FileBuf& source;
-
   lex::Token** cursor;
   HeapAllocator alloc;
   Diagnostics& diag;
