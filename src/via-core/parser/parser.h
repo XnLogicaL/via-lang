@@ -32,6 +32,7 @@ public:
 private:
   bool match(lex::TokenKind kind, int ahead = 0);
   bool optional(lex::TokenKind kind);
+
   lex::Token* peek(int ahead = 0);
   lex::Token* advance();
   lex::Token* expect(lex::TokenKind kind, const char* task);

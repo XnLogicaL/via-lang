@@ -11,21 +11,6 @@ namespace core {
 
 namespace lex {
 
-Location AbsLocation::to_relative(const FileBuf& source) const {
-  usize line = 1;
-  usize init = 0;
-
-  for (usize i = 0; i < begin; ++i) {
-    if (source.data[i] == '\n') {
-      ++line;
-      init = i + 1;
-    }
-  }
-
-  usize column = begin - init;
-  return {line, column};
-}
-
 AbsLocation Token::location(const FileBuf& source) const {
   const usize begin = lexeme - source.data;
   const usize end = begin + size;
