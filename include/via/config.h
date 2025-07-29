@@ -39,11 +39,12 @@
 
 #include <vector>
 #include <memory>
-#include <format>
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <mimalloc.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace via {
 
@@ -54,7 +55,7 @@ template<typename Sig>
 using Function = std::function<Sig>;
 
 template<typename... Args>
-using Fmt = std::format_string<Args...>;
+using Fmt = fmt::format_string<Args...>;
 
 template<typename K, typename V>
 using Map = std::unordered_map<K, V>;
@@ -97,6 +98,27 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
+namespace detail {
+
+template<typename T>
+concept has_to_string = requires(T t) {
+                          { t.to_string() } -> std::same_as<String>;
+                        };
+
+} // namespace detail
+
 } // namespace via
+
+template<typename T>
+struct fmt::formatter<T, char, std::enable_if_t<via::detail::has_to_string<T>>> {
+  constexpr auto parse(fmt::format_parse_context& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  auto format(const T& t, FormatContext& ctx) const {
+    return fmt::format_to(ctx.out(), "{}", t.to_string());
+  }
+};
 
 #endif

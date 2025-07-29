@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "parser.h"
+#include <fmt/core.h>
 
 namespace via {
 
@@ -23,9 +24,9 @@ public:
       msg(msg) {}
 
   template<typename... Args>
-  explicit ParserError(AbsLocation loc, Fmt<Args...> fmt, Args... args)
+  explicit ParserError(AbsLocation loc, Fmt<Args...> form, Args... args)
     : loc(loc),
-      msg(std::format(fmt, std::forward<Args>(args)...)) {}
+      msg(fmt::format(form, std::forward<Args>(args)...)) {}
 };
 
 static bool is_expr_start(TokenKind kind) {

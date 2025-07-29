@@ -2,7 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "ast.h"
-#include <iostream>
+#include <fmt/core.h>
 
 namespace via {
 
@@ -15,7 +15,7 @@ namespace ast {
 inline usize DEFAULT_DEPTH = 0;
 
 #define TAB                 String(depth * 4, ' ')
-#define FORMAT(...)         TAB + std::format(__VA_ARGS__)
+#define FORMAT(...)         TAB + fmt::format(__VA_ARGS__)
 #define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
 template<typename T, typename F = Function<String(const T& __t)>>
@@ -250,7 +250,7 @@ String NodeStmtExpr::get_dump(usize& depth) const {
 }
 
 void dump_stmt(StmtNode* stmt, usize& depth) {
-  std::println(std::cout, "{}", stmt->get_dump(depth));
+  fmt::println("{}", stmt->get_dump(depth));
 }
 
 } // namespace ast

@@ -8,6 +8,7 @@
 #include <via/util/color.h>
 #include "lexer/location.h"
 #include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 namespace via {
 
@@ -45,7 +46,7 @@ void diag(DiagContext& ctx, AbsLocation loc, String msg) {
 
 template<const DiagnosisKind Kind, typename... Args>
 void diagf(DiagContext& ctx, AbsLocation loc, Fmt<Args...> fmt, Args... args) {
-  diag_raw(ctx, {Kind, loc, std::format(fmt, std::forward<Args>(args)...)});
+  diag_raw(ctx, {Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
 }
 
 template<typename T = std::function<bool(const Diagnosis&)>>
