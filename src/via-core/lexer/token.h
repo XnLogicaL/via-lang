@@ -5,7 +5,7 @@
 #define VIA_CORE_TOKEN_H_
 
 #include <via/config.h>
-#include <via/util/buffer.h>
+#include <util/buffer.h>
 #include "location.h"
 #include <magic_enum/magic_enum.hpp>
 

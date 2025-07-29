@@ -5,8 +5,8 @@
 #define VIA_CORE_LEXER_H_
 
 #include <via/config.h>
-#include <via/util/memory.h>
-#include <via/util/buffer.h>
+#include <util/memory.h>
+#include <util/buffer.h>
 #include "token.h"
 #include <mimalloc.h>
 

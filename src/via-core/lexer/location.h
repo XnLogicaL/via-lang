@@ -5,7 +5,7 @@
 #define VIA_CORE_LOCATION_H_
 
 #include <via/config.h>
-#include <via/util/buffer.h>
+#include <util/buffer.h>
 
 namespace via {
 

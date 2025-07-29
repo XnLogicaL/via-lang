@@ -5,7 +5,7 @@
 #define VIA_CORE_DIAG_H_
 
 #include <via/config.h>
-#include <via/util/color.h>
+#include <util/color.h>
 #include "lexer/location.h"
 #include <spdlog/spdlog.h>
 #include <fmt/core.h>
