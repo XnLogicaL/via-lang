@@ -30,47 +30,49 @@ print(b); // 100
 /* bytecode dump
 ** 
 ** [section<text>]
-**   pushk        K0        ; a=10
-**   duplocalref  0         ; &b=a
+**     pushk        K0        ; a=10
+**     duplocalref  0         ; &b=a
 ** 
-** [closure<foo> R0]
-**   getargref    R0 0      ; &x
-**   imul1        R0 R0     ; x*=x
-**   retnil
+**   [closure<foo> R0]
+**     getargref    R0 0      ; &x
+**     imul1        R0 R0     ; x*=x
+**     retnil
 ** 
-** [closure<bar> R1]
-**   getargref    R0 0      ; &x
-**   imul1        R0 R0     ; x*=x
-**   retnil
+**   [closure<bar> R1]
+**     getargref    R0 0      ; &x
+**     imul1        R0 R0     ; x*=x
+**     retnil
 **
-** [closure<baz> R2]
-**   capture      3
-**   getupvref    R0 0
-**   pushargref   R1 0
-**   call         R0
-**   drop
-**   getargref    R0 0      ; &x
-**   pushfmulxk   R0 K1     ; y=&x*3.333
-**   retnil
+**   [closure<baz> R2]
+**     capture      3
+**     getupvref    R0 0
+**     pushargref   R1 0
+**     call         R0
+**     drop
+**     getargref    R0 0      ; &x
+**     pushfmulxk   R0 K1     ; y=&x*3.333
+**     retnil
 ** 
-**   getlocalref  R0 2      ; foo
-**   duplocal     0         ; arg[0]=a
-**   call         R0 1
-**   drop
-**   getlocalref  R0 3      ; bar
-**   duplocalref  0         ; arg[0]=&a
-**   call         R0 1
-**   drop
-**   refglobal    R0 K3     ; &global["print"]
-**   duplocalref  0         ; arg[0]=&a""
-**   call         R0 1
-**   duplocalref  1         ; arg[0]=&b
-**   call         R0 1
-**   halt
+**     getlocalref  R0 2      ; foo
+**     duplocal     0         ; arg[0]=a
+**     call         R0 1
+**     drop
+**     getlocalref  R0 3      ; bar
+**     duplocalref  0         ; arg[0]=&a
+**     call         R0 1
+**     drop
+**     refglobal    R0 K3     ; &global["print"]
+**     duplocalref  0         ; arg[0]=&a
+**     call         R0 1
+**     drop
+**     duplocalref  1         ; arg[0]=&b
+**     call         R0 1
+**     drop
+**     halt
 **
 ** [section<data>]
-**   [constant<0>] VLK_INT 10
-**   [constant<1>] VLK_FLOAT 3.333
+**   [constant<0>] VLK_INT    10
+**   [constant<1>] VLK_FLOAT  3.333
 **   [constant<2>] VLK_STRING "foo"
 **   [constant<3>] VLK_STRING "bar"
 **   [constant<4>] VLK_STRING "print"
