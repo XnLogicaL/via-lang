@@ -10,10 +10,11 @@ target_include_directories(via-core
 )
 
 target_link_libraries(via-core
-    PUBLIC
-        mimalloc
-        spdlog
-        magic_enum
+  PUBLIC  
+    mimalloc
+    spdlog
+    magic_enum
+    FMT
 )
 
 add_library(via::core ALIAS via-core)

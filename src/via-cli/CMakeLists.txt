@@ -4,6 +4,7 @@ add_executable(via-cli ${VIA_CLI_SOURCES})
 
 target_include_directories(via-cli
   PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include
     ${CMAKE_CURRENT_SOURCE_DIR}/../via-shared
 )
@@ -14,6 +15,7 @@ target_link_libraries(via-cli
         argparse
         spdlog
         magic_enum
+        FMT
 )
 
 add_executable(via::cli ALIAS via-cli)
