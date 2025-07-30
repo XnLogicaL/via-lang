@@ -3,6 +3,7 @@
 
 #include "value_ref.h"
 #include "interpreter.h"
+#include "value.h"
 
 namespace via {
 
@@ -14,7 +15,7 @@ void ValueRef::free() {
   assert(!is_null() && "free called on NULL reference");
 
   if (--ptr->rc == 0) {
-    ctx->get_allocator().free(ptr);
+    ptr->free();
     ptr = NULL;
   }
 }
@@ -28,9 +29,8 @@ usize ValueRef::count_refs() const {
   return ptr->rc;
 }
 
-ValueRef::ValueRef(Interpreter* ctx)
-    : ctx(ctx), ptr(ctx->get_allocator().emplace<Value>(ctx)) {}
-
+ValueRef::ValueRef(Interpreter* ctx) : ctx(ctx), ptr(NULL) {}
+ValueRef::ValueRef(Interpreter* ctx, Value* ptr) : ctx(ctx), ptr(ptr) {}
 ValueRef::~ValueRef() {
   if (!is_null())
     free();

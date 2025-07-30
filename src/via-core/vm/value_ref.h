@@ -6,13 +6,15 @@
 
 #include <util/memory.h>
 #include <via/config.h>
-#include "value.h"
 
 namespace via {
 
 namespace core {
 
 namespace vm {
+
+class Interpreter;
+struct Value;
 
 struct ValueRef {
   Interpreter* ctx;
@@ -26,6 +28,7 @@ struct ValueRef {
   VIA_IMPLCOPY(ValueRef);
 
   ValueRef(Interpreter* ctx);
+  ValueRef(Interpreter* ctx, Value* ptr);
   ~ValueRef();
 
   Value* operator->() const;
