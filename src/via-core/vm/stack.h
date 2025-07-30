@@ -23,9 +23,15 @@ class Stack {
 
   HeapAllocator* get_allocator();
 
+  usize size() const;
+
+  void jump(T* dst);
+  void jump(usize dst);
+
   void push(T val);
   T pop();
-  T top();
+  T* top();
+  T* at(usize idx);
   T* begin();
   T* end();
 

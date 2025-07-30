@@ -15,6 +15,24 @@ HeapAllocator* Stack<T>::get_allocator() {
 }
 
 template <typename T>
+usize Stack<T>::size() const {
+  return sp - bp;
+}
+
+template <typename T>
+void Stack<T>::jump(T* dst) {
+  assert(dst >= bp && dst <= bp + STACK_SIZE - 1 &&
+         "stack jump destination out of bounds");
+  sp = dst;
+}
+
+template <typename T>
+void Stack<T>::jump(usize dst) {
+  assert(dst < STACK_SIZE && "stack jump destination out of bounds");
+  sp = bp + dst;
+}
+
+template <typename T>
 void Stack<T>::push(T val) {
   *(sp++) = val;
 }
@@ -25,8 +43,13 @@ T Stack<T>::pop() {
 }
 
 template <typename T>
-T Stack<T>::top() {
-  return sp[-1];  // UB lol
+T* Stack<T>::top() {
+  return sp - 1;
+}
+
+template <typename T>
+T* Stack<T>::at(usize idx) {
+  return bp + idx;
 }
 
 template <typename T>
