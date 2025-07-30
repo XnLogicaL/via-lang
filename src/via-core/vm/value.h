@@ -7,6 +7,7 @@
 #include <util/constexpr_stof.h>
 #include <util/constexpr_stoi.h>
 #include <via/config.h>
+#include "value_ref.h"
 
 namespace via {
 
@@ -16,12 +17,21 @@ namespace vm {
 
 class Interpreter;
 
+enum class Arith {
+  Add,
+  Sub,
+  Mul,
+  Div,
+  Pow,
+  Mod,
+};
+
 struct Value {
   using int_type = i64;
   using float_type = f32;
   using bool_type = bool;
 
-  usize rc = 1;
+  usize rc = 0;
   Interpreter* ctx;
 
   enum Kind {
@@ -38,6 +48,10 @@ struct Value {
     bool b;
     char* str;
   } u;
+
+  void free();
+
+  ValueRef make_ref();
 
   constexpr Optional<int_type> as_cint() const;
   constexpr Optional<float_type> as_cfloat() const;
@@ -63,6 +77,35 @@ struct Value {
     }
 
     return Value(ctx);
+  }
+
+  constexpr Value arith_add(const Value* other) const;
+  constexpr Value arith_sub(const Value* other) const;
+  constexpr Value arith_mul(const Value* other) const;
+  constexpr Value arith_div(const Value* other) const;
+  constexpr Value arith_pow(const Value* other) const;
+  constexpr Value arith_mod(const Value* other) const;
+
+  template <const Arith At>
+  inline constexpr Value arith(const Value* other) const {
+    switch (At) {
+      case Arith::Add:
+        return arith_add(other);
+      case Arith::Sub:
+        return arith_sub(other);
+      case Arith::Mul:
+        return arith_mul(other);
+      case Arith::Div:
+        return arith_div(other);
+      case Arith::Pow:
+        return arith_pow(other);
+      case Arith::Mod:
+        return arith_mod(other);
+      default:
+        break;
+    }
+
+    VIA_BUG("invalid Arith enum value");
   }
 
 #define CTOR inline constexpr explicit Value

@@ -2,12 +2,19 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "value.h"
+#include "interpreter.h"
 
 namespace via {
 
 namespace core {
 
 namespace vm {
+
+void Value::free() {}
+
+ValueRef Value::make_ref() {
+  return ValueRef(ctx, this);
+}
 
 constexpr Optional<Value::int_type> Value::as_cint() const {
   switch (kind) {
@@ -69,7 +76,25 @@ constexpr Value::bool_type Value::as_cbool() const {
 }
 
 constexpr char* Value::as_cstring() const {
-  VIA_TODO("as_cstring not implemented")
+#define ALLOC_STR(str) ctx->get_allocator().strdup(str)
+
+  switch (kind) {
+    case String:
+      return ALLOC_STR(u.str);
+    case Nil:
+      return ALLOC_STR("nil");
+    case Bool:
+      return ALLOC_STR(u.b ? "true" : "false");
+    case Int:
+      return ALLOC_STR(std::to_string(u.i).c_str());
+    case Float:
+      return ALLOC_STR(std::to_string(u.fp).c_str());
+    default:
+      break;
+  }
+
+  VIA_BUG("bad kind value");
+#undef ALLOC_STR
 }
 
 constexpr Value Value::as_int() const {
