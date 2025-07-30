@@ -4,13 +4,13 @@
 #ifndef VIA_CORE_PARSER_H_
 #define VIA_CORE_PARSER_H_
 
-#include <via/config.h>
-#include <util/memory.h>
-#include "diag.h"
-#include "ast.h"
-#include "lexer/token.h"
-#include "lexer/lexer.h"
 #include <mimalloc.h>
+#include <util/memory.h>
+#include <via/config.h>
+#include "ast.h"
+#include "diag.h"
+#include "lexer/lexer.h"
+#include "lexer/token.h"
 
 namespace via {
 
@@ -21,15 +21,13 @@ using AstBuf = Buffer<parser::ast::StmtNode*>;
 namespace parser {
 
 class Parser final {
-public:
+ public:
   Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
-    : source(source),
-      cursor(tokens.data),
-      diag(diag) {}
+      : source(source), cursor(tokens.data), diag(diag) {}
 
   AstBuf parse();
 
-private:
+ private:
   bool match(lex::TokenKind kind, int ahead = 0);
   bool optional(lex::TokenKind kind);
 
@@ -55,7 +53,7 @@ private:
   ast::NodeStmtWhile* parse_while();
   ast::StmtNode* parse_stmt();
 
-private:
+ private:
   const FileBuf& source;
   lex::Token** cursor;
   HeapAllocator alloc;
@@ -64,10 +62,10 @@ private:
 
 void dump_ast(const AstBuf& B);
 
-} // namespace parser
+}  // namespace parser
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

@@ -24,8 +24,8 @@ Location AbsLocation::to_relative(const FileBuf& source) const {
   return {line, column};
 }
 
-} // namespace lex
+}  // namespace lex
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via

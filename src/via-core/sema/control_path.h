@@ -14,19 +14,19 @@ namespace core {
 namespace sema {
 
 enum class ControlPath {
-  None,        // uninterrupted flow
-  Return,      // returns from function
-  Break,       // breaks a loop/switch
-  Continue,    // continues a loop
-  Unreachable, // statement is never reached
+  None,         // uninterrupted flow
+  Return,       // returns from function
+  Break,        // breaks a loop/switch
+  Continue,     // continues a loop
+  Unreachable,  // statement is never reached
 };
 
 ControlPath sema_cpath_analyze(const parser::ast::StmtNode* stmt);
 
-} // namespace sema
+}  // namespace sema
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

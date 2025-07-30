@@ -4,20 +4,17 @@
 #ifndef VIA_SHARED_MEMORY_H_
 #define VIA_SHARED_MEMORY_H_
 
-#include "via/config.h"
 #include <mimalloc.h>
+#include "via/config.h"
 
 namespace via {
 
 struct HeapAllocator {
   mi_heap_t* heap;
 
-  inline explicit HeapAllocator()
-    : heap(mi_heap_new()) {}
+  inline explicit HeapAllocator() : heap(mi_heap_new()) {}
 
-  inline ~HeapAllocator() {
-    mi_heap_destroy(heap);
-  }
+  inline ~HeapAllocator() { mi_heap_destroy(heap); }
 
   VIA_NOCOPY(HeapAllocator);
   VIA_NOMOVE(HeapAllocator);
@@ -25,23 +22,23 @@ struct HeapAllocator {
 
 void* heap_alloc(HeapAllocator& heap, const usize size);
 
-template<typename T>
+template <typename T>
 inline T* heap_alloc(HeapAllocator& heap) {
   return (T*)mi_heap_malloc(heap.heap, sizeof(T));
 }
 
-template<typename T>
+template <typename T>
 inline T* heap_alloc(HeapAllocator& heap, const usize count) {
   return (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 inline T* heap_emplace(HeapAllocator& heap, Args... args) {
   void* mem = mi_heap_malloc(heap.heap, sizeof(T));
   return new (mem) T(std::forward<Args>(args)...);
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 inline T* heap_emplace(HeapAllocator& heap, usize count, Args&&... args) {
   T* ptr = (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
   for (usize i = 0; i < count; ++i)
@@ -49,6 +46,6 @@ inline T* heap_emplace(HeapAllocator& heap, usize count, Args&&... args) {
   return ptr;
 }
 
-} // namespace via
+}  // namespace via
 
 #endif

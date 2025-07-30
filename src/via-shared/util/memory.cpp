@@ -9,4 +9,4 @@ void* heap_alloc(HeapAllocator& heap, const usize size) {
   return mi_heap_malloc(heap.heap, size);
 }
 
-} // namespace via
+}  // namespace via

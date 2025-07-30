@@ -4,37 +4,37 @@
 #ifndef VIA_BUFFER_H_
 #define VIA_BUFFER_H_
 
-#include "via/config.h"
 #include <cstring>
+#include "via/config.h"
 
 namespace via {
 
-template<typename T>
+template <typename T>
 using Allocator = T* (*)(usize);
 
-template<typename T>
+template <typename T>
 using Deleter = void (*)(T*);
 
 namespace detail {
 
-template<typename T>
+template <typename T>
 inline T* std_calloc(usize size) noexcept {
   return (T*)std::calloc(size, sizeof(T));
 }
 
-template<typename T>
+template <typename T>
 inline void std_free(T* ptr) noexcept {
   std::free((void*)ptr);
 }
 
-} // namespace detail
+}  // namespace detail
 
 // clang-format off
 template<
   typename T,
   const Allocator<T> Alloc = detail::std_calloc,
   const Deleter<T> Free = detail::std_free
-> // clang-format on
+>  // clang-format on
 struct Buffer {
   T* data = NULL;
   mutable T* cursor = NULL;
@@ -50,9 +50,7 @@ struct Buffer {
 
   inline Buffer() = default;
   inline Buffer(const usize size)
-    : data(Alloc(size)),
-      cursor(data),
-      size(size) {}
+      : data(Alloc(size)), cursor(data), size(size) {}
 
   inline Buffer(const T* begin, const T* end) {
     usize offset = end - begin;
@@ -63,21 +61,15 @@ struct Buffer {
     std::memcpy(data, begin, offset);
   }
 
-  inline ~Buffer() {
-    Free(data);
-  }
+  inline ~Buffer() { Free(data); }
 
   inline Buffer(const Buffer& other)
-    : data(Alloc(other.size)),
-      cursor(data),
-      size(other.size) {
+      : data(Alloc(other.size)), cursor(data), size(other.size) {
     std::memcpy(data, other.data, size);
   }
 
   inline Buffer(Buffer&& other)
-    : data(other.data),
-      cursor(data),
-      size(other.size) {
+      : data(other.data), cursor(data), size(other.size) {
     other.data = NULL;
     other.cursor = NULL;
     other.size = 0;
@@ -114,6 +106,6 @@ struct Buffer {
   }
 };
 
-} // namespace via
+}  // namespace via
 
 #endif

@@ -4,8 +4,8 @@
 #ifndef VIA_H_
 #define VIA_H_
 
-#include <via-core/lexer/token.h>
 #include <via-core/lexer/lexer.h>
+#include <via-core/lexer/token.h>
 #include <via-core/parser/ast.h>
 #include <via-core/parser/parser.h>
 

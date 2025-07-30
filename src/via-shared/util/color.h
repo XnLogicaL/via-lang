@@ -42,18 +42,17 @@ enum class Style {
 };
 
 // Function to wrap a String with ANSI escape codes
-inline String apply_color(
-  String string,
-  FGColor foreground_color,
-  BGColor background_color = BGColor::Black,
-  Style style = Style::Reset
-) {
+inline String apply_color(String string,
+                          FGColor foreground_color,
+                          BGColor background_color = BGColor::Black,
+                          Style style = Style::Reset) {
   // Construct ANSI escape code and apply the color formatting to the text
-  return "\033[" + std::to_string(static_cast<int>(style)) + ";"
-    + std::to_string(static_cast<int>(foreground_color)) + ";"
-    + std::to_string(static_cast<int>(background_color)) + "m" + string + "\033[0m";
+  return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
+         std::to_string(static_cast<int>(foreground_color)) + ";" +
+         std::to_string(static_cast<int>(background_color)) + "m" + string +
+         "\033[0m";
 }
 
-} // namespace via
+}  // namespace via
 
 #endif

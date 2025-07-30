@@ -4,11 +4,11 @@
 #ifndef VIA_CORE_DIAG_H_
 #define VIA_CORE_DIAG_H_
 
-#include <via/config.h>
-#include <util/color.h>
-#include "lexer/location.h"
-#include <spdlog/spdlog.h>
 #include <fmt/core.h>
+#include <spdlog/spdlog.h>
+#include <util/color.h>
+#include <via/config.h>
+#include "lexer/location.h"
 
 namespace via {
 
@@ -30,25 +30,24 @@ struct Diagnosis {
 };
 
 class Diagnostics final {
-public:
+ public:
   inline explicit Diagnostics(const String& path, const FileBuf& file)
-    : path(path),
-      file(file) {}
+      : path(path), file(file) {}
 
   void emit();
   void clear();
 
-  template<const Diag Kind>
+  template <const Diag Kind>
   void diagnose(AbsLocation loc, String msg) {
     diags.push_back({Kind, loc, msg});
   }
 
-  template<const Diag Kind, typename... Args>
+  template <const Diag Kind, typename... Args>
   void diagnosef(AbsLocation loc, Fmt<Args...> fmt, Args... args) {
     diagnose_raw({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
   }
 
-  template<typename T = std::function<bool(const Diagnosis&)>>
+  template <typename T = std::function<bool(const Diagnosis&)>>
   Vec<Diagnosis> collect(T callback) {
     Vec<Diagnosis> filtered;
 
@@ -59,14 +58,14 @@ public:
     return filtered;
   }
 
-private:
+ private:
   const String& path;
   const FileBuf& file;
   Vec<Diagnosis> diags;
 };
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

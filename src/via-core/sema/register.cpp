@@ -16,8 +16,8 @@ int sema_alloc_register(RegisterState& R) {
       u64 mask = (1ULL << j);
 
       if ((*addr & mask) == 0ULL) {
-        *addr |= mask;       // mark bit as occupied
-        return (i * 64) + j; // absolute register address
+        *addr |= mask;        // mark bit as occupied
+        return (i * 64) + j;  // absolute register address
       }
     }
   }
@@ -28,11 +28,11 @@ int sema_alloc_register(RegisterState& R) {
 void sema_free_register(RegisterState& R, int reg) {
   u16 wrd = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
-  R.buf.data[wrd] &= mask; // mark bit as free
+  R.buf.data[wrd] &= mask;  // mark bit as free
 }
 
-} // namespace sema
+}  // namespace sema
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via

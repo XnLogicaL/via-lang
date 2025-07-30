@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_REGISTER_H_
 #define VIA_CORE_REGISTER_H_
 
-#include <via/config.h>
 #include <util/buffer.h>
+#include <via/config.h>
 
 namespace via {
 
@@ -20,10 +20,10 @@ struct RegisterState {
 int sema_alloc_register(RegisterState& S);
 void sema_free_register(RegisterState& S, int reg);
 
-} // namespace sema
+}  // namespace sema
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

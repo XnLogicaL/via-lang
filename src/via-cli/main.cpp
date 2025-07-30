@@ -1,15 +1,15 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include <fstream>
-#include <argparse/argparse.hpp>
 #include <spdlog/spdlog.h>
 #include <via/via.h>
+#include <argparse/argparse.hpp>
+#include <fstream>
 
-#define CLI_ASSERT(cond, msg)                                                                      \
-  if (!(cond)) {                                                                                   \
-    spdlog::error(msg);                                                                            \
-    return -1;                                                                                     \
+#define CLI_ASSERT(cond, msg) \
+  if (!(cond)) {              \
+    spdlog::error(msg);       \
+    return -1;                \
   }
 
 using namespace via;
@@ -69,7 +69,8 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 
   // check for errors
   Vec<Diagnosis> diags;
-  if ((diags = diag_ctx.collect([](const auto& diag) { return diag.kind == Diag::Error; }),
+  if ((diags = diag_ctx.collect(
+           [](const auto& diag) { return diag.kind == Diag::Error; }),
        diags.empty()))
     return;
 
@@ -77,14 +78,14 @@ static void process_file(const String& input_path, EmitType emit_kind) {
   diag_ctx.clear();
 
   switch (emit_kind) {
-  case EmitType::ttree:
-    core::lex::dump_ttree(token_buf);
-    break;
-  case EmitType::ast:
-    core::parser::dump_ast(ast_buf);
-    break;
-  default:
-    break;
+    case EmitType::ttree:
+      core::lex::dump_ttree(token_buf);
+      break;
+    case EmitType::ast:
+      core::parser::dump_ast(ast_buf);
+      break;
+    default:
+      break;
   }
 }
 
@@ -95,10 +96,10 @@ int main(int argc, char* argv[]) {
 
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")
-    .nargs(1)
-    .choices("none", "list", "ttree", "ast")
-    .default_value("none")
-    .help("Emission type");
+      .nargs(1)
+      .choices("none", "list", "ttree", "ast")
+      .default_value("none")
+      .help("Emission type");
 
   String path, emit;
 
@@ -106,11 +107,9 @@ int main(int argc, char* argv[]) {
     cli.parse_args(argc, argv);
     path = cli.get("input");
     emit = cli.get("--emit");
-  }
-  catch (const std::bad_any_cast&) {
+  } catch (const std::bad_any_cast&) {
     CLI_ASSERT(false, "bad emission type")
-  }
-  catch (const std::exception& err) {
+  } catch (const std::exception& err) {
     CLI_ASSERT(false, err.what())
   }
 

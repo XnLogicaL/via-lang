@@ -14,11 +14,11 @@ namespace ast {
 
 inline usize DEFAULT_DEPTH = 0;
 
-#define TAB                 String(depth * 4, ' ')
-#define FORMAT(...)         TAB + fmt::format(__VA_ARGS__)
+#define TAB String(depth * 4, ' ')
+#define FORMAT(...) TAB + fmt::format(__VA_ARGS__)
 #define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
-template<typename T, typename F = Function<String(const T& __t)>>
+template <typename T, typename F = Function<String(const T& __t)>>
 static String __vec_to_string(const Vec<T>& __v, F __f) {
   std::ostringstream oss;
   oss << "{";
@@ -32,7 +32,8 @@ static String __vec_to_string(const Vec<T>& __v, F __f) {
 
 static String tpb_to_string(const TupleBinding* tpb) {
   usize depth = 0;
-  return FORMAT("TupleBinding[{}]", __vec_to_string(tpb->binds, [](const auto& e) {
+  return FORMAT("TupleBinding[{}]",
+                __vec_to_string(tpb->binds, [](const auto& e) {
                   return e->get_dump(DEFAULT_DEPTH);
                 }));
 }
@@ -51,7 +52,8 @@ static String lvalue_to_string(const LValue* lval) {
 // --------------------------------------------------
 
 String NodeExprLit::get_dump(usize& depth) const {
-  return FORMAT("NodeExprLit({}, {})", magic_enum::enum_name(tok->kind), tok->to_string());
+  return FORMAT("NodeExprLit({}, {})", magic_enum::enum_name(tok->kind),
+                tok->to_string());
 }
 
 // --------------------------------------------------
@@ -67,7 +69,8 @@ String NodeExprSym::get_dump(usize& depth) const {
 // --------------------------------------------------
 
 String NodeExprUn::get_dump(usize& depth) const {
-  return FORMAT("NodeExprUn({}, {})", op->to_string(), expr->get_dump(DEFAULT_DEPTH));
+  return FORMAT("NodeExprUn({}, {})", op->to_string(),
+                expr->get_dump(DEFAULT_DEPTH));
 }
 
 // --------------------------------------------------
@@ -75,12 +78,8 @@ String NodeExprUn::get_dump(usize& depth) const {
 // --------------------------------------------------
 
 String NodeExprBin::get_dump(usize& depth) const {
-  return FORMAT(
-    "NodeExprBin({}, {}, {})",
-    op->to_string(),
-    lhs->get_dump(DEFAULT_DEPTH),
-    rhs->get_dump(DEFAULT_DEPTH)
-  );
+  return FORMAT("NodeExprBin({}, {}, {})", op->to_string(),
+                lhs->get_dump(DEFAULT_DEPTH), rhs->get_dump(DEFAULT_DEPTH));
 }
 
 // --------------------------------------------------
@@ -96,13 +95,10 @@ String NodeExprGroup::get_dump(usize& depth) const {
 // --------------------------------------------------
 
 String NodeExprCall::get_dump(usize& depth) const {
-  return FORMAT(
-    "NodeExprCall({}, {})",
-    lval->get_dump(DEFAULT_DEPTH),
-    __vec_to_string<ExprNode*>(
-      args, [](ExprNode* const& val) { return val->get_dump(DEFAULT_DEPTH); }
-    )
-  );
+  return FORMAT("NodeExprCall({}, {})", lval->get_dump(DEFAULT_DEPTH),
+                __vec_to_string<ExprNode*>(args, [](ExprNode* const& val) {
+                  return val->get_dump(DEFAULT_DEPTH);
+                }));
 }
 
 // --------------------------------------------------
@@ -110,7 +106,8 @@ String NodeExprCall::get_dump(usize& depth) const {
 // --------------------------------------------------
 
 String NodeExprSubs::get_dump(usize& depth) const {
-  return FORMAT("NodeExprSubs({}, {})", lval->get_dump(depth), idx->get_dump(depth));
+  return FORMAT("NodeExprSubs({}, {})", lval->get_dump(depth),
+                idx->get_dump(depth));
 }
 
 // --------------------------------------------------
@@ -118,7 +115,8 @@ String NodeExprSubs::get_dump(usize& depth) const {
 // --------------------------------------------------
 
 String NodeExprTuple::get_dump(usize& depth) const {
-  return FORMAT("NodeExprTuple({})", __vec_to_string(vals, [](const auto& expr) {
+  return FORMAT("NodeExprTuple({})",
+                __vec_to_string(vals, [](const auto& expr) {
                   return expr->get_dump(DEFAULT_DEPTH);
                 }));
 }
@@ -146,8 +144,9 @@ String NodeStmtScope::get_dump(usize& depth) const {
 
 String NodeStmtVar::get_dump(usize& depth) const {
   String rvalue = rval->get_dump(DEFAULT_DEPTH);
-  String lvalue =
-    lval->kind == LValue::Symbol ? lval->sym->get_dump(DEFAULT_DEPTH) : tpb_to_string(lval->tpb);
+  String lvalue = lval->kind == LValue::Symbol
+                      ? lval->sym->get_dump(DEFAULT_DEPTH)
+                      : tpb_to_string(lval->tpb);
 
   return FORMAT("NodeStmtVar({}, {})", lvalue, rvalue);
 }
@@ -183,12 +182,8 @@ String NodeStmtIf::get_dump(usize& depth) const {
 
 String NodeStmtFor::get_dump(usize& depth) const {
   std::ostringstream oss;
-  oss << FORMAT(
-    "NodeStmtFor({}, {}, {})\n",
-    init->get_dump(DEFAULT_DEPTH),
-    target->get_dump(DEFAULT_DEPTH),
-    step->get_dump(DEFAULT_DEPTH)
-  );
+  oss << FORMAT("NodeStmtFor({}, {}, {})\n", init->get_dump(DEFAULT_DEPTH),
+                target->get_dump(DEFAULT_DEPTH), step->get_dump(DEFAULT_DEPTH));
   depth++;
 
   for (const auto& stmt : br->stmts)
@@ -205,7 +200,8 @@ String NodeStmtFor::get_dump(usize& depth) const {
 
 String NodeStmtForEach::get_dump(usize& depth) const {
   std::ostringstream oss;
-  oss << FORMAT("NodeStmtForEach({}, {})\n", lvalue_to_string(lval), iter->get_dump(DEFAULT_DEPTH));
+  oss << FORMAT("NodeStmtForEach({}, {})\n", lvalue_to_string(lval),
+                iter->get_dump(DEFAULT_DEPTH));
   depth++;
 
   for (const auto& stmt : br->stmts)
@@ -249,14 +245,10 @@ String NodeStmtExpr::get_dump(usize& depth) const {
   return FORMAT("NodeStmtExpr({})", expr->get_dump(depth));
 }
 
-void dump_stmt(StmtNode* stmt, usize& depth) {
-  fmt::println("{}", stmt->get_dump(depth));
-}
+}  // namespace ast
 
-} // namespace ast
+}  // namespace parser
 
-} // namespace parser
+}  // namespace core
 
-} // namespace core
-
-} // namespace via
+}  // namespace via

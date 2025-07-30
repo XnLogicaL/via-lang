@@ -9,6 +9,6 @@ namespace core {
 
 namespace sema {}
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via

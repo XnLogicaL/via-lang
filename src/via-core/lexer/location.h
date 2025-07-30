@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_LOCATION_H_
 #define VIA_CORE_LOCATION_H_
 
-#include <via/config.h>
 #include <util/buffer.h>
+#include <via/config.h>
 
 namespace via {
 
@@ -28,10 +28,10 @@ struct AbsLocation {
   Location to_relative(const FileBuf& source) const;
 };
 
-} // namespace lex
+}  // namespace lex
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

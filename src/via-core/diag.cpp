@@ -15,25 +15,26 @@ void Diagnostics::emit() {
   for (const Diagnosis& diag : diags) {
     Location loc = diag.loc.to_relative(file);
     String addr = fmt::format("{}:{}:{}", path, loc.line, loc.offset);
-    String msg =
-      fmt::format("{} {}", diag.msg, apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
+    String msg = fmt::format(
+        "{} {}", diag.msg,
+        apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
 
     switch (diag.kind) {
-    case Diag::Info:
-      spdlog::info(msg);
-      break;
-    case Diag::Warn:
-      spdlog::warn(msg);
-      break;
-    case Diag::Error:
-      spdlog::error(msg);
-      break;
-    default:
-      break;
+      case Diag::Info:
+        spdlog::info(msg);
+        break;
+      case Diag::Warn:
+        spdlog::warn(msg);
+        break;
+      case Diag::Error:
+        spdlog::error(msg);
+        break;
+      default:
+        break;
     }
   }
 }
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via

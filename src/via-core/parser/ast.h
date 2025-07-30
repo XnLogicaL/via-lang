@@ -59,8 +59,8 @@ struct Parameter {
   AbsLocation loc;
 };
 
-#define COMMON_HEADER(klass)                                                                       \
-  using klass::loc;                                                                                \
+#define COMMON_HEADER(klass) \
+  using klass::loc;          \
   String get_dump(usize& depth) const override;
 
 struct NodeExprLit : public ExprNode {
@@ -174,12 +174,12 @@ void dump_stmt(StmtNode* stmt, usize& depth);
 
 #undef COMMON_HEADER
 
-} // namespace ast
+}  // namespace ast
 
-} // namespace parser
+}  // namespace parser
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
 
 #endif

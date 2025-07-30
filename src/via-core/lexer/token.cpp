@@ -25,7 +25,8 @@ String Token::to_string() const {
 String Token::get_dump() const {
   std::ostringstream oss;
   oss << "[";
-  oss << std::left << std::setfill(' ') << std::setw(12) << magic_enum::enum_name(kind);
+  oss << std::left << std::setfill(' ') << std::setw(12)
+      << magic_enum::enum_name(kind);
   oss << " '";
 
   // check for eof token
@@ -38,8 +39,8 @@ String Token::get_dump() const {
   return oss.str();
 }
 
-} // namespace lex
+}  // namespace lex
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via

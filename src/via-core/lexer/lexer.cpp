@@ -18,67 +18,60 @@ struct TokenReprPair {
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-  {"var", TokenKind::KW_VAR},
-  {"macro", TokenKind::KW_MACRO},
-  {"func", TokenKind::KW_FUNC},
-  {"type", TokenKind::KW_TYPE},
-  {"while", TokenKind::KW_WHILE},
-  {"for", TokenKind::KW_FOR},
-  {"if", TokenKind::KW_IF},
-  {"in", TokenKind::KW_IN},
-  {"else", TokenKind::KW_ELSE},
-  {"do", TokenKind::KW_DO},
-  {"and", TokenKind::KW_AND},
-  {"or", TokenKind::KW_OR},
-  {"not", TokenKind::KW_NOT},
-  {"shl", TokenKind::KW_SHL},
-  {"shr", TokenKind::KW_SHR},
+    {"var", TokenKind::KW_VAR},     {"macro", TokenKind::KW_MACRO},
+    {"func", TokenKind::KW_FUNC},   {"type", TokenKind::KW_TYPE},
+    {"while", TokenKind::KW_WHILE}, {"for", TokenKind::KW_FOR},
+    {"if", TokenKind::KW_IF},       {"in", TokenKind::KW_IN},
+    {"else", TokenKind::KW_ELSE},   {"do", TokenKind::KW_DO},
+    {"and", TokenKind::KW_AND},     {"or", TokenKind::KW_OR},
+    {"not", TokenKind::KW_NOT},     {"shl", TokenKind::KW_SHL},
+    {"shr", TokenKind::KW_SHR},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
-  {".", TokenKind::DOT},
-  {",", TokenKind::COMMA},
-  {";", TokenKind::SEMICOLON},
-  {":", TokenKind::COLON},
-  {"::", TokenKind::DBCOLON},
-  {"->", TokenKind::ARROW},
-  {"?", TokenKind::QUESTION},
-  {"+", TokenKind::PLUS},
-  {"-", TokenKind::MINUS},
-  {"*", TokenKind::ASTERISK},
-  {"/", TokenKind::FSLASH},
-  {"**", TokenKind::POW},
-  {"%", TokenKind::PERCENT},
-  {"&", TokenKind::AMPERSAND},
-  {"~", TokenKind::TILDE},
-  {"^", TokenKind::CARET},
-  {"|", TokenKind::PIPE},
-  {"!", TokenKind::BANG},
-  {"++", TokenKind::INC},
-  {"--", TokenKind::DEC},
-  {"<", TokenKind::LESSTHAN},
-  {">", TokenKind::GREATERTHAN},
-  {"..", TokenKind::CONCAT},
-  {"(", TokenKind::LPAREN},
-  {")", TokenKind::RPAREN},
-  {"[", TokenKind::LBRACKET},
-  {"]", TokenKind::RBRACKET},
-  {"{", TokenKind::LCURLY},
-  {"}", TokenKind::RCURLY},
-  {"=", TokenKind::EQUALS},
-  {"==", TokenKind::DBEQUALS},
-  {"+=", TokenKind::PLUSEQUALS},
-  {"*=", TokenKind::ASTERISKEQUALS},
-  {"/=", TokenKind::FSLASHEQUALS},
-  {"**=", TokenKind::POWEQUALS},
-  {"%=", TokenKind::PERCENTEQUALS},
-  {"&=", TokenKind::AMPERSANDEQUALS},
-  {"^=", TokenKind::CARETEQUALS},
-  {"|=", TokenKind::PIPEEQUALS},
-  {"!=", TokenKind::BANGEQUALS},
-  {"<=", TokenKind::LESSTHANEQUALS},
-  {">=", TokenKind::GREATERTHANEQUALS},
-  {"..=", TokenKind::CONCATEQUALS},
+    {".", TokenKind::DOT},
+    {",", TokenKind::COMMA},
+    {";", TokenKind::SEMICOLON},
+    {":", TokenKind::COLON},
+    {"::", TokenKind::DBCOLON},
+    {"->", TokenKind::ARROW},
+    {"?", TokenKind::QUESTION},
+    {"+", TokenKind::PLUS},
+    {"-", TokenKind::MINUS},
+    {"*", TokenKind::ASTERISK},
+    {"/", TokenKind::FSLASH},
+    {"**", TokenKind::POW},
+    {"%", TokenKind::PERCENT},
+    {"&", TokenKind::AMPERSAND},
+    {"~", TokenKind::TILDE},
+    {"^", TokenKind::CARET},
+    {"|", TokenKind::PIPE},
+    {"!", TokenKind::BANG},
+    {"++", TokenKind::INC},
+    {"--", TokenKind::DEC},
+    {"<", TokenKind::LESSTHAN},
+    {">", TokenKind::GREATERTHAN},
+    {"..", TokenKind::CONCAT},
+    {"(", TokenKind::LPAREN},
+    {")", TokenKind::RPAREN},
+    {"[", TokenKind::LBRACKET},
+    {"]", TokenKind::RBRACKET},
+    {"{", TokenKind::LCURLY},
+    {"}", TokenKind::RCURLY},
+    {"=", TokenKind::EQUALS},
+    {"==", TokenKind::DBEQUALS},
+    {"+=", TokenKind::PLUSEQUALS},
+    {"*=", TokenKind::ASTERISKEQUALS},
+    {"/=", TokenKind::FSLASHEQUALS},
+    {"**=", TokenKind::POWEQUALS},
+    {"%=", TokenKind::PERCENTEQUALS},
+    {"&=", TokenKind::AMPERSANDEQUALS},
+    {"^=", TokenKind::CARETEQUALS},
+    {"|=", TokenKind::PIPEEQUALS},
+    {"!=", TokenKind::BANGEQUALS},
+    {"<=", TokenKind::LESSTHANEQUALS},
+    {">=", TokenKind::GREATERTHANEQUALS},
+    {"..=", TokenKind::CONCATEQUALS},
 };
 
 // why does the C standard library not have this??
@@ -88,13 +81,13 @@ static bool isbdigit(char c) {
 
 static bool isnumeric(TokenKind* kind, char c) {
   switch (*kind) {
-  // clang-format off
+    // clang-format off
   case TokenKind::INT:  return isdigit(c) || (c == '.' && *kind != TokenKind::FP); // decimal
   case TokenKind::XINT: return isxdigit(c); // hexadecimal
   case TokenKind::BINT: return isbdigit(c); // binary
-  // clang-format on
-  default:
-    break;
+    // clang-format on
+    default:
+      break;
   }
 
   return false;
@@ -131,8 +124,8 @@ Token* Lexer::read_number() {
       goto decimal;
 
     token->size = 2;
-    advance(); // 0
-    advance(); // b/x
+    advance();  // 0
+    advance();  // b/x
   }
 
 decimal:
@@ -158,9 +151,9 @@ Token* Lexer::read_string() {
   Token* token = heap_emplace<Token>(alloc);
   token->kind = TokenKind::STRING;
   token->lexeme = file.cursor;
-  token->size = 1; // for opening quote
+  token->size = 1;  // for opening quote
 
-  char oq = advance(); // opening quote
+  char oq = advance();  // opening quote
 
   char c;
   bool closed = false;
@@ -250,9 +243,8 @@ found:
 
     for (int i = 0; i < matched_size; ++i)
       advance();
-  }
-  else
-    advance(); // advance one char if no match
+  } else
+    advance();  // advance one char if no match
 
   return token;
 }
@@ -265,8 +257,8 @@ bool Lexer::skip_comment() {
 
   if (next == '/') {
     // Line comment: skip until newline or EOF
-    advance(); // consume first '/'
-    advance(); // consume second '/'
+    advance();  // consume first '/'
+    advance();  // consume second '/'
 
     while (char c = peek(0)) {
       if (c == '\n' || c == '\0')
@@ -279,17 +271,17 @@ bool Lexer::skip_comment() {
 
   if (next == '*') {
     // Block comment: skip until closing */
-    advance(); // consume '/'
-    advance(); // consume '*'
+    advance();  // consume '/'
+    advance();  // consume '*'
 
     while (true) {
       char c = peek(0);
       if (c == '\0')
-        break; // EOF without closing */
+        break;  // EOF without closing */
 
       if (c == '*' && peek(1) == '/') {
-        advance(); // consume '*'
-        advance(); // consume '/'
+        advance();  // consume '*'
+        advance();  // consume '/'
         break;
       }
 
@@ -344,8 +336,8 @@ void dump_ttree(const TokenBuf& B) {
     fmt::println("{}", (*p)->get_dump());
 }
 
-} // namespace lex
+}  // namespace lex
 
-} // namespace core
+}  // namespace core
 
-} // namespace via
+}  // namespace via
