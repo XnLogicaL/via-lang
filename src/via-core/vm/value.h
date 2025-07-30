@@ -1,0 +1,88 @@
+// This file is a part of the via Programming Language project
+// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+
+#ifndef VIA_VM_VALUE_H_
+#define VIA_VM_VALUE_H_
+
+#include <util/constexpr_stof.h>
+#include <util/constexpr_stoi.h>
+#include <via/config.h>
+
+namespace via {
+
+namespace core {
+
+namespace vm {
+
+class Interpreter;
+
+struct Value {
+  using int_type = i64;
+  using float_type = f32;
+  using bool_type = bool;
+
+  usize rc = 1;
+  Interpreter* ctx;
+
+  enum Kind {
+    Nil,
+    Int,
+    Float,
+    Bool,
+    String,
+  } kind = Nil;
+
+  union Un {
+    i64 i;
+    f64 fp;
+    bool b;
+    char* str;
+  } u;
+
+  constexpr Optional<int_type> as_cint() const;
+  constexpr Optional<float_type> as_cfloat() const;
+  constexpr bool_type as_cbool() const;
+  constexpr char* as_cstring() const;
+
+  constexpr Value as_int() const;
+  constexpr Value as_float() const;
+  constexpr Value as_bool() const;
+  constexpr Value as_string() const;
+
+  template <const Kind As>
+  inline constexpr Value as() const {
+    switch (As) {
+      case Int:
+        return as_int();
+      case Float:
+        return as_float();
+      case Bool:
+        return as_bool();
+      default:
+        break;
+    }
+
+    return Value(ctx);
+  }
+
+#define CTOR inline constexpr explicit Value
+#define TYPED_CTOR(type, ctype, id) \
+  CTOR(Interpreter* ctx, ctype id) : ctx(ctx), kind(type), u({.id = id}) {}
+
+  CTOR(Interpreter* ctx) : ctx(ctx) {}
+  TYPED_CTOR(Int, int_type, i);
+  TYPED_CTOR(Float, float_type, fp);
+  TYPED_CTOR(Bool, bool_type, b);
+  TYPED_CTOR(String, char*, str);
+
+#undef CTOR
+#undef TYPED_CTOR
+};
+
+}  // namespace vm
+
+}  // namespace core
+
+}  // namespace via
+
+#endif
