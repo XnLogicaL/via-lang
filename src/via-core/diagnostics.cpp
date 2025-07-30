@@ -1,7 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "diag.h"
+#include "diagnostics.h"
 
 namespace via {
 
@@ -14,9 +14,11 @@ void Diagnostics::clear() {
 void Diagnostics::emit() {
   for (const Diagnosis& diag : diags) {
     Location loc = diag.loc.to_relative(file);
+
     String addr = fmt::format("{}:{}:{}", path, loc.line, loc.offset);
     String msg = fmt::format(
-        "{} {}", diag.msg,
+        "{} {} [{}]", diag.msg,
+        apply_color("at", FGColor::White, BGColor::Black, Style::Faint),
         apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
 
     switch (diag.kind) {

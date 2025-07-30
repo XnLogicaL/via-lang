@@ -17,8 +17,8 @@ struct RegisterState {
   Buffer<u64> buf{UINT16_MAX / 8};
 };
 
-int sema_alloc_register(RegisterState& S);
-void sema_free_register(RegisterState& S, int reg);
+int alloc_register(RegisterState& S);
+void free_register(RegisterState& S, int reg);
 
 }  // namespace sema
 

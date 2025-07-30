@@ -8,6 +8,8 @@
 #include "lexer/location.h"
 #include "lexer/token.h"
 
+#define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
+
 namespace via {
 
 namespace core {

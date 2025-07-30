@@ -7,7 +7,15 @@ namespace via {
 
 namespace core {
 
-namespace sema {}
+namespace sema {
+
+using namespace parser::ast;
+
+ControlPath analyze_cpath(const StmtNode* stmt) {
+  return ControlPath::None;
+}
+
+}  // namespace sema
 
 }  // namespace core
 

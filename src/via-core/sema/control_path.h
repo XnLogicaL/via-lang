@@ -21,7 +21,7 @@ enum class ControlPath {
   Unreachable,  // statement is never reached
 };
 
-ControlPath sema_cpath_analyze(const parser::ast::StmtNode* stmt);
+ControlPath analyze_cpath(const parser::ast::StmtNode* stmt);
 
 }  // namespace sema
 

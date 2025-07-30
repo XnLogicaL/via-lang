@@ -9,7 +9,7 @@ namespace core {
 
 namespace sema {
 
-int sema_alloc_register(RegisterState& R) {
+int alloc_register(RegisterState& R) {
   for (u16 i = 0; i < UINT16_MAX; i++) {
     for (u16 j = 0; j < 64; j++) {
       u64* addr = R.buf.data + i;
@@ -25,10 +25,10 @@ int sema_alloc_register(RegisterState& R) {
   return -1;
 }
 
-void sema_free_register(RegisterState& R, int reg) {
-  u16 wrd = reg / 64, bit = reg % 64;
+void free_register(RegisterState& R, int reg) {
+  u16 word = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
-  R.buf.data[wrd] &= mask;  // mark bit as free
+  R.buf.data[word] &= mask;  // mark bit as free
 }
 
 }  // namespace sema

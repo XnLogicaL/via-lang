@@ -16,7 +16,6 @@ inline usize DEFAULT_DEPTH = 0;
 
 #define TAB String(depth * 4, ' ')
 #define FORMAT(...) TAB + fmt::format(__VA_ARGS__)
-#define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
 
 template <typename T, typename F = Function<String(const T& __t)>>
 static String __vec_to_string(const Vec<T>& __v, F __f) {

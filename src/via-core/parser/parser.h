@@ -8,7 +8,7 @@
 #include <util/memory.h>
 #include <via/config.h>
 #include "ast.h"
-#include "diag.h"
+#include "diagnostics.h"
 #include "lexer/lexer.h"
 #include "lexer/token.h"
 

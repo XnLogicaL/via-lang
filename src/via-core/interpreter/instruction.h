@@ -267,9 +267,9 @@ const char* opcode_to_string(Opcode opc);
 struct Instruction {
   Opcode op = Opcode::NOP;
   u16 a, b, c;
-};
 
-String instruction_format(Instruction insn);
+  String to_string() const;
+};
 
 }  // namespace vm
 
