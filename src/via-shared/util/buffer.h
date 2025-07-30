@@ -48,11 +48,11 @@ struct Buffer {
   inline const T* end() const { return data + size * sizeof(T); }
   // clang-format on
 
-  inline Buffer() = default;
-  inline Buffer(const usize size)
+  constexpr Buffer() = default;
+  constexpr Buffer(const usize size)
       : data(Alloc(size)), cursor(data), size(size) {}
 
-  inline Buffer(const T* begin, const T* end) {
+  constexpr Buffer(const T* begin, const T* end) {
     usize offset = end - begin;
     size = offset / sizeof(T);
     data = Alloc(size);
@@ -61,21 +61,21 @@ struct Buffer {
     std::memcpy(data, begin, offset);
   }
 
-  inline ~Buffer() { Free(data); }
+  ~Buffer() { Free(data); }
 
-  inline Buffer(const Buffer& other)
+  constexpr Buffer(const Buffer& other)
       : data(Alloc(other.size)), cursor(data), size(other.size) {
     std::memcpy(data, other.data, size);
   }
 
-  inline Buffer(Buffer&& other)
+  constexpr Buffer(Buffer&& other)
       : data(other.data), cursor(data), size(other.size) {
     other.data = NULL;
     other.cursor = NULL;
     other.size = 0;
   }
 
-  inline Buffer& operator=(const Buffer& other) {
+  Buffer& operator=(const Buffer& other) {
     if (this != &other) {
       Free(data);
 
@@ -89,7 +89,7 @@ struct Buffer {
     return *this;
   }
 
-  inline Buffer& operator=(Buffer&& other) {
+  Buffer& operator=(Buffer&& other) {
     if (this != &other) {
       Free(data);
 
