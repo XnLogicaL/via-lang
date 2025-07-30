@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "value_ref.h"
+#include "interpreter.h"
 
 namespace via {
 
@@ -13,7 +14,7 @@ void ValueRef::free() {
   assert(!is_null() && "free called on NULL reference");
 
   if (--ptr->rc == 0) {
-    // TODO: heap_free(..., (void*)ptr);
+    ctx->get_allocator().free(ptr);
     ptr = NULL;
   }
 }
@@ -27,7 +28,8 @@ usize ValueRef::count_refs() const {
   return ptr->rc;
 }
 
-ValueRef::ValueRef(Interpreter* ctx) : ctx(ctx), ptr(NULL /* TODO */) {}
+ValueRef::ValueRef(Interpreter* ctx)
+    : ctx(ctx), ptr(ctx->get_allocator().emplace<Value>(ctx)) {}
 
 ValueRef::~ValueRef() {
   if (!is_null())
