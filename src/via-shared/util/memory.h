@@ -9,43 +9,44 @@
 
 namespace via {
 
-struct HeapAllocator {
-  mi_heap_t* heap;
+class HeapAllocator {
+ public:
+  void* alloc(usize size);
+  void free(void* ptr);
 
-  inline explicit HeapAllocator() : heap(mi_heap_new()) {}
+  template <typename T>
+  inline T* alloc() {
+    return (T*)mi_heap_malloc(heap, sizeof(T));
+  }
 
-  inline ~HeapAllocator() { mi_heap_destroy(heap); }
+  template <typename T>
+  inline T* alloc(const usize count) {
+    return (T*)mi_heap_malloc(heap, count * sizeof(T));
+  }
+
+  template <typename T, typename... Args>
+  inline T* emplace(Args... args) {
+    void* mem = mi_heap_malloc(heap, sizeof(T));
+    return new (mem) T(std::forward<Args>(args)...);
+  }
+
+  template <typename T, typename... Args>
+  inline T* emplace(usize count, Args&&... args) {
+    T* ptr = (T*)mi_heap_malloc(heap, count * sizeof(T));
+    for (usize i = 0; i < count; ++i)
+      new (&ptr[i]) T(std::forward<Args>(args)...);
+    return ptr;
+  }
+
+  HeapAllocator() = default;
+  ~HeapAllocator() { mi_heap_destroy(heap); }
 
   VIA_NOCOPY(HeapAllocator);
   VIA_NOMOVE(HeapAllocator);
+
+ private:
+  mi_heap_t* heap = mi_heap_new();
 };
-
-void* heap_alloc(HeapAllocator& heap, const usize size);
-void heap_free(HeapAllocator& heap, void* ptr);
-
-template <typename T>
-inline T* heap_alloc(HeapAllocator& heap) {
-  return (T*)mi_heap_malloc(heap.heap, sizeof(T));
-}
-
-template <typename T>
-inline T* heap_alloc(HeapAllocator& heap, const usize count) {
-  return (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
-}
-
-template <typename T, typename... Args>
-inline T* heap_emplace(HeapAllocator& heap, Args... args) {
-  void* mem = mi_heap_malloc(heap.heap, sizeof(T));
-  return new (mem) T(std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline T* heap_emplace(HeapAllocator& heap, usize count, Args&&... args) {
-  T* ptr = (T*)mi_heap_malloc(heap.heap, count * sizeof(T));
-  for (usize i = 0; i < count; ++i)
-    new (&ptr[i]) T(std::forward<Args>(args)...);
-  return ptr;
-}
 
 }  // namespace via
 

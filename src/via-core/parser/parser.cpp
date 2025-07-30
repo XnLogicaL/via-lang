@@ -122,7 +122,7 @@ Token* Parser::expect(TokenKind kind, const char* task) {
 TupleBinding* Parser::parse_tuple_binding() {
   SAVE_FIRST()
 
-  auto tpb = heap_emplace<TupleBinding>(alloc);
+  auto tpb = alloc.emplace<TupleBinding>();
 
   while (!match(TokenKind::RBRACKET)) {
     Token* id = advance();
@@ -133,7 +133,7 @@ TupleBinding* Parser::parse_tuple_binding() {
                         "Unexpected token '{}' while parsing tuple binding",
                         id->to_string());
 
-    auto sym = heap_emplace<NodeExprSym>(alloc);
+    auto sym = alloc.emplace<NodeExprSym>();
     sym->loc = id->location(source);
     sym->tok = id;
 
@@ -148,12 +148,12 @@ TupleBinding* Parser::parse_tuple_binding() {
 }
 
 LValue* Parser::parse_lvalue() {
-  auto lval = heap_emplace<LValue>(alloc);
+  auto lval = alloc.emplace<LValue>();
 
   if (match(TokenKind::IDENT)) {
     Token* id = advance();
 
-    auto sym = heap_emplace<NodeExprSym>(alloc);
+    auto sym = alloc.emplace<NodeExprSym>();
     sym->loc = id->location(source);
     sym->tok = id;
 
@@ -188,7 +188,7 @@ ExprNode* Parser::parse_primary() {
     case TokenKind::STRING: {
       advance();
 
-      auto* lit = heap_emplace<NodeExprLit>(alloc);
+      auto* lit = alloc.emplace<NodeExprLit>();
       lit->tok = first;
       lit->loc = loc;
 
@@ -197,7 +197,7 @@ ExprNode* Parser::parse_primary() {
     case TokenKind::IDENT: {
       advance();
 
-      auto* sym = heap_emplace<NodeExprSym>(alloc);
+      auto* sym = alloc.emplace<NodeExprSym>();
       sym->tok = first;
       sym->loc = loc;
 
@@ -220,7 +220,7 @@ ExprNode* Parser::parse_primary() {
 
         expect(TokenKind::RPAREN, "parsing tuple expression");
 
-        auto* tup = heap_emplace<NodeExprTuple>(alloc);
+        auto* tup = alloc.emplace<NodeExprTuple>();
         tup->vals = std::move(vals);
         tup->loc = {start.begin, peek(-1)->location(source).end};
 
@@ -229,7 +229,7 @@ ExprNode* Parser::parse_primary() {
 
       expect(TokenKind::RPAREN, "parsing grouping expression");
 
-      auto* group = heap_emplace<NodeExprGroup>(alloc);
+      auto* group = alloc.emplace<NodeExprGroup>();
       group->expr = first;
       group->loc = {start.begin, peek(-1)->location(source).end};
 
@@ -249,7 +249,7 @@ ExprNode* Parser::parse_unary_or_postfix() {
     case TokenKind::KW_NOT:
     case TokenKind::MINUS:
     case TokenKind::TILDE: {
-      auto* un = heap_emplace<NodeExprUn>(alloc);
+      auto* un = alloc.emplace<NodeExprUn>();
       un->op = advance();
       un->expr = parse_unary_or_postfix();
       un->loc = {un->op->location(source).begin, un->expr->loc.end};
@@ -279,7 +279,7 @@ ExprNode* Parser::parse_unary_or_postfix() {
         } else
           advance();  // consume ')'
 
-        auto* call = heap_emplace<NodeExprCall>(alloc);
+        auto* call = alloc.emplace<NodeExprCall>();
         call->lval = expr;
         call->args = std::move(args);
         call->loc = {expr->loc.begin, peek(-1)->location(source).end};
@@ -294,7 +294,7 @@ ExprNode* Parser::parse_unary_or_postfix() {
 
         expect(TokenKind::RBRACKET, "parsing subscript expression");
 
-        auto* subs = heap_emplace<NodeExprSubs>(alloc);
+        auto* subs = alloc.emplace<NodeExprSubs>();
         subs->lval = expr;
         subs->idx = idx;
         subs->loc = {expr->loc.begin, peek(-1)->location(source).end};
@@ -313,7 +313,7 @@ ExprNode* Parser::parse_expr(int min_prec) {
 
   int prec;
   while ((prec = bin_prec(peek()->kind), prec >= min_prec)) {
-    auto bin = heap_emplace<NodeExprBin>(alloc);
+    auto bin = alloc.emplace<NodeExprBin>();
     bin->op = advance();
     bin->lhs = lhs;
     bin->rhs = parse_expr(prec + 1);
@@ -328,7 +328,7 @@ NodeStmtScope* Parser::parse_scope() {
   auto* first = advance();
   auto loc = first->location(source);
 
-  auto scope = heap_emplace<NodeStmtScope>(alloc);
+  auto scope = alloc.emplace<NodeStmtScope>();
 
   if (first->kind == TokenKind::COLON) {
     scope->stmts.push_back(parse_stmt());
@@ -349,7 +349,7 @@ NodeStmtScope* Parser::parse_scope() {
 NodeStmtVar* Parser::parse_var() {
   SAVE_FIRST()
 
-  auto vars = heap_emplace<NodeStmtVar>(alloc);
+  auto vars = alloc.emplace<NodeStmtVar>();
   vars->lval = parse_lvalue();
 
   expect(TokenKind::EQUALS, "parsing variable declaration");
@@ -365,7 +365,7 @@ NodeStmtVar* Parser::parse_var() {
 NodeStmtFor* Parser::parse_for() {
   SAVE_FIRST()
 
-  auto fors = heap_emplace<NodeStmtFor>(alloc);
+  auto fors = alloc.emplace<NodeStmtFor>();
   fors->init = parse_var();
 
   expect(TokenKind::COMMA, "parsing for statement");
@@ -384,7 +384,7 @@ NodeStmtFor* Parser::parse_for() {
 NodeStmtForEach* Parser::parse_foreach() {
   SAVE_FIRST()
 
-  auto fors = heap_emplace<NodeStmtForEach>(alloc);
+  auto fors = alloc.emplace<NodeStmtForEach>();
   fors->lval = parse_lvalue();
 
   expect(TokenKind::KW_IN, "parsing for each statement");
@@ -405,7 +405,7 @@ NodeStmtIf* Parser::parse_if() {
   br.cnd = parse_expr();
   br.br = parse_scope();
 
-  auto ifs = heap_emplace<NodeStmtIf>(alloc);
+  auto ifs = alloc.emplace<NodeStmtIf>();
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
@@ -416,7 +416,7 @@ NodeStmtIf* Parser::parse_if() {
 NodeStmtWhile* Parser::parse_while() {
   SAVE_FIRST()
 
-  auto whs = heap_emplace<NodeStmtWhile>(alloc);
+  auto whs = alloc.emplace<NodeStmtWhile>();
   whs->cnd = parse_expr();
   whs->br = parse_scope();
   whs->loc = {loc.begin, whs->br->loc.end};
@@ -444,7 +444,7 @@ StmtNode* Parser::parse_stmt() {
   }
 
   if (match(TokenKind::SEMICOLON)) {
-    auto empty = heap_emplace<NodeStmtEmpty>(alloc);
+    auto empty = alloc.emplace<NodeStmtEmpty>();
     empty->loc = advance()->location(source);
     return empty;
   }
@@ -455,7 +455,7 @@ StmtNode* Parser::parse_stmt() {
                       "Unexpected token '{}' while parsing statement",
                       first->to_string());
 
-  auto es = heap_emplace<NodeStmtExpr>(alloc);
+  auto es = alloc.emplace<NodeStmtExpr>();
   es->expr = parse_expr();
   es->loc = es->expr->loc;
 

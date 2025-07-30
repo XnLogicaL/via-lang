@@ -81,7 +81,7 @@ static bool isbdigit(char c) {
 
 static bool isnumeric(TokenKind* kind, char c) {
   switch (*kind) {
-    // clang-format off
+      // clang-format off
   case TokenKind::INT:  return isdigit(c) || (c == '.' && *kind != TokenKind::FP); // decimal
   case TokenKind::XINT: return isxdigit(c); // hexadecimal
   case TokenKind::BINT: return isbdigit(c); // binary
@@ -110,7 +110,7 @@ char Lexer::peek(int count) {
 }
 
 Token* Lexer::read_number() {
-  Token* token = heap_emplace<Token>(alloc);
+  Token* token = alloc.emplace<Token>();
   token->kind = TokenKind::INT;
   token->lexeme = file.cursor;
   token->size = 0;
@@ -148,7 +148,7 @@ decimal:
 }
 
 Token* Lexer::read_string() {
-  Token* token = heap_emplace<Token>(alloc);
+  Token* token = alloc.emplace<Token>();
   token->kind = TokenKind::STRING;
   token->lexeme = file.cursor;
   token->size = 1;  // for opening quote
@@ -172,7 +172,7 @@ Token* Lexer::read_string() {
 }
 
 Token* Lexer::read_identifier() {
-  Token* token = heap_emplace<Token>(alloc);
+  Token* token = alloc.emplace<Token>();
   token->kind = TokenKind::IDENT;
   token->lexeme = file.cursor;
   token->size = 0;
@@ -210,7 +210,7 @@ Token* Lexer::read_identifier() {
 }
 
 Token* Lexer::read_symbol() {
-  Token* token = heap_emplace<Token>(alloc);
+  Token* token = alloc.emplace<Token>();
   token->lexeme = file.cursor;
   token->kind = TokenKind::ILLEGAL;
   token->size = 1;
@@ -321,7 +321,7 @@ TokenBuf Lexer::tokenize() {
     toks.push_back(token);
   }
 
-  Token* eof = heap_emplace<Token>(alloc);
+  Token* eof = alloc.emplace<Token>();
   eof->kind = TokenKind::EOF_;
   eof->lexeme = file.cursor;
   eof->size = 0;
