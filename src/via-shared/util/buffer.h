@@ -40,6 +40,8 @@ struct Buffer {
   mutable T* cursor = NULL;
   usize size = 0;
 
+  void reset_cursor() const;
+
   // clang-format off
   inline T* begin() { return data; }
   inline T* end() { return data + size * sizeof(T); }

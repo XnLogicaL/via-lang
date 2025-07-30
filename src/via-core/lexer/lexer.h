@@ -16,8 +16,6 @@ namespace core {
 
 namespace lex {
 
-using FileBuf = Buffer<char>;
-
 class Lexer final {
  public:
   Lexer(const FileBuf& file) : file(file) {}
