@@ -40,6 +40,8 @@ class HeapAllocator {
     return ptr;
   }
 
+  char* strdup(const char* str);
+
   HeapAllocator() = default;
   ~HeapAllocator() { mi_heap_destroy(heap); }
 
