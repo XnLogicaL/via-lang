@@ -481,9 +481,8 @@ AstBuf Parser::parse() {
 
 void dump_ast(const AstBuf& B) {
   usize depth = 0;
-
-  for (StmtNode** stmt = B.data; stmt < B.data + B.size; stmt++)
-    fmt::println("{}", (*stmt)->get_dump(depth));
+  for (const StmtNode* stmt : B)
+    fmt::println("{}", stmt->get_dump(depth));
 }
 
 }  // namespace parser
