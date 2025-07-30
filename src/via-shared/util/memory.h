@@ -25,12 +25,14 @@ class HeapAllocator {
   }
 
   template <typename T, typename... Args>
+    requires std::is_constructible_v<T, Args...>
   inline T* emplace(Args... args) {
     void* mem = mi_heap_malloc(heap, sizeof(T));
     return new (mem) T(std::forward<Args>(args)...);
   }
 
   template <typename T, typename... Args>
+    requires std::is_constructible_v<T, Args...>
   inline T* emplace(usize count, Args&&... args) {
     T* ptr = (T*)mi_heap_malloc(heap, count * sizeof(T));
     for (usize i = 0; i < count; ++i)
