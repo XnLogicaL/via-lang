@@ -17,6 +17,23 @@ HeapAllocator& Interpreter::get_allocator() {
   return alloc;
 }
 
+StkId* Interpreter::new_local(Value* val) {
+  stack.push((uptr)val);
+  return (StkId*)stack.top();
+}
+
+void Interpreter::set_local(StkId* id, Value* val) {
+  *id = val;
+}
+
+Value* Interpreter::get_local(StkId* id) {
+  return *id;
+}
+
+ValueRef Interpreter::get_local_ref(StkId* id) {
+  return get_local(id)->make_ref();
+}
+
 }  // namespace vm
 
 }  // namespace core
