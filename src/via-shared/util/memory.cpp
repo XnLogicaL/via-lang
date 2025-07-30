@@ -9,4 +9,8 @@ void* heap_alloc(HeapAllocator& heap, const usize size) {
   return mi_heap_malloc(heap.heap, size);
 }
 
+void heap_free(HeapAllocator& heap, void* ptr) {
+  mi_free(ptr);
+}
+
 }  // namespace via

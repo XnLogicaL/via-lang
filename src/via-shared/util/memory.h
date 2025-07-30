@@ -21,6 +21,7 @@ struct HeapAllocator {
 };
 
 void* heap_alloc(HeapAllocator& heap, const usize size);
+void heap_free(HeapAllocator& heap, void* ptr);
 
 template <typename T>
 inline T* heap_alloc(HeapAllocator& heap) {
