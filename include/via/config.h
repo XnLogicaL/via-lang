@@ -23,6 +23,10 @@
   target& operator=(const target&); \
   target(const target&);
 
+#define VIA_IMPLCOPY_CONSTEXPR(target)        \
+  constexpr target& operator=(const target&); \
+  constexpr target(const target&);
+
 #define VIA_NOMOVE(target)              \
   target& operator=(target&&) = delete; \
   target(target&&) = delete;
