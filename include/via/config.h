@@ -15,6 +15,14 @@
 #define VIA_VERSION "0.0.2"
 #define VIA_WORDSIZE sizeof(void*)
 
+#define VIA_BUG(msg)                                \
+  assert(false &&                                   \
+         "internal bug (please create an issue at " \
+         "https://github.com/XnLogicaL/via-lang): " msg)
+
+#define VIA_TODO(msg) assert(false && "TODO: " msg);
+#define VIA_UNIMPLEMENTED(msg) assert(false && "unimplemented: " msg);
+
 #define VIA_NOCOPY(target)                   \
   target& operator=(const target&) = delete; \
   target(const target&) = delete;
