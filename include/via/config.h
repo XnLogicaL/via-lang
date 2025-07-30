@@ -40,8 +40,10 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <mimalloc.h>
+#include <expected>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -83,6 +85,13 @@ using Arc = Atomic<Rc<T>>;
 
 template <typename T, typename U>
 using Pair = std::pair<T, U>;
+
+template <typename T, typename E>
+using Result = std::expected<T, E>;
+
+template <typename T>
+using Optional = std::optional<T>;
+inline constexpr auto nullopt = std::nullopt;
 
 using u8 = uint8_t;
 using u16 = uint16_t;
