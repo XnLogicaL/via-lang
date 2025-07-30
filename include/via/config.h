@@ -52,6 +52,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <mimalloc.h>
+#include <cassert>
 #include <expected>
 #include <functional>
 #include <memory>
