@@ -13,6 +13,8 @@
   <img src="https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg" alt="CI">
 </p>
 
+# Introduction
+
 *"An evolution, not a revolution. -C3"*
 
 ```go
@@ -36,9 +38,7 @@ var ref = util::retain(&nums, func(k: int, v: int) {
 printn(ref, ref is nums) // [2, 4, 6] true
 ```
 
-A performant, minimal, modern alternative to **Lua**.
-
-[Skip to installation](README.md#installation)<sub>(if you wish to not read the following yap)</sub>
+A performant, minimal, modern alternative to **Lua**
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
