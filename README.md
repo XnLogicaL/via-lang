@@ -27,9 +27,7 @@
 
 # Introduction
 
-*"An evolution, not a revolution. -C3"*
-
-A minimalistic, multi-paradigm scripting language built for performance-critical applications. 
+A minimalistic, multi-paradigm scripting language built for performance-critical applications.
 
 <img src="https://i.imgur.com/l0Yd6Ok.png" style="width:500px;height:500px;"/>
 
