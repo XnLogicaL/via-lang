@@ -22,7 +22,7 @@
   <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
   <a href="#design">Design</a> &nbsp;&bull;&nbsp;
   <a href="#installation">Installation</a> &nbsp;&bull;&nbsp;
-  <a href="#credits">Credits</a> &nbsp;&bull;&nbsp;
+  <a href="#credits">Credits</a>
 </p>
 
 # Introduction
