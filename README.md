@@ -1,17 +1,15 @@
 <p align="center">
   <img src="https://i.imgur.com/9WjzQ98.png"/>
 </p>
-  
-![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
-![OS](https://img.shields.io/badge/OS-linux%2C%20windows%2C%20macOS-0078D4)
-![CPU](https://img.shields.io/badge/CPU-x86%2C%20x64%2C%20ARM%2C%20ARM64-FF8C00)
-![CI](https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg)
-![GitHub top language](https://img.shields.io/github/languages/top/XnLogicaL/via-lang)
-![GitHub language count](https://img.shields.io/github/languages/count/XnLogicaL/via-lang)
-![GitHub release](https://img.shields.io/github/v/release/XnLogicaL/via-lang)
-![GitHub release date](https://img.shields.io/github/release-date/XnLogicaL/via-lang)
-
-# via
+---
+<p align="center">
+  <img src="https://img.shields.io/github/license/XnLogicaL/via-lang" alt="License">
+  <img src="https://img.shields.io/badge/OS-linux%2C%20windows%2C%20macOS-0078D4" alt="OS">
+  <img src="https://img.shields.io/badge/CPU-x86%2C%20x64%2C%20ARM%2C%20ARM64-FF8C00" alt="CPU">
+  <img src="https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg" alt="CI">
+  <img src="https://img.shields.io/github/languages/top/XnLogicaL/via-lang" alt="Top Language">
+  <img src="https://img.shields.io/github/languages/count/XnLogicaL/via-lang" alt="Language Count">
+</p>
 
 *"An evolution, not a revolution. -C3"*
 
