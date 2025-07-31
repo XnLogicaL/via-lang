@@ -1,5 +1,5 @@
-<p align="center" style="background-color:black; padding:10px 100px; display:inline-block;">
-  <img src="https://i.imgur.com/TpsUquz.png"/>
+<p align="center">
+  <img src="https://i.imgur.com/9WjzQ98.png"/>
 </p>
   
 ![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
