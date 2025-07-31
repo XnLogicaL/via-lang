@@ -13,6 +13,19 @@
   <img src="https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg" alt="CI">
 </p>
 
+<p align="center">
+  This repository contains the <strong>via Programming Language</strong> source code and its tools.
+</p>
+
+<p align="center">
+  <p align="center">
+  <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
+  <a href="#installation">Installation</a> &nbsp;&bull;&nbsp;
+  <a href="#usage">Usage</a> &nbsp;&bull;&nbsp;
+  <a href="#documentation">Documentation</a> &nbsp;&bull;&nbsp;
+  <a href="#issue">Issue?</a>
+</p>
+
 # Introduction
 
 *"An evolution, not a revolution. -C3"*
