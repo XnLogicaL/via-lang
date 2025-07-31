@@ -38,7 +38,7 @@ var ref = util::retain(&nums, func(k: int, v: int) {
 printn(ref, ref is nums) // [2, 4, 6] true
 ```
 
-A performant, minimal, modern alternative to **Lua**
+A minimalistic, multi-paradigm scripting language built for performance-critical applications. 
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
