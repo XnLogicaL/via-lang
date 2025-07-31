@@ -3,13 +3,13 @@
 </p>
   
 ![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
+![OS](https://img.shields.io/badge/OS-linux%2C%20windows%2C%20macOS-0078D4)
+![CPU](https://img.shields.io/badge/CPU-x86%2C%20x64%2C%20ARM%2C%20ARM64-FF8C00)
+![CI](https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg)
 ![GitHub top language](https://img.shields.io/github/languages/top/XnLogicaL/via-lang)
 ![GitHub language count](https://img.shields.io/github/languages/count/XnLogicaL/via-lang)
 ![GitHub release](https://img.shields.io/github/v/release/XnLogicaL/via-lang)
 ![GitHub release date](https://img.shields.io/github/release-date/XnLogicaL/via-lang)
-![OS](https://img.shields.io/badge/OS-linux%2C%20windows%2C%20macOS-0078D4)
-![CPU](https://img.shields.io/badge/CPU-x86%2C%20x64%2C%20ARM%2C%20ARM64-FF8C00)
-![CI](https://github.com/XnLogicaL/via-lang/actions/workflows/ci.yml/badge.svg)
 
 # via
 
