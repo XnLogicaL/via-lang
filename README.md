@@ -1,7 +1,9 @@
 <p align="center">
   <img src="https://i.imgur.com/9WjzQ98.png"/>
 </p>
+
 ---
+
 <p align="center">
   <img src="https://img.shields.io/github/license/XnLogicaL/via-lang" alt="License">
   <img src="https://img.shields.io/badge/OS-linux%2C%20windows%2C%20macOS-0078D4" alt="OS">
