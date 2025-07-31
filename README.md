@@ -33,7 +33,7 @@ A minimalistic, multi-paradigm scripting language built for performance-critical
 
 
 > [!WARNING]
-> This project is currently **not** production-ready. All features and implementations are **experimental** and therefore are subject to change.
+> This project is currently **not** production-ready. There are many missing core features that are yet to be implemented, tested, and improved. All features and implementations are **experimental** and therefore are subject to change.
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
