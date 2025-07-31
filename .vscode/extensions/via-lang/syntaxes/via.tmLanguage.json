@@ -20,7 +20,7 @@
     },
     {
       "name": "keyword.control.via",
-      "match": "\\b(static|import|export|mod|type|defer|const|func|with|elseif|macro|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|shl|shr|try|enum)\\b"
+      "match": "\\b(is|static|import|export|mod|type|defer|const|func|with|elseif|macro|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|shl|shr|try|enum)\\b"
     },
     {
       "name": "variable.language.self.via",
