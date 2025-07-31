@@ -1,4 +1,4 @@
-![Logo](https://imgur.com/a/Rha0EFR)
+![Logo](https://i.imgur.com/TpsUquz.png)
 
 ![License](https://img.shields.io/github/license/XnLogicaL/via-lang)
 ![GitHub top language](https://img.shields.io/github/languages/top/XnLogicaL/via-lang)
