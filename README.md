@@ -29,28 +29,9 @@
 
 *"An evolution, not a revolution. -C3"*
 
-```go
-type predicate<T> = func(k: int, v: T) -> bool
-
-mod util {
-  func retain<T>(&list: [T], keep: predicate<T>) -> [T] {
-    for [k, v] in list:
-      if not keep(k, v):
-        list[i] = nil
-
-    return list
-  }
-}
-
-var nums = [1, 2, 3, 4, 5, 6]
-var ref = util::retain(&nums, func(k: int, v: int) {
-    return v % 2 == 0;
-})
-
-printn(ref, ref is nums) // [2, 4, 6] true
-```
-
 A minimalistic, multi-paradigm scripting language built for performance-critical applications. 
+
+<img src="https://i.imgur.com/Iub9Hf7.png"/>
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
