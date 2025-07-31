@@ -31,7 +31,12 @@ A minimalistic, multi-paradigm scripting language built for performance-critical
 
 <img src="https://i.imgur.com/l0Yd6Ok.png" style="width:500px;height:500px;"/>
 
+
+> [!WARNING]
+> This project is not ready for production at the moment. All features and implementations are **experimental**.
+
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
+
 It takes good features from all respected and established languages and carefully sows them together to hopefully make for a good scripting language.
 
 ## Why not Lua?
