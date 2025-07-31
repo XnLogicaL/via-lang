@@ -27,6 +27,8 @@
 
 <h1 align="center">Introduction</h1>
 
+<p align="center">
+
 A minimalistic, multi-paradigm scripting language built for performance-critical applications.
 
 <p align="center">
@@ -141,3 +143,5 @@ via XX.XX.XX
 - **@XnLogicaL** - Lead maintainer
 - **@KasenDaniels** - Name and banner
 - [MFTOOL JAVA](https://github.com/ankitwasankar/mftool-java) - README inspiration
+
+</p>
