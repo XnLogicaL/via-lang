@@ -1,8 +1,10 @@
-<p align="center">
-  <img src="https://i.imgur.com/9WjzQ98.png"/>
-</p>
+<h1 align="center">
+  <a href="https://github.com/XnLogicaL/via-lang">
+    <img src="https://i.imgur.com/9WjzQ98.png"/>
+  </a>
+</h1>
 
----
+<p align="center">
 
 <p align="center">
   <img src="https://img.shields.io/github/license/XnLogicaL/via-lang" alt="License">
