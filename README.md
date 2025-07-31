@@ -156,4 +156,4 @@ via XX.XX.XX
 
 - **@XnLogicaL** - Lead maintainer
 - **@KasenDaniels** - Name and banner
-- [MFTOOL JAVA](https://github.com/ankitwasankar/mftool-java) - README inspiration
+- [mftool-java](https://github.com/ankitwasankar/mftool-java) - README inspiration
