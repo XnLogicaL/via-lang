@@ -20,10 +20,9 @@
 <p align="center">
   <p align="center">
   <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
+  <a href="#design">Design</a> &nbsp;&bull;&nbsp;
   <a href="#installation">Installation</a> &nbsp;&bull;&nbsp;
-  <a href="#usage">Usage</a> &nbsp;&bull;&nbsp;
-  <a href="#documentation">Documentation</a> &nbsp;&bull;&nbsp;
-  <a href="#issue">Issue?</a>
+  <a href="#credits">Credits</a> &nbsp;&bull;&nbsp;
 </p>
 
 # Introduction
@@ -69,9 +68,9 @@ via solves this problem by only abstracting what is necessary. All of the langua
 
 ---
 
-## Design
+# Design
 
-#### Syntax
+## Syntax
 
 via has a semi-verbose syntax that is designed to get the behavior of code across with just a look.
 
@@ -81,7 +80,7 @@ via has a semi-verbose syntax that is designed to get the behavior of code acros
 
 - via uses curly-braces ("*{*" and "*}*") to define scope bounds, which makes it familiar to a significant portion of programmers, while not losing the appeal of simplicity.
 
-#### Static typing
+## Static typing
 
 via is a statically typed language. However, the type system is implemented in a way that, it does not make the language any less ergonomic and easy-to-use.
 
@@ -89,7 +88,7 @@ via is a statically typed language. However, the type system is implemented in a
 
 - Static typing also has another massive benefit, which significant runtime performance improvements over dynamic typing, at the very cheap cost of more compile-time checks. In a lot of cases, via outperforms Lua by 1.5-2x, simply because the interpreter does not have to check types and trusts the compiler.
 
-#### Performance
+## Performance
 
 via has an **extremely fast** runtime, often outperforming reputably fast interpreted languages like Lua, without stepping into **JIT** territory.
 
@@ -97,7 +96,7 @@ via has an **extremely fast** runtime, often outperforming reputably fast interp
 
 - It has a powerful and often aggressively-optimizing compiler that has the capability to compiler user-defined functions into native machine code and still treat them as functions during runtime, achieving close to native performance.
 
-#### Embedability
+## Embedability
 
 via is designed to be embedable into most environments that require an efficient scripting language.
 
@@ -109,19 +108,19 @@ via is designed to be embedable into most environments that require an efficient
 
 ---
 
-## Installation
+# Installation
 
-#### Prebuilt
+## Prebuilt
 
 To install pre-built binaries, simply go to the [GitHub Releases]() page and pick the binary that suits your OS and CPU architecture.
 
-#### From source
+## From source
 
 If pre-built installation is not available to you for whatever reason, or you just want to mess around with the source code, you're more than welcome.
 
 A [UNIX compliant]() operating system is recommended for this process.
 
-##### Preperation: Installing dependencies
+### Preperation: Installing dependencies
 via uses [CMake]() to generate build files. Compilers and other tools are preference-based, here are supported compilers:
 - MSVC
 - Clang
@@ -134,14 +133,14 @@ $ cmake --version
 
 ---
 
-##### Step 1: Cloning the repository
+### Step 1: Cloning the repository
 
 First step is to clone the repository into your local machine.
 ```bash
 $ git clone --recursive https://github.com/XnLogicaL/via-lang.git
 ```
 
-##### Step 2: Generating build files
+### Step 2: Generating build files
 
 Now that you have the repository cloned, you will need to make a `build` folder.
 ```bash
@@ -154,7 +153,7 @@ $ cmake .. -DDEBUG_MODE=OFF
 ```
 The `-DDEBUG_MODE=OFF` flag disables debug mode, which is used for testing and disables optimizations.
 
-##### Step 3: Building executable
+### Step 3: Building executable
 
 Finally, you can build the executable by running your build system. If you are on Linux, this will be `Make`, on Windows it will be `msbuild`. For the sake of the guide, we will use Linux for this.
 ```bash
@@ -168,7 +167,8 @@ $ ./via --version
 via XX.XX.XX
 ```
 
-## Credits
+# Credits
 
 - **@XnLogicaL** - Lead maintainer
 - **@KasenDaniels** - Name and banner
+- [MFTOOL JAVA](https://github.com/ankitwasankar/mftool-java) - README inspiration
