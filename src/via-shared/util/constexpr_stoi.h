@@ -14,31 +14,68 @@ template <typename T>
   requires std::is_integral_v<T>
 constexpr Optional<T> stoi(StringView str, usize* pos = NULL) {
   using namespace std::literals;
-  const auto numbers = "0123456789"sv;
-
-  const usize begin = str.find_first_of(numbers);
+  const auto digits = "0123456789abcdefABCDEF"sv;
+  const usize begin = str.find_first_of(digits);
   if (begin == StringView::npos)
     return nullopt;
 
-  const auto sign = begin != 0U && str[begin - 1U] == '-' ? -1 : 1;
+  int sign = 1;
+  if (begin >= 1 && str[begin - 1U] == '-') {
+    sign = -1;
+  }
+
   str.remove_prefix(begin);
 
-  const auto end = str.find_first_not_of(numbers);
-  if (end != StringView::npos)
-    str.remove_suffix(std::size(str) - end);
+  int base = 10;
+  if (str.starts_with("0x") || str.starts_with("0X")) {
+    base = 16;
+    str.remove_prefix(2);
+  } else if (str.starts_with("0b") || str.starts_with("0B")) {
+    base = 2;
+    str.remove_prefix(2);
+  }
 
-  auto result = 0;
-  auto multiplier = 1U;
-  for (ptrdiff_t i = std::size(str) - 1U; i >= 0; --i) {
-    auto number = str[i] - '0';
-    result += number * multiplier * sign;
-    multiplier *= 10U;
+  usize end = 0;
+  while (end < str.size()) {
+    char c = str[end];
+    if ((base == 2 && (c != '0' && c != '1')) ||
+        (base == 10 && !std::isdigit(c)) || (base == 16 && !std::isxdigit(c)))
+      break;
+    ++end;
+  }
+
+  if (end == 0)
+    return nullopt;
+
+  const StringView digits_to_parse = str.substr(0, end);
+
+  T result = 0;
+  for (usize i = 0; i < digits_to_parse.size(); ++i) {
+    char c = digits_to_parse[i];
+    T digit = 0;
+
+    if (c >= '0' && c <= '9')
+      digit = c - '0';
+    else if (c >= 'a' && c <= 'f')
+      digit = 10 + (c - 'a');
+    else if (c >= 'A' && c <= 'F')
+      digit = 10 + (c - 'A');
+
+    if (digit >= base)
+      return nullopt;  // invalid digit for base
+
+    result = result * base + digit;
   }
 
   if (pos != NULL)
-    *pos = begin + std::size(str);
+    *pos = begin +
+           (str.starts_with("0x") || str.starts_with("0X") ||
+                    str.starts_with("0b") || str.starts_with("0B")
+                ? 2
+                : 0) +
+           end;
 
-  return result;
+  return result * sign;
 }
 
 }  // namespace via
