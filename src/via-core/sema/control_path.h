@@ -5,6 +5,7 @@
 #define VIA_CORE_CONTROL_PATH_H_
 
 #include <via/config.h>
+#include "constexpr.h"
 #include "parser/ast.h"
 
 namespace via {

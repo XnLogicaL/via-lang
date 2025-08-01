@@ -5,6 +5,7 @@
 #define VIA_SEMA_CONSTEXPR_H_
 
 #include <via/config.h>
+#include "context.h"
 #include "parser/ast.h"
 
 namespace via {
@@ -13,7 +14,14 @@ namespace core {
 
 namespace sema {
 
-bool is_constexpr(const parser::ast::ExprNode* expr);
+// Recursive check to determine whether if an expression can be evaluated during
+// compile-time.
+bool is_constexpr(SemaContext& ctx, const parser::ast::ExprNode* expr);
+
+// Recursive algorithm that collapses/decays an expression to the simplest form
+// possible.
+parser::ast::ExprNode* eval_constexpr(SemaContext& ctx,
+                                      const parser::ast::ExprNode* expr);
 
 }  // namespace sema
 
