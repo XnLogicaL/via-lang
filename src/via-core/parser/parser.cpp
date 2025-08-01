@@ -192,6 +192,41 @@ ExprNode* Parser::parse_primary() {
       lit->tok = first;
       lit->loc = loc;
 
+      switch (lit->tok->kind) {
+        case TokenKind::INT:
+        case TokenKind::BINT:
+        case TokenKind::XINT:
+          lit->kind = NodeExprLit::Int;
+          lit->u.i = stoi<vm::Value::int_type>(lit->tok->to_string())
+                         .or_else([]() -> Optional<vm::Value::int_type> {
+                           VIA_BUG("illformed int token passed to parser");
+                           return nullopt;
+                         })
+                         .value();
+          break;
+        case TokenKind::FP:
+          lit->kind = NodeExprLit::Float;
+          lit->kind = NodeExprLit::Int;
+          lit->u.fp = stof<vm::Value::float_type>(lit->tok->to_string())
+                          .or_else([]() -> Optional<vm::Value::float_type> {
+                            VIA_BUG("illformed fp token passed to parser");
+                            return nullopt;
+                          })
+                          .value();
+          break;
+        case TokenKind::TRUE:
+        case TokenKind::FALSE:
+          lit->kind = NodeExprLit::Bool;
+          lit->u.b = lit->tok->kind == TokenKind::TRUE;
+          break;
+        case TokenKind::STRING:
+          lit->kind = NodeExprLit::String;
+          lit->u.str = alloc.strdup(lit->tok->to_string().c_str());
+          break;
+        default:
+          break;
+      }
+
       return lit;
     }
     case TokenKind::IDENT: {
