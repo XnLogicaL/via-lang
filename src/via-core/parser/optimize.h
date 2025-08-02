@@ -17,7 +17,7 @@ namespace parser {
 class OptimizationPass {
  public:
   OptimizationPass(HeapAllocator& alloc) : alloc(alloc) {}
-  virtual void apply(AstBuf& ast) const = 0;
+  virtual void apply(AstBuf& ast) = 0;
 
  protected:
   HeapAllocator& alloc;
