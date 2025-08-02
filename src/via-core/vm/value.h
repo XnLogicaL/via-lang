@@ -79,35 +79,6 @@ struct Value {
     return Value(ctx);
   }
 
-  constexpr Value arith_add(const Value* other) const;
-  constexpr Value arith_sub(const Value* other) const;
-  constexpr Value arith_mul(const Value* other) const;
-  constexpr Value arith_div(const Value* other) const;
-  constexpr Value arith_pow(const Value* other) const;
-  constexpr Value arith_mod(const Value* other) const;
-
-  template <const Arith At>
-  inline constexpr Value arith(const Value* other) const {
-    switch (At) {
-      case Arith::Add:
-        return arith_add(other);
-      case Arith::Sub:
-        return arith_sub(other);
-      case Arith::Mul:
-        return arith_mul(other);
-      case Arith::Div:
-        return arith_div(other);
-      case Arith::Pow:
-        return arith_pow(other);
-      case Arith::Mod:
-        return arith_mod(other);
-      default:
-        break;
-    }
-
-    VIA_BUG("invalid Arith enum value");
-  }
-
 #define CTOR inline constexpr explicit Value
 #define TYPED_CTOR(type, ctype, id) \
   CTOR(Interpreter* ctx, ctype id) : ctx(ctx), kind(type), u({.id = id}) {}
