@@ -96,10 +96,7 @@ A [UNIX compliant]() operating system is recommended for this process.
 
 ### Preperation: Installing dependencies
 
-via uses [CMake]() to generate build files. Compilers and other tools are preference-based, here are supported compilers:
-- MSVC
-- Clang
-- GCC
+via uses [CMake]() to generate build files. Compilers and other tools are preference-based, as via is 100% C++23 compliant (give or take). However, it also utilitzes some libraries that are **not** standard compliant, but should work in almost all platforms.
   
 You can verify that you have `CMake` installed by running this:
 ```bash
