@@ -5,7 +5,10 @@
 #define VIA_PARSER_OPTIMIZE_FOLD_H_
 
 #include <via/config.h>
+#include "ast.h"
+#include "lexer/token.h"
 #include "optimize.h"
+#include "sema/constexpr.h"
 
 namespace via {
 
@@ -16,11 +19,18 @@ namespace parser {
 class FoldOptimizationPass final : public OptimizationPass {
  public:
   using OptimizationPass::OptimizationPass;
-  void apply(AstBuf& ast) const override;
+
+  void apply(AstBuf& ast) override;
 
  private:
   using OptimizationPass::alloc;
-  ast::ExprNode* apply_expr(const ast::ExprNode* expr);
+
+  void apply_if(AstBuf& ast, usize pos, ast::NodeStmtIf* node);
+  void apply_stmt(AstBuf& ast, usize pos, ast::StmtNode* node);
+
+  PseudoValue* apply_un(const ast::NodeExprUn* un);
+  PseudoValue* apply_bin(const ast::NodeExprBin* bin);
+  PseudoValue* apply_expr(const ast::ExprNode* expr);
 };
 
 }  // namespace parser
