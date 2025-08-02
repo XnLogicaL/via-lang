@@ -7,9 +7,9 @@
 #include <via/config.h>
 #include "lexer/location.h"
 #include "lexer/token.h"
-#include "vm/value.h"
+#include "pseudo_value.h"
 
-#define TRY_COERCE(T, a, b) (const T* a = dynamic_cast<const T*>(b))
+#define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
 
 namespace via {
 
@@ -70,20 +70,7 @@ struct NodeExprLit : public ExprNode {
   COMMON_HEADER(ExprNode)
 
   Token* tok;
-
-  enum Kind {
-    Int,
-    Float,
-    Bool,
-    String,
-  } kind;
-
-  union {
-    vm::Value::int_type i;
-    vm::Value::float_type fp;
-    vm::Value::bool_type b;
-    char* str;
-  } u;
+  PseudoValue psv;
 };
 
 struct NodeExprSym : public ExprNode {

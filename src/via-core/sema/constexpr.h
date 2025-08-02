@@ -18,11 +18,6 @@ namespace sema {
 // compile-time.
 bool is_constexpr(SemaContext& ctx, const parser::ast::ExprNode* expr);
 
-// Recursive algorithm that collapses/decays an expression to the simplest form
-// possible.
-parser::ast::ExprNode* eval_constexpr(SemaContext& ctx,
-                                      const parser::ast::ExprNode* expr);
-
 }  // namespace sema
 
 }  // namespace core
