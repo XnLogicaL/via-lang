@@ -4,6 +4,53 @@
 #ifndef VIA_CONFIG_H_
 #define VIA_CONFIG_H_
 
+#if defined(_WIN32) || defined(_WIN64)
+#define VIA_PLATFORM_WINDOWS
+#endif
+
+#if defined(__linux__)
+#ifdef __ANDROID__
+#define VIA_PLATFORM_ANDROID
+#else
+#define VIA_PLATFORM_LINUX
+#endif
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+#define VIA_PLATFORM_IOS
+#else
+#define VIA_PLATFORM_MACOS
+#endif
+#endif
+
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
+    defined(__bsdi__) || defined(__DragonFly__)
+#define VIA_PLATFORM_BSD
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#define VIA_PLATFORM_WEB
+#endif
+
+#if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_MACOS) || \
+    defined(VIA_PLATFORM_BSD)
+#define VIA_PLATFORM_POSIX
+#endif
+
+#if defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_ANDROID)
+#define VIA_PLATFORM_UNIX
+#endif
+
+#ifdef VIA_PLATFORM_WINDOWS
+#define VIA_EXPORT __declspec(dllexport)
+#else
+#define VIA_EXPORT
+#endif
+
+#define VIA_MODINIT_FUNC extern "C" VIA_EXPORT const ModuleDef*
+
 // Check if libstacktrace is available.
 #if __has_include(<stacktrace>) && __cplusplus >= 202302L
 #include <stacktrace>
