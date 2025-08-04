@@ -74,17 +74,12 @@ static constexpr TokenReprPair SYMBOLS[] = {
     {"..=", TokenKind::CONCATEQUALS},
 };
 
-// why does the C standard library not have this??
-static bool isbdigit(char c) {
-  return c == '0' || c == '1';
-}
-
-static bool isnumeric(TokenKind* kind, char c) {
+static bool is_numeric(TokenKind* kind, char c) {
   switch (*kind) {
       // clang-format off
   case TokenKind::INT:  return isdigit(c) || (c == '.' && *kind != TokenKind::FP); // decimal
   case TokenKind::XINT: return isxdigit(c); // hexadecimal
-  case TokenKind::BINT: return isbdigit(c); // binary
+  case TokenKind::BINT: return c == '0' || c == '1'; // binary
     // clang-format on
     default:
       break;
@@ -93,20 +88,24 @@ static bool isnumeric(TokenKind* kind, char c) {
   return false;
 }
 
-static bool isidentifierinitial(char c) {
+static bool is_identifier_initial(char c) {
   return isalpha(c) || c == '_';
 }
 
-static bool isidentifier(char c) {
+static bool is_identifier(char c) {
   return isalnum(c) || c == '_';
 }
 
-char Lexer::advance() {
-  return *(file.cursor++);
+static bool is_string_delimiter(char c) {
+  return c == '"' || c == '\'' || c == '`';
 }
 
-char Lexer::peek(int count) {
-  return *(file.cursor + count);
+char Lexer::advance(int ahead) {
+  return *(file.cursor += ahead);
+}
+
+char Lexer::peek(int ahead) {
+  return *(file.cursor + ahead);
 }
 
 Token* Lexer::read_number() {
@@ -115,7 +114,7 @@ Token* Lexer::read_number() {
   token->lexeme = file.cursor;
   token->size = 0;
 
-  if (peek(0) == '0') {
+  if (peek() == '0') {
     if (peek(1) == 'x')
       token->kind = TokenKind::XINT;
     else if (peek(1) == 'b')
@@ -130,7 +129,7 @@ Token* Lexer::read_number() {
 
 decimal:
   char c;
-  while ((c = peek(0)), isnumeric(&token->kind, c)) {
+  while ((c = peek()), is_numeric(&token->kind, c)) {
     if (c == '.') {
       if (token->kind == TokenKind::INT)
         token->kind = TokenKind::FP;
@@ -153,13 +152,13 @@ Token* Lexer::read_string() {
   token->lexeme = file.cursor;
   token->size = 1;  // for opening quote
 
-  char oq = advance();  // opening quote
+  char del = advance();  // opening quote
 
   char c;
   bool closed = false;
   while ((c = advance()) != '\0') {
     token->size++;
-    if (c == oq) {
+    if (c == del) {
       closed = true;
       break;
     }
@@ -178,7 +177,7 @@ Token* Lexer::read_identifier() {
   token->size = 0;
 
   char c;
-  while ((c = peek(0)), isidentifier(c)) {
+  while ((c = peek()), is_identifier(c)) {
     advance();
     token->size++;
   }
@@ -250,20 +249,19 @@ found:
 }
 
 bool Lexer::skip_comment() {
-  if (peek(0) != '/')
+  if (peek() != '/')
     return false;
 
   char next = peek(1);
 
   if (next == '/') {
     // Line comment: skip until newline or EOF
-    advance();  // consume first '/'
-    advance();  // consume second '/'
+    advance(2);  // consume first '//'
 
-    while (char c = peek(0)) {
+    while (char c = peek()) {
       if (c == '\n' || c == '\0')
         break;
-      advance();
+      advance(2);
     }
 
     return true;
@@ -271,17 +269,15 @@ bool Lexer::skip_comment() {
 
   if (next == '*') {
     // Block comment: skip until closing */
-    advance();  // consume '/'
-    advance();  // consume '*'
+    advance(2);  // consume '/*'
 
     while (true) {
-      char c = peek(0);
+      char c = peek();
       if (c == '\0')
         break;  // EOF without closing */
 
       if (c == '*' && peek(1) == '/') {
-        advance();  // consume '*'
-        advance();  // consume '/'
+        advance(2);  // consume '*/'
         break;
       }
 
@@ -298,7 +294,7 @@ TokenBuf Lexer::tokenize() {
   Vec<Token*> toks;
 
   char c;
-  while ((c = peek(0)), c != '\0') {
+  while ((c = peek()), c != '\0') {
     if (isspace(c)) {
       advance();
       continue;
@@ -311,9 +307,9 @@ TokenBuf Lexer::tokenize() {
 
     if (isdigit(c))
       token = read_number();
-    else if (isidentifierinitial(c))
+    else if (is_identifier_initial(c))
       token = read_identifier();
-    else if (c == '"' || c == '\'')
+    else if (is_string_delimiter(c))
       token = read_string();
     else
       token = read_symbol();
@@ -327,7 +323,6 @@ TokenBuf Lexer::tokenize() {
   eof->size = 0;
 
   toks.push_back(eof);
-
   return TokenBuf(toks.data(), toks.data() + (toks.size() * sizeof(Token*)));
 }
 

@@ -23,8 +23,8 @@ class Lexer final {
   TokenBuf tokenize();
 
  private:
-  char advance();
-  char peek(int ahead);
+  char advance(int ahead = 1);
+  char peek(int ahead = 0);
 
   Token* read_number();
   Token* read_string();
