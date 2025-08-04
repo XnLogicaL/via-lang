@@ -51,14 +51,6 @@
 
 #define VIA_MODINIT_FUNC extern "C" VIA_EXPORT const ModuleDef*
 
-// Check if libstacktrace is available.
-#if __has_include(<stacktrace>) && __cplusplus >= 202302L
-#include <stacktrace>
-#define VIA_HASSTACKTRACE 1
-#else
-#define VIA_HASSTACKTRACE 0
-#endif
-
 #define VIA_VERSION "0.0.2"
 #define VIA_WORDSIZE sizeof(void*)
 
@@ -90,12 +82,6 @@
   target& operator=(target&&); \
   target(target&&);
 
-#if VIA_HASSTACKTRACE == 1
-#define VIA_STACKTRACE std::stacktrace::current()
-#else
-#define VIA_STACKTRACE ""
-#endif
-
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <mimalloc.h>
@@ -109,6 +95,9 @@
 #include <vector>
 
 namespace via {
+
+using std::literals::operator""s;
+using std::literals::operator""sv;
 
 using String = std::string;
 using StringView = std::string_view;
