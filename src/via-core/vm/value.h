@@ -7,6 +7,7 @@
 #include <util/constexpr_stof.h>
 #include <util/constexpr_stoi.h>
 #include <via/config.h>
+#include "interpreter.h"
 #include "value_ref.h"
 
 namespace via {
@@ -29,7 +30,6 @@ enum class Arith {
 struct Value {
   using int_type = i64;
   using float_type = f32;
-  using bool_type = bool;
 
   usize rc = 0;
   Interpreter* ctx;
@@ -50,18 +50,106 @@ struct Value {
   } u;
 
   void free();
-
   ValueRef make_ref();
 
-  constexpr Optional<int_type> as_cint() const;
-  constexpr Optional<float_type> as_cfloat() const;
-  constexpr bool_type as_cbool() const;
-  constexpr char* as_cstring() const;
+  constexpr Optional<int_type> as_cint() const {
+    switch (kind) {
+      case Int:
+        return u.i;
+      case Float:
+        return static_cast<int_type>(u.fp);
+      case Bool:
+        return static_cast<int_type>(u.b);
+      case String: {
+        auto result = stoi<int_type>(u.str);
+        if (result.has_value())
+          return *result;
+        break;
+      }
+      default:
+        break;
+    }
 
-  constexpr Value as_int() const;
-  constexpr Value as_float() const;
-  constexpr Value as_bool() const;
-  constexpr Value as_string() const;
+    return nullopt;
+  }
+
+  constexpr Optional<float_type> as_cfloat() const {
+    switch (kind) {
+      case Float:
+        return u.fp;
+      case Int:
+        return static_cast<float_type>(u.i);
+      case Bool:
+        return static_cast<float_type>(u.b);
+      case String: {
+        auto result = stof<float_type>(u.str);
+        if (result.has_value())
+          return *result;
+        break;
+      }
+      default:
+        break;
+    }
+
+    return nullopt;
+  }
+
+  constexpr bool as_cbool() const {
+    switch (kind) {
+      case Bool:
+        return u.b;
+      case Int:
+        return static_cast<bool>(u.i);
+      case Float:
+        return static_cast<bool>(u.fp);
+      case String:
+        return true;
+      default:
+        break;
+    }
+
+    return false;
+  }
+
+  constexpr char* as_cstring() const {
+#define ALLOC_STR(str) ctx->get_allocator().strdup(str)
+
+    switch (kind) {
+      case String:
+        return ALLOC_STR(u.str);
+      case Nil:
+        return ALLOC_STR("nil");
+      case Bool:
+        return ALLOC_STR(u.b ? "true" : "false");
+      case Int:
+        return ALLOC_STR(std::to_string(u.i).c_str());
+      case Float:
+        return ALLOC_STR(std::to_string(u.fp).c_str());
+      default:
+        break;
+    }
+
+    VIA_BUG("bad kind value");
+#undef ALLOC_STR
+  }
+
+  constexpr Value as_int() const {
+    auto result = as_cint();
+    return result.has_value() ? Value(ctx, *result) : Value(ctx);
+  }
+
+  constexpr Value as_float() const {
+    auto result = as_cint();
+    return result.has_value() ? Value(ctx, *result) : Value(ctx);
+  }
+
+  constexpr Value as_bool() const {
+    return Value(ctx, as_cbool());
+  }
+
+  constexpr Value as_string() const {
+    return Value(ctx, as_cstring());
+  }
 
   template <const Kind As>
   inline constexpr Value as() const {
@@ -86,7 +174,7 @@ struct Value {
   CTOR(Interpreter* ctx) : ctx(ctx) {}
   TYPED_CTOR(Int, int_type, i);
   TYPED_CTOR(Float, float_type, fp);
-  TYPED_CTOR(Bool, bool_type, b);
+  TYPED_CTOR(Bool, bool, b);
   TYPED_CTOR(String, char*, str);
 
 #undef CTOR
