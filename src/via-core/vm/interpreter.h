@@ -9,8 +9,6 @@
 #include "header.h"
 #include "instruction.h"
 #include "stack.h"
-#include "value.h"
-#include "value_ref.h"
 
 namespace via {
 
@@ -18,10 +16,12 @@ namespace core {
 
 namespace vm {
 
-inline constexpr usize REGISTER_COUNT = UINT16_MAX + 1;
+struct Value;
+struct ValueRef;
 
-// Lua reference haha
-using StkId = Value*;
+using StkEntry = Value*;
+
+inline constexpr usize REGISTER_COUNT = UINT16_MAX + 1;
 
 class Interpreter {
  public:
@@ -33,10 +33,10 @@ class Interpreter {
   Stack<uptr>& get_stack();
   HeapAllocator& get_allocator();
 
-  StkId* new_local(Value* val);
-  void set_local(StkId* id, Value* val);
-  Value* get_local(StkId* id);
-  ValueRef get_local_ref(StkId* id);
+  StkEntry* new_local(Value* val);
+  void set_local(StkEntry* id, Value* val);
+  Value* get_local(StkEntry* id);
+  ValueRef get_local_ref(StkEntry* id);
 
   void execute_once();
   void execute();

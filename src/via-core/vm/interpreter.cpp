@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "interpreter.h"
+#include "value.h"
 
 namespace via {
 
@@ -17,20 +18,20 @@ HeapAllocator& Interpreter::get_allocator() {
   return alloc;
 }
 
-StkId* Interpreter::new_local(Value* val) {
+StkEntry* Interpreter::new_local(Value* val) {
   stack.push((uptr)val);
-  return (StkId*)stack.top();
+  return (StkEntry*)stack.top();
 }
 
-void Interpreter::set_local(StkId* id, Value* val) {
+void Interpreter::set_local(StkEntry* id, Value* val) {
   *id = val;
 }
 
-Value* Interpreter::get_local(StkId* id) {
+Value* Interpreter::get_local(StkEntry* id) {
   return *id;
 }
 
-ValueRef Interpreter::get_local_ref(StkId* id) {
+ValueRef Interpreter::get_local_ref(StkEntry* id) {
   return get_local(id)->make_ref();
 }
 
