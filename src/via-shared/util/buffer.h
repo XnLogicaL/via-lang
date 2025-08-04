@@ -4,8 +4,8 @@
 #ifndef VIA_BUFFER_H_
 #define VIA_BUFFER_H_
 
+#include <via/config.h>
 #include <cstring>
-#include "via/config.h"
 
 namespace via {
 
