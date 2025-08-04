@@ -13,6 +13,7 @@ class HeapAllocator {
  public:
   void* alloc(usize size);
   void free(void* ptr);
+  char* strdup(const char* str);
 
   template <typename T>
   inline T* alloc() {
@@ -39,8 +40,6 @@ class HeapAllocator {
       new (&ptr[i]) T(std::forward<Args>(args)...);
     return ptr;
   }
-
-  char* strdup(const char* str);
 
   HeapAllocator() = default;
   ~HeapAllocator() { mi_heap_destroy(heap); }
