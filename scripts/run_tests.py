@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This file is a part of the via Programming Language project
 # Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
@@ -9,7 +10,7 @@ TESTS_DIR="./test"
 BINARY="./build/via"
 
 def run_test(test_file):
-    # Construct the command to run your interpreter with the test file
+    # Construct the command to run interpreter with the test file
     result = subprocess.run([BINARY, "run", test_file], capture_output=True, text=True)
 
     # Get the output of the program
