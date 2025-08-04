@@ -7,7 +7,6 @@
 #include <via/config.h>
 #include "instruction.h"
 #include "lexer/location.h"
-#include "value.h"
 
 namespace via {
 
@@ -15,6 +14,7 @@ namespace core {
 
 namespace vm {
 
+struct Value;
 struct Header {
   static constexpr u32 magic = 0x2E766961;  // .via
 
