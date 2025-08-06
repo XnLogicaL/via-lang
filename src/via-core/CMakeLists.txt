@@ -10,7 +10,8 @@ target_include_directories(via-core
 )
 
 target_link_libraries(via-core
-  PUBLIC  
+  PUBLIC 
+    via::shared
     mimalloc
     spdlog
     magic_enum

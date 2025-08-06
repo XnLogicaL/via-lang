@@ -11,6 +11,13 @@ namespace via {
 
 class HeapAllocator {
  public:
+  HeapAllocator() = default;
+  ~HeapAllocator() { mi_heap_destroy(heap); }
+
+  VIA_NOCOPY(HeapAllocator);
+  VIA_NOMOVE(HeapAllocator);
+
+ public:
   void* alloc(usize size);
   void free(void* ptr);
   char* strdup(const char* str);
@@ -21,13 +28,13 @@ class HeapAllocator {
   }
 
   template <typename T>
-  inline T* alloc(const usize count) {
+  inline T* alloc(usize count) {
     return (T*)mi_heap_malloc(heap, count * sizeof(T));
   }
 
   template <typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
-  inline T* emplace(Args... args) {
+  inline T* emplace(Args&&... args) {
     void* mem = mi_heap_malloc(heap, sizeof(T));
     return new (mem) T(std::forward<Args>(args)...);
   }
@@ -40,12 +47,6 @@ class HeapAllocator {
       new (&ptr[i]) T(std::forward<Args>(args)...);
     return ptr;
   }
-
-  HeapAllocator() = default;
-  ~HeapAllocator() { mi_heap_destroy(heap); }
-
-  VIA_NOCOPY(HeapAllocator);
-  VIA_NOMOVE(HeapAllocator);
 
  private:
   mi_heap_t* heap = mi_heap_new();
