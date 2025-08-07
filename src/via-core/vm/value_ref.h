@@ -17,7 +17,6 @@ class Interpreter;
 struct Value;
 
 struct ValueRef {
-  Interpreter* ctx;
   Value* ptr;
 
   void free();

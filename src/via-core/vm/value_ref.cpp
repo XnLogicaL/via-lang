@@ -29,14 +29,14 @@ usize ValueRef::count_refs() const {
   return ptr->rc;
 }
 
-ValueRef::ValueRef(Interpreter* ctx) : ctx(ctx), ptr(NULL) {}
-ValueRef::ValueRef(Interpreter* ctx, Value* ptr) : ctx(ctx), ptr(ptr) {}
+ValueRef::ValueRef(Interpreter* ctx) : ptr(NULL) {}
+ValueRef::ValueRef(Interpreter* ctx, Value* ptr) : ptr(ptr) {}
 ValueRef::~ValueRef() {
   if (!is_null())
     free();
 }
 
-ValueRef::ValueRef(const ValueRef& other) : ctx(other.ctx), ptr(other.ptr) {
+ValueRef::ValueRef(const ValueRef& other) : ptr(other.ptr) {
   if (!other.is_null())
     other.ptr->rc++;
 }
@@ -49,7 +49,6 @@ ValueRef& ValueRef::operator=(const ValueRef& other) {
     if (!is_null())
       free();
 
-    this->ctx = other->ctx;
     this->ptr = other.ptr;
   }
 
