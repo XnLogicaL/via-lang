@@ -67,12 +67,10 @@ dispatch:
       goto dispatch;
     case HALT:
       goto exit;
-
     case EXTRAARG1:
     case EXTRAARG2:
     case EXTRAARG3:
       VIA_BUG("use of reserved opcode");
-
     case IADD1:
       R(pc->a)->u.i += R(pc->b)->u.i;
       goto dispatch;
@@ -97,7 +95,6 @@ dispatch:
     case FADD2K:
       R(pc->a)->u.fp = R(pc->b)->u.fp + K(pc->c)->u.fp;
       goto dispatch;
-
     case ISUB1:
       R(pc->a)->u.i -= R(pc->b)->u.i;
       goto dispatch;
@@ -128,7 +125,6 @@ dispatch:
     case FSUB2KX:
       R(pc->a)->u.fp = K(pc->b)->u.fp - R(pc->c)->u.fp;
       goto dispatch;
-
     case IMUL1:
       R(pc->a)->u.i *= R(pc->b)->u.i;
       goto dispatch;
@@ -153,7 +149,6 @@ dispatch:
     case FMUL2K:
       R(pc->a)->u.fp = R(pc->b)->u.fp * K(pc->c)->u.fp;
       goto dispatch;
-
     case IDIV1:
       R(pc->a)->u.i /= R(pc->b)->u.i;
       goto dispatch;
@@ -184,7 +179,6 @@ dispatch:
     case FDIV2KX:
       R(pc->a)->u.fp = K(pc->b)->u.fp / R(pc->c)->u.fp;
       goto dispatch;
-
     case IPOW1:
       R(pc->a)->u.i = ipow(R(pc->a)->u.i, R(pc->b)->u.i);
       goto dispatch;
@@ -215,7 +209,6 @@ dispatch:
     case FPOW2KX:
       R(pc->a)->u.fp = std::pow(K(pc->b)->u.fp, R(pc->c)->u.fp);
       goto dispatch;
-
     case IMOD1:
       R(pc->a)->u.i = R(pc->a)->u.i % R(pc->b)->u.i;
       goto dispatch;
@@ -246,7 +239,6 @@ dispatch:
     case FMOD2KX:
       R(pc->a)->u.fp = std::fmod(K(pc->b)->u.fp, R(pc->c)->u.fp);
       goto dispatch;
-
     case INEG:
       R(pc->a)->u.i = -R(pc->b)->u.i;
       goto dispatch;
@@ -259,7 +251,6 @@ dispatch:
     case FNEGK:
       R(pc->a)->u.fp = -K(pc->b)->u.fp;
       goto dispatch;
-
     default:
       VIA_BUG("unknown opcode");
       break;
