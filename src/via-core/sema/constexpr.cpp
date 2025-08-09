@@ -9,7 +9,7 @@ namespace core {
 
 namespace sema {
 
-using namespace parser::ast;
+using namespace ast;
 
 // TODO: This function must perform deeper constexpr checks, such as constexpr
 // variables and members.

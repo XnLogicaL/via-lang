@@ -9,7 +9,7 @@ namespace core {
 
 namespace sema {
 
-using namespace parser::ast;
+using namespace ast;
 
 ControlPath analyze_cpath(const StmtNode* stmt) {
   return ControlPath::None;

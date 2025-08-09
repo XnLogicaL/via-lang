@@ -22,7 +22,7 @@ enum class ControlPath {
   Unreachable,  // statement is never reached
 };
 
-ControlPath analyze_cpath(const parser::ast::StmtNode* stmt);
+ControlPath analyze_cpath(const ast::StmtNode* stmt);
 
 }  // namespace sema
 

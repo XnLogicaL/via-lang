@@ -16,7 +16,7 @@ namespace sema {
 
 // Recursive check to determine whether if an expression can be evaluated during
 // compile-time.
-bool is_constexpr(SemaContext& ctx, const parser::ast::ExprNode* expr);
+bool is_constexpr(SemaContext& ctx, const ast::ExprNode* expr);
 
 }  // namespace sema
 
