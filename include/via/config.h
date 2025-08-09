@@ -49,6 +49,18 @@
 #define VIA_EXPORT
 #endif
 
+#ifdef __GNUC__
+#ifdef __clang__
+#define VIA_COMPILER_CLANG
+#else
+#define VIA_COMPILER_GCC
+#endif
+#endif
+
+#ifdef _MSC_VER
+#define VIA_COMPILER_MSVC
+#endif
+
 #define VIA_MODINIT_FUNC extern "C" VIA_EXPORT const ModuleDef*
 
 #define VIA_VERSION "0.0.2"
