@@ -51,6 +51,8 @@ class Interpreter {
 
   Stack<uptr> stack;
   Buffer<Value*> regs;
+  Buffer<Instruction*> lbt;
+
   HeapAllocator alloc;
 
   const uptr* fp;  // frame pointer
