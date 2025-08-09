@@ -18,7 +18,7 @@ namespace via {
 
 namespace core {
 
-using AstBuf = Vec<parser::ast::StmtNode*>;
+using AstBuf = Vec<ast::StmtNode*>;
 
 namespace parser {
 
