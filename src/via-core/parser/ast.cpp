@@ -8,8 +8,6 @@ namespace via {
 
 namespace core {
 
-namespace parser {
-
 namespace ast {
 
 inline usize DEFAULT_DEPTH = 0;
@@ -245,8 +243,6 @@ String NodeStmtExpr::get_dump(usize& depth) const {
 }
 
 }  // namespace ast
-
-}  // namespace parser
 
 }  // namespace core
 

@@ -15,33 +15,36 @@ namespace via {
 
 namespace core {
 
-namespace parser {
+namespace compiler {
+
+class Visitor;
+
+}
 
 namespace ast {
 
-using lex::AbsLocation;
-using lex::Token;
-
-struct ExprNode {
-  AbsLocation loc;
+struct Node {
+  lex::AbsLocation loc;
+  virtual void accept(compiler::Visitor& vis) const = 0;
   virtual String get_dump(usize& depth) const = 0;
 };
 
-struct StmtNode {
-  AbsLocation loc;
-  virtual String get_dump(usize& depth) const = 0;
+struct ExprNode : public Node {
+  using Node::loc;
 };
 
-struct TypeNode {
-  AbsLocation loc;
-  virtual String get_dump(usize& depth) const = 0;
+struct StmtNode : public Node {
+  using Node::loc;
+};
+
+struct TypeNode : public Node {
+  using Node::loc;
 };
 
 struct NodeExprSym;
-
 struct TupleBinding {
   Vec<NodeExprSym*> binds;
-  AbsLocation loc;
+  lex::AbsLocation loc;
 };
 
 struct LValue {
@@ -59,34 +62,35 @@ struct LValue {
 struct Parameter {
   NodeExprSym* sym;
   TypeNode* type;
-  AbsLocation loc;
+  lex::AbsLocation loc;
 };
 
-#define COMMON_HEADER(klass) \
-  using klass::loc;          \
+#define COMMON_HEADER(klass)                                  \
+  using klass::loc;                                           \
+  virtual void accept(compiler::Visitor& vis) const override; \
   String get_dump(usize& depth) const override;
 
 struct NodeExprLit : public ExprNode {
   COMMON_HEADER(ExprNode)
 
-  Token* tok;
+  lex::Token* tok;
   PseudoValue psv;
 };
 
 struct NodeExprSym : public ExprNode {
   COMMON_HEADER(ExprNode)
-  Token* tok;
+  lex::Token* tok;
 };
 
 struct NodeExprUn : public ExprNode {
   COMMON_HEADER(ExprNode)
-  Token* op;
+  lex::Token* op;
   ExprNode* expr;
 };
 
 struct NodeExprBin : public ExprNode {
   COMMON_HEADER(ExprNode)
-  Token* op;
+  lex::Token* op;
   ExprNode *lhs, *rhs;
 };
 
@@ -175,13 +179,9 @@ struct NodeStmtExpr : public StmtNode {
   ExprNode* expr;
 };
 
-void dump_stmt(StmtNode* stmt, usize& depth);
-
 #undef COMMON_HEADER
 
 }  // namespace ast
-
-}  // namespace parser
 
 }  // namespace core
 
