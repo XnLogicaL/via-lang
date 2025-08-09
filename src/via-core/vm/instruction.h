@@ -103,40 +103,70 @@ enum class Opcode : u16 {
   // bitwise opcodes
   BAND1,
   BAND2,
+  BAND1K,
+  BAND2K,
   BOR1,
   BOR2,
+  BOR1K,
+  BOR2K,
   BXOR1,
   BXOR2,
+  BXOR1K,
+  BXOR2K,
+  BSHL1,
+  BSHL2,
+  BSHL1K,
+  BSHL2K,
+  BSHR1,
+  BSHR2,
+  BSHR1K,
+  BSHR2K,
   BNOT,
-  BSHL,
-  BSHR,
+  BNOTK,
 
   // comparison opcodes
-  NOT,   // not   <dst: *> <src: *>
-  AND,   // and   <dst: *> <lhs: *> <rhs: *>
-  OR,    // or    <dst: *> <lhs: *> <rhs: *>
-  EQ,    // eq    <dst: *> <lhs: *> <rhs: *>
-  NEQ,   // neq   <dst: *> <lhs: *> <rhs: *>
-  IS,    // is    <dst: *> <lhs: *> <rhs: *>
-  LT,    // lt    <dst: *> <lhs: *> <rhs: *>
-  GT,    // gt    <dst: *> <lhs: *> <rhs: *>
-  LTEQ,  // lteq  <dst: *> <lhs: *> <rhs: *>
-  GTEQ,  // gteq  <dst: *> <lhs: *> <rhs: *>
+  AND,
+  ANDK,
+  OR,
+  ORK,
+  IEQ,
+  IEQK,
+  FEQ,
+  FEQK,
+  BEQ,
+  BEQK,
+  SEQ,
+  SEQK,
+  INEQ,
+  INEQK,
+  FNEQ,
+  FNEQK,
+  BNEQ,
+  BNEQK,
+  SNEQ,
+  SNEQK,
+  IS,
+  ILT,
+  ILTK,
+  FLT,
+  FLTK,
+  IGT,
+  IGTK,
+  FGT,
+  FGTK,
+  ILTEQ,
+  ILTEQK,
+  FLTEQ,
+  FLTEQK,
+  IGTEQ,
+  IGTEQK,
+  FGTEQ,
+  FGTEQK,
+  NOT,
 
   // control flow opcodes
-  JMP,         // jmp        <lbl>
-  JMPIF,       // jmpif      <cnd: *>  <lbl>
-  JMPIFNOT,    // jmpifnot   <cnd: *>  <lbl>
-  JMPIFEQ,     // jmpifeq    <lhs: *>  <rhs: *>      <lbl>
-  JMPIFIS,     // jmpifis    <lhs: *>  <rhs: *>      <lbl>
-  JMPIFLTI,    // jmpiflt    <lhs: *int> <rhs: *int> <lbl>
-  JMPIFLTF,    // jmpiflt    <lhs: *fp>  <rhs: *fp>  <lbl>
-  JMPIFGTI,    // jmpifgt    <lhs: *int> <rhs: *int> <lbl>
-  JMPIFGTF,    // jmpiflt    <lhs: *fp>  <rhs: *fp>  <lbl>
-  JMPIFLTEQI,  // jmpiflteq  <lhs: *int> <rhs: *int> <lbl>
-  JMPIFLTEQF,  // jmpiflteq  <lhs: *fp>  <rhs: *fp>  <lbl>
-  JMPIFGTEQI,  // jmpifgteq  <lhs: *int> <rhs: *int> <lbl>
-  JMPIFGTEQF,  // jmpifgteq  <lhs: *fp>  <rhs: *fp>  <lbl>
+  JMP,    // jmp        <lbl>
+  JMPIF,  // jmpif      <cnd: *bool> <lbl>
 
   // stack opcodes
   PUSH,         // push         <src: *>
@@ -147,24 +177,22 @@ enum class Opcode : u16 {
   GETLOCAL,     // getlocal     <dst: *> <idx>
   GETLOCALREF,  // getlocalref  <dst: *> <idx>
   SETLOCAL,     // setlocal     <src: *> <idx>
-  DUPLOCAL,     // duplocal     <id>
-  DUPLOCALREF,  // duplocalref  <id>
 
   // cast opcodes
-  BTOI,   // btoi   <dst: *> <bool: *>
-  FTOI,   // ftoi   <dst: *> <fp: *>
-  STOI,   // stoi   <dst: *> <str: *>
-  ITOF,   // itof   <dst: *> <int: *>
-  BTOF,   // btof   <dst: *> <bool: *>
-  STOF,   // stof   <dst: *> <str: *>
-  ITOB,   // itob   <dst: *> <int: *>
-  STOB,   // stob   <dst: *> <str: *>
-  ITOS,   // itos   <dst: *> <int: *>
-  FTOS,   // ftos   <dst: *> <fp: *>
-  BTOS,   // btos   <dst: *> <bool: *>
-  ARTOS,  // artos  <dst: *> <arr: *>
-  DTTOS,  // dttos  <dst: *> <dict: *>
-  FNTOS,  // fntos  <dst: *> <func: *>
+  BTOI,   // btoi   <dst: *> <src: *bool>
+  FTOI,   // ftoi   <dst: *> <src: *fp>
+  STOI,   // stoi   <dst: *> <src: *str>
+  ITOF,   // itof   <dst: *> <src: *int>
+  BTOF,   // btof   <dst: *> <src: *bool>
+  STOF,   // stof   <dst: *> <src: *str>
+  ITOB,   // itob   <dst: *> <src: *int>
+  STOB,   // stob   <dst: *> <src: *str>
+  ITOS,   // itos   <dst: *> <src: *int>
+  FTOS,   // ftos   <dst: *> <src: *fp>
+  BTOS,   // btos   <dst: *> <src: *bool>
+  ARTOS,  // artos  <dst: *> <src: *arr>
+  DTTOS,  // dttos  <dst: *> <src: *dict>
+  FNTOS,  // fntos  <dst: *> <src: *fn>
 
   // function opcodes
   CAPTURE,    // capture  <stk>
