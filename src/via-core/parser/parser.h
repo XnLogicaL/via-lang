@@ -6,6 +6,7 @@
 
 #include <mimalloc.h>
 #include <via/config.h>
+#include <via/types.h>
 #include "ast.h"
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
@@ -16,11 +17,7 @@
 
 namespace via {
 
-namespace core {
-
 using AstBuf = Vec<ast::StmtNode*>;
-
-namespace parser {
 
 class Parser final {
  public:
@@ -30,12 +27,12 @@ class Parser final {
   AstBuf parse();
 
  private:
-  bool match(lex::TokenKind kind, int ahead = 0);
-  bool optional(lex::TokenKind kind);
+  bool match(Token::Kind kind, int ahead = 0);
+  bool optional(Token::Kind kind);
 
-  lex::Token* peek(int ahead = 0);
-  lex::Token* advance();
-  lex::Token* expect(lex::TokenKind kind, const char* task);
+  Token* peek(int ahead = 0);
+  Token* advance();
+  Token* expect(Token::Kind kind, const char* task);
 
   // Special
   ast::TupleBinding* parse_tuple_binding();
@@ -57,16 +54,12 @@ class Parser final {
 
  private:
   const FileBuf& source;
-  lex::Token** cursor;
+  Token** cursor;
   HeapAllocator alloc;
   Diagnostics& diag;
 };
 
 void dump_ast(const AstBuf& B);
-
-}  // namespace parser
-
-}  // namespace core
 
 }  // namespace via
 

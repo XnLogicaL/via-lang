@@ -5,13 +5,14 @@
 #define VIA_CORE_CONVERT_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
 
 namespace via {
 
 template <typename T>
 struct Convert {
-  static String to_string(T t) {
+  static String to_string(const T& t) {
     if constexpr (std::is_enum_v<T>)
       return magic_enum::enum_name(t);
 
@@ -22,7 +23,7 @@ struct Convert {
 }  // namespace via
 
 template <typename T>
-struct fmt::formatter<T, char> {
+struct fmt::formatter<T, char, std::true_type> {
   constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
 
   template <typename FormatContext>

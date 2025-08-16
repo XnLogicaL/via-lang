@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace core {
-
 void Diagnostics::clear() {
   diags.clear();
 }
@@ -36,7 +34,5 @@ void Diagnostics::emit() {
     }
   }
 }
-
-}  // namespace core
 
 }  // namespace via

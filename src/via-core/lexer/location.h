@@ -5,15 +5,12 @@
 #define VIA_CORE_LOCATION_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "buffer.h"
 
 namespace via {
 
-namespace core {
-
 using FileBuf = Buffer<char>;
-
-namespace lex {
 
 struct Location {
   usize line;
@@ -27,10 +24,6 @@ struct AbsLocation {
   // Returns the absolute location as a relative location.
   Location to_relative(const FileBuf& source) const;
 };
-
-}  // namespace lex
-
-}  // namespace core
 
 }  // namespace via
 

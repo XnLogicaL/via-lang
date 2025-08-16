@@ -6,6 +6,7 @@
 
 #include <mimalloc.h>
 #include <via/config.h>
+#include <via/types.h>
 
 namespace via {
 

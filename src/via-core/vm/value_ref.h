@@ -5,13 +5,10 @@
 #define VIA_VM_VALUE_REF_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "memory.h"
 
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 class Interpreter;
 struct Value;
@@ -33,10 +30,6 @@ struct ValueRef {
   Value* operator->() const;
   Value& operator*() const;
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

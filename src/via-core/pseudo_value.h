@@ -5,15 +5,14 @@
 #define VIA_CORE_PSEUDO_VALUE_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "vm/value.h"
 
 namespace via {
 
-namespace core {
-
 struct PseudoValue {
-  using int_type = vm::Value::int_type;
-  using float_type = vm::Value::float_type;
+  using int_type = Value::int_type;
+  using float_type = Value::float_type;
 
   enum Kind {
     Nil,
@@ -108,8 +107,6 @@ struct PseudoValue {
     VIA_BUG("bad kind value");
   }
 };
-
-}  // namespace core
 
 }  // namespace via
 

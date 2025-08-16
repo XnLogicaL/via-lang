@@ -5,12 +5,9 @@
 #define VIA_CORE_INSTRUCTION_H_
 
 #include <via/config.h>
+#include <via/types.h>
 
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 // special operand symbols:
 // [*T] register containing T
@@ -240,10 +237,6 @@ struct Instruction {
 
   String to_string() const;
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

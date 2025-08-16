@@ -6,10 +6,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace ast {
-
 inline usize DEFAULT_DEPTH = 0;
 
 #define TAB String(depth * 4, ' ')
@@ -241,9 +237,5 @@ String NodeStmtEmpty::get_dump(usize& depth) const {
 String NodeStmtExpr::get_dump(usize& depth) const {
   return FORMAT("NodeStmtExpr({})", expr->get_dump(depth));
 }
-
-}  // namespace ast
-
-}  // namespace core
 
 }  // namespace via

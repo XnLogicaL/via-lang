@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace core {
-
 namespace sema {
 
 using namespace ast;
@@ -34,7 +32,5 @@ bool is_constexpr(SemaContext& ctx, const ExprNode* expr) {
 }
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via

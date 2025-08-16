@@ -5,6 +5,7 @@
 #define VIA_CORE_AST_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "lexer/location.h"
 #include "lexer/token.h"
 #include "pseudo_value.h"
@@ -13,19 +14,13 @@
 
 namespace via {
 
-namespace core {
-
-namespace compiler {
-
 class Visitor;
-
-}
 
 namespace ast {
 
 struct Node {
-  lex::AbsLocation loc;
-  virtual void accept(compiler::Visitor& vis) const = 0;
+  AbsLocation loc;
+  virtual void accept(Visitor& vis) const = 0;
   virtual String get_dump(usize& depth) const = 0;
 };
 
@@ -44,7 +39,7 @@ struct TypeNode : public Node {
 struct NodeExprSym;
 struct TupleBinding {
   Vec<NodeExprSym*> binds;
-  lex::AbsLocation loc;
+  AbsLocation loc;
 };
 
 struct LValue {
@@ -62,35 +57,35 @@ struct LValue {
 struct Parameter {
   NodeExprSym* sym;
   TypeNode* type;
-  lex::AbsLocation loc;
+  AbsLocation loc;
 };
 
-#define COMMON_HEADER(klass)                                  \
-  using klass::loc;                                           \
-  virtual void accept(compiler::Visitor& vis) const override; \
+#define COMMON_HEADER(klass)                        \
+  using klass::loc;                                 \
+  virtual void accept(Visitor& vis) const override; \
   String get_dump(usize& depth) const override;
 
 struct NodeExprLit : public ExprNode {
   COMMON_HEADER(ExprNode)
 
-  lex::Token* tok;
+  Token* tok;
   PseudoValue psv;
 };
 
 struct NodeExprSym : public ExprNode {
   COMMON_HEADER(ExprNode)
-  lex::Token* tok;
+  Token* tok;
 };
 
 struct NodeExprUn : public ExprNode {
   COMMON_HEADER(ExprNode)
-  lex::Token* op;
+  Token* op;
   ExprNode* expr;
 };
 
 struct NodeExprBin : public ExprNode {
   COMMON_HEADER(ExprNode)
-  lex::Token* op;
+  Token* op;
   ExprNode *lhs, *rhs;
 };
 
@@ -182,8 +177,6 @@ struct NodeStmtExpr : public StmtNode {
 #undef COMMON_HEADER
 
 }  // namespace ast
-
-}  // namespace core
 
 }  // namespace via
 

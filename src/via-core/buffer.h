@@ -5,6 +5,7 @@
 #define VIA_BUFFER_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include <cstring>
 
 namespace via {

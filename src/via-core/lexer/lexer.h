@@ -4,23 +4,20 @@
 #ifndef VIA_CORE_LEXER_H_
 #define VIA_CORE_LEXER_H_
 
-#include <mimalloc.h>
 #include <via/config.h>
-#include "buffer.h"
+#include <via/types.h>
+#include <sstream>
+#include "convert.h"
 #include "memory.h"
 #include "token.h"
 
-
 namespace via {
-
-namespace core {
-
-namespace lex {
 
 class Lexer final {
  public:
   Lexer(const FileBuf& file) : file(file) {}
 
+ public:
   TokenBuf tokenize();
 
  private:
@@ -39,11 +36,17 @@ class Lexer final {
   HeapAllocator alloc;
 };
 
-void dump_ttree(const TokenBuf& B);
+template <>
+struct Convert<TokenBuf> {
+  static String to_string(const TokenBuf& buf) {
+    std::ostringstream oss;
 
-}  // namespace lex
+    for (const Token* tok : buf)
+      oss << Convert<Token>::to_string(*tok);
 
-}  // namespace core
+    return oss.str();
+  }
+};
 
 }  // namespace via
 

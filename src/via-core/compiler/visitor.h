@@ -5,17 +5,14 @@
 #define VIA_CORE_VISITOR_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "diagnostics.h"
 #include "parser/ast.h"
 #include "sema/context.h"
 
 namespace via {
 
-namespace core {
-
-namespace compiler {
-
-class Visitor {
+class ASTVisitor {
  public:
   virtual void visit(const ast::NodeExprLit& elit, u16 dst) = 0;
   virtual void visit(const ast::NodeExprSym& esym, u16 dst) = 0;
@@ -38,7 +35,7 @@ class Visitor {
   virtual void visit(const ast::NodeStmtExpr& svar) = 0;
 };
 
-class TranslationVisitor : public Visitor {
+class TranslationVisitor : public ASTVisitor {
  public:
   TranslationVisitor(Diagnostics& diag) : diag(diag) {}
 
@@ -78,10 +75,6 @@ class StmtVisitor : public TranslationVisitor {
   void visit(const ast::NodeStmtEmpty& svar) override;
   void visit(const ast::NodeStmtExpr& svar) override;
 };
-
-}  // namespace compiler
-
-}  // namespace core
 
 }  // namespace via
 

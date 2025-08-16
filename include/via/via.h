@@ -4,9 +4,15 @@
 #ifndef VIA_H_
 #define VIA_H_
 
+#define VIA_POLICY_CHECK
+#include "policy.h"
+#undef VIA_POLICY_CHECK
+
 #include <via-core/lexer/lexer.h>
 #include <via-core/lexer/token.h>
 #include <via-core/parser/ast.h>
 #include <via-core/parser/parser.h>
+#include <via-core/semver.h>
+#include "config.h"
 
 #endif

@@ -7,15 +7,11 @@
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include <via/config.h>
+#include <via/types.h>
 #include "color.h"
 #include "lexer/location.h"
 
 namespace via {
-
-namespace core {
-
-using lex::AbsLocation;
-using lex::Location;
 
 enum class Diag {
   Info,
@@ -63,8 +59,6 @@ class Diagnostics final {
   const FileBuf& file;
   Vec<Diagnosis> diags;
 };
-
-}  // namespace core
 
 }  // namespace via
 

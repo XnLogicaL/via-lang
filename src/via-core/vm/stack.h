@@ -5,13 +5,10 @@
 #define VIA_VM_STACK_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "memory.h"
 
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 inline constexpr usize STACK_SIZE = 8192;
 
@@ -40,10 +37,6 @@ class Stack {
   T* const bp;
   T* sp;
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

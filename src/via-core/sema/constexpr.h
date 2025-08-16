@@ -5,12 +5,11 @@
 #define VIA_SEMA_CONSTEXPR_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "context.h"
 #include "parser/ast.h"
 
 namespace via {
-
-namespace core {
 
 namespace sema {
 
@@ -19,8 +18,6 @@ namespace sema {
 bool is_constexpr(SemaContext& ctx, const ast::ExprNode* expr);
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via
 

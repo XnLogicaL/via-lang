@@ -5,16 +5,13 @@
 #define VIA_VM_VALUE_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 #include "interpreter.h"
 #include "value_ref.h"
 
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 class Interpreter;
 struct PseudoValue;
@@ -77,10 +74,6 @@ struct Value {
 
   static Value* from_pseudo(Interpreter* ctx, const PseudoValue& psv);
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

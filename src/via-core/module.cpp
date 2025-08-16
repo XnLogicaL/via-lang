@@ -11,8 +11,6 @@
 
 namespace via {
 
-namespace core {
-
 constexpr const char* MODINIT_PREFIX = "viainit_";
 constexpr const usize MODINIT_PREFIX_LEN = 8;
 
@@ -54,7 +52,5 @@ const ModuleDef* open_module(const char* path, const char* name) {
   return init();
 #endif
 }
-
-}  // namespace core
 
 }  // namespace via

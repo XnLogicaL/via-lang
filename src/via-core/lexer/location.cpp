@@ -5,10 +5,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace lex {
-
 Location AbsLocation::to_relative(const FileBuf& source) const {
   usize line = 1;
   usize init = 0;
@@ -23,9 +19,5 @@ Location AbsLocation::to_relative(const FileBuf& source) const {
   usize column = begin - init;
   return {line, column};
 }
-
-}  // namespace lex
-
-}  // namespace core
 
 }  // namespace via

@@ -5,14 +5,11 @@
 #define VIA_VM_HEADER_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "instruction.h"
 #include "lexer/location.h"
 
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 struct Value;
 struct Header {
@@ -25,10 +22,6 @@ struct Header {
   Header() = default;
   Header(const FileBuf& buf);
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

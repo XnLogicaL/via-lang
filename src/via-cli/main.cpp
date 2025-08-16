@@ -12,17 +12,9 @@
     return -1;                \
   }
 
-using namespace via;
+using via::String;
+using via::Vec;
 using namespace argparse;
-
-using core::AstBuf;
-using core::Diag;
-using core::Diagnosis;
-using core::Diagnostics;
-using core::FileBuf;
-using core::TokenBuf;
-using core::lex::Lexer;
-using core::parser::Parser;
 
 enum class EmitType {
   none,
@@ -58,19 +50,19 @@ static void process_file(const String& input_path, EmitType emit_kind) {
     return;
   }
 
-  FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
-  Diagnostics diag_ctx{input_path, file_buf};
+  via::FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
+  via::Diagnostics diag_ctx{input_path, file_buf};
 
-  Lexer lexer(file_buf);
-  TokenBuf token_buf = lexer.tokenize();
+  via::Lexer lexer(file_buf);
+  auto token_buf = lexer.tokenize();
 
-  Parser parser(file_buf, token_buf, diag_ctx);
-  AstBuf ast_buf = parser.parse();
+  via::Parser parser(file_buf, token_buf, diag_ctx);
+  auto ast_buf = parser.parse();
 
   // check for errors
-  Vec<Diagnosis> diags;
+  Vec<via::Diagnosis> diags;
   if ((diags = diag_ctx.collect(
-           [](const auto& diag) { return diag.kind == Diag::Error; }),
+           [](const auto& diag) { return diag.kind == via::Diag::Error; }),
        diags.empty()))
     return;
 
@@ -79,10 +71,10 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 
   switch (emit_kind) {
     case EmitType::ttree:
-      core::lex::dump_ttree(token_buf);
+      fmt::println("{}", token_buf);
       break;
     case EmitType::ast:
-      core::parser::dump_ast(ast_buf);
+      via::dump_ast(ast_buf);
       break;
     default:
       break;
@@ -92,7 +84,7 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 int main(int argc, char* argv[]) {
   spdlog::set_pattern("%^%l:%$ %v");
 
-  ArgumentParser cli("via", VIA_VERSION);
+  ArgumentParser cli("via", fmt::format("{}", via::get_semantic_version()));
 
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")

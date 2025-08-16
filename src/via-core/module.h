@@ -5,19 +5,16 @@
 #define VIA_CORE_MODULE_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "buffer.h"
 
 namespace via {
-
-namespace core {
 
 struct ModuleDef;
 
 using ModuleInitFunc = const ModuleDef* (*)();
 
 const ModuleDef* open_module(const char* path, const char* name);
-
-}  // namespace core
 
 }  // namespace via
 

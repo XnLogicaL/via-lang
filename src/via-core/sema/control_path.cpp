@@ -5,8 +5,6 @@
 
 namespace via {
 
-namespace core {
-
 namespace sema {
 
 using namespace ast;
@@ -16,7 +14,5 @@ ControlPath analyze_cpath(const StmtNode* stmt) {
 }
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via

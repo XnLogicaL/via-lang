@@ -7,11 +7,9 @@
 
 namespace via {
 
-namespace core {
-
 namespace parser {
 
-using lex::TokenKind;
+using Token::Kind;
 using namespace ast;
 
 void FoldOptimizationPass::apply(AstBuf& ast) {
@@ -51,7 +49,7 @@ void FoldOptimizationPass::apply_stmt(AstBuf& ast, usize pos, StmtNode* node) {
 
 PseudoValue* FoldOptimizationPass::apply_un(const NodeExprUn* un) {
   switch (un->op->kind) {
-    case TokenKind::MINUS:
+    case Token::Kind::MINUS:
       if (auto psv = apply_expr(un->expr)) {
         if (psv->kind == PseudoValue::Int) {
           psv->u.i = -psv->u.i;
@@ -72,9 +70,5 @@ PseudoValue* FoldOptimizationPass::apply_un(const NodeExprUn* un) {
 PseudoValue* FoldOptimizationPass::apply_bin(const NodeExprBin* bin) {
   return NULL;
 }
-
-}  // namespace parser
-
-}  // namespace core
 
 }  // namespace via

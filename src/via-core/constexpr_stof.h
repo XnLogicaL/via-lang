@@ -5,6 +5,7 @@
 #define VIA_CORE_CONSTEXPR_STOF_H_
 
 #include <via/config.h>
+#include <via/types.h>
 
 namespace via {
 

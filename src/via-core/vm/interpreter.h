@@ -5,17 +5,13 @@
 #define VIA_VM_INTERPRETER_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "buffer.h"
 #include "header.h"
 #include "instruction.h"
 #include "stack.h"
 
-
 namespace via {
-
-namespace core {
-
-namespace vm {
 
 struct Value;
 struct ValueRef;
@@ -59,10 +55,6 @@ class Interpreter {
   const uptr* fp;  // frame pointer
   const Instruction* pc;
 };
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
 

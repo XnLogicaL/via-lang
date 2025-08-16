@@ -7,79 +7,75 @@
 
 namespace via {
 
-namespace core {
-
-namespace lex {
-
 // max 3-char symbol lookahead
 struct TokenReprPair {
   const char* str;
-  TokenKind kind;
+  Token::Kind kind;
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-    {"var", TokenKind::KW_VAR},     {"macro", TokenKind::KW_MACRO},
-    {"func", TokenKind::KW_FUNC},   {"type", TokenKind::KW_TYPE},
-    {"while", TokenKind::KW_WHILE}, {"for", TokenKind::KW_FOR},
-    {"if", TokenKind::KW_IF},       {"in", TokenKind::KW_IN},
-    {"else", TokenKind::KW_ELSE},   {"do", TokenKind::KW_DO},
-    {"and", TokenKind::KW_AND},     {"or", TokenKind::KW_OR},
-    {"not", TokenKind::KW_NOT},     {"shl", TokenKind::KW_SHL},
-    {"shr", TokenKind::KW_SHR},
+    {"var", Token::Kind::KW_VAR},     {"macro", Token::Kind::KW_MACRO},
+    {"func", Token::Kind::KW_FUNC},   {"type", Token::Kind::KW_TYPE},
+    {"while", Token::Kind::KW_WHILE}, {"for", Token::Kind::KW_FOR},
+    {"if", Token::Kind::KW_IF},       {"in", Token::Kind::KW_IN},
+    {"else", Token::Kind::KW_ELSE},   {"do", Token::Kind::KW_DO},
+    {"and", Token::Kind::KW_AND},     {"or", Token::Kind::KW_OR},
+    {"not", Token::Kind::KW_NOT},     {"shl", Token::Kind::KW_SHL},
+    {"shr", Token::Kind::KW_SHR},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
-    {".", TokenKind::DOT},
-    {",", TokenKind::COMMA},
-    {";", TokenKind::SEMICOLON},
-    {":", TokenKind::COLON},
-    {"::", TokenKind::DBCOLON},
-    {"->", TokenKind::ARROW},
-    {"?", TokenKind::QUESTION},
-    {"+", TokenKind::PLUS},
-    {"-", TokenKind::MINUS},
-    {"*", TokenKind::ASTERISK},
-    {"/", TokenKind::FSLASH},
-    {"**", TokenKind::POW},
-    {"%", TokenKind::PERCENT},
-    {"&", TokenKind::AMPERSAND},
-    {"~", TokenKind::TILDE},
-    {"^", TokenKind::CARET},
-    {"|", TokenKind::PIPE},
-    {"!", TokenKind::BANG},
-    {"++", TokenKind::INC},
-    {"--", TokenKind::DEC},
-    {"<", TokenKind::LESSTHAN},
-    {">", TokenKind::GREATERTHAN},
-    {"..", TokenKind::CONCAT},
-    {"(", TokenKind::LPAREN},
-    {")", TokenKind::RPAREN},
-    {"[", TokenKind::LBRACKET},
-    {"]", TokenKind::RBRACKET},
-    {"{", TokenKind::LCURLY},
-    {"}", TokenKind::RCURLY},
-    {"=", TokenKind::EQUALS},
-    {"==", TokenKind::DBEQUALS},
-    {"+=", TokenKind::PLUSEQUALS},
-    {"*=", TokenKind::ASTERISKEQUALS},
-    {"/=", TokenKind::FSLASHEQUALS},
-    {"**=", TokenKind::POWEQUALS},
-    {"%=", TokenKind::PERCENTEQUALS},
-    {"&=", TokenKind::AMPERSANDEQUALS},
-    {"^=", TokenKind::CARETEQUALS},
-    {"|=", TokenKind::PIPEEQUALS},
-    {"!=", TokenKind::BANGEQUALS},
-    {"<=", TokenKind::LESSTHANEQUALS},
-    {">=", TokenKind::GREATERTHANEQUALS},
-    {"..=", TokenKind::CONCATEQUALS},
+    {".", Token::Kind::DOT},
+    {",", Token::Kind::COMMA},
+    {";", Token::Kind::SEMICOLON},
+    {":", Token::Kind::COLON},
+    {"::", Token::Kind::DBCOLON},
+    {"->", Token::Kind::ARROW},
+    {"?", Token::Kind::QUESTION},
+    {"+", Token::Kind::PLUS},
+    {"-", Token::Kind::MINUS},
+    {"*", Token::Kind::ASTERISK},
+    {"/", Token::Kind::FSLASH},
+    {"**", Token::Kind::POW},
+    {"%", Token::Kind::PERCENT},
+    {"&", Token::Kind::AMPERSAND},
+    {"~", Token::Kind::TILDE},
+    {"^", Token::Kind::CARET},
+    {"|", Token::Kind::PIPE},
+    {"!", Token::Kind::BANG},
+    {"++", Token::Kind::INC},
+    {"--", Token::Kind::DEC},
+    {"<", Token::Kind::LESSTHAN},
+    {">", Token::Kind::GREATERTHAN},
+    {"..", Token::Kind::CONCAT},
+    {"(", Token::Kind::LPAREN},
+    {")", Token::Kind::RPAREN},
+    {"[", Token::Kind::LBRACKET},
+    {"]", Token::Kind::RBRACKET},
+    {"{", Token::Kind::LCURLY},
+    {"}", Token::Kind::RCURLY},
+    {"=", Token::Kind::EQUALS},
+    {"==", Token::Kind::DBEQUALS},
+    {"+=", Token::Kind::PLUSEQUALS},
+    {"*=", Token::Kind::ASTERISKEQUALS},
+    {"/=", Token::Kind::FSLASHEQUALS},
+    {"**=", Token::Kind::POWEQUALS},
+    {"%=", Token::Kind::PERCENTEQUALS},
+    {"&=", Token::Kind::AMPERSANDEQUALS},
+    {"^=", Token::Kind::CARETEQUALS},
+    {"|=", Token::Kind::PIPEEQUALS},
+    {"!=", Token::Kind::BANGEQUALS},
+    {"<=", Token::Kind::LESSTHANEQUALS},
+    {">=", Token::Kind::GREATERTHANEQUALS},
+    {"..=", Token::Kind::CONCATEQUALS},
 };
 
-static bool is_numeric(TokenKind* kind, char c) {
+static bool is_numeric(Token::Kind* kind, char c) {
   switch (*kind) {
       // clang-format off
-  case TokenKind::INT:  return isdigit(c) || (c == '.' && *kind != TokenKind::FP); // decimal
-  case TokenKind::XINT: return isxdigit(c); // hexadecimal
-  case TokenKind::BINT: return c == '0' || c == '1'; // binary
+  case Token::Kind::INT:  return isdigit(c) || (c == '.' && *kind != Token::Kind::FP); // decimal
+  case Token::Kind::XINT: return isxdigit(c); // hexadecimal
+  case Token::Kind::BINT: return c == '0' || c == '1'; // binary
     // clang-format on
     default:
       break;
@@ -110,15 +106,15 @@ char Lexer::peek(int ahead) {
 
 Token* Lexer::read_number() {
   Token* token = alloc.emplace<Token>();
-  token->kind = TokenKind::INT;
+  token->kind = Token::Kind::INT;
   token->lexeme = file.cursor;
   token->size = 0;
 
   if (peek() == '0') {
     if (peek(1) == 'x')
-      token->kind = TokenKind::XINT;
+      token->kind = Token::Kind::XINT;
     else if (peek(1) == 'b')
-      token->kind = TokenKind::BINT;
+      token->kind = Token::Kind::BINT;
     else
       goto decimal;
 
@@ -131,10 +127,10 @@ decimal:
   char c;
   while ((c = peek()), is_numeric(&token->kind, c)) {
     if (c == '.') {
-      if (token->kind == TokenKind::INT)
-        token->kind = TokenKind::FP;
+      if (token->kind == Token::Kind::INT)
+        token->kind = Token::Kind::FP;
       else {
-        token->kind = TokenKind::ILLEGAL;
+        token->kind = Token::Kind::ILLEGAL;
         break;
       }
     }
@@ -148,7 +144,7 @@ decimal:
 
 Token* Lexer::read_string() {
   Token* token = alloc.emplace<Token>();
-  token->kind = TokenKind::STRING;
+  token->kind = Token::Kind::STRING;
   token->lexeme = file.cursor;
   token->size = 1;  // for opening quote
 
@@ -165,14 +161,14 @@ Token* Lexer::read_string() {
   }
 
   if (!closed)
-    token->kind = TokenKind::ILLEGAL;
+    token->kind = Token::Kind::ILLEGAL;
 
   return token;
 }
 
 Token* Lexer::read_identifier() {
   Token* token = alloc.emplace<Token>();
-  token->kind = TokenKind::IDENT;
+  token->kind = Token::Kind::IDENT;
   token->lexeme = file.cursor;
   token->size = 0;
 
@@ -193,15 +189,15 @@ Token* Lexer::read_identifier() {
   }
 
   if (strncmp(token->lexeme, "nil", token->size) == 0)
-    token->kind = TokenKind::NIL;
+    token->kind = Token::Kind::NIL;
   else if (strncmp(token->lexeme, "true", token->size) == 0)
-    token->kind = TokenKind::TRUE;
+    token->kind = Token::Kind::TRUE;
   else if (strncmp(token->lexeme, "false", token->size) == 0)
-    token->kind = TokenKind::FALSE;
+    token->kind = Token::Kind::FALSE;
 
-  if (token->kind == TokenKind::IDENT && c == '!') {
+  if (token->kind == Token::Kind::IDENT && c == '!') {
     token->size++;
-    token->kind = TokenKind::MIDENT;
+    token->kind = Token::Kind::MIDENT;
     advance();
   }
 
@@ -211,11 +207,11 @@ Token* Lexer::read_identifier() {
 Token* Lexer::read_symbol() {
   Token* token = alloc.emplace<Token>();
   token->lexeme = file.cursor;
-  token->kind = TokenKind::ILLEGAL;
+  token->kind = Token::Kind::ILLEGAL;
   token->size = 1;
 
   int max_len = 3;
-  TokenKind matched_kind = TokenKind::ILLEGAL;
+  Token::Kind matched_kind = Token::Kind::ILLEGAL;
   int matched_size = 0;
 
   char buf[4] = {};
@@ -236,7 +232,7 @@ Token* Lexer::read_symbol() {
   }
 
 found:
-  if (matched_kind != TokenKind::ILLEGAL) {
+  if (matched_kind != Token::Kind::ILLEGAL) {
     token->kind = matched_kind;
     token->size = matched_size;
 
@@ -318,21 +314,12 @@ TokenBuf Lexer::tokenize() {
   }
 
   Token* eof = alloc.emplace<Token>();
-  eof->kind = TokenKind::EOF_;
+  eof->kind = Token::Kind::EOF_;
   eof->lexeme = file.cursor;
   eof->size = 0;
 
   toks.push_back(eof);
   return TokenBuf(toks.data(), toks.data() + (toks.size() * sizeof(Token*)));
 }
-
-void dump_ttree(const TokenBuf& B) {
-  for (Token** p = B.data; p < B.data + B.size; p++)
-    fmt::println("{}", (*p)->get_dump());
-}
-
-}  // namespace lex
-
-}  // namespace core
 
 }  // namespace via

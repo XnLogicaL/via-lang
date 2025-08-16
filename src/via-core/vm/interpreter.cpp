@@ -6,26 +6,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace vm {
-
-template <typename T>
-  requires std::is_integral_v<T>
-static inline T ipow(T base, T exp) {
-  T result = 1;
-  for (;;) {
-    if (exp & 1)
-      result *= base;
-    exp >>= 1;
-    if (!exp)
-      break;
-    base *= base;
-  }
-
-  return result;
-}
-
 Stack<uptr>& Interpreter::get_stack() {
   return stack;
 }
@@ -785,10 +765,5 @@ dispatch:
   }
 #endif
 exit:
-}  // namespace vm
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via

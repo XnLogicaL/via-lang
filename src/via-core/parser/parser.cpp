@@ -11,13 +11,11 @@
 
 namespace via {
 
-namespace core {
-
 namespace parser {
 
-using lex::Token;
-using lex::TokenKind;
-using enum lex::TokenKind;
+using Token;
+using Token::Kind;
+using enum Token::Kind;
 using namespace ast;
 
 struct ParserError {
@@ -32,55 +30,55 @@ struct ParserError {
       : loc(loc), msg(fmt::format(form, std::forward<Args>(args)...)) {}
 };
 
-static bool is_expr_start(TokenKind kind) {
+static bool is_expr_start(Token::Kind kind) {
   switch (kind) {
-    case TokenKind::INT:
-    case TokenKind::BINT:
-    case TokenKind::XINT:
-    case TokenKind::NIL:
-    case TokenKind::FP:
-    case TokenKind::STRING:
-    case TokenKind::IDENT:
-    case TokenKind::LPAREN:
-    case TokenKind::MINUS:
-    case TokenKind::KW_NOT:
-    case TokenKind::TILDE:
+    case Token::Kind::INT:
+    case Token::Kind::BINT:
+    case Token::Kind::XINT:
+    case Token::Kind::NIL:
+    case Token::Kind::FP:
+    case Token::Kind::STRING:
+    case Token::Kind::IDENT:
+    case Token::Kind::LPAREN:
+    case Token::Kind::MINUS:
+    case Token::Kind::KW_NOT:
+    case Token::Kind::TILDE:
       return true;
     default:
       return false;
   }
 }
 
-static int bin_prec(TokenKind kind) {
+static int bin_prec(Token::Kind kind) {
   switch (kind) {
-    case TokenKind::KW_OR:
+    case Token::Kind::KW_OR:
       return 0;
-    case TokenKind::KW_AND:
+    case Token::Kind::KW_AND:
       return 1;
-    case TokenKind::DBEQUALS:
-    case TokenKind::BANGEQUALS:
-    case TokenKind::LESSTHAN:
-    case TokenKind::LESSTHANEQUALS:
-    case TokenKind::GREATERTHAN:
-    case TokenKind::GREATERTHANEQUALS:
+    case Token::Kind::DBEQUALS:
+    case Token::Kind::BANGEQUALS:
+    case Token::Kind::LESSTHAN:
+    case Token::Kind::LESSTHANEQUALS:
+    case Token::Kind::GREATERTHAN:
+    case Token::Kind::GREATERTHANEQUALS:
       return 2;
-    case TokenKind::AMPERSAND:
+    case Token::Kind::AMPERSAND:
       return 3;
-    case TokenKind::CARET:
+    case Token::Kind::CARET:
       return 4;
-    case TokenKind::PIPE:
+    case Token::Kind::PIPE:
       return 5;
-    case TokenKind::KW_SHL:
-    case TokenKind::KW_SHR:
+    case Token::Kind::KW_SHL:
+    case Token::Kind::KW_SHR:
       return 6;
-    case TokenKind::PLUS:
-    case TokenKind::MINUS:
+    case Token::Kind::PLUS:
+    case Token::Kind::MINUS:
       return 7;
-    case TokenKind::ASTERISK:
-    case TokenKind::FSLASH:
-    case TokenKind::PERCENT:
+    case Token::Kind::ASTERISK:
+    case Token::Kind::FSLASH:
+    case Token::Kind::PERCENT:
       return 8;
-    case TokenKind::POW:
+    case Token::Kind::POW:
       return 9;
     default:
       return -1;
@@ -96,11 +94,11 @@ Token* Parser::advance() {
   return peek(-1);
 }
 
-bool Parser::match(TokenKind kind, int ahead) {
+bool Parser::match(Token::Kind kind, int ahead) {
   return peek(ahead)->kind == kind;
 }
 
-bool Parser::optional(TokenKind kind) {
+bool Parser::optional(Token::Kind kind) {
   if (match(kind)) {
     advance();
     return true;
@@ -109,7 +107,7 @@ bool Parser::optional(TokenKind kind) {
   return false;
 }
 
-Token* Parser::expect(TokenKind kind, const char* task) {
+Token* Parser::expect(Token::Kind kind, const char* task) {
   if (!match(kind)) {
     const Token& unexp = *peek();
     throw ParserError(unexp.location(source), "Unexpected token '{}' while {}",
@@ -124,11 +122,11 @@ TupleBinding* Parser::parse_tuple_binding() {
 
   auto tpb = alloc.emplace<TupleBinding>();
 
-  while (!match(TokenKind::RBRACKET)) {
+  while (!match(Token::Kind::RBRACKET)) {
     Token* id = advance();
     auto id_loc = id->location(source);
 
-    if (id->kind != TokenKind::IDENT)
+    if (id->kind != Token::Kind::IDENT)
       throw ParserError(id_loc,
                         "Unexpected token '{}' while parsing tuple binding",
                         id->to_string());
@@ -139,8 +137,8 @@ TupleBinding* Parser::parse_tuple_binding() {
 
     tpb->binds.push_back(sym);
 
-    if (!match(TokenKind::RBRACKET))
-      expect(TokenKind::COMMA, "parsing tuple binding");
+    if (!match(Token::Kind::RBRACKET))
+      expect(Token::Kind::COMMA, "parsing tuple binding");
   }
 
   tpb->loc = {loc.begin, advance()->location(source).end};
@@ -150,7 +148,7 @@ TupleBinding* Parser::parse_tuple_binding() {
 LValue* Parser::parse_lvalue() {
   auto lval = alloc.emplace<LValue>();
 
-  if (match(TokenKind::IDENT)) {
+  if (match(Token::Kind::IDENT)) {
     Token* id = advance();
 
     auto sym = alloc.emplace<NodeExprSym>();
@@ -159,7 +157,7 @@ LValue* Parser::parse_lvalue() {
 
     lval->kind = LValue::Symbol;
     lval->sym = sym;
-  } else if (match(TokenKind::LBRACKET)) {
+  } else if (match(Token::Kind::LBRACKET)) {
     auto tpb = parse_tuple_binding();
     lval->kind = LValue::Tpb;
     lval->tpb = tpb;
@@ -178,14 +176,14 @@ ExprNode* Parser::parse_primary() {
   SAVE_FIRST()
 
   switch (first->kind) {
-    case TokenKind::INT:
-    case TokenKind::BINT:
-    case TokenKind::XINT:
-    case TokenKind::NIL:
-    case TokenKind::FP:
-    case TokenKind::TRUE:
-    case TokenKind::FALSE:
-    case TokenKind::STRING: {
+    case Token::Kind::INT:
+    case Token::Kind::BINT:
+    case Token::Kind::XINT:
+    case Token::Kind::NIL:
+    case Token::Kind::FP:
+    case Token::Kind::TRUE:
+    case Token::Kind::FALSE:
+    case Token::Kind::STRING: {
       advance();
 
       auto* lit = alloc.emplace<NodeExprLit>();
@@ -193,12 +191,12 @@ ExprNode* Parser::parse_primary() {
       lit->loc = loc;
 
       switch (lit->tok->kind) {
-        case TokenKind::NIL:
+        case Token::Kind::NIL:
           lit->psv.kind = PseudoValue::Nil;
           break;
-        case TokenKind::INT:
-        case TokenKind::BINT:
-        case TokenKind::XINT:
+        case Token::Kind::INT:
+        case Token::Kind::BINT:
+        case Token::Kind::XINT:
           lit->psv.kind = PseudoValue::Int;
           lit->psv.u.i = via::stoi<PseudoValue::int_type>(lit->tok->to_string())
                              .or_else([]() -> Optional<PseudoValue::int_type> {
@@ -207,7 +205,7 @@ ExprNode* Parser::parse_primary() {
                              })
                              .value();
           break;
-        case TokenKind::FP:
+        case Token::Kind::FP:
           lit->psv.kind = PseudoValue::Float;
           lit->psv.u.fp =
               via::stof<PseudoValue::float_type>(lit->tok->to_string())
@@ -217,12 +215,12 @@ ExprNode* Parser::parse_primary() {
                   })
                   .value();
           break;
-        case TokenKind::TRUE:
-        case TokenKind::FALSE:
+        case Token::Kind::TRUE:
+        case Token::Kind::FALSE:
           lit->psv.kind = PseudoValue::Bool;
-          lit->psv.u.b = lit->tok->kind == TokenKind::TRUE;
+          lit->psv.u.b = lit->tok->kind == Token::Kind::TRUE;
           break;
-        case TokenKind::STRING:
+        case Token::Kind::STRING:
           lit->psv.kind = PseudoValue::String;
           lit->psv.u.str = alloc.strdup(lit->tok->to_string().c_str());
           break;
@@ -232,7 +230,7 @@ ExprNode* Parser::parse_primary() {
 
       return lit;
     }
-    case TokenKind::IDENT: {
+    case Token::Kind::IDENT: {
       advance();
 
       auto* sym = alloc.emplace<NodeExprSym>();
@@ -241,22 +239,22 @@ ExprNode* Parser::parse_primary() {
 
       return sym;
     }
-    case TokenKind::LPAREN: {
+    case Token::Kind::LPAREN: {
       advance();
 
       AbsLocation start = loc;
       ExprNode* first = parse_expr();
 
-      if (match(TokenKind::COMMA)) {
+      if (match(Token::Kind::COMMA)) {
         Vec<ExprNode*> vals;
         vals.push_back(first);
 
-        while (match(TokenKind::COMMA)) {
+        while (match(Token::Kind::COMMA)) {
           advance();
           vals.push_back(parse_expr());
         }
 
-        expect(TokenKind::RPAREN, "parsing tuple expression");
+        expect(Token::Kind::RPAREN, "parsing tuple expression");
 
         auto* tup = alloc.emplace<NodeExprTuple>();
         tup->vals = std::move(vals);
@@ -265,7 +263,7 @@ ExprNode* Parser::parse_primary() {
         return tup;
       }
 
-      expect(TokenKind::RPAREN, "parsing grouping expression");
+      expect(Token::Kind::RPAREN, "parsing grouping expression");
 
       auto* group = alloc.emplace<NodeExprGroup>();
       group->expr = first;
@@ -284,9 +282,9 @@ ExprNode* Parser::parse_unary_or_postfix() {
   ExprNode* expr;
 
   switch (peek()->kind) {
-    case TokenKind::KW_NOT:
-    case TokenKind::MINUS:
-    case TokenKind::TILDE: {
+    case Token::Kind::KW_NOT:
+    case Token::Kind::MINUS:
+    case Token::Kind::TILDE: {
       auto* un = alloc.emplace<NodeExprUn>();
       un->op = advance();
       un->expr = parse_unary_or_postfix();
@@ -303,17 +301,17 @@ ExprNode* Parser::parse_unary_or_postfix() {
     Token* first = peek();
 
     switch (first->kind) {
-      case TokenKind::LPAREN: {  // Function call
-        advance();               // consume '('
+      case Token::Kind::LPAREN: {  // Function call
+        advance();                 // consume '('
 
         Vec<ExprNode*> args;
 
-        if (!match(TokenKind::RPAREN)) {
+        if (!match(Token::Kind::RPAREN)) {
           do
             args.push_back(parse_expr());
-          while (match(TokenKind::COMMA) && advance());
+          while (match(Token::Kind::COMMA) && advance());
 
-          expect(TokenKind::RPAREN, "parsing function call");
+          expect(Token::Kind::RPAREN, "parsing function call");
         } else
           advance();  // consume ')'
 
@@ -325,12 +323,12 @@ ExprNode* Parser::parse_unary_or_postfix() {
         break;
       }
 
-      case TokenKind::LBRACKET: {  // Subscript
-        advance();                 // consume '['
+      case Token::Kind::LBRACKET: {  // Subscript
+        advance();                   // consume '['
 
         ExprNode* idx = parse_expr();
 
-        expect(TokenKind::RBRACKET, "parsing subscript expression");
+        expect(Token::Kind::RBRACKET, "parsing subscript expression");
 
         auto* subs = alloc.emplace<NodeExprSubs>();
         subs->lval = expr;
@@ -368,11 +366,11 @@ NodeStmtScope* Parser::parse_scope() {
 
   auto scope = alloc.emplace<NodeStmtScope>();
 
-  if (first->kind == TokenKind::COLON) {
+  if (first->kind == Token::Kind::COLON) {
     scope->stmts.push_back(parse_stmt());
     scope->loc = {loc.begin, scope->stmts.back()->loc.end};
-  } else if (first->kind == TokenKind::LCURLY) {
-    while (!match(TokenKind::RCURLY))
+  } else if (first->kind == Token::Kind::LCURLY) {
+    while (!match(Token::Kind::RCURLY))
       scope->stmts.push_back(parse_stmt());
 
     advance();
@@ -380,7 +378,7 @@ NodeStmtScope* Parser::parse_scope() {
     throw ParserError(loc, "Expected ':' or '{{' while parsing scope, got '{}'",
                       first->to_string());
 
-  optional(TokenKind::SEMICOLON);
+  optional(Token::Kind::SEMICOLON);
   return scope;
 }
 
@@ -390,13 +388,13 @@ NodeStmtVar* Parser::parse_var() {
   auto vars = alloc.emplace<NodeStmtVar>();
   vars->lval = parse_lvalue();
 
-  expect(TokenKind::EQUALS, "parsing variable declaration");
+  expect(Token::Kind::EQUALS, "parsing variable declaration");
 
   ExprNode* rval = parse_expr();
   vars->rval = rval;
   vars->loc = {loc.begin, rval->loc.end};
 
-  optional(TokenKind::SEMICOLON);
+  optional(Token::Kind::SEMICOLON);
   return vars;
 }
 
@@ -406,11 +404,11 @@ NodeStmtFor* Parser::parse_for() {
   auto fors = alloc.emplace<NodeStmtFor>();
   fors->init = parse_var();
 
-  expect(TokenKind::COMMA, "parsing for statement");
+  expect(Token::Kind::COMMA, "parsing for statement");
 
   fors->target = parse_expr();
 
-  expect(TokenKind::COMMA, "parsing for statement");
+  expect(Token::Kind::COMMA, "parsing for statement");
 
   fors->step = parse_expr();
   fors->br = parse_scope();
@@ -425,7 +423,7 @@ NodeStmtForEach* Parser::parse_foreach() {
   auto fors = alloc.emplace<NodeStmtForEach>();
   fors->lval = parse_lvalue();
 
-  expect(TokenKind::KW_IN, "parsing for each statement");
+  expect(Token::Kind::KW_IN, "parsing for each statement");
 
   fors->iter = parse_expr();
   fors->br = parse_scope();
@@ -447,7 +445,7 @@ NodeStmtIf* Parser::parse_if() {
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
-  optional(TokenKind::SEMICOLON);
+  optional(Token::Kind::SEMICOLON);
   return ifs;
 }
 
@@ -463,25 +461,25 @@ NodeStmtWhile* Parser::parse_while() {
 }
 
 StmtNode* Parser::parse_stmt() {
-  if (match(TokenKind::KW_IF))
+  if (match(Token::Kind::KW_IF))
     return parse_if();
-  else if (match(TokenKind::KW_WHILE))
+  else if (match(Token::Kind::KW_WHILE))
     return parse_while();
-  else if (match(TokenKind::KW_VAR))
+  else if (match(Token::Kind::KW_VAR))
     return parse_var();
-  else if (match(TokenKind::KW_DO)) {
+  else if (match(Token::Kind::KW_DO)) {
     advance();
     return parse_scope();
-  } else if (match(TokenKind::KW_FOR)) {
+  } else if (match(Token::Kind::KW_FOR)) {
     // generic for loop
-    if (match(TokenKind::KW_VAR, 1))
+    if (match(Token::Kind::KW_VAR, 1))
       return parse_for();
 
     // for each loop
     return parse_foreach();
   }
 
-  if (match(TokenKind::SEMICOLON)) {
+  if (match(Token::Kind::SEMICOLON)) {
     auto empty = alloc.emplace<NodeStmtEmpty>();
     empty->loc = advance()->location(source);
     return empty;
@@ -497,14 +495,14 @@ StmtNode* Parser::parse_stmt() {
   es->expr = parse_expr();
   es->loc = es->expr->loc;
 
-  optional(TokenKind::SEMICOLON);
+  optional(Token::Kind::SEMICOLON);
   return es;
 }
 
 AstBuf Parser::parse() {
   Vec<StmtNode*> nodes;
 
-  while (!match(TokenKind::EOF_)) {
+  while (!match(Token::Kind::EOF_)) {
     try {
       nodes.push_back(parse_stmt());
     } catch (const ParserError& e) {
@@ -521,9 +519,5 @@ void dump_ast(const AstBuf& buf) {
   for (const StmtNode* stmt : buf)
     fmt::println("{}", stmt->get_dump(depth));
 }
-
-}  // namespace parser
-
-}  // namespace core
 
 }  // namespace via

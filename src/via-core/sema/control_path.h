@@ -5,12 +5,11 @@
 #define VIA_CORE_CONTROL_PATH_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "constexpr.h"
 #include "parser/ast.h"
 
 namespace via {
-
-namespace core {
 
 namespace sema {
 
@@ -25,8 +24,6 @@ enum class ControlPath {
 ControlPath analyze_cpath(const ast::StmtNode* stmt);
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via
 

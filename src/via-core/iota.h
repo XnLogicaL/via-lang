@@ -5,6 +5,7 @@
 #define VIA_CORE_IOTA_H_
 
 #include <via/config.h>
+#include <via/types.h>
 
 namespace via {
 

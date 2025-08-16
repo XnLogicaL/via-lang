@@ -1,14 +1,13 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "value.h"
+#include "panic.h"
 
 namespace via {
 
-void Value::free() {}
-
-ValueRef Value::make_ref() {
-  return ValueRef(ctx, this);
+[[noreturn]] void panic(String message) {
+  spdlog::error("program panic: {}", message);
+  std::terminate();
 }
 
 }  // namespace via

@@ -5,11 +5,10 @@
 #define VIA_CORE_REGISTER_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "context.h"
 
 namespace via {
-
-namespace core {
 
 namespace sema {
 
@@ -17,8 +16,6 @@ int alloc_register(SemaContext& ctx);
 void free_register(SemaContext& ctx, int reg);
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via
 

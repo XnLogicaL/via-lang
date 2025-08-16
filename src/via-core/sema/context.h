@@ -5,12 +5,11 @@
 #define VIA_CORE_CONTEXT_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "buffer.h"
 #include "memory.h"
 
 namespace via {
-
-namespace core {
 
 namespace sema {
 
@@ -20,8 +19,6 @@ struct SemaContext {
 };
 
 }  // namespace sema
-
-}  // namespace core
 
 }  // namespace via
 

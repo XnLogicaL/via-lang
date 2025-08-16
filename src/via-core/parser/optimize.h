@@ -5,14 +5,11 @@
 #define VIA_PARSER_OPTIMIZE_H_
 
 #include <via/config.h>
+#include <via/types.h>
 #include "ast.h"
 #include "parser.h"
 
 namespace via {
-
-namespace core {
-
-namespace parser {
 
 class OptimizationPass {
  public:
@@ -22,10 +19,6 @@ class OptimizationPass {
  protected:
   HeapAllocator& alloc;
 };
-
-}  // namespace parser
-
-}  // namespace core
 
 }  // namespace via
 

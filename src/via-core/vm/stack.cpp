@@ -5,10 +5,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace vm {
-
 template <typename T>
 HeapAllocator* Stack<T>::get_allocator() {
   return alloc;
@@ -61,9 +57,5 @@ template <typename T>
 T* Stack<T>::end() {
   return sp;
 }
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via

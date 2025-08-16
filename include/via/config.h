@@ -21,7 +21,7 @@
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #define VIA_PLATFORM_IOS
 #else
-#define VIA_PLATFORM_MACOS
+#define VIA_PLATFORM_OSX
 #endif
 #endif
 
@@ -31,10 +31,10 @@
 #endif
 
 #if defined(__EMSCRIPTEN__)
-#define VIA_PLATFORM_WEB
+#define VIA_PLATFORM_EMSCRIPTEN
 #endif
 
-#if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_MACOS) || \
+#if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
     defined(VIA_PLATFORM_BSD)
 #define VIA_PLATFORM_POSIX
 #endif
@@ -63,7 +63,6 @@
 
 #define VIA_MODINIT_FUNC extern "C" VIA_EXPORT const ModuleDef*
 
-#define VIA_VERSION "0.0.2"
 #define VIA_WORDSIZE sizeof(void*)
 
 #define VIA_BUG(msg)                                \
@@ -94,83 +93,15 @@
   target& operator=(target&&); \
   target(target&&);
 
-#include <fmt/core.h>
-#include <fmt/format.h>
-#include <mimalloc.h>
-#include <cassert>
-#include <expected>
-#include <functional>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include "types.h"
 
 namespace via {
 
-using std::literals::operator""s;
-using std::literals::operator""sv;
+namespace config {
 
-using String = std::string;
-using StringView = std::string_view;
+inline constexpr usize version = 010;
 
-template <typename Sig>
-using Function = std::function<Sig>;
-
-template <typename... Args>
-using Fmt = fmt::format_string<Args...>;
-
-template <typename K, typename V>
-using Map = std::unordered_map<K, V>;
-
-template <typename T>
-using Set = std::unordered_set<T>;
-
-template <typename T, const size_t Size>
-using Array = std::array<T, Size>;
-
-template <typename T>
-using Vec = std::vector<T>;
-
-template <typename T>
-using Box = std::unique_ptr<T>;
-
-template <typename T>
-using Atomic = std::atomic<T>;
-
-template <typename T>
-using Rc = std::shared_ptr<T>;
-
-template <typename T>
-using Arc = Atomic<Rc<T>>;
-
-template <typename T, typename U>
-using Pair = std::pair<T, U>;
-
-template <typename T, typename E>
-using Result = std::expected<T, E>;
-
-template <typename T>
-using Optional = std::optional<T>;
-inline constexpr auto nullopt = std::nullopt;
-
-using u8 = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
-using usize = size_t;
-using uptr = uintptr_t;
-
-using i8 = int8_t;
-using i16 = int16_t;
-using i32 = int32_t;
-using i64 = int64_t;
-using ptr = intptr_t;
-
-using f32 = float;
-using f64 = double;
+}
 
 }  // namespace via
 

@@ -7,10 +7,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace vm {
-
 enum class Operand : u8 {
   None,
   Generic,
@@ -325,9 +321,5 @@ String Instruction::to_string() const {
 
   return oss.str();
 }
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via

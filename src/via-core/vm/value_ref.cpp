@@ -7,10 +7,6 @@
 
 namespace via {
 
-namespace core {
-
-namespace vm {
-
 void ValueRef::free() {
   assert(!is_null() && "free called on NULL reference");
 
@@ -64,9 +60,5 @@ Value& ValueRef::operator*() const {
   assert(!is_null() && "attempt to read NULL reference (dereference)");
   return *ptr;
 }
-
-}  // namespace vm
-
-}  // namespace core
 
 }  // namespace via
