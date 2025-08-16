@@ -172,26 +172,6 @@ using ptr = intptr_t;
 using f32 = float;
 using f64 = double;
 
-namespace detail {
-
-template <typename T>
-concept has_to_string = requires(T t) {
-                          { t.to_string() } -> std::same_as<String>;
-                        };
-
-}  // namespace detail
-
 }  // namespace via
-
-template <typename T>
-struct fmt::
-    formatter<T, char, std::enable_if_t<via::detail::has_to_string<T>>> {
-  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
-
-  template <typename FormatContext>
-  auto format(const T& t, FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), "{}", t.to_string());
-  }
-};
 
 #endif

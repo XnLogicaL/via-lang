@@ -5,7 +5,7 @@
 #define VIA_CORE_MEMORY_H_
 
 #include <mimalloc.h>
-#include "via/config.h"
+#include <via/config.h>
 
 namespace via {
 
