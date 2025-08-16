@@ -228,9 +228,6 @@ enum class Opcode : u16 {
   PCALLDYNAMIC,  // pcalldynamic <inst: *> <idx> <argc>
 };
 
-Opcode opcode_from_string(const char* str);
-const char* opcode_to_string(Opcode opc);
-
 struct Instruction {
   Opcode op = Opcode::NOP;
   u16 a, b, c;

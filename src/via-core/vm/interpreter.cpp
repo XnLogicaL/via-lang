@@ -765,5 +765,6 @@ dispatch:
   }
 #endif
 exit:
+}
 
 }  // namespace via

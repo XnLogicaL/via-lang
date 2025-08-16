@@ -22,12 +22,12 @@ class FoldOptimizationPass final : public OptimizationPass {
  private:
   using OptimizationPass::alloc;
 
-  void apply_if(AstBuf& ast, usize pos, NodeStmtIf* node);
-  void apply_stmt(AstBuf& ast, usize pos, StmtNode* node);
+  void apply_if(AstBuf& ast, usize pos, ast::NodeStmtIf* node);
+  void apply_stmt(AstBuf& ast, usize pos, ast::StmtNode* node);
 
-  PseudoValue* apply_un(const NodeExprUn* un);
-  PseudoValue* apply_bin(const NodeExprBin* bin);
-  PseudoValue* apply_expr(const ExprNode* expr);
+  PseudoValue* apply_un(const ast::NodeExprUn* un);
+  PseudoValue* apply_bin(const ast::NodeExprBin* bin);
+  PseudoValue* apply_expr(const ast::ExprNode* expr);
 };
 
 }  // namespace via

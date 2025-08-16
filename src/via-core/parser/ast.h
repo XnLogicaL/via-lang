@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "convert.h"
 #include "lexer/location.h"
 #include "lexer/token.h"
 #include "pseudo_value.h"
@@ -43,7 +44,7 @@ struct TupleBinding {
 };
 
 struct LValue {
-  enum Kind {
+  enum class Kind {
     Symbol,
     Tpb,
   } kind;

@@ -11,10 +11,6 @@
 
 namespace via {
 
-namespace parser {
-
-using Token;
-using Token::Kind;
 using enum Token::Kind;
 using namespace ast;
 
@@ -155,11 +151,11 @@ LValue* Parser::parse_lvalue() {
     sym->loc = id->location(source);
     sym->tok = id;
 
-    lval->kind = LValue::Symbol;
+    lval->kind = LValue::Kind::Symbol;
     lval->sym = sym;
   } else if (match(Token::Kind::LBRACKET)) {
     auto tpb = parse_tuple_binding();
-    lval->kind = LValue::Tpb;
+    lval->kind = LValue::Kind::Tpb;
     lval->tpb = tpb;
   } else {
     Token* bad = peek();

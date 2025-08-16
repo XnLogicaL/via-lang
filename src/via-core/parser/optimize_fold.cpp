@@ -7,9 +7,6 @@
 
 namespace via {
 
-namespace parser {
-
-using Token::Kind;
 using namespace ast;
 
 void FoldOptimizationPass::apply(AstBuf& ast) {

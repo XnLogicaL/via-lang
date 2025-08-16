@@ -4,18 +4,15 @@
 #ifndef VIA_CORE_TOKEN_H_
 #define VIA_CORE_TOKEN_H_
 
+#include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
-#include <iomanip>
-#include <sstream>
+#include <ranges>
 #include "buffer.h"
 #include "convert.h"
 #include "location.h"
 
 namespace via {
-
-struct Token;
-using TokenBuf = Buffer<Token*>;
 
 struct Token {
   enum class Kind {
@@ -103,17 +100,14 @@ struct Token {
   AbsLocation location(const FileBuf& source) const;
 };
 
+using TokenBuf = Buffer<Token*>;
+
 template <>
 struct Convert<Token> {
   static String to_string(const Token& tok) {
-    std::ostringstream oss;
-    oss << "[";
-    oss << std::left << std::setfill(' ') << std::setw(12)
-        << Convert<Token::Kind>::to_string(tok.kind);
-    oss << " '";
-    oss << ((*tok.lexeme == '\0') ? "<eof>" : tok.to_string());
-    oss << "']";
-    return oss.str();
+    return fmt::format("[{:<12} '{}']",
+                       Convert<Token::Kind>::to_string(tok.kind),
+                       (*tok.lexeme == '\0') ? "<eof>" : tok.to_string());
   }
 };
 

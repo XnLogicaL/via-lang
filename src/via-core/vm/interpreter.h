@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "buffer.h"
+#include "constexpr_ipow.h"
 #include "header.h"
 #include "instruction.h"
 #include "stack.h"
@@ -16,16 +17,16 @@ namespace via {
 struct Value;
 struct ValueRef;
 
-namespace cfg {
+namespace config {
 
-inline constexpr usize REGISTER_COUNT = UINT16_MAX + 1;
+inline constexpr usize register_count = UINT16_MAX + 1;
 
 }
 
 class Interpreter {
  public:
   constexpr Interpreter(const Header* H)
-      : H(H), pc(H->is.data()), stack(&alloc), regs(cfg::REGISTER_COUNT) {
+      : H(H), pc(H->is.data()), stack(&alloc), regs(config::register_count) {
     assert(!H->is.empty() && "illformed header (bytecode array empty)");
   }
 

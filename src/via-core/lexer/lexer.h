@@ -36,18 +36,6 @@ class Lexer final {
   HeapAllocator alloc;
 };
 
-template <>
-struct Convert<TokenBuf> {
-  static String to_string(const TokenBuf& buf) {
-    std::ostringstream oss;
-
-    for (const Token* tok : buf)
-      oss << Convert<Token>::to_string(*tok);
-
-    return oss.str();
-  }
-};
-
 }  // namespace via
 
 #endif

@@ -4,19 +4,42 @@
 #ifndef VIA_CORE_CONVERT_H_
 #define VIA_CORE_CONVERT_H_
 
+#include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
+#include <ranges>
+#include "buffer.h"
 
 namespace via {
 
 template <typename T>
 struct Convert {
   static String to_string(const T& t) {
-    if constexpr (std::is_enum_v<T>)
-      return magic_enum::enum_name(t);
+    if constexpr (std::is_enum_v<T>) {
+      return String(magic_enum::enum_name(t));
+    } else {
+      return std::to_string(t);
+    }
+  }
+};
 
-    return std::to_string(t);
+template <typename T>
+struct Convert<Vec<T>> {
+  static String to_string(const Vec<T>& v) {
+    auto transform = std::views::transform(
+        [](const T& t) { return Convert<T>::to_string(t); });
+    return fmt::format("{}", fmt::join(v | transform, ", "));
+  }
+};
+
+template <typename T>
+struct Convert<Buffer<T>> {
+  static String to_string(const Buffer<T>& buf) {
+    auto range = std::views::counted(buf.begin(), buf.size);
+    auto transform = std::views::transform(
+        [](const T& t) { return Convert<T>::to_string(t); });
+    return fmt::format("{}", fmt::join(range | transform, "\n"));
   }
 };
 
