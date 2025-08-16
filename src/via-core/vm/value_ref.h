@@ -4,8 +4,8 @@
 #ifndef VIA_VM_VALUE_REF_H_
 #define VIA_VM_VALUE_REF_H_
 
-#include <util/memory.h>
 #include <via/config.h>
+#include "memory.h"
 
 namespace via {
 

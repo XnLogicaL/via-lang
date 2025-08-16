@@ -4,9 +4,9 @@
 #ifndef VIA_CORE_TOKEN_H_
 #define VIA_CORE_TOKEN_H_
 
-#include <util/buffer.h>
 #include <via/config.h>
 #include <magic_enum/magic_enum.hpp>
+#include "buffer.h"
 #include "location.h"
 
 namespace via {

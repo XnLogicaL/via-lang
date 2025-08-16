@@ -5,14 +5,14 @@
 #define VIA_CORE_PARSER_H_
 
 #include <mimalloc.h>
-#include <util/constexpr_stof.h>
-#include <util/constexpr_stoi.h>
-#include <util/memory.h>
 #include <via/config.h>
 #include "ast.h"
+#include "constexpr_stof.h"
+#include "constexpr_stoi.h"
 #include "diagnostics.h"
 #include "lexer/lexer.h"
 #include "lexer/token.h"
+#include "memory.h"
 
 namespace via {
 

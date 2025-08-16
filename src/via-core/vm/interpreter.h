@@ -4,11 +4,12 @@
 #ifndef VIA_VM_INTERPRETER_H_
 #define VIA_VM_INTERPRETER_H_
 
-#include <util/buffer.h>
 #include <via/config.h>
+#include "buffer.h"
 #include "header.h"
 #include "instruction.h"
 #include "stack.h"
+
 
 namespace via {
 

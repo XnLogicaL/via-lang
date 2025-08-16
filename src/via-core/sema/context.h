@@ -4,9 +4,9 @@
 #ifndef VIA_CORE_CONTEXT_H_
 #define VIA_CORE_CONTEXT_H_
 
-#include <util/buffer.h>
-#include <util/memory.h>
 #include <via/config.h>
+#include "buffer.h"
+#include "memory.h"
 
 namespace via {
 

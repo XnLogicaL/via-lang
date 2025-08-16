@@ -6,8 +6,8 @@
 
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
-#include <util/color.h>
 #include <via/config.h>
+#include "color.h"
 #include "lexer/location.h"
 
 namespace via {

@@ -4,9 +4,9 @@
 #ifndef VIA_VM_VALUE_H_
 #define VIA_VM_VALUE_H_
 
-#include <util/constexpr_stof.h>
-#include <util/constexpr_stoi.h>
 #include <via/config.h>
+#include "constexpr_stof.h"
+#include "constexpr_stoi.h"
 #include "interpreter.h"
 #include "value_ref.h"
 

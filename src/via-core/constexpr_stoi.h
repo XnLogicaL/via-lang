@@ -1,8 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_SHARED_CONSTEXPR_STOI_H_
-#define VIA_SHARED_CONSTEXPR_STOI_H_
+#ifndef VIA_CORE_CONSTEXPR_STOI_H_
+#define VIA_CORE_CONSTEXPR_STOI_H_
 
 #include <via/config.h>
 

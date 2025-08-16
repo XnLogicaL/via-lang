@@ -5,10 +5,11 @@
 #define VIA_CORE_LEXER_H_
 
 #include <mimalloc.h>
-#include <util/buffer.h>
-#include <util/memory.h>
 #include <via/config.h>
+#include "buffer.h"
+#include "memory.h"
 #include "token.h"
+
 
 namespace via {
 

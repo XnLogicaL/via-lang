@@ -4,8 +4,8 @@
 #ifndef VIA_CORE_LOCATION_H_
 #define VIA_CORE_LOCATION_H_
 
-#include <util/buffer.h>
 #include <via/config.h>
+#include "buffer.h"
 
 namespace via {
 

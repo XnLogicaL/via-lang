@@ -12,6 +12,5 @@ add_subdirectory(thirdparty/mimalloc)
 add_subdirectory(thirdparty/fmt)
 
 # Modules
-add_subdirectory(src/via-shared)
 add_subdirectory(src/via-core)
 add_subdirectory(src/via-cli)
