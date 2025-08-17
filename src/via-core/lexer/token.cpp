@@ -2,13 +2,11 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "token.h"
-#include <cstring>
-#include <iomanip>
 
 namespace via {
 
 AbsLocation Token::location(const FileBuf& source) const {
-  const usize begin = lexeme - source.data;
+  const usize begin = lexeme - source.cbegin();
   const usize end = begin + size;
 
   return {begin, end};
