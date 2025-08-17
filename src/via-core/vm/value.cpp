@@ -38,22 +38,6 @@ Value* Value::construct(Interpreter* ctx, char* string) {
   return construct_impl(ctx, Kind::string, {.string = string});
 }
 
-Value::Kind Value::kind() const {
-  return k;
-}
-
-Value::Union& Value::data() {
-  return u;
-}
-
-const Value::Union& Value::data() const {
-  return u;
-}
-
-Interpreter* Value::context() const {
-  return ctx;
-}
-
 void Value::free() {
   switch (k) {
     case Kind::string:

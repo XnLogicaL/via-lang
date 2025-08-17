@@ -6,8 +6,6 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "constexpr_stof.h"
-#include "constexpr_stoi.h"
 #include "interpreter.h"
 #include "value_ref.h"
 
@@ -46,20 +44,20 @@ class Value final {
   static Value* construct(Interpreter* ctx, char* string);
 
  public:
-  Kind kind() const;
-  Union& data();
-  const Union& data() const;
-  Interpreter* context() const;
+  Kind kind() const { return k; }
+  Union& data() { return u; }
+  const Union& data() const { return u; }
+  Interpreter* context() const { return ctx; }
 
   void free();
   Value* clone();
   ValueRef make_ref();
 
   // Totally safe access methods
-  int_type int_() const;
-  float_type float_() const;
-  bool boolean() const;
-  char* string() const;
+  int_type get_int() const { return u.int_; }
+  float_type get_float() const { return u.float_; }
+  bool get_boolean() const { return u.boolean; }
+  char* get_string() const { return u.string; }
 
   Optional<int_type> as_cint() const;
   Optional<float_type> as_cfloat() const;
