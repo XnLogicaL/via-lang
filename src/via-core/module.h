@@ -6,13 +6,20 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "buffer.h"
 
 namespace via {
 
-struct ModuleDef;
+namespace config {
 
-using ModuleInitFunc = const ModuleDef* (*)();
+namespace module {
+
+inline constexpr auto init_prefix = "viainit_"sv;
+
+}
+
+}  // namespace config
+
+struct ModuleDef;
 
 const ModuleDef* open_module(const char* path, const char* name);
 

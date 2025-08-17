@@ -2,8 +2,9 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "module.h"
+#include "buffer.h"
 
-#ifdef VIA_PLATFORM_LINUX
+#ifdef VIA_PLATFORM_UNIX
 #include <dlfcn.h>
 #elif defined(VIA_PLATFORM_WINDOWS)
 #include <windows.h>
@@ -11,8 +12,7 @@
 
 namespace via {
 
-constexpr const char* MODINIT_PREFIX = "viainit_";
-constexpr const usize MODINIT_PREFIX_LEN = 8;
+using ModuleInitFunc = const ModuleDef* (*)();
 
 #ifdef VIA_PLATFORM_WINDOWS
 static struct WinLibraryManager {
@@ -23,34 +23,32 @@ static struct WinLibraryManager {
       FreeLibrary(handle);
     }
   }
-} _win_libs;
+} win_libs;
 #endif
+
+static ModuleInitFunc load_symbol(const char* path, const char* symbol) {
+#ifdef VIA_PLATFORM_UNIX
+  if (void* handle = dlopen(path, RTLD_NOW)) {
+    return (ModuleInitFunc)dlsym(handle, symbol);
+  }
+#elif defined(VIA_PLATFORM_WINDOWS)
+  if (HMODULE handle = LoadLibraryA(path)) {
+    win_libs.libs.push_back(handle);
+    return (ModuleInitFunc)GetProcAddress(handle, symbol);
+  }
+#endif
+
+  return NULL;
+}
+
+static String get_symbol(const char* name) {
+  return fmt::format("{}{}", config::module::init_prefix, name);
+}
 
 const ModuleDef* open_module(const char* path, const char* name) {
-  // Compose symbol name like: viainit_<name>
-  Buffer<char> symbuf{strlen(name) + MODINIT_PREFIX_LEN + 1};
-  strcpy(symbuf.data, MODINIT_PREFIX);
-  strcpy(symbuf.data + MODINIT_PREFIX_LEN, name);
-
-#ifdef VIA_PLATFORM_UNIX
-  void* handle = dlopen(path, RTLD_NOW);
-  assert(handle);
-
-  auto init = (ModuleInitFunc)dlsym(handle, symbuf.data);
-  assert(init);
-
-  return init();
-#elif defined(VIA_PLATFORM_WINDOWS)
-  HMODULE handle = LoadLibraryA(path);
-  assert(handle);
-
-  _win_libs.libs.push_back(handle);
-
-  auto init = (ModuleInitFunc)GetProcAddress(handle, symbuf.data);
-  assert(init);
-
-  return init();
-#endif
+  auto symbol = get_symbol(name);
+  auto init = load_symbol(path, symbol.c_str());
+  return init != NULL ? init() : NULL;
 }
 
 }  // namespace via
