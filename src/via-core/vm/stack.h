@@ -35,7 +35,7 @@ class Stack final {
   void push(T val) { *(sp++) = val; }
   T pop() { return *(--sp); }
   T* top() { return sp - 1; }
-  T* at(usize idx) { return *(bp + idx); }
+  T* at(usize idx) { return bp + idx; }
   T* begin() { return bp; }
   T* end() { return sp - 1; }
 
