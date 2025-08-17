@@ -11,13 +11,18 @@
 
 namespace via {
 
-struct Value;
+namespace sema {
+
+class ConstValue;
+
+}
+
 struct Header {
   static constexpr u32 magic = 0x2E766961;  // .via
 
   u64 flags;
-  Vec<Value> ks;        // constants
-  Vec<Instruction> is;  // Instructions
+  Vec<sema::ConstValue> consts;
+  Vec<Instruction> bytecode;
 
   Header() = default;
   Header(const FileBuf& buf);

@@ -12,8 +12,8 @@ namespace via {
 
 namespace sema {
 
-i32 alloc_register(Context& ctx);
-void free_register(Context& ctx, i32 reg);
+u16 alloc_register(Context& ctx);
+void free_register(Context& ctx, u16 reg);
 
 }  // namespace sema
 

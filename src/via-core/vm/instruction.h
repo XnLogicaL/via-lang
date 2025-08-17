@@ -21,10 +21,11 @@ enum class Opcode : u16 {
   EXTRAARG3,  // extraarg <a: any> <b: any> <c: any>
 
   // register manip opcodes
-  MOVE,        // move        <dst: *> <src: *>
-  XCHG,        // xchg        <r0: *>  <r1: *>
-  COPY,        // copy        <dst: *> <src: *>
-  COPYREF,     // copyref     <dst: *> <src: *>
+  MOVE,     // move        <dst: *> <src: *>
+  XCHG,     // xchg        <r0: *>  <r1: *>
+  COPY,     // copy        <dst: *> <src: *>
+  COPYREF,  // copyref     <dst: *> <src: *>
+  LOADK,
   LOADTRUE,    // loadtrue    <dst: *>
   LOADFALSE,   // loadfalse   <dst: *>
   NEWSTR,      // newstr      <dst: *>

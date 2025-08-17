@@ -7,15 +7,15 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
+#include "const_value.h"
 #include "context.h"
 
 namespace via {
 
 namespace sema {
 
-// Recursive check to determine whether if an expression can be evaluated during
-// compile-time.
-bool is_constexpr(SemaContext& ctx, const ast::ExprNode* expr);
+bool is_constexpr(Context& ctx, const ast::ExprNode* expr);
+ConstValue to_constexpr(Context& ctx, const ast::ExprNode* expr);
 
 }  // namespace sema
 

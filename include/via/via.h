@@ -4,6 +4,9 @@
 #ifndef VIA_H_
 #define VIA_H_
 
+#include <codegen/expr_visitor.h>
+#include <codegen/generator.h>
+#include <codegen/stmt_visitor.h>
 #include <via-core/ast/ast.h>
 #include <via-core/ast/visitor.h>
 #include <via-core/buffer.h>
@@ -34,5 +37,6 @@
 #include <via-core/vm/value.h>
 #include <via-core/vm/value_ref.h>
 #include "policy.h"
+
 
 #endif

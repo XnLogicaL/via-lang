@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "register.h"
+#include "panic.h"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
 #define VIA_HAVE_BUILTIN_CTZLL
@@ -11,7 +12,7 @@ namespace via {
 
 namespace sema {
 
-i32 alloc_register(Context& ctx) {
+u16 alloc_register(Context& ctx) {
   for (u16 i = 0; i < ctx.regs.size(); i++) {
 #ifdef VIA_HAVE_BUILTIN_CTZLL
     u64 word = ctx.regs[i];
@@ -34,10 +35,10 @@ i32 alloc_register(Context& ctx) {
 #endif
   }
 
-  return -1;  // no free register
+  VIA_BUG("semantic register allocation failure");
 }
 
-void free_register(Context& ctx, i32 reg) {
+void free_register(Context& ctx, u16 reg) {
   u16 word = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
   ctx.regs[word] &= mask;  // mark bit as free

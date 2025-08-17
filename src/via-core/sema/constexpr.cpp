@@ -11,7 +11,7 @@ using namespace ast;
 
 // TODO: This function must perform deeper constexpr checks, such as constexpr
 // variables and members.
-bool is_constexpr(SemaContext& ctx, const ExprNode* expr) {
+bool is_constexpr(Context& ctx, const ExprNode* expr) {
   if TRY_COERCE (const NodeExprLit, lit, expr)
     return true;
   else if TRY_COERCE (const NodeExprGroup, grp, expr)
@@ -29,6 +29,10 @@ bool is_constexpr(SemaContext& ctx, const ExprNode* expr) {
   }
 
   return false;
+}
+
+ConstValue to_constexpr(Context& ctx, const ExprNode* expr) {
+  return ConstValue();
 }
 
 }  // namespace sema

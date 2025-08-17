@@ -22,6 +22,9 @@ namespace via {
 using std::literals::operator""s;
 using std::literals::operator""sv;
 
+template <typename T>
+using Ref = std::reference_wrapper<T>;
+
 using String = std::string;
 using StringView = std::string_view;
 

@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "diagnostics.h"
+#include "color.h"
 
 namespace via {
 

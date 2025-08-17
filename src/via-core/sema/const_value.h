@@ -35,6 +35,18 @@ class ConstValue final {
   constexpr Union& data() { return u; }
   constexpr const Union& data() const { return u; }
 
+  constexpr bool compare(const ConstValue& other) const {
+    // clang-format off
+    return std::visit([&other](auto&& lhs) -> bool {
+      using T = std::decay_t<decltype(lhs)>;
+      if (!std::holds_alternative<T>(other.u))
+        return false;
+
+      return lhs == std::get<T>(other.u);
+    }, u);
+    // clang-format on
+  }
+
  private:
   Union u;
 };

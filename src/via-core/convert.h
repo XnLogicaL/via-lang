@@ -41,7 +41,7 @@ struct Convert<Vec<T>> {
 template <typename T>
 struct Convert<Buffer<T>> {
   static String to_string(const Buffer<T>& buf) {
-    auto range = std::views::counted(buf.begin(), buf.size);
+    auto range = std::views::counted(buf.begin(), buf.size());
     auto transform = std::views::transform(
         [](const T& t) { return Convert<T>::to_string(t); });
     return fmt::format("{}", fmt::join(range | transform, "\n"));

@@ -8,7 +8,6 @@
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
-#include "color.h"
 #include "lexer/location.h"
 
 namespace via {
@@ -26,9 +25,10 @@ struct Diagnosis {
 
 class Diagnostics final {
  public:
-  inline explicit Diagnostics(const String& path, const FileBuf& file)
+  Diagnostics(const String& path, const FileBuf& file)
       : path(path), file(file) {}
 
+ public:
   void emit();
   void clear();
 
@@ -38,20 +38,13 @@ class Diagnostics final {
   }
 
   template <const Diagnosis::Kind Kind, typename... Args>
-  void diagnosef(AbsLocation loc, Fmt<Args...> fmt, Args... args) {
-    diagnose_raw({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
+  void diagnosef(AbsLocation loc,
+                 fmt::format_string<Args...> fmt,
+                 Args... args) {
+    diags.push_back({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
   }
 
-  template <typename T = std::function<bool(const Diagnosis&)>>
-  Vec<Diagnosis> collect(T callback) {
-    Vec<Diagnosis> filtered;
-
-    for (Diagnosis diag : diags)
-      if (callback(diag))
-        filtered.push_back(diag);
-
-    return filtered;
-  }
+  Vec<Diagnosis>& get_diagnostics() { return diags; }
 
  private:
   const String& path;

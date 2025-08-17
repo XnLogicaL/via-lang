@@ -10,7 +10,7 @@ Location AbsLocation::to_relative(const FileBuf& source) const {
   usize init = 0;
 
   for (usize i = 0; i < begin; ++i) {
-    if (source.data[i] == '\n') {
+    if (source[i] == '\n') {
       ++line;
       init = i + 1;
     }

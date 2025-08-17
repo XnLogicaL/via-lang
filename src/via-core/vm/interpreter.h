@@ -31,10 +31,10 @@ class Interpreter final {
  public:
   Interpreter(const Header* H)
       : H(H),
-        pc(H->is.data()),
+        pc(H->bytecode.data()),
         stack(&alloc),
         regs(config::vm::register_count) {
-    assert(!H->is.empty() && "illformed header (bytecode array empty)");
+    assert(!H->bytecode.empty() && "illformed header (bytecode array empty)");
   }
 
  public:
