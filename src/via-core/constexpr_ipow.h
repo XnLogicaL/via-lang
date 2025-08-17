@@ -9,8 +9,7 @@
 
 namespace via {
 
-template <typename T = int>
-  requires std::is_integral_v<T>
+template <std::integral T = int>
 constexpr T ipow(T base, T exp) {
   T result = 1;
   for (;;) {

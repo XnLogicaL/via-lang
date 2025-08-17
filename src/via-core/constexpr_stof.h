@@ -15,8 +15,7 @@ inline constexpr bool is_digit(char c) {
 
 // Based on:
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
-template <typename T>
-  requires std::is_floating_point_v<T>
+template <std::floating_point T>
 constexpr Optional<T> stof(StringView str, usize* pos = NULL) {
   size_t i = 0;
   const size_t n = str.size();

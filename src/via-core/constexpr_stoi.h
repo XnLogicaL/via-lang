@@ -11,8 +11,7 @@ namespace via {
 
 // Taken from (slightly modified):
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
-template <typename T>
-  requires std::is_integral_v<T>
+template <std::integral T>
 constexpr Optional<T> stoi(StringView str, usize* pos = NULL) {
   using namespace std::literals;
   const auto digits = "0123456789abcdefABCDEF"sv;
