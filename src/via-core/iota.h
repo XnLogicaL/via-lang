@@ -9,9 +9,8 @@
 
 namespace via {
 
-template <typename T>
-  requires std::is_integral_v<T>
-constexpr T iota() {
+template <std::integral T = int>
+constexpr T iota() noexcept {
   static T old(0);
   return old++;
 }
