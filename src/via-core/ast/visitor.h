@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "panic.h"
 
 namespace via {
 
@@ -33,25 +34,27 @@ struct NodeStmtExpr;
 
 class Visitor {
  public:
-  virtual void visit(const NodeExprLit& elit, u16 dst) = 0;
-  virtual void visit(const NodeExprSym& esym, u16 dst) = 0;
-  virtual void visit(const NodeExprUn& eun, u16 dst) = 0;
-  virtual void visit(const NodeExprBin& ebin, u16 dst) = 0;
-  virtual void visit(const NodeExprGroup& egrp, u16 dst) = 0;
-  virtual void visit(const NodeExprCall& ecall, u16 dst) = 0;
-  virtual void visit(const NodeExprSubs& esubs, u16 dst) = 0;
-  virtual void visit(const NodeExprTuple& etup, u16 dst) = 0;
-  virtual void visit(const NodeExprLambda& elam, u16 dst) = 0;
+  // clang-format off
+  virtual void visit(const NodeExprLit& elit, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprSym& esym, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprUn& eun, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprBin& ebin, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprGroup& egrp, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprCall& ecall, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprSubs& esubs, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprTuple& etup, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprLambda& elam, u16 dst) { VIA_UNIMPLEMENTED(); }
 
-  virtual void visit(const NodeStmtVar& svar) = 0;
-  virtual void visit(const NodeStmtScope& svar) = 0;
-  virtual void visit(const NodeStmtIf& svar) = 0;
-  virtual void visit(const NodeStmtFor& svar) = 0;
-  virtual void visit(const NodeStmtForEach& svar) = 0;
-  virtual void visit(const NodeStmtWhile& svar) = 0;
-  virtual void visit(const NodeStmtAssign& svar) = 0;
-  virtual void visit(const NodeStmtEmpty& svar) = 0;
-  virtual void visit(const NodeStmtExpr& svar) = 0;
+  virtual void visit(const NodeStmtVar& svar) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtScope& sscp) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtIf& sif) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtFor& sfor) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtForEach& sfeach) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtWhile& swhl) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtAssign& sasgn) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtEmpty& semt) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeStmtExpr& sexpr) { VIA_UNIMPLEMENTED(); }
+  // clang-format on
 };
 
 }  // namespace ast
