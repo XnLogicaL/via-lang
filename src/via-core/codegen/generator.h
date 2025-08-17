@@ -20,10 +20,6 @@ namespace via {
 
 class Generator final {
  public:
-  friend class gen::ExprVisitor;
-  friend class gen::StmtVisitor;
-
- public:
   Generator(const Vec<ast::StmtNode*>& ast, Diagnostics& diags)
       : m_ast(ast), m_diags(diags) {}
 
@@ -34,11 +30,10 @@ class Generator final {
   sema::Context& get_sema_context() { return m_sema; }
   sema::Stack& get_sema_stack() { return m_stack; }
 
- protected:
   void emit_instruction(Opcode op, Array<u16, 3> ops = {});
   void emit_constant(sema::ConstValue&& cv, u16* kp);
 
- protected:
+ private:
   const Vec<ast::StmtNode*>& m_ast;
   Diagnostics& m_diags;
   Header m_header;
