@@ -11,24 +11,29 @@
 namespace via {
 
 class Interpreter;
-struct Value;
+class Value;
 
-struct ValueRef {
-  Value* ptr;
+class ValueRef final {
+ public:
+  ValueRef(Interpreter* ctx);
+  ValueRef(Interpreter* ctx, Value* ptr);
+  ValueRef(const ValueRef& other);
+  ValueRef(ValueRef&& other);
+  ~ValueRef();
 
+  ValueRef& operator=(const ValueRef& other);
+  ValueRef& operator=(ValueRef&& other);
+  Value* operator->() const;
+  Value& operator*() const;
+
+ public:
+  Value* get() const;
   void free();
   bool is_null() const;
   usize count_refs() const;
 
-  VIA_NOMOVE(ValueRef);
-  VIA_IMPLCOPY(ValueRef);
-
-  ValueRef(Interpreter* ctx);
-  ValueRef(Interpreter* ctx, Value* ptr);
-  ~ValueRef();
-
-  Value* operator->() const;
-  Value& operator*() const;
+ private:
+  Value* ptr;
 };
 
 }  // namespace via

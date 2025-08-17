@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "interpreter.h"
+#include "panic.h"
 #include "value.h"
 
 namespace via {
@@ -19,16 +20,16 @@ ValueRef Interpreter::get_register(u16 reg) {
 }
 
 void Interpreter::set_register(u16 reg, ValueRef val) {
-  regs.data[reg] = val.ptr;
+  regs.data[reg] = val.get();
 }
 
 ValueRef Interpreter::new_local(ValueRef val) {
-  stack.push((uptr)val.ptr);
+  stack.push((uptr)val.get());
   return get_local(stack.size() - 1);
 }
 
 void Interpreter::set_local(usize sp, ValueRef val) {
-  *stack.at(sp) = reinterpret_cast<uptr>(val.ptr);
+  *stack.at(sp) = reinterpret_cast<uptr>(val.get());
 }
 
 ValueRef Interpreter::get_local(usize sp) {
@@ -179,12 +180,12 @@ dispatch:
     }
     CASE(LOADTRUE) {
       RFREE(a);
-      RSET(a, Value::make(this, true));
+      RSET(a, Value::construct(this, true));
       goto dispatch;
     }
     CASE(LOADFALSE) {
       RFREE(a);
-      RSET(a, Value::make(this, false));
+      RSET(a, Value::construct(this, false));
       goto dispatch;
     }
     CASE(NEWSTR)

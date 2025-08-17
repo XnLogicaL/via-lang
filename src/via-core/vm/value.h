@@ -14,42 +14,52 @@
 namespace via {
 
 class Interpreter;
-struct PseudoValue;
 
-enum class Arith {
-  Add,
-  Sub,
-  Mul,
-  Div,
-  Pow,
-  Mod,
-};
-
-struct Value {
+class Value final {
+ public:
   using int_type = i64;
   using float_type = f32;
 
-  usize rc = 0;
-  Interpreter* ctx;
+  enum class Kind {
+    nil,
+    int_,
+    float_,
+    boolean,
+    string,
+  };
 
-  enum Kind {
-    Nil,
-    Int,
-    Float,
-    Bool,
-    String,
-  } kind = Nil;
-
-  union Un {
+  union Union {
     i64 i;
     f64 fp;
     bool b;
     char* str;
-  } u;
+  };
+
+  friend class ValueRef;
+  friend class Interpreter;
+
+ public:
+  static Value* construct(Interpreter* ctx);
+  static Value* construct(Interpreter* ctx, int_type i);
+  static Value* construct(Interpreter* ctx, float_type f);
+  static Value* construct(Interpreter* ctx, bool b);
+  static Value* construct(Interpreter* ctx, char* s);
+
+ public:
+  Kind kind() const;
+  Union& data();
+  const Union& data() const;
+  Interpreter* context() const;
 
   void free();
   Value* clone();
   ValueRef make_ref();
+
+  // Totally safe access methods
+  int_type int_() const;
+  float_type float_() const;
+  bool boolean() const;
+  char* string() const;
 
   Optional<int_type> as_cint() const;
   Optional<float_type> as_cfloat() const;
@@ -61,18 +71,16 @@ struct Value {
   Value* as_bool() const;
   Value* as_string() const;
 
-  template <Kind As>
-  inline Value* as() const {
-    return NULL;
-  }
+ private:
+  static Value* construct_impl(Interpreter* ctx,
+                               Value::Kind kind,
+                               Value::Union un = {});
 
-  static Value* make(Interpreter* ctx);
-  static Value* make(Interpreter* ctx, int_type i);
-  static Value* make(Interpreter* ctx, float_type f);
-  static Value* make(Interpreter* ctx, bool b);
-  static Value* make(Interpreter* ctx, char* s);
-
-  static Value* from_pseudo(Interpreter* ctx, const PseudoValue& psv);
+ private:
+  usize rc = 0;
+  Kind k = Kind::nil;
+  Union u = {};
+  Interpreter* ctx = NULL;
 };
 
 }  // namespace via

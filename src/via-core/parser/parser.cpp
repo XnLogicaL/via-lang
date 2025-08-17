@@ -185,45 +185,6 @@ ExprNode* Parser::parse_primary() {
       auto* lit = alloc.emplace<NodeExprLit>();
       lit->tok = first;
       lit->loc = loc;
-
-      switch (lit->tok->kind) {
-        case Token::Kind::NIL:
-          lit->psv.kind = PseudoValue::Nil;
-          break;
-        case Token::Kind::INT:
-        case Token::Kind::BINT:
-        case Token::Kind::XINT:
-          lit->psv.kind = PseudoValue::Int;
-          lit->psv.u.i = via::stoi<PseudoValue::int_type>(lit->tok->to_string())
-                             .or_else([]() -> Optional<PseudoValue::int_type> {
-                               VIA_BUG("illformed int token passed to parser");
-                               return nullopt;
-                             })
-                             .value();
-          break;
-        case Token::Kind::FP:
-          lit->psv.kind = PseudoValue::Float;
-          lit->psv.u.fp =
-              via::stof<PseudoValue::float_type>(lit->tok->to_string())
-                  .or_else([]() -> Optional<PseudoValue::float_type> {
-                    VIA_BUG("illformed fp token passed to parser");
-                    return nullopt;
-                  })
-                  .value();
-          break;
-        case Token::Kind::TRUE:
-        case Token::Kind::FALSE:
-          lit->psv.kind = PseudoValue::Bool;
-          lit->psv.u.b = lit->tok->kind == Token::Kind::TRUE;
-          break;
-        case Token::Kind::STRING:
-          lit->psv.kind = PseudoValue::String;
-          lit->psv.u.str = alloc.strdup(lit->tok->to_string().c_str());
-          break;
-        default:
-          break;
-      }
-
       return lit;
     }
     case Token::Kind::IDENT: {
@@ -502,7 +463,7 @@ AstBuf Parser::parse() {
     try {
       nodes.push_back(parse_stmt());
     } catch (const ParserError& e) {
-      diag.diagnose<Diag::Error>(e.loc, e.msg);
+      diag.diagnose<Diagnosis::Kind::Error>(e.loc, e.msg);
       break;
     }
   }

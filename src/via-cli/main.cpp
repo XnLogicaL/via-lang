@@ -61,8 +61,9 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 
   // check for errors
   Vec<via::Diagnosis> diags;
-  if ((diags = diag_ctx.collect(
-           [](const auto& diag) { return diag.kind == via::Diag::Error; }),
+  if ((diags = diag_ctx.collect([](const auto& diag) {
+        return diag.kind == via::Diagnosis::Kind::Error;
+      }),
        diags.empty()))
     return;
 

@@ -10,7 +10,6 @@
 #include "lexer/location.h"
 #include "lexer/token.h"
 #include "panic.h"
-#include "pseudo_value.h"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
 
@@ -69,9 +68,7 @@ struct Parameter {
 
 struct NodeExprLit : public ExprNode {
   COMMON_HEADER(ExprNode)
-
   Token* tok;
-  PseudoValue psv;
 };
 
 struct NodeExprSym : public ExprNode {

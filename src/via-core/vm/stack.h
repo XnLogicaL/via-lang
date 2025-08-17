@@ -10,14 +10,22 @@
 
 namespace via {
 
-inline constexpr usize STACK_SIZE = 8192;
+namespace config {
+
+namespace vm {
+
+inline constexpr usize stack_size = 8192;
+}
+
+}  // namespace config
 
 template <typename T>
-class Stack {
+class Stack final {
  public:
-  constexpr Stack(HeapAllocator* alloc)
-      : alloc(alloc), bp(alloc->alloc<T>(STACK_SIZE)), sp(bp) {}
+  Stack(HeapAllocator* alloc)
+      : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp) {}
 
+ public:
   HeapAllocator* get_allocator();
 
   usize size() const;
@@ -26,6 +34,7 @@ class Stack {
   void jump(usize dst);
 
   void push(T val);
+
   T pop();
   T* top();
   T* at(usize idx);

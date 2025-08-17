@@ -42,7 +42,7 @@ static ModuleInitFunc load_symbol(const char* path, const char* symbol) {
 }
 
 static String get_symbol(const char* name) {
-  return fmt::format("{}{}", config::module::init_prefix, name);
+  return fmt::format("{}{}", config::modules::init_prefix, name);
 }
 
 const ModuleDef* open_module(const char* path, const char* name) {

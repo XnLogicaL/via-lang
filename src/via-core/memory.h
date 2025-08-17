@@ -22,6 +22,7 @@ class HeapAllocator {
   void* alloc(usize size);
   void free(void* ptr);
   char* strdup(const char* str);
+  bool owns(void* ptr) { return mi_heap_check_owned(heap, ptr); }
 
   template <typename T>
   inline T* alloc() {

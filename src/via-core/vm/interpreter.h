@@ -14,22 +14,30 @@
 
 namespace via {
 
-struct Value;
-struct ValueRef;
+class Value;
+class ValueRef;
 
 namespace config {
+
+namespace vm {
 
 inline constexpr usize register_count = UINT16_MAX + 1;
 
 }
 
-class Interpreter {
+}  // namespace config
+
+class Interpreter final {
  public:
-  constexpr Interpreter(const Header* H)
-      : H(H), pc(H->is.data()), stack(&alloc), regs(config::register_count) {
+  Interpreter(const Header* H)
+      : H(H),
+        pc(H->is.data()),
+        stack(&alloc),
+        regs(config::vm::register_count) {
     assert(!H->is.empty() && "illformed header (bytecode array empty)");
   }
 
+ public:
   Stack<uptr>& get_stack();
   HeapAllocator& get_allocator();
 

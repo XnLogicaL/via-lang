@@ -13,14 +13,13 @@
 
 namespace via {
 
-enum class Diag {
-  Info,
-  Warn,
-  Error,
-};
-
 struct Diagnosis {
-  Diag kind;
+  enum class Kind {
+    Info,
+    Warn,
+    Error,
+  } kind;
+
   AbsLocation loc;
   String msg;
 };
@@ -33,12 +32,12 @@ class Diagnostics final {
   void emit();
   void clear();
 
-  template <const Diag Kind>
+  template <const Diagnosis::Kind Kind>
   void diagnose(AbsLocation loc, String msg) {
     diags.push_back({Kind, loc, msg});
   }
 
-  template <const Diag Kind, typename... Args>
+  template <const Diagnosis::Kind Kind, typename... Args>
   void diagnosef(AbsLocation loc, Fmt<Args...> fmt, Args... args) {
     diagnose_raw({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
   }

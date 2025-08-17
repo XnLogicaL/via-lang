@@ -20,13 +20,13 @@ void Diagnostics::emit() {
         apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
 
     switch (diag.kind) {
-      case Diag::Info:
+      case Diagnosis::Kind::Info:
         spdlog::info(msg);
         break;
-      case Diag::Warn:
+      case Diagnosis::Kind::Warn:
         spdlog::warn(msg);
         break;
-      case Diag::Error:
+      case Diagnosis::Kind::Error:
         spdlog::error(msg);
         break;
       default:

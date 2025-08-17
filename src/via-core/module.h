@@ -11,7 +11,7 @@ namespace via {
 
 namespace config {
 
-namespace module {
+namespace modules {
 
 inline constexpr auto init_prefix = "viainit_"sv;
 
