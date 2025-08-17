@@ -7,11 +7,8 @@
 #include <mimalloc.h>
 #include <via/config.h>
 #include <via/types.h>
-#include "ast.h"
-#include "constexpr_stof.h"
-#include "constexpr_stoi.h"
+#include "ast/ast.h"
 #include "diagnostics.h"
-#include "lexer/lexer.h"
 #include "lexer/token.h"
 #include "memory.h"
 
