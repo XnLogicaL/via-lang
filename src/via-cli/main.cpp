@@ -71,10 +71,9 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 
   switch (emit_kind) {
     case EmitType::ttree:
-      fmt::println("{}", token_buf);
+      fmt::println("{}", via::Convert<via::TokenBuf>::to_string(token_buf));
       break;
     case EmitType::ast:
-      via::dump_ast(ast_buf);
       break;
     default:
       break;
@@ -84,7 +83,8 @@ static void process_file(const String& input_path, EmitType emit_kind) {
 int main(int argc, char* argv[]) {
   spdlog::set_pattern("%^%l:%$ %v");
 
-  ArgumentParser cli("via", fmt::format("{}", via::get_semantic_version()));
+  ArgumentParser cli("via", via::Convert<via::Version>::to_string(
+                                via::get_semantic_version()));
 
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")

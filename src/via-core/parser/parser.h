@@ -59,8 +59,6 @@ class Parser final {
   Diagnostics& diag;
 };
 
-void dump_ast(const AstBuf& B);
-
 }  // namespace via
 
 #endif

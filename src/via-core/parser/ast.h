@@ -9,6 +9,7 @@
 #include "convert.h"
 #include "lexer/location.h"
 #include "lexer/token.h"
+#include "panic.h"
 #include "pseudo_value.h"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
@@ -19,22 +20,22 @@ class Visitor;
 
 namespace ast {
 
-struct Node {
+struct ExprNode {
   AbsLocation loc;
   virtual void accept(Visitor& vis) const = 0;
   virtual String get_dump(usize& depth) const = 0;
 };
 
-struct ExprNode : public Node {
-  using Node::loc;
+struct StmtNode {
+  AbsLocation loc;
+  virtual void accept(Visitor& vis) const = 0;
+  virtual String get_dump(usize& depth) const = 0;
 };
 
-struct StmtNode : public Node {
-  using Node::loc;
-};
-
-struct TypeNode : public Node {
-  using Node::loc;
+struct TypeNode {
+  AbsLocation loc;
+  virtual void accept(Visitor& vis) const = 0;
+  virtual String get_dump(usize& depth) const = 0;
 };
 
 struct NodeExprSym;

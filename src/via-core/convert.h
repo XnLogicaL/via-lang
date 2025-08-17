@@ -9,6 +9,7 @@
 #include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
+#include <type_traits>
 #include "buffer.h"
 
 namespace via {
@@ -16,11 +17,15 @@ namespace via {
 template <typename T>
 struct Convert {
   static String to_string(const T& t) {
-    if constexpr (std::is_enum_v<T>) {
-      return String(magic_enum::enum_name(t));
-    } else {
-      return std::to_string(t);
-    }
+    return Convert<std::decay_t<T>>::to_string(t);
+  }
+};
+
+template <typename T>
+  requires std::is_enum_v<T>
+struct Convert<T> {
+  static String to_string(const T& t) {
+    return String(magic_enum::enum_name(t));
   }
 };
 

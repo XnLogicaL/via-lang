@@ -510,10 +510,4 @@ AstBuf Parser::parse() {
   return nodes;
 }
 
-void dump_ast(const AstBuf& buf) {
-  usize depth = 0;
-  for (const StmtNode* stmt : buf)
-    fmt::println("{}", stmt->get_dump(depth));
-}
-
 }  // namespace via

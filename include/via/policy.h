@@ -4,8 +4,14 @@
 #ifndef VIA_POLICY_H_
 #define VIA_POLICY_H_
 
-#ifndef VIA_POLICY_CHECK
-#error Include <via/via.h> directly instead
+#include "config.h"
+
+#ifdef VIA_PLATFORM_UNKNOWN
+#error Unknown/unsupported platform. List of supported platforms: Windows, Linux, IOS, OSX, BSD, EMSCRIPTEN or any UNIX/POSIX compliant OS.
+#endif
+
+#ifdef VIA_COMPILER_UNKNOWN
+#error Unknown/unsupported compiler. List of supported compilers: MSVC, GCC, CLANG or any adapters for these compilers like MinGW or Msys.
 #endif
 
 #endif

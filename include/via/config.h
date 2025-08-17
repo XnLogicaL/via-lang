@@ -6,47 +6,31 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #define VIA_PLATFORM_WINDOWS
-#endif
-
-#if defined(__linux__)
+#elifdef __linux__
 #ifdef __ANDROID__
 #define VIA_PLATFORM_ANDROID
 #else
 #define VIA_PLATFORM_LINUX
 #endif
-#endif
-
-#if defined(__APPLE__) && defined(__MACH__)
+#elif defined(__APPLE__) && defined(__MACH__)
 #include <TargetConditionals.h>
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #define VIA_PLATFORM_IOS
 #else
 #define VIA_PLATFORM_OSX
 #endif
-#endif
-
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
     defined(__bsdi__) || defined(__DragonFly__)
 #define VIA_PLATFORM_BSD
-#endif
-
-#if defined(__EMSCRIPTEN__)
+#elifdef __EMSCRIPTEN__
 #define VIA_PLATFORM_EMSCRIPTEN
-#endif
-
-#if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
+#elif defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
     defined(VIA_PLATFORM_BSD)
 #define VIA_PLATFORM_POSIX
-#endif
-
-#if defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_ANDROID)
+#elif defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_ANDROID)
 #define VIA_PLATFORM_UNIX
-#endif
-
-#ifdef VIA_PLATFORM_WINDOWS
-#define VIA_EXPORT __declspec(dllexport)
 #else
-#define VIA_EXPORT
+#define VIA_PLATFORM_UNKNOWN
 #endif
 
 #ifdef __GNUC__
@@ -55,23 +39,15 @@
 #else
 #define VIA_COMPILER_GCC
 #endif
-#endif
-
-#ifdef _MSC_VER
+#elifdef _MSC_VER
 #define VIA_COMPILER_MSVC
 #endif
 
-#define VIA_MODINIT_FUNC extern "C" VIA_EXPORT const ModuleDef*
-
-#define VIA_WORDSIZE sizeof(void*)
-
-#define VIA_BUG(msg)                                \
-  assert(false &&                                   \
-         "internal bug (please create an issue at " \
-         "https://github.com/XnLogicaL/via-lang): " msg)
-
-#define VIA_TODO(msg) assert(false && "TODO: " msg);
-#define VIA_UNIMPLEMENTED(msg) assert(false && "unimplemented: " msg);
+#ifdef VIA_PLATFORM_WINDOWS
+#define VIA_EXPORT __declspec(dllexport)
+#else
+#define VIA_EXPORT
+#endif
 
 #define VIA_NOCOPY(target)                   \
   target& operator=(const target&) = delete; \

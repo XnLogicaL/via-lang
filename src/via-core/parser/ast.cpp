@@ -3,7 +3,6 @@
 
 #include "ast.h"
 #include <fmt/core.h>
-#include <sstream>
 
 namespace via {
 
