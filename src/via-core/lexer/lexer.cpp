@@ -97,11 +97,13 @@ static bool is_string_delimiter(char c) {
 }
 
 char Lexer::advance(int ahead) {
-  return *(m_cursor += ahead);
+  char c = *m_cursor;
+  m_cursor += ahead;
+  return m_cursor < m_end ? *m_cursor : '\0';
 }
 
 char Lexer::peek(int ahead) {
-  return *(m_cursor + ahead);
+  return m_cursor + ahead < m_end ? *(m_cursor + ahead) : '\0';
 }
 
 Token* Lexer::read_number() {
@@ -148,10 +150,10 @@ Token* Lexer::read_string() {
   token->size = 1;  // for opening quote
 
   char del = advance();  // opening quote
-
   char c;
   bool closed = false;
-  while ((c = advance()) != '\0') {
+  while ((c = peek()) != '\0') {
+    advance();
     token->size++;
     if (c == del) {
       closed = true;
@@ -222,7 +224,7 @@ Token* Lexer::read_symbol() {
     buf[len] = '\0';
 
     for (const auto& sym : SYMBOLS) {
-      if (strcmp(buf, sym.str) == 0) {
+      if (strncmp(buf, sym.str, len) == 0) {
         matched_kind = sym.kind;
         matched_size = len;
         goto found;
@@ -249,22 +251,20 @@ bool Lexer::skip_comment() {
     return false;
 
   char next = peek(1);
-
   if (next == '/') {
-    // Line comment: skip until newline or EOF
     advance(2);  // consume first '//'
 
     while (char c = peek()) {
       if (c == '\n' || c == '\0')
         break;
-      advance(2);
+
+      advance();
     }
 
     return true;
   }
 
   if (next == '*') {
-    // Block comment: skip until closing */
     advance(2);  // consume '/*'
 
     while (true) {
@@ -290,7 +290,7 @@ Vec<Token*> Lexer::tokenize() {
   Vec<Token*> toks;
 
   char c;
-  while (c = peek(), c != '\0') {
+  while ((c = peek()), c != '\0') {
     if (isspace(c)) {
       advance();
       continue;
@@ -301,7 +301,7 @@ Vec<Token*> Lexer::tokenize() {
 
     Token* token;
 
-    if (isdigit(c))
+    if (std::isdigit(c))
       token = read_number();
     else if (is_identifier_initial(c))
       token = read_identifier();

@@ -18,7 +18,12 @@ Header Generator::generate() {
 }
 
 void Generator::emit_instruction(Opcode op, Array<u16, 3> ops) {
-  m_header.bytecode.push_back({op, ops[0], ops[1], ops[2]});
+  m_header.bytecode.push_back({
+      .op = op,
+      .a = ops[0],
+      .b = ops[1],
+      .c = ops[2],
+  });
 }
 
 void Generator::emit_constant(ConstValue&& cv, u16* kp) {

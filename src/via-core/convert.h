@@ -18,7 +18,7 @@ template <typename T>
 struct Convert {
   static String to_string(const T& t) {
     if constexpr (std::is_enum_v<T>) {
-      return magic_enum::enum_name(t);
+      return String(magic_enum::enum_name(t));
     } else {
       return std::to_string(t);
     }

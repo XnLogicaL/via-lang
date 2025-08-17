@@ -27,13 +27,13 @@ struct Header {
 
   Header() = default;
   Header(const Vec<char>& file);
+
+  String get_dump() const;
 };
 
 template <>
 struct Convert<Header> {
-  static String to_string(const Header& header) {
-    return Convert<Vec<Instruction>>::to_string(header.bytecode);
-  }
+  static String to_string(const Header& header) { return header.get_dump(); }
 };
 
 }  // namespace via

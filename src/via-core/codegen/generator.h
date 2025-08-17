@@ -30,6 +30,10 @@ class Generator final {
  public:
   Header generate();
 
+  Diagnostics& get_diagnostics() { return m_diags; }
+  sema::Context& get_sema_context() { return m_sema; }
+  sema::Stack& get_sema_stack() { return m_stack; }
+
  protected:
   void emit_instruction(Opcode op, Array<u16, 3> ops = {});
   void emit_constant(sema::ConstValue&& cv, u16* kp);

@@ -21,22 +21,14 @@ enum class EmitType {
 
 inline void process_file(const Context& ctx) {
   String input = read_file(ctx);
-  FileBuf file_buf(input.cbegin().base(), input.cend().base());
+  Vec<char> file_buf(input.begin(), input.end());
   Diagnostics diag_ctx{ctx.path, file_buf};
 
   Lexer lexer(file_buf);
   auto token_buf = lexer.tokenize();
 
-  for (Token* tok : token_buf)
-    fmt::println("{}", (void*)tok);
-
-  for (Token* tok : token_buf)
-    fmt::println("{}", Convert<Token>::to_string(*tok));
-
   Parser parser(file_buf, token_buf, diag_ctx);
   auto ast_buf = parser.parse();
-
-  fmt::println("parsed");
 
   Header header;
 
@@ -46,8 +38,6 @@ inline void process_file(const Context& ctx) {
   {
     Generator gen(ast_buf, diag_ctx);
     header = gen.generate();
-
-    fmt::println("generated");
   }
 
 has_errors:
@@ -56,13 +46,16 @@ has_errors:
 
   switch (magic_enum::enum_cast<EmitType>(ctx.emit).value_or(EmitType::none)) {
     case EmitType::ttree:
-      fmt::println("{}", Convert<TokenBuf>::to_string(token_buf));
+      for (const Token* tok : token_buf)
+        fmt::println("{}", tok->get_dump());
       break;
     case EmitType::ast:
-      fmt::println("{}", Convert<AstBuf>::to_string(ast_buf));
+      usize depth;
+      for (const ast::StmtNode* node : ast_buf)
+        fmt::println("{}", node->get_dump(depth));
       break;
     case EmitType::header:
-      fmt::println("{}", Convert<Header>::to_string(header));
+      fmt::println("{}", header.get_dump());
       break;
     default:
       break;

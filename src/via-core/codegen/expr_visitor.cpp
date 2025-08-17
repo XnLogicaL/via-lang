@@ -26,12 +26,13 @@ void ExprVisitor::visit(const ast::NodeExprLit& elit, u16 dst) {
 
 void ExprVisitor::visit(const ast::NodeExprSym& esym, u16 dst) {
   String symbol = esym.tok->to_string();
-  if (auto local = ctx.stack.top().find_local(symbol)) {
+  if (auto local = ctx.get_sema_stack().top().find_local(symbol)) {
     ctx.emit_instruction(Opcode::GETLOCALREF, {dst, local->id});
     return;
   }
 
-  ctx.diags.diagnosef<Error>(esym.loc, "Unknown symbol '{}'", symbol);
+  ctx.get_diagnostics().diagnosef<Error>(esym.loc, "Unknown symbol '{}'",
+                                         symbol);
 }
 
 void ExprVisitor::visit(const ast::NodeExprUn& eun, u16 dst) {}

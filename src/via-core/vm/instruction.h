@@ -30,9 +30,7 @@ enum class Opcode : u16 {
   LOADTRUE,    // loadtrue    <dst: *>
   LOADFALSE,   // loadfalse   <dst: *>
   NEWSTR,      // newstr      <dst: *>
-  NEWSTR2,     // newstr2     <dst: *> <presize>
   NEWARR,      // newarr      <dst: *>
-  NEWARR2,     // newarr2     <dst: *> <presize>
   NEWDICT,     // newdict     <dst: *>
   NEWTUPLE,    // newtuple    <dst: *> <presize>  ...extraarg1<val: *>
   NEWCLOSURE,  // newclosure  <dst: *> <id: $str>
@@ -234,12 +232,12 @@ struct Instruction {
   Opcode op = Opcode::NOP;
   u16 a, b, c;
 
-  String to_string() const;
+  String get_dump() const;
 };
 
 template <>
 struct Convert<Instruction> {
-  static String to_string(const Instruction& insn) { return insn.to_string(); }
+  static String to_string(const Instruction& insn) { return insn.get_dump(); }
 };
 
 }  // namespace via

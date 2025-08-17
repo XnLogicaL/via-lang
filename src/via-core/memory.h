@@ -15,7 +15,7 @@ namespace detail {
 
 template <typename T, typename... Args>
 void construct_at(T* dst, Args&&... args) {
-  new (dst) T(std::forward<Args>(args)...);
+  (void)(new (dst) T(std::forward<Args>(args)...));
 }
 
 template <typename T, typename... Args>
@@ -130,8 +130,9 @@ class Allocator final {
   template <typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
   [[nodiscard]] T* emplace(Args&&... args) {
-    void* mem = mi_heap_malloc(m_heap, sizeof(T));
-    return detail::construct_at(mem, std::forward<Args>(args)...);
+    T* mem = (T*)mi_heap_malloc(m_heap, sizeof(T));
+    detail::construct_at(mem, std::forward<Args>(args)...);
+    return mem;
   }
 
   template <typename T, typename... Args>

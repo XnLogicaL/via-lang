@@ -13,21 +13,23 @@ namespace gen {
 using namespace ast;
 
 void StmtVisitor::visit(const NodeStmtVar& svar) {
-  u16 dst = sema::alloc_register(ctx.sema);
+  sema::Context& sema_ctx = ctx.get_sema_context();
+  u16 dst = sema::alloc_register(sema_ctx);
 
   switch (svar.lval->kind) {
     case LValue::Kind::Symbol:
-      if (sema::is_constexpr(ctx.sema, svar.lval->sym)) {
+      if (sema::is_constexpr(sema_ctx, svar.rval)) {
         u16 kp;
 
-        auto cv = sema::to_constexpr(ctx.sema, svar.lval->sym);
+        auto cv = sema::to_constexpr(sema_ctx, svar.lval->sym);
         ctx.emit_constant(std::move(cv), &kp);
         ctx.emit_instruction(Opcode::PUSHK, {dst, kp});
       } else {
+        svar.rval->accept(expr_vis, dst);
         ctx.emit_instruction(Opcode::PUSH, {dst});
       }
 
-      sema::free_register(ctx.sema, dst);
+      sema::free_register(sema_ctx, dst);
       break;
     default:
       VIA_UNIMPLEMENTED();

@@ -94,16 +94,13 @@ struct Token {
   usize size;
 
   String to_string() const;
+  String get_dump() const;
   AbsLocation location(const Vec<char>& source) const;
 };
 
 template <>
 struct Convert<Token> {
-  static String to_string(const Token& tok) {
-    return fmt::format("[{:<12} '{}']",
-                       Convert<Token::Kind>::to_string(tok.kind),
-                       (*tok.lexeme == '\0') ? "<eof>" : tok.to_string());
-  }
+  static String to_string(const Token& tok) { return tok.get_dump(); }
 };
 
 }  // namespace via

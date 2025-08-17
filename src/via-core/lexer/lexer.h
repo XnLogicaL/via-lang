@@ -13,7 +13,10 @@ namespace via {
 
 class Lexer final {
  public:
-  Lexer(const Vec<char>& file) : m_file(file), m_cursor(file.data()) {}
+  Lexer(const Vec<char>& file)
+      : m_file(file),
+        m_cursor(file.data()),
+        m_end(file.data() + file.size() - 1) {}
 
  public:
   Vec<Token*> tokenize();
@@ -30,6 +33,7 @@ class Lexer final {
  private:
   const Vec<char>& m_file;
   const char* m_cursor;
+  const char* m_end;
   Allocator m_alloc;
 };
 
