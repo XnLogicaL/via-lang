@@ -5,8 +5,8 @@
 
 namespace via {
 
-AbsLocation Token::location(const FileBuf& source) const {
-  const usize begin = lexeme - source.cbegin();
+AbsLocation Token::location(const Vec<char>& source) const {
+  const usize begin = lexeme - source.cbegin().base();
   const usize end = begin + size;
 
   return {begin, end};

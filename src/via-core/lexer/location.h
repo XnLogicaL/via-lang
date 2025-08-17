@@ -6,11 +6,8 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "buffer.h"
 
 namespace via {
-
-using FileBuf = Buffer<char>;
 
 struct Location {
   usize line;
@@ -22,7 +19,7 @@ struct AbsLocation {
   usize end;
 
   // Returns the absolute location as a relative location.
-  Location to_relative(const FileBuf& source) const;
+  Location to_relative(const Vec<char>& source) const;
 };
 
 }  // namespace via

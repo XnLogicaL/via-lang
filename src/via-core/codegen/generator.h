@@ -24,7 +24,8 @@ class Generator final {
   friend class gen::StmtVisitor;
 
  public:
-  Generator(const AstBuf& ast, Diagnostics& diags) : ast(ast), diags(diags) {}
+  Generator(const Vec<ast::StmtNode*>& ast, Diagnostics& diags)
+      : m_ast(ast), m_diags(diags) {}
 
  public:
   Header generate();
@@ -34,12 +35,11 @@ class Generator final {
   void emit_constant(sema::ConstValue&& cv, u16* kp);
 
  protected:
-  const AstBuf& ast;
-  Diagnostics& diags;
-
-  Header header;
-  sema::Stack stack;
-  sema::Context sema;
+  const Vec<ast::StmtNode*>& m_ast;
+  Diagnostics& m_diags;
+  Header m_header;
+  sema::Stack m_stack;
+  sema::Context m_sema;
 };
 
 }  // namespace via

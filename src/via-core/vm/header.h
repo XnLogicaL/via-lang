@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "convert.h"
 #include "instruction.h"
 #include "lexer/location.h"
 
@@ -25,7 +26,14 @@ struct Header {
   Vec<Instruction> bytecode;
 
   Header() = default;
-  Header(const FileBuf& buf);
+  Header(const Vec<char>& file);
+};
+
+template <>
+struct Convert<Header> {
+  static String to_string(const Header& header) {
+    return Convert<Vec<Instruction>>::to_string(header.bytecode);
+  }
 };
 
 }  // namespace via

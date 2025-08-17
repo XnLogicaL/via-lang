@@ -19,7 +19,7 @@ inline argparse::ArgumentParser& get_cli_app() {
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")
       .nargs(1)
-      .choices("none", "list", "ttree", "ast")
+      .choices("none", "ttree", "ast", "header")
       .default_value("none")
       .help("Emission type");
 

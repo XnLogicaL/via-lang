@@ -97,17 +97,17 @@ static bool is_string_delimiter(char c) {
 }
 
 char Lexer::advance(int ahead) {
-  return *(cursor += ahead);
+  return *(m_cursor += ahead);
 }
 
 char Lexer::peek(int ahead) {
-  return *(cursor + ahead);
+  return *(m_cursor + ahead);
 }
 
 Token* Lexer::read_number() {
-  Token* token = alloc.emplace<Token>();
+  Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::INT;
-  token->lexeme = cursor;
+  token->lexeme = m_cursor;
   token->size = 0;
 
   if (peek() == '0') {
@@ -119,8 +119,7 @@ Token* Lexer::read_number() {
       goto decimal;
 
     token->size = 2;
-    advance();  // 0
-    advance();  // b/x
+    advance(2);  // 0b/0x
   }
 
 decimal:
@@ -143,9 +142,9 @@ decimal:
 }
 
 Token* Lexer::read_string() {
-  Token* token = alloc.emplace<Token>();
+  Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::STRING;
-  token->lexeme = cursor;
+  token->lexeme = m_cursor;
   token->size = 1;  // for opening quote
 
   char del = advance();  // opening quote
@@ -167,9 +166,9 @@ Token* Lexer::read_string() {
 }
 
 Token* Lexer::read_identifier() {
-  Token* token = alloc.emplace<Token>();
+  Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::IDENT;
-  token->lexeme = cursor;
+  token->lexeme = m_cursor;
   token->size = 0;
 
   char c;
@@ -205,8 +204,8 @@ Token* Lexer::read_identifier() {
 }
 
 Token* Lexer::read_symbol() {
-  Token* token = alloc.emplace<Token>();
-  token->lexeme = cursor;
+  Token* token = m_alloc.emplace<Token>();
+  token->lexeme = m_cursor;
   token->kind = Token::Kind::ILLEGAL;
   token->size = 1;
 
@@ -218,7 +217,7 @@ Token* Lexer::read_symbol() {
 
   for (int len = max_len; len >= 1; --len) {
     for (int i = 0; i < len; ++i)
-      buf[i] = cursor[i];
+      buf[i] = m_cursor[i];
 
     buf[len] = '\0';
 
@@ -238,8 +237,9 @@ found:
 
     for (int i = 0; i < matched_size; ++i)
       advance();
-  } else
+  } else {
     advance();  // advance one char if no match
+  }
 
   return token;
 }
@@ -286,11 +286,11 @@ bool Lexer::skip_comment() {
   return false;
 }
 
-TokenBuf Lexer::tokenize() {
+Vec<Token*> Lexer::tokenize() {
   Vec<Token*> toks;
 
   char c;
-  while ((c = peek()), c != '\0') {
+  while (c = peek(), c != '\0') {
     if (isspace(c)) {
       advance();
       continue;
@@ -313,13 +313,13 @@ TokenBuf Lexer::tokenize() {
     toks.push_back(token);
   }
 
-  Token* eof = alloc.emplace<Token>();
+  Token* eof = m_alloc.emplace<Token>();
   eof->kind = Token::Kind::EOF_;
-  eof->lexeme = cursor;
+  eof->lexeme = m_cursor;
   eof->size = 0;
 
   toks.push_back(eof);
-  return TokenBuf(toks.data(), toks.data() + (toks.size() * sizeof(Token*)));
+  return toks;
 }
 
 }  // namespace via

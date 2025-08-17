@@ -5,7 +5,7 @@
 
 namespace via {
 
-Location AbsLocation::to_relative(const FileBuf& source) const {
+Location AbsLocation::to_relative(const Vec<char>& source) const {
   usize line = 1;
   usize init = 0;
 

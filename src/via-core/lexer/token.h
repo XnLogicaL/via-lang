@@ -94,12 +94,8 @@ struct Token {
   usize size;
 
   String to_string() const;
-  String get_dump() const;
-
-  AbsLocation location(const FileBuf& source) const;
+  AbsLocation location(const Vec<char>& source) const;
 };
-
-using TokenBuf = Buffer<Token*>;
 
 template <>
 struct Convert<Token> {

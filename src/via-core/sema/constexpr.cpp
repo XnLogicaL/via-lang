@@ -32,7 +32,7 @@ bool is_constexpr(Context& ctx, const ExprNode* expr) {
 }
 
 ConstValue to_constexpr(Context& ctx, const ExprNode* expr) {
-  return ConstValue();
+  return ConstValue(ConstValue::int_type(69));
 }
 
 }  // namespace sema

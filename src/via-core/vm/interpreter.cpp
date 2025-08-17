@@ -11,7 +11,7 @@ Stack<uptr>& Interpreter::get_stack() {
   return stack;
 }
 
-HeapAllocator& Interpreter::get_allocator() {
+Allocator& Interpreter::get_allocator() {
   return alloc;
 }
 

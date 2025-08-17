@@ -39,7 +39,7 @@ class Interpreter final {
 
  public:
   Stack<uptr>& get_stack();
-  HeapAllocator& get_allocator();
+  Allocator& get_allocator();
 
   ValueRef get_constant(u16 id);
 
@@ -59,7 +59,7 @@ class Interpreter final {
   Buffer<Value*> regs;
   Buffer<Instruction*> lbt;
 
-  HeapAllocator alloc;
+  Allocator alloc;
 
   const uptr* fp;  // frame pointer
   const Instruction* pc;

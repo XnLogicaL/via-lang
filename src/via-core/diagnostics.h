@@ -13,43 +13,73 @@
 namespace via {
 
 struct Diagnosis {
-  enum class Kind {
+  enum class Kind : u8 {
     Info,
     Warn,
     Error,
-  } kind;
+  };
 
-  AbsLocation loc;
-  String msg;
+  Kind kind = Kind::Info;
+  AbsLocation loc;  // Absolute location in the source buffer
+  String msg;       // Human-readable message
 };
 
 class Diagnostics final {
  public:
-  Diagnostics(const String& path, const FileBuf& file)
-      : path(path), file(file) {}
+  Diagnostics(const String& path, const Vec<char>& file)
+      : m_path(path), m_file(file) {}
+
+  VIA_NOCOPY(Diagnostics)
 
  public:
-  void emit();
-  void clear();
+  /// Emit all queued diagnostics to the provided spdlog logger (or default).
+  void emit(spdlog::logger* logger = spdlog::default_logger().get()) const;
 
-  template <const Diagnosis::Kind Kind>
+  /// Remove all queued diagnostics.
+  void clear() noexcept { m_diags.clear(); }
+
+  /// Push a diagnosis with a pre-formatted message.
+  template <Diagnosis::Kind K>
   void diagnose(AbsLocation loc, String msg) {
-    diags.push_back({Kind, loc, msg});
+    m_diags.emplace_back(K, loc, std::move(msg));
   }
 
-  template <const Diagnosis::Kind Kind, typename... Args>
+  /// Push a diagnosis using fmt-style formatting.
+  template <Diagnosis::Kind K, typename... Args>
   void diagnosef(AbsLocation loc,
-                 fmt::format_string<Args...> fmt,
-                 Args... args) {
-    diags.push_back({Kind, loc, fmt::format(fmt, std::forward<Args>(args)...)});
+                 fmt::format_string<Args...> fmtstr,
+                 Args&&... args) {
+    m_diags.emplace_back(
+        K, loc,
+        fmt::vformat(fmtstr,
+                     fmt::make_format_args(std::forward<Args>(args)...)));
   }
 
-  Vec<Diagnosis>& get_diagnostics() { return diags; }
+  [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return m_diags; }
+  [[nodiscard]] const Vec<Diagnosis>& diagnostics() const noexcept {
+    return m_diags;
+  }
+
+  [[nodiscard]] bool has_errors() const noexcept {
+    for (const auto& d : m_diags) {
+      if (d.kind == Diagnosis::Kind::Error)
+        return true;
+    }
+
+    return false;
+  }
+
+  [[nodiscard]] const String& path() const noexcept { return m_path; }
+  [[nodiscard]] const Vec<char>& file() const noexcept { return m_file; }
 
  private:
-  const String& path;
-  const FileBuf& file;
-  Vec<Diagnosis> diags;
+  // Helper to pretty-print a single diagnosis line with source context.
+  void emit_one(const Diagnosis& d, spdlog::logger* logger) const;
+
+ private:
+  const String& m_path;
+  const Vec<char>& m_file;
+  Vec<Diagnosis> m_diags{};
 };
 
 }  // namespace via

@@ -7,7 +7,7 @@
 
 #define SAVE_FIRST()       \
   auto* first = advance(); \
-  auto loc = first->location(source);
+  auto loc = first->location(m_source);
 
 namespace via {
 
@@ -82,11 +82,11 @@ static int bin_prec(Token::Kind kind) {
 }
 
 Token* Parser::peek(int ahead) {
-  return cursor[ahead];
+  return m_cursor[ahead];
 }
 
 Token* Parser::advance() {
-  return *(cursor++);
+  return *(m_cursor++);
 }
 
 bool Parser::match(Token::Kind kind, int ahead) {
@@ -105,8 +105,9 @@ bool Parser::optional(Token::Kind kind) {
 Token* Parser::expect(Token::Kind kind, const char* task) {
   if (!match(kind)) {
     const Token& unexp = *peek();
-    throw ParserError(unexp.location(source), "Unexpected token '{}' while {}",
-                      unexp.to_string(), task);
+    throw ParserError(unexp.location(m_source),
+                      "Unexpected token '{}' while {}", unexp.to_string(),
+                      task);
   }
 
   return advance();
@@ -115,19 +116,19 @@ Token* Parser::expect(Token::Kind kind, const char* task) {
 TupleBinding* Parser::parse_tuple_binding() {
   SAVE_FIRST()
 
-  auto tpb = alloc.emplace<TupleBinding>();
+  auto tpb = m_alloc.emplace<TupleBinding>();
 
   while (!match(Token::Kind::RBRACKET)) {
     Token* id = advance();
-    auto id_loc = id->location(source);
+    auto id_loc = id->location(m_source);
 
     if (id->kind != Token::Kind::IDENT)
       throw ParserError(id_loc,
                         "Unexpected token '{}' while parsing tuple binding",
                         id->to_string());
 
-    auto sym = alloc.emplace<NodeExprSym>();
-    sym->loc = id->location(source);
+    auto sym = m_alloc.emplace<NodeExprSym>();
+    sym->loc = id->location(m_source);
     sym->tok = id;
 
     tpb->binds.push_back(sym);
@@ -136,18 +137,18 @@ TupleBinding* Parser::parse_tuple_binding() {
       expect(Token::Kind::COMMA, "parsing tuple binding");
   }
 
-  tpb->loc = {loc.begin, advance()->location(source).end};
+  tpb->loc = {loc.begin, advance()->location(m_source).end};
   return tpb;
 }
 
 LValue* Parser::parse_lvalue() {
-  auto lval = alloc.emplace<LValue>();
+  auto lval = m_alloc.emplace<LValue>();
 
   if (match(Token::Kind::IDENT)) {
     Token* id = advance();
 
-    auto sym = alloc.emplace<NodeExprSym>();
-    sym->loc = id->location(source);
+    auto sym = m_alloc.emplace<NodeExprSym>();
+    sym->loc = id->location(m_source);
     sym->tok = id;
 
     lval->kind = LValue::Kind::Symbol;
@@ -159,7 +160,7 @@ LValue* Parser::parse_lvalue() {
   } else {
     Token* bad = peek();
     throw ParserError(
-        bad->location(source),
+        bad->location(m_source),
         "Unexpected token '{}' while parsing variable declaration statement",
         bad->to_string());
   }
@@ -181,7 +182,7 @@ ExprNode* Parser::parse_primary() {
     case Token::Kind::STRING: {
       advance();
 
-      auto* lit = alloc.emplace<NodeExprLit>();
+      auto* lit = m_alloc.emplace<NodeExprLit>();
       lit->tok = first;
       lit->loc = loc;
       return lit;
@@ -189,7 +190,7 @@ ExprNode* Parser::parse_primary() {
     case Token::Kind::IDENT: {
       advance();
 
-      auto* sym = alloc.emplace<NodeExprSym>();
+      auto* sym = m_alloc.emplace<NodeExprSym>();
       sym->tok = first;
       sym->loc = loc;
 
@@ -212,18 +213,18 @@ ExprNode* Parser::parse_primary() {
 
         expect(Token::Kind::RPAREN, "parsing tuple expression");
 
-        auto* tup = alloc.emplace<NodeExprTuple>();
+        auto* tup = m_alloc.emplace<NodeExprTuple>();
         tup->vals = std::move(vals);
-        tup->loc = {start.begin, peek(-1)->location(source).end};
+        tup->loc = {start.begin, peek(-1)->location(m_source).end};
 
         return tup;
       }
 
       expect(Token::Kind::RPAREN, "parsing grouping expression");
 
-      auto* group = alloc.emplace<NodeExprGroup>();
+      auto* group = m_alloc.emplace<NodeExprGroup>();
       group->expr = first;
-      group->loc = {start.begin, peek(-1)->location(source).end};
+      group->loc = {start.begin, peek(-1)->location(m_source).end};
 
       return group;
     }
@@ -241,10 +242,10 @@ ExprNode* Parser::parse_unary_or_postfix() {
     case Token::Kind::KW_NOT:
     case Token::Kind::MINUS:
     case Token::Kind::TILDE: {
-      auto* un = alloc.emplace<NodeExprUn>();
+      auto* un = m_alloc.emplace<NodeExprUn>();
       un->op = advance();
       un->expr = parse_unary_or_postfix();
-      un->loc = {un->op->location(source).begin, un->expr->loc.end};
+      un->loc = {un->op->location(m_source).begin, un->expr->loc.end};
       expr = un;
       break;
     }
@@ -271,10 +272,10 @@ ExprNode* Parser::parse_unary_or_postfix() {
         } else
           advance();  // consume ')'
 
-        auto* call = alloc.emplace<NodeExprCall>();
+        auto* call = m_alloc.emplace<NodeExprCall>();
         call->lval = expr;
         call->args = std::move(args);
-        call->loc = {expr->loc.begin, peek(-1)->location(source).end};
+        call->loc = {expr->loc.begin, peek(-1)->location(m_source).end};
         expr = call;
         break;
       }
@@ -286,10 +287,10 @@ ExprNode* Parser::parse_unary_or_postfix() {
 
         expect(Token::Kind::RBRACKET, "parsing subscript expression");
 
-        auto* subs = alloc.emplace<NodeExprSubs>();
+        auto* subs = m_alloc.emplace<NodeExprSubs>();
         subs->lval = expr;
         subs->idx = idx;
-        subs->loc = {expr->loc.begin, peek(-1)->location(source).end};
+        subs->loc = {expr->loc.begin, peek(-1)->location(m_source).end};
         expr = subs;
         break;
       }
@@ -305,7 +306,7 @@ ExprNode* Parser::parse_expr(int min_prec) {
 
   int prec;
   while ((prec = bin_prec(peek()->kind), prec >= min_prec)) {
-    auto bin = alloc.emplace<NodeExprBin>();
+    auto bin = m_alloc.emplace<NodeExprBin>();
     bin->op = advance();
     bin->lhs = lhs;
     bin->rhs = parse_expr(prec + 1);
@@ -318,9 +319,9 @@ ExprNode* Parser::parse_expr(int min_prec) {
 
 NodeStmtScope* Parser::parse_scope() {
   auto* first = advance();
-  auto loc = first->location(source);
+  auto loc = first->location(m_source);
 
-  auto scope = alloc.emplace<NodeStmtScope>();
+  auto scope = m_alloc.emplace<NodeStmtScope>();
 
   if (first->kind == Token::Kind::COLON) {
     scope->stmts.push_back(parse_stmt());
@@ -341,7 +342,7 @@ NodeStmtScope* Parser::parse_scope() {
 NodeStmtVar* Parser::parse_var() {
   SAVE_FIRST()
 
-  auto vars = alloc.emplace<NodeStmtVar>();
+  auto vars = m_alloc.emplace<NodeStmtVar>();
   vars->lval = parse_lvalue();
 
   expect(Token::Kind::EQUALS, "parsing variable declaration");
@@ -357,7 +358,7 @@ NodeStmtVar* Parser::parse_var() {
 NodeStmtFor* Parser::parse_for() {
   SAVE_FIRST()
 
-  auto fors = alloc.emplace<NodeStmtFor>();
+  auto fors = m_alloc.emplace<NodeStmtFor>();
   fors->init = parse_var();
 
   expect(Token::Kind::COMMA, "parsing for statement");
@@ -376,7 +377,7 @@ NodeStmtFor* Parser::parse_for() {
 NodeStmtForEach* Parser::parse_foreach() {
   SAVE_FIRST()
 
-  auto fors = alloc.emplace<NodeStmtForEach>();
+  auto fors = m_alloc.emplace<NodeStmtForEach>();
   fors->lval = parse_lvalue();
 
   expect(Token::Kind::KW_IN, "parsing for each statement");
@@ -397,7 +398,7 @@ NodeStmtIf* Parser::parse_if() {
   br.cnd = parse_expr();
   br.br = parse_scope();
 
-  auto ifs = alloc.emplace<NodeStmtIf>();
+  auto ifs = m_alloc.emplace<NodeStmtIf>();
   ifs->brs.push_back(br);
   ifs->loc = {loc.begin, br.br->loc.end};
 
@@ -408,7 +409,7 @@ NodeStmtIf* Parser::parse_if() {
 NodeStmtWhile* Parser::parse_while() {
   SAVE_FIRST()
 
-  auto whs = alloc.emplace<NodeStmtWhile>();
+  auto whs = m_alloc.emplace<NodeStmtWhile>();
   whs->cnd = parse_expr();
   whs->br = parse_scope();
   whs->loc = {loc.begin, whs->br->loc.end};
@@ -436,18 +437,18 @@ StmtNode* Parser::parse_stmt() {
   }
 
   if (match(Token::Kind::SEMICOLON)) {
-    auto empty = alloc.emplace<NodeStmtEmpty>();
-    empty->loc = advance()->location(source);
+    auto empty = m_alloc.emplace<NodeStmtEmpty>();
+    empty->loc = advance()->location(m_source);
     return empty;
   }
 
   Token* first;
   if ((first = peek(), !is_expr_start(first->kind)))
-    throw ParserError(first->location(source),
+    throw ParserError(first->location(m_source),
                       "Unexpected token '{}' while parsing statement",
                       first->to_string());
 
-  auto es = alloc.emplace<NodeStmtExpr>();
+  auto es = m_alloc.emplace<NodeStmtExpr>();
   es->expr = parse_expr();
   es->loc = es->expr->loc;
 
@@ -455,14 +456,14 @@ StmtNode* Parser::parse_stmt() {
   return es;
 }
 
-AstBuf Parser::parse() {
+Vec<StmtNode*> Parser::parse() {
   Vec<StmtNode*> nodes;
 
   while (!match(Token::Kind::EOF_)) {
     try {
       nodes.push_back(parse_stmt());
     } catch (const ParserError& e) {
-      diag.diagnose<Diagnosis::Kind::Error>(e.loc, e.msg);
+      m_diag.diagnose<Diagnosis::Kind::Error>(e.loc, e.msg);
       break;
     }
   }

@@ -23,11 +23,11 @@ inline constexpr usize stack_size = 8192;
 template <typename T>
 class Stack final {
  public:
-  Stack(HeapAllocator* alloc)
+  Stack(Allocator* alloc)
       : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp) {}
 
  public:
-  HeapAllocator* get_allocator() { return alloc; }
+  Allocator* get_allocator() { return alloc; }
 
   usize size() const { return sp - bp; }
   void jump(T* dst) { sp = dst; }
@@ -40,7 +40,7 @@ class Stack final {
   T* end() { return sp - 1; }
 
  private:
-  HeapAllocator* alloc;
+  Allocator* alloc;
   T* const bp;
   T* sp;
 };

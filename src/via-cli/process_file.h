@@ -21,27 +21,36 @@ enum class EmitType {
 
 inline void process_file(const Context& ctx) {
   String input = read_file(ctx);
-  FileBuf file_buf(input.c_str(), input.c_str() + input.size() + 1);
+  FileBuf file_buf(input.cbegin().base(), input.cend().base());
   Diagnostics diag_ctx{ctx.path, file_buf};
 
   Lexer lexer(file_buf);
   auto token_buf = lexer.tokenize();
 
+  for (Token* tok : token_buf)
+    fmt::println("{}", (void*)tok);
+
+  for (Token* tok : token_buf)
+    fmt::println("{}", Convert<Token>::to_string(*tok));
+
   Parser parser(file_buf, token_buf, diag_ctx);
   auto ast_buf = parser.parse();
 
-  Generator gen(ast_buf, diag_ctx);
-  auto header = gen.generate();
+  fmt::println("parsed");
 
-  // check for errors
-  auto diags = diag_ctx.get_diagnostics();
-  auto pred = [](const Diagnosis& diag) {
-    return diag.kind == Diagnosis::Kind::Error;
-  };
+  Header header;
 
-  if (auto it = std::ranges::find_if(diags, pred); it != diags.end())
-    return;
+  if (diag_ctx.has_errors())
+    goto has_errors;
 
+  {
+    Generator gen(ast_buf, diag_ctx);
+    header = gen.generate();
+
+    fmt::println("generated");
+  }
+
+has_errors:
   diag_ctx.emit();
   diag_ctx.clear();
 

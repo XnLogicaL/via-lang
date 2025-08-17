@@ -14,14 +14,12 @@
 
 namespace via {
 
-using AstBuf = Vec<ast::StmtNode*>;
-
 class Parser final {
  public:
-  Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
-      : source(source), cursor(tokens.cbegin()), diag(diag) {}
+  Parser(const Vec<char>& source, const Vec<Token*>& tokens, Diagnostics& diag)
+      : m_source(source), m_cursor(tokens.cbegin().base()), m_diag(diag) {}
 
-  AstBuf parse();
+  Vec<ast::StmtNode*> parse();
 
  private:
   bool match(Token::Kind kind, int ahead = 0);
@@ -50,10 +48,10 @@ class Parser final {
   ast::StmtNode* parse_stmt();
 
  private:
-  const FileBuf& source;
-  Token* const* cursor;
-  HeapAllocator alloc;
-  Diagnostics& diag;
+  const Vec<char>& m_source;
+  Token* const* m_cursor;
+  Allocator m_alloc;
+  Diagnostics& m_diag;
 };
 
 }  // namespace via

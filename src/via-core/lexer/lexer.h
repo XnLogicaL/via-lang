@@ -13,26 +13,24 @@ namespace via {
 
 class Lexer final {
  public:
-  Lexer(const FileBuf& file) : file(file), cursor(file.cbegin()) {}
+  Lexer(const Vec<char>& file) : m_file(file), m_cursor(file.data()) {}
 
  public:
-  TokenBuf tokenize();
+  Vec<Token*> tokenize();
 
  private:
   char advance(int ahead = 1);
   char peek(int ahead = 0);
-
   Token* read_number();
   Token* read_string();
   Token* read_symbol();
   Token* read_identifier();
-
   bool skip_comment();
 
  private:
-  const FileBuf& file;
-  const char* cursor;
-  HeapAllocator alloc;
+  const Vec<char>& m_file;
+  const char* m_cursor;
+  Allocator m_alloc;
 };
 
 }  // namespace via

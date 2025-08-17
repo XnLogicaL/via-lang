@@ -10,9 +10,7 @@
 
 namespace via {
 
-template <typename T,
-          Allocator<T> Alloc = detail::std_calloc<T>,
-          Deleter<T> Free = detail::std_free<T>>
+template <typename T, typename Ator = StdAllocator>
 class Buffer {
  public:
   using value_type = T;
@@ -25,17 +23,17 @@ class Buffer {
  public:
   Buffer() noexcept = default;
 
-  Buffer(size_type sz) : m_data(Alloc(sz)), m_size(sz) {
+  Buffer(size_type sz) : m_data(Ator::template alloc<T>(sz)), m_size(sz) {
     m_construct_range(m_data, m_size);
   }
 
   Buffer(const_iterator begin, const_iterator end)
-      : m_size(end - begin), m_data(Alloc(m_size)) {
+      : m_size(end - begin), m_data(Ator::template alloc<T>(m_size)) {
     m_construct_range(m_data, begin, end);
   }
 
   Buffer(const Buffer& other)
-      : m_size(other.m_size), m_data(Alloc(other.m_size)) {
+      : m_size(other.m_size), m_data(Ator::template alloc<T>(other.m_size)) {
     m_construct_range(m_data, other.begin(), other.end());
   }
 
@@ -104,16 +102,16 @@ class Buffer {
         for (size_type i = 0; i < m_size; ++i)
           m_data[i].~T();
       }
-      Free(m_data);
+      Ator::template free<T>(m_data);
       m_data = NULL;
       m_size = 0;
     }
   }
 
   void m_resize(size_type new_size) {
-    m_data = Alloc(new_size);
+    m_data = Ator::template alloc<T>(new_size);
     m_size = new_size;
-    construct_range(m_data, m_size);
+    m_construct_range(m_data, m_size);
   }
 };
 
