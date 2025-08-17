@@ -79,7 +79,7 @@ namespace via {
 
 namespace config {
 
-inline constexpr usize version = 010;
+inline constexpr usize version = 10;
 
 }
 
