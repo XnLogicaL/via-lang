@@ -29,10 +29,10 @@ class Value final {
   };
 
   union Union {
-    int_type i;
-    float_type fp;
-    bool b;
-    char* str;
+    int_type int_;
+    float_type float_;
+    bool boolean;
+    char* string;
   };
 
   friend class ValueRef;
@@ -40,10 +40,10 @@ class Value final {
 
  public:
   static Value* construct(Interpreter* ctx);
-  static Value* construct(Interpreter* ctx, int_type i);
-  static Value* construct(Interpreter* ctx, float_type f);
-  static Value* construct(Interpreter* ctx, bool b);
-  static Value* construct(Interpreter* ctx, char* s);
+  static Value* construct(Interpreter* ctx, int_type int_);
+  static Value* construct(Interpreter* ctx, float_type float_);
+  static Value* construct(Interpreter* ctx, bool boolean);
+  static Value* construct(Interpreter* ctx, char* string);
 
  public:
   Kind kind() const;
@@ -72,14 +72,12 @@ class Value final {
   Value* as_string() const;
 
  private:
-  static Value* construct_impl(Interpreter* ctx,
-                               Value::Kind kind,
-                               Value::Union un = {});
+  static Value* construct_impl(Interpreter* ctx, Kind kind, Union data = {});
 
  private:
-  usize rc = 0;
   Kind k = Kind::nil;
   Union u = {};
+  usize rc = 0;
   Interpreter* ctx = NULL;
 };
 

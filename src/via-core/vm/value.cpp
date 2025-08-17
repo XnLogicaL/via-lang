@@ -7,10 +7,10 @@ namespace via {
 
 Value* Value::construct_impl(Interpreter* ctx,
                              Value::Kind kind,
-                             Value::Union un) {
+                             Value::Union data) {
   Value* ptr = ctx->get_allocator().emplace<Value>();
   ptr->k = kind;
-  ptr->u = un;
+  ptr->u = data;
   return ptr;
 }
 
@@ -18,24 +18,24 @@ Value* Value::construct(Interpreter* ctx) {
   return construct_impl(ctx, Kind::nil);
 }
 
-Value* Value::construct(Interpreter* ctx, Value::int_type i) {
-  return construct_impl(ctx, Kind::int_, {.i = i});
+Value* Value::construct(Interpreter* ctx, Value::int_type int_) {
+  return construct_impl(ctx, Kind::int_, {.int_ = int_});
 }
 
-Value* Value::construct(Interpreter* ctx, Value::float_type fp) {
-  return construct_impl(ctx, Kind::float_, {.fp = fp});
+Value* Value::construct(Interpreter* ctx, Value::float_type float_) {
+  return construct_impl(ctx, Kind::float_, {.float_ = float_});
 }
 
-Value* Value::construct(Interpreter* ctx, bool b) {
-  return construct_impl(ctx, Kind::boolean, {.b = b});
+Value* Value::construct(Interpreter* ctx, bool boolean) {
+  return construct_impl(ctx, Kind::boolean, {.boolean = boolean});
 }
 
-Value* Value::construct(Interpreter* ctx, char* s) {
+Value* Value::construct(Interpreter* ctx, char* string) {
   assert(
-      ctx->get_allocator().owns(s) &&
+      ctx->get_allocator().owns(string) &&
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
-  return construct_impl(ctx, Kind::string, {.str = s});
+  return construct_impl(ctx, Kind::string, {.string = string});
 }
 
 Value::Kind Value::kind() const {
@@ -57,7 +57,7 @@ Interpreter* Value::context() const {
 void Value::free() {
   switch (k) {
     case Kind::string:
-      ctx->get_allocator().free(u.str);
+      ctx->get_allocator().free(u.string);
       break;
     default:
       // Trivial types don't require explicit destruction
