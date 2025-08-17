@@ -15,6 +15,7 @@ namespace config {
 namespace vm {
 
 inline constexpr usize stack_size = 8192;
+
 }
 
 }  // namespace config
@@ -26,20 +27,17 @@ class Stack final {
       : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp) {}
 
  public:
-  HeapAllocator* get_allocator();
+  HeapAllocator* get_allocator() { return alloc; }
 
-  usize size() const;
-
-  void jump(T* dst);
-  void jump(usize dst);
-
-  void push(T val);
-
-  T pop();
-  T* top();
-  T* at(usize idx);
-  T* begin();
-  T* end();
+  usize size() const { return sp - bp; }
+  void jump(T* dst) { sp = dst; }
+  void jump(usize dst) { sp = bp + dst; }
+  void push(T val) { *(sp++) = val; }
+  T pop() { return *(--sp); }
+  T* top() { return sp - 1; }
+  T* at(usize idx) { return *(bp + idx); }
+  T* begin() { return bp; }
+  T* end() { return sp - 1; }
 
  private:
   HeapAllocator* alloc;
