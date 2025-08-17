@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 namespace via {
@@ -58,6 +59,10 @@ using Pair = std::pair<T, U>;
 
 template <typename T, typename E>
 using Result = std::expected<T, E>;
+
+template <typename... Ts>
+using Variant = std::variant<Ts...>;
+using monostate = std::monostate;
 
 template <typename T>
 using Optional = std::optional<T>;
