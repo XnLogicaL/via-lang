@@ -32,7 +32,7 @@
 
 A minimalistic, multi-paradigm scripting language built for performance-critical applications.
 
-<img src="https://i.imgur.com/l0Yd6Ok.png" style="max-width:400px;max-height:400px;width:1000px;height:1000px;"/>
+<img src="https://i.imgur.com/l0Yd6Ok.png" style="width:100%; aspect-ratio:1.1/1; object-fit: cover;"/>
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
