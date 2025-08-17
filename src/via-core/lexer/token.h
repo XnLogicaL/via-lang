@@ -7,7 +7,6 @@
 #include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
-#include <ranges>
 #include "buffer.h"
 #include "convert.h"
 #include "location.h"
