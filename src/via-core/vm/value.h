@@ -29,8 +29,8 @@ class Value final {
   };
 
   union Union {
-    i64 i;
-    f64 fp;
+    int_type i;
+    float_type fp;
     bool b;
     char* str;
   };
