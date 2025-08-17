@@ -25,14 +25,14 @@
   <a href="#credits">Credits</a>
 </p>
 
-> [!WARNING]
-> This project is currently **not** production-ready. There are many missing core features that are yet to be implemented, tested, and improved. All features and implementations are **experimental** and therefore are subject to change.
-
 # Introduction
 
 A minimalistic, multi-paradigm scripting language built for performance-critical applications.
 
-<img src="https://i.imgur.com/l0Yd6Ok.png" style="width:100%; aspect-ratio:1.1/1; object-fit: cover;"/>
+<img src="https://i.imgur.com/l0Yd6Ok.png" style="width:80%; aspect-ratio:1.1/1; object-fit: cover;"/>
+
+> [!WARNING]
+> This project is currently **not** production-ready. There are many missing core features that are yet to be implemented, tested, and improved. All features and implementations are **experimental** and therefore are subject to change.
 
 **via** is a language that attempts to fix the issues of modern interpreted languages, rather than adding more bloat and abstractions over them.
 
