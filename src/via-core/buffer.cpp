@@ -3,11 +3,4 @@
 
 #include "buffer.h"
 
-namespace via {
-
-template <typename T, const Allocator<T> A, const Deleter<T> D>
-void Buffer<T, A, D>::reset_cursor() const {
-  this->cursor = data;
-}
-
-}  // namespace via
+namespace via {}

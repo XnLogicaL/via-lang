@@ -97,17 +97,17 @@ static bool is_string_delimiter(char c) {
 }
 
 char Lexer::advance(int ahead) {
-  return *(file.cursor += ahead);
+  return *(cursor += ahead);
 }
 
 char Lexer::peek(int ahead) {
-  return *(file.cursor + ahead);
+  return *(cursor + ahead);
 }
 
 Token* Lexer::read_number() {
   Token* token = alloc.emplace<Token>();
   token->kind = Token::Kind::INT;
-  token->lexeme = file.cursor;
+  token->lexeme = cursor;
   token->size = 0;
 
   if (peek() == '0') {
@@ -145,7 +145,7 @@ decimal:
 Token* Lexer::read_string() {
   Token* token = alloc.emplace<Token>();
   token->kind = Token::Kind::STRING;
-  token->lexeme = file.cursor;
+  token->lexeme = cursor;
   token->size = 1;  // for opening quote
 
   char del = advance();  // opening quote
@@ -169,7 +169,7 @@ Token* Lexer::read_string() {
 Token* Lexer::read_identifier() {
   Token* token = alloc.emplace<Token>();
   token->kind = Token::Kind::IDENT;
-  token->lexeme = file.cursor;
+  token->lexeme = cursor;
   token->size = 0;
 
   char c;
@@ -206,7 +206,7 @@ Token* Lexer::read_identifier() {
 
 Token* Lexer::read_symbol() {
   Token* token = alloc.emplace<Token>();
-  token->lexeme = file.cursor;
+  token->lexeme = cursor;
   token->kind = Token::Kind::ILLEGAL;
   token->size = 1;
 
@@ -218,7 +218,7 @@ Token* Lexer::read_symbol() {
 
   for (int len = max_len; len >= 1; --len) {
     for (int i = 0; i < len; ++i)
-      buf[i] = file.cursor[i];
+      buf[i] = cursor[i];
 
     buf[len] = '\0';
 
@@ -315,7 +315,7 @@ TokenBuf Lexer::tokenize() {
 
   Token* eof = alloc.emplace<Token>();
   eof->kind = Token::Kind::EOF_;
-  eof->lexeme = file.cursor;
+  eof->lexeme = cursor;
   eof->size = 0;
 
   toks.push_back(eof);

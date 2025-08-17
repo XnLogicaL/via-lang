@@ -8,6 +8,7 @@
 #include <cassert>
 #include <expected>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -82,6 +83,9 @@ using i64 = int64_t;
 
 using f32 = float;
 using f64 = double;
+
+template <typename T>
+using Limits = std::numeric_limits<T>;
 
 }  // namespace via
 

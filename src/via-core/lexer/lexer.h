@@ -6,8 +6,6 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include <sstream>
-#include "convert.h"
 #include "memory.h"
 #include "token.h"
 
@@ -15,7 +13,7 @@ namespace via {
 
 class Lexer final {
  public:
-  Lexer(const FileBuf& file) : file(file) {}
+  Lexer(const FileBuf& file) : file(file), cursor(file.cbegin()) {}
 
  public:
   TokenBuf tokenize();
@@ -33,6 +31,7 @@ class Lexer final {
 
  private:
   const FileBuf& file;
+  const char* cursor;
   HeapAllocator alloc;
 };
 

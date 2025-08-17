@@ -14,10 +14,10 @@ void Diagnostics::emit() {
     Location loc = diag.loc.to_relative(file);
 
     String addr = fmt::format("{}:{}:{}", path, loc.line, loc.offset);
-    String msg = fmt::format(
-        "{} {} [{}]", diag.msg,
-        apply_color("at", FGColor::White, BGColor::Black, Style::Faint),
-        apply_color(addr, FGColor::Cyan, BGColor::Black, Style::Bold));
+    String msg =
+        fmt::format("{} {} [{}]", diag.msg,
+                    apply_color("at", Fg::White, Bg::Black, Style::Faint),
+                    apply_color(addr, Fg::Cyan, Bg::Black, Style::Bold));
 
     switch (diag.kind) {
       case Diagnosis::Kind::Info:

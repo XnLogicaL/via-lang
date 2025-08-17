@@ -13,7 +13,7 @@ namespace via {
 
 namespace sema {
 
-struct SemaContext {
+struct Context {
   HeapAllocator alloc;
   Buffer<u64> regs{UINT16_MAX / 8};
 };

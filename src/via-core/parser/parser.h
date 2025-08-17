@@ -19,7 +19,7 @@ using AstBuf = Vec<ast::StmtNode*>;
 class Parser final {
  public:
   Parser(const FileBuf& source, const TokenBuf& tokens, Diagnostics& diag)
-      : source(source), cursor(tokens.data), diag(diag) {}
+      : source(source), cursor(tokens.cbegin()), diag(diag) {}
 
   AstBuf parse();
 
@@ -51,7 +51,7 @@ class Parser final {
 
  private:
   const FileBuf& source;
-  Token** cursor;
+  Token* const* cursor;
   HeapAllocator alloc;
   Diagnostics& diag;
 };

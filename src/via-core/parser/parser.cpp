@@ -86,8 +86,7 @@ Token* Parser::peek(int ahead) {
 }
 
 Token* Parser::advance() {
-  cursor++;
-  return peek(-1);
+  return *(cursor++);
 }
 
 bool Parser::match(Token::Kind kind, int ahead) {

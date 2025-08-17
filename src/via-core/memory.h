@@ -10,6 +10,26 @@
 
 namespace via {
 
+template <typename T>
+using Allocator = T* (*)(usize);
+
+template <typename T>
+using Deleter = void (*)(T*);
+
+namespace detail {
+
+template <typename T>
+inline T* std_calloc(usize sz) noexcept {
+  return static_cast<T*>(std::calloc(sz, sizeof(T)));
+}
+
+template <typename T>
+inline void std_free(T* ptr) noexcept {
+  std::free(ptr);
+}
+
+}  // namespace detail
+
 class HeapAllocator {
  public:
   HeapAllocator() = default;

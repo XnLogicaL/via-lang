@@ -16,11 +16,11 @@ HeapAllocator& Interpreter::get_allocator() {
 }
 
 ValueRef Interpreter::get_register(u16 reg) {
-  return regs.data[reg]->make_ref();
+  return regs[reg]->make_ref();
 }
 
 void Interpreter::set_register(u16 reg, ValueRef val) {
-  regs.data[reg] = val.get();
+  regs[reg] = val.get();
 }
 
 ValueRef Interpreter::new_local(ValueRef val) {
@@ -120,8 +120,8 @@ ValueRef Interpreter::get_local(usize sp) {
   if (R(id) != NULL) \
     reinterpret_cast<Value*>(stack.at(id))->rc--;
 
-#define R(id) regs.data[id]
-#define RSET(id, val) regs.data[id] = val
+#define R(id) regs[id]
+#define RSET(id, val) regs[id] = val
 #define RFREE(id)               \
   [[likely]] if (R(id) != NULL) \
     R(id)->rc--;
@@ -678,12 +678,12 @@ dispatch:
       goto dispatch;
     }
     CASE(JMP) {
-      pc = lbt.data[a];
+      pc = lbt[a];
       goto dispatch;
     }
     CASE(JMPIF) {
       if (R(a)->as_cbool())
-        pc = lbt.data[b];
+        pc = lbt[b];
       goto dispatch;
     }
     CASE(PUSH) {
