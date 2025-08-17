@@ -6,8 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "constexpr.h"
-#include "parser/ast.h"
+#include "ast/ast.h"
 
 namespace via {
 
