@@ -24,13 +24,17 @@
 #define VIA_PLATFORM_BSD
 #elifdef __EMSCRIPTEN__
 #define VIA_PLATFORM_EMSCRIPTEN
-#elif defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
-    defined(VIA_PLATFORM_BSD)
-#define VIA_PLATFORM_POSIX
-#elif defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_ANDROID)
-#define VIA_PLATFORM_UNIX
 #else
 #define VIA_PLATFORM_UNKNOWN
+#endif
+
+#if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
+    defined(VIA_PLATFORM_BSD)
+#define VIA_PLATFORM_POSIX
+#endif
+
+#if defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_ANDROID)
+#define VIA_PLATFORM_UNIX
 #endif
 
 #ifdef __GNUC__
