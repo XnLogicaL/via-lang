@@ -4,16 +4,24 @@
 #include "header.h"
 #include <sstream>
 #include "color.h"
+#include "sema/const_value.h"
 
 namespace via {
 
 String Header::get_dump() const {
   std::ostringstream oss;
-  oss << apply_color("[section .text]", Fg::White, Bg::Black, Style::Underline)
-      << "\n";
+  oss << apply_ansi_style("[section .text]\n", Fg::Yellow, Bg::Black,
+                          Style::Underline);
 
   for (const Instruction& insn : bytecode) {
     oss << "  " << insn.get_dump() << "\n";
+  }
+
+  oss << apply_ansi_style("[section .data]\n", Fg::Yellow, Bg::Black,
+                          Style::Underline);
+
+  for (const sema::ConstValue& cv : consts) {
+    oss << "  " << cv.get_dump() << "\n";
   }
 
   return oss.str();

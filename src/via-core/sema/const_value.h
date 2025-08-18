@@ -42,22 +42,30 @@ class ConstValue final {
   }
 
   constexpr bool compare(const ConstValue& other) const {
-    // clang-format off
-    return std::visit([&other](auto&& lhs) -> bool {
-      using T = std::decay_t<decltype(lhs)>;
-      if (!std::holds_alternative<T>(other.u))
-        return false;
+    return std::visit(
+        [&other](auto&& lhs) -> bool {
+          using T = std::decay_t<decltype(lhs)>;
+          if (!std::holds_alternative<T>(other.u))
+            return false;
 
-      return lhs == std::get<T>(other.u);
-    }, u);
-    // clang-format on
+          return lhs == std::get<T>(other.u);
+        },
+        u);
   }
+
+  String to_string() const;
+  String get_dump() const;
 
  private:
   Union u;
 };
 
 }  // namespace sema
+
+template <>
+struct Convert<sema::ConstValue> {
+  static String to_string(const sema::ConstValue& cv) { return cv.get_dump(); }
+};
 
 }  // namespace via
 

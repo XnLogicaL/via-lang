@@ -58,8 +58,8 @@ void Diagnostics::emit_one(const Diagnosis& d, spdlog::logger* logger) const {
   line_sv = StringView(line_start, static_cast<usize>(line_end - line_start));
 
   logger->log(level, "{} {} {}", d.msg,
-              apply_color("at", Fg::White, Bg::Black, Style::Faint),
-              apply_color(fmt::format("[{}:{}]", line, col), Fg::Cyan));
+              apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
+              apply_ansi_style(fmt::format("[{}:{}]", line, col), Fg::Cyan));
 
   logger->log(spdlog::level::off, "{}", line_sv);
 

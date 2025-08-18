@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "const_value.h"
+#include "color.h"
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 
@@ -32,6 +33,32 @@ Optional<ConstValue> ConstValue::from_literal_token(const Token& tok) {
   }
 
   return nullopt;
+}
+
+String ConstValue::to_string() const {
+  switch (kind()) {
+    case Kind::Nil:
+      return "nil";
+    case Kind::Boolean:
+      return value<Kind::Boolean>() ? "true" : "false";
+    case Kind::Int:
+      return std::to_string(value<Kind::Int>());
+    case Kind::Float:
+      return std::to_string(value<Kind::Float>());
+    case Kind::String:
+      return fmt::format("\"{}\"", value<Kind::String>());
+    default:
+      break;
+  }
+
+  return "<unknown-cv-type>";
+}
+
+String ConstValue::get_dump() const {
+  return fmt::format(
+      "{} [{} {}]",
+      apply_ansi_style("constant", Fg::Magenta, Bg::Black, Style::Bold),
+      magic_enum::enum_name(kind()), to_string());
 }
 
 }  // namespace sema
