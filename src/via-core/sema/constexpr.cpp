@@ -12,8 +12,6 @@ using namespace ast;
 using namespace types;
 using enum ConstValue::Kind;
 
-// TODO: This function must perform deeper constexpr checks, such as constexpr
-// variables and members.
 bool is_constexpr(Context& ctx, const ExprNode* expr) {
   if TRY_COERCE (const NodeExprLit, lit, expr)
     return true;
@@ -53,9 +51,7 @@ static UnOp to_unop(Token::Kind kind) {
 
 template <UnOp Op, type T>
 static EvalResult evaluate_unary(Context& ctx, ConstValue&& cv) {
-  using Result = unary_result_t<Op, T>;
-
-  if constexpr (!is_valid_type_v<Result>)
+  if constexpr (!is_valid_type_v<unary_result<Op, T>>)
     return std::unexpected(
         fmt::format("Invalid unary operation ({}) on type '{}'",
                     magic_enum::enum_name(Op), get_typename<T>(ctx)));
@@ -100,7 +96,7 @@ EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
     return *ConstValue::from_literal_token(*lit->tok);
   else if TRY_COERCE (const NodeExprGroup, grp, expr)
     return to_constexpr(ctx, grp->expr);
-  else if TRY_COERCE (const NodeExprUn, un, expr) {
+  else if TRY_COERCE (const NodeExprUn, un, expr)
     return to_constexpr(ctx, un->expr).and_then([&ctx, &un](ConstValue cv) {
       return std::visit(
           [&ctx, &un, &cv](types::type auto&& t) -> EvalResult {
@@ -109,9 +105,8 @@ EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
           },
           get_type(ctx, un->expr));
     });
-  }
 
-  VIA_UNIMPLEMENTED("unimplemented to_constexpr case");
+  VIA_UNIMPLEMENTED("to_constexpr");
 }
 
 }  // namespace sema

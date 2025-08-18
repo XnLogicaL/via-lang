@@ -21,7 +21,7 @@ void StmtVisitor::visit(const NodeStmtVar& svar) {
       if (sema::is_constexpr(sema_ctx, svar.rval)) {
         u16 kp;
 
-        auto cvr = sema::to_constexpr(sema_ctx, svar.lval->sym);
+        auto cvr = sema::to_constexpr(sema_ctx, svar.rval);
         if (cvr.has_value()) {
           ctx.emit_constant(std::move(*cvr), &kp);
           ctx.emit_instruction(Opcode::PUSHK, {dst, kp});

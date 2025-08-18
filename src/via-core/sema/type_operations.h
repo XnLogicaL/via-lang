@@ -8,7 +8,6 @@
 #include <via/types.h>
 #include "type_base.h"
 #include "type_primitives.h"
-#include "type_utils.h"
 
 namespace via {
 

@@ -24,6 +24,17 @@ inline constexpr auto is_type_v = is_type<T>::value;
 template <typename T>
 concept type = is_type_v<T>;
 
+template <typename T>
+struct is_valid_type {
+  static constexpr bool value =
+      requires {
+        typename T::type;                            // T::type must exist
+      } && (!std::same_as<typename T::type, void>);  // T::type != void
+};
+
+template <typename T>
+inline constexpr auto is_valid_type_v = is_valid_type<T>::value;
+
 }  // namespace types
 
 }  // namespace sema
