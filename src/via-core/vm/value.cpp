@@ -15,19 +15,19 @@ Value* Value::construct_impl(Interpreter* ctx,
 }
 
 Value* Value::construct(Interpreter* ctx) {
-  return construct_impl(ctx, Kind::nil);
+  return construct_impl(ctx, Kind::Nil);
 }
 
 Value* Value::construct(Interpreter* ctx, Value::int_type int_) {
-  return construct_impl(ctx, Kind::int_, {.int_ = int_});
+  return construct_impl(ctx, Kind::Int, {.int_ = int_});
 }
 
 Value* Value::construct(Interpreter* ctx, Value::float_type float_) {
-  return construct_impl(ctx, Kind::float_, {.float_ = float_});
+  return construct_impl(ctx, Kind::Float, {.float_ = float_});
 }
 
 Value* Value::construct(Interpreter* ctx, bool boolean) {
-  return construct_impl(ctx, Kind::boolean, {.boolean = boolean});
+  return construct_impl(ctx, Kind::Boolean, {.boolean = boolean});
 }
 
 Value* Value::construct(Interpreter* ctx, char* string) {
@@ -35,12 +35,12 @@ Value* Value::construct(Interpreter* ctx, char* string) {
       ctx->get_allocator().owns(string) &&
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
-  return construct_impl(ctx, Kind::string, {.string = string});
+  return construct_impl(ctx, Kind::String, {.string = string});
 }
 
 void Value::free() {
   switch (k) {
-    case Kind::string:
+    case Kind::String:
       ctx->get_allocator().free(u.string);
       break;
     default:
@@ -48,7 +48,7 @@ void Value::free() {
       break;
   }
 
-  k = Kind::nil;
+  k = Kind::Nil;
 }
 
 Value* Value::clone() {

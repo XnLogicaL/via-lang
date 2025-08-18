@@ -15,7 +15,9 @@ namespace via {
 namespace sema {
 
 bool is_constexpr(Context& ctx, const ast::ExprNode* expr);
-ConstValue to_constexpr(Context& ctx, const ast::ExprNode* expr);
+
+Result<ConstValue, String> to_constexpr(Context& ctx,
+                                        const ast::ExprNode* expr);
 
 }  // namespace sema
 

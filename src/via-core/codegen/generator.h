@@ -28,7 +28,6 @@ class Generator final {
 
   Diagnostics& get_diagnostics() { return m_diags; }
   sema::Context& get_sema_context() { return m_sema; }
-  sema::Stack& get_sema_stack() { return m_stack; }
 
   void emit_instruction(Opcode op, Array<u16, 3> ops = {});
   void emit_constant(sema::ConstValue&& cv, u16* kp);
@@ -37,7 +36,6 @@ class Generator final {
   const Vec<ast::StmtNode*>& m_ast;
   Diagnostics& m_diags;
   Header m_header;
-  sema::Stack m_stack;
   sema::Context m_sema;
 };
 

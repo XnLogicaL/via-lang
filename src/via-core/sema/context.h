@@ -8,6 +8,7 @@
 #include <via/types.h>
 #include "buffer.h"
 #include "memory.h"
+#include "stack.h"
 
 namespace via {
 
@@ -15,6 +16,7 @@ namespace sema {
 
 struct Context {
   Allocator alloc;
+  Stack stack;
   Buffer<u64> regs{UINT16_MAX / 8};
 };
 

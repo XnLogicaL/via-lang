@@ -19,11 +19,11 @@ class Value final {
   using float_type = f32;
 
   enum class Kind {
-    nil,
-    int_,
-    float_,
-    boolean,
-    string,
+    Nil,
+    Int,
+    Float,
+    Boolean,
+    String,
   };
 
   union Union {
@@ -73,7 +73,7 @@ class Value final {
   static Value* construct_impl(Interpreter* ctx, Kind kind, Union data = {});
 
  private:
-  Kind k = Kind::nil;
+  Kind k = Kind::Nil;
   Union u = {};
   usize rc = 0;
   Interpreter* ctx = NULL;

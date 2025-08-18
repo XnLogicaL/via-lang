@@ -18,6 +18,7 @@ class ConstValue final {
   using nil_type = monostate;
   using int_type = Value::int_type;
   using float_type = Value::float_type;
+
   using Kind = Value::Kind;
   using Union = Variant<nil_type, int_type, float_type, bool, String>;
 
@@ -34,6 +35,11 @@ class ConstValue final {
   constexpr Kind kind() const { return static_cast<Kind>(u.index()); }
   constexpr Union& data() { return u; }
   constexpr const Union& data() const { return u; }
+
+  template <const Kind kind>
+  constexpr auto value() const {
+    return std::get<static_cast<usize>(kind)>(u);
+  }
 
   constexpr bool compare(const ConstValue& other) const {
     // clang-format off

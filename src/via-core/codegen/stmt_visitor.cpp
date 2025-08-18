@@ -21,9 +21,14 @@ void StmtVisitor::visit(const NodeStmtVar& svar) {
       if (sema::is_constexpr(sema_ctx, svar.rval)) {
         u16 kp;
 
-        auto cv = sema::to_constexpr(sema_ctx, svar.lval->sym);
-        ctx.emit_constant(std::move(cv), &kp);
-        ctx.emit_instruction(Opcode::PUSHK, {dst, kp});
+        auto cvr = sema::to_constexpr(sema_ctx, svar.lval->sym);
+        if (cvr.has_value()) {
+          ctx.emit_constant(std::move(*cvr), &kp);
+          ctx.emit_instruction(Opcode::PUSHK, {dst, kp});
+        } else {
+          ctx.get_diagnostics().diagnose<Diagnosis::Kind::Error>(svar.loc,
+                                                                 cvr.error());
+        }
       } else {
         svar.rval->accept(expr_vis, dst);
         ctx.emit_instruction(Opcode::PUSH, {dst});
