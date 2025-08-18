@@ -17,7 +17,10 @@ void StmtVisitor::visit(const NodeStmtVar& svar) {
   u16 dst = sema::alloc_register(sema_ctx);
 
   switch (svar.lval->kind) {
-    case LValue::Kind::Symbol:
+    case LValue::Kind::Symbol: {
+      auto existing =
+          sema_ctx.stack.top().find_local(svar.lval->sym->tok->to_string());
+
       if (sema::is_constexpr(sema_ctx, svar.rval)) {
         u16 kp;
 
@@ -36,12 +39,26 @@ void StmtVisitor::visit(const NodeStmtVar& svar) {
 
       sema::free_register(sema_ctx, dst);
       break;
+    }
     default:
       VIA_UNIMPLEMENTED();
   }
 }
 
-void StmtVisitor::visit(const NodeStmtScope& sscp) {}
+void StmtVisitor::visit(const NodeStmtScope& sscp) {
+  sema::Context& sema_ctx = ctx.get_sema_context();
+  sema::Frame& frame = sema_ctx.stack.top();
+
+  frame.save();
+  ctx.emit_instruction(Opcode::SAVESP);
+
+  for (const ast::StmtNode* stmt : sscp.stmts)
+    stmt->accept(*this);
+
+  frame.restore();
+  ctx.emit_instruction(Opcode::RESTSP);
+}
+
 void StmtVisitor::visit(const NodeStmtIf& sif) {}
 void StmtVisitor::visit(const NodeStmtFor& sfor) {}
 void StmtVisitor::visit(const NodeStmtForEach& sfeach) {}

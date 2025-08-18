@@ -322,6 +322,8 @@ static constexpr InstructionLayout insn_layout_map[] = {
     {"not", Opcode::NOT, {Operand::Register, Operand::Register}},
     {"jmp", Opcode::JMP, {Operand::Label}},
     {"jmpif", Opcode::JMPIF, {Operand::Register, Operand::Label}},
+    {"savesp", Opcode::SAVESP, {}},
+    {"restsp", Opcode::RESTSP, {}},
     {"push", Opcode::PUSH, {Operand::Register}},
     {"pushk", Opcode::PUSHK, {Operand::Constant}},
     {"getarg", Opcode::GETARG, {Operand::Register, Operand::Generic}},

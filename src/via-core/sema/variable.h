@@ -19,19 +19,20 @@ class Local final {
   };
 
  public:
-  Local(String symbol, ast::TypeNode* type, u64 quals = 0ULL)
+  Local() = default;
+  Local(StringView symbol, ast::TypeNode* type, u64 quals = 0ULL)
       : quals(quals), symbol(symbol), type(type) {}
 
  public:
   u64 get_qualifiers() const { return quals; }
-  String get_symbol() const { return symbol; }
+  StringView get_symbol() const { return symbol; }
   ast::TypeNode* get_type() const { return type; }
 
  protected:
-  u64 quals;
-  String symbol;
-  ast::ExprNode* expr;
-  ast::TypeNode* type;
+  u64 quals = 0ULL;
+  StringView symbol = "<invalid-local>";
+  ast::ExprNode* expr = NULL;
+  ast::TypeNode* type = NULL;
 };
 
 struct LocalRef {

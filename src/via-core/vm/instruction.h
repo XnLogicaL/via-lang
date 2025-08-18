@@ -166,6 +166,8 @@ enum class Opcode : u16 {
   JMPIF,  // jmpif      <cnd: *bool> <lbl>
 
   // stack opcodes
+  SAVESP,       // savesp
+  RESTSP,       // restsp
   PUSH,         // push         <src: *>
   PUSHK,        // pushk        <val: $>
   GETARG,       // getarg       <dst: *> <idx>

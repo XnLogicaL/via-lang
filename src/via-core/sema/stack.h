@@ -14,10 +14,15 @@ namespace sema {
 
 class Frame final {
  public:
+  Local& top() { return locals.back(); }
   Vec<Local>& get_locals() { return locals; }
   Optional<LocalRef> find_local(String symbol);
 
+  void save() { sp = locals.size(); }
+  void restore() { locals.resize(sp); }
+
  private:
+  usize sp;
   Vec<Local> locals;
 };
 
@@ -29,7 +34,7 @@ class Stack final {
   void push(Frame&& frame) { frames.push_back(std::move(frame)); }
 
  private:
-  Vec<Frame> frames;
+  Vec<Frame> frames{Frame()};
 };
 
 }  // namespace sema
