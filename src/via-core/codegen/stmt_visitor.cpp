@@ -14,12 +14,14 @@ using namespace ast;
 
 void StmtVisitor::visit(const NodeStmtVar& svar) {
   sema::Context& sema_ctx = ctx.get_sema_context();
+  sema::Frame& frame = sema_ctx.stack.top();
+
   u16 dst = sema::alloc_register(sema_ctx);
 
   switch (svar.lval->kind) {
     case LValue::Kind::Symbol: {
-      auto existing =
-          sema_ctx.stack.top().find_local(svar.lval->sym->tok->to_string());
+      String symbol = svar.lval->sym->tok->to_string();
+      frame.set_local(symbol, svar.lval, svar.rval, NULL);
 
       if (sema::is_constexpr(sema_ctx, svar.rval)) {
         u16 kp;

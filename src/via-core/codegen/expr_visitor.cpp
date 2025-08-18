@@ -27,7 +27,7 @@ void ExprVisitor::visit(const ast::NodeExprLit& elit, u16 dst) {
 void ExprVisitor::visit(const ast::NodeExprSym& esym, u16 dst) {
   String symbol = esym.tok->to_string();
 
-  if (auto local = ctx.get_sema_context().stack.top().find_local(symbol)) {
+  if (auto local = ctx.get_sema_context().stack.top().get_local(symbol)) {
     ctx.emit_instruction(Opcode::GETLOCALREF, {dst, local->id});
     return;
   }

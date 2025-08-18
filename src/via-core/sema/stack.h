@@ -16,14 +16,28 @@ class Frame final {
  public:
   Local& top() { return locals.back(); }
   Vec<Local>& get_locals() { return locals; }
-  Optional<LocalRef> find_local(String symbol);
 
   void save() { sp = locals.size(); }
-  void restore() { locals.resize(sp); }
+  void restore() {
+    locals.resize(sp);
+    m_eliminate_dead_vtable();
+  }
+
+  Optional<LocalRef> get_local(String symbol);
+
+  void set_local(String symbol,
+                 const ast::LValue* lval,
+                 const ast::ExprNode* rval,
+                 const ast::TypeNode* type,
+                 u64 quals = 0ULL);
+
+ private:
+  void m_eliminate_dead_vtable();
 
  private:
   usize sp;
   Vec<Local> locals;
+  Map<String, usize> vtable;
 };
 
 class Stack final {

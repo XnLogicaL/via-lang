@@ -20,19 +20,34 @@ class Local final {
 
  public:
   Local() = default;
-  Local(StringView symbol, ast::TypeNode* type, u64 quals = 0ULL)
-      : quals(quals), symbol(symbol), type(type) {}
+  Local(StringView symbol,
+        const ast::LValue* lval,
+        const ast::ExprNode* rval,
+        const ast::TypeNode* type,
+        usize version = 0,
+        u64 quals = 0ULL)
+      : m_version(version),
+        m_quals(quals),
+        m_symbol(symbol),
+        m_lval(lval),
+        m_rval(rval),
+        m_type(type) {}
 
  public:
-  u64 get_qualifiers() const { return quals; }
-  StringView get_symbol() const { return symbol; }
-  ast::TypeNode* get_type() const { return type; }
+  usize get_version() const { return m_version; }
+  u64 get_qualifiers() const { return m_quals; }
+  StringView get_symbol() const { return m_symbol; }
+  const ast::LValue* get_lval() const { return m_lval; }
+  const ast::ExprNode* get_rval() const { return m_rval; }
+  const ast::TypeNode* get_type() const { return m_type; }
 
  protected:
-  u64 quals = 0ULL;
-  StringView symbol = "<invalid-local>";
-  ast::ExprNode* expr = NULL;
-  ast::TypeNode* type = NULL;
+  const usize m_version = 0;
+  const u64 m_quals = 0ULL;
+  const StringView m_symbol = "<invalid-local>";
+  const ast::LValue* m_lval = NULL;
+  const ast::ExprNode* m_rval = NULL;
+  const ast::TypeNode* m_type = NULL;
 };
 
 struct LocalRef {
