@@ -2,7 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "register.h"
-#include "panic.h"
+#include "debug.h"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
 #define VIA_HAVE_BUILTIN_CTZLL
@@ -35,7 +35,8 @@ u16 alloc_register(Context& ctx) {
 #endif
   }
 
-  VIA_BUG("semantic register allocation failure");
+  bug("semantic register allocation failure");
+  std::unreachable();
 }
 
 void free_register(Context& ctx, u16 reg) {

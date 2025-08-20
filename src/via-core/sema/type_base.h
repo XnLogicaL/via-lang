@@ -35,6 +35,9 @@ struct is_valid_type {
 template <typename T>
 inline constexpr auto is_valid_type_v = is_valid_type<T>::value;
 
+template <typename... Args>
+struct pack {};
+
 }  // namespace types
 
 }  // namespace sema

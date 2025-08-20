@@ -1,12 +1,11 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_CORE_VISITOR_H_
-#define VIA_CORE_VISITOR_H_
+#ifndef VIA_CORE_AST_VISITOR_H_
+#define VIA_CORE_AST_VISITOR_H_
 
 #include <via/config.h>
 #include <via/types.h>
-#include "panic.h"
 
 namespace via {
 
@@ -29,33 +28,57 @@ struct NodeStmtFor;
 struct NodeStmtForEach;
 struct NodeStmtWhile;
 struct NodeStmtAssign;
+struct NodeStmtEnum;
 struct NodeStmtEmpty;
 struct NodeStmtExpr;
 
+struct VisitInfo {
+  u16 dst = 0;
+};
+
+namespace types {
+
+template <typename T>
+struct is_visit_info {
+  static constexpr bool value =
+      std::is_same_v<VisitInfo, T> || std::is_base_of_v<VisitInfo, T>;
+};
+
+template <typename T>
+inline constexpr auto is_visit_info_v = is_visit_info<T>::value;
+
+template <typename T>
+concept visit_info = is_visit_info_v<T>;
+
+}  // namespace types
+
 class Visitor {
  public:
-  // clang-format off
-  virtual void visit(const NodeExprLit& elit, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprSym& esym, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprUn& eun, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprBin& ebin, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprGroup& egrp, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprCall& ecall, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprSubs& esubs, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprTuple& etup, u16 dst) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeExprLambda& elam, u16 dst) { VIA_UNIMPLEMENTED(); }
+  virtual void visit(const NodeExprLit& elit, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprSym& esym, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprUn& eun, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprBin& ebin, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprGroup& egrp, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprCall& ecall, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprSubs& esubs, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprTuple& etup, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeExprLambda& elam, Box<VisitInfo> vi) = 0;
 
-  virtual void visit(const NodeStmtVar& svar) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtScope& sscp) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtIf& sif) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtFor& sfor) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtForEach& sfeach) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtWhile& swhl) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtAssign& sasgn) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtEmpty& semt) { VIA_UNIMPLEMENTED(); }
-  virtual void visit(const NodeStmtExpr& sexpr) { VIA_UNIMPLEMENTED(); }
-  // clang-format on
+  virtual void visit(const NodeStmtVar&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtScope&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtIf&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtFor&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtForEach&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtWhile&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtAssign&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtEmpty&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const NodeStmtExpr&, Box<VisitInfo> vi) = 0;
 };
+
+template <types::visit_info Vi = VisitInfo, typename... Args>
+Box<Vi> make_visit_info(Args&&... args) noexcept {
+  return std::make_unique<Vi>(std::forward<Args>(args)...);
+}
 
 }  // namespace ast
 

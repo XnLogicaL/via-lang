@@ -12,10 +12,6 @@ AbsLocation Token::location(const Vec<char>& source) const {
   return {begin, end};
 }
 
-String Token::to_string() const {
-  return String(lexeme, size);
-}
-
 String Token::get_dump() const {
   return fmt::format("[{:<12} '{}']", Convert<Token::Kind>::to_string(kind),
                      (*lexeme == '\0') ? "<eof>" : to_string());

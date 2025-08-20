@@ -286,8 +286,8 @@ bool Lexer::skip_comment() {
   return false;
 }
 
-Vec<Token*> Lexer::tokenize() {
-  Vec<Token*> toks;
+TokenTree Lexer::tokenize() {
+  TokenTree toks;
 
   char c;
   while ((c = peek()), c != '\0') {

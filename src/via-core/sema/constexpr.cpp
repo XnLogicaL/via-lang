@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "constexpr.h"
+#include "debug.h"
 #include "type.h"
 
 namespace via {
@@ -13,15 +14,24 @@ using namespace types;
 using enum ConstValue::Kind;
 
 bool is_constexpr(Context& ctx, const ExprNode* expr) {
-  if TRY_COERCE (const NodeExprLit, lit, expr)
+  if TRY_COERCE (const NodeExprLit, lit, expr) {
     return true;
-  else if TRY_COERCE (const NodeExprGroup, grp, expr)
+  } else if TRY_COERCE (const NodeExprSym, sym, expr) {
+    Frame& frame = ctx.stack.top();
+    StringView symbol = sym->tok->to_string_view();
+
+    if (auto lref = frame.get_local(symbol)) {
+      return is_constexpr(ctx, lref->local.get_rval());
+    }
+
+    bug("is_constexpr symbol lookup failed");
+  } else if TRY_COERCE (const NodeExprGroup, grp, expr) {
     return is_constexpr(ctx, grp->expr);
-  else if TRY_COERCE (const NodeExprUn, un, expr)
+  } else if TRY_COERCE (const NodeExprUn, un, expr) {
     return is_constexpr(ctx, un->expr);
-  else if TRY_COERCE (const NodeExprBin, bin, expr)
+  } else if TRY_COERCE (const NodeExprBin, bin, expr) {
     return is_constexpr(ctx, bin->lhs) && is_constexpr(ctx, bin->rhs);
-  else if TRY_COERCE (const NodeExprTuple, tup, expr) {
+  } else if TRY_COERCE (const NodeExprTuple, tup, expr) {
     for (const auto* val : tup->vals)
       if (!is_constexpr(ctx, val))
         return false;
@@ -34,27 +44,12 @@ bool is_constexpr(Context& ctx, const ExprNode* expr) {
 
 using EvalResult = Result<ConstValue, via::String>;
 
-static UnOp to_unop(Token::Kind kind) {
-  switch (kind) {
-    case Token::Kind::MINUS:
-      return UnOp::Neg;
-    case Token::Kind::KW_NOT:
-      return UnOp::Not;
-    case Token::Kind::TILDE:
-      return UnOp::Bnot;
-    default:
-      break;
-  }
-
-  VIA_BUG();
-}
-
 template <UnOp Op, type T>
 static EvalResult evaluate_unary(Context& ctx, ConstValue&& cv) {
   if constexpr (!is_valid_type_v<unary_result<Op, T>>)
     return std::unexpected(
         fmt::format("Invalid unary operation ({}) on type '{}'",
-                    magic_enum::enum_name(Op), get_typename<T>(ctx)));
+                    magic_enum::enum_name(Op), type_info<T>::name));
 
   switch (Op) {
     case UnOp::Neg:
@@ -72,7 +67,8 @@ static EvalResult evaluate_unary(Context& ctx, ConstValue&& cv) {
       return ConstValue(~cv.value<Int>());
   }
 
-  VIA_BUG();
+  bug("failed to evaluate unary constexpr");
+  std::unreachable();
 }
 
 template <type T>
@@ -88,25 +84,43 @@ static EvalResult dispatch_unary(Context& ctx, UnOp op, ConstValue&& cv) {
       break;
   }
 
-  VIA_BUG();
+  bug("failed to dispatch unary constexpr");
+  std::unreachable();
 }
 
 EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
-  if TRY_COERCE (const NodeExprLit, lit, expr)
+  if TRY_COERCE (const NodeExprLit, lit, expr) {
     return *ConstValue::from_literal_token(*lit->tok);
-  else if TRY_COERCE (const NodeExprGroup, grp, expr)
-    return to_constexpr(ctx, grp->expr);
-  else if TRY_COERCE (const NodeExprUn, un, expr)
-    return to_constexpr(ctx, un->expr).and_then([&ctx, &un](ConstValue cv) {
-      return std::visit(
-          [&ctx, &un, &cv](types::type auto&& t) -> EvalResult {
-            return dispatch_unary<std::decay_t<decltype(t)>>(
-                ctx, to_unop(un->op->kind), std::move(cv));
-          },
-          get_type(ctx, un->expr));
-    });
+  } else if TRY_COERCE (const NodeExprSym, sym, expr) {
+    Frame& frame = ctx.stack.top();
+    StringView symbol = sym->tok->to_string_view();
 
-  VIA_UNIMPLEMENTED("to_constexpr");
+    if (auto lref = frame.get_local(symbol)) {
+      return to_constexpr(ctx, lref->local.get_rval());
+    }
+
+    bug("attempt to fold non-constexpr symbol");
+  } else if TRY_COERCE (const NodeExprGroup, grp, expr) {
+    return to_constexpr(ctx, grp->expr);
+  } else if TRY_COERCE (const NodeExprUn, un, expr) {
+    return to_constexpr(ctx, un->expr)
+        .and_then([&ctx, &un](ConstValue&& cv) -> EvalResult {
+          if (auto ty = infer_type(ctx, un->expr)) {
+            return std::visit(
+                [&](auto&& t) {
+                  return dispatch_unary<std::decay_t<decltype(t)>>(
+                      ctx, to_unop(un->op->kind), std::move(cv));
+                },
+                *ty);
+          }
+
+          bug("failed to infer inner type of unary constexpr");
+          std::unreachable();
+        });
+  }
+
+  unimplemented("to_constexpr");
+  std::unreachable();
 }
 
 }  // namespace sema

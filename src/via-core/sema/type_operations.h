@@ -6,6 +6,8 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "debug.h"
+#include "lexer/token.h"
 #include "type_base.h"
 #include "type_primitives.h"
 
@@ -109,6 +111,22 @@ using binary_result_t = typename binary_result<Op, L, R>::type;
 
 template <UnOp Op, type T>
 using unary_result_t = typename unary_result<Op, T>::type;
+
+constexpr UnOp to_unop(Token::Kind kind) {
+  switch (kind) {
+    case Token::Kind::MINUS:
+      return UnOp::Neg;
+    case Token::Kind::KW_NOT:
+      return UnOp::Not;
+    case Token::Kind::TILDE:
+      return UnOp::Bnot;
+    default:
+      break;
+  }
+
+  bug("to_unop unmapped token kind");
+  std::unreachable();
+}
 
 }  // namespace types
 

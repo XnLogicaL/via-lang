@@ -1,10 +1,10 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "type.h"
+#include "pass_const_fold.h"
 
 namespace via {
 
-namespace sema {}  // namespace sema
+namespace ast {}
 
 }  // namespace via

@@ -13,6 +13,8 @@
 
 namespace via {
 
+using SourceTree = Vec<char>;
+
 struct Token {
   enum class Kind {
     EOF_ = 0,  // end of file
@@ -93,9 +95,11 @@ struct Token {
   const char* lexeme;
   usize size;
 
-  String to_string() const;
   String get_dump() const;
-  AbsLocation location(const Vec<char>& source) const;
+  String to_string() const { return String(lexeme, size); }
+  StringView to_string_view() const { return StringView(lexeme, size); }
+
+  AbsLocation location(const SourceTree& source) const;
 };
 
 template <>

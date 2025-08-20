@@ -456,8 +456,8 @@ StmtNode* Parser::parse_stmt() {
   return es;
 }
 
-Vec<StmtNode*> Parser::parse() {
-  Vec<StmtNode*> nodes;
+SyntaxTree Parser::parse() {
+  SyntaxTree nodes;
 
   while (!match(Token::Kind::EOF_)) {
     try {

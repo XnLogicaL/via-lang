@@ -18,22 +18,34 @@ namespace gen {
 
 class StmtVisitor : public ast::Visitor {
  public:
-  StmtVisitor(Generator& ctx) : ctx(ctx), expr_vis(ctx) {}
+  StmtVisitor(Generator& ctx) : m_ctx(ctx), m_vis(ctx) {}
 
  public:
-  void visit(const ast::NodeStmtVar& svar) override;
-  void visit(const ast::NodeStmtScope& sscp) override;
-  void visit(const ast::NodeStmtIf& sif) override;
-  void visit(const ast::NodeStmtFor& sfor) override;
-  void visit(const ast::NodeStmtForEach& sfeach) override;
-  void visit(const ast::NodeStmtWhile& swhl) override;
-  void visit(const ast::NodeStmtAssign& sasgn) override;
-  void visit(const ast::NodeStmtEmpty& semt) override;
-  void visit(const ast::NodeStmtExpr& sexpr) override;
+  // clang-format off
+  void visit(const ast::NodeExprLit&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprSym&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprUn&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprBin&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprGroup&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprCall&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprSubs&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprTuple&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  void visit(const ast::NodeExprLambda&, Box<ast::VisitInfo>) { bug("bad visit"); }
+  // clang-format on
+
+  void visit(const ast::NodeStmtVar& svar, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtScope& sscp, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtIf& sif, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtFor& sfor, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtForEach& sfeach, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtWhile& swhl, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtAssign& sasgn, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtEmpty& semt, Box<ast::VisitInfo> vi);
+  void visit(const ast::NodeStmtExpr& sexpr, Box<ast::VisitInfo> vi);
 
  private:
-  Generator& ctx;
-  ExprVisitor expr_vis;
+  Generator& m_ctx;
+  ExprVisitor m_vis;
 };
 
 }  // namespace gen

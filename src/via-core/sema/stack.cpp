@@ -8,38 +8,29 @@ namespace via {
 
 namespace sema {
 
-Optional<LocalRef> Frame::get_local(String symbol) {
-  const auto pred = [this, &symbol](const Local& local) {
-    return local.get_symbol() == symbol &&
-           local.get_version() == vtable[symbol];
-  };
-
-  if (auto it = std::ranges::find_if(locals, pred); it != locals.end()) {
-    u16 id = std::ranges::distance(locals.begin(), it);
-    return LocalRef{id, *it};
+Optional<LocalRef> Frame::get_local(StringView symbol) {
+  for (i64 i = locals.size() - 1; i >= 0; --i) {
+    Local& local = locals[i];
+    if (local.get_symbol() == symbol) {
+      return LocalRef{static_cast<u16>(i), local};
+    }
   }
 
   return nullopt;
 }
 
-void Frame::set_local(String symbol,
+void Frame::set_local(StringView symbol,
                       const ast::LValue* lval,
                       const ast::ExprNode* rval,
                       const ast::TypeNode* type,
                       u64 quals) {
-  usize version = vtable[symbol];
-  vtable[symbol] = version + 1;
-  locals.emplace_back(symbol, lval, rval, type, version, quals);
-}
+  usize version = 0;
 
-void Frame::m_eliminate_dead_vtable() {
-  for (auto it = vtable.begin(); it != vtable.end();) {
-    if (!get_local(it->first)) {
-      it = vtable.erase(it);
-    } else {
-      ++it;
-    }
+  if (auto lref = get_local(symbol)) {
+    version = lref->local.get_version() + 1;
   }
+
+  locals.emplace_back(symbol, lval, rval, type, version, quals);
 }
 
 }  // namespace sema

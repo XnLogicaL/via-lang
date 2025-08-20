@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "expr_visitor.h"
+#include "debug.h"
 #include "generator.h"
 #include "sema/const_value.h"
 #include "sema/constexpr.h"
@@ -12,37 +13,41 @@ namespace gen {
 
 using sema::ConstValue;
 using enum Diagnosis::Kind;
+using namespace ast;
 
-void ExprVisitor::visit(const ast::NodeExprLit& elit, u16 dst) {
+void ExprVisitor::visit(const NodeExprLit& elit, Box<VisitInfo> vi) {
   if (auto kval = ConstValue::from_literal_token(*elit.tok)) {
     u16 kp;
-    ctx.emit_constant(std::move(*kval), &kp);
-    ctx.emit_instruction(Opcode::LOADK, {dst, kp});
+    m_ctx.emit_constant(std::move(*kval), &kp);
+    m_ctx.emit_instruction(Opcode::LOADK, {vi->dst, kp});
     return;
   }
 
-  VIA_BUG("bad token literal");
+  bug("bad token literal");
 }
 
-void ExprVisitor::visit(const ast::NodeExprSym& esym, u16 dst) {
+void ExprVisitor::visit(const NodeExprSym& esym, Box<VisitInfo> vi) {
+  sema::Context& sema_ctx = m_ctx.get_sema_context();
+  sema::Frame& frame = sema_ctx.stack.top();
+
   String symbol = esym.tok->to_string();
 
-  if (auto local = ctx.get_sema_context().stack.top().get_local(symbol)) {
-    ctx.emit_instruction(Opcode::GETLOCALREF, {dst, local->id});
+  if (auto lref = sema_ctx.stack.top().get_local(symbol)) {
+    m_ctx.emit_instruction(Opcode::GETLOCAL, {vi->dst, lref->id});
     return;
   }
 
-  ctx.get_diagnostics().diagnosef<Error>(esym.loc, "Unknown symbol '{}'",
-                                         symbol);
+  m_ctx.get_diagnostics().diagnosef<Error>(esym.loc, "Unknown symbol '{}'",
+                                           symbol);
 }
 
-void ExprVisitor::visit(const ast::NodeExprUn& eun, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprBin& ebin, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprGroup& egrp, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprCall& ecall, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprSubs& esubs, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprTuple& etup, u16 dst) {}
-void ExprVisitor::visit(const ast::NodeExprLambda& elam, u16 dst) {}
+void ExprVisitor::visit(const NodeExprUn& eun, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprBin& ebin, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprGroup& egrp, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprCall& ecall, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprSubs& esubs, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprTuple& etup, Box<VisitInfo> vi) {}
+void ExprVisitor::visit(const NodeExprLambda& elam, Box<VisitInfo> vi) {}
 
 }  // namespace gen
 

@@ -8,14 +8,6 @@
 #include <via/config.h>
 #include <via/types.h>
 
-#define VIA_BUG(msg)                                              \
-  panic(                                                          \
-      "internal tooling bug detected (please create an issue at " \
-      "https://github.com/XnLogicaL/via-lang): " msg)
-
-#define VIA_TODO(msg) panic("TODO: " msg);
-#define VIA_UNIMPLEMENTED(msg) panic("unimplemented: " msg);
-
 namespace via {
 
 [[noreturn]] void panic(String message);

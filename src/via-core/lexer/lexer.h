@@ -11,15 +11,18 @@
 
 namespace via {
 
+using SourceTree = Vec<char>;
+using TokenTree = Vec<Token*>;
+
 class Lexer final {
  public:
-  Lexer(const Vec<char>& file)
+  Lexer(const SourceTree& file)
       : m_file(file),
         m_cursor(file.data()),
         m_end(file.data() + file.size() - 1) {}
 
  public:
-  Vec<Token*> tokenize();
+  TokenTree tokenize();
 
  private:
   char advance(int ahead = 1);

@@ -9,6 +9,7 @@
 #include <via/types.h>
 #include "ast/ast.h"
 #include "diagnostics.h"
+#include "lexer/lexer.h"
 #include "lexer/token.h"
 #include "memory.h"
 
@@ -16,10 +17,13 @@ namespace via {
 
 class Parser final {
  public:
-  Parser(const Vec<char>& source, const Vec<Token*>& tokens, Diagnostics& diag)
+  Parser(const SourceTree& source, const TokenTree& tokens, Diagnostics& diag)
       : m_source(source), m_cursor(tokens.cbegin().base()), m_diag(diag) {}
 
-  Vec<ast::StmtNode*> parse();
+ public:
+  Allocator& get_allocator() { return m_alloc; }
+
+  ast::SyntaxTree parse();
 
  private:
   bool match(Token::Kind kind, int ahead = 0);
@@ -48,10 +52,10 @@ class Parser final {
   ast::StmtNode* parse_stmt();
 
  private:
-  const Vec<char>& m_source;
+  Diagnostics& m_diag;
+  const SourceTree& m_source;
   Token* const* m_cursor;
   Allocator m_alloc;
-  Diagnostics& m_diag;
 };
 
 }  // namespace via

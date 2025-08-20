@@ -11,7 +11,7 @@ Header Generator::generate() {
   gen::StmtVisitor visitor(*this);
 
   for (const ast::StmtNode* stmt : m_ast)
-    stmt->accept(visitor);
+    stmt->accept(visitor, {});
 
   emit_instruction(Opcode::HALT);
   return m_header;

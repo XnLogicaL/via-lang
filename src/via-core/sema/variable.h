@@ -15,7 +15,7 @@ namespace sema {
 class Local final {
  public:
   enum class Qualifier : u64 {
-    const_ = 1ULL >> 63,
+    Const = 1ULL >> 63,
   };
 
  public:
@@ -39,7 +39,7 @@ class Local final {
   StringView get_symbol() const { return m_symbol; }
   const ast::LValue* get_lval() const { return m_lval; }
   const ast::ExprNode* get_rval() const { return m_rval; }
-  const ast::TypeNode* get_type() const { return m_type; }
+  const ast::TypeNode* infer_type() const { return m_type; }
 
  protected:
   const usize m_version = 0;

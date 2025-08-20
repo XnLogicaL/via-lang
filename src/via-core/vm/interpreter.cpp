@@ -2,7 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "interpreter.h"
-#include "panic.h"
+#include "debug.h"
 #include "value.h"
 
 namespace via {
@@ -154,7 +154,7 @@ dispatch:
     CASE(EXTRAARG1)
     CASE(EXTRAARG2)
     CASE(EXTRAARG3) {
-      VIA_BUG("use of reserved opcode");
+      bug("use of reserved opcode");
     }
     CASE(MOVE) {
       RFREE(a);
@@ -195,7 +195,7 @@ dispatch:
     CASE(NEWDICT)
     CASE(NEWTUPLE)
     CASE(NEWCLOSURE) {
-      VIA_TODO();
+      todo("implement opcodes");
     }
     CASE(IADD1) {
       R(a)->u.int_ += R(b)->u.int_;
@@ -697,7 +697,7 @@ dispatch:
     CASE(GETARG)
     CASE(GETARGREF)
     CASE(SETARG) {
-      VIA_TODO();
+      todo("implement opcodes");
     }
     CASE(GETLOCAL) {
       RFREE(a);
@@ -755,13 +755,13 @@ dispatch:
     CASE(PCALLSTATIC)
     CASE(CALLDYNAMIC)
     CASE(PCALLDYNAMIC) {
-      VIA_TODO();
+      todo("implement opcodes");
     }
 #ifdef HAS_CGOTO
   }
 #else
     default:
-      VIA_BUG("unknown opcode");
+      bug("unknown opcode");
       break;
   }
 #endif

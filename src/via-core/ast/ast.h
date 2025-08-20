@@ -6,9 +6,9 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "debug.h"
 #include "lexer/location.h"
 #include "lexer/token.h"
-#include "panic.h"
 #include "visitor.h"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
@@ -19,20 +19,23 @@ namespace ast {
 
 struct ExprNode {
   AbsLocation loc;
-  virtual void accept(Visitor& vis, u16 dst) const = 0;
+
   virtual String get_dump(usize& depth) const = 0;
+  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
 };
 
 struct StmtNode {
   AbsLocation loc;
-  virtual void accept(Visitor& vis) const = 0;
+
   virtual String get_dump(usize& depth) const = 0;
+  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
 };
 
 struct TypeNode {
   AbsLocation loc;
-  virtual void accept(Visitor& vis) const = 0;
+
   virtual String get_dump(usize& depth) const = 0;
+  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
 };
 
 struct NodeExprSym;
@@ -59,66 +62,66 @@ struct Parameter {
   AbsLocation loc;
 };
 
-#define COMMON_HEADER_EXPR(klass)                                              \
-  using klass::loc;                                                            \
-  void accept(Visitor& vis, u16 dst) const override { vis.visit(*this, dst); } \
-  String get_dump(usize& depth) const override { VIA_TODO(); }
+#define COMMON_HEADER(klass)                                    \
+  using klass::loc;                                             \
+  String get_dump(usize& depth) const override {                \
+    todo(#klass "::get_dump");                                  \
+    return {};                                                  \
+  }                                                             \
+  void accept(Visitor& vis, Box<VisitInfo> vi) const override { \
+    vis.visit(*this, std::move(vi));                            \
+  }
 
 struct NodeExprLit : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Token* tok;
 };
 
 struct NodeExprSym : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Token* tok;
 };
 
 struct NodeExprUn : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Token* op;
   ExprNode* expr;
 };
 
 struct NodeExprBin : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Token* op;
   ExprNode *lhs, *rhs;
 };
 
 struct NodeExprGroup : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   ExprNode* expr;
 };
 
 struct NodeExprCall : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   ExprNode* lval;
   Vec<ExprNode*> args;
 };
 
 struct NodeExprSubs : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   ExprNode *lval, *idx;
 };
 
 struct NodeExprTuple : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Vec<ExprNode*> vals;
 };
 
 struct NodeStmtScope;
 
 struct NodeExprLambda : public ExprNode {
-  COMMON_HEADER_EXPR(ExprNode)
+  COMMON_HEADER(ExprNode)
   Vec<Parameter> pms;
   NodeStmtScope* scope;
 };
-
-#define COMMON_HEADER(klass)                                     \
-  using klass::loc;                                              \
-  void accept(Visitor& vis) const override { vis.visit(*this); } \
-  String get_dump(usize& depth) const override { VIA_TODO(); }
 
 struct NodeStmtVar : public StmtNode {
   COMMON_HEADER(StmtNode)
@@ -176,7 +179,9 @@ struct NodeStmtExpr : public StmtNode {
   ExprNode* expr;
 };
 
-#undef COMMON_HEADER_EXPR
+using SyntaxTree = Vec<StmtNode*>;
+
+#undef COMMON_HEADER
 #undef COMMON_HEADER
 
 }  // namespace ast

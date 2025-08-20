@@ -20,7 +20,7 @@ namespace via {
 
 class Generator final {
  public:
-  Generator(const Vec<ast::StmtNode*>& ast, Diagnostics& diags)
+  Generator(const ast::SyntaxTree& ast, Diagnostics& diags)
       : m_ast(ast), m_diags(diags) {}
 
  public:
@@ -33,7 +33,7 @@ class Generator final {
   void emit_constant(sema::ConstValue&& cv, u16* kp);
 
  private:
-  const Vec<ast::StmtNode*>& m_ast;
+  const ast::SyntaxTree& m_ast;
   Diagnostics& m_diags;
   Header m_header;
   sema::Context m_sema;
