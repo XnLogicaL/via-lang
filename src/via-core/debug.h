@@ -12,9 +12,9 @@
 namespace via {
 
 void assert(bool cond, String message);
-void bug(String what);
-void todo(String what);
-void unimplemented(String what);
+[[noreturn]] void bug(String what);
+[[noreturn]] void todo(String what);
+[[noreturn]] void unimplemented(String what);
 
 }  // namespace via
 

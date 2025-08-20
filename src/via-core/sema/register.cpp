@@ -36,7 +36,6 @@ u16 alloc_register(Context& ctx) {
   }
 
   bug("semantic register allocation failure");
-  std::unreachable();
 }
 
 void free_register(Context& ctx, u16 reg) {

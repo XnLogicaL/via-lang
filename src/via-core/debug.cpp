@@ -14,16 +14,19 @@ void assert(bool cond, String message) {
 #endif
 }
 
-void bug(String what) {
+[[noreturn]] void bug(String what) {
   assert(false, fmt::format("internal bug detected: {}", what));
+  std::unreachable();
 }
 
-void todo(String what) {
+[[noreturn]] void todo(String what) {
   assert(false, fmt::format("todo: {}", what));
+  std::unreachable();
 }
 
-void unimplemented(String what) {
+[[noreturn]] void unimplemented(String what) {
   assert(false, fmt::format("unimplemented: {}", what));
+  std::unreachable();
 }
 
 }  // namespace via

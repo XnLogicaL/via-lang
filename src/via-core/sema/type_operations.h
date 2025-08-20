@@ -43,67 +43,67 @@ enum class UnOp {
 
 template <BinOp Op, type L, type R>
 struct binary_result {
-  using type = void;
+  using type = invalid_type<>;
 };
 
 template <UnOp Op, type T>
 struct unary_result {
-  using type = void;
+  using type = invalid_type<>;
 };
 
 template <BinOp Op>
-struct binary_result<Op, int_type, int_type> {
-  using type = int_type;
+struct binary_result<Op, int_type<type_list<>>, int_type<type_list<>>> {
+  using type = int_type<type_list<>>;
 };
 
 template <BinOp Op>
-struct binary_result<Op, float_type, float_type> {
-  using type = float_type;
+struct binary_result<Op, float_type<>, float_type<>> {
+  using type = float_type<>;
 };
 
 template <BinOp Op>
-struct binary_result<Op, int_type, float_type> {
-  using type = float_type;
+struct binary_result<Op, int_type<>, float_type<>> {
+  using type = float_type<>;
 };
 
 template <BinOp Op>
-struct binary_result<Op, float_type, int_type> {
-  using type = float_type;
+struct binary_result<Op, float_type<>, int_type<>> {
+  using type = float_type<>;
 };
 
 template <type L, type R>
 struct binary_result<BinOp::And, L, R> {
-  using type = bool_type;
+  using type = bool_type<>;
 };
 
 template <type L, type R>
 struct binary_result<BinOp::Or, L, R> {
-  using type = bool_type;
+  using type = bool_type<>;
 };
 
 template <type L, type R>
 struct binary_result<BinOp::Con, L, R> {
-  using type = string_type;
+  using type = string_type<>;
 };
 
 template <>
-struct unary_result<UnOp::Neg, int_type> {
-  using type = int_type;
+struct unary_result<UnOp::Neg, int_type<>> {
+  using type = int_type<>;
 };
 
 template <>
-struct unary_result<UnOp::Neg, float_type> {
-  using type = float_type;
+struct unary_result<UnOp::Neg, float_type<>> {
+  using type = float_type<>;
 };
 
 template <type T>
 struct unary_result<UnOp::Not, T> {
-  using type = bool_type;
+  using type = bool_type<>;
 };
 
 template <>
-struct unary_result<UnOp::Bnot, int_type> {
-  using type = int_type;
+struct unary_result<UnOp::Bnot, int_type<>> {
+  using type = int_type<>;
 };
 
 template <BinOp Op, type L, type R>
@@ -125,7 +125,6 @@ constexpr UnOp to_unop(Token::Kind kind) {
   }
 
   bug("to_unop unmapped token kind");
-  std::unreachable();
 }
 
 }  // namespace types

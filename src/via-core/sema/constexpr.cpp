@@ -46,20 +46,20 @@ using EvalResult = Result<ConstValue, via::String>;
 
 template <UnOp Op, type T>
 static EvalResult evaluate_unary(Context& ctx, ConstValue&& cv) {
-  if constexpr (!is_valid_type_v<unary_result<Op, T>>)
+  if constexpr (!is_valid_type_v<unary_result_t<Op, T>>)
     return std::unexpected(
         fmt::format("Invalid unary operation ({}) on type '{}'",
                     magic_enum::enum_name(Op), type_info<T>::name));
 
   switch (Op) {
     case UnOp::Neg:
-      if constexpr (std::is_same_v<T, int_type>)
+      if constexpr (std::is_same_v<T, int_type<>>)
         return ConstValue(-cv.value<Int>());
       return ConstValue(-cv.value<Float>());
     case UnOp::Not:
-      if constexpr (std::is_same_v<T, nil_type>)
+      if constexpr (std::is_same_v<T, nil_type<>>)
         return ConstValue(true);
-      else if constexpr (std::is_same_v<T, bool_type>)
+      else if constexpr (std::is_same_v<T, bool_type<>>)
         return ConstValue(!cv.value<Boolean>());
 
       return ConstValue(false);
@@ -68,7 +68,6 @@ static EvalResult evaluate_unary(Context& ctx, ConstValue&& cv) {
   }
 
   bug("failed to evaluate unary constexpr");
-  std::unreachable();
 }
 
 template <type T>
@@ -85,7 +84,6 @@ static EvalResult dispatch_unary(Context& ctx, UnOp op, ConstValue&& cv) {
   }
 
   bug("failed to dispatch unary constexpr");
-  std::unreachable();
 }
 
 EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
@@ -105,7 +103,7 @@ EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
   } else if TRY_COERCE (const NodeExprUn, un, expr) {
     return to_constexpr(ctx, un->expr)
         .and_then([&ctx, &un](ConstValue&& cv) -> EvalResult {
-          if (auto ty = infer_type(ctx, un->expr)) {
+          if (auto ty = infer_type<type_list<>>(ctx, un->expr)) {
             return std::visit(
                 [&](auto&& t) {
                   return dispatch_unary<std::decay_t<decltype(t)>>(
@@ -115,12 +113,10 @@ EvalResult to_constexpr(Context& ctx, const ExprNode* expr) {
           }
 
           bug("failed to infer inner type of unary constexpr");
-          std::unreachable();
         });
   }
 
   unimplemented("to_constexpr");
-  std::unreachable();
 }
 
 }  // namespace sema
