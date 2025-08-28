@@ -4,14 +4,19 @@
 #include "diagnostics.h"
 #include "color.h"
 
-namespace via {
+namespace via
+{
 
-void Diagnostics::emit(spdlog::logger* logger) const {
-  for (const auto& d : m_diags)
+void DiagnosticContext::emit(spdlog::logger* logger) const
+{
+  for (const auto& d : m_diags) {
     emit_one(d, logger);
+  }
 }
 
-void Diagnostics::emit_one(const Diagnosis& d, spdlog::logger* logger) const {
+void DiagnosticContext::emit_one(const Diagnosis& d,
+                                 spdlog::logger* logger) const
+{
   spdlog::level::level_enum level;
   switch (d.kind) {
     case Diagnosis::Kind::Info:
@@ -28,13 +33,13 @@ void Diagnostics::emit_one(const Diagnosis& d, spdlog::logger* logger) const {
   u64 line = 0, col = 0;
   StringView line_sv;
 
-  if (d.loc.begin >= m_file.size()) {
+  if (d.loc.begin >= m_source.size()) {
     logger->log(level, "{}", d.msg);
     return;
   }
 
-  const char* begin = reinterpret_cast<const char*>(m_file.data());
-  const char* end = begin + m_file.size();
+  const char* begin = reinterpret_cast<const char*>(m_source.data());
+  const char* end = begin + m_source.size();
   const char* ptr = begin + d.loc.begin;
 
   const char* line_start = ptr;
@@ -57,9 +62,10 @@ void Diagnostics::emit_one(const Diagnosis& d, spdlog::logger* logger) const {
   col = static_cast<u64>(ptr - line_start) + 1;  // 1-based
   line_sv = StringView(line_start, static_cast<usize>(line_end - line_start));
 
-  logger->log(level, "{} {} {}", d.msg,
-              apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
-              apply_ansi_style(fmt::format("[{}:{}]", line, col), Fg::Cyan));
+  logger->log(
+      level, "{} {} {}", d.msg,
+      apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
+      apply_ansi_style(fmt::format("[{}:{}:{}]", m_path, line, col), Fg::Cyan));
 
   logger->log(spdlog::level::off, "{}", line_sv);
 

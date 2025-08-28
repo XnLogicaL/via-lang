@@ -7,14 +7,18 @@
 #include <via/config.h>
 #include <via/types.h>
 
-#undef assert
+namespace via
+{
 
-namespace via {
+namespace debug
+{
 
-void assert(bool cond, String message);
+void _assert(bool cond, String message);
 [[noreturn]] void bug(String what);
 [[noreturn]] void todo(String what);
-[[noreturn]] void unimplemented(String what);
+[[noreturn]] void unimplemented(String what = "<no-message-specified>");
+
+}  // namespace debug
 
 }  // namespace via
 

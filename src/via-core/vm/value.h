@@ -9,16 +9,19 @@
 #include "interpreter.h"
 #include "value_ref.h"
 
-namespace via {
+namespace via
+{
 
 class Interpreter;
 
-class Value final {
+class Value final
+{
  public:
   using int_type = i64;
   using float_type = f32;
 
-  enum class Kind {
+  enum class Kind
+  {
     Nil,
     Int,
     Float,
@@ -26,7 +29,8 @@ class Value final {
     String,
   };
 
-  union Union {
+  union Union
+  {
     int_type int_;
     float_type float_;
     bool boolean;
@@ -76,7 +80,7 @@ class Value final {
   Kind k = Kind::Nil;
   Union u = {};
   usize rc = 0;
-  Interpreter* ctx = NULL;
+  Interpreter* ctx = nullptr;
 };
 
 }  // namespace via

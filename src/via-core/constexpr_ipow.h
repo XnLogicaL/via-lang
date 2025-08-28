@@ -7,10 +7,12 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
 template <std::integral T = int>
-constexpr T ipow(T base, T exp) {
+constexpr T ipow(T base, T exp)
+{
   T result = 1;
   for (;;) {
     if (exp & 1)

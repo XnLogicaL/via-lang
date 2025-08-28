@@ -9,11 +9,14 @@
 #include "lexer/token.h"
 #include "vm/value.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
-class ConstValue final {
+class ConstValue final
+{
  public:
   using nil_type = monostate;
   using int_type = Value::int_type;
@@ -37,11 +40,13 @@ class ConstValue final {
   constexpr const Union& data() const { return u; }
 
   template <const Kind kind>
-  constexpr auto value() const {
+  constexpr auto value() const
+  {
     return std::get<static_cast<usize>(kind)>(u);
   }
 
-  constexpr bool compare(const ConstValue& other) const {
+  constexpr bool compare(const ConstValue& other) const
+  {
     return std::visit(
         [&other](auto&& lhs) -> bool {
           using T = std::decay_t<decltype(lhs)>;
@@ -63,7 +68,8 @@ class ConstValue final {
 }  // namespace sema
 
 template <>
-struct Convert<sema::ConstValue> {
+struct Convert<sema::ConstValue>
+{
   static String to_string(const sema::ConstValue& cv) { return cv.get_dump(); }
 };
 

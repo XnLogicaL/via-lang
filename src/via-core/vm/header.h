@@ -6,33 +6,39 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <filesystem>
 #include "convert.h"
+#include "diagnostics.h"
 #include "instruction.h"
-#include "lexer/location.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
 class ConstValue;
 
 }
 
-struct Header {
-  static constexpr u32 magic = 0x2E766961;  // .via
+struct Header
+{
+  static constexpr u32 kmagic = 0x2E766961;  // .via
 
+  u32 magic;
   u64 flags;
   Vec<sema::ConstValue> consts;
   Vec<Instruction> bytecode;
 
   Header() = default;
-  Header(const Vec<char>& file);
+  Header(const std::filesystem::path& binary, DiagnosticContext& diags);
 
   String get_dump() const;
 };
 
 template <>
-struct Convert<Header> {
+struct Convert<Header>
+{
   static String to_string(const Header& header) { return header.get_dump(); }
 };
 

@@ -6,18 +6,19 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "ast/ast.h"
 #include "const_value.h"
-#include "context.h"
+#include "ir/ir.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+class Module;
 
-bool is_constexpr(Context& ctx, const ast::ExprNode* expr);
+namespace sema
+{
 
-Result<ConstValue, String> to_constexpr(Context& ctx,
-                                        const ast::ExprNode* expr);
+bool is_constexpr(Module* m, const ir::Expr* expr);
+Result<ConstValue, String> to_constexpr(Module* m, const ir::Expr* expr);
 
 }  // namespace sema
 

@@ -4,11 +4,21 @@
 #include "header.h"
 #include <sstream>
 #include "color.h"
+#include "debug.h"
 #include "sema/const_value.h"
 
-namespace via {
+namespace fs = std::filesystem;
 
-String Header::get_dump() const {
+namespace via
+{
+
+Header::Header(const fs::path& binary, DiagnosticContext& diags)
+{
+  debug::unimplemented("Header construction from binary file");
+}
+
+String Header::get_dump() const
+{
   std::ostringstream oss;
   oss << apply_ansi_style("[section .text]\n", Fg::Yellow, Bg::Black,
                           Style::Underline);

@@ -8,12 +8,14 @@
 #include <via/types.h>
 #include "memory.h"
 
-namespace via {
+namespace via
+{
 
 class Interpreter;
 class Value;
 
-class ValueRef final {
+class ValueRef final
+{
  public:
   ValueRef(Interpreter* ctx);
   ValueRef(Interpreter* ctx, Value* ptr);

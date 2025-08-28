@@ -3,9 +3,11 @@
 
 #include "location.h"
 
-namespace via {
+namespace via
+{
 
-Location AbsLocation::to_relative(const Vec<char>& source) const {
+RelLoc SourceLoc::to_relative(const String& source) const
+{
   usize line = 1;
   usize init = 0;
 

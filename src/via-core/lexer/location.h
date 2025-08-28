@@ -7,19 +7,22 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
-struct Location {
+struct RelLoc
+{
   usize line;
   usize offset;
 };
 
-struct AbsLocation {
+struct SourceLoc
+{
   usize begin;
   usize end;
 
   // Returns the absolute location as a relative location.
-  Location to_relative(const Vec<char>& source) const;
+  RelLoc to_relative(const String& source) const;
 };
 
 }  // namespace via

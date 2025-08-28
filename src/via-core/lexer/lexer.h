@@ -9,17 +9,19 @@
 #include "memory.h"
 #include "token.h"
 
-namespace via {
+namespace via
+{
 
-using SourceTree = Vec<char>;
 using TokenTree = Vec<Token*>;
 
-class Lexer final {
+class Lexer final
+{
  public:
-  Lexer(const SourceTree& file)
+  Lexer(const String& file)
       : m_file(file),
         m_cursor(file.data()),
-        m_end(file.data() + file.size() - 1) {}
+        m_end(file.data() + file.size() - 1)
+  {}
 
  public:
   TokenTree tokenize();
@@ -34,11 +36,18 @@ class Lexer final {
   bool skip_comment();
 
  private:
-  const Vec<char>& m_file;
+  const String& m_file;
   const char* m_cursor;
   const char* m_end;
   Allocator m_alloc;
 };
+
+namespace debug
+{
+
+void dump(const TokenTree& tt);
+
+}
 
 }  // namespace via
 

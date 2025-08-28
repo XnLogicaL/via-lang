@@ -13,178 +13,376 @@
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
 
-namespace via {
+namespace via
+{
 
-namespace ast {
+namespace ast
+{
 
-struct ExprNode {
-  AbsLocation loc;
-
-  virtual String get_dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
-};
-
-struct StmtNode {
-  AbsLocation loc;
+struct Expr
+{
+  SourceLoc loc;
 
   virtual String get_dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
-struct TypeNode {
-  AbsLocation loc;
+struct Stmt
+{
+  SourceLoc loc;
 
   virtual String get_dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, Box<VisitInfo> vi) const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
-struct NodeExprSym;
-struct TupleBinding {
-  Vec<NodeExprSym*> binds;
-  AbsLocation loc;
+struct Type
+{
+  SourceLoc loc;
+
+  virtual String get_dump(usize& depth) const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
-struct LValue {
-  enum class Kind {
-    Symbol,
-    Tpb,
+struct TupleBinding
+{
+  Vec<const Token*> binds;
+  SourceLoc loc;
+};
+
+struct Path
+{
+  Vec<const Token*> path;
+  SourceLoc loc;
+};
+
+struct LValue
+{
+  enum class Kind
+  {
+    SYM,  // Symbol
+    TPB,  // Tuple binding
+    SP,   // Static path
+    DP,   // Dynamic path
   } kind;
 
-  union {
-    TupleBinding* tpb;
-    NodeExprSym* sym;
+  union
+  {
+    const Token* sym;
+    const Path* path;
+    const TupleBinding* tpb;
   };
+
+  SourceLoc loc;
 };
 
-struct Parameter {
-  NodeExprSym* sym;
-  TypeNode* type;
-  AbsLocation loc;
+struct PlValue
+{
+  enum class Kind
+  {
+    SYM,  // Symbol
+    SP,   // Static path
+    DP,   // Dynamic path
+  } kind;
+
+  union
+  {
+    const Token* sym;
+    const Path* path;
+  };
+
+  SourceLoc loc;
 };
 
-#define COMMON_HEADER(klass)                                    \
-  using klass::loc;                                             \
-  String get_dump(usize& depth) const override {                \
-    todo(#klass "::get_dump");                                  \
-    return {};                                                  \
-  }                                                             \
-  void accept(Visitor& vis, Box<VisitInfo> vi) const override { \
-    vis.visit(*this, std::move(vi));                            \
+struct Parameter
+{
+  const Token* sym;
+  const Type* type;
+  SourceLoc loc;
+};
+
+struct AttributeGroup
+{
+  struct Attribute
+  {
+    const Path* sp;
+    Vec<const Token*> args;
+  };
+
+  Vec<Attribute> ats;
+  SourceLoc loc;
+};
+
+#define COMMON_HEADER(klass)                              \
+  using klass::loc;                                       \
+  String get_dump(usize& depth) const override            \
+  {                                                       \
+    debug::todo(#klass "::get_dump");                     \
+    return {};                                            \
+  }                                                       \
+  void accept(Visitor& vis, VisitInfo* vi) const override \
+  {                                                       \
+    vis.visit(*this, vi);                                 \
   }
 
-struct NodeExprLit : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Token* tok;
+struct ExprLit : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Token* tok;
 };
 
-struct NodeExprSym : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Token* tok;
+struct ExprSymbol : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Token* sym;
 };
 
-struct NodeExprUn : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Token* op;
-  ExprNode* expr;
+struct ExprDynAccess : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr* expr;
+  const Token* index;
 };
 
-struct NodeExprBin : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Token* op;
-  ExprNode *lhs, *rhs;
+struct ExprStaticAccess : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr* expr;
+  const Token* index;
 };
 
-struct NodeExprGroup : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  ExprNode* expr;
+struct ExprUnary : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Token* op;
+  const Expr* expr;
 };
 
-struct NodeExprCall : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  ExprNode* lval;
-  Vec<ExprNode*> args;
+struct ExprBinary : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Token* op;
+  const Expr *lhs, *rhs;
 };
 
-struct NodeExprSubs : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  ExprNode *lval, *idx;
+struct ExprGroup : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr* expr;
 };
 
-struct NodeExprTuple : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Vec<ExprNode*> vals;
+struct ExprCall : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr* lval;
+  Vec<const Expr*> args;
 };
 
-struct NodeStmtScope;
-
-struct NodeExprLambda : public ExprNode {
-  COMMON_HEADER(ExprNode)
-  Vec<Parameter> pms;
-  NodeStmtScope* scope;
+struct ExprSubscript : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr *lval, *idx;
 };
 
-struct NodeStmtVar : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  LValue* lval;
-  ExprNode* rval;
+struct ExprCast : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr* expr;
+  const Type* type;
 };
 
-struct NodeStmtScope : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  Vec<StmtNode*> stmts;
+struct ExprTuple : public Expr
+{
+  COMMON_HEADER(Expr)
+  Vec<const Expr*> vals;
 };
 
-struct NodeStmtIf : public StmtNode {
-  struct Branch {
-    ExprNode* cnd;
-    NodeStmtScope* br;
+struct StmtScope;
+
+struct ExprLambda : public Expr
+{
+  COMMON_HEADER(Expr)
+  Vec<const Parameter*> pms;
+  const StmtScope* scope;
+};
+
+struct StmtVarDecl : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const LValue* lval;
+  const Expr* rval;
+  const Type* type;
+};
+
+struct StmtScope : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  Vec<const Stmt*> stmts;
+};
+
+struct StmtIf : public Stmt
+{
+  struct Branch
+  {
+    const Expr* cnd;
+    const StmtScope* br;
   };
 
-  COMMON_HEADER(StmtNode)
+  COMMON_HEADER(Stmt)
   Vec<Branch> brs;
 };
 
-struct NodeStmtFor : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  NodeStmtVar* init;
-  ExprNode* target;
-  ExprNode* step;
-  NodeStmtScope* br;
+struct StmtFor : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const StmtVarDecl* init;
+  const Expr *target, *step;
+  const StmtScope* br;
 };
 
-struct NodeStmtForEach : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  LValue* lval;
-  ExprNode* iter;
-  NodeStmtScope* br;
+struct StmtForEach : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const LValue* lval;
+  const Expr* iter;
+  const StmtScope* br;
 };
 
-struct NodeStmtWhile : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  ExprNode* cnd;
-  NodeStmtScope* br;
+struct StmtWhile : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const Expr* cnd;
+  const StmtScope* br;
 };
 
-struct NodeStmtAssign : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  ExprNode *lval, *rval;
+struct StmtAssign : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const Token* op;
+  const Expr *lval, *rval;
 };
 
-struct NodeStmtEmpty : public StmtNode {
-  COMMON_HEADER(StmtNode)
+struct StmtReturn : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const Expr* expr;
 };
 
-struct NodeStmtExpr : public StmtNode {
-  COMMON_HEADER(StmtNode)
-  ExprNode* expr;
+struct StmtEnum : public Stmt
+{
+  struct Pair
+  {
+    const Token* sym;
+    const Expr* expr;
+  };
+
+  COMMON_HEADER(Stmt);
+  const Token* sym;
+  const Type* type;
+  Vec<Pair> pairs;
 };
 
-using SyntaxTree = Vec<StmtNode*>;
+struct StmtModule : public Stmt
+{
+  COMMON_HEADER(Stmt);
+  const Token* sym;
+  Vec<const Stmt*> scp;
+};
 
-#undef COMMON_HEADER
+struct StmtImport : public Stmt
+{
+  COMMON_HEADER(Stmt);
+
+  enum class TailKind
+  {
+    Import,          // a::b
+    ImportAll,       // a::*
+    ImportCompound,  // a::{b...}
+  } kind;
+
+  Vec<const Token*> path;
+  Vec<const Token*> tail;
+};
+
+struct StmtFunctionDecl : public Stmt
+{
+  COMMON_HEADER(Stmt);
+
+  const Token* name;
+  const Type* ret;
+  Vec<const Parameter*> parms;
+  const StmtScope* scp;
+};
+
+struct StmtStructDecl : public Stmt
+{
+  COMMON_HEADER(Stmt);
+
+  const Path* sp;
+  Vec<const Stmt*> scp;
+};
+
+struct StmtTypeDecl : public Stmt
+{
+  COMMON_HEADER(Stmt);
+  const Token* sym;
+  const Type* type;
+};
+
+struct StmtUsing : public Stmt
+{
+  COMMON_HEADER(Stmt);
+  const Path* sp;
+  const StmtScope* scp;
+};
+
+struct StmtEmpty : public Stmt
+{
+  COMMON_HEADER(Stmt)
+};
+
+struct StmtExpr : public Stmt
+{
+  COMMON_HEADER(Stmt)
+  const Expr* expr;
+};
+
+struct TypeBuiltin : public Type
+{
+  COMMON_HEADER(Type);
+  const Token* tok;
+};
+
+struct TypeArray : public Type
+{
+  COMMON_HEADER(Type);
+  const Type* type;
+};
+
+struct TypeDict : public Type
+{
+  COMMON_HEADER(Type);
+  const Type *key, *val;
+};
+
+struct TypeFunc : public Type
+{
+  COMMON_HEADER(Type);
+  const Type* ret;
+  Vec<const Parameter*> params;
+};
+
 #undef COMMON_HEADER
 
 }  // namespace ast
+
+using SyntaxTree = Vec<const ast::Stmt*>;
+
+namespace debug
+{
+
+void dump(const SyntaxTree& ast);
+
+}
 
 }  // namespace via
 

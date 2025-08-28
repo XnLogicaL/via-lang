@@ -1,0 +1,34 @@
+import std::io;
+
+mod flags {
+  struct FlagContext {
+    var flags: int = 0;
+
+    fn append(flag: int) -> nil {
+      self.flags |= flag;
+    }
+
+    fn has(flag: int) -> bool {
+      return (self.flags & flag) as bool;
+    }
+  }
+}
+
+mod main {
+  fn call() -> nil {
+    using std::io {
+      enum CLIFlags of int {
+        DoSomeBs = 1 shl 1,
+      }
+
+      var ctx = FlagContext::new();
+      ctx.append(CLIFlags::DoSomeBs);
+
+      var has = ctx.has(CLIFlags::DoSomeBs);
+      print(has);
+    }
+  }
+}
+
+main::call();
+.

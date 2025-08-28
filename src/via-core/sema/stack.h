@@ -6,21 +6,25 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "variable.h"
+#include "local.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
-class Frame final {
+class Frame final
+{
  public:
   Local& top() { return locals.back(); }
+
   Optional<LocalRef> get_local(StringView symbol);
 
   void set_local(StringView symbol,
                  const ast::LValue* lval,
-                 const ast::ExprNode* rval,
-                 const ast::TypeNode* type,
+                 const ast::Expr* rval,
+                 const ast::Type* type,
                  u64 quals = 0ULL);
 
   void save() { sp = locals.size(); }
@@ -31,16 +35,16 @@ class Frame final {
   Vec<Local> locals;
 };
 
-class Stack final {
- public:
-  Frame& top() { return frames.back(); }
-  const Frame& top() const { return frames.back(); }
+namespace stack
+{
 
-  void push(Frame&& frame) { frames.push_back(std::move(frame)); }
+void reset();
+void push(Frame&& frame);
+usize size();
+Frame& top();
+Frame* at(usize pos);
 
- private:
-  Vec<Frame> frames{Frame()};
-};
+}  // namespace stack
 
 }  // namespace sema
 

@@ -1,10 +1,7 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#include "pass_const_fold.h"
+#include "builder.h"
 
-namespace via {
-
-namespace ast {}
-
-}  // namespace via
+namespace via
+{}  // namespace via

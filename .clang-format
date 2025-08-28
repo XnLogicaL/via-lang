@@ -1,2 +1,13 @@
 Language: Cpp
 BasedOnStyle: Chromium
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterNamespace: true
+  AfterFunction: true
+  AfterClass: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterEnum: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false

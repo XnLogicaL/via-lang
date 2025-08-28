@@ -3,16 +3,19 @@
 
 #include "token.h"
 
-namespace via {
+namespace via
+{
 
-AbsLocation Token::location(const Vec<char>& source) const {
+SourceLoc Token::location(const String& source) const
+{
   const usize begin = lexeme - source.cbegin().base();
   const usize end = begin + size;
 
   return {begin, end};
 }
 
-String Token::get_dump() const {
+String Token::get_dump() const
+{
   return fmt::format("[{:<12} '{}']", Convert<Token::Kind>::to_string(kind),
                      (*lexeme == '\0') ? "<eof>" : to_string());
 }

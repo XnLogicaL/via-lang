@@ -12,14 +12,17 @@
 #include "instruction.h"
 #include "stack.h"
 
-namespace via {
+namespace via
+{
 
 class Value;
 class ValueRef;
 
-namespace config {
+namespace config
+{
 
-namespace vm {
+namespace vm
+{
 
 inline constexpr usize register_count = UINT16_MAX + 1;
 
@@ -27,13 +30,15 @@ inline constexpr usize register_count = UINT16_MAX + 1;
 
 }  // namespace config
 
-class Interpreter final {
+class Interpreter final
+{
  public:
   Interpreter(const Header* H)
       : H(H),
         pc(H->bytecode.data()),
         stack(&alloc),
-        regs(config::vm::register_count) {
+        regs(config::vm::register_count)
+  {
     assert(!H->bytecode.empty() && "illformed header (bytecode array empty)");
   }
 

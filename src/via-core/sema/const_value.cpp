@@ -6,11 +6,14 @@
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
-Optional<ConstValue> ConstValue::from_literal_token(const Token& tok) {
+Optional<ConstValue> ConstValue::from_literal_token(const Token& tok)
+{
   switch (tok.kind) {
     case Token::Kind::NIL:
       return ConstValue();
@@ -35,7 +38,8 @@ Optional<ConstValue> ConstValue::from_literal_token(const Token& tok) {
   return nullopt;
 }
 
-String ConstValue::to_string() const {
+String ConstValue::to_string() const
+{
   switch (kind()) {
     case Kind::Nil:
       return "nil";
@@ -54,7 +58,8 @@ String ConstValue::to_string() const {
   return "<unknown-cv-type>";
 }
 
-String ConstValue::get_dump() const {
+String ConstValue::get_dump() const
+{
   return fmt::format(
       "{} [{} {}]",
       apply_ansi_style("constant", Fg::Magenta, Bg::Black, Style::Bold),

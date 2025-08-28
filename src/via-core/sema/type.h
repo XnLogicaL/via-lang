@@ -7,93 +7,174 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
-#include "context.h"
-#include "type_base.h"
-#include "type_operations.h"
-#include "type_primitives.h"
+#include "type_visitor.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
-namespace types {
+class Type
+{
+ public:
+  enum class Kind
+  {
+    Builtin,        // nil/bool/int/float/string
+    Array,          // [T]
+    Dict,           // {K: T}
+    Function,       // fn(...T) -> R
+    User,           // UserType<...>
+    TemplateParam,  // typename T
+    TemplateSpec,   // UserType<T0, T1, ...>
+    SubstParam,     // T -> Arg
+  };
 
-template <typelist Ts>
-using any = Variant<nil_type<Ts>,
-                    bool_type<Ts>,
-                    int_type<Ts>,
-                    float_type<Ts>,
-                    string_type<Ts>,
-                    array_type<Ts>,
-                    dict_type<Ts>>;
+  using InferResult = Result<Type*, String>;
 
-};  // namespace types
+ public:
+  static InferResult from(Allocator& alloc, const ast::Type* type);
+  static InferResult infer(Allocator& alloc, const ast::Expr* expr);
 
-template <types::typelist Ts>
-Optional<types::any<Ts>> infer_type(Context& ctx, const ast::ExprNode* expr) {
-  using types::UnOp;
+ public:
+  bool is_dependent() const { return flags & 0x1; }
+  virtual void accept(TypeVisitor& vis, VisitInfo* vi) = 0;
 
-  if TRY_COERCE (const ast::NodeExprLit, lit, expr) {
-    switch (lit->tok->kind) {
-      case Token::Kind::NIL:
-        return types::nil_type{};
-      case Token::Kind::TRUE:
-      case Token::Kind::FALSE:
-        return types::bool_type{};
-      case Token::Kind::INT:
-      case Token::Kind::XINT:
-      case Token::Kind::BINT:
-        return types::int_type{};
-      case Token::Kind::FP:
-        return types::float_type{};
-      case Token::Kind::STRING:
-        return types::string_type{};
-      default:
-        break;
-    }
+ public:
+  const Kind kind;
+  const u8 flags;
 
-    bug("infer_type: bad literal");
-  } else if TRY_COERCE (const ast::NodeExprSym, sym, expr) {
-    Frame& frame = ctx.stack.top();
-    StringView symbol = sym->tok->to_string_view();
+ protected:
+  explicit Type(Kind kind, u8 flags = 0) : kind(kind), flags(flags) {}
+};
 
-    // TODO: TEMPORARY IMPLEMENTATION
-    if (auto lref = frame.get_local(symbol))
-      return infer_type<Ts>(ctx, lref->local.get_rval());
+struct BuiltinType : Type
+{
+  enum class Kind : u8
+  {
+    Nil,
+    Bool,
+    Int,
+    Float,
+    String
+  };
 
-    bug("infer_type: bad symbol (lookup failure)");
-  } else if TRY_COERCE (const ast::NodeExprUn, un, expr) {
-    UnOp op = types::to_unop(un->op->kind);
+  const Kind bt;
+  explicit BuiltinType(Kind b) : Type(Type::Kind::Builtin, 0), bt(b) {}
 
-    return infer_type<Ts>(ctx, un->expr)
-        .and_then([&op](auto&& ty) -> types::any<Ts> {
-          return std::visit(
-              [op](auto&& t) -> types::any<Ts> {
-                using T = std::decay_t<decltype(t)>;
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
 
-                switch (op) {
-                  case UnOp::Neg:
-                    return types::invalid_or_t<
-                        types::unary_result_t<UnOp::Neg, T>,
-                        types::invalid_type<>>{};
-                  case UnOp::Not:
-                    return types::unary_result_t<UnOp::Not, T>{};
-                  case UnOp::Bnot:
-                    return types::invalid_or_t<
-                        types::unary_result_t<UnOp::Bnot, T>,
-                        types::invalid_type<>>{};
-                  default:
-                    break;
-                }
+struct ArrayType : Type
+{
+  const Type* elem;
+  explicit ArrayType(const Type* elem)
+      : Type(Kind::Array, elem->is_dependent()), elem(elem)
+  {}
 
-                bug("unmapped unary operation");
-              },
-              ty);
-        });
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct DictType : Type
+{
+  const Type *key, *val;
+  explicit DictType(const Type* key, const Type* val)
+      : Type(Kind::Dict, (key->is_dependent() || val->is_dependent())),
+        key(key),
+        val(val)
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct FuncType : Type
+{
+  Vec<const Type*> params;
+  const Type* result;
+
+  static u8 compute_dep(const Vec<const Type*>& ps, const Type* rs)
+  {
+    bool dep = rs->is_dependent();
+    for (auto* p : ps)
+      dep |= p->is_dependent();
+    return dep ? 1 : 0;
   }
 
-  unimplemented("infer_type");
-}
+  explicit FuncType(Vec<const Type*> ps, const Type* rs)
+      : Type(Kind::Function, compute_dep(ps, rs)),
+        params(std::move(ps)),
+        result(rs)
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct UserType : Type
+{
+  const ast::StmtTypeDecl* decl;
+  explicit UserType(const ast::StmtTypeDecl* D) : Type(Kind::User, 0), decl(D)
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct TemplateParamType : Type
+{
+  u32 depth, index;
+  explicit TemplateParamType(u32 d, u32 i)
+      : Type(Kind::TemplateParam, /*dependent*/ 1), depth(d), index(i)
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct TemplateSpecType : Type
+{
+  const ast::StmtTypeDecl* primary;
+  Vec<const Type*> args;
+  explicit TemplateSpecType(const ast::StmtTypeDecl* Prim,
+                            Vec<const Type*> A,
+                            bool dep)
+      : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(Prim), args(std::move(A))
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
+
+struct SubstParamType : Type
+{
+  const TemplateParamType* parm;
+  const Type* replacement;
+  explicit SubstParamType(const TemplateParamType* par, const Type* rs)
+      : Type(Kind::SubstParam, rs->is_dependent()), parm(par), replacement(rs)
+  {}
+
+  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  {
+    vis.visit(*this, vi);
+  }
+};
 
 }  // namespace sema
 

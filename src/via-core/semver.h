@@ -9,14 +9,17 @@
 #include "constexpr_ipow.h"
 #include "convert.h"
 
-namespace via {
+namespace via
+{
 
-struct Version {
+struct Version
+{
   usize major, minor, patch;
 };
 
 template <usize P = 1>
-constexpr Version get_semantic_version() {
+constexpr Version get_semantic_version()
+{
   constexpr usize ver = config::version;
   constexpr usize major = ipow<usize>(100, P);
   constexpr usize minor = ipow<usize>(10, P);
@@ -29,8 +32,10 @@ constexpr Version get_semantic_version() {
 }
 
 template <>
-struct Convert<Version> {
-  static String to_string(const Version& v) {
+struct Convert<Version>
+{
+  static String to_string(const Version& v)
+  {
     return fmt::format("{}.{}.{}", v.major, v.minor, v.patch);
   }
 };

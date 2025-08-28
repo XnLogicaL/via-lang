@@ -8,11 +8,14 @@
 #include <via/types.h>
 #include "ast/ast.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
-enum class ControlPath {
+enum class ControlPath
+{
   None,         // uninterrupted flow
   Return,       // returns from function
   Break,        // breaks a loop/switch
@@ -20,7 +23,7 @@ enum class ControlPath {
   Unreachable,  // statement is never reached
 };
 
-ControlPath analyze_cpath(const ast::StmtNode* stmt);
+ControlPath analyze_cpath(const ast::Stmt* stmt);
 
 }  // namespace sema
 

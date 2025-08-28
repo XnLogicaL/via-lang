@@ -4,24 +4,32 @@
 #include "lexer.h"
 #include <fmt/core.h>
 #include <cstring>
+#include <iostream>
 
-namespace via {
+namespace via
+{
 
 // max 3-char symbol lookahead
-struct TokenReprPair {
+struct TokenReprPair
+{
   const char* str;
   Token::Kind kind;
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-    {"var", Token::Kind::KW_VAR},     {"macro", Token::Kind::KW_MACRO},
-    {"func", Token::Kind::KW_FUNC},   {"type", Token::Kind::KW_TYPE},
-    {"while", Token::Kind::KW_WHILE}, {"for", Token::Kind::KW_FOR},
-    {"if", Token::Kind::KW_IF},       {"in", Token::Kind::KW_IN},
+    {"var", Token::Kind::KW_VAR},     {"fn", Token::Kind::KW_FN},
+    {"type", Token::Kind::KW_TYPE},   {"while", Token::Kind::KW_WHILE},
+    {"for", Token::Kind::KW_FOR},     {"if", Token::Kind::KW_IF},
+    {"in", Token::Kind::KW_IN},       {"of", Token::Kind::KW_OF},
     {"else", Token::Kind::KW_ELSE},   {"do", Token::Kind::KW_DO},
     {"and", Token::Kind::KW_AND},     {"or", Token::Kind::KW_OR},
     {"not", Token::Kind::KW_NOT},     {"shl", Token::Kind::KW_SHL},
-    {"shr", Token::Kind::KW_SHR},
+    {"shr", Token::Kind::KW_SHR},     {"return", Token::Kind::KW_RETURN},
+    {"as", Token::Kind::KW_AS},       {"import", Token::Kind::KW_IMPORT},
+    {"mod", Token::Kind::KW_MODULE},  {"struct", Token::Kind::KW_STRUCT},
+    {"enum", Token::Kind::KW_ENUM},   {"using", Token::Kind::KW_USING},
+    {"bool", Token::Kind::KW_BOOL},   {"int", Token::Kind::KW_INT},
+    {"float", Token::Kind::KW_FLOAT}, {"string", Token::Kind::KW_STRING},
 };
 
 static constexpr TokenReprPair SYMBOLS[] = {
@@ -70,7 +78,8 @@ static constexpr TokenReprPair SYMBOLS[] = {
     {"..=", Token::Kind::CONCATEQUALS},
 };
 
-static bool is_numeric(Token::Kind* kind, char c) {
+static bool is_numeric(Token::Kind* kind, char c)
+{
   switch (*kind) {
       // clang-format off
   case Token::Kind::INT:  return isdigit(c) || (c == '.' && *kind != Token::Kind::FP); // decimal
@@ -84,29 +93,35 @@ static bool is_numeric(Token::Kind* kind, char c) {
   return false;
 }
 
-static bool is_identifier_initial(char c) {
+static bool is_identifier_initial(char c)
+{
   return isalpha(c) || c == '_';
 }
 
-static bool is_identifier(char c) {
+static bool is_identifier(char c)
+{
   return isalnum(c) || c == '_';
 }
 
-static bool is_string_delimiter(char c) {
+static bool is_string_delimiter(char c)
+{
   return c == '"' || c == '\'' || c == '`';
 }
 
-char Lexer::advance(int ahead) {
+char Lexer::advance(int ahead)
+{
   char c = *m_cursor;
   m_cursor += ahead;
   return m_cursor < m_end ? *m_cursor : '\0';
 }
 
-char Lexer::peek(int ahead) {
+char Lexer::peek(int ahead)
+{
   return m_cursor + ahead < m_end ? *(m_cursor + ahead) : '\0';
 }
 
-Token* Lexer::read_number() {
+Token* Lexer::read_number()
+{
   Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::INT;
   token->lexeme = m_cursor;
@@ -143,7 +158,8 @@ decimal:
   return token;
 }
 
-Token* Lexer::read_string() {
+Token* Lexer::read_string()
+{
   Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::STRING;
   token->lexeme = m_cursor;
@@ -167,7 +183,8 @@ Token* Lexer::read_string() {
   return token;
 }
 
-Token* Lexer::read_identifier() {
+Token* Lexer::read_identifier()
+{
   Token* token = m_alloc.emplace<Token>();
   token->kind = Token::Kind::IDENT;
   token->lexeme = m_cursor;
@@ -205,7 +222,8 @@ Token* Lexer::read_identifier() {
   return token;
 }
 
-Token* Lexer::read_symbol() {
+Token* Lexer::read_symbol()
+{
   Token* token = m_alloc.emplace<Token>();
   token->lexeme = m_cursor;
   token->kind = Token::Kind::ILLEGAL;
@@ -246,7 +264,8 @@ found:
   return token;
 }
 
-bool Lexer::skip_comment() {
+bool Lexer::skip_comment()
+{
   if (peek() != '/')
     return false;
 
@@ -286,7 +305,8 @@ bool Lexer::skip_comment() {
   return false;
 }
 
-TokenTree Lexer::tokenize() {
+TokenTree Lexer::tokenize()
+{
   TokenTree toks;
 
   char c;
@@ -321,5 +341,19 @@ TokenTree Lexer::tokenize() {
   toks.push_back(eof);
   return toks;
 }
+
+namespace debug
+{
+
+void dump(const TokenTree& tt)
+{
+  fmt::println("debug::dump(TokenTree):");
+
+  for (const auto* tk : tt) {
+    fmt::println("  {}", tk->get_dump());
+  }
+}
+
+}  // namespace debug
 
 }  // namespace via

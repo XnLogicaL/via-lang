@@ -8,28 +8,34 @@
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
+#include "lexer/lexer.h"
 #include "lexer/location.h"
 
-namespace via {
+namespace via
+{
 
-struct Diagnosis {
-  enum class Kind : u8 {
+struct Diagnosis
+{
+  enum class Kind : u8
+  {
     Info,
     Warn,
     Error,
   };
 
   Kind kind = Kind::Info;
-  AbsLocation loc;  // Absolute location in the source buffer
-  String msg;       // Human-readable message
+  SourceLoc loc;  // Absolute location in the source buffer
+  String msg;     // Human-readable message
 };
 
-class Diagnostics final {
+class DiagnosticContext final
+{
  public:
-  Diagnostics(const String& path, const Vec<char>& file)
-      : m_path(path), m_file(file) {}
+  DiagnosticContext(String path, const String& file)
+      : m_path(path), m_source(file)
+  {}
 
-  VIA_NOCOPY(Diagnostics)
+  NO_COPY(DiagnosticContext)
 
  public:
   /// Emit all queued diagnostics to the provided spdlog logger (or default).
@@ -40,27 +46,28 @@ class Diagnostics final {
 
   /// Push a diagnosis with a pre-formatted message.
   template <Diagnosis::Kind K>
-  void diagnose(AbsLocation loc, String msg) {
+  void report(SourceLoc loc, String msg)
+  {
     m_diags.emplace_back(K, loc, std::move(msg));
   }
 
   /// Push a diagnosis using fmt-style formatting.
   template <Diagnosis::Kind K, typename... Args>
-  void diagnosef(AbsLocation loc,
-                 fmt::format_string<Args...> fmtstr,
-                 Args&&... args) {
+  void report(SourceLoc loc, fmt::format_string<Args...> fmt, Args&&... args)
+  {
     m_diags.emplace_back(
         K, loc,
-        fmt::vformat(fmtstr,
-                     fmt::make_format_args(std::forward<Args>(args)...)));
+        fmt::format(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
   }
 
   [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return m_diags; }
-  [[nodiscard]] const Vec<Diagnosis>& diagnostics() const noexcept {
+  [[nodiscard]] const Vec<Diagnosis>& diagnostics() const noexcept
+  {
     return m_diags;
   }
 
-  [[nodiscard]] bool has_errors() const noexcept {
+  [[nodiscard]] bool has_errors() const noexcept
+  {
     for (const auto& d : m_diags) {
       if (d.kind == Diagnosis::Kind::Error)
         return true;
@@ -70,15 +77,15 @@ class Diagnostics final {
   }
 
   [[nodiscard]] const String& path() const noexcept { return m_path; }
-  [[nodiscard]] const Vec<char>& file() const noexcept { return m_file; }
+  [[nodiscard]] const String& source() const noexcept { return m_source; }
 
  private:
   // Helper to pretty-print a single diagnosis line with source context.
   void emit_one(const Diagnosis& d, spdlog::logger* logger) const;
 
  private:
-  const String& m_path;
-  const Vec<char>& m_file;
+  String m_path;
+  const String& m_source;
   Vec<Diagnosis> m_diags{};
 };
 

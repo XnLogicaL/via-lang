@@ -7,12 +7,14 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
 // Taken from (slightly modified):
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::integral T>
-constexpr Optional<T> stoi(StringView str, usize* pos = NULL) {
+constexpr Optional<T> stoi(StringView str, usize* pos = nullptr)
+{
   using namespace std::literals;
   const auto digits = "0123456789abcdefABCDEF"sv;
   const usize begin = str.find_first_of(digits);
@@ -67,7 +69,7 @@ constexpr Optional<T> stoi(StringView str, usize* pos = NULL) {
     result = result * base + digit;
   }
 
-  if (pos != NULL)
+  if (pos != nullptr)
     *pos = begin +
            (str.starts_with("0x") || str.starts_with("0X") ||
                     str.starts_with("0b") || str.starts_with("0B")

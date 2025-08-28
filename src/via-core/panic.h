@@ -8,12 +8,14 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
 [[noreturn]] void panic(String message);
 
 template <typename... Args>
-[[noreturn]] void panic(fmt::format_string<Args...> fmt, Args&&... args) {
+[[noreturn]] void panic(fmt::format_string<Args...> fmt, Args&&... args)
+{
   panic(fmt::format(fmt, std::forward<Args>(args)...));
 }
 

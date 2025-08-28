@@ -7,19 +7,21 @@
 #include <via/via.h>
 #include <argparse/argparse.hpp>
 
-namespace via {
+namespace via
+{
 
-namespace cli {
+namespace cli
+{
 
-inline argparse::ArgumentParser& get_cli_app() {
+inline auto& get_cli_app()
+{
   static argparse::ArgumentParser cli(
-      "via",
-      via::Convert<via::Version>::to_string(via::get_semantic_version()));
+      "via", Convert<Version>::to_string(get_semantic_version()));
 
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--emit", "-e")
       .nargs(1)
-      .choices("none", "ttree", "ast", "header")
+      .choices("none", "ttree", "ast", "ir")
       .default_value("none")
       .help("Emission type");
 

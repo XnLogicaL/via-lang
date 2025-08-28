@@ -8,12 +8,14 @@
 #include <via/types.h>
 #include "convert.h"
 
-namespace via {
+namespace via
+{
 
 // special operand symbols:
 // [*T] register containing T
 // [$T] constant containing T
-enum class Opcode : u16 {
+enum class Opcode : u16
+{
   // meta opcodes
   NOP,        // nop
   HALT,       // halt
@@ -230,7 +232,8 @@ enum class Opcode : u16 {
   PCALLDYNAMIC,  // pcalldynamic <inst: *> <idx> <argc>
 };
 
-struct Instruction {
+struct Instruction
+{
   Opcode op = Opcode::NOP;
   u16 a, b, c;
 
@@ -238,7 +241,8 @@ struct Instruction {
 };
 
 template <>
-struct Convert<Instruction> {
+struct Convert<Instruction>
+{
   static String to_string(const Instruction& insn) { return insn.get_dump(); }
 };
 

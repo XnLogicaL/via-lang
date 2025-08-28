@@ -6,14 +6,28 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "context.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace config
+{
 
-u16 alloc_register(Context& ctx);
-void free_register(Context& ctx, u16 reg);
+inline constexpr usize register_count = UINT16_MAX;
+
+}
+
+namespace sema
+{
+
+namespace registers
+{
+
+void reset();
+u16 alloc();
+void free(u16 reg);
+
+}  // namespace registers
 
 }  // namespace sema
 

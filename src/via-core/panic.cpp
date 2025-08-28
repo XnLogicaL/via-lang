@@ -3,10 +3,12 @@
 
 #include "panic.h"
 
-namespace via {
+namespace via
+{
 
-[[noreturn]] void panic(String message) {
-  spdlog::error("program panic: {}", message);
+[[noreturn]] void panic(String message)
+{
+  spdlog::error("panic: {}", message);
   std::terminate();
 }
 

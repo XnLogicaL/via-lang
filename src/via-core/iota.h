@@ -7,10 +7,12 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
 template <std::integral T = int>
-constexpr T iota() noexcept {
+constexpr T iota() noexcept
+{
   static T old(0);
   return old++;
 }

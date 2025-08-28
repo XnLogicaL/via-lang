@@ -6,9 +6,11 @@
 #include <iomanip>
 #include "color.h"
 
-namespace via {
+namespace via
+{
 
-enum class Operand : u8 {
+enum class Operand : u8
+{
   None,
   Generic,
   Register,
@@ -16,11 +18,13 @@ enum class Operand : u8 {
   Label,
 };
 
-struct OperandLayout {
+struct OperandLayout
+{
   Operand a = Operand::None, b = Operand::None, c = Operand::None;
 };
 
-struct InstructionLayout {
+struct InstructionLayout
+{
   const char* op_str;
   Opcode opc;
   OperandLayout ol;
@@ -349,7 +353,8 @@ static constexpr InstructionLayout insn_layout_map[] = {
     // ...
 };
 
-static char get_operand_prefix(Operand kind) {
+static char get_operand_prefix(Operand kind)
+{
   switch (kind) {
     case Operand::Label:
       return 'L';
@@ -364,9 +369,10 @@ static char get_operand_prefix(Operand kind) {
   return 0x00;
 }
 
-String Instruction::get_dump() const {
+String Instruction::get_dump() const
+{
   const u16 ops[] = {a, b, c};
-  const InstructionLayout* il = NULL;
+  const InstructionLayout* il = nullptr;
 
   for (const auto& pair : insn_layout_map) {
     if (pair.opc == op) {
@@ -375,7 +381,7 @@ String Instruction::get_dump() const {
     }
   }
 
-  if (il == NULL) {
+  if (il == nullptr) {
     return "<unmapped-instruction>";
   }
 

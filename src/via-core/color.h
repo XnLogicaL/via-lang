@@ -6,10 +6,12 @@
 
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
 // ANSI text foreground color codes.
-enum class Fg {
+enum class Fg
+{
   Red = 31,
   Green = 32,
   Blue = 34,
@@ -21,7 +23,8 @@ enum class Fg {
 };
 
 // ANSI text background color codes.
-enum class Bg {
+enum class Bg
+{
   Red = 41,
   Green = 42,
   Blue = 44,
@@ -33,7 +36,8 @@ enum class Bg {
 };
 
 // ANSI text style color codes.
-enum class Style {
+enum class Style
+{
   Reset = 0,
   Bold = 1,
   Faint = 2,
@@ -44,7 +48,8 @@ enum class Style {
 constexpr String apply_ansi_style(String str,
                                   Fg foreground_color,
                                   Bg background_color = Bg::Black,
-                                  Style style = Style::Reset) {
+                                  Style style = Style::Reset)
+{
   // Construct ANSI escape code and apply the color formatting to the text
   return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
          std::to_string(static_cast<int>(foreground_color)) + ";" +

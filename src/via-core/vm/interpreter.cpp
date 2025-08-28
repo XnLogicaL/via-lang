@@ -5,34 +5,42 @@
 #include "debug.h"
 #include "value.h"
 
-namespace via {
+namespace via
+{
 
-Stack<uptr>& Interpreter::get_stack() {
+Stack<uptr>& Interpreter::get_stack()
+{
   return stack;
 }
 
-Allocator& Interpreter::get_allocator() {
+Allocator& Interpreter::get_allocator()
+{
   return alloc;
 }
 
-ValueRef Interpreter::get_register(u16 reg) {
+ValueRef Interpreter::get_register(u16 reg)
+{
   return regs[reg]->make_ref();
 }
 
-void Interpreter::set_register(u16 reg, ValueRef val) {
+void Interpreter::set_register(u16 reg, ValueRef val)
+{
   regs[reg] = val.get();
 }
 
-ValueRef Interpreter::new_local(ValueRef val) {
+ValueRef Interpreter::new_local(ValueRef val)
+{
   stack.push((uptr)val.get());
   return get_local(stack.size() - 1);
 }
 
-void Interpreter::set_local(usize sp, ValueRef val) {
+void Interpreter::set_local(usize sp, ValueRef val)
+{
   *stack.at(sp) = reinterpret_cast<uptr>(val.get());
 }
 
-ValueRef Interpreter::get_local(usize sp) {
+ValueRef Interpreter::get_local(usize sp)
+{
   return reinterpret_cast<Value*>(stack.at(sp))->make_ref();
 }
 
@@ -116,17 +124,18 @@ ValueRef Interpreter::get_local(usize sp) {
 
 #define L(id) reinterpret_cast<Value*>(stack.at(id))
 #define LSET(id, val) *stack.at(id) = reinterpret_cast<uptr>(val);
-#define LFREE(id)    \
-  if (R(id) != NULL) \
+#define LFREE(id)       \
+  if (R(id) != nullptr) \
     reinterpret_cast<Value*>(stack.at(id))->rc--;
 
 #define R(id) regs[id]
 #define RSET(id, val) regs[id] = val
-#define RFREE(id)               \
-  [[likely]] if (R(id) != NULL) \
+#define RFREE(id)                  \
+  [[likely]] if (R(id) != nullptr) \
     R(id)->rc--;
 
-void Interpreter::execute() {
+void Interpreter::execute()
+{
   using enum Opcode;
 
 #ifdef HAS_CGOTO
@@ -145,45 +154,54 @@ dispatch:
 #else
   switch (pc->op) {
 #endif
-    CASE(NOP) {
+    CASE(NOP)
+    {
       goto dispatch;
     }
-    CASE(HALT) {
+    CASE(HALT)
+    {
       goto exit;
     }
     CASE(EXTRAARG1)
     CASE(EXTRAARG2)
-    CASE(EXTRAARG3) {
-      bug("use of reserved opcode");
+    CASE(EXTRAARG3)
+    {
+      debug::bug("use of reserved opcode");
     }
-    CASE(MOVE) {
+    CASE(MOVE)
+    {
       RFREE(a);
       RSET(a, R(b));
-      RSET(b, NULL);
+      RSET(b, nullptr);
       goto dispatch;
     }
-    CASE(XCHG) {
+    CASE(XCHG)
+    {
       Value* ra = R(a);
       RSET(a, R(b));
       RSET(b, ra);
       goto dispatch;
     }
-    CASE(COPY) {
+    CASE(COPY)
+    {
       RFREE(a);
       RSET(a, R(b)->clone());
       goto dispatch;
     }
-    CASE(COPYREF) {
+    CASE(COPYREF)
+    {
       RFREE(a);
       RSET(a, R(b));
       goto dispatch;
     }
-    CASE(LOADTRUE) {
+    CASE(LOADTRUE)
+    {
       RFREE(a);
       RSET(a, Value::construct(this, true));
       goto dispatch;
     }
-    CASE(LOADFALSE) {
+    CASE(LOADFALSE)
+    {
       RFREE(a);
       RSET(a, Value::construct(this, false));
       goto dispatch;
@@ -194,522 +212,651 @@ dispatch:
     CASE(NEWARR2)
     CASE(NEWDICT)
     CASE(NEWTUPLE)
-    CASE(NEWCLOSURE) {
-      todo("implement opcodes");
+    CASE(NEWCLOSURE)
+    {
+      debug::todo("implement opcodes");
     }
-    CASE(IADD1) {
+    CASE(IADD1)
+    {
       R(a)->u.int_ += R(b)->u.int_;
       goto dispatch;
     }
-    CASE(IADD2) {
+    CASE(IADD2)
+    {
       R(a)->u.int_ = R(b)->u.int_ + R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IADD1K) {
+    CASE(IADD1K)
+    {
       R(a)->u.int_ += K(b)->u.int_;
       goto dispatch;
     }
-    CASE(IADD2K) {
+    CASE(IADD2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ + K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FADD1) {
+    CASE(FADD1)
+    {
       R(a)->u.float_ += R(b)->u.float_;
       goto dispatch;
     }
-    CASE(FADD2) {
+    CASE(FADD2)
+    {
       R(a)->u.float_ = R(b)->u.float_ + R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FADD1K) {
+    CASE(FADD1K)
+    {
       R(a)->u.float_ += K(b)->u.float_;
       goto dispatch;
     }
-    CASE(FADD2K) {
+    CASE(FADD2K)
+    {
       R(a)->u.float_ = R(b)->u.float_ + K(c)->u.float_;
       goto dispatch;
     }
-    CASE(ISUB1) {
+    CASE(ISUB1)
+    {
       R(a)->u.int_ -= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(ISUB2) {
+    CASE(ISUB2)
+    {
       R(a)->u.int_ = R(b)->u.int_ - R(c)->u.int_;
       goto dispatch;
     }
-    CASE(ISUB1K) {
+    CASE(ISUB1K)
+    {
       R(a)->u.int_ -= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(ISUB2K) {
+    CASE(ISUB2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ - K(c)->u.int_;
       goto dispatch;
     }
-    CASE(ISUB2KX) {
+    CASE(ISUB2KX)
+    {
       R(a)->u.int_ = K(b)->u.int_ - R(c)->u.int_;
       goto dispatch;
     }
-    CASE(FSUB1) {
+    CASE(FSUB1)
+    {
       R(a)->u.float_ -= R(b)->u.float_;
       goto dispatch;
     }
-    CASE(FSUB2) {
+    CASE(FSUB2)
+    {
       R(a)->u.float_ = R(b)->u.float_ - R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FSUB1K) {
+    CASE(FSUB1K)
+    {
       R(a)->u.float_ -= K(b)->u.float_;
       goto dispatch;
     }
-    CASE(FSUB2K) {
+    CASE(FSUB2K)
+    {
       R(a)->u.float_ = R(b)->u.float_ - K(c)->u.float_;
       goto dispatch;
     }
-    CASE(FSUB2KX) {
+    CASE(FSUB2KX)
+    {
       R(a)->u.float_ = K(b)->u.float_ - R(c)->u.float_;
       goto dispatch;
     }
-    CASE(IMUL1) {
+    CASE(IMUL1)
+    {
       R(a)->u.int_ *= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(IMUL2) {
+    CASE(IMUL2)
+    {
       R(a)->u.int_ = R(b)->u.int_ * R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IMUL1K) {
+    CASE(IMUL1K)
+    {
       R(a)->u.int_ *= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(IMUL2K) {
+    CASE(IMUL2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ * K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FMUL1) {
+    CASE(FMUL1)
+    {
       R(a)->u.float_ *= R(b)->u.float_;
       goto dispatch;
     }
-    CASE(FMUL2) {
+    CASE(FMUL2)
+    {
       R(a)->u.float_ = R(b)->u.float_ * R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FMUL1K) {
+    CASE(FMUL1K)
+    {
       R(a)->u.float_ *= K(b)->u.float_;
       goto dispatch;
     }
-    CASE(FMUL2K) {
+    CASE(FMUL2K)
+    {
       R(a)->u.float_ = R(b)->u.float_ * K(c)->u.float_;
       goto dispatch;
     }
-    CASE(IDIV1) {
+    CASE(IDIV1)
+    {
       R(a)->u.int_ /= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(IDIV2) {
+    CASE(IDIV2)
+    {
       R(a)->u.int_ = R(b)->u.int_ / R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IDIV1K) {
+    CASE(IDIV1K)
+    {
       R(a)->u.int_ /= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(IDIV2K) {
+    CASE(IDIV2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ / K(c)->u.int_;
       goto dispatch;
     }
-    CASE(IDIV2KX) {
+    CASE(IDIV2KX)
+    {
       R(a)->u.int_ = K(b)->u.int_ / R(c)->u.int_;
       goto dispatch;
     }
-    CASE(FDIV1) {
+    CASE(FDIV1)
+    {
       R(a)->u.float_ /= R(b)->u.float_;
       goto dispatch;
     }
-    CASE(FDIV2) {
+    CASE(FDIV2)
+    {
       R(a)->u.float_ = R(b)->u.float_ / R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FDIV1K) {
+    CASE(FDIV1K)
+    {
       R(a)->u.float_ /= K(b)->u.float_;
       goto dispatch;
     }
-    CASE(FDIV2K) {
+    CASE(FDIV2K)
+    {
       R(a)->u.float_ = R(b)->u.float_ / K(c)->u.float_;
       goto dispatch;
     }
-    CASE(FDIV2KX) {
+    CASE(FDIV2KX)
+    {
       R(a)->u.float_ = K(b)->u.float_ / R(c)->u.float_;
       goto dispatch;
     }
-    CASE(IPOW1) {
+    CASE(IPOW1)
+    {
       R(a)->u.int_ = ipow(R(a)->u.int_, R(b)->u.int_);
       goto dispatch;
     }
-    CASE(IPOW2) {
+    CASE(IPOW2)
+    {
       R(a)->u.int_ = ipow(R(b)->u.int_, R(c)->u.int_);
       goto dispatch;
     }
-    CASE(IPOW1K) {
+    CASE(IPOW1K)
+    {
       R(a)->u.int_ = ipow(R(a)->u.int_, K(b)->u.int_);
       goto dispatch;
     }
-    CASE(IPOW2K) {
+    CASE(IPOW2K)
+    {
       R(a)->u.int_ = ipow(R(b)->u.int_, K(c)->u.int_);
       goto dispatch;
     }
-    CASE(IPOW2KX) {
+    CASE(IPOW2KX)
+    {
       R(a)->u.int_ = ipow(K(b)->u.int_, R(c)->u.int_);
       goto dispatch;
     }
-    CASE(FPOW1) {
+    CASE(FPOW1)
+    {
       R(a)->u.float_ = std::pow(R(a)->u.float_, R(b)->u.float_);
       goto dispatch;
     }
-    CASE(FPOW2) {
+    CASE(FPOW2)
+    {
       R(a)->u.float_ = std::pow(R(b)->u.float_, R(c)->u.float_);
       goto dispatch;
     }
-    CASE(FPOW1K) {
+    CASE(FPOW1K)
+    {
       R(a)->u.float_ = std::pow(R(a)->u.float_, K(b)->u.float_);
       goto dispatch;
     }
-    CASE(FPOW2K) {
+    CASE(FPOW2K)
+    {
       R(a)->u.float_ = std::pow(R(b)->u.float_, K(c)->u.float_);
       goto dispatch;
     }
-    CASE(FPOW2KX) {
+    CASE(FPOW2KX)
+    {
       R(a)->u.float_ = std::pow(K(b)->u.float_, R(c)->u.float_);
       goto dispatch;
     }
-    CASE(IMOD1) {
+    CASE(IMOD1)
+    {
       R(a)->u.int_ = R(a)->u.int_ % R(b)->u.int_;
       goto dispatch;
     }
-    CASE(IMOD2) {
+    CASE(IMOD2)
+    {
       R(a)->u.int_ = R(b)->u.int_ % R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IMOD1K) {
+    CASE(IMOD1K)
+    {
       R(a)->u.int_ = R(a)->u.int_ % K(b)->u.int_;
       goto dispatch;
     }
-    CASE(IMOD2K) {
+    CASE(IMOD2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ % K(c)->u.int_;
       goto dispatch;
     }
-    CASE(IMOD2KX) {
+    CASE(IMOD2KX)
+    {
       R(a)->u.int_ = K(b)->u.int_ % R(c)->u.int_;
       goto dispatch;
     }
-    CASE(FMOD1) {
+    CASE(FMOD1)
+    {
       R(a)->u.float_ = std::fmod(R(a)->u.float_, R(b)->u.float_);
       goto dispatch;
     }
-    CASE(FMOD2) {
+    CASE(FMOD2)
+    {
       R(a)->u.float_ = std::fmod(R(b)->u.float_, R(c)->u.float_);
       goto dispatch;
     }
-    CASE(FMOD1K) {
+    CASE(FMOD1K)
+    {
       R(a)->u.float_ = std::fmod(R(a)->u.float_, K(b)->u.float_);
       goto dispatch;
     }
-    CASE(FMOD2K) {
+    CASE(FMOD2K)
+    {
       R(a)->u.float_ = std::fmod(R(b)->u.float_, K(c)->u.float_);
       goto dispatch;
     }
-    CASE(FMOD2KX) {
+    CASE(FMOD2KX)
+    {
       R(a)->u.float_ = std::fmod(K(b)->u.float_, R(c)->u.float_);
       goto dispatch;
     }
-    CASE(INEG) {
+    CASE(INEG)
+    {
       R(a)->u.int_ = -R(b)->u.int_;
       goto dispatch;
     }
-    CASE(INEGK) {
+    CASE(INEGK)
+    {
       R(a)->u.int_ = -K(b)->u.int_;
       goto dispatch;
     }
-    CASE(FNEG) {
+    CASE(FNEG)
+    {
       R(a)->u.float_ = -R(b)->u.float_;
       goto dispatch;
     }
-    CASE(FNEGK) {
+    CASE(FNEGK)
+    {
       R(a)->u.float_ = -K(b)->u.float_;
       goto dispatch;
     }
-    CASE(BAND1) {
+    CASE(BAND1)
+    {
       R(a)->u.int_ &= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BAND2) {
+    CASE(BAND2)
+    {
       R(a)->u.int_ = R(b)->u.int_ & R(c)->u.int_;
       goto dispatch;
     }
-    CASE(BAND1K) {
+    CASE(BAND1K)
+    {
       R(a)->u.int_ &= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(BAND2K) {
+    CASE(BAND2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ & K(c)->u.int_;
       goto dispatch;
     }
-    CASE(BOR1) {
+    CASE(BOR1)
+    {
       R(a)->u.int_ |= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BOR2) {
+    CASE(BOR2)
+    {
       R(a)->u.int_ = R(b)->u.int_ | R(c)->u.int_;
       goto dispatch;
     }
-    CASE(BOR1K) {
+    CASE(BOR1K)
+    {
       R(a)->u.int_ |= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(BOR2K) {
+    CASE(BOR2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ | K(c)->u.int_;
       goto dispatch;
     }
-    CASE(BXOR1) {
+    CASE(BXOR1)
+    {
       R(a)->u.int_ ^= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BXOR2) {
+    CASE(BXOR2)
+    {
       R(a)->u.int_ = R(b)->u.int_ ^ R(c)->u.int_;
       goto dispatch;
     }
-    CASE(BXOR1K) {
+    CASE(BXOR1K)
+    {
       R(a)->u.int_ ^= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(BXOR2K) {
+    CASE(BXOR2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ ^ K(c)->u.int_;
       goto dispatch;
     }
-    CASE(BSHL1) {
+    CASE(BSHL1)
+    {
       R(a)->u.int_ <<= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BSHL2) {
+    CASE(BSHL2)
+    {
       R(a)->u.int_ = R(b)->u.int_ << R(c)->u.int_;
       goto dispatch;
     }
-    CASE(BSHL1K) {
+    CASE(BSHL1K)
+    {
       R(a)->u.int_ <<= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(BSHL2K) {
+    CASE(BSHL2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ << K(c)->u.int_;
       goto dispatch;
     }
-    CASE(BSHR1) {
+    CASE(BSHR1)
+    {
       R(a)->u.int_ >>= R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BSHR2) {
+    CASE(BSHR2)
+    {
       R(a)->u.int_ = R(b)->u.int_ >> R(c)->u.int_;
       goto dispatch;
     }
-    CASE(BSHR1K) {
+    CASE(BSHR1K)
+    {
       R(a)->u.int_ >>= K(b)->u.int_;
       goto dispatch;
     }
-    CASE(BSHR2K) {
+    CASE(BSHR2K)
+    {
       R(a)->u.int_ = R(b)->u.int_ >> K(c)->u.int_;
       goto dispatch;
     }
-    CASE(BNOT) {
+    CASE(BNOT)
+    {
       R(a)->u.int_ = ~R(b)->u.int_;
       goto dispatch;
     }
-    CASE(BNOTK) {
+    CASE(BNOTK)
+    {
       R(a)->u.int_ = K(b)->u.int_;
       goto dispatch;
     }
-    CASE(AND) {
+    CASE(AND)
+    {
       R(a)->u.boolean = R(b)->u.boolean && R(c)->u.boolean;
       goto dispatch;
     }
-    CASE(ANDK) {
+    CASE(ANDK)
+    {
       R(a)->u.boolean = R(b)->u.boolean && K(c)->u.boolean;
       goto dispatch;
     }
-    CASE(OR) {
+    CASE(OR)
+    {
       R(a)->u.boolean = R(b)->u.boolean || R(c)->u.boolean;
       goto dispatch;
     }
-    CASE(ORK) {
+    CASE(ORK)
+    {
       R(a)->u.boolean = R(b)->u.boolean || K(c)->u.boolean;
       goto dispatch;
     }
-    CASE(IEQ) {
+    CASE(IEQ)
+    {
       R(a)->u.boolean = R(b)->u.int_ == R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IEQK) {
+    CASE(IEQK)
+    {
       R(a)->u.boolean = R(b)->u.int_ == K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FEQ) {
+    CASE(FEQ)
+    {
       R(a)->u.boolean = R(b)->u.float_ == R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FEQK) {
+    CASE(FEQK)
+    {
       R(a)->u.boolean = R(b)->u.float_ == K(c)->u.float_;
       goto dispatch;
     }
-    CASE(BEQ) {
+    CASE(BEQ)
+    {
       R(a)->u.boolean = R(b)->u.boolean == R(c)->u.boolean;
       goto dispatch;
     }
-    CASE(BEQK) {
+    CASE(BEQK)
+    {
       R(a)->u.boolean = R(b)->u.boolean == K(c)->u.boolean;
       goto dispatch;
     }
-    CASE(SEQ) {
+    CASE(SEQ)
+    {
       R(a)->u.boolean = std::strcmp(R(b)->u.string, R(c)->u.string) == 0;
       goto dispatch;
     }
-    CASE(SEQK) {
+    CASE(SEQK)
+    {
       R(a)->u.boolean = std::strcmp(R(b)->u.string, K(c)->u.string) == 0;
       goto dispatch;
     }
-    CASE(INEQ) {
+    CASE(INEQ)
+    {
       R(a)->u.boolean = R(b)->u.int_ != R(c)->u.int_;
       goto dispatch;
     }
-    CASE(INEQK) {
+    CASE(INEQK)
+    {
       R(a)->u.boolean = R(b)->u.int_ != K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FNEQ) {
+    CASE(FNEQ)
+    {
       R(a)->u.boolean = R(b)->u.float_ != R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FNEQK) {
+    CASE(FNEQK)
+    {
       R(a)->u.boolean = R(b)->u.float_ != K(c)->u.float_;
       goto dispatch;
     }
-    CASE(BNEQ) {
+    CASE(BNEQ)
+    {
       R(a)->u.boolean = R(b)->u.boolean != R(c)->u.boolean;
       goto dispatch;
     }
-    CASE(BNEQK) {
+    CASE(BNEQK)
+    {
       R(a)->u.boolean = R(b)->u.boolean != K(c)->u.boolean;
       goto dispatch;
     }
-    CASE(SNEQ) {
+    CASE(SNEQ)
+    {
       R(a)->u.boolean = std::strcmp(R(b)->u.string, R(c)->u.string) == 1;
       goto dispatch;
     }
-    CASE(SNEQK) {
+    CASE(SNEQK)
+    {
       R(a)->u.boolean = std::strcmp(R(b)->u.string, K(c)->u.string) == 1;
       goto dispatch;
     }
-    CASE(IS) {
+    CASE(IS)
+    {
       R(a)->u.boolean = R(b) == R(c);
       goto dispatch;
     }
-    CASE(ILT) {
+    CASE(ILT)
+    {
       R(a)->u.boolean = R(b)->u.int_ < R(c)->u.int_;
       goto dispatch;
     }
-    CASE(ILTK) {
+    CASE(ILTK)
+    {
       R(a)->u.boolean = R(b)->u.int_ < K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FLT) {
+    CASE(FLT)
+    {
       R(a)->u.boolean = R(b)->u.float_ < R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FLTK) {
+    CASE(FLTK)
+    {
       R(a)->u.boolean = R(b)->u.float_ < K(c)->u.float_;
       goto dispatch;
     }
-    CASE(IGT) {
+    CASE(IGT)
+    {
       R(a)->u.boolean = R(b)->u.int_ > R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IGTK) {
+    CASE(IGTK)
+    {
       R(a)->u.boolean = R(b)->u.int_ > K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FGT) {
+    CASE(FGT)
+    {
       R(a)->u.boolean = R(b)->u.float_ > R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FGTK) {
+    CASE(FGTK)
+    {
       R(a)->u.boolean = R(b)->u.float_ > K(c)->u.float_;
       goto dispatch;
     }
-    CASE(ILTEQ) {
+    CASE(ILTEQ)
+    {
       R(a)->u.boolean = R(b)->u.int_ <= R(c)->u.int_;
       goto dispatch;
     }
-    CASE(ILTEQK) {
+    CASE(ILTEQK)
+    {
       R(a)->u.boolean = R(b)->u.int_ <= K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FLTEQ) {
+    CASE(FLTEQ)
+    {
       R(a)->u.boolean = R(b)->u.float_ <= R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FLTEQK) {
+    CASE(FLTEQK)
+    {
       R(a)->u.boolean = R(b)->u.float_ <= K(c)->u.float_;
       goto dispatch;
     }
-    CASE(IGTEQ) {
+    CASE(IGTEQ)
+    {
       R(a)->u.boolean = R(b)->u.int_ >= R(c)->u.int_;
       goto dispatch;
     }
-    CASE(IGTEQK) {
+    CASE(IGTEQK)
+    {
       R(a)->u.boolean = R(b)->u.int_ >= K(c)->u.int_;
       goto dispatch;
     }
-    CASE(FGTEQ) {
+    CASE(FGTEQ)
+    {
       R(a)->u.boolean = R(b)->u.float_ >= R(c)->u.float_;
       goto dispatch;
     }
-    CASE(FGTEQK) {
+    CASE(FGTEQK)
+    {
       R(a)->u.boolean = R(b)->u.float_ >= K(c)->u.float_;
       goto dispatch;
     }
-    CASE(NOT) {
+    CASE(NOT)
+    {
       R(a)->u.boolean = !R(b)->u.boolean;
       goto dispatch;
     }
-    CASE(JMP) {
+    CASE(JMP)
+    {
       pc = lbt[a];
       goto dispatch;
     }
-    CASE(JMPIF) {
+    CASE(JMPIF)
+    {
       if (R(a)->as_cbool())
         pc = lbt[b];
       goto dispatch;
     }
-    CASE(PUSH) {
+    CASE(PUSH)
+    {
       new_local(R(a)->make_ref());
       goto dispatch;
     }
-    CASE(PUSHK) {
+    CASE(PUSHK)
+    {
       new_local(K(a));
       goto dispatch;
     }
     CASE(GETARG)
     CASE(GETARGREF)
-    CASE(SETARG) {
-      todo("implement opcodes");
+    CASE(SETARG)
+    {
+      debug::todo("implement opcodes");
     }
-    CASE(GETLOCAL) {
+    CASE(GETLOCAL)
+    {
       RFREE(a);
       RSET(a, L(b)->clone());
       goto dispatch;
     }
-    CASE(GETLOCALREF) {
+    CASE(GETLOCALREF)
+    {
       RFREE(a);
       RSET(a, L(b));
       goto dispatch;
     }
-    CASE(SETLOCAL) {
+    CASE(SETLOCAL)
+    {
       LFREE(b);
       LSET(b, R(a));
       goto dispatch;
@@ -754,14 +901,15 @@ dispatch:
     CASE(CALLSTATIC)
     CASE(PCALLSTATIC)
     CASE(CALLDYNAMIC)
-    CASE(PCALLDYNAMIC) {
-      todo("implement opcodes");
+    CASE(PCALLDYNAMIC)
+    {
+      debug::todo("implement opcodes");
     }
 #ifdef HAS_CGOTO
   }
 #else
     default:
-      bug("unknown opcode");
+      debug::bug("unknown opcode");
       break;
   }
 #endif

@@ -5,26 +5,31 @@
 #include "interpreter.h"
 #include "value.h"
 
-namespace via {
+namespace via
+{
 
-ValueRef::ValueRef(Interpreter* ctx) : ptr(NULL) {}
+ValueRef::ValueRef(Interpreter* ctx) : ptr(nullptr) {}
 ValueRef::ValueRef(Interpreter* ctx, Value* ptr) : ptr(ptr) {}
 
-ValueRef::ValueRef(const ValueRef& other) : ptr(other.ptr) {
+ValueRef::ValueRef(const ValueRef& other) : ptr(other.ptr)
+{
   if (!other.is_null())
     other.ptr->rc++;
 }
 
-ValueRef::ValueRef(ValueRef&& other) : ptr(other.ptr) {
-  other.ptr = NULL;
+ValueRef::ValueRef(ValueRef&& other) : ptr(other.ptr)
+{
+  other.ptr = nullptr;
 }
 
-ValueRef::~ValueRef() {
+ValueRef::~ValueRef()
+{
   if (!is_null())
     free();
 }
 
-ValueRef& ValueRef::operator=(const ValueRef& other) {
+ValueRef& ValueRef::operator=(const ValueRef& other)
+{
   if (this != &other) {
     if (!other.is_null())
       other.ptr->rc++;
@@ -38,43 +43,49 @@ ValueRef& ValueRef::operator=(const ValueRef& other) {
   return *this;
 }
 
-ValueRef& ValueRef::operator=(ValueRef&& other) {
+ValueRef& ValueRef::operator=(ValueRef&& other)
+{
   if (this != &other) {
     if (!is_null())
       free();
 
     ptr = other.ptr;
-    other.ptr = NULL;
+    other.ptr = nullptr;
   }
 
   return *this;
 }
 
-Value* ValueRef::operator->() const {
-  assert(!is_null() && "attempt to read NULL reference (member access)");
+Value* ValueRef::operator->() const
+{
+  assert(!is_null() && "attempt to read nullptr reference (member access)");
   return ptr;
 }
 
-Value& ValueRef::operator*() const {
-  assert(!is_null() && "attempt to read NULL reference (dereference)");
+Value& ValueRef::operator*() const
+{
+  assert(!is_null() && "attempt to read nullptr reference (dereference)");
   return *ptr;
 }
 
-void ValueRef::free() {
-  assert(!is_null() && "free called on NULL reference");
+void ValueRef::free()
+{
+  assert(!is_null() && "free called on nullptr reference");
 
   if (--ptr->rc == 0) {
     ptr->free();
-    ptr = NULL;
+    ptr = nullptr;
   }
 }
 
-bool ValueRef::is_null() const {
-  return ptr == NULL;
+bool ValueRef::is_null() const
+{
+  return ptr == nullptr;
 }
 
-usize ValueRef::count_refs() const {
-  assert(!is_null() && "count_refs() called on NULL reference");
+usize ValueRef::count_refs() const
+{
+  assert(!is_null() && "count_refs() called on nullptr reference");
   return ptr->rc;
 }
 

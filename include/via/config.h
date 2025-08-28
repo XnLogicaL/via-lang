@@ -53,27 +53,104 @@
 #define VIA_EXPORT
 #endif
 
-#define VIA_NOCOPY(target)                   \
+#define NO_COPY(target)                      \
   target& operator=(const target&) = delete; \
   target(const target&) = delete;
 
-#define VIA_IMPLCOPY(target)        \
+#define IMPL_COPY(target)           \
   target& operator=(const target&); \
   target(const target&);
 
-#define VIA_NOMOVE(target)              \
+#define NO_MOVE(target)                 \
   target& operator=(target&&) = delete; \
   target(target&&) = delete;
 
-#define VIA_IMPLMOVE(target)   \
+#define IMPL_MOVE(target)      \
   target& operator=(target&&); \
   target(target&&);
 
+// BIT_ENUM macro: defines enum class + bitwise operators
+#define BIT_ENUM(name, type)                                               \
+  inline constexpr name operator|(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) | static_cast<type>(b)); \
+  }                                                                        \
+  inline constexpr name operator&(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) & static_cast<type>(b)); \
+  }                                                                        \
+  inline constexpr name operator^(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) ^ static_cast<type>(b)); \
+  }                                                                        \
+  inline constexpr name operator~(name a)                                  \
+  {                                                                        \
+    return static_cast<name>(~static_cast<type>(a));                       \
+  }                                                                        \
+  inline constexpr name& operator|=(name& a, name b)                       \
+  {                                                                        \
+    a = a | b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  inline constexpr name& operator&=(name& a, name b)                       \
+  {                                                                        \
+    a = a & b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  inline constexpr name& operator^=(name& a, name b)                       \
+  {                                                                        \
+    a = a ^ b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  inline constexpr type to_uint(name a)                                    \
+  {                                                                        \
+    return static_cast<type>(a);                                           \
+  }
+
+#define BIT_ENUM_CLASS(name, type)                                         \
+  friend constexpr name operator|(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) | static_cast<type>(b)); \
+  }                                                                        \
+  friend constexpr name operator&(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) & static_cast<type>(b)); \
+  }                                                                        \
+  friend constexpr name operator^(name a, name b)                          \
+  {                                                                        \
+    return static_cast<name>(static_cast<type>(a) ^ static_cast<type>(b)); \
+  }                                                                        \
+  friend constexpr name operator~(name a)                                  \
+  {                                                                        \
+    return static_cast<name>(~static_cast<type>(a));                       \
+  }                                                                        \
+  friend constexpr name& operator|=(name& a, name b)                       \
+  {                                                                        \
+    a = a | b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  friend constexpr name& operator&=(name& a, name b)                       \
+  {                                                                        \
+    a = a & b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  friend constexpr name& operator^=(name& a, name b)                       \
+  {                                                                        \
+    a = a ^ b;                                                             \
+    return a;                                                              \
+  }                                                                        \
+  friend constexpr type to_uint(name a)                                    \
+  {                                                                        \
+    return static_cast<type>(a);                                           \
+  }
+
 #include "types.h"
 
-namespace via {
+namespace via
+{
 
-namespace config {
+namespace config
+{
 
 inline constexpr usize version = 10;
 

@@ -6,79 +6,96 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "debug.h"
 
-namespace via {
+namespace via
+{
 
-namespace ast {
-
-struct NodeExprLit;
-struct NodeExprSym;
-struct NodeExprUn;
-struct NodeExprBin;
-struct NodeExprGroup;
-struct NodeExprCall;
-struct NodeExprSubs;
-struct NodeExprTuple;
-struct NodeExprLambda;
-
-struct NodeStmtVar;
-struct NodeStmtScope;
-struct NodeStmtIf;
-struct NodeStmtFor;
-struct NodeStmtForEach;
-struct NodeStmtWhile;
-struct NodeStmtAssign;
-struct NodeStmtEnum;
-struct NodeStmtEmpty;
-struct NodeStmtExpr;
-
-struct VisitInfo {
-  u16 dst = 0;
+struct VisitInfo
+{
+  virtual ~VisitInfo() = default;
 };
 
-namespace types {
+namespace ast
+{
 
-template <typename T>
-struct is_visit_info {
-  static constexpr bool value =
-      std::is_same_v<VisitInfo, T> || std::is_base_of_v<VisitInfo, T>;
-};
+struct ExprLit;
+struct ExprSymbol;
+struct ExprDynAccess;
+struct ExprStaticAccess;
+struct ExprUnary;
+struct ExprBinary;
+struct ExprGroup;
+struct ExprCall;
+struct ExprSubscript;
+struct ExprCast;
+struct ExprTuple;
+struct ExprLambda;
 
-template <typename T>
-inline constexpr auto is_visit_info_v = is_visit_info<T>::value;
+struct StmtVarDecl;
+struct StmtScope;
+struct StmtIf;
+struct StmtFor;
+struct StmtForEach;
+struct StmtWhile;
+struct StmtAssign;
+struct StmtReturn;
+struct StmtEnum;
+struct StmtImport;
+struct StmtModule;
+struct StmtFunctionDecl;
+struct StmtStructDecl;
+struct StmtTypeDecl;
+struct StmtUsing;
+struct StmtEmpty;
+struct StmtExpr;
 
-template <typename T>
-concept visit_info = is_visit_info_v<T>;
+struct TypeBuiltin;
+struct TypeArray;
+struct TypeDict;
+struct TypeFunc;
 
-}  // namespace types
-
-class Visitor {
+class Visitor
+{
  public:
-  virtual void visit(const NodeExprLit& elit, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprSym& esym, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprUn& eun, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprBin& ebin, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprGroup& egrp, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprCall& ecall, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprSubs& esubs, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprTuple& etup, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeExprLambda& elam, Box<VisitInfo> vi) = 0;
+  // clang-format off
+  virtual void visit(const ExprLit&, VisitInfo* vi) { debug::unimplemented("visit(ExprLit)"); }
+  virtual void visit(const ExprSymbol&, VisitInfo* vi) { debug::unimplemented("visit(ExprSymbol)"); }
+  virtual void visit(const ExprDynAccess&, VisitInfo* vi) { debug::unimplemented("visit(ExprDynAccess)"); }
+  virtual void visit(const ExprStaticAccess&, VisitInfo* vi) { debug::unimplemented("visit(ExprStaticAccess)"); }
+  virtual void visit(const ExprUnary&, VisitInfo* vi) { debug::unimplemented("visit(ExprUnary)"); }
+  virtual void visit(const ExprBinary&, VisitInfo* vi) { debug::unimplemented("visit(ExprBinary)"); }
+  virtual void visit(const ExprGroup&, VisitInfo* vi) { debug::unimplemented("visit(ExprGroup)"); }
+  virtual void visit(const ExprCall&, VisitInfo* vi) { debug::unimplemented("visit(ExprCall)"); }
+  virtual void visit(const ExprSubscript&, VisitInfo* vi) { debug::unimplemented("visit(ExprSubscript)"); }
+  virtual void visit(const ExprCast&, VisitInfo* vi) { debug::unimplemented("visit(ExprCast)"); }
+  virtual void visit(const ExprTuple&, VisitInfo* vi) { debug::unimplemented("visit(ExprTuple)"); }
+  virtual void visit(const ExprLambda&, VisitInfo* vi) { debug::unimplemented("visit(ExprLambda)"); }
 
-  virtual void visit(const NodeStmtVar&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtScope&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtIf&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtFor&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtForEach&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtWhile&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtAssign&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtEmpty&, Box<VisitInfo> vi) = 0;
-  virtual void visit(const NodeStmtExpr&, Box<VisitInfo> vi) = 0;
+  virtual void visit(const StmtVarDecl&, VisitInfo* vi) { debug::unimplemented("visit(StmtVarDecl)"); }
+  virtual void visit(const StmtScope&, VisitInfo* vi) { debug::unimplemented("visit(StmtScope)"); }
+  virtual void visit(const StmtIf&, VisitInfo* vi) { debug::unimplemented("visit(StmtIf)"); }
+  virtual void visit(const StmtFor&, VisitInfo* vi) { debug::unimplemented("visit(StmtFor)"); }
+  virtual void visit(const StmtForEach&, VisitInfo* vi) { debug::unimplemented("visit(StmtForEach)"); }
+  virtual void visit(const StmtWhile&, VisitInfo* vi) { debug::unimplemented("visit(StmtWhile)"); }
+  virtual void visit(const StmtAssign&, VisitInfo* vi) { debug::unimplemented("visit(StmtAssign)"); }
+  virtual void visit(const StmtReturn&, VisitInfo* vi) { debug::unimplemented("visit(StmtReturn)"); }
+  virtual void visit(const StmtEnum&, VisitInfo* vi) { debug::unimplemented("visit(StmtEnum)"); }
+  virtual void visit(const StmtImport&, VisitInfo* vi) { debug::unimplemented("visit(StmtImport)"); }
+  virtual void visit(const StmtModule&, VisitInfo* vi) { debug::unimplemented("visit(StmtModule)"); }
+  virtual void visit(const StmtFunctionDecl&, VisitInfo* vi) { debug::unimplemented("visit(StmtFunctionDecl)"); }
+  virtual void visit(const StmtStructDecl&, VisitInfo* vi) { debug::unimplemented("visit(StmtStructDecl)"); }
+  virtual void visit(const StmtTypeDecl&, VisitInfo* vi) { debug::unimplemented("visit(StmtTypeDecl)"); }
+  virtual void visit(const StmtUsing&, VisitInfo* vi) { debug::unimplemented("visit(StmtUsing)"); }
+  virtual void visit(const StmtEmpty&, VisitInfo* vi) { debug::unimplemented("visit(StmtEmpty)"); }
+  virtual void visit(const StmtExpr&, VisitInfo* vi) { debug::unimplemented("visit(StmtExpr)"); }
+
+  virtual void visit(const TypeBuiltin&, VisitInfo* vi) { debug::unimplemented("visit(TypeBuiltin)"); }
+  virtual void visit(const TypeArray&, VisitInfo* vi) { debug::unimplemented("visit(TypeArray)"); }
+  virtual void visit(const TypeDict&, VisitInfo* vi) { debug::unimplemented("visit(TypeDict)"); }
+  virtual void visit(const TypeFunc&, VisitInfo* vi) { debug::unimplemented("visit(TypeFunc)"); }
+  // clang-format on
 };
-
-template <types::visit_info Vi = VisitInfo, typename... Args>
-Box<Vi> make_visit_info(Args&&... args) noexcept {
-  return std::make_unique<Vi>(std::forward<Args>(args)...);
-}
 
 }  // namespace ast
 

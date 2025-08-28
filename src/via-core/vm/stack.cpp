@@ -3,4 +3,5 @@
 
 #include "stack.h"
 
-namespace via {}
+namespace via
+{}

@@ -3,4 +3,5 @@
 
 #include "buffer.h"
 
-namespace via {}
+namespace via
+{}

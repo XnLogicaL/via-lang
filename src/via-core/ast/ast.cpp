@@ -3,8 +3,24 @@
 
 #include "ast.h"
 
-namespace via {
+namespace via
+{
 
-namespace ast {}  // namespace ast
+namespace ast
+{}  // namespace ast
+
+namespace debug
+{
+
+void dump(const SyntaxTree& ast)
+{
+  fmt::println("debug::dump(SyntaxTree):");
+
+  for (const auto* st : ast) {
+    fmt::println("  {}", reinterpret_cast<const void*>(st));
+  }
+}
+
+}  // namespace debug
 
 }  // namespace via

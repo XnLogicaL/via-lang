@@ -4,29 +4,42 @@
 #include "debug.h"
 #include "panic.h"
 
-namespace via {
+namespace via
+{
 
-#undef assert
+namespace debug
+{
 
-void assert(bool cond, String message) {
+[[noreturn]] static void invoke_ub()
+{
+  std::unreachable();
+}
+
+void _assert(bool cond, String message)
+{
 #ifndef NDEBUG
   (cond ? (void)0 : panic(message));
 #endif
 }
 
-[[noreturn]] void bug(String what) {
-  assert(false, fmt::format("internal bug detected: {}", what));
-  std::unreachable();
+[[noreturn]] void bug(String what)
+{
+  debug::_assert(false, fmt::format("internal bug detected: {}", what));
+  invoke_ub();
 }
 
-[[noreturn]] void todo(String what) {
-  assert(false, fmt::format("todo: {}", what));
-  std::unreachable();
+[[noreturn]] void todo(String what)
+{
+  debug::_assert(false, fmt::format("todo: {}", what));
+  invoke_ub();
 }
 
-[[noreturn]] void unimplemented(String what) {
-  assert(false, fmt::format("unimplemented: {}", what));
-  std::unreachable();
+[[noreturn]] void unimplemented(String what)
+{
+  debug::_assert(false, fmt::format("unimplemented: {}", what));
+  invoke_ub();
 }
+
+}  // namespace debug
 
 }  // namespace via

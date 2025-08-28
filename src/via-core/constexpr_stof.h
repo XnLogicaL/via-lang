@@ -7,16 +7,19 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via {
+namespace via
+{
 
-inline constexpr bool is_digit(char c) {
+inline constexpr bool is_digit(char c)
+{
   return c >= '0' && c <= '9';
 }
 
 // Based on:
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::floating_point T>
-constexpr Optional<T> stof(StringView str, usize* pos = NULL) {
+constexpr Optional<T> stof(StringView str, usize* pos = nullptr)
+{
   size_t i = 0;
   const size_t n = str.size();
 

@@ -7,16 +7,16 @@
 #include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
-#include "buffer.h"
 #include "convert.h"
 #include "location.h"
 
-namespace via {
+namespace via
+{
 
-using SourceTree = Vec<char>;
-
-struct Token {
-  enum class Kind {
+struct Token
+{
+  enum class Kind
+  {
     EOF_ = 0,  // end of file
     ILLEGAL,   // unrecognized lexeme
 
@@ -31,21 +31,32 @@ struct Token {
     TRUE,    // true literal
     FALSE,   // false literal
 
-    KW_VAR,    // var
-    KW_MACRO,  // macro
-    KW_FUNC,   // func
-    KW_TYPE,   // type
-    KW_WHILE,  // while
-    KW_FOR,    // for
-    KW_IF,     // if
-    KW_IN,     // in
-    KW_ELSE,   // else
-    KW_DO,     // do
-    KW_AND,    // and
-    KW_OR,     // or
-    KW_NOT,    // not
-    KW_SHL,    // shl
-    KW_SHR,    // shr
+    KW_VAR,     // var
+    KW_FN,      // fn
+    KW_TYPE,    // type
+    KW_WHILE,   // while
+    KW_FOR,     // for
+    KW_IF,      // if
+    KW_IN,      // in
+    KW_OF,      // of
+    KW_ELSE,    // else
+    KW_DO,      // do
+    KW_AND,     // and
+    KW_OR,      // or
+    KW_NOT,     // not
+    KW_SHL,     // shl
+    KW_SHR,     // shr
+    KW_RETURN,  // return
+    KW_AS,      // as
+    KW_IMPORT,  // import
+    KW_MODULE,  // mod
+    KW_STRUCT,  // struct
+    KW_ENUM,    // enum
+    KW_USING,   // using
+    KW_BOOL,    // bool
+    KW_INT,     // int
+    KW_FLOAT,   // float
+    KW_STRING,  // string
 
     DOT,                // .
     COMMA,              // ,
@@ -99,11 +110,12 @@ struct Token {
   String to_string() const { return String(lexeme, size); }
   StringView to_string_view() const { return StringView(lexeme, size); }
 
-  AbsLocation location(const SourceTree& source) const;
+  SourceLoc location(const String& source) const;
 };
 
 template <>
-struct Convert<Token> {
+struct Convert<Token>
+{
   static String to_string(const Token& tok) { return tok.get_dump(); }
 };
 

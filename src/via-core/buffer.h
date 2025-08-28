@@ -8,10 +8,12 @@
 #include <via/types.h>
 #include "memory.h"
 
-namespace via {
+namespace via
+{
 
 template <typename T, typename Ator = StdAllocator>
-class Buffer {
+class Buffer
+{
  public:
   using value_type = T;
   using size_type = usize;
@@ -23,26 +25,31 @@ class Buffer {
  public:
   Buffer() noexcept = default;
 
-  Buffer(size_type sz) : m_data(Ator::template alloc<T>(sz)), m_size(sz) {
+  Buffer(size_type sz) : m_data(Ator::template alloc<T>(sz)), m_size(sz)
+  {
     m_construct_range(m_data, m_size);
   }
 
   Buffer(const_iterator begin, const_iterator end)
-      : m_size(end - begin), m_data(Ator::template alloc<T>(m_size)) {
+      : m_size(end - begin), m_data(Ator::template alloc<T>(m_size))
+  {
     m_construct_range(m_data, begin, end);
   }
 
   Buffer(const Buffer& other)
-      : m_size(other.m_size), m_data(Ator::template alloc<T>(other.m_size)) {
+      : m_size(other.m_size), m_data(Ator::template alloc<T>(other.m_size))
+  {
     m_construct_range(m_data, other.begin(), other.end());
   }
 
-  Buffer(Buffer&& other) noexcept : m_data(other.m_data), m_size(other.m_size) {
-    other.m_data = NULL;
+  Buffer(Buffer&& other) noexcept : m_data(other.m_data), m_size(other.m_size)
+  {
+    other.m_data = nullptr;
     other.m_size = 0;
   }
 
-  Buffer& operator=(const Buffer& other) {
+  Buffer& operator=(const Buffer& other)
+  {
     if (this != &other) {
       m_clear();
       m_resize(other.m_size);
@@ -51,12 +58,13 @@ class Buffer {
     return *this;
   }
 
-  Buffer& operator=(Buffer&& other) noexcept {
+  Buffer& operator=(Buffer&& other) noexcept
+  {
     if (this != &other) {
       m_clear();
       m_data = other.m_data;
       m_size = other.m_size;
-      other.m_data = NULL;
+      other.m_data = nullptr;
       other.m_size = 0;
     }
     return *this;
@@ -79,36 +87,40 @@ class Buffer {
   const_iterator cend() const noexcept { return m_data + m_size; }
 
  private:
-  pointer m_data = NULL;
+  pointer m_data = nullptr;
   size_type m_size = 0;
 
   template <typename It>
-  void m_construct_range(pointer dest, It begin, It end) {
+  void m_construct_range(pointer dest, It begin, It end)
+  {
     for (pointer d = dest; begin != end; ++d, ++begin) {
       new (d) T(*begin);
     }
   }
 
-  void m_construct_range(pointer dest, size_type count) {
+  void m_construct_range(pointer dest, size_type count)
+  {
     if constexpr (!std::is_trivially_default_constructible_v<T>) {
       for (size_type i = 0; i < count; ++i)
         new (&dest[i]) T();
     }
   }
 
-  void m_clear() {
+  void m_clear()
+  {
     if (m_data) {
       if constexpr (!std::is_trivially_destructible_v<T>) {
         for (size_type i = 0; i < m_size; ++i)
           m_data[i].~T();
       }
       Ator::template free<T>(m_data);
-      m_data = NULL;
+      m_data = nullptr;
       m_size = 0;
     }
   }
 
-  void m_resize(size_type new_size) {
+  void m_resize(size_type new_size)
+  {
     m_data = Ator::template alloc<T>(new_size);
     m_size = new_size;
     m_construct_range(m_data, m_size);

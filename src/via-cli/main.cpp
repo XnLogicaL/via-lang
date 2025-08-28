@@ -4,32 +4,57 @@
 #include <spdlog/spdlog.h>
 #include <via/via.h>
 #include "app.h"
-#include "context.h"
-#include "init.h"
-#include "panic.h"
-#include "process_file.h"
 
-int main(int argc, char* argv[]) {
+#undef assert
+
+namespace fs = std::filesystem;
+
+using via::Module;
+using via::ModuleManager;
+
+static void assert(bool cond, std::string msg)
+{
+  if (!cond) {
+    spdlog::error(msg);
+    throw 1;
+  }
+}
+
+int main(int argc, char* argv[])
+{
+  spdlog::set_pattern("%^%l:%$ %v");
+
   try {
-    via::cli::Context ctx;
-    via::cli::init();
-
     auto& cli = via::cli::get_cli_app();
+
+    std::string name, emit;
+    fs::path path;
 
     try {
       cli.parse_args(argc, argv);
-      ctx.path = cli.get("input");
-      ctx.emit = cli.get("--emit");
+      path = cli.get("input");
+      emit = cli.get("--emit");
     } catch (const std::bad_any_cast&) {
-      via::cli::panic_assert(false, "bad argument");
+      assert(false, "bad argument");
     } catch (const std::exception& err) {
-      via::cli::panic_assert(false, err.what());
+      assert(false, err.what());
     }
 
-    via::cli::panic_assert(!ctx.path.empty(), "no input file");
-    via::cli::process_file(ctx);
-  } catch (int exit_code) {
-    return exit_code;
+    via::u32 flags = 0;
+    {
+      if (emit == "ttree")
+        flags |= Module::Flags::DUMP_TTREE;
+      else if (emit == "ast")
+        flags |= Module::Flags::DUMP_AST;
+      else if (emit == "ir")
+        flags |= Module::Flags::DUMP_IR;
+    }
+
+    ModuleManager mm;
+    Module* module =
+        Module::from_source(&mm, name.c_str(), path, Module::Perms::ALL, flags);
+  } catch (int code) {
+    return code;
   }
 
   return 0;

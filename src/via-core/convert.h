@@ -12,11 +12,14 @@
 #include <type_traits>
 #include "buffer.h"
 
-namespace via {
+namespace via
+{
 
 template <typename T>
-struct Convert {
-  static String to_string(const T& t) {
+struct Convert
+{
+  static String to_string(const T& t)
+  {
     if constexpr (std::is_enum_v<T>) {
       return String(magic_enum::enum_name(t));
     } else {
@@ -26,8 +29,10 @@ struct Convert {
 };
 
 template <typename T>
-struct Convert<Vec<T>> {
-  static String to_string(const Vec<T>& v) {
+struct Convert<Vec<T>>
+{
+  static String to_string(const Vec<T>& v)
+  {
     auto transform = std::views::transform(
         [](const T& t) { return Convert<T>::to_string(t); });
     return fmt::format("{}", fmt::join(v | transform, ", "));
@@ -35,8 +40,10 @@ struct Convert<Vec<T>> {
 };
 
 template <typename T>
-struct Convert<Buffer<T>> {
-  static String to_string(const Buffer<T>& buf) {
+struct Convert<Buffer<T>>
+{
+  static String to_string(const Buffer<T>& buf)
+  {
     auto range = std::views::counted(buf.begin(), buf.size());
     auto transform = std::views::transform(
         [](const T& t) { return Convert<T>::to_string(t); });
@@ -47,11 +54,13 @@ struct Convert<Buffer<T>> {
 }  // namespace via
 
 template <typename T>
-struct fmt::formatter<T, char, std::true_type> {
+struct fmt::formatter<T, char, std::true_type>
+{
   constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
 
   template <typename FormatContext>
-  auto format(const T& t, FormatContext& ctx) const {
+  auto format(const T& t, FormatContext& ctx) const
+  {
     return fmt::format_to(ctx.out(), "{}", via::Convert<T>::to_string(t));
   }
 };

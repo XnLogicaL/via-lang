@@ -6,6 +6,7 @@
 
 #include <fmt/format.h>
 #include <cassert>
+#include <deque>
 #include <expected>
 #include <functional>
 #include <limits>
@@ -17,7 +18,8 @@
 #include <variant>
 #include <vector>
 
-namespace via {
+namespace via
+{
 
 using std::literals::operator""s;
 using std::literals::operator""sv;
@@ -34,14 +36,20 @@ using Function = std::function<Sig>;
 template <typename... Args>
 using Fmt = fmt::format_string<Args...>;
 
-template <typename K, typename V>
-using Map = std::unordered_map<K, V>;
+template <typename K,
+          typename V,
+          typename Hash = std::hash<K>,
+          typename Eq = std::equal_to<K>>
+using Map = std::unordered_map<K, V, Hash, Eq>;
 
 template <typename T>
 using Set = std::unordered_set<T>;
 
 template <typename T, const size_t Size>
 using Array = std::array<T, Size>;
+
+template <typename T>
+using Deque = std::deque<T>;
 
 template <typename T>
 using Vec = std::vector<T>;

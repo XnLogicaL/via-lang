@@ -8,11 +8,14 @@
 #include <via/types.h>
 #include "memory.h"
 
-namespace via {
+namespace via
+{
 
-namespace config {
+namespace config
+{
 
-namespace vm {
+namespace vm
+{
 
 inline constexpr usize stack_size = 8192;
 
@@ -21,10 +24,12 @@ inline constexpr usize stack_size = 8192;
 }  // namespace config
 
 template <typename T>
-class Stack final {
+class Stack final
+{
  public:
   Stack(Allocator* alloc)
-      : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp) {}
+      : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp)
+  {}
 
  public:
   Allocator* get_allocator() { return alloc; }

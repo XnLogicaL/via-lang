@@ -3,13 +3,16 @@
 
 #include "control_path.h"
 
-namespace via {
+namespace via
+{
 
-namespace sema {
+namespace sema
+{
 
 using namespace ast;
 
-ControlPath analyze_cpath(const StmtNode* stmt) {
+ControlPath analyze_cpath(const Stmt* stmt)
+{
   return ControlPath::None;
 }
 

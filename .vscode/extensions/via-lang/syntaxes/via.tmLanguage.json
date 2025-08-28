@@ -20,7 +20,7 @@
     },
     {
       "name": "keyword.control.via",
-      "match": "\\b(of|is|static|import|export|mod|type|defer|const|func|with|elseif|macro|struct|do|in|var|global|as|if|else|while|for|return|break|continue|match|case|default|and|not|or|shl|shr|try|enum)\\b"
+      "match": "\\b(var|fn|type|while|for|if|in|of|else|do|shl|shr|as|return|mod|enum|struct|import|using|bool|int|float|string)\\b"
     },
     {
       "name": "variable.language.self.via",
@@ -36,64 +36,23 @@
     },
     {
       "name": "constant.numeric.via",
-      "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+      "match": "\\b(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?\\b"
     },
     {
       "name": "keyword.operator.arithmetic.via",
-      "match": "[+\\-*/%]"
+      "match": "(\\+|\\-|\\*|/|\\*\\*|%)"
+    },
+    {
+      "name": "keyword.operator.via",
+      "match": "(~|\\^|&|!)"
     },
     {
       "name": "keyword.operator.comparison.via",
-      "match": "==|!=|<=|>=|<|>"
+      "match": "(==|!=|<=|>=|<|>)"
     },
     {
       "name": "keyword.operator.assignment.via",
       "match": "="
-    },
-    {
-      "name": "keyword.operator.logical.via",
-      "match": "\\b(and|or|not)\\b"
-    },
-    {
-      "match": "(?<=\\bfunc\\s)([A-Za-z_][A-Za-z0-9_]*)",
-      "name": "entity.name.function.via"
-    },
-    {
-      "match": "(?<=\\bstruct\\s)([A-Za-z_][A-Za-z0-9_]*)",
-      "name": "entity.name.class.via"
-    },
-    {
-      "match": "(->)\\s*([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "1": {
-          "name": "keyword.operator.via"
-        },
-        "2": {
-          "name": "entity.name.type.via"
-        }
-      }
-    },
-    {
-      "match": "(:)\\s*([A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "1": {
-          "name": "keyword.operator.via"
-        },
-        "2": {
-          "name": "entity.name.type.via"
-        }
-      }
-    },
-    {
-      "match": "\\bas\\s+([&]?[A-Za-z_][A-Za-z0-9_]*)",
-      "captures": {
-        "0": {
-          "name": "keyword.control.via"
-        },
-        "1": {
-          "name": "entity.name.type.via"
-        }
-      }
     },
     {
       "name": "string.quoted.double.via",
@@ -106,8 +65,8 @@
         },
         {
           "name": "string.interpolation.via",
-          "begin": "\\$\\{",
-          "end": "\\}",
+          "begin": "\\\\\\(",
+          "end": "\\)",
           "patterns": [
             {
               "name": "variable.other.via",
@@ -122,6 +81,26 @@
       "match": "\\b[A-Za-z_][A-Za-z0-9_]*!"
     },
     {
+      "match": "(?<=\\bvar\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "variable.other.via"
+    },
+    {
+      "match": "(?<=\\bfn\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.function.via"
+    },
+    {
+      "match": "(?<=\\bstruct\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.class.via"
+    },
+    {
+      "match": "(?<=\\benum\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.enum.via"
+    },
+    {
+      "match": "(?<=\\bmod\\s)([A-Za-z_][A-Za-z0-9_]*)",
+      "name": "entity.name.class.via"
+    },
+    {
       "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\.([A-Za-z_][A-Za-z0-9_]*)\\b",
       "captures": {
         "1": {
@@ -133,8 +112,23 @@
       }
     },
     {
-      "name": "variable.other.via",
-      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)\\b",
+      "captures": {
+        "1": {
+          "name": "entity.name.class.via"
+        },
+        "2": {
+          "name": "entity.name.function.via"
+        }
+      }
+    },
+    {
+      "match": "\\$\\[static\\]",
+      "name": "variable.name.property.via"
+    },
+    {
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b",
+      "name": "variable.other.via"
     }
   ]
 }

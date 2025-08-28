@@ -4,20 +4,24 @@
 #include "memory.h"
 #include <cstring>
 
-namespace via {
+namespace via
+{
 
-[[nodiscard]] void* Allocator::alloc(usize size) {
+[[nodiscard]] void* Allocator::alloc(usize size)
+{
   return mi_heap_malloc(m_heap, size);
 }
 
-[[nodiscard]] char* Allocator::strdup(const char* str) {
+[[nodiscard]] char* Allocator::strdup(const char* str)
+{
   usize len = strlen(str);
   char* buf = alloc<char>(len + 1);
   memcpy(buf, str, len + 1);
   return buf;
 }
 
-void Allocator::free(void* ptr) {
+void Allocator::free(void* ptr)
+{
   mi_free(ptr);
 }
 
