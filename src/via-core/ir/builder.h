@@ -19,17 +19,17 @@ namespace ir
 class Builder final
 {
  public:
-  Builder(via::Module* m, const SyntaxTree& ast, DiagnosticContext& diags)
+  Builder(via::Module* m, const SyntaxTree& ast, DiagContext& diags)
       : m_module(m), m_ast(ast), m_diags(diags)
   {}
 
  public:
-  IrTree build() { return {}; }
+  IrTree build();
 
  private:
   via::Module* m_module;
   const SyntaxTree& m_ast;
-  DiagnosticContext& m_diags;
+  DiagContext& m_diags;
 };
 
 }  // namespace ir

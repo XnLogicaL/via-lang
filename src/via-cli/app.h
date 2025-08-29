@@ -19,11 +19,11 @@ inline auto& get_cli_app()
       "via", Convert<Version>::to_string(get_semantic_version()));
 
   cli.add_argument("input").default_value("").help("Target source file");
-  cli.add_argument("--emit", "-e")
+  cli.add_argument("--dump", "-D")
       .nargs(1)
-      .choices("none", "ttree", "ast", "ir")
-      .default_value("none")
-      .help("Emission type");
+      .choices("", "ttree", "ast", "ir")
+      .default_value("")
+      .help("Dump the given tree");
 
   return cli;
 }

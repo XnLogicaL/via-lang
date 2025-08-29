@@ -19,7 +19,7 @@ namespace via
 class Parser final
 {
  public:
-  Parser(const String& source, const TokenTree& tokens, DiagnosticContext& diag)
+  Parser(const String& source, const TokenTree& tokens, DiagContext& diag)
       : m_source(source), m_cursor(tokens.cbegin().base()), m_diag(diag)
   {}
 
@@ -76,7 +76,7 @@ class Parser final
   ast::Stmt* parse_stmt();
 
  private:
-  DiagnosticContext& m_diag;
+  DiagContext& m_diag;
   const String& m_source;
   Token* const* m_cursor;
   Allocator m_alloc;

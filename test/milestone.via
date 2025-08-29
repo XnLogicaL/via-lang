@@ -1,4 +1,4 @@
-import std::io;
+import example;
 
 mod flags {
   struct FlagContext {
@@ -16,7 +16,7 @@ mod flags {
 
 mod main {
   fn call() -> nil {
-    using std::io {
+    using module {
       enum CLIFlags of int {
         DoSomeBs = 1 shl 1,
       }
@@ -31,4 +31,3 @@ mod main {
 }
 
 main::call();
-.

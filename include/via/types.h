@@ -8,6 +8,7 @@
 #include <cassert>
 #include <deque>
 #include <expected>
+#include <filesystem>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -20,6 +21,8 @@
 
 namespace via
 {
+
+namespace fs = std::filesystem;
 
 using std::literals::operator""s;
 using std::literals::operator""sv;

@@ -27,32 +27,36 @@ int main(int argc, char* argv[])
   try {
     auto& cli = via::cli::get_cli_app();
 
-    std::string name, emit;
+    std::string dump;
     fs::path path;
 
     try {
       cli.parse_args(argc, argv);
       path = cli.get("input");
-      emit = cli.get("--emit");
+      dump = cli.get("--dump");
     } catch (const std::bad_any_cast&) {
       assert(false, "bad argument");
     } catch (const std::exception& err) {
       assert(false, err.what());
     }
 
-    via::u32 flags = 0;
+    uint32_t flags = 0;
     {
-      if (emit == "ttree")
+      if (dump == "ttree")
         flags |= Module::Flags::DUMP_TTREE;
-      else if (emit == "ast")
+      else if (dump == "ast")
         flags |= Module::Flags::DUMP_AST;
-      else if (emit == "ir")
+      else if (dump == "ir")
         flags |= Module::Flags::DUMP_IR;
     }
 
+    assert(!path.empty(), "no input files");
+
     ModuleManager mm;
-    Module* module =
-        Module::from_source(&mm, name.c_str(), path, Module::Perms::ALL, flags);
+    auto module = Module::from_source(&mm, nullptr, path.stem().c_str(), path,
+                                      Module::Perms::ALL, flags);
+
+    assert(module.has_value(), module.error_or("<no-error>"));
   } catch (int code) {
     return code;
   }

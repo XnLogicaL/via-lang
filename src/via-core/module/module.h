@@ -39,25 +39,30 @@ class Module final
   };
 
  public:
-  [[nodiscard]] static Module* from_source(ModuleManager* mm,
-                                           const char* name,
-                                           std::filesystem::path path,
-                                           u32 perms = 0,
-                                           u32 flags = 0);
+  static Result<Module*, String> from_source(ModuleManager* mm,
+                                             Module* importee,
+                                             const char* name,
+                                             fs::path path,
+                                             u32 perms = 0,
+                                             u32 flags = 0);
 
  public:
-  [[nodiscard]] auto& defs() { return m_defs; }
-  [[nodiscard]] Allocator& get_allocator() { return m_alloc; }
+  Allocator& get_allocator() { return m_alloc; }
 
   Optional<SymbolInfo> lookup(const QualPath& qs);
 
+  Result<Module*, String> resolve_import(const QualPath& qs);
+
  protected:
   Allocator m_alloc;
-  String m_name, m_path;
+  u32 m_perms, m_flags;
+  String m_name;
+  fs::path m_path;
   ir::IrTree m_ir;
   Vec<Module*> m_imports;
   Map<SymbolId, Def*> m_defs;
   SymbolTable m_symbols;
+  Module* m_importee = nullptr;
   ModuleManager* m_manager = nullptr;
 };
 

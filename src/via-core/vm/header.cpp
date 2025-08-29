@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 namespace via
 {
 
-Header::Header(const fs::path& binary, DiagnosticContext& diags)
+Header::Header(const fs::path& binary, DiagContext& diags)
 {
   debug::unimplemented("Header construction from binary file");
 }

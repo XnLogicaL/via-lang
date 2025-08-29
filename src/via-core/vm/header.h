@@ -31,7 +31,7 @@ struct Header
   Vec<Instruction> bytecode;
 
   Header() = default;
-  Header(const std::filesystem::path& binary, DiagnosticContext& diags);
+  Header(const std::filesystem::path& binary, DiagContext& diags);
 
   String get_dump() const;
 };

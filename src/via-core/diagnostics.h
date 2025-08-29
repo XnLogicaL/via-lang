@@ -28,14 +28,14 @@ struct Diagnosis
   String msg;     // Human-readable message
 };
 
-class DiagnosticContext final
+class DiagContext final
 {
  public:
-  DiagnosticContext(String path, const String& file)
-      : m_path(path), m_source(file)
+  DiagContext(String path, String name, const String& file)
+      : m_path(path), m_name(name), m_source(file)
   {}
 
-  NO_COPY(DiagnosticContext)
+  NO_COPY(DiagContext)
 
  public:
   /// Emit all queued diagnostics to the provided spdlog logger (or default).
@@ -84,7 +84,7 @@ class DiagnosticContext final
   void emit_one(const Diagnosis& d, spdlog::logger* logger) const;
 
  private:
-  String m_path;
+  String m_path, m_name;
   const String& m_source;
   Vec<Diagnosis> m_diags{};
 };

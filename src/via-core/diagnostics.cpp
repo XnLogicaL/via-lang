@@ -7,15 +7,14 @@
 namespace via
 {
 
-void DiagnosticContext::emit(spdlog::logger* logger) const
+void DiagContext::emit(spdlog::logger* logger) const
 {
   for (const auto& d : m_diags) {
     emit_one(d, logger);
   }
 }
 
-void DiagnosticContext::emit_one(const Diagnosis& d,
-                                 spdlog::logger* logger) const
+void DiagContext::emit_one(const Diagnosis& d, spdlog::logger* logger) const
 {
   spdlog::level::level_enum level;
   switch (d.kind) {
@@ -62,19 +61,24 @@ void DiagnosticContext::emit_one(const Diagnosis& d,
   col = static_cast<u64>(ptr - line_start) + 1;  // 1-based
   line_sv = StringView(line_start, static_cast<usize>(line_end - line_start));
 
-  logger->log(
-      level, "{} {} {}", d.msg,
-      apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
-      apply_ansi_style(fmt::format("[{}:{}:{}]", m_path, line, col), Fg::Cyan));
+  logger->log(level, "{} {} {}", d.msg,
+              apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
+              apply_ansi_style(fmt::format("[{}:{}:{}] module({})", m_path,
+                                           line, col, m_name),
+                               Fg::Cyan));
 
-  logger->log(spdlog::level::off, "{}", line_sv);
+  usize line_width = static_cast<usize>(std::log10(line)) + 1;
+
+  spdlog::set_pattern("%v");
+  logger->log(spdlog::level::off, " {} | {}", line, line_sv);
 
   String caret(line_sv.size(), ' ');
   if (col > 0 && col - 1 < caret.size()) {
     caret[col - 1] = '^';
   }
 
-  logger->log(spdlog::level::off, "{}", caret);
+  logger->log(spdlog::level::off, " {} | {}", String(line_width, ' '), caret);
+  spdlog::set_pattern("%^%l:%$ %v");
 }
 
 }  // namespace via

@@ -1,0 +1,3 @@
+import milestone;
+
+fn print(a: string) -> nil {}
