@@ -32,6 +32,7 @@ struct Token
     FALSE,   // false literal
 
     KW_VAR,     // var
+    KW_CONST,   // const
     KW_FN,      // fn
     KW_TYPE,    // type
     KW_WHILE,   // while
@@ -106,7 +107,7 @@ struct Token
   const char* lexeme;
   usize size;
 
-  String get_dump() const;
+  String dump() const;
   String to_string() const { return String(lexeme, size); }
   StringView to_string_view() const { return StringView(lexeme, size); }
 
@@ -116,7 +117,7 @@ struct Token
 template <>
 struct Convert<Token>
 {
-  static String to_string(const Token& tok) { return tok.get_dump(); }
+  static String to_string(const Token& tok) { return tok.dump(); }
 };
 
 }  // namespace via

@@ -29,6 +29,8 @@ struct ExprGroup;
 struct ExprCall;
 struct ExprSubscript;
 struct ExprCast;
+struct ExprTernary;
+struct ExprArray;
 struct ExprTuple;
 struct ExprLambda;
 
@@ -69,6 +71,8 @@ class Visitor
   virtual void visit(const ExprCall&, VisitInfo* vi) { debug::unimplemented("visit(ExprCall)"); }
   virtual void visit(const ExprSubscript&, VisitInfo* vi) { debug::unimplemented("visit(ExprSubscript)"); }
   virtual void visit(const ExprCast&, VisitInfo* vi) { debug::unimplemented("visit(ExprCast)"); }
+  virtual void visit(const ExprTernary&, VisitInfo* vi) { debug::unimplemented("visit(ExprTernary)"); }
+  virtual void visit(const ExprArray&, VisitInfo* vi) { debug::unimplemented("visit(ExprArray)"); }
   virtual void visit(const ExprTuple&, VisitInfo* vi) { debug::unimplemented("visit(ExprTuple)"); }
   virtual void visit(const ExprLambda&, VisitInfo* vi) { debug::unimplemented("visit(ExprLambda)"); }
 

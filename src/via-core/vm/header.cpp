@@ -17,21 +17,21 @@ Header::Header(const fs::path& binary, DiagContext& diags)
   debug::unimplemented("Header construction from binary file");
 }
 
-String Header::get_dump() const
+String Header::dump() const
 {
   std::ostringstream oss;
   oss << apply_ansi_style("[section .text]\n", Fg::Yellow, Bg::Black,
                           Style::Underline);
 
   for (const Instruction& insn : bytecode) {
-    oss << "  " << insn.get_dump() << "\n";
+    oss << "  " << insn.dump() << "\n";
   }
 
   oss << apply_ansi_style("[section .data]\n", Fg::Yellow, Bg::Black,
                           Style::Underline);
 
   for (const sema::ConstValue& cv : consts) {
-    oss << "  " << cv.get_dump() << "\n";
+    oss << "  " << cv.dump() << "\n";
   }
 
   return oss.str();

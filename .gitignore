@@ -3,4 +3,3 @@ build
 .cache
 compile_commands.json
 scripts/__pycache__
-installer/target

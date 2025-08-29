@@ -33,13 +33,13 @@ struct Header
   Header() = default;
   Header(const std::filesystem::path& binary, DiagContext& diags);
 
-  String get_dump() const;
+  String dump() const;
 };
 
 template <>
 struct Convert<Header>
 {
-  static String to_string(const Header& header) { return header.get_dump(); }
+  static String to_string(const Header& header) { return header.dump(); }
 };
 
 }  // namespace via

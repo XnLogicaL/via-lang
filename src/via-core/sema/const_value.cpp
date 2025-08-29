@@ -58,7 +58,7 @@ String ConstValue::to_string() const
   return "<unknown-cv-type>";
 }
 
-String ConstValue::get_dump() const
+String ConstValue::dump() const
 {
   return fmt::format(
       "{} [{} {}]",

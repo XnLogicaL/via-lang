@@ -14,7 +14,7 @@ SourceLoc Token::location(const String& source) const
   return {begin, end};
 }
 
-String Token::get_dump() const
+String Token::dump() const
 {
   return fmt::format("[{:<12} '{}']", Convert<Token::Kind>::to_string(kind),
                      (*lexeme == '\0') ? "<eof>" : to_string());

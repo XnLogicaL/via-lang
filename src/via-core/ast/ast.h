@@ -23,7 +23,7 @@ struct Expr
 {
   SourceLoc loc;
 
-  virtual String get_dump(usize& depth) const = 0;
+  virtual String dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -31,7 +31,7 @@ struct Stmt
 {
   SourceLoc loc;
 
-  virtual String get_dump(usize& depth) const = 0;
+  virtual String dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -39,7 +39,7 @@ struct Type
 {
   SourceLoc loc;
 
-  virtual String get_dump(usize& depth) const = 0;
+  virtual String dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -47,12 +47,16 @@ struct TupleBinding
 {
   Vec<const Token*> binds;
   SourceLoc loc;
+
+  String dump() const;
 };
 
 struct Path
 {
   Vec<const Token*> path;
   SourceLoc loc;
+
+  String dump() const;
 };
 
 struct LValue
@@ -73,6 +77,8 @@ struct LValue
   };
 
   SourceLoc loc;
+
+  String dump() const;
 };
 
 struct PlValue
@@ -91,6 +97,8 @@ struct PlValue
   };
 
   SourceLoc loc;
+
+  String dump() const;
 };
 
 struct Parameter
@@ -98,6 +106,8 @@ struct Parameter
   const Token* sym;
   const Type* type;
   SourceLoc loc;
+
+  String dump() const;
 };
 
 struct AttributeGroup
@@ -110,15 +120,13 @@ struct AttributeGroup
 
   Vec<Attribute> ats;
   SourceLoc loc;
+
+  String dump() const;
 };
 
 #define COMMON_HEADER(klass)                              \
   using klass::loc;                                       \
-  String get_dump(usize& depth) const override            \
-  {                                                       \
-    debug::todo(#klass "::get_dump");                     \
-    return {};                                            \
-  }                                                       \
+  String dump(usize& depth) const override;               \
   void accept(Visitor& vis, VisitInfo* vi) const override \
   {                                                       \
     vis.visit(*this, vi);                                 \
@@ -190,6 +198,18 @@ struct ExprCast : public Expr
   const Type* type;
 };
 
+struct ExprTernary : public Expr
+{
+  COMMON_HEADER(Expr)
+  const Expr *cnd, *lhs, *rhs;
+};
+
+struct ExprArray : public Expr
+{
+  COMMON_HEADER(Expr)
+  Vec<const Expr*> init;
+};
+
 struct ExprTuple : public Expr
 {
   COMMON_HEADER(Expr)
@@ -208,6 +228,7 @@ struct ExprLambda : public Expr
 struct StmtVarDecl : public Stmt
 {
   COMMON_HEADER(Stmt)
+  const Token* decl;
   const LValue* lval;
   const Expr* rval;
   const Type* type;
@@ -317,7 +338,7 @@ struct StmtStructDecl : public Stmt
 {
   COMMON_HEADER(Stmt);
 
-  const Path* sp;
+  const Token* name;
   Vec<const Stmt*> scp;
 };
 

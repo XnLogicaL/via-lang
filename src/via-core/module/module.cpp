@@ -2,7 +2,6 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "module.h"
-#include <filesystem>
 #include <fstream>
 #include "ir/builder.h"
 #include "manager.h"
@@ -18,8 +17,6 @@
 namespace via
 {
 
-namespace fs = std::filesystem;
-
 static Allocator module_alloc;
 
 static Result<String, String> read_file(const fs::path& path)
@@ -27,11 +24,11 @@ static Result<String, String> read_file(const fs::path& path)
   std::ifstream ifs(path);
   if (!ifs.is_open()) {
     return std::unexpected(
-        fmt::format("no such file or directory: '{}'", path.string()));
+        fmt::format("No such file or directory: '{}'", path.string()));
   }
 
-  via::String line;
-  via::String content;
+  String line;
+  String content;
   while (std::getline(ifs, line)) {
     content += line;
     content += '\n';
@@ -300,7 +297,7 @@ Result<Module*, String> Module::resolve_import(const QualPath& qs)
   }
 
   if ((m_perms & Perms::IMPORT) == 0u) {
-    return std::unexpected("Current module does not have import capabilties");
+    return std::unexpected("Current module lacks import capabilties");
   }
 
   switch (module->kind) {

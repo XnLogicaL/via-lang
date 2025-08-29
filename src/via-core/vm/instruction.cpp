@@ -369,7 +369,7 @@ static char get_operand_prefix(Operand kind)
   return 0x00;
 }
 
-String Instruction::get_dump() const
+String Instruction::dump() const
 {
   const u16 ops[] = {a, b, c};
   const InstructionLayout* il = nullptr;

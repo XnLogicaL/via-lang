@@ -237,13 +237,13 @@ struct Instruction
   Opcode op = Opcode::NOP;
   u16 a, b, c;
 
-  String get_dump() const;
+  String dump() const;
 };
 
 template <>
 struct Convert<Instruction>
 {
-  static String to_string(const Instruction& insn) { return insn.get_dump(); }
+  static String to_string(const Instruction& insn) { return insn.dump(); }
 };
 
 }  // namespace via

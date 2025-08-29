@@ -59,7 +59,7 @@ class Parser final
 
   // Statement
   ast::StmtScope* parse_stmt_scope();
-  ast::StmtVarDecl* parse_stmt_var();
+  ast::StmtVarDecl* parse_stmt_var(bool semicolon);
   ast::StmtFor* parse_stmt_for();
   ast::StmtForEach* parse_stmt_foreach();
   ast::StmtIf* parse_stmt_if();

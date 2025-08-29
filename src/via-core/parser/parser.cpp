@@ -116,9 +116,8 @@ Token* Parser::expect(Token::Kind kind, const char* task)
   if (!match(kind)) {
     const Token& unexp = *peek();
     throw ParserError(unexp.location(m_source),
-                      "Unexpected token '{}' ({}) while {} ({} expected)",
-                      unexp.to_string(), magic_enum::enum_name(unexp.kind),
-                      task, magic_enum::enum_name(kind));
+                      "Unexpected token '{}' ({}) while {}", unexp.to_string(),
+                      magic_enum::enum_name(unexp.kind), task);
   }
 
   return advance();
@@ -208,9 +207,8 @@ LValue* Parser::parse_lvalue()
   } else {
     Token* bad = peek();
     throw ParserError(bad->location(m_source),
-                      "Unexpected token '{}' ({}) while parsing lvalue "
-                      "(expected identifier or '[')",
-                      magic_enum::enum_name(bad->kind), bad->to_string());
+                      "Unexpected token '{}' ({}) while parsing lvalue",
+                      bad->to_string(), magic_enum::enum_name(bad->kind));
   }
 
   return lval;
@@ -286,6 +284,7 @@ Expr* Parser::parse_expr_primary()
   SAVE_FIRST()
 
   switch (first->kind) {
+    // Literal expression
     case INT:
     case BINT:
     case XINT:
@@ -299,14 +298,17 @@ Expr* Parser::parse_expr_primary()
       lit->loc = loc;
       return lit;
     }
+
+    // Symbol expression
     case IDENT: {
       auto* sym = m_alloc.emplace<ExprSymbol>();
       sym->sym = first;
       sym->loc = loc;
       return sym;
     }
+
+    // Group or tuple expression
     case LPAREN: {
-      SourceLoc start = loc;
       Expr* first = parse_expr();
 
       if (match(COMMA)) {
@@ -322,7 +324,7 @@ Expr* Parser::parse_expr_primary()
 
         auto* tup = m_alloc.emplace<ExprTuple>();
         tup->vals = std::move(vals);
-        tup->loc = {start.begin, peek(-1)->location(m_source).end};
+        tup->loc = {loc.begin, peek(-1)->location(m_source).end};
 
         return tup;
       }
@@ -331,15 +333,50 @@ Expr* Parser::parse_expr_primary()
 
       auto* group = m_alloc.emplace<ExprGroup>();
       group->expr = first;
-      group->loc = {start.begin, peek(-1)->location(m_source).end};
-
+      group->loc = {loc.begin, peek(-1)->location(m_source).end};
       return group;
     }
+
+    // Array expression
+    case LBRACKET: {
+      auto* arr = m_alloc.emplace<ExprArray>();
+
+      while (true) {
+        arr->init.push_back(parse_expr());
+
+        if (match(RBRACKET)) {
+          optional(COMMA);  // trailing comma
+          break;
+        } else {
+          expect(COMMA, "parsing array initializer");
+        }
+      }
+
+      Token* last = expect(RBRACKET, "terminating array initializer");
+      arr->loc = {loc.begin, last->location(m_source).end};
+      return arr;
+    }
+
+    // Ternary expression
+    case KW_IF: {
+      auto* tern = m_alloc.emplace<ExprTernary>();
+      tern->cnd = parse_expr();
+
+      expect(COLON, "parsing ternary expression");
+
+      tern->lhs = parse_expr();
+
+      expect(KW_ELSE, "parsing ternary expression");
+
+      tern->rhs = parse_expr();
+      tern->loc = {loc.begin, tern->rhs->loc.end};
+      return tern;
+    }
+
     default:
-      throw ParserError(loc,
-                        "Unexpected token '{}' ({}) while parsing primary "
-                        "expression (expected literal, identifier or '(')",
-                        magic_enum::enum_name(first->kind), first->to_string());
+      throw ParserError(
+          loc, "Unexpected token '{}' ({}) while parsing primary expression",
+          first->to_string(), magic_enum::enum_name(first->kind));
   }
 }
 
@@ -541,8 +578,7 @@ Type* Parser::parse_type()
       return parse_type_func();
     default:
       throw ParserError(tok->location(m_source),
-                        "Unexpected token '{}' ({}) while parsing type "
-                        "(expected builtin type, '[', '{{' or 'fn')",
+                        "Unexpected token '{}' ({}) while parsing type",
                         magic_enum::enum_name(tok->kind), tok->to_string());
   }
 }
@@ -569,15 +605,18 @@ StmtScope* Parser::parse_stmt_scope()
   return scope;
 }
 
-StmtVarDecl* Parser::parse_stmt_var()
+StmtVarDecl* Parser::parse_stmt_var(bool semicolon)
 {
   SAVE_FIRST()
 
   auto vars = m_alloc.emplace<StmtVarDecl>();
+  vars->decl = first;
   vars->lval = parse_lvalue();
 
   if (optional(COLON)) {
     vars->type = parse_type();
+  } else {
+    vars->type = nullptr;
   }
 
   expect(EQUALS, "parsing variable declaration");
@@ -585,7 +624,10 @@ StmtVarDecl* Parser::parse_stmt_var()
   vars->rval = parse_expr();
   vars->loc = {loc.begin, vars->rval->loc.end};
 
-  optional(SEMICOLON);
+  if (semicolon) {
+    optional(SEMICOLON);
+  }
+
   return vars;
 }
 
@@ -594,13 +636,18 @@ StmtFor* Parser::parse_stmt_for()
   SAVE_FIRST()
 
   auto fors = m_alloc.emplace<StmtFor>();
-  fors->init = parse_stmt_var();
+  fors->init = parse_stmt_var(false);
 
-  expect(COMMA, "parsing for statement");
+  if (fors->init->decl->kind == KW_CONST) {
+    throw ParserError(fors->init->decl->location(m_source),
+                      "'const' variable not allowed in ranged for loop");
+  }
+
+  expect(COMMA, "parsing ranged for loop");
 
   fors->target = parse_expr();
 
-  expect(COMMA, "parsing for statement");
+  expect(COMMA, "parsing ranged for loop");
 
   fors->step = parse_expr();
   fors->br = parse_stmt_scope();
@@ -635,6 +682,22 @@ StmtIf* Parser::parse_stmt_if()
 
   auto* ifs = m_alloc.emplace<StmtIf>();
   ifs->brs.push_back(br);
+
+  while (match(KW_ELSE)) {
+    advance();
+
+    Branch br;
+
+    if (match(KW_IF)) {
+      advance();
+      br.cnd = parse_expr();
+    } else {
+      br.cnd = nullptr;
+    }
+
+    br.br = parse_stmt_scope();
+  }
+
   ifs->loc = {loc.begin, br.br->loc.end};
   return ifs;
 }
@@ -725,7 +788,7 @@ StmtModule* Parser::parse_stmt_module()
 
     switch (tok->kind) {
       case KW_VAR:
-        mod->scp.push_back(parse_stmt_var());
+        mod->scp.push_back(parse_stmt_var(true));
         break;
       case KW_FN:
         mod->scp.push_back(parse_stmt_func());
@@ -747,9 +810,7 @@ StmtModule* Parser::parse_stmt_module()
         break;
       default:
         throw ParserError(tok->location(m_source),
-                          "Unexpected token '{}' ({}) while parsing module "
-                          "statement (expected 'var', 'fn', 'struct', 'type', "
-                          "'module', 'using' or 'enum')",
+                          "Unexpected token '{}' ({}) while parsing module",
                           magic_enum::enum_name(tok->kind), tok->to_string());
     }
   }
@@ -799,9 +860,8 @@ StmtImport* Parser::parse_stmt_import()
       break;
     } else {
       throw ParserError(tok->location(m_source),
-                        "Unexpected token '{}' ({}) while parsing import path "
-                        "(expected identifier, '{{' or '*')",
-                        magic_enum::enum_name(tok->kind), tok->to_string());
+                        "Unexpected token '{}' ({}) while parsing import path",
+                        tok->to_string(), magic_enum::enum_name(tok->kind));
     }
   }
 
@@ -846,7 +906,7 @@ StmtStructDecl* Parser::parse_stmt_struct()
   SAVE_FIRST()
 
   auto* strc = m_alloc.emplace<StmtStructDecl>();
-  strc->sp = parse_static_path();
+  strc->name = expect(IDENT, "parsing struct name");
 
   expect(LCURLY, "parsing struct body");
 
@@ -854,13 +914,15 @@ StmtStructDecl* Parser::parse_stmt_struct()
     Token* tok = peek();
     switch (tok->kind) {
       case KW_VAR:
-        strc->scp.push_back(parse_stmt_var());
+        strc->scp.push_back(parse_stmt_var(false));
+        expect(COMMA, "terminating struct member");
         break;
       case KW_FN:
         strc->scp.push_back(parse_stmt_func());
         break;
       case KW_TYPE:
         strc->scp.push_back(parse_stmt_type());
+        expect(COMMA, "terminating struct member");
         break;
       case KW_USING:
         strc->scp.push_back(parse_stmt_using());
@@ -871,8 +933,7 @@ StmtStructDecl* Parser::parse_stmt_struct()
       default:
         throw ParserError(
             tok->location(m_source),
-            "Unexpected token '{}' ({}) while parsing struct body (expected "
-            "'var', 'fn', 'type', 'using' or 'enum')",
+            "Unexpected token '{}' ({}) while parsing struct body",
             tok->to_string(), magic_enum::enum_name(tok->kind));
     }
   }
@@ -917,7 +978,8 @@ Stmt* Parser::parse_stmt()
     case KW_WHILE:
       return parse_stmt_while();
     case KW_VAR:
-      return parse_stmt_var();
+    case KW_CONST:
+      return parse_stmt_var(true);
     case KW_DO:
       advance();
       return parse_stmt_scope();
@@ -954,10 +1016,12 @@ Stmt* Parser::parse_stmt()
   }
 
   Token* first;
-  if ((first = peek(), !is_expr_start(first->kind)))
+  if ((first = peek(), !is_expr_start(first->kind))) {
+  unexpected_token:
     throw ParserError(first->location(m_source),
                       "Unexpected token '{}' ({}) while parsing statement",
                       first->to_string(), magic_enum::enum_name(first->kind));
+  }
 
   Expr* expr = parse_expr();
 
@@ -976,6 +1040,14 @@ Stmt* Parser::parse_stmt()
       auto es = m_alloc.emplace<StmtExpr>();
       es->expr = expr;
       es->loc = es->expr->loc;
+
+      if TRY_COERCE (const ExprCall, _, expr) {
+        goto valid_expr_stmt;
+      } else {
+        goto unexpected_token;
+      }
+
+    valid_expr_stmt:
       optional(SEMICOLON);
       return es;
     }

@@ -59,7 +59,7 @@ class ConstValue final
   }
 
   String to_string() const;
-  String get_dump() const;
+  String dump() const;
 
  private:
   Union u;
@@ -70,7 +70,7 @@ class ConstValue final
 template <>
 struct Convert<sema::ConstValue>
 {
-  static String to_string(const sema::ConstValue& cv) { return cv.get_dump(); }
+  static String to_string(const sema::ConstValue& cv) { return cv.dump(); }
 };
 
 }  // namespace via
