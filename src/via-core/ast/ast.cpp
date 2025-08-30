@@ -408,12 +408,16 @@ String TypeFunc::dump(usize&) const
 namespace debug
 {
 
-void dump(const SyntaxTree& ast)
+[[nodiscard]] String dump(const SyntaxTree& ast)
 {
+  std::ostringstream oss;
   usize depth = 0;
+
   for (const auto* st : ast) {
-    fmt::println("{}", st->dump(depth));
+    oss << st->dump(depth) << "\n";
   }
+
+  return oss.str();
 }
 
 }  // namespace debug

@@ -1,8 +1,8 @@
 // This file is a part of the via Programming Language project
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
-#ifndef VIA_CORE_IR_IR_H_
-#define VIA_CORE_IR_IR_H_
+#ifndef VIA_CORE_IR_H_
+#define VIA_CORE_IR_H_
 
 #include <via/config.h>
 #include <via/types.h>
@@ -17,45 +17,36 @@ namespace via
 namespace ir
 {
 
-struct Parameter
-{
-  SymbolId symbol;
-  const sema::Type* type;
-};
-
 struct Expr
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String to_string() = 0;
+  virtual String dump() const = 0;
 };
 
 struct Stmt
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String to_string() = 0;
+  virtual String dump() const = 0;
 };
 
 struct Entity
 {
   SymbolId symbol;
   virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String to_string() = 0;
+  virtual String dump() const = 0;
 };
 
 struct Terminator
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String to_string() = 0;
+  virtual String dump() const = 0;
 };
 
 #define COMMON_HEADER()                             \
+  String dump() const override;                     \
   void accept(Visitor& vis, VisitInfo* vi) override \
   {                                                 \
     vis.visit(*this, vi);                           \
-  }                                                 \
-  String to_string() override                       \
-  {                                                 \
-    debug::unimplemented();                         \
   }
 
 struct Return : public Terminator
@@ -93,7 +84,15 @@ struct BasicBlock
   Vec<Stmt*> stmts;
   Terminator* term;
 
-  String to_string();
+  String dump();
+};
+
+struct Parameter
+{
+  SymbolId sym;
+  sema::Type* type;
+
+  String dump();
 };
 
 struct ExprConstant : public Expr
@@ -201,37 +200,65 @@ struct StmtVarDecl : public Stmt
 
 struct Function : public Entity
 {
-  using Entity::symbol;
   COMMON_HEADER()
+
+  using Entity::symbol;
+
+  enum class Kind
+  {
+    IR,
+    NATIVE,
+  } kind;
+
+  SymbolId sym;
+  sema::Type* ret;
+  Vec<Parameter> parms;
+
+  union
+  {
+    void* native;
+    StmtFunctionDecl* func;
+  };
 };
 
 struct Module : public Entity
 {
-  using Entity::symbol;
   COMMON_HEADER()
+
+  using Entity::symbol;
 };
 
 struct Type : public Entity
 {
-  using Entity::symbol;
   COMMON_HEADER()
+
+  using Entity::symbol;
 };
 
 struct Enum : public Entity
 {
-  using Entity::symbol;
   COMMON_HEADER()
+
+  using Entity::symbol;
 };
 
 struct Block : public Entity
 {
-  using Entity::symbol;
   COMMON_HEADER()
+
+  using Entity::symbol;
 };
 
-using IrTree = Vec<Entity*>;
-
 }  // namespace ir
+
+using IrTree = Vec<ir::Entity*>;
+
+namespace debug
+{
+
+[[nodiscard]] String dump(const IrTree& ir);
+
+}
 
 }  // namespace via
 

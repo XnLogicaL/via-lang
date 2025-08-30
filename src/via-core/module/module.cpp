@@ -164,9 +164,11 @@ Result<Module*, String> Module::from_source(ModuleManager* mm,
     diags.clear();
 
     if (flags & DUMP_TTREE)
-      debug::dump(tt);
+      fmt::println("{}", debug::dump(tt));
     if (flags & DUMP_AST)
-      debug::dump(ast);
+      fmt::println("{}", debug::dump(ast));
+    if (flags & DUMP_IR)
+      fmt::println("{}", debug::dump(m->m_ir));
 
     if (failed) {
       for (Module* m = importee; m != nullptr; m = m->m_importee)

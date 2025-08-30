@@ -401,7 +401,7 @@ using SyntaxTree = Vec<const ast::Stmt*>;
 namespace debug
 {
 
-void dump(const SyntaxTree& ast);
+[[nodiscard]] String dump(const SyntaxTree& ast);
 
 }
 

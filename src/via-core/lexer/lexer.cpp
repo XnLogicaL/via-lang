@@ -358,13 +358,15 @@ TokenTree Lexer::tokenize()
 namespace debug
 {
 
-void dump(const TokenTree& tt)
+[[nodiscard]] String dump(const TokenTree& tt)
 {
-  fmt::println("debug::dump(TokenTree):");
+  std::ostringstream oss;
 
   for (const auto* tk : tt) {
-    fmt::println("  {}", tk->dump());
+    oss << tk->dump() << "\n";
   }
+
+  return oss.str();
 }
 
 }  // namespace debug

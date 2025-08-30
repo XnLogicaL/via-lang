@@ -696,6 +696,7 @@ StmtIf* Parser::parse_stmt_if()
     }
 
     br.br = parse_stmt_scope();
+    ifs->brs.push_back(br);
   }
 
   ifs->loc = {loc.begin, br.br->loc.end};

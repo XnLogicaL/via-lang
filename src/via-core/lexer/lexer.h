@@ -45,7 +45,7 @@ class Lexer final
 namespace debug
 {
 
-void dump(const TokenTree& tt);
+[[nodiscard]] String dump(const TokenTree& tt);
 
 }
 

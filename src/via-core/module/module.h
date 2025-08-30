@@ -58,7 +58,7 @@ class Module final
   u32 m_perms, m_flags;
   String m_name;
   fs::path m_path;
-  ir::IrTree m_ir;
+  IrTree m_ir;
   Vec<Module*> m_imports;
   Map<SymbolId, Def*> m_defs;
   SymbolTable m_symbols;
