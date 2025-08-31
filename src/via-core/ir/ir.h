@@ -213,12 +213,6 @@ struct Function : public Entity
   SymbolId sym;
   sema::Type* ret;
   Vec<Parameter> parms;
-
-  union
-  {
-    void* native;
-    StmtFunctionDecl* func;
-  };
 };
 
 struct Module : public Entity

@@ -58,19 +58,19 @@ ValueRef& ValueRef::operator=(ValueRef&& other)
 
 Value* ValueRef::operator->() const
 {
-  assert(!is_null() && "attempt to read nullptr reference (member access)");
+  debug::assertm(!is_null(), "attempt to read NULL reference (operator->)");
   return ptr;
 }
 
 Value& ValueRef::operator*() const
 {
-  assert(!is_null() && "attempt to read nullptr reference (dereference)");
+  debug::assertm(!is_null(), "attempt to read NULL reference (operator*)");
   return *ptr;
 }
 
 void ValueRef::free()
 {
-  assert(!is_null() && "free called on nullptr reference");
+  debug::assertm(!is_null(), "free called on NULL reference");
 
   if (--ptr->rc == 0) {
     ptr->free();
@@ -85,7 +85,7 @@ bool ValueRef::is_null() const
 
 usize ValueRef::count_refs() const
 {
-  assert(!is_null() && "count_refs() called on nullptr reference");
+  debug::assertm(!is_null(), "count_refs() called on NULL reference");
   return ptr->rc;
 }
 

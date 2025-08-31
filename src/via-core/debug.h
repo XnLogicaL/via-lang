@@ -6,6 +6,13 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <source_location>
+
+#ifdef NDEBUG
+#define VIA_ASSERT(cond, ...) ((void)0)
+#else
+#define VIA_ASSERT(cond, ...) (::via::debug::__assert(cond, ))
+#endif
 
 namespace via
 {
@@ -13,10 +20,21 @@ namespace via
 namespace debug
 {
 
-void _assert(bool cond, String message);
-[[noreturn]] void bug(String what);
-[[noreturn]] void todo(String what);
-[[noreturn]] void unimplemented(String what = "<no-message-specified>");
+void assertm(bool cond,
+             String message = "<no-message-specified>",
+             std::source_location __loc = std::source_location::current());
+
+[[noreturn]] void bug(
+    String what,
+    std::source_location __loc = std::source_location::current());
+
+[[noreturn]] void todo(
+    String what,
+    std::source_location __loc = std::source_location::current());
+
+[[noreturn]] void unimplemented(
+    String what = "<no-message-specified>",
+    std::source_location __loc = std::source_location::current());
 
 }  // namespace debug
 

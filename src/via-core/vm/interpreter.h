@@ -7,7 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "buffer.h"
-#include "constexpr_ipow.h"
+#include "debug.h"
 #include "header.h"
 #include "instruction.h"
 #include "stack.h"
@@ -39,7 +39,7 @@ class Interpreter final
         stack(&alloc),
         regs(config::vm::register_count)
   {
-    assert(!H->bytecode.empty() && "illformed header (bytecode array empty)");
+    debug::assertm(!H->bytecode.empty(), "illformed header");
   }
 
  public:

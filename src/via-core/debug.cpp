@@ -15,28 +15,30 @@ namespace debug
   std::unreachable();
 }
 
-void _assert(bool cond, String message)
+void assertm(bool cond, String message, std::source_location __loc)
 {
-#ifndef NDEBUG
-  (cond ? (void)0 : panic(message));
+#ifdef NDEBUG
+  void(0);
+#else
+  cond ? panic(message) : void(0);
 #endif
 }
 
-[[noreturn]] void bug(String what)
+[[noreturn]] void bug(String what, std::source_location __loc)
 {
-  debug::_assert(false, fmt::format("internal bug detected: {}", what));
+  debug::assertm(false, fmt::format("internal bug detected: {}", what), __loc);
   invoke_ub();
 }
 
-[[noreturn]] void todo(String what)
+[[noreturn]] void todo(String what, std::source_location __loc)
 {
-  debug::_assert(false, fmt::format("todo: {}", what));
+  debug::assertm(false, fmt::format("todo: {}", what), __loc);
   invoke_ub();
 }
 
-[[noreturn]] void unimplemented(String what)
+[[noreturn]] void unimplemented(String what, std::source_location __loc)
 {
-  debug::_assert(false, fmt::format("unimplemented: {}", what));
+  debug::assertm(false, fmt::format("unimplemented: {}", what), __loc);
   invoke_ub();
 }
 

@@ -11,3 +11,4 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
+IndentPPDirectives: BeforeHash

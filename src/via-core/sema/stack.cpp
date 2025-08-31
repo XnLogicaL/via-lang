@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "stack.h"
+#include "debug.h"
 
 namespace via
 {
@@ -59,7 +60,7 @@ usize size()
 
 Frame& top()
 {
-  assert(!stack.empty());
+  debug::assertm(!stack.empty());
   return stack.back();
 }
 

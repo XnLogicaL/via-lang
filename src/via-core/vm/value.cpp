@@ -38,8 +38,8 @@ Value* Value::construct(Interpreter* ctx, bool boolean)
 
 Value* Value::construct(Interpreter* ctx, char* string)
 {
-  assert(
-      ctx->get_allocator().owns(string) &&
+  debug::assertm(
+      ctx->get_allocator().owns(string),
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
   return construct_impl(ctx, Kind::String, {.string = string});

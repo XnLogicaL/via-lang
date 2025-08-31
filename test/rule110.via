@@ -1,105 +1,29 @@
-import __io;
+import std::io;
+import std::array;
 
-fn main() -> nil {
-    const WIDTH = 31;
-    const STEPS = 15;
-
+fn r110(width: int, steps: int) -> nil {
     // Initialize the row with all 0s except the middle cell
-    var row = [0] * WIDTH;
-    row[WIDTH / 2] = 1;
+    var row = array::create::<int>(WIDTH, 0);
+    row[width / 2] = 1;
 
-    for var t = 0, STEPS, 1 {
+    for var t = 0, steps {
         // Print current row
-        for var i = 0, WIDTH, 1 {
-            if row[i] == 1:
-                __io::print("#");
-            else:
-                __io::print(" ");
+        for [i, cell] in row {
+            io::print("#" if cell == 1 else " ")
         }
 
-        __io::println("");
+        io::println();
 
-        // Compute next row
-        var next_row = [0] * WIDTH;
-        for var i = 0, WIDTH, 1 {
-            var left = if i == 0: 0 else row[i-1];
+        // Compute next row using map with index access
+        array::transform(&row, fn (i: int, _: int) {
+            var left = 0 if i == 0 else row[i-1];   
+            var right = 0 if i == width-1 else row[i+1];
             var center = row[i];
-            var right = if i == WIDTH-1: 0 else row[i+1];
 
-            // Rule 110 mapping
-            if left == 1 and center == 1 and right == 1:
-                next_row[i] = 0;
-            else if left == 1 and center == 1 and right == 0:
-                next_row[i] = 1;
-            else if left == 1 and center == 0 and right == 1:
-                next_row[i] = 1;
-            else if left == 1 and center == 0 and right == 0:
-                next_row[i] = 0;
-            else if left == 0 and center == 1 and right == 1:
-                next_row[i] = 1;
-            else if left == 0 and center == 1 and right == 0:
-                next_row[i] = 1;
-            else if left == 0 and center == 0 and right == 1:
-                next_row[i] = 1;
-            else if left == 0 and center == 0 and right == 0:
-                next_row[i] = 0;
-        }
-
-        row = next_row;
+            var index = (left shl 2) | (center shl 1) | right;
+            return (0b01101110 shr index) & 1;
+        });
     }
 }
 
-/*
-
-StmtImport({[IDENT '__io']})
-StmtFunctionDecl(name=[IDENT 'main'], ret=TypeBuiltin([NIL 'nil']), parms={})
- StmtVarDecl(lval=LValue(symbol=[IDENT 'WIDTH']), rval=ExprLit([INT '31']), type=<no-annotated-type>)
- StmtVarDecl(lval=LValue(symbol=[IDENT 'STEPS']), rval=ExprLit([INT '15']), type=<no-annotated-type>)
- StmtVarDecl(lval=LValue(symbol=[IDENT 'row']), rval=ExprBinary([ASTERISK '*'], ExprArray(init={ExprLit([INT '0'])}), ExprSymbol([IDENT 'WIDTH'])), type=<no-annotated-type>)
- StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'row']), ExprBinary([FSLASH '/'], ExprSymbol([IDENT 'WIDTH']), ExprLit([INT '2']))), rval=ExprLit([INT '1']))
- StmtFor(init=StmtVarDecl(lval=LValue(symbol=[IDENT 't']), rval=ExprLit([INT '0']), type=<no-annotated-type>), target=ExprSymbol([IDENT 'STEPS']), step=ExprLit([INT '1']))
-  StmtFor(init=StmtVarDecl(lval=LValue(symbol=[IDENT 'i']), rval=ExprLit([INT '0']), type=<no-annotated-type>), target=ExprSymbol([IDENT 'WIDTH']), step=ExprLit([INT '1']))
-   StmtIf()
-    Branch(ExprBinary([DBEQUALS '=='], ExprSubscript(ExprSymbol([IDENT 'row']), ExprSymbol([IDENT 'i'])), ExprLit([INT '1'])))
-     StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENT '__io']), ExprSymbol([IDENT '__io'])), args={ExprLit([STRING '"#"'])}))
-    EndBranch()
-   EndIf()
-  EndFor()
-  StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENT '__io']), ExprSymbol([IDENT '__io'])), args={ExprLit([STRING '""'])}))
-  StmtVarDecl(lval=LValue(symbol=[IDENT 'next_row']), rval=ExprBinary([ASTERISK '*'], ExprArray(init={ExprLit([INT '0'])}), ExprSymbol([IDENT 'WIDTH'])), type=<no-annotated-type>)
-  StmtFor(init=StmtVarDecl(lval=LValue(symbol=[IDENT 'i']), rval=ExprLit([INT '0']), type=<no-annotated-type>), target=ExprSymbol([IDENT 'WIDTH']), step=ExprLit([INT '1']))
-   StmtVarDecl(lval=LValue(symbol=[IDENT 'left']), rval=ExprTernary(cnd=ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'i']), ExprLit([INT '0'])), lhs=ExprLit([INT '0']), rhs=ExprSubscript(ExprSymbol([IDENT 'row']), ExprBinary([MINUS '-'], ExprSymbol([IDENT 'i']), ExprLit([INT '1'])))), type=<no-annotated-type>)
-   StmtVarDecl(lval=LValue(symbol=[IDENT 'center']), rval=ExprSubscript(ExprSymbol([IDENT 'row']), ExprSymbol([IDENT 'i'])), type=<no-annotated-type>)
-   StmtVarDecl(lval=LValue(symbol=[IDENT 'right']), rval=ExprTernary(cnd=ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'i']), ExprBinary([MINUS '-'], ExprSymbol([IDENT 'WIDTH']), ExprLit([INT '1']))), lhs=ExprLit([INT '0']), rhs=ExprSubscript(ExprSymbol([IDENT 'row']), ExprBinary([PLUS '+'], ExprSymbol([IDENT 'i']), ExprLit([INT '1'])))), type=<no-annotated-type>)
-   StmtIf()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '1'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '1']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '1']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '0']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '1'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '1']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '0']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '1']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '1'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '0']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '1']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '1']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '1'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '0']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '0']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '0']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '0'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '1']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '1']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '1']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '0'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '1']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '0']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '1']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '0'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '0']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '1']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '1']))
-    EndBranch()
-    Branch(ExprBinary([KW_AND 'and'], ExprBinary([KW_AND 'and'], ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'left']), ExprLit([INT '0'])), ExprBinary([DBEQUALS '=='], ExprSymbol([IDENT 'center']), ExprLit([INT '0']))), ExprBinary([DBEQUALS     '=='], ExprSymbol([IDENT 'right']), ExprLit([INT '0']))))
-     StmtAssign(op=[EQUALS '='], lval=ExprSubscript(ExprSymbol([IDENT 'next_row']), ExprSymbol([IDENT 'i'])), rval=ExprLit([INT '0']))
-    EndBranch()
-   EndIf()
-  EndFor()
-  StmtAssign(op=[EQUALS '='], lval=ExprSymbol([IDENT 'row']), rval=ExprSymbol([IDENT 'next_row']))
- EndFor()
-EndFunctionDecl()
-
-*/
+r110(31, 15);

@@ -3,6 +3,7 @@
 
 #include "module.h"
 #include <fstream>
+#include "debug.h"
 #include "ir/builder.h"
 #include "manager.h"
 #include "sema/register.h"
@@ -231,7 +232,7 @@ struct ModuleCandidate
 static Optional<ModuleInfo> resolve_import_path(fs::path root,
                                                 const QualPath& qs)
 {
-  assert(!qs.empty());
+  debug::assertm(!qs.empty(), "bad import path");
 
   QualPath slice = qs;
   String module_name = slice.back();
