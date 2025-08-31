@@ -10,7 +10,7 @@
 namespace via
 {
 
-struct RelLoc
+struct RelSourceLoc
 {
   usize line;
   usize offset;
@@ -22,7 +22,7 @@ struct SourceLoc
   usize end;
 
   // Returns the absolute location as a relative location.
-  RelLoc to_relative(const String& source) const;
+  RelSourceLoc toRelative(const String& source) const;
 };
 
 }  // namespace via

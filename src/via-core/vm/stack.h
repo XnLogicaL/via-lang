@@ -17,7 +17,7 @@ namespace config
 namespace vm
 {
 
-inline constexpr usize stack_size = 8192;
+inline constexpr usize kStackSize = 8192;
 
 }
 
@@ -27,27 +27,29 @@ template <typename T>
 class Stack final
 {
  public:
-  Stack(Allocator* alloc)
-      : alloc(alloc), bp(alloc->alloc<T>(config::vm::stack_size)), sp(bp)
+  Stack(Allocator* pAlloc)
+      : mAlloc(pAlloc),
+        mBasePtr(mAlloc->alloc<T>(config::vm::kStackSize)),
+        mStkPtr(mBasePtr)
   {}
 
  public:
-  Allocator* get_allocator() { return alloc; }
+  Allocator* getAllocator() { return mAlloc; }
 
-  usize size() const { return sp - bp; }
-  void jump(T* dst) { sp = dst; }
-  void jump(usize dst) { sp = bp + dst; }
-  void push(T val) { *(sp++) = val; }
-  T pop() { return *(--sp); }
-  T* top() { return sp - 1; }
-  T* at(usize idx) { return bp + idx; }
-  T* begin() { return bp; }
-  T* end() { return sp - 1; }
+  usize size() const { return mStkPtr - mBasePtr; }
+  void jump(T* dst) { mStkPtr = dst; }
+  void jump(usize dst) { mStkPtr = mBasePtr + dst; }
+  void push(T val) { *(mStkPtr++) = val; }
+  T pop() { return *(--mStkPtr); }
+  T* top() { return mStkPtr - 1; }
+  T* at(usize idx) { return mBasePtr + idx; }
+  T* begin() { return mBasePtr; }
+  T* end() { return mStkPtr - 1; }
 
  private:
-  Allocator* alloc;
-  T* const bp;
-  T* sp;
+  Allocator* mAlloc;
+  T* const mBasePtr;
+  T* mStkPtr;
 };
 
 }  // namespace via

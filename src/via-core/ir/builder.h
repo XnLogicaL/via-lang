@@ -20,21 +20,19 @@ class Builder final
 {
  public:
   Builder(via::Module* m, const SyntaxTree& ast, DiagContext& diags)
-      : m_module(m), m_ast(ast), m_diags(diags)
+      : mModule(m), mAst(ast), mDiags(diags)
   {}
 
  public:
   IrTree build();
 
  private:
-  via::Module* m_module;
-  const SyntaxTree& m_ast;
-  DiagContext& m_diags;
+  via::Module* mModule;
+  const SyntaxTree& mAst;
+  DiagContext& mDiags;
 };
 
 }  // namespace ir
-
-using IRBuilder = ir::Builder;
 
 }  // namespace via
 

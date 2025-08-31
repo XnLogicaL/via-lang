@@ -43,7 +43,10 @@ struct Terminator
 };
 
 #define COMMON_HEADER()                             \
-  String dump() const override;                     \
+  String dump() const override                      \
+  {                                                 \
+    debug::todo("dump");                            \
+  }                                                 \
   void accept(Visitor& vis, VisitInfo* vi) override \
   {                                                 \
     vis.visit(*this, vi);                           \

@@ -16,16 +16,16 @@ namespace detail
 {
 
 template <typename T, typename... Args>
-void construct_at(T* dst, Args&&... args)
+void constructAt(T* dst, Args&&... args)
 {
   (void)(new (dst) T(std::forward<Args>(args)...));
 }
 
 template <typename T, typename... Args>
-void construct_range(T* dst, usize sz, Args&&... args)
+void constructRangeAt(T* dst, usize sz, Args&&... args)
 {
   for (usize i = 0; i < sz; i++)
-    construct_at(dst + i, std::forward<Args>(args)...);
+    constructAt(dst + i, std::forward<Args>(args)...);
 }
 
 }  // namespace detail
@@ -47,7 +47,7 @@ struct StdAllocator
 
 struct MiAllocator
 {
-  static mi_heap_t* get_allocator()
+  static mi_heap_t* getAllocator()
   {
     static mi_heap_t* alloc = mi_heap_new();
     return alloc;
@@ -56,7 +56,7 @@ struct MiAllocator
   template <typename T>
   static T* alloc(usize sz)
   {
-    return (T*)mi_heap_calloc(get_allocator(), sz, sizeof(T));
+    return (T*)mi_heap_calloc(getAllocator(), sz, sizeof(T));
   }
 
   template <typename T>
@@ -71,7 +71,7 @@ class BumpAllocator final
 {
  public:
   BumpAllocator(usize sz)
-      : m_base(Alloc::template alloc<std::byte>(sz)), m_cursor(m_base)
+      : m_base(Alloc::template alloc<std::byte>(sz)), mCursor(m_base)
   {}
   ~BumpAllocator() { Alloc::template free<std::byte>(m_base); }
 
@@ -79,49 +79,49 @@ class BumpAllocator final
   template <typename T>
   [[nodiscard]] T* alloc()
   {
-    T* ptr = (T*)m_cursor;
-    m_cursor += sizeof(T);
-    detail::construct_at(ptr);
+    T* ptr = (T*)mCursor;
+    mCursor += sizeof(T);
+    detail::constructAt(ptr);
     return ptr;
   }
 
   template <typename T>
   [[nodiscard]] T* alloc(usize sz)
   {
-    T* ptr = (T*)m_cursor;
-    m_cursor += sizeof(T) * sz;
-    detail::construct_range(ptr, sz);
+    T* ptr = (T*)mCursor;
+    mCursor += sizeof(T) * sz;
+    detail::constructRangeAt(ptr, sz);
     return ptr;
   }
 
   template <typename T, typename... Args>
   [[nodiscard]] T* emplace(Args&&... args)
   {
-    T* ptr = (T*)m_cursor;
-    m_cursor += sizeof(T);
-    detail::construct_at(ptr, std::forward<Args>(args)...);
+    T* ptr = (T*)mCursor;
+    mCursor += sizeof(T);
+    detail::constructAt(ptr, std::forward<Args>(args)...);
     return ptr;
   }
 
   template <typename T, typename... Args>
   [[nodiscard]] T* emplace(usize sz, Args&&... args)
   {
-    T* ptr = (T*)m_cursor;
-    m_cursor += sizeof(T) * sz;
-    detail::construct_range(ptr, sz, std::forward<Args>(args)...);
+    T* ptr = (T*)mCursor;
+    mCursor += sizeof(T) * sz;
+    detail::constructRangeAt(ptr, sz, std::forward<Args>(args)...);
     return ptr;
   }
 
  private:
   std::byte* m_base;
-  std::byte* m_cursor;
+  std::byte* mCursor;
 };
 
 class Allocator final
 {
  public:
   Allocator() = default;
-  ~Allocator() { mi_heap_destroy(m_heap); }
+  ~Allocator() { mi_heap_destroy(mHeap); }
 
   NO_COPY(Allocator);
   NO_MOVE(Allocator);
@@ -131,29 +131,26 @@ class Allocator final
 
   [[nodiscard]] void* alloc(usize size);
   [[nodiscard]] char* strdup(const char* str);
-  [[nodiscard]] bool owns(void* ptr)
-  {
-    return mi_heap_check_owned(m_heap, ptr);
-  }
+  [[nodiscard]] bool owns(void* ptr) { return mi_heap_check_owned(mHeap, ptr); }
 
   template <typename T>
   [[nodiscard]] T* alloc()
   {
-    return (T*)mi_heap_malloc(m_heap, sizeof(T));
+    return (T*)mi_heap_malloc(mHeap, sizeof(T));
   }
 
   template <typename T>
   [[nodiscard]] T* alloc(usize count)
   {
-    return (T*)mi_heap_malloc(m_heap, count * sizeof(T));
+    return (T*)mi_heap_malloc(mHeap, count * sizeof(T));
   }
 
   template <typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
   [[nodiscard]] T* emplace(Args&&... args)
   {
-    T* mem = (T*)mi_heap_malloc(m_heap, sizeof(T));
-    detail::construct_at(mem, std::forward<Args>(args)...);
+    T* mem = (T*)mi_heap_malloc(mHeap, sizeof(T));
+    detail::constructAt(mem, std::forward<Args>(args)...);
     return mem;
   }
 
@@ -161,13 +158,13 @@ class Allocator final
     requires std::is_constructible_v<T, Args...>
   [[nodiscard]] T* emplace(usize count, Args&&... args)
   {
-    T* mem = (T*)mi_heap_malloc(m_heap, count * sizeof(T));
-    detail::construct_range(mem, count, std::forward<Args>(args)...);
+    T* mem = (T*)mi_heap_malloc(mHeap, count * sizeof(T));
+    detail::constructRangeAt(mem, count, std::forward<Args>(args)...);
     return mem;
   }
 
  private:
-  mi_heap_t* m_heap = mi_heap_new();
+  mi_heap_t* mHeap = mi_heap_new();
 };
 
 }  // namespace via

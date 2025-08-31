@@ -26,27 +26,27 @@ template <typename T, typename Id = u64>
 class InternTable
 {
  public:
-  using view = View<T>::type;
+  using View = View<T>::type;
 
  public:
   Id intern(const T& t)
   {
-    auto [it, inserted] = map.try_emplace(t, next_id);
+    auto [it, inserted] = mMap.try_emplace(t, mNextId);
     if (inserted)
-      next_id++;
+      mNextId++;
     return it->second;
   }
 
-  Optional<view> lookup(Id id) const
+  Optional<View> lookup(Id id) const
   {
-    if (auto it = map.find(id))
+    if (auto it = mMap.find(id))
       return it->first;
     return nullopt;
   }
 
  protected:
-  usize next_id = 0;
-  Map<T, Id> map;
+  usize mNextId = 0;
+  Map<T, Id> mMap;
 };
 
 }  // namespace via

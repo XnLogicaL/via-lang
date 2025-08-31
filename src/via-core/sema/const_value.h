@@ -32,7 +32,7 @@ class ConstValue final
   constexpr explicit ConstValue(bool boolean) : u(boolean) {}
   constexpr explicit ConstValue(String string) : u(string) {}
 
-  static Optional<ConstValue> from_literal_token(const Token& tok);
+  static Optional<ConstValue> fromToken(const Token& tok);
 
  public:
   constexpr Kind kind() const { return static_cast<Kind>(u.index()); }
@@ -58,7 +58,7 @@ class ConstValue final
         u);
   }
 
-  String to_string() const;
+  String toString() const;
   String dump() const;
 
  private:
@@ -66,12 +66,6 @@ class ConstValue final
 };
 
 }  // namespace sema
-
-template <>
-struct Convert<sema::ConstValue>
-{
-  static String to_string(const sema::ConstValue& cv) { return cv.dump(); }
-};
 
 }  // namespace via
 

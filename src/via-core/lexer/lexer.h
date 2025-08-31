@@ -18,9 +18,7 @@ class Lexer final
 {
  public:
   Lexer(const String& file)
-      : m_file(file),
-        m_cursor(file.data()),
-        m_end(file.data() + file.size() - 1)
+      : mFile(file), mCursor(file.data()), mEnd(file.data() + file.size() - 1)
   {}
 
  public:
@@ -29,17 +27,17 @@ class Lexer final
  private:
   char advance(int ahead = 1);
   char peek(int ahead = 0);
-  Token* read_number();
-  Token* read_string();
-  Token* read_symbol();
-  Token* read_identifier();
-  bool skip_comment();
+  Token* readNumber();
+  Token* readString();
+  Token* readSymbol();
+  Token* readIdentifier();
+  bool skipComment();
 
  private:
-  const String& m_file;
-  const char* m_cursor;
-  const char* m_end;
-  Allocator m_alloc;
+  const String& mFile;
+  const char* mCursor;
+  const char* mEnd;
+  Allocator mAlloc;
 };
 
 namespace debug

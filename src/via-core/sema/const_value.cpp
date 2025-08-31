@@ -2,6 +2,7 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "const_value.h"
+#include <magic_enum/magic_enum.hpp>
 #include "color.h"
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
@@ -12,7 +13,7 @@ namespace via
 namespace sema
 {
 
-Optional<ConstValue> ConstValue::from_literal_token(const Token& tok)
+Optional<ConstValue> ConstValue::fromToken(const Token& tok)
 {
   switch (tok.kind) {
     case Token::Kind::NIL:
@@ -24,11 +25,11 @@ Optional<ConstValue> ConstValue::from_literal_token(const Token& tok)
     case Token::Kind::INT:
     case Token::Kind::XINT:
     case Token::Kind::BINT:
-      if (auto val = stoi<ConstValue::int_type>(tok.to_string()))
+      if (auto val = stoi<ConstValue::int_type>(tok.toString()))
         return ConstValue(*val);
       break;
     case Token::Kind::FP:
-      if (auto val = stof<ConstValue::float_type>(tok.to_string()))
+      if (auto val = stof<ConstValue::float_type>(tok.toString()))
         return ConstValue(*val);
       break;
     default:
@@ -38,7 +39,7 @@ Optional<ConstValue> ConstValue::from_literal_token(const Token& tok)
   return nullopt;
 }
 
-String ConstValue::to_string() const
+String ConstValue::toString() const
 {
   switch (kind()) {
     case Kind::Nil:
@@ -60,10 +61,9 @@ String ConstValue::to_string() const
 
 String ConstValue::dump() const
 {
-  return fmt::format(
-      "{} [{} {}]",
-      apply_ansi_style("constant", Fg::Magenta, Bg::Black, Style::Bold),
-      magic_enum::enum_name(kind()), to_string());
+  return fmt::format("{} [{} {}]",
+                     applyANSI("constant", Fg::Magenta, Bg::Black, Style::Bold),
+                     magic_enum::enum_name(kind()), toString());
 }
 
 }  // namespace sema

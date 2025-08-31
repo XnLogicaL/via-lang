@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
+#include "memory.h"
 #include "type_visitor.h"
 
 namespace via
@@ -37,7 +38,7 @@ class Type
   static InferResult infer(Allocator& alloc, const ast::Expr* expr);
 
  public:
-  bool is_dependent() const { return flags & 0x1; }
+  bool isDependent() const { return flags & 0x1; }
   virtual void accept(TypeVisitor& vis, VisitInfo* vi) = 0;
 
  public:
@@ -72,7 +73,7 @@ struct ArrayType : Type
 {
   const Type* elem;
   explicit ArrayType(const Type* elem)
-      : Type(Kind::Array, elem->is_dependent()), elem(elem)
+      : Type(Kind::Array, elem->isDependent()), elem(elem)
   {}
 
   void accept(TypeVisitor& vis, VisitInfo* vi) override
@@ -85,7 +86,7 @@ struct DictType : Type
 {
   const Type *key, *val;
   explicit DictType(const Type* key, const Type* val)
-      : Type(Kind::Dict, (key->is_dependent() || val->is_dependent())),
+      : Type(Kind::Dict, (key->isDependent() || val->isDependent())),
         key(key),
         val(val)
   {}
@@ -101,16 +102,16 @@ struct FuncType : Type
   Vec<const Type*> params;
   const Type* result;
 
-  static u8 compute_dep(const Vec<const Type*>& ps, const Type* rs)
+  static u8 computeDependence(const Vec<const Type*>& ps, const Type* rs)
   {
-    bool dep = rs->is_dependent();
+    bool dep = rs->isDependent();
     for (auto* p : ps)
-      dep |= p->is_dependent();
+      dep |= p->isDependent();
     return dep ? 1 : 0;
   }
 
   explicit FuncType(Vec<const Type*> ps, const Type* rs)
-      : Type(Kind::Function, compute_dep(ps, rs)),
+      : Type(Kind::Function, computeDependence(ps, rs)),
         params(std::move(ps)),
         result(rs)
   {}
@@ -150,10 +151,10 @@ struct TemplateSpecType : Type
 {
   const ast::StmtTypeDecl* primary;
   Vec<const Type*> args;
-  explicit TemplateSpecType(const ast::StmtTypeDecl* Prim,
+  explicit TemplateSpecType(const ast::StmtTypeDecl* prim,
                             Vec<const Type*> A,
                             bool dep)
-      : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(Prim), args(std::move(A))
+      : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(prim), args(std::move(A))
   {}
 
   void accept(TypeVisitor& vis, VisitInfo* vi) override
@@ -167,7 +168,7 @@ struct SubstParamType : Type
   const TemplateParamType* parm;
   const Type* replacement;
   explicit SubstParamType(const TemplateParamType* par, const Type* rs)
-      : Type(Kind::SubstParam, rs->is_dependent()), parm(par), replacement(rs)
+      : Type(Kind::SubstParam, rs->isDependent()), parm(par), replacement(rs)
   {}
 
   void accept(TypeVisitor& vis, VisitInfo* vi) override

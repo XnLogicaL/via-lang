@@ -2,11 +2,10 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "register.h"
-#include "buffer.h"
 #include "debug.h"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
-#define VIA_HAVE_BUILTIN_CTZLL
+  #define VIA_HAVE_BUILTIN_CTZLL
 #endif
 
 namespace via
@@ -18,11 +17,11 @@ namespace sema
 namespace registers
 {
 
-static Buffer<u16> regs{config::register_count / 8};
+static Vec<u16> regs(config::kRegisterCount / 8);
 
 void reset()
 {
-  std::memset(regs.data(), 0, config::register_count / 8);
+  std::memset(regs.data(), 0, config::kRegisterCount / 8);
 }
 
 u16 alloc()

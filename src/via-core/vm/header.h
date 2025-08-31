@@ -7,7 +7,6 @@
 #include <via/config.h>
 #include <via/types.h>
 #include <filesystem>
-#include "convert.h"
 #include "diagnostics.h"
 #include "instruction.h"
 
@@ -34,12 +33,6 @@ struct Header
   Header(const std::filesystem::path& binary, DiagContext& diags);
 
   String dump() const;
-};
-
-template <>
-struct Convert<Header>
-{
-  static String to_string(const Header& header) { return header.dump(); }
 };
 
 }  // namespace via

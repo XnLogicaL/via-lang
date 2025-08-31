@@ -12,20 +12,7 @@ namespace via
 {
 
 namespace sema
-{
-
-enum class ControlPath
-{
-  None,         // uninterrupted flow
-  Return,       // returns from function
-  Break,        // breaks a loop/switch
-  Continue,     // continues a loop
-  Unreachable,  // statement is never reached
-};
-
-ControlPath analyze_cpath(const ast::Stmt* stmt);
-
-}  // namespace sema
+{}  // namespace sema
 
 }  // namespace via
 

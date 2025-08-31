@@ -45,10 +45,10 @@ enum class Style
   Underline = 4,
 };
 
-constexpr String apply_ansi_style(String str,
-                                  Fg foreground_color,
-                                  Bg background_color = Bg::Black,
-                                  Style style = Style::Reset)
+constexpr String applyANSI(String str,
+                           Fg foreground_color,
+                           Bg background_color = Bg::Black,
+                           Style style = Style::Reset)
 {
   // Construct ANSI escape code and apply the color formatting to the text
   return "\033[" + std::to_string(static_cast<int>(style)) + ";" +

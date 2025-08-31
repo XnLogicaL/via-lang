@@ -114,7 +114,7 @@ struct AttributeGroup
 {
   struct Attribute
   {
-    const Path* sp;
+    const Path* mStkPtr;
     Vec<const Token*> args;
   };
 
@@ -352,7 +352,7 @@ struct StmtTypeDecl : public Stmt
 struct StmtUsing : public Stmt
 {
   COMMON_HEADER(Stmt);
-  const Path* sp;
+  const Path* mStkPtr;
   const StmtScope* scp;
 };
 

@@ -31,7 +31,7 @@ struct InstructionLayout
 };
 
 // TODO
-static constexpr InstructionLayout insn_layout_map[] = {
+static constexpr InstructionLayout kInstrLayoutMap[] = {
     {"nop", Opcode::NOP, {}},
     {"halt", Opcode::HALT, {}},
     {"extraarg1", Opcode::EXTRAARG1, {Operand::Generic}},
@@ -353,7 +353,7 @@ static constexpr InstructionLayout insn_layout_map[] = {
     // ...
 };
 
-static char get_operand_prefix(Operand kind)
+static char getOperandPrefix(Operand kind)
 {
   switch (kind) {
     case Operand::Label:
@@ -374,7 +374,7 @@ String Instruction::dump() const
   const u16 ops[] = {a, b, c};
   const InstructionLayout* il = nullptr;
 
-  for (const auto& pair : insn_layout_map) {
+  for (const auto& pair : kInstrLayoutMap) {
     if (pair.opc == op) {
       il = &pair;
       break;
@@ -387,29 +387,30 @@ String Instruction::dump() const
 
   std::ostringstream oss;
   oss << std::left << std::setfill(' ') << std::setw(20);
-  oss << apply_ansi_style(il->op_str, Fg::Magenta, Bg::Black, Style::Bold)
-      << " ";
+  oss << applyANSI(il->op_str, Fg::Magenta, Bg::Black, Style::Bold) << " ";
 
   for (size_t i = 0; u16 operand : ops) {
     // disgusting addressing hack
     const Operand* ok;
-    if ((ok = &(il->ol.a) + i++, *ok == Operand::None))
+    if ((ok = &(il->ol.a) + i++, *ok == Operand::None)) {
       break;
+    }
 
-    String real_pref;
+    String realPrefix;
 
     char pref;
-    if ((pref = get_operand_prefix(*ok), pref == 0))
-      real_pref = "";
+    if ((pref = getOperandPrefix(*ok), pref == 0))
+      realPrefix = "";
     else
-      real_pref = pref;
+      realPrefix = pref;
 
-    oss << real_pref << std::to_string(operand);
+    oss << realPrefix << std::to_string(operand);
 
     // another address hack...
     // check if next operand is used and append seperator accordingly
-    if (*(ok + 1) != Operand::None)
+    if (*(ok + 1) != Operand::None) {
       oss << " ";
+    }
   }
 
   return oss.str();

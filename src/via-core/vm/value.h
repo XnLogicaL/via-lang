@@ -48,39 +48,39 @@ class Value final
   static Value* construct(Interpreter* ctx, char* string);
 
  public:
-  Kind kind() const { return k; }
-  Union& data() { return u; }
-  const Union& data() const { return u; }
-  Interpreter* context() const { return ctx; }
+  Kind kind() const { return mKind; }
+  Union& data() { return mData; }
+  const Union& data() const { return mData; }
+  Interpreter* context() const { return mCtx; }
 
   void free();
   Value* clone();
-  ValueRef make_ref();
+  ValueRef makeRef();
 
   // Totally safe access methods
-  int_type get_int() const { return u.int_; }
-  float_type get_float() const { return u.float_; }
-  bool get_boolean() const { return u.boolean; }
-  char* get_string() const { return u.string; }
+  int_type getInt() const { return mData.int_; }
+  float_type getFloat() const { return mData.float_; }
+  bool getBool() const { return mData.boolean; }
+  char* getString() const { return mData.string; }
 
-  Optional<int_type> as_cint() const;
-  Optional<float_type> as_cfloat() const;
-  bool as_cbool() const;
-  char* as_cstring() const;
+  Optional<int_type> asCInt() const;
+  Optional<float_type> asCFloat() const;
+  bool asCBool() const;
+  char* asCString() const;
 
-  Value* as_int() const;
-  Value* as_float() const;
-  Value* as_bool() const;
-  Value* as_string() const;
-
- private:
-  static Value* construct_impl(Interpreter* ctx, Kind kind, Union data = {});
+  Value* asInt() const;
+  Value* asFloat() const;
+  Value* asBool() const;
+  Value* asString() const;
 
  private:
-  Kind k = Kind::Nil;
-  Union u = {};
-  usize rc = 0;
-  Interpreter* ctx = nullptr;
+  static Value* constructImpl(Interpreter* mCtx, Kind kind, Union data = {});
+
+ private:
+  Kind mKind = Kind::Nil;
+  Union mData = {};
+  usize mRc = 0;
+  Interpreter* mCtx = nullptr;
 };
 
 }  // namespace via

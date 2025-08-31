@@ -152,7 +152,7 @@ namespace via
 namespace config
 {
 
-inline constexpr usize version = 10;
+inline constexpr usize kVersion = 10;
 
 }
 

@@ -13,10 +13,10 @@ namespace via
 namespace cli
 {
 
-inline auto& get_cli_app()
+inline auto& getApp()
 {
-  static argparse::ArgumentParser cli(
-      "via", Convert<Version>::to_string(get_semantic_version()));
+  static argparse::ArgumentParser cli("via",
+                                      via::toString(getSemanticVersion()));
 
   cli.add_argument("input").default_value("").help("Target source file");
   cli.add_argument("--dump", "-D")

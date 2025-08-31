@@ -10,11 +10,11 @@ namespace via
 namespace sema
 {
 
-Optional<LocalRef> Frame::get_local(StringView symbol)
+Optional<LocalRef> Frame::getLocal(StringView symbol)
 {
-  for (i64 i = locals.size() - 1; i >= 0; --i) {
-    Local& local = locals[i];
-    if (local.get_symbol() == symbol) {
+  for (i64 i = mLocals.size() - 1; i >= 0; --i) {
+    Local& local = mLocals[i];
+    if (local.getSymbol() == symbol) {
       return LocalRef{static_cast<u16>(i), local};
     }
   }
@@ -22,20 +22,20 @@ Optional<LocalRef> Frame::get_local(StringView symbol)
   return nullopt;
 }
 
-void Frame::set_local(StringView symbol,
-                      const ast::LValue* lval,
-                      const ast::Expr* rval,
-                      const ast::Type* type,
-                      u64 quals)
+void Frame::setLocal(StringView symbol,
+                     const ast::LValue* lval,
+                     const ast::Expr* rval,
+                     const ast::Type* type,
+                     u64 quals)
 {
   usize version;
-  if (auto lref = get_local(symbol)) {
-    version = lref->local.get_version() + 1;
+  if (auto lref = getLocal(symbol)) {
+    version = lref->local.getVersion() + 1;
   } else {
     version = 0;
   }
 
-  locals.emplace_back(symbol, lval, rval, type, version, quals);
+  mLocals.emplace_back(symbol, lval, rval, type, version, quals);
 }
 
 namespace stack

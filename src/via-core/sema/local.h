@@ -30,29 +30,29 @@ class Local final
         const ast::Type* type,
         usize version = 0,
         u64 quals = 0ULL)
-      : m_version(version),
-        m_quals(quals),
-        m_symbol(symbol),
-        m_lval(lval),
-        m_rval(rval),
-        m_type(type)
+      : mVersion(version),
+        mQuals(quals),
+        mSymbol(symbol),
+        mLVal(lval),
+        mRVal(rval),
+        mType(type)
   {}
 
  public:
-  usize get_version() const { return m_version; }
-  u64 get_qualifiers() const { return m_quals; }
-  StringView get_symbol() const { return m_symbol; }
-  const ast::LValue* get_lval() const { return m_lval; }
-  const ast::Expr* get_rval() const { return m_rval; }
-  const ast::Type* get_type() const { return m_type; }
+  usize getVersion() const { return mVersion; }
+  u64 getQualifiers() const { return mQuals; }
+  StringView getSymbol() const { return mSymbol; }
+  const ast::LValue* getLVal() const { return mLVal; }
+  const ast::Expr* getRVal() const { return mRVal; }
+  const ast::Type* getType() const { return mType; }
 
  protected:
-  const usize m_version = 0;
-  const u64 m_quals = 0ULL;
-  const StringView m_symbol = "<invalid-local>";
-  const ast::LValue* m_lval = nullptr;
-  const ast::Expr* m_rval = nullptr;
-  const ast::Type* m_type = nullptr;
+  const usize mVersion = 0;
+  const u64 mQuals = 0ULL;
+  const StringView mSymbol = "<invalid-local>";
+  const ast::LValue* mLVal = nullptr;
+  const ast::Expr* mRVal = nullptr;
+  const ast::Type* mType = nullptr;
 };
 
 struct LocalRef

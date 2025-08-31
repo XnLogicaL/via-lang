@@ -9,12 +9,12 @@ namespace via
 
 void DiagContext::emit(spdlog::logger* logger) const
 {
-  for (const auto& d : m_diags) {
-    emit_one(d, logger);
+  for (const auto& d : mDiags) {
+    emitOnce(d, logger);
   }
 }
 
-void DiagContext::emit_one(const Diagnosis& d, spdlog::logger* logger) const
+void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
 {
   spdlog::level::level_enum level;
   switch (d.kind) {
@@ -30,54 +30,53 @@ void DiagContext::emit_one(const Diagnosis& d, spdlog::logger* logger) const
   }
 
   u64 line = 0, col = 0;
-  StringView line_sv;
+  StringView lineView;
 
-  if (d.loc.begin >= m_source.size()) {
+  if (d.loc.begin >= mSource.size()) {
     logger->log(level, "{}", d.msg);
     return;
   }
 
-  const char* begin = reinterpret_cast<const char*>(m_source.data());
-  const char* end = begin + m_source.size();
+  const char* begin = reinterpret_cast<const char*>(mSource.data());
+  const char* end = begin + mSource.size();
   const char* ptr = begin + d.loc.begin;
 
-  const char* line_start = ptr;
-  while (line_start > begin && line_start[-1] != '\n' &&
-         line_start[-1] != '\r') {
-    --line_start;
+  const char* lineBegin = ptr;
+  while (lineBegin > begin && lineBegin[-1] != '\n' && lineBegin[-1] != '\r') {
+    --lineBegin;
   }
 
-  const char* line_end = ptr;
-  while (line_end < end && *line_end != '\n' && *line_end != '\r') {
-    ++line_end;
+  const char* lineEnd = ptr;
+  while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
+    ++lineEnd;
   }
 
-  for (const char* p = begin; p < line_start; ++p) {
+  for (const char* p = begin; p < lineBegin; ++p) {
     if (*p == '\n')
       ++line;
   }
 
-  ++line;                                        // 1-based
-  col = static_cast<u64>(ptr - line_start) + 1;  // 1-based
-  line_sv = StringView(line_start, static_cast<usize>(line_end - line_start));
+  ++line;                                       // 1-based
+  col = static_cast<u64>(ptr - lineBegin) + 1;  // 1-based
+  lineView = StringView(lineBegin, static_cast<usize>(lineEnd - lineBegin));
 
-  logger->log(level, "{} {} {}", d.msg,
-              apply_ansi_style("at", Fg::White, Bg::Black, Style::Faint),
-              apply_ansi_style(fmt::format("[{}:{}:{}] module({})", m_path,
-                                           line, col, m_name),
-                               Fg::Cyan));
+  logger->log(
+      level, "{} {} {}", d.msg,
+      applyANSI("at", Fg::White, Bg::Black, Style::Faint),
+      applyANSI(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
+                Fg::Cyan));
 
-  usize line_width = static_cast<usize>(std::log10(line)) + 1;
+  usize lineWidth = static_cast<usize>(std::log10(line)) + 1;
 
   spdlog::set_pattern("%v");
-  logger->log(spdlog::level::off, " {} | {}", line, line_sv);
+  logger->log(spdlog::level::off, " {} | {}", line, lineView);
 
-  String caret(line_sv.size(), ' ');
+  String caret(lineView.size(), ' ');
   if (col > 0 && col - 1 < caret.size()) {
     caret[col - 1] = '^';
   }
 
-  logger->log(spdlog::level::off, " {} | {}", String(line_width, ' '), caret);
+  logger->log(spdlog::level::off, " {} | {}", String(lineWidth, ' '), caret);
   spdlog::set_pattern("%^%l:%$ %v");
 }
 

@@ -4,7 +4,6 @@
 #include "lexer.h"
 #include <fmt/core.h>
 #include <cstring>
-#include <iostream>
 
 namespace via
 {
@@ -16,7 +15,7 @@ struct TokenReprPair
   Token::Kind kind;
 };
 
-static constexpr TokenReprPair KEYWORDS[] = {
+static constexpr TokenReprPair kLexKeywords[] = {
     {"var", Token::Kind::KW_VAR},       {"const", Token::Kind::KW_CONST},
     {"fn", Token::Kind::KW_FN},         {"type", Token::Kind::KW_TYPE},
     {"while", Token::Kind::KW_WHILE},   {"for", Token::Kind::KW_FOR},
@@ -33,7 +32,7 @@ static constexpr TokenReprPair KEYWORDS[] = {
     {"string", Token::Kind::KW_STRING},
 };
 
-static constexpr TokenReprPair SYMBOLS[] = {
+static constexpr TokenReprPair kLexSymbols[] = {
     {".", Token::Kind::DOT},
     {",", Token::Kind::COMMA},
     {";", Token::Kind::SEMICOLON},
@@ -79,14 +78,38 @@ static constexpr TokenReprPair SYMBOLS[] = {
     {"..=", Token::Kind::CONCATEQUALS},
 };
 
-static bool is_numeric(Token::Kind* kind, char c)
+static consteval usize stringLength(const char* str)
+{
+  usize len = 0;
+  while (str[len] != '\0')
+    ++len;
+
+  return len;
+}
+
+static consteval usize maxSymbolSize()
+{
+  usize maxSize = 0;
+
+  for (const auto& sym : kLexSymbols) {
+    usize size = stringLength(sym.str);
+    if (size > maxSize) {
+      maxSize = size;
+    }
+  }
+
+  return maxSize;
+}
+
+static bool isNumeric(Token::Kind* kind, char c)
 {
   switch (*kind) {
-      // clang-format off
-  case Token::Kind::INT:  return isdigit(c) || (c == '.' && *kind != Token::Kind::FP); // decimal
-  case Token::Kind::XINT: return isxdigit(c); // hexadecimal
-  case Token::Kind::BINT: return c == '0' || c == '1'; // binary
-    // clang-format on
+    case Token::Kind::INT:
+      return isdigit(c) || (c == '.' && *kind != Token::Kind::FP);  // decimal
+    case Token::Kind::XINT:
+      return isxdigit(c);  // hexadecimal
+    case Token::Kind::BINT:
+      return c == '0' || c == '1';  // binary
     default:
       break;
   }
@@ -94,38 +117,38 @@ static bool is_numeric(Token::Kind* kind, char c)
   return false;
 }
 
-static bool is_identifier_initial(char c)
+static bool isIdentifierInitial(char c)
 {
   return isalpha(c) || c == '_';
 }
 
-static bool is_identifier(char c)
+static bool isIdentifier(char c)
 {
   return isalnum(c) || c == '_';
 }
 
-static bool is_string_delimiter(char c)
+static bool isStringDelimiter(char c)
 {
   return c == '"' || c == '\'' || c == '`';
 }
 
 char Lexer::advance(int ahead)
 {
-  char c = *m_cursor;
-  m_cursor += ahead;
-  return m_cursor < m_end ? c : '\0';
+  char c = *mCursor;
+  mCursor += ahead;
+  return mCursor < mEnd ? c : '\0';
 }
 
 char Lexer::peek(int ahead)
 {
-  return m_cursor + ahead < m_end ? *(m_cursor + ahead) : '\0';
+  return mCursor + ahead < mEnd ? *(mCursor + ahead) : '\0';
 }
 
-Token* Lexer::read_number()
+Token* Lexer::readNumber()
 {
-  Token* token = m_alloc.emplace<Token>();
+  Token* token = mAlloc.emplace<Token>();
   token->kind = Token::Kind::INT;
-  token->lexeme = m_cursor;
+  token->lexeme = mCursor;
   token->size = 0;
 
   if (peek() == '0') {
@@ -142,7 +165,7 @@ Token* Lexer::read_number()
 
 decimal:
   char c;
-  while ((c = peek()), is_numeric(&token->kind, c)) {
+  while ((c = peek()), isNumeric(&token->kind, c)) {
     if (c == '.') {
       if (token->kind == Token::Kind::INT)
         token->kind = Token::Kind::FP;
@@ -159,11 +182,11 @@ decimal:
   return token;
 }
 
-Token* Lexer::read_string()
+Token* Lexer::readString()
 {
-  Token* token = m_alloc.emplace<Token>();
+  Token* token = mAlloc.emplace<Token>();
   token->kind = Token::Kind::STRING;
-  token->lexeme = m_cursor;
+  token->lexeme = mCursor;
 
   char del = advance();
   token->size = 1;
@@ -192,20 +215,20 @@ Token* Lexer::read_string()
   return token;
 }
 
-Token* Lexer::read_identifier()
+Token* Lexer::readIdentifier()
 {
-  Token* token = m_alloc.emplace<Token>();
+  Token* token = mAlloc.emplace<Token>();
   token->kind = Token::Kind::IDENT;
-  token->lexeme = m_cursor;
+  token->lexeme = mCursor;
   token->size = 0;
 
   char c;
-  while ((c = peek()), is_identifier(c)) {
+  while ((c = peek()), isIdentifier(c)) {
     advance();
     token->size++;
   }
 
-  for (const auto& kw : KEYWORDS) {
+  for (const auto& kw : kLexKeywords) {
     if (strlen(kw.str) != token->size)
       continue;
 
@@ -234,42 +257,42 @@ Token* Lexer::read_identifier()
   return token;
 }
 
-Token* Lexer::read_symbol()
+Token* Lexer::readSymbol()
 {
-  Token* token = m_alloc.emplace<Token>();
-  token->lexeme = m_cursor;
+  Token* token = mAlloc.emplace<Token>();
+  token->lexeme = mCursor;
   token->kind = Token::Kind::ILLEGAL;
   token->size = 1;
 
-  int max_len = 3;
-  int matched_size = 0;
-  auto matched_kind = Token::Kind::ILLEGAL;
+  int matchSize = 0;
+  auto matchKind = Token::Kind::ILLEGAL;
 
   char buf[4] = {};
 
-  for (int len = max_len; len >= 1; --len) {
+  for (int len = maxSymbolSize(); len >= 1; --len) {
     for (int i = 0; i < len; ++i) {
-      buf[i] = m_cursor[i];
+      buf[i] = mCursor[i];
     }
 
     buf[len] = '\0';
 
-    for (const auto& sym : SYMBOLS) {
+    for (const auto& sym : kLexSymbols) {
       if (len == strlen(sym.str) && strcmp(buf, sym.str) == 0) {
-        matched_kind = sym.kind;
-        matched_size = len;
+        matchKind = sym.kind;
+        matchSize = len;
         goto found;
       }
     }
   }
 
 found:
-  if (matched_kind != Token::Kind::ILLEGAL) {
-    token->kind = matched_kind;
-    token->size = matched_size;
+  if (matchKind != Token::Kind::ILLEGAL) {
+    token->kind = matchKind;
+    token->size = matchSize;
 
-    for (int i = 0; i < matched_size; ++i)
+    for (int i = 0; i < matchSize; ++i) {
       advance();
+    }
   } else {
     advance();  // advance one char if no match
   }
@@ -277,10 +300,11 @@ found:
   return token;
 }
 
-bool Lexer::skip_comment()
+bool Lexer::skipComment()
 {
-  if (peek() != '/')
+  if (peek() != '/') {
     return false;
+  }
 
   char next = peek(1);
   if (next == '/') {
@@ -329,26 +353,26 @@ TokenTree Lexer::tokenize()
       continue;
     }
 
-    if (skip_comment())
+    if (skipComment())
       continue;
 
     Token* token;
 
     if (std::isdigit(c))
-      token = read_number();
-    else if (is_identifier_initial(c))
-      token = read_identifier();
-    else if (is_string_delimiter(c))
-      token = read_string();
+      token = readNumber();
+    else if (isIdentifierInitial(c))
+      token = readIdentifier();
+    else if (isStringDelimiter(c))
+      token = readString();
     else
-      token = read_symbol();
+      token = readSymbol();
 
     toks.push_back(token);
   }
 
-  Token* eof = m_alloc.emplace<Token>();
+  Token* eof = mAlloc.emplace<Token>();
   eof->kind = Token::Kind::EOF_;
-  eof->lexeme = m_cursor;
+  eof->lexeme = mCursor;
   eof->size = 0;
 
   toks.push_back(eof);

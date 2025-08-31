@@ -2,12 +2,12 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "parser.h"
-
 #include <fmt/core.h>
+#include <magic_enum/magic_enum.hpp>
 
 #define SAVE_FIRST()       \
   auto* first = advance(); \
-  auto loc = first->location(m_source);
+  auto loc = first->location(mSource);
 
 namespace via
 {
@@ -29,7 +29,7 @@ struct ParserError
   {}
 };
 
-static bool is_expr_start(Token::Kind kind)
+static bool isExprInitial(Token::Kind kind)
 {
   switch (kind) {
     case INT:
@@ -49,7 +49,7 @@ static bool is_expr_start(Token::Kind kind)
   }
 }
 
-static int bin_prec(Token::Kind kind)
+static int binPrec(Token::Kind kind)
 {
   switch (kind) {
     case KW_OR:
@@ -86,14 +86,14 @@ static int bin_prec(Token::Kind kind)
   }
 }
 
-Token* Parser::peek(int ahead)
+const Token* Parser::peek(int ahead)
 {
-  return m_cursor[ahead];
+  return mCursor[ahead];
 }
 
-Token* Parser::advance()
+const Token* Parser::advance()
 {
-  return *(m_cursor++);
+  return *(mCursor++);
 }
 
 bool Parser::match(Token::Kind kind, int ahead)
@@ -111,44 +111,42 @@ bool Parser::optional(Token::Kind kind)
   return false;
 }
 
-Token* Parser::expect(Token::Kind kind, const char* task)
+const Token* Parser::expect(Token::Kind kind, const char* task)
 {
   if (!match(kind)) {
     const Token& unexp = *peek();
-    throw ParserError(unexp.location(m_source),
-                      "Unexpected token '{}' ({}) while {}", unexp.to_string(),
+    throw ParserError(unexp.location(mSource),
+                      "Unexpected token '{}' ({}) while {}", unexp.toString(),
                       magic_enum::enum_name(unexp.kind), task);
   }
 
   return advance();
 }
 
-TupleBinding* Parser::parse_tuple_binding()
+TupleBinding* Parser::parseTupleBinding()
 {
   SAVE_FIRST()
 
-  auto* tpb = m_alloc.emplace<TupleBinding>();
+  auto* tpb = mAlloc.emplace<TupleBinding>();
 
   while (!match(RBRACKET)) {
-    Token* id = expect(IDENT, "parsing tuple binding");
-    auto id_loc = id->location(m_source);
-
+    auto* id = expect(IDENT, "parsing tuple binding");
     tpb->binds.push_back(id);
 
     if (!match(RBRACKET))
       expect(COMMA, "parsing tuple binding");
   }
 
-  tpb->loc = {loc.begin, advance()->location(m_source).end};
+  tpb->loc = {loc.begin, advance()->location(mSource).end};
   return tpb;
 }
 
-Path* Parser::parse_static_path()
+Path* Parser::parseStaticPath()
 {
-  auto* sp = m_alloc.emplace<Path>();
+  auto* mStkPtr = mAlloc.emplace<Path>();
 
   while (true) {
-    sp->path.push_back(expect(IDENT, "parsing static path"));
+    mStkPtr->path.push_back(expect(IDENT, "parsing static path"));
 
     if (match(DBCOLON)) {
       advance();
@@ -157,14 +155,14 @@ Path* Parser::parse_static_path()
     }
   }
 
-  sp->loc = {sp->path.front()->location(m_source).begin,
-             sp->path.back()->location(m_source).end};
-  return sp;
+  mStkPtr->loc = {mStkPtr->path.front()->location(mSource).begin,
+                  mStkPtr->path.back()->location(mSource).end};
+  return mStkPtr;
 }
 
-Path* Parser::parse_dynamic_path()
+Path* Parser::parseDynamicPath()
 {
-  auto* dp = m_alloc.emplace<Path>();
+  auto* dp = mAlloc.emplace<Path>();
 
   while (true) {
     dp->path.push_back(expect(IDENT, "parsing dynamic path"));
@@ -176,76 +174,76 @@ Path* Parser::parse_dynamic_path()
     }
   }
 
-  dp->loc = {dp->path.front()->location(m_source).begin,
-             dp->path.back()->location(m_source).end};
+  dp->loc = {dp->path.front()->location(mSource).begin,
+             dp->path.back()->location(mSource).end};
   return dp;
 }
 
-LValue* Parser::parse_lvalue()
+LValue* Parser::parseLValue()
 {
-  auto* lval = m_alloc.emplace<LValue>();
+  auto* lval = mAlloc.emplace<LValue>();
 
   if (match(IDENT)) {
     if (match(DOT, 1)) {
       lval->kind = LValue::Kind::DP;
-      lval->path = parse_dynamic_path();
+      lval->path = parseDynamicPath();
       lval->loc = lval->path->loc;
     } else if (match(DBCOLON, 1)) {
       lval->kind = LValue::Kind::SP;
-      lval->path = parse_static_path();
+      lval->path = parseStaticPath();
       lval->loc = lval->path->loc;
     } else {
       lval->kind = LValue::Kind::SYM;
       lval->sym = advance();
-      lval->loc = lval->sym->location(m_source);
+      lval->loc = lval->sym->location(mSource);
     }
   } else if (match(LBRACKET)) {
-    auto tpb = parse_tuple_binding();
+    auto tpb = parseTupleBinding();
     lval->kind = LValue::Kind::TPB;
     lval->tpb = tpb;
     lval->loc = lval->tpb->loc;
   } else {
-    Token* bad = peek();
-    throw ParserError(bad->location(m_source),
+    auto* bad = peek();
+    throw ParserError(bad->location(mSource),
                       "Unexpected token '{}' ({}) while parsing lvalue",
-                      bad->to_string(), magic_enum::enum_name(bad->kind));
+                      bad->toString(), magic_enum::enum_name(bad->kind));
   }
 
   return lval;
 }
 
-PlValue* Parser::parse_plvalue()
+PlValue* Parser::parsePLValue()
 {
-  auto* plval = m_alloc.emplace<PlValue>();
+  auto* plval = mAlloc.emplace<PlValue>();
 
   if (expect(IDENT, "parsing plvalue")) {
     if (match(DOT, 1)) {
       plval->kind = PlValue::Kind::DP;
-      plval->path = parse_dynamic_path();
+      plval->path = parseDynamicPath();
       plval->loc = plval->path->loc;
     } else if (match(DBCOLON, 1)) {
       plval->kind = PlValue::Kind::SP;
-      plval->path = parse_static_path();
+      plval->path = parseStaticPath();
       plval->loc = plval->path->loc;
     } else {
       plval->kind = PlValue::Kind::SYM;
       plval->sym = advance();
-      plval->loc = plval->sym->location(m_source);
+      plval->loc = plval->sym->location(mSource);
     }
   }
 
   return plval;
 }
 
-Parameter* Parser::parse_parameter()
+Parameter* Parser::parseParameter()
 {
   SAVE_FIRST()
 
-  auto* par = m_alloc.emplace<Parameter>();
+  auto* par = mAlloc.emplace<Parameter>();
   par->sym = first;
 
   if (optional(COLON)) {
-    par->type = parse_type();
+    par->type = parseType();
     par->loc = {loc.begin, par->type->loc.end};
   } else {
     par->loc = loc;
@@ -254,16 +252,16 @@ Parameter* Parser::parse_parameter()
   return par;
 }
 
-AttributeGroup* Parser::parse_attribute_group()
+AttributeGroup* Parser::parseAttribGroup()
 {
   SAVE_FIRST()
   expect(LBRACKET, "parsing attribute group");
 
-  auto* atg = m_alloc.emplace<AttributeGroup>();
+  auto* atg = mAlloc.emplace<AttributeGroup>();
 
   while (true) {
-    atg->ats.push_back(AttributeGroup::Attribute{
-        .sp = parse_static_path(),
+    atg->ats.push_back({
+        .mStkPtr = parseStaticPath(),
         .args = {},
     });
 
@@ -274,12 +272,12 @@ AttributeGroup* Parser::parse_attribute_group()
     }
   }
 
-  Token* last = expect(RBRACKET, "terminating attribute group");
-  atg->loc = {loc.begin, last->location(m_source).end};
+  auto* last = expect(RBRACKET, "terminating attribute group");
+  atg->loc = {loc.begin, last->location(mSource).end};
   return atg;
 }
 
-Expr* Parser::parse_expr_primary()
+Expr* Parser::parseExprPrimary()
 {
   SAVE_FIRST()
 
@@ -293,7 +291,7 @@ Expr* Parser::parse_expr_primary()
     case TRUE:
     case FALSE:
     case STRING: {
-      auto* lit = m_alloc.emplace<ExprLit>();
+      auto* lit = mAlloc.emplace<ExprLit>();
       lit->tok = first;
       lit->loc = loc;
       return lit;
@@ -301,7 +299,7 @@ Expr* Parser::parse_expr_primary()
 
     // Symbol expression
     case IDENT: {
-      auto* sym = m_alloc.emplace<ExprSymbol>();
+      auto* sym = mAlloc.emplace<ExprSymbol>();
       sym->sym = first;
       sym->loc = loc;
       return sym;
@@ -309,7 +307,7 @@ Expr* Parser::parse_expr_primary()
 
     // Group or tuple expression
     case LPAREN: {
-      Expr* first = parse_expr();
+      Expr* first = parseExpr();
 
       if (match(COMMA)) {
         Vec<const Expr*> vals;
@@ -317,32 +315,32 @@ Expr* Parser::parse_expr_primary()
 
         while (match(COMMA)) {
           advance();
-          vals.push_back(parse_expr());
+          vals.push_back(parseExpr());
         }
 
         expect(RPAREN, "parsing tuple expression");
 
-        auto* tup = m_alloc.emplace<ExprTuple>();
+        auto* tup = mAlloc.emplace<ExprTuple>();
         tup->vals = std::move(vals);
-        tup->loc = {loc.begin, peek(-1)->location(m_source).end};
+        tup->loc = {loc.begin, peek(-1)->location(mSource).end};
 
         return tup;
       }
 
       expect(RPAREN, "parsing grouping expression");
 
-      auto* group = m_alloc.emplace<ExprGroup>();
+      auto* group = mAlloc.emplace<ExprGroup>();
       group->expr = first;
-      group->loc = {loc.begin, peek(-1)->location(m_source).end};
+      group->loc = {loc.begin, peek(-1)->location(mSource).end};
       return group;
     }
 
     // Array expression
     case LBRACKET: {
-      auto* arr = m_alloc.emplace<ExprArray>();
+      auto* arr = mAlloc.emplace<ExprArray>();
 
       while (true) {
-        arr->init.push_back(parse_expr());
+        arr->init.push_back(parseExpr());
 
         if (match(RBRACKET)) {
           optional(COMMA);  // trailing comma
@@ -352,35 +350,19 @@ Expr* Parser::parse_expr_primary()
         }
       }
 
-      Token* last = expect(RBRACKET, "terminating array initializer");
-      arr->loc = {loc.begin, last->location(m_source).end};
+      auto* last = expect(RBRACKET, "terminating array initializer");
+      arr->loc = {loc.begin, last->location(mSource).end};
       return arr;
-    }
-
-    // Ternary expression
-    case KW_IF: {
-      auto* tern = m_alloc.emplace<ExprTernary>();
-      tern->cnd = parse_expr();
-
-      expect(COLON, "parsing ternary expression");
-
-      tern->lhs = parse_expr();
-
-      expect(KW_ELSE, "parsing ternary expression");
-
-      tern->rhs = parse_expr();
-      tern->loc = {loc.begin, tern->rhs->loc.end};
-      return tern;
     }
 
     default:
       throw ParserError(
           loc, "Unexpected token '{}' ({}) while parsing primary expression",
-          first->to_string(), magic_enum::enum_name(first->kind));
+          first->toString(), magic_enum::enum_name(first->kind));
   }
 }
 
-Expr* Parser::parse_expr_unary_or_postfix()
+Expr* Parser::parseExprAffix()
 {
   Expr* expr;
 
@@ -388,31 +370,47 @@ Expr* Parser::parse_expr_unary_or_postfix()
     case KW_NOT:
     case MINUS:
     case TILDE: {
-      auto* un = m_alloc.emplace<ExprUnary>();
+      auto* un = mAlloc.emplace<ExprUnary>();
       un->op = advance();
-      un->expr = parse_expr_unary_or_postfix();
-      un->loc = {un->op->location(m_source).begin, un->expr->loc.end};
+      un->expr = parseExprAffix();
+      un->loc = {un->op->location(mSource).begin, un->expr->loc.end};
       expr = un;
       break;
     }
     default:
-      expr = parse_expr_primary();
+      expr = parseExprPrimary();
       break;
   }
 
   while (true) {
-    Token* first = peek();
+    auto* first = peek();
 
     switch (first->kind) {
+      // Cast expression
       case KW_AS: {
         advance();
 
-        auto* cast = m_alloc.emplace<ExprCast>();
+        auto* cast = mAlloc.emplace<ExprCast>();
         cast->expr = expr;
-        cast->type = parse_type();
-        cast->loc = {cast->expr->loc.begin, cast->type->loc.end};
+        cast->type = parseType();
+        cast->loc = {expr->loc.begin, cast->type->loc.end};
         expr = cast;
         break;
+      }
+
+      // Ternary expression
+      case KW_IF: {
+        advance();
+
+        auto* tern = mAlloc.emplace<ExprTernary>();
+        tern->lhs = expr;
+        tern->cnd = parseExpr();
+
+        expect(KW_ELSE, "parsing ternary expression");
+
+        tern->rhs = parseExpr();
+        tern->loc = {expr->loc.begin, tern->rhs->loc.end};
+        expr = tern;
       }
 
       case LPAREN: {  // Function call
@@ -422,17 +420,17 @@ Expr* Parser::parse_expr_unary_or_postfix()
 
         if (!match(RPAREN)) {
           do
-            args.push_back(parse_expr());
+            args.push_back(parseExpr());
           while (match(COMMA) && advance());
 
           expect(RPAREN, "parsing function call");
         } else
           advance();  // consume ')'
 
-        auto* call = m_alloc.emplace<ExprCall>();
+        auto* call = mAlloc.emplace<ExprCall>();
         call->lval = expr;
         call->args = std::move(args);
-        call->loc = {expr->loc.begin, peek(-1)->location(m_source).end};
+        call->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
         expr = call;
         break;
       }
@@ -440,14 +438,14 @@ Expr* Parser::parse_expr_unary_or_postfix()
       case LBRACKET: {  // Subscript
         advance();      // consume '['
 
-        Expr* idx = parse_expr();
+        Expr* idx = parseExpr();
 
         expect(RBRACKET, "parsing subscript expression");
 
-        auto* subs = m_alloc.emplace<ExprSubscript>();
+        auto* subs = mAlloc.emplace<ExprSubscript>();
         subs->lval = expr;
         subs->idx = idx;
-        subs->loc = {expr->loc.begin, peek(-1)->location(m_source).end};
+        subs->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
         expr = subs;
         break;
       }
@@ -455,10 +453,10 @@ Expr* Parser::parse_expr_unary_or_postfix()
       case DOT: {   // Dynamic access
         advance();  // consume '.'
 
-        auto* da = m_alloc.emplace<ExprDynAccess>();
+        auto* da = mAlloc.emplace<ExprDynAccess>();
         da->expr = expr;
         da->index = expect(IDENT, "parsing dynamic access expression");
-        da->loc = {da->expr->loc.begin, da->index->location(m_source).end};
+        da->loc = {da->expr->loc.begin, da->index->location(mSource).end};
         expr = da;
         break;
       }
@@ -466,10 +464,10 @@ Expr* Parser::parse_expr_unary_or_postfix()
       case DBCOLON: {  // Static access
         advance();     // consume '::'
 
-        auto* sa = m_alloc.emplace<ExprStaticAccess>();
+        auto* sa = mAlloc.emplace<ExprStaticAccess>();
         sa->expr = expr;
         sa->index = expect(IDENT, "parsing static access expression");
-        sa->loc = {sa->expr->loc.begin, sa->index->location(m_source).end};
+        sa->loc = {sa->expr->loc.begin, sa->index->location(mSource).end};
         expr = sa;
         break;
       }
@@ -480,16 +478,16 @@ Expr* Parser::parse_expr_unary_or_postfix()
   }
 }
 
-Expr* Parser::parse_expr(int min_prec)
+Expr* Parser::parseExpr(int minPrec)
 {
-  Expr* lhs = parse_expr_unary_or_postfix();
+  Expr* lhs = parseExprAffix();
 
   int prec;
-  while ((prec = bin_prec(peek()->kind), prec >= min_prec)) {
-    auto bin = m_alloc.emplace<ExprBinary>();
+  while ((prec = binPrec(peek()->kind), prec >= minPrec)) {
+    auto bin = mAlloc.emplace<ExprBinary>();
     bin->op = advance();
     bin->lhs = lhs;
-    bin->rhs = parse_expr(prec + 1);
+    bin->rhs = parseExpr(prec + 1);
     bin->loc = {lhs->loc.begin, bin->rhs->loc.end};
     lhs = bin;
   }
@@ -497,131 +495,127 @@ Expr* Parser::parse_expr(int min_prec)
   return lhs;
 }
 
-TypeBuiltin* Parser::parse_type_builtin()
+TypeBuiltin* Parser::parseTypeBuiltin()
 {
   SAVE_FIRST()
 
-  auto* bt = m_alloc.emplace<TypeBuiltin>();
+  auto* bt = mAlloc.emplace<TypeBuiltin>();
   bt->tok = first;
   bt->loc = loc;
   return bt;
 }
 
-TypeArray* Parser::parse_type_array()
+TypeArray* Parser::parseTypeArray()
 {
   SAVE_FIRST();
 
-  auto* at = m_alloc.emplace<TypeArray>();
-  at->type = parse_type();
+  auto* at = mAlloc.emplace<TypeArray>();
+  at->type = parseType();
 
-  Token* end = expect(RBRACKET, "terminating array type");
+  auto* end = expect(RBRACKET, "terminating array type");
 
-  at->loc = {loc.begin, end->location(m_source).end};
+  at->loc = {loc.begin, end->location(mSource).end};
   return at;
 }
 
-TypeDict* Parser::parse_type_dict()
+TypeDict* Parser::parseTypeDict()
 {
   SAVE_FIRST();
 
-  auto* dt = m_alloc.emplace<TypeDict>();
-  dt->key = parse_type();
+  auto* dt = mAlloc.emplace<TypeDict>();
+  dt->key = parseType();
 
   expect(COLON, "parsing dictionary type");
 
-  dt->val = parse_type();
+  dt->val = parseType();
 
-  Token* end = expect(RCURLY, "terminating dictionary type");
+  auto* end = expect(RCURLY, "terminating dictionary type");
 
-  dt->loc = {
-      first->location(m_source).begin,
-      end->location(m_source).end,
-  };
-
+  dt->loc = {first->location(mSource).begin, end->location(mSource).end};
   return dt;
 }
 
-TypeFunc* Parser::parse_type_func()
+TypeFunc* Parser::parseTypeFunc()
 {
   SAVE_FIRST()
   expect(LPAREN, "parsing function type parameter list");
 
-  auto* fn = m_alloc.emplace<TypeFunc>();
+  auto* fn = mAlloc.emplace<TypeFunc>();
 
   while (!match(RPAREN)) {
-    fn->params.push_back(parse_parameter());
+    fn->params.push_back(parseParameter());
     expect(COMMA, "terminating function type parameter");
   }
 
   expect(ARROW, "parsing function type return type");
 
-  fn->ret = parse_type();
+  fn->ret = parseType();
   fn->loc = {loc.begin, fn->ret->loc.end};
   return fn;
 }
 
-Type* Parser::parse_type()
+Type* Parser::parseType()
 {
-  Token* tok = peek();
+  auto* tok = peek();
   switch (tok->kind) {
     case NIL:
     case KW_BOOL:
     case KW_INT:
     case KW_FLOAT:
     case KW_STRING:
-      return parse_type_builtin();
+      return parseTypeBuiltin();
     case LBRACKET:
-      return parse_type_array();
+      return parseTypeArray();
     case LCURLY:
-      return parse_type_dict();
+      return parseTypeDict();
     case KW_FN:
-      return parse_type_func();
+      return parseTypeFunc();
     default:
-      throw ParserError(tok->location(m_source),
+      throw ParserError(tok->location(mSource),
                         "Unexpected token '{}' ({}) while parsing type",
-                        magic_enum::enum_name(tok->kind), tok->to_string());
+                        magic_enum::enum_name(tok->kind), tok->toString());
   }
 }
 
-StmtScope* Parser::parse_stmt_scope()
+StmtScope* Parser::parseStmtScope()
 {
   SAVE_FIRST()
 
-  auto scope = m_alloc.emplace<StmtScope>();
+  auto scope = mAlloc.emplace<StmtScope>();
 
   if (first->kind == COLON) {
-    scope->stmts.push_back(parse_stmt());
+    scope->stmts.push_back(parseStmt());
     scope->loc = {loc.begin, scope->stmts.back()->loc.end};
   } else if (first->kind == LCURLY) {
     while (!match(RCURLY)) {
-      scope->stmts.push_back(parse_stmt());
+      scope->stmts.push_back(parseStmt());
     }
 
     advance();
   } else
     throw ParserError(loc, "Expected ':' or '{{' while parsing scope, got '{}'",
-                      first->to_string());
+                      first->toString());
 
   return scope;
 }
 
-StmtVarDecl* Parser::parse_stmt_var(bool semicolon)
+StmtVarDecl* Parser::parseStmtVarDecl(bool semicolon)
 {
   SAVE_FIRST()
 
-  auto vars = m_alloc.emplace<StmtVarDecl>();
+  auto vars = mAlloc.emplace<StmtVarDecl>();
   vars->decl = first;
-  vars->lval = parse_lvalue();
+  vars->lval = parseLValue();
 
   if (optional(COLON)) {
-    vars->type = parse_type();
+    vars->type = parseType();
   } else {
     vars->type = nullptr;
   }
 
   expect(EQUALS, "parsing variable declaration");
 
-  vars->rval = parse_expr();
+  vars->rval = parseExpr();
   vars->loc = {loc.begin, vars->rval->loc.end};
 
   if (semicolon) {
@@ -631,56 +625,56 @@ StmtVarDecl* Parser::parse_stmt_var(bool semicolon)
   return vars;
 }
 
-StmtFor* Parser::parse_stmt_for()
+StmtFor* Parser::parseStmtFor()
 {
   SAVE_FIRST()
 
-  auto fors = m_alloc.emplace<StmtFor>();
-  fors->init = parse_stmt_var(false);
+  auto fors = mAlloc.emplace<StmtFor>();
+  fors->init = parseStmtVarDecl(false);
 
   if (fors->init->decl->kind == KW_CONST) {
-    throw ParserError(fors->init->decl->location(m_source),
+    throw ParserError(fors->init->decl->location(mSource),
                       "'const' variable not allowed in ranged for loop");
   }
 
   expect(COMMA, "parsing ranged for loop");
 
-  fors->target = parse_expr();
+  fors->target = parseExpr();
 
   expect(COMMA, "parsing ranged for loop");
 
-  fors->step = parse_expr();
-  fors->br = parse_stmt_scope();
+  fors->step = parseExpr();
+  fors->br = parseStmtScope();
   fors->loc = {loc.begin, fors->br->loc.end};
   return fors;
 }
 
-StmtForEach* Parser::parse_stmt_foreach()
+StmtForEach* Parser::parseStmtForEach()
 {
   SAVE_FIRST()
 
-  auto fors = m_alloc.emplace<StmtForEach>();
-  fors->lval = parse_lvalue();
+  auto fors = mAlloc.emplace<StmtForEach>();
+  fors->lval = parseLValue();
 
   expect(KW_IN, "parsing for each statement");
 
-  fors->iter = parse_expr();
-  fors->br = parse_stmt_scope();
+  fors->iter = parseExpr();
+  fors->br = parseStmtScope();
   fors->loc = {loc.begin, fors->br->loc.end};
   return fors;
 }
 
-StmtIf* Parser::parse_stmt_if()
+StmtIf* Parser::parseStmtIf()
 {
   using Branch = StmtIf::Branch;
 
   SAVE_FIRST()
 
   Branch br;
-  br.cnd = parse_expr();
-  br.br = parse_stmt_scope();
+  br.cnd = parseExpr();
+  br.br = parseStmtScope();
 
-  auto* ifs = m_alloc.emplace<StmtIf>();
+  auto* ifs = mAlloc.emplace<StmtIf>();
   ifs->brs.push_back(br);
 
   while (match(KW_ELSE)) {
@@ -690,12 +684,12 @@ StmtIf* Parser::parse_stmt_if()
 
     if (match(KW_IF)) {
       advance();
-      br.cnd = parse_expr();
+      br.cnd = parseExpr();
     } else {
       br.cnd = nullptr;
     }
 
-    br.br = parse_stmt_scope();
+    br.br = parseStmtScope();
     ifs->brs.push_back(br);
   }
 
@@ -703,36 +697,36 @@ StmtIf* Parser::parse_stmt_if()
   return ifs;
 }
 
-StmtWhile* Parser::parse_stmt_while()
+StmtWhile* Parser::parseStmtWhile()
 {
   SAVE_FIRST()
 
-  auto* whs = m_alloc.emplace<StmtWhile>();
-  whs->cnd = parse_expr();
-  whs->br = parse_stmt_scope();
+  auto* whs = mAlloc.emplace<StmtWhile>();
+  whs->cnd = parseExpr();
+  whs->br = parseStmtScope();
   whs->loc = {loc.begin, whs->br->loc.end};
   return whs;
 }
 
-StmtAssign* Parser::parse_stmt_assign(Expr* lhs)
+StmtAssign* Parser::parseStmtAssign(Expr* lhs)
 {
-  auto as = m_alloc.emplace<StmtAssign>();
+  auto as = mAlloc.emplace<StmtAssign>();
   as->lval = lhs;
   as->op = advance();
-  as->rval = parse_expr();
+  as->rval = parseExpr();
   as->loc = {as->lval->loc.begin, as->rval->loc.end};
   optional(SEMICOLON);
   return as;
 }
 
-StmtReturn* Parser::parse_stmt_return()
+StmtReturn* Parser::parseStmtReturn()
 {
   SAVE_FIRST()
 
-  auto* ret = m_alloc.emplace<StmtReturn>();
+  auto* ret = mAlloc.emplace<StmtReturn>();
 
-  if (is_expr_start(peek()->kind)) {
-    ret->expr = parse_expr();
+  if (isExprInitial(peek()->kind)) {
+    ret->expr = parseExpr();
     ret->loc = {loc.begin, ret->expr->loc.end};
   } else {
     ret->expr = nullptr;
@@ -743,96 +737,96 @@ StmtReturn* Parser::parse_stmt_return()
   return ret;
 }
 
-StmtEnum* Parser::parse_stmt_enum()
+StmtEnum* Parser::parseStmtEnum()
 {
   SAVE_FIRST()
 
-  auto ens = m_alloc.emplace<StmtEnum>();
+  auto ens = mAlloc.emplace<StmtEnum>();
   ens->sym = advance();
 
   if (optional(KW_OF)) {
-    ens->type = parse_type();
+    ens->type = parseType();
   }
 
   expect(LCURLY, "parsing enumerator list");
 
   while (!match(RCURLY)) {
-    Token* sym = advance();
+    auto* sym = advance();
     expect(EQUALS, "parsing enumerator pair");
 
     ens->pairs.push_back({
         .sym = sym,
-        .expr = parse_expr(),
+        .expr = parseExpr(),
     });
 
     expect(COMMA, "parsing enumerator pair");
   }
 
-  ens->loc = {loc.begin, advance()->location(m_source).end};
+  ens->loc = {loc.begin, advance()->location(mSource).end};
   return ens;
 }
 
-StmtModule* Parser::parse_stmt_module()
+StmtModule* Parser::parseStmtModule()
 {
   SAVE_FIRST()
 
-  auto* mod = m_alloc.emplace<StmtModule>();
+  auto* mod = mAlloc.emplace<StmtModule>();
   mod->sym = advance();
 
   expect(LCURLY, "parsing module body");
 
   while (true) {
-    Token* tok = peek();
+    auto* tok = peek();
     if (tok->kind == RCURLY) {
       break;
     }
 
     switch (tok->kind) {
       case KW_VAR:
-        mod->scp.push_back(parse_stmt_var(true));
+        mod->scp.push_back(parseStmtVarDecl(true));
         break;
       case KW_FN:
-        mod->scp.push_back(parse_stmt_func());
+        mod->scp.push_back(parseStmtFuncDecl());
         break;
       case KW_STRUCT:
-        mod->scp.push_back(parse_stmt_struct());
+        mod->scp.push_back(parseStmtStructDecl());
         break;
       case KW_TYPE:
-        mod->scp.push_back(parse_stmt_type());
+        mod->scp.push_back(parseStmtTypeDecl());
         break;
       case KW_MODULE:
-        mod->scp.push_back(parse_stmt_module());
+        mod->scp.push_back(parseStmtModule());
         break;
       case KW_USING:
-        mod->scp.push_back(parse_stmt_using());
+        mod->scp.push_back(parseStmtUsingDecl());
         break;
       case KW_ENUM:
-        mod->scp.push_back(parse_stmt_enum());
+        mod->scp.push_back(parseStmtEnum());
         break;
       default:
-        throw ParserError(tok->location(m_source),
+        throw ParserError(tok->location(mSource),
                           "Unexpected token '{}' ({}) while parsing module",
-                          magic_enum::enum_name(tok->kind), tok->to_string());
+                          magic_enum::enum_name(tok->kind), tok->toString());
     }
   }
 
-  Token* last = expect(RCURLY, "terminating module body");
-  mod->loc = {loc.begin, last->location(m_source).end};
+  auto* last = expect(RCURLY, "terminating module body");
+  mod->loc = {loc.begin, last->location(mSource).end};
   return mod;
 }
 
-StmtImport* Parser::parse_stmt_import()
+StmtImport* Parser::parseStmtImport()
 {
   using TailKind = StmtImport::TailKind;
 
   SAVE_FIRST()
 
   usize end;
-  auto imp = m_alloc.emplace<StmtImport>();
+  auto imp = mAlloc.emplace<StmtImport>();
   imp->kind = TailKind::Import;
 
   while (true) {
-    Token* tok = advance();
+    auto* tok = advance();
 
     if (tok->kind == IDENT) {
       imp->path.push_back(tok);
@@ -840,29 +834,29 @@ StmtImport* Parser::parse_stmt_import()
       if (match(DBCOLON)) {
         advance();
       } else {
-        end = tok->location(m_source).end;
+        end = tok->location(mSource).end;
         break;
       }
     } else if (tok->kind == LCURLY) {
       imp->kind = TailKind::ImportCompound;
 
       while (!match(RCURLY)) {
-        Token* member = expect(IDENT, "parsing compound import member");
+        auto* member = expect(IDENT, "parsing compound import member");
         imp->tail.push_back(member);
         expect(COMMA, "parsing compound import");
       }
 
-      Token* last = expect(RCURLY, "terminating compound import");
-      end = last->location(m_source).end;
+      auto* last = expect(RCURLY, "terminating compound import");
+      end = last->location(mSource).end;
       break;
     } else if (tok->kind == ASTERISK) {
       imp->kind = TailKind::ImportAll;
-      end = tok->location(m_source).end;
+      end = tok->location(mSource).end;
       break;
     } else {
-      throw ParserError(tok->location(m_source),
+      throw ParserError(tok->location(mSource),
                         "Unexpected token '{}' ({}) while parsing import path",
-                        tok->to_string(), magic_enum::enum_name(tok->kind));
+                        tok->toString(), magic_enum::enum_name(tok->kind));
     }
   }
 
@@ -871,17 +865,17 @@ StmtImport* Parser::parse_stmt_import()
   return imp;
 }
 
-StmtFunctionDecl* Parser::parse_stmt_func()
+StmtFunctionDecl* Parser::parseStmtFuncDecl()
 {
   SAVE_FIRST()
 
-  auto* fn = m_alloc.emplace<StmtFunctionDecl>();
+  auto* fn = mAlloc.emplace<StmtFunctionDecl>();
   fn->name = expect(IDENT, "parsing function name");
 
   expect(LPAREN, "parsing function parameter list");
 
   while (!match(RPAREN)) {
-    fn->parms.push_back(parse_parameter());
+    fn->parms.push_back(parseParameter());
 
     if (match(RPAREN)) {
       optional(COMMA);
@@ -894,137 +888,138 @@ StmtFunctionDecl* Parser::parse_stmt_func()
   expect(RPAREN, "terminating function parameter list");
 
   if (optional(ARROW)) {
-    fn->ret = parse_type();
+    fn->ret = parseType();
   }
 
-  fn->scp = parse_stmt_scope();
+  fn->scp = parseStmtScope();
   fn->loc = {loc.begin, fn->scp->loc.end};
   return fn;
 }
 
-StmtStructDecl* Parser::parse_stmt_struct()
+StmtStructDecl* Parser::parseStmtStructDecl()
 {
   SAVE_FIRST()
 
-  auto* strc = m_alloc.emplace<StmtStructDecl>();
+  auto* strc = mAlloc.emplace<StmtStructDecl>();
   strc->name = expect(IDENT, "parsing struct name");
 
   expect(LCURLY, "parsing struct body");
 
   while (!match(RCURLY)) {
-    Token* tok = peek();
+    auto* tok = peek();
     switch (tok->kind) {
+      case KW_CONST:
       case KW_VAR:
-        strc->scp.push_back(parse_stmt_var(false));
+        strc->scp.push_back(parseStmtVarDecl(false));
         expect(COMMA, "terminating struct member");
         break;
       case KW_FN:
-        strc->scp.push_back(parse_stmt_func());
+        strc->scp.push_back(parseStmtFuncDecl());
         break;
       case KW_TYPE:
-        strc->scp.push_back(parse_stmt_type());
+        strc->scp.push_back(parseStmtTypeDecl());
         expect(COMMA, "terminating struct member");
         break;
       case KW_USING:
-        strc->scp.push_back(parse_stmt_using());
+        strc->scp.push_back(parseStmtUsingDecl());
         break;
       case KW_ENUM:
-        strc->scp.push_back(parse_stmt_enum());
+        strc->scp.push_back(parseStmtEnum());
         break;
       default:
         throw ParserError(
-            tok->location(m_source),
+            tok->location(mSource),
             "Unexpected token '{}' ({}) while parsing struct body",
-            tok->to_string(), magic_enum::enum_name(tok->kind));
+            tok->toString(), magic_enum::enum_name(tok->kind));
     }
   }
 
-  Token* last = expect(RCURLY, "terminating struct body");
-  strc->loc = {loc.begin, last->location(m_source).end};
+  auto* last = expect(RCURLY, "terminating struct body");
+  strc->loc = {loc.begin, last->location(mSource).end};
   return strc;
 }
 
-StmtTypeDecl* Parser::parse_stmt_type()
+StmtTypeDecl* Parser::parseStmtTypeDecl()
 {
   SAVE_FIRST()
 
-  auto* ty = m_alloc.emplace<StmtTypeDecl>();
+  auto* ty = mAlloc.emplace<StmtTypeDecl>();
   ty->sym = advance();
 
   expect(EQUALS, "parsing type declaration");
 
-  ty->type = parse_type();
+  ty->type = parseType();
   ty->loc = {loc.begin, ty->type->loc.end};
 
   optional(SEMICOLON);
   return ty;
 }
 
-StmtUsing* Parser::parse_stmt_using()
+StmtUsing* Parser::parseStmtUsingDecl()
 {
   SAVE_FIRST();
 
-  auto* usn = m_alloc.emplace<StmtUsing>();
-  usn->sp = parse_static_path();
-  usn->scp = parse_stmt_scope();
+  auto* usn = mAlloc.emplace<StmtUsing>();
+  usn->mStkPtr = parseStaticPath();
+  usn->scp = parseStmtScope();
   usn->loc = {loc.begin, usn->scp->loc.end};
   return usn;
 }
 
-Stmt* Parser::parse_stmt()
+Stmt* Parser::parseStmt()
 {
   switch (peek()->kind) {
     case KW_IF:
-      return parse_stmt_if();
+      return parseStmtIf();
     case KW_WHILE:
-      return parse_stmt_while();
+      return parseStmtWhile();
     case KW_VAR:
     case KW_CONST:
-      return parse_stmt_var(true);
+      return parseStmtVarDecl(true);
     case KW_DO:
       advance();
-      return parse_stmt_scope();
+      return parseStmtScope();
     case KW_FOR:
       // generic for loop
       if (match(KW_VAR, 1))
-        return parse_stmt_for();
+        return parseStmtFor();
 
       // for each loop
-      return parse_stmt_foreach();
+      return parseStmtForEach();
     case KW_RETURN:
-      return parse_stmt_return();
+      return parseStmtReturn();
     case KW_ENUM:
-      return parse_stmt_enum();
+      return parseStmtEnum();
     case KW_MODULE:
-      return parse_stmt_module();
+      return parseStmtModule();
     case KW_IMPORT:
-      return parse_stmt_import();
+      return parseStmtImport();
     case KW_FN:
-      return parse_stmt_func();
+      return parseStmtFuncDecl();
     case KW_STRUCT:
-      return parse_stmt_struct();
+      return parseStmtStructDecl();
     case KW_TYPE:
-      return parse_stmt_type();
+      return parseStmtTypeDecl();
     case KW_USING:
-      return parse_stmt_using();
+      return parseStmtUsingDecl();
     case SEMICOLON: {
-      auto empty = m_alloc.emplace<StmtEmpty>();
-      empty->loc = advance()->location(m_source);
+      auto empty = mAlloc.emplace<StmtEmpty>();
+      empty->loc = advance()->location(mSource);
       return empty;
     }
     default:
       break;
   }
 
-  Token* first;
-  if ((first = peek(), !is_expr_start(first->kind))) {
+  const Token* first = peek();
+  if (!isExprInitial(first->kind)) {
   unexpected_token:
-    throw ParserError(first->location(m_source),
+    throw ParserError(first->location(mSource),
                       "Unexpected token '{}' ({}) while parsing statement",
-                      first->to_string(), magic_enum::enum_name(first->kind));
+                      first->toString(), magic_enum::enum_name(first->kind));
   }
 
-  Expr* expr = parse_expr();
+  Expr* expr = parseExpr();
 
   switch (peek()->kind) {
     case EQUALS:
@@ -1036,9 +1031,9 @@ Stmt* Parser::parse_stmt()
     case PERCENTEQUALS:
     case PIPEEQUALS:
     case AMPERSANDEQUALS:
-      return parse_stmt_assign(expr);
+      return parseStmtAssign(expr);
     default: {
-      auto es = m_alloc.emplace<StmtExpr>();
+      auto es = mAlloc.emplace<StmtExpr>();
       es->expr = expr;
       es->loc = es->expr->loc;
 
@@ -1061,9 +1056,9 @@ SyntaxTree Parser::parse()
 
   while (!match(EOF_)) {
     try {
-      nodes.push_back(parse_stmt());
+      nodes.push_back(parseStmt());
     } catch (const ParserError& e) {
-      m_diag.report<Diagnosis::Kind::Error>(e.loc, e.msg);
+      mDiag.report<Diagnosis::Kind::Error>(e.loc, e.msg);
       break;
     }
   }

@@ -3,41 +3,113 @@
 
 #include "type_context.h"
 
+static inline size_t hashCombine(size_t seed, size_t v) noexcept
+{
+  return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
+}
+
+static inline size_t hashPtr(const void* ptr) noexcept
+{
+  return reinterpret_cast<size_t>(reinterpret_cast<uintptr_t>(ptr));
+}
+
+template <class It, class ElemHash>
+static inline size_t hashRange(It first, It last, size_t seed, ElemHash hash)
+{
+  seed = hashCombine(seed, static_cast<size_t>(std::distance(first, last)));
+  for (auto it = first; it != last; ++it) {
+    seed = hashCombine(seed, hash(*it));
+  }
+  return seed;
+}
+
+size_t std::hash<via::sema::DictKey>::operator()(
+    const via::sema::DictKey& key) const noexcept
+{
+  size_t seed = hashPtr(key.key);
+  seed = hashCombine(seed, hashPtr(key.val));
+  return seed;
+}
+
+bool std::equal_to<via::sema::DictKey>::operator()(
+    const via::sema::DictKey& a,
+    const via::sema::DictKey& b) const noexcept
+{
+  return a.key == b.key && a.val == b.val;
+}
+
+size_t std::hash<via::sema::FuncKey>::operator()(
+    const via::sema::FuncKey& key) const noexcept
+{
+  size_t seed = hashPtr(key.result);
+  seed = hashRange(key.tps.begin(), key.tps.end(), seed, hashPtr);
+  return seed;
+}
+
+bool std::equal_to<via::sema::FuncKey>::operator()(
+    const via::sema::FuncKey& a,
+    const via::sema::FuncKey& b) const noexcept
+{
+  if (a.result != b.result)
+    return false;
+  if (a.tps.size() != b.tps.size())
+    return false;
+  for (size_t i = 0; i < a.tps.size(); ++i)
+    if (a.tps[i] != b.tps[i])
+      return false;
+  return true;
+}
+
+size_t std::hash<via::sema::UserKey>::operator()(
+    const via::sema::UserKey& key) const noexcept
+{
+  return hashPtr(key.decl);
+}
+
+bool std::equal_to<via::sema::UserKey>::operator()(
+    const via::sema::UserKey& a,
+    const via::sema::UserKey& b) const noexcept
+{
+  return a.decl == b.decl;
+}
+
 namespace via
 {
 
 namespace sema
 {
 
-const BuiltinType* TypeContext::get_builtin(BuiltinType::Kind kind)
+const BuiltinType* TypeContext::getBuiltinTypeInstance(BuiltinType::Kind kind)
 {
-  return m_builtins[(u8)kind];
+  return mBuiltins[(u8)kind];
 }
 
-const ArrayType* TypeContext::get_array(const Type* type)
+const ArrayType* TypeContext::getArrayTypeInstance(const Type* type)
 {
-  return m_arrays[type];
+  return mArrays[type];
 }
 
-const DictType* TypeContext::get_dict(const Type* key, const Type* val)
+const DictType* TypeContext::getDictTypeInstance(const Type* key,
+                                                 const Type* val)
 {
-  return m_dicts[DictKey{
+  return mDicts[DictKey{
       .key = key,
       .val = val,
   }];
 }
 
-const FuncType* TypeContext::get_function(const Type* res, Vec<const Type*> tps)
+const FuncType* TypeContext::getFunctionTypeInstance(const Type* res,
+                                                     Vec<const Type*> tps)
 {
-  return m_funcs[FuncKey{
+  return mFuncs[FuncKey{
       .result = res,
       .tps = tps,
   }];
 }
 
-const UserType* TypeContext::get_utype(const ast::StmtTypeDecl* decl)
+const UserType* TypeContext::getUserTypeInstance(const ast::StmtTypeDecl* decl)
 {
-  return m_users[UserKey{.decl = decl}];
+  return mUsers[UserKey{.decl = decl}];
 }
 
 const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
@@ -50,8 +122,9 @@ const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
     case Type::Kind::TemplateParam: {
       auto* parm = static_cast<const TemplateParamType*>(tp);
 
-      if (auto* rs = env.lookup(parm->depth, parm->index))
+      if (auto* rs = env.lookup(parm->depth, parm->index)) {
         return rs;  // fully substituted here
+      }
 
       return tp;  // still dependent
     }
@@ -60,23 +133,25 @@ const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
       auto* sbs = static_cast<const SubstParamType*>(tp);
       auto* rs = instantiate(sbs->replacement, env);
 
-      if (rs == sbs->replacement)
+      if (rs == sbs->replacement) {
         return tp;
+      }
 
-      return m_alloc.emplace<SubstParamType>(sbs->parm, rs);
+      return mAlloc.emplace<SubstParamType>(sbs->parm, rs);
     }
 
     case Type::Kind::Array: {
       auto* at = static_cast<const ArrayType*>(tp);
       auto* tmp = instantiate(at->elem, env);
-      return (tmp == at->elem) ? tp : get_array(tmp);
+      return (tmp == at->elem) ? tp : getArrayTypeInstance(tmp);
     }
 
     case Type::Kind::Dict: {
       auto* dt = static_cast<const DictType*>(tp);
       auto* key = instantiate(dt->key, env);
       auto* val = instantiate(dt->val, env);
-      return (key == dt->key && val == dt->val) ? tp : get_dict(key, val);
+      return (key == dt->key && val == dt->val) ? tp
+                                                : getDictTypeInstance(key, val);
     }
 
     case Type::Kind::Function: {
@@ -93,7 +168,7 @@ const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
 
       auto* rs = instantiate(ft->result, env);
       same &= (rs == ft->result);
-      return same ? tp : get_function(rs, tps);
+      return same ? tp : getFunctionTypeInstance(rs, tps);
     }
 
     case Type::Kind::TemplateSpec: {
@@ -108,7 +183,7 @@ const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
         args.push_back(na);
       }
 
-      return same ? tp : get_tspec(S->primary, args);
+      return same ? tp : getTemplateSpecInstance(S->primary, args);
     }
   }
 

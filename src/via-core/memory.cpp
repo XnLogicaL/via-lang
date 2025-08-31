@@ -9,7 +9,7 @@ namespace via
 
 [[nodiscard]] void* Allocator::alloc(usize size)
 {
-  return mi_heap_malloc(m_heap, size);
+  return mi_heap_malloc(mHeap, size);
 }
 
 [[nodiscard]] char* Allocator::strdup(const char* str)

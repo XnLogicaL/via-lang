@@ -6,67 +6,67 @@
 namespace via
 {
 
-Value* Value::construct_impl(Interpreter* ctx,
-                             Value::Kind kind,
-                             Value::Union data)
+Value* Value::constructImpl(Interpreter* ctx,
+                            Value::Kind kind,
+                            Value::Union data)
 {
-  Value* ptr = ctx->get_allocator().emplace<Value>();
-  ptr->k = kind;
-  ptr->u = data;
+  Value* ptr = ctx->getAllocator().emplace<Value>();
+  ptr->mKind = kind;
+  ptr->mData = data;
   return ptr;
 }
 
 Value* Value::construct(Interpreter* ctx)
 {
-  return construct_impl(ctx, Kind::Nil);
+  return constructImpl(ctx, Kind::Nil);
 }
 
 Value* Value::construct(Interpreter* ctx, Value::int_type int_)
 {
-  return construct_impl(ctx, Kind::Int, {.int_ = int_});
+  return constructImpl(ctx, Kind::Int, {.int_ = int_});
 }
 
 Value* Value::construct(Interpreter* ctx, Value::float_type float_)
 {
-  return construct_impl(ctx, Kind::Float, {.float_ = float_});
+  return constructImpl(ctx, Kind::Float, {.float_ = float_});
 }
 
 Value* Value::construct(Interpreter* ctx, bool boolean)
 {
-  return construct_impl(ctx, Kind::Boolean, {.boolean = boolean});
+  return constructImpl(ctx, Kind::Boolean, {.boolean = boolean});
 }
 
 Value* Value::construct(Interpreter* ctx, char* string)
 {
   debug::assertm(
-      ctx->get_allocator().owns(string),
+      ctx->getAllocator().owns(string),
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
-  return construct_impl(ctx, Kind::String, {.string = string});
+  return constructImpl(ctx, Kind::String, {.string = string});
 }
 
 void Value::free()
 {
-  switch (k) {
+  switch (mKind) {
     case Kind::String:
-      ctx->get_allocator().free(u.string);
+      mCtx->getAllocator().free(mData.string);
       break;
     default:
       // Trivial types don't require explicit destruction
       break;
   }
 
-  k = Kind::Nil;
+  mKind = Kind::Nil;
 }
 
 Value* Value::clone()
 {
-  return construct_impl(ctx, k, u);
+  return constructImpl(mCtx, mKind, mData);
 }
 
-ValueRef Value::make_ref()
+ValueRef Value::makeRef()
 {
-  return ValueRef(ctx, this);
+  return ValueRef(mCtx, this);
 }
 
 }  // namespace via

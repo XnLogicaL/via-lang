@@ -8,7 +8,6 @@
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
-#include "lexer/lexer.h"
 #include "lexer/location.h"
 
 namespace via
@@ -31,44 +30,40 @@ struct Diagnosis
 class DiagContext final
 {
  public:
-  DiagContext(String path, String name, const String& file)
-      : m_path(path), m_name(name), m_source(file)
+  DiagContext(String path, String name, const String& source)
+      : mPath(path), mName(name), mSource(source)
   {}
 
   NO_COPY(DiagContext)
 
  public:
-  /// Emit all queued diagnostics to the provided spdlog logger (or default).
   void emit(spdlog::logger* logger = spdlog::default_logger().get()) const;
+  void clear() noexcept { mDiags.clear(); }
 
-  /// Remove all queued diagnostics.
-  void clear() noexcept { m_diags.clear(); }
-
-  /// Push a diagnosis with a pre-formatted message.
   template <Diagnosis::Kind K>
   void report(SourceLoc loc, String msg)
   {
-    m_diags.emplace_back(K, loc, std::move(msg));
+    mDiags.emplace_back(K, loc, std::move(msg));
   }
 
   /// Push a diagnosis using fmt-style formatting.
   template <Diagnosis::Kind K, typename... Args>
   void report(SourceLoc loc, fmt::format_string<Args...> fmt, Args&&... args)
   {
-    m_diags.emplace_back(
+    mDiags.emplace_back(
         K, loc,
         fmt::format(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
   }
 
-  [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return m_diags; }
+  [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return mDiags; }
   [[nodiscard]] const Vec<Diagnosis>& diagnostics() const noexcept
   {
-    return m_diags;
+    return mDiags;
   }
 
-  [[nodiscard]] bool has_errors() const noexcept
+  [[nodiscard]] bool hasErrors() const noexcept
   {
-    for (const auto& d : m_diags) {
+    for (const auto& d : mDiags) {
       if (d.kind == Diagnosis::Kind::Error)
         return true;
     }
@@ -76,17 +71,16 @@ class DiagContext final
     return false;
   }
 
-  [[nodiscard]] const String& path() const noexcept { return m_path; }
-  [[nodiscard]] const String& source() const noexcept { return m_source; }
+  [[nodiscard]] const String& source() const noexcept { return mSource; }
 
  private:
   // Helper to pretty-print a single diagnosis line with source context.
-  void emit_one(const Diagnosis& d, spdlog::logger* logger) const;
+  void emitOnce(const Diagnosis& d, spdlog::logger* logger) const;
 
  private:
-  String m_path, m_name;
-  const String& m_source;
-  Vec<Diagnosis> m_diags{};
+  String mPath, mName;
+  const String& mSource;
+  Vec<Diagnosis> mDiags{};
 };
 
 }  // namespace via

@@ -7,7 +7,6 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "constexpr_ipow.h"
-#include "convert.h"
 
 namespace via
 {
@@ -18,9 +17,9 @@ struct Version
 };
 
 template <usize P = 1>
-constexpr Version get_semantic_version()
+consteval Version getSemanticVersion()
 {
-  constexpr usize ver = config::version;
+  constexpr usize ver = config::kVersion;
   constexpr usize major = ipow<usize>(100, P);
   constexpr usize minor = ipow<usize>(10, P);
 
@@ -31,14 +30,10 @@ constexpr Version get_semantic_version()
   };
 }
 
-template <>
-struct Convert<Version>
+inline String toString(const Version& v)
 {
-  static String to_string(const Version& v)
-  {
-    return fmt::format("{}.{}.{}", v.major, v.minor, v.patch);
-  }
-};
+  return fmt::format("{}.{}.{}", v.major, v.minor, v.patch);
+}
 
 }  // namespace via
 

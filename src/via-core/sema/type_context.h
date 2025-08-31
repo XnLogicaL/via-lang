@@ -14,6 +14,63 @@ namespace via
 namespace sema
 {
 
+struct DictKey;
+struct FuncKey;
+struct UserKey;
+
+}  // namespace sema
+
+}  // namespace via
+
+template <>
+struct std::hash<via::sema::DictKey>
+{
+  size_t operator()(const via::sema::DictKey& key) const noexcept;
+};
+
+template <>
+struct std::equal_to<via::sema::DictKey>
+{
+  bool operator()(const via::sema::DictKey& a,
+                  const via::sema::DictKey& b) const noexcept;
+};
+
+template <>
+struct std::hash<via::sema::FuncKey>
+{
+  size_t operator()(const via::sema::FuncKey& key) const noexcept;
+};
+
+template <>
+struct std::equal_to<via::sema::FuncKey>
+{
+  bool operator()(const via::sema::FuncKey& a,
+                  const via::sema::FuncKey& b) const noexcept;
+};
+
+template <>
+struct std::hash<via::sema::UserKey>
+{
+  size_t operator()(const via::sema::UserKey& key) const noexcept;
+};
+
+template <>
+struct std::equal_to<via::sema::UserKey>
+{
+  bool operator()(const via::sema::UserKey& a,
+                  const via::sema::UserKey& b) const noexcept;
+};
+
+namespace via
+{
+
+namespace sema
+{
+
+struct DictKey;
+struct FuncKey;
+struct UserKey;
+
 struct DictKey
 {
   const Type *key, *val;
@@ -28,101 +85,6 @@ struct FuncKey
 struct UserKey
 {
   const ast::StmtTypeDecl* decl;
-};
-
-template <typename T>
-struct Hash;
-
-template <typename T>
-struct Eq;
-
-static inline usize hash_combine(usize seed, usize v) noexcept
-{
-  // 0x9e37... is the 64-bit golden ratio used by boost::hash_combine
-  return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
-}
-
-static inline usize hash_ptr(const void* ptr) noexcept
-{
-  return reinterpret_cast<usize>(reinterpret_cast<uptr>(ptr));
-}
-
-template <class It, class ElemHash>
-static inline usize hash_range(It first, It last, usize seed, ElemHash hash)
-{
-  seed = hash_combine(seed, static_cast<usize>(std::distance(first, last)));
-  for (auto it = first; it != last; ++it) {
-    seed = hash_combine(seed, hash(*it));
-  }
-  return seed;
-}
-
-template <>
-struct Hash<DictType>
-{
-  usize operator()(const DictKey& key) const noexcept
-  {
-    usize seed = hash_ptr(key.key);
-    seed = hash_combine(seed, hash_ptr(key.val));
-    return seed;
-  }
-};
-
-template <>
-struct Eq<DictType>
-{
-  bool operator()(const DictKey& a, const DictKey& b) const noexcept
-  {
-    return a.key == b.key && a.val == b.val;
-  }
-};
-
-template <>
-struct Hash<FuncType>
-{
-  usize operator()(const FuncKey& key) const noexcept
-  {
-    usize seed = 0;
-    seed = hash_ptr(key.result);
-    seed = hash_range(key.tps.begin(), key.tps.end(), seed, hash_ptr);
-    return seed;
-  }
-};
-
-template <>
-struct Eq<FuncType>
-{
-  bool operator()(const FuncKey& a, const FuncKey& b) const noexcept
-  {
-    if (a.result != b.result)
-      return false;
-    if (a.tps.size() != b.tps.size())
-      return false;
-    for (usize i = 0; i < a.tps.size(); ++i)
-      if (a.tps[i] != b.tps[i])
-        return false;
-    return true;
-  }
-};
-
-template <>
-struct Hash<UserType>
-{
-  bool operator()(const UserKey& key) const noexcept
-  {
-    usize seed = 0;
-    seed = hash_ptr(key.decl);
-    return seed;
-  }
-};
-
-template <>
-struct Eq<UserType>
-{
-  bool operator()(const UserKey& a, const UserKey& b) const noexcept
-  {
-    return a.decl == b.decl;
-  }
 };
 
 class TypeEnv final
@@ -146,31 +108,31 @@ class TypeEnv final
 class TypeContext final
 {
  public:
-  TypeContext() : m_alloc(8 * 1024 * 1024) {}
+  TypeContext() : mAlloc(8 * 1024 * 1024) {}
 
- public:
-  const BuiltinType* get_builtin(BuiltinType::Kind kind);
-  const ArrayType* get_array(const Type* type);
-  const DictType* get_dict(const Type* key, const Type* val);
-  const FuncType* get_function(const Type* res, Vec<const Type*> tps);
-  const UserType* get_utype(const ast::StmtTypeDecl* decl);
-  const TemplateParamType* get_tparam(u32 depth, u32 index);
-  const TemplateSpecType* get_tspec(const ast::StmtTypeDecl* prim,
-                                    Vec<const Type*> args);
+  const BuiltinType* getBuiltinTypeInstance(BuiltinType::Kind kind);
+  const ArrayType* getArrayTypeInstance(const Type* type);
+  const DictType* getDictTypeInstance(const Type* key, const Type* val);
+  const FuncType* getFunctionTypeInstance(const Type* res,
+                                          Vec<const Type*> tps);
+  const UserType* getUserTypeInstance(const ast::StmtTypeDecl* decl);
+  const TemplateParamType* getTemplateParmInstance(u32 depth, u32 index);
+  const TemplateSpecType* getTemplateSpecInstance(const ast::StmtTypeDecl* prim,
+                                                  Vec<const Type*> args);
 
   const Type* instantiate(const Type* tp, const TypeEnv& env);
 
  private:
-  BumpAllocator<> m_alloc;
-  Map<u8, const BuiltinType*> m_builtins;
-  Map<const Type*, const ArrayType*> m_arrays;
-  Map<DictKey, const DictType*, Hash<DictType>, Eq<DictType>> m_dicts;
-  Map<FuncKey, const FuncType*, Hash<FuncType>, Eq<FuncType>> m_funcs;
-  Map<UserKey, const UserType*, Hash<UserType>, Eq<UserType>> m_users;
+  BumpAllocator<> mAlloc;
+  Map<u8, const BuiltinType*> mBuiltins;
+  Map<const Type*, const ArrayType*> mArrays;
+  Map<DictKey, const DictType*> mDicts;
+  Map<FuncKey, const FuncType*> mFuncs;
+  Map<UserKey, const UserType*> mUsers;
 };
 
 }  // namespace sema
 
 }  // namespace via
 
-#endif
+#endif  // VIA_CORE_SEMA_TYPE_CONTEXT_H_

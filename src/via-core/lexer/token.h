@@ -7,7 +7,6 @@
 #include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
-#include "convert.h"
 #include "location.h"
 
 namespace via
@@ -104,21 +103,20 @@ struct Token
     GREATERTHANEQUALS,  // >=
     CONCATEQUALS,       // ..=
   } kind;
+
   const char* lexeme;
   usize size;
 
   String dump() const;
-  String to_string() const { return String(lexeme, size); }
-  StringView to_string_view() const { return StringView(lexeme, size); }
-
+  String toString() const { return String(lexeme, size); }
+  StringView toStringView() const { return StringView(lexeme, size); }
   SourceLoc location(const String& source) const;
 };
 
-template <>
-struct Convert<Token>
+inline String toString(const Token& tok)
 {
-  static String to_string(const Token& tok) { return tok.dump(); }
-};
+  return tok.dump();
+}
 
 }  // namespace via
 

@@ -7,15 +7,6 @@ namespace via
 {
 
 namespace sema
-{
-
-using namespace ast;
-
-ControlPath analyze_cpath(const Stmt* stmt)
-{
-  return ControlPath::None;
-}
-
-}  // namespace sema
+{}  // namespace sema
 
 }  // namespace via

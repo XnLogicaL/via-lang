@@ -17,22 +17,21 @@ namespace sema
 class Frame final
 {
  public:
-  Local& top() { return locals.back(); }
+  Local& top() { return mLocals.back(); }
 
-  Optional<LocalRef> get_local(StringView symbol);
+  Optional<LocalRef> getLocal(StringView symbol);
+  void setLocal(StringView symbol,
+                const ast::LValue* lval,
+                const ast::Expr* rval,
+                const ast::Type* type,
+                u64 quals = 0ULL);
 
-  void set_local(StringView symbol,
-                 const ast::LValue* lval,
-                 const ast::Expr* rval,
-                 const ast::Type* type,
-                 u64 quals = 0ULL);
-
-  void save() { sp = locals.size(); }
-  void restore() { locals.resize(sp); }
+  void save() { mStkPtr = mLocals.size(); }
+  void restore() { mLocals.resize(mStkPtr); }
 
  private:
-  usize sp;
-  Vec<Local> locals;
+  usize mStkPtr;
+  Vec<Local> mLocals;
 };
 
 namespace stack

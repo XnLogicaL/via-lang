@@ -15,7 +15,7 @@ namespace via
 using SymbolId = u64;
 using QualPath = Deque<String>;
 
-inline String to_string(const QualPath& qs)
+inline String toString(const QualPath& qs)
 {
   std::ostringstream oss;
 
@@ -36,7 +36,7 @@ class SymbolTable final : public InternTable<String, SymbolId>
   using InternTable::intern;
 
  public:
-  SymbolId intern(const QualPath& qs) { return intern(to_string(qs)); }
+  SymbolId intern(const QualPath& qs) { return intern(toString(qs)); }
 };
 
 }  // namespace via

@@ -123,9 +123,9 @@ struct UnaryVisitInfo : VisitInfo
   explicit UnaryVisitInfo(Allocator& alloc, UnaryOp op) : alloc(alloc), op(op)
   {}
 
-  static UnaryVisitInfo* from(VisitInfo* raw_vi)
+  static UnaryVisitInfo* from(VisitInfo* raw)
   {
-    if TRY_COERCE (UnaryVisitInfo, uvi, raw_vi) {
+    if TRY_COERCE (UnaryVisitInfo, uvi, raw) {
       return uvi;
     } else {
       debug::bug("Invalid visit info passed to unary visitor");
@@ -144,9 +144,9 @@ struct BinaryVisitInfo : VisitInfo
       : alloc(alloc), op(op)
   {}
 
-  static BinaryVisitInfo* from(VisitInfo* raw_vi)
+  static BinaryVisitInfo* from(VisitInfo* raw)
   {
-    if TRY_COERCE (BinaryVisitInfo, bvi, raw_vi) {
+    if TRY_COERCE (BinaryVisitInfo, bvi, raw) {
       return bvi;
     } else {
       debug::bug("Invalid visit info passed to unary visitor");
@@ -156,11 +156,11 @@ struct BinaryVisitInfo : VisitInfo
 
 struct UnaryVisitor : TypeVisitor
 {
-  void visit(const BuiltinType& bt, VisitInfo* raw_vi) override
+  void visit(const BuiltinType& bt, VisitInfo* raw) override
   {
     using enum BuiltinType::Kind;
 
-    auto* vi = UnaryVisitInfo::from(raw_vi);
+    auto* vi = UnaryVisitInfo::from(raw);
 
     switch (vi->op) {
       case UnaryOp::NEG:
@@ -209,9 +209,9 @@ struct InferVisitInfo : VisitInfo
 
   explicit InferVisitInfo(Allocator& alloc) : alloc(alloc) {}
 
-  static InferVisitInfo* from(VisitInfo* raw_vi)
+  static InferVisitInfo* from(VisitInfo* raw)
   {
-    if (auto* info = dynamic_cast<InferVisitInfo*>(raw_vi)) {
+    if (auto* info = dynamic_cast<InferVisitInfo*>(raw)) {
       return info;
     } else {
       debug::bug("Invalid visit info passed to inference visitor");
@@ -221,12 +221,12 @@ struct InferVisitInfo : VisitInfo
 
 struct InferVisitor : Visitor
 {
-  void visit(const ExprLit& elit, VisitInfo* raw_vi) override
+  void visit(const ExprLit& elit, VisitInfo* raw) override
   {
     using enum Token::Kind;
     using enum BuiltinType::Kind;
 
-    auto* vi = InferVisitInfo::from(raw_vi);
+    auto* vi = InferVisitInfo::from(raw);
     BuiltinType::Kind kind;
 
     switch (elit.tok->kind) {
@@ -256,22 +256,22 @@ struct InferVisitor : Visitor
     vi->type = vi->alloc.emplace<BuiltinType>(kind);
   }
 
-  void visit(const ExprSymbol& esym, VisitInfo* raw_vi) override
+  void visit(const ExprSymbol& esym, VisitInfo* raw) override
   {
-    auto* vi = InferVisitInfo::from(raw_vi);
+    auto* vi = InferVisitInfo::from(raw);
     Frame& frame = stack::top();
-    StringView symbol = esym.sym->to_string_view();
+    StringView symbol = esym.sym->toStringView();
 
-    if (auto lref = frame.get_local(symbol)) {
-      lref->local.get_type()->accept(*this, raw_vi);
+    if (auto lref = frame.getLocal(symbol)) {
+      lref->local.getType()->accept(*this, raw);
     } else {
       debug::bug("inference visitor: symbol lookup failed");
     }
   }
 
-  void visit(const ExprUnary& eun, VisitInfo* raw_vi) override
+  void visit(const ExprUnary& eun, VisitInfo* raw) override
   {
-    auto* vi = InferVisitInfo::from(raw_vi);
+    auto* vi = InferVisitInfo::from(raw);
 
     UnaryVisitor uvis;
     UnaryVisitInfo uvi(vi->alloc, to_unary_op(eun.op->kind));
@@ -283,42 +283,42 @@ struct InferVisitor : Visitor
     vi->type = uvi.type;
   }
 
-  void visit(const ExprBinary&, VisitInfo* raw_vi) override {}
-  void visit(const ExprGroup&, VisitInfo* raw_vi) override {}
-  void visit(const ExprCall&, VisitInfo* raw_vi) override {}
-  void visit(const ExprSubscript&, VisitInfo* raw_vi) override {}
-  void visit(const ExprTuple&, VisitInfo* raw_vi) override {}
-  void visit(const ExprLambda&, VisitInfo* raw_vi) override {}
+  void visit(const ExprBinary&, VisitInfo* raw) override {}
+  void visit(const ExprGroup&, VisitInfo* raw) override {}
+  void visit(const ExprCall&, VisitInfo* raw) override {}
+  void visit(const ExprSubscript&, VisitInfo* raw) override {}
+  void visit(const ExprTuple&, VisitInfo* raw) override {}
+  void visit(const ExprLambda&, VisitInfo* raw) override {}
 
-  void visit(const TypeBuiltin&, VisitInfo* raw_vi) override {}
-  void visit(const TypeArray&, VisitInfo* raw_vi) override {}
-  void visit(const TypeDict&, VisitInfo* raw_vi) override {}
-  void visit(const TypeFunc&, VisitInfo* raw_vi) override {}
+  void visit(const TypeBuiltin&, VisitInfo* raw) override {}
+  void visit(const TypeArray&, VisitInfo* raw) override {}
+  void visit(const TypeDict&, VisitInfo* raw) override {}
+  void visit(const TypeFunc&, VisitInfo* raw) override {}
 };
 
 Type::InferResult Type::infer(Allocator& alloc, const ast::Expr* expr)
 {
   InferVisitor vis;
-  InferVisitInfo raw_vi(alloc);
-  expr->accept(vis, &raw_vi);
+  InferVisitInfo raw(alloc);
+  expr->accept(vis, &raw);
 
-  if (raw_vi.type == nullptr) {
-    return std::unexpected(raw_vi.fail);
+  if (raw.type == nullptr) {
+    return std::unexpected(raw.fail);
   } else {
-    return raw_vi.type;
+    return raw.type;
   }
 }
 
 Type::InferResult Type::from(Allocator& alloc, const ast::Type* type)
 {
   InferVisitor vis;
-  InferVisitInfo raw_vi(alloc);
-  type->accept(vis, &raw_vi);
+  InferVisitInfo raw(alloc);
+  type->accept(vis, &raw);
 
-  if (raw_vi.type == nullptr) {
-    return std::unexpected(raw_vi.fail);
+  if (raw.type == nullptr) {
+    return std::unexpected(raw.fail);
   } else {
-    return raw_vi.type;
+    return raw.type;
   }
 }
 

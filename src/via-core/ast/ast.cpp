@@ -53,7 +53,7 @@ String LValue::dump() const
     case Kind::TPB:
       return fmt::format("LValue(tpb={})", tpb->dump());
     case Kind::SP:
-      return fmt::format("LValue(sp={})", path->dump());
+      return fmt::format("LValue(mStkPtr={})", path->dump());
     case Kind::DP:
       return fmt::format("LValue(dp={})", path->dump());
   }
@@ -65,7 +65,7 @@ String PlValue::dump() const
     case Kind::SYM:
       return fmt::format("PlValue(symbol={})", sym->dump());
     case Kind::SP:
-      return fmt::format("PlValue(sp={})", path->dump());
+      return fmt::format("PlValue(mStkPtr={})", path->dump());
     case Kind::DP:
       return fmt::format("PlValue(dp={})", path->dump());
   }
@@ -82,7 +82,7 @@ String AttributeGroup::dump() const
   return fmt::format(
       "AttributeGroup({})", ast::dump(ats, [](const auto& atr) {
         return fmt::format(
-            "Attribute(sp={}, args={})", atr.sp->dump(),
+            "Attribute(mStkPtr={}, args={})", atr.mStkPtr->dump(),
             ast::dump(atr.args, [](const auto& arg) { return arg->dump(); }));
       }));
 }
@@ -358,7 +358,7 @@ String StmtTypeDecl::dump(usize& depth) const
 String StmtUsing::dump(usize& depth) const
 {
   std::ostringstream oss;
-  oss << INDENT + fmt::format("StmtUsing({})\n", sp->dump());
+  oss << INDENT + fmt::format("StmtUsing({})\n", mStkPtr->dump());
   depth++;
 
   for (const auto& stmt : scp->stmts) {

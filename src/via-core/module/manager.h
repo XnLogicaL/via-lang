@@ -14,35 +14,34 @@ namespace via
 class ModuleManager
 {
  public:
-  auto& get_modules() { return m_modules; }
+  friend class via::Module;
 
-  void add_module(Module* m) { m_modules[m->m_path] = m; }
-
-  Module* get_module(fs::path name) { return m_modules[name]; }
-
-  bool has_module(fs::path name)
+ public:
+  auto& getModules() { return mModules; }
+  Module* getModule(fs::path name) { return mModules[name]; }
+  void addModule(Module* m) { mModules[m->mPath] = m; }
+  bool hasModule(fs::path name)
   {
-    return m_modules.find(name) != m_modules.end();
+    return mModules.find(name) != mModules.end();
   }
 
-  bool is_importing(const std::string& name) const
+ protected:
+  bool isImporting(const std::string& name) const
   {
-    return std::find(m_import_stack.begin(), m_import_stack.end(), name) !=
-           m_import_stack.end();
+    return std::find(mImports.begin(), mImports.end(), name) != mImports.end();
   }
 
-  void push_import(const std::string& name) { m_import_stack.push_back(name); }
-
-  void pop_import()
+  void pushImport(const std::string& name) { mImports.push_back(name); }
+  void popImport()
   {
-    if (!m_import_stack.empty()) {
-      m_import_stack.pop_back();
+    if (!mImports.empty()) {
+      mImports.pop_back();
     }
   }
 
  private:
-  Vec<String> m_import_stack;
-  Map<fs::path, Module*> m_modules;
+  Vec<String> mImports;
+  Map<fs::path, Module*> mModules;
 };
 
 }  // namespace via

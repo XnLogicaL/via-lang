@@ -1,2 +1,0 @@
-fn print(str: string) -> nil {}
-fn println(str: string) -> nil {}

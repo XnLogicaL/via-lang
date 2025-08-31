@@ -6,7 +6,6 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "buffer.h"
 #include "debug.h"
 #include "header.h"
 #include "instruction.h"
@@ -24,7 +23,7 @@ namespace config
 namespace vm
 {
 
-inline constexpr usize register_count = UINT16_MAX + 1;
+inline constexpr usize kRegisterCount = UINT16_MAX + 1;
 
 }
 
@@ -37,23 +36,20 @@ class Interpreter final
       : H(H),
         pc(H->bytecode.data()),
         stack(&alloc),
-        regs(config::vm::register_count)
+        regs(config::vm::kRegisterCount)
   {
     debug::assertm(!H->bytecode.empty(), "illformed header");
   }
 
  public:
-  Stack<uptr>& get_stack();
-  Allocator& get_allocator();
+  Stack<uptr>& getStack();
+  Allocator& getAllocator();
 
-  ValueRef get_constant(u16 id);
+  ValueRef getConstant(u16 id);
 
-  ValueRef get_register(u16 reg);
-  void set_register(u16 reg, ValueRef val);
-
-  ValueRef new_local(ValueRef val);
-  ValueRef get_local(usize sp);
-  void set_local(usize sp, ValueRef val);
+  ValueRef pushLocal(ValueRef val);
+  ValueRef getLocal(usize mStkPtr);
+  void setLocal(usize mStkPtr, ValueRef val);
 
   void execute();
 
@@ -61,8 +57,8 @@ class Interpreter final
   const Header* H;
 
   Stack<uptr> stack;
-  Buffer<Value*> regs;
-  Buffer<Instruction*> lbt;
+  Vec<Value*> regs;
+  Vec<Instruction*> lbt;
 
   Allocator alloc;
 

@@ -10,6 +10,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "defs.h"
+#include "module/symbol.h"
 
 namespace via
 {
@@ -39,31 +40,29 @@ class Module final
   };
 
  public:
-  static Result<Module*, String> from_source(ModuleManager* mm,
-                                             Module* importee,
-                                             const char* name,
-                                             fs::path path,
-                                             u32 perms = 0,
-                                             u32 flags = 0);
+  static Result<Module*, String> fromSource(ModuleManager* mm,
+                                            Module* importee,
+                                            const char* name,
+                                            fs::path path,
+                                            u32 perms = 0,
+                                            u32 flags = 0);
 
  public:
-  Allocator& get_allocator() { return m_alloc; }
-
+  Allocator& getAllocator() { return mAlloc; }
   Optional<SymbolInfo> lookup(const QualPath& qs);
-
-  Result<Module*, String> resolve_import(const QualPath& qs);
+  Result<Module*, String> resolveImport(const QualPath& qs);
 
  protected:
-  Allocator m_alloc;
-  u32 m_perms, m_flags;
-  String m_name;
-  fs::path m_path;
-  IrTree m_ir;
-  Vec<Module*> m_imports;
-  Map<SymbolId, Def*> m_defs;
-  SymbolTable m_symbols;
-  Module* m_importee = nullptr;
-  ModuleManager* m_manager = nullptr;
+  Allocator mAlloc;
+  u32 mPerms, mFlags;
+  String mName;
+  fs::path mPath;
+  IrTree mIr;
+  Vec<Module*> mImports;
+  Map<SymbolId, Def*> mDefs;
+  SymbolTable mSymbols;
+  Module* mImportee = nullptr;
+  ModuleManager* mManager = nullptr;
 };
 
 }  // namespace via

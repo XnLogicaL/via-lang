@@ -17,8 +17,8 @@ class Module;
 namespace sema
 {
 
-bool is_constexpr(Module* m, const ir::Expr* expr);
-Result<ConstValue, String> to_constexpr(Module* m, const ir::Expr* expr);
+bool isConstExpr(Module* m, const ir::Expr* expr);
+Result<ConstValue, String> evalConstExpr(Module* m, const ir::Expr* expr);
 
 }  // namespace sema
 

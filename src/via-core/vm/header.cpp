@@ -7,8 +7,6 @@
 #include "debug.h"
 #include "sema/const_value.h"
 
-namespace fs = std::filesystem;
-
 namespace via
 {
 
@@ -20,15 +18,15 @@ Header::Header(const fs::path& binary, DiagContext& diags)
 String Header::dump() const
 {
   std::ostringstream oss;
-  oss << apply_ansi_style("[section .text]\n", Fg::Yellow, Bg::Black,
-                          Style::Underline);
+  oss << applyANSI("[section .text]\n", Fg::Yellow, Bg::Black,
+                   Style::Underline);
 
   for (const Instruction& insn : bytecode) {
     oss << "  " << insn.dump() << "\n";
   }
 
-  oss << apply_ansi_style("[section .data]\n", Fg::Yellow, Bg::Black,
-                          Style::Underline);
+  oss << applyANSI("[section .data]\n", Fg::Yellow, Bg::Black,
+                   Style::Underline);
 
   for (const sema::ConstValue& cv : consts) {
     oss << "  " << cv.dump() << "\n";

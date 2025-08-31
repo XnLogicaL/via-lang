@@ -6,7 +6,6 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "memory.h"
 
 namespace via
 {
@@ -31,8 +30,8 @@ class ValueRef final
  public:
   Value* get() const;
   void free();
-  bool is_null() const;
-  usize count_refs() const;
+  bool isNullRef() const;
+  usize getRefCount() const;
 
  private:
   Value* ptr;

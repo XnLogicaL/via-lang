@@ -14,14 +14,14 @@ namespace sema
 using namespace ast;
 using enum ConstValue::Kind;
 
-bool is_constexpr(Module* m, const ir::Expr* expr)
+bool isConstExpr(Module* m, const ir::Expr* expr)
 {
-  debug::unimplemented("is_constexpr");
+  debug::unimplemented("isConstExpr");
 }
 
-Result<ConstValue, via::String> to_constexpr(Module* m, const ir::Expr* expr)
+Result<ConstValue, via::String> evalConstExpr(Module* m, const ir::Expr* expr)
 {
-  debug::unimplemented("to_constexpr");
+  debug::unimplemented("evalConstExpr");
 }
 
 }  // namespace sema

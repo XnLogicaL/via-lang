@@ -20,66 +20,65 @@ class Parser final
 {
  public:
   Parser(const String& source, const TokenTree& tokens, DiagContext& diag)
-      : m_source(source), m_cursor(tokens.cbegin().base()), m_diag(diag)
+      : mSource(source), mCursor(tokens.cbegin().base()), mDiag(diag)
   {}
 
  public:
-  Allocator& get_allocator() { return m_alloc; }
-
+  Allocator& getAllocator() { return mAlloc; }
   SyntaxTree parse();
 
  private:
   bool match(Token::Kind kind, int ahead = 0);
   bool optional(Token::Kind kind);
 
-  Token* peek(int ahead = 0);
-  Token* advance();
-  Token* expect(Token::Kind kind, const char* task);
+  const Token* peek(int ahead = 0);
+  const Token* advance();
+  const Token* expect(Token::Kind kind, const char* task);
 
   // Special
-  ast::TupleBinding* parse_tuple_binding();
-  ast::Path* parse_static_path();
-  ast::Path* parse_dynamic_path();
-  ast::LValue* parse_lvalue();
-  ast::PlValue* parse_plvalue();
-  ast::Parameter* parse_parameter();
-  ast::AttributeGroup* parse_attribute_group();
+  ast::TupleBinding* parseTupleBinding();
+  ast::Path* parseStaticPath();
+  ast::Path* parseDynamicPath();
+  ast::LValue* parseLValue();
+  ast::PlValue* parsePLValue();
+  ast::Parameter* parseParameter();
+  ast::AttributeGroup* parseAttribGroup();
 
   // Expression
-  ast::Expr* parse_expr_primary();
-  ast::Expr* parse_expr_unary_or_postfix();
-  ast::Expr* parse_expr(int min_prec = 0);
+  ast::Expr* parseExprPrimary();
+  ast::Expr* parseExprAffix();
+  ast::Expr* parseExpr(int minPrec = 0);
 
   // Types
-  ast::TypeBuiltin* parse_type_builtin();
-  ast::TypeArray* parse_type_array();
-  ast::TypeDict* parse_type_dict();
-  ast::TypeFunc* parse_type_func();
-  ast::Type* parse_type();
+  ast::TypeBuiltin* parseTypeBuiltin();
+  ast::TypeArray* parseTypeArray();
+  ast::TypeDict* parseTypeDict();
+  ast::TypeFunc* parseTypeFunc();
+  ast::Type* parseType();
 
   // Statement
-  ast::StmtScope* parse_stmt_scope();
-  ast::StmtVarDecl* parse_stmt_var(bool semicolon);
-  ast::StmtFor* parse_stmt_for();
-  ast::StmtForEach* parse_stmt_foreach();
-  ast::StmtIf* parse_stmt_if();
-  ast::StmtWhile* parse_stmt_while();
-  ast::StmtAssign* parse_stmt_assign(ast::Expr* lhs);
-  ast::StmtReturn* parse_stmt_return();
-  ast::StmtEnum* parse_stmt_enum();
-  ast::StmtModule* parse_stmt_module();
-  ast::StmtImport* parse_stmt_import();
-  ast::StmtFunctionDecl* parse_stmt_func();
-  ast::StmtStructDecl* parse_stmt_struct();
-  ast::StmtTypeDecl* parse_stmt_type();
-  ast::StmtUsing* parse_stmt_using();
-  ast::Stmt* parse_stmt();
+  ast::StmtScope* parseStmtScope();
+  ast::StmtVarDecl* parseStmtVarDecl(bool semicolon);
+  ast::StmtFor* parseStmtFor();
+  ast::StmtForEach* parseStmtForEach();
+  ast::StmtIf* parseStmtIf();
+  ast::StmtWhile* parseStmtWhile();
+  ast::StmtAssign* parseStmtAssign(ast::Expr* lhs);
+  ast::StmtReturn* parseStmtReturn();
+  ast::StmtEnum* parseStmtEnum();
+  ast::StmtModule* parseStmtModule();
+  ast::StmtImport* parseStmtImport();
+  ast::StmtFunctionDecl* parseStmtFuncDecl();
+  ast::StmtStructDecl* parseStmtStructDecl();
+  ast::StmtTypeDecl* parseStmtTypeDecl();
+  ast::StmtUsing* parseStmtUsingDecl();
+  ast::Stmt* parseStmt();
 
  private:
-  DiagContext& m_diag;
-  const String& m_source;
-  Token* const* m_cursor;
-  Allocator m_alloc;
+  DiagContext& mDiag;
+  const String& mSource;
+  const Token* const* mCursor;
+  Allocator mAlloc;
 };
 
 }  // namespace via

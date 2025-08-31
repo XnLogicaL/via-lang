@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
   spdlog::set_pattern("%^%l:%$ %v");
 
   try {
-    auto& cli = via::cli::get_cli_app();
+    auto& cli = via::cli::getApp();
 
     std::string dump;
     fs::path path;
@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
     assert(!path.empty(), "no input files");
 
     ModuleManager mm;
-    auto module = Module::from_source(&mm, nullptr, path.stem().c_str(), path,
-                                      Module::Perms::ALL, flags);
+    auto module = Module::fromSource(&mm, nullptr, path.stem().c_str(), path,
+                                     Module::Perms::ALL, flags);
 
     assert(module.has_value(), module.error_or("<no-error>"));
   } catch (int code) {

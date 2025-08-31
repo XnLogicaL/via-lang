@@ -8,12 +8,6 @@
 #include <via/types.h>
 #include <source_location>
 
-#ifdef NDEBUG
-#define VIA_ASSERT(cond, ...) ((void)0)
-#else
-#define VIA_ASSERT(cond, ...) (::via::debug::__assert(cond, ))
-#endif
-
 namespace via
 {
 

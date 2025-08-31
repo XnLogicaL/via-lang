@@ -13,7 +13,7 @@ namespace via
 namespace config
 {
 
-inline constexpr usize register_count = UINT16_MAX;
+inline constexpr usize kRegisterCount = UINT16_MAX;
 
 }
 

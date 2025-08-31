@@ -13,8 +13,9 @@ ValueRef::ValueRef(Interpreter* ctx, Value* ptr) : ptr(ptr) {}
 
 ValueRef::ValueRef(const ValueRef& other) : ptr(other.ptr)
 {
-  if (!other.is_null())
-    other.ptr->rc++;
+  if (!other.isNullRef()) {
+    other.ptr->mRc++;
+  }
 }
 
 ValueRef::ValueRef(ValueRef&& other) : ptr(other.ptr)
@@ -24,18 +25,21 @@ ValueRef::ValueRef(ValueRef&& other) : ptr(other.ptr)
 
 ValueRef::~ValueRef()
 {
-  if (!is_null())
+  if (!isNullRef()) {
     free();
+  }
 }
 
 ValueRef& ValueRef::operator=(const ValueRef& other)
 {
   if (this != &other) {
-    if (!other.is_null())
-      other.ptr->rc++;
+    if (!other.isNullRef()) {
+      other.ptr->mRc++;
+    }
 
-    if (!is_null())
+    if (!isNullRef()) {
       free();
+    }
 
     this->ptr = other.ptr;
   }
@@ -46,8 +50,9 @@ ValueRef& ValueRef::operator=(const ValueRef& other)
 ValueRef& ValueRef::operator=(ValueRef&& other)
 {
   if (this != &other) {
-    if (!is_null())
+    if (!isNullRef()) {
       free();
+    }
 
     ptr = other.ptr;
     other.ptr = nullptr;
@@ -58,35 +63,35 @@ ValueRef& ValueRef::operator=(ValueRef&& other)
 
 Value* ValueRef::operator->() const
 {
-  debug::assertm(!is_null(), "attempt to read NULL reference (operator->)");
+  debug::assertm(!isNullRef(), "attempt to read NULL reference (operator->)");
   return ptr;
 }
 
 Value& ValueRef::operator*() const
 {
-  debug::assertm(!is_null(), "attempt to read NULL reference (operator*)");
+  debug::assertm(!isNullRef(), "attempt to read NULL reference (operator*)");
   return *ptr;
 }
 
 void ValueRef::free()
 {
-  debug::assertm(!is_null(), "free called on NULL reference");
+  debug::assertm(!isNullRef(), "free called on NULL reference");
 
-  if (--ptr->rc == 0) {
+  if (--ptr->mRc == 0) {
     ptr->free();
     ptr = nullptr;
   }
 }
 
-bool ValueRef::is_null() const
+bool ValueRef::isNullRef() const
 {
   return ptr == nullptr;
 }
 
-usize ValueRef::count_refs() const
+usize ValueRef::getRefCount() const
 {
-  debug::assertm(!is_null(), "count_refs() called on NULL reference");
-  return ptr->rc;
+  debug::assertm(!isNullRef(), "getRefCount() called on NULL reference");
+  return ptr->mRc;
 }
 
 }  // namespace via

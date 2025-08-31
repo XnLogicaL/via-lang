@@ -46,8 +46,9 @@ constexpr Optional<T> stoi(StringView str, usize* pos = nullptr)
     ++end;
   }
 
-  if (end == 0)
+  if (end == 0) {
     return nullopt;
+  }
 
   const StringView digits_to_parse = str.substr(0, end);
 

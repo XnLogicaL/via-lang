@@ -6,7 +6,6 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "convert.h"
 
 namespace via
 {
@@ -238,12 +237,6 @@ struct Instruction
   u16 a, b, c;
 
   String dump() const;
-};
-
-template <>
-struct Convert<Instruction>
-{
-  static String to_string(const Instruction& insn) { return insn.dump(); }
 };
 
 }  // namespace via

@@ -12,7 +12,7 @@ namespace via
 
 template <typename T>
   requires(std::is_default_constructible_v<T>)
-constexpr T* get_instance() noexcept
+constexpr T* getInstance() noexcept
 {
   static T instance;
   return &instance;
