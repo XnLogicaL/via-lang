@@ -24,7 +24,8 @@
   <a href="#credits">Credits</a>
 </p>
 
-> ⚠️ **Warning:** via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
+>[!WARNING]
+> via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
 
 # Introduction
 
