@@ -48,11 +48,11 @@ static UnaryOp to_unary_op(Token::Kind kind)
   using enum Token::Kind;
 
   switch (kind) {
-    case MINUS:
+    case OP_MINUS:
       return UnaryOp::NEG;
     case KW_NOT:
       return UnaryOp::NOT;
-    case TILDE:
+    case OP_TILDE:
       return UnaryOp::BNOT;
     default:
       break;
@@ -66,45 +66,45 @@ static BinaryOp to_binary_op(Token::Kind kind)
   using enum Token::Kind;
 
   switch (kind) {
-    case PLUS:
+    case OP_PLUS:
       return BinaryOp::ADD;
-    case MINUS:
+    case OP_MINUS:
       return BinaryOp::SUB;
-    case ASTERISK:
+    case OP_STAR:
       return BinaryOp::MUL;
-    case FSLASH:
+    case OP_SLASH:
       return BinaryOp::DIV;
-    case POW:
+    case OP_STAR_STAR:
       return BinaryOp::POW;
-    case PERCENT:
+    case OP_PERCENT:
       return BinaryOp::MOD;
     case KW_AND:
       return BinaryOp::AND;
     case KW_OR:
       return BinaryOp::OR;
-    case AMPERSAND:
+    case OP_AMP:
       return BinaryOp::BAND;
-    case PIPE:
+    case OP_PIPE:
       return BinaryOp::BOR;
-    case CARET:
+    case OP_CARET:
       return BinaryOp::BXOR;
-    case KW_SHL:
+    case OP_SHL:
       return BinaryOp::BSHL;
-    case KW_SHR:
+    case OP_SHR:
       return BinaryOp::BSHR;
-    case DBEQUALS:
+    case OP_EQ_EQ:
       return BinaryOp::EQ;
-    case BANGEQUALS:
+    case OP_BANG_EQ:
       return BinaryOp::NEQ;
-    case LESSTHAN:
+    case OP_LT:
       return BinaryOp::LT;
-    case GREATERTHAN:
+    case OP_GT:
       return BinaryOp::GT;
-    case LESSTHANEQUALS:
+    case OP_LT_EQ:
       return BinaryOp::LTEQ;
-    case GREATERTHANEQUALS:
+    case OP_GT_EQ:
       return BinaryOp::GTEQ;
-    case CONCAT:
+    case OP_DOT_DOT:
       return BinaryOp::CONCAT;
     default:
       break;
@@ -230,22 +230,22 @@ struct InferVisitor : Visitor
     BuiltinType::Kind kind;
 
     switch (elit.tok->kind) {
-      case NIL:
+      case LIT_NIL:
         kind = Nil;
         break;
-      case TRUE:
-      case FALSE:
+      case LIT_TRUE:
+      case LIT_FALSE:
         kind = Bool;
         break;
-      case INT:
-      case XINT:
-      case BINT:
+      case LIT_INT:
+      case LIT_XINT:
+      case LIT_BINT:
         kind = Int;
         break;
-      case FP:
+      case LIT_FLOAT:
         kind = Float;
         break;
-      case STRING:
+      case LIT_STRING:
         kind = String;
         break;
       default:

@@ -8,7 +8,7 @@ fn r110(width: int, steps: int) -> nil {
 
     for var t = 0, steps {
         // Print current row
-        for [i, cell] in row {
+        for (i, cell) in row {
             io::print("#" if cell == 1 else " ")
         }
 
@@ -20,10 +20,29 @@ fn r110(width: int, steps: int) -> nil {
             var right = 0 if i == width-1 else row[i+1];
             var center = row[i];
 
-            var index = (left shl 2) | (center shl 1) | right;
-            return (0b01101110 shr index) & 1;
+            var index = (left << 2) | (center >> 1) | right;
+            return (0b01101110 >> index) & 1;
         });
     }
 }
 
 r110(31, 15);
+
+/*
+
+StmtImport({[IDENTIFIER 'std'], [IDENTIFIER 'io']})
+StmtImport({[IDENTIFIER 'std'], [IDENTIFIER 'array']})
+StmtFunctionDecl(name=[IDENTIFIER 'r110'], ret=TypeBuiltin([LIT_NIL 'nil']), parms={Parameter(sym=[IDENTIFIER 'width'], type=TypeBuiltin([KW_INT 'int'])), Parameter(sym=[IDENTIFIER 'steps'], type=TypeBuiltin([KW_INT 'int']))})
+ StmtVarDecl(lval=ExprSymbol([IDENTIFIER 'row']), rval=ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'array']), AccessIdent(instantiated=true, symbol=[IDENTIFIER 'create'], generics={TypeBuiltin([KW_INT 'int'])})), args={ExprSymbol([IDENTIFIER 'WIDTH']), ExprLit([LIT_INT '0'])}), type=<no-annotated-type>)
+ StmtAssign(op=[OP_EQ '='], lval=ExprSubscript(ExprSymbol([IDENTIFIER 'row']), ExprBinary([OP_SLASH '/'], ExprSymbol([IDENTIFIER 'width']), ExprLit([LIT_INT '2']))), rval=ExprLit([LIT_INT '1']))
+ StmtFor(init=StmtVarDecl(lval=ExprSymbol([IDENTIFIER 't']), rval=ExprLit([LIT_INT '0']), type=<no-annotated-type>), target=ExprSymbol([IDENTIFIER 'steps']), step=<no-explicit-step>)
+  StmtForEach(lval=ExprTuple(vals={ExprSymbol([IDENTIFIER 'i']), ExprSymbol([IDENTIFIER 'cell'])}), iter=ExprSymbol([IDENTIFIER 'row']))
+   StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'io']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'print'], generics={})), args={ExprTernary(cnd=ExprBinary([OP_EQ_EQ '=='], ExprSymbol([IDENTIFIER 'cell']), ExprLit([LIT_INT '1'])), lhs=ExprLit([LIT_STRING '"#"']), rhs=ExprLit([LIT_STRING '" "']))}))
+  EndForEach()
+  StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'io']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'println'], generics={})), args={}))
+  StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'array']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'transform'], generics={})), args={ExprUnary([OP_AMP '&'], ExprSymbol([IDENTIFIER 'row'])), ExprLambda(<lambda>)}))
+ EndFor()
+EndFunctionDecl()
+StmtExpr(ExprCall(callee=ExprSymbol([IDENTIFIER 'r110']), args={ExprLit([LIT_INT '31']), ExprLit([LIT_INT '15'])}))
+
+*/

@@ -31,10 +31,11 @@ static String dump(const Vec<T>& vec,
   return oss.str();
 }
 
-String TupleBinding::dump() const
+String AccessIdent::dump() const
 {
-  return fmt::format("TupleBinding({})", ast::dump(binds, [](const auto& bind) {
-                       return bind->dump();
+  return fmt::format("AccessIdent(instantiated={}, symbol={}, generics={})",
+                     inst, symbol->dump(), ast::dump(gens, [](const auto& tp) {
+                       return tp->dump(ZERO);
                      }));
 }
 
@@ -43,32 +44,6 @@ String Path::dump() const
   return fmt::format("Path({})", ast::dump(path, [](const auto& node) {
                        return node->dump();
                      }));
-}
-
-String LValue::dump() const
-{
-  switch (kind) {
-    case Kind::SYM:
-      return fmt::format("LValue(symbol={})", sym->dump());
-    case Kind::TPB:
-      return fmt::format("LValue(tpb={})", tpb->dump());
-    case Kind::SP:
-      return fmt::format("LValue(mStkPtr={})", path->dump());
-    case Kind::DP:
-      return fmt::format("LValue(dp={})", path->dump());
-  }
-}
-
-String PlValue::dump() const
-{
-  switch (kind) {
-    case Kind::SYM:
-      return fmt::format("PlValue(symbol={})", sym->dump());
-    case Kind::SP:
-      return fmt::format("PlValue(mStkPtr={})", path->dump());
-    case Kind::DP:
-      return fmt::format("PlValue(dp={})", path->dump());
-  }
 }
 
 String Parameter::dump() const
@@ -82,7 +57,7 @@ String AttributeGroup::dump() const
   return fmt::format(
       "AttributeGroup({})", ast::dump(ats, [](const auto& atr) {
         return fmt::format(
-            "Attribute(mStkPtr={}, args={})", atr.mStkPtr->dump(),
+            "Attribute(sp={}, args={})", atr.sp->dump(),
             ast::dump(atr.args, [](const auto& arg) { return arg->dump(); }));
       }));
 }
@@ -105,8 +80,7 @@ String ExprDynAccess::dump(usize&) const
 
 String ExprStaticAccess::dump(usize&) const
 {
-  return fmt::format("ExprStaticAccess({}, {})", expr->dump(ZERO),
-                     expr->dump(ZERO));
+  return fmt::format("ExprStaticAccess({}, {})", expr->dump(ZERO), aid->dump());
 }
 
 String ExprUnary::dump(usize&) const
@@ -171,7 +145,7 @@ String ExprLambda::dump(usize&) const
 String StmtVarDecl::dump(usize& depth) const
 {
   return INDENT + fmt::format("StmtVarDecl(lval={}, rval={}, type={})",
-                              lval->dump(), rval->dump(ZERO),
+                              lval->dump(ZERO), rval->dump(ZERO),
                               type ? type->dump(ZERO) : "<no-annotated-type>");
 }
 
@@ -219,7 +193,8 @@ String StmtFor::dump(usize& depth) const
   std::ostringstream oss;
   oss << INDENT
       << fmt::format("StmtFor(init={}, target={}, step={})\n", init->dump(ZERO),
-                     target->dump(ZERO), step->dump(ZERO));
+                     target->dump(ZERO),
+                     step ? step->dump(ZERO) : "<no-explicit-step>");
   depth++;
 
   for (const Stmt* stmt : br->stmts) {
@@ -235,7 +210,7 @@ String StmtForEach::dump(usize& depth) const
 {
   std::ostringstream oss;
   oss << INDENT
-      << fmt::format("StmtForEach(lval={}, iter={})\n", lval->dump(),
+      << fmt::format("StmtForEach(lval={}, iter={})\n", lval->dump(ZERO),
                      iter->dump(ZERO));
   depth++;
 
@@ -358,7 +333,7 @@ String StmtTypeDecl::dump(usize& depth) const
 String StmtUsing::dump(usize& depth) const
 {
   std::ostringstream oss;
-  oss << INDENT + fmt::format("StmtUsing({})\n", mStkPtr->dump());
+  oss << INDENT + fmt::format("StmtUsing({})\n", sp->dump());
   depth++;
 
   for (const auto& stmt : scp->stmts) {

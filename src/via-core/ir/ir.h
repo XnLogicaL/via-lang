@@ -147,7 +147,7 @@ struct ExprBinary : public Expr
     SUB,
     MUL,
     DIV,
-    POW,
+    OP_STAR_STAR,
     MOD,
     AND,
     OR,

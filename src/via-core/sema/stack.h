@@ -21,7 +21,7 @@ class Frame final
 
   Optional<LocalRef> getLocal(StringView symbol);
   void setLocal(StringView symbol,
-                const ast::LValue* lval,
+                const ast::Expr* lval,
                 const ast::Expr* rval,
                 const ast::Type* type,
                 u64 quals = 0ULL);

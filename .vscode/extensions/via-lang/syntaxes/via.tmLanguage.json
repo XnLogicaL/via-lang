@@ -20,7 +20,7 @@
     },
     {
       "name": "keyword.control.via",
-      "match": "\\b(var|const|fn|type|while|for|if|in|of|else|do|and|or|not|shl|shr|as|return|mod|enum|struct|import|using|bool|int|float|string)\\b"
+      "match": "\\b(var|const|fn|type|while|for|if|in|of|else|do|and|or|not|as|return|mod|enum|struct|import|using|bool|int|float|string)\\b"
     },
     {
       "name": "variable.language.self.via",
@@ -44,7 +44,7 @@
     },
     {
       "name": "keyword.operator.via",
-      "match": "(~|\\^|&|!)"
+      "match": "(~|\\^|&|!|<<|>>)"
     },
     {
       "name": "keyword.operator.comparison.via",

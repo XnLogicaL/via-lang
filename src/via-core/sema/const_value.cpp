@@ -16,19 +16,19 @@ namespace sema
 Optional<ConstValue> ConstValue::fromToken(const Token& tok)
 {
   switch (tok.kind) {
-    case Token::Kind::NIL:
+    case Token::Kind::LIT_NIL:
       return ConstValue();
-    case Token::Kind::TRUE:
+    case Token::Kind::LIT_TRUE:
       return ConstValue(true);
-    case Token::Kind::FALSE:
+    case Token::Kind::LIT_FALSE:
       return ConstValue(false);
-    case Token::Kind::INT:
-    case Token::Kind::XINT:
-    case Token::Kind::BINT:
+    case Token::Kind::LIT_INT:
+    case Token::Kind::LIT_XINT:
+    case Token::Kind::LIT_BINT:
       if (auto val = stoi<ConstValue::int_type>(tok.toString()))
         return ConstValue(*val);
       break;
-    case Token::Kind::FP:
+    case Token::Kind::LIT_FLOAT:
       if (auto val = stof<ConstValue::float_type>(tok.toString()))
         return ConstValue(*val);
       break;

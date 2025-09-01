@@ -17,10 +17,10 @@ namespace debug
 
 void assertm(bool cond, String message, std::source_location __loc)
 {
-#ifdef NDEBUG
-  void(0);
-#else
-  cond ? panic(message) : void(0);
+#ifndef NDEBUG
+  if (!cond) {
+    panic(message);
+  }
 #endif
 }
 

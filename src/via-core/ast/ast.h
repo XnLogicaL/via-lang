@@ -6,12 +6,12 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "debug.h"
 #include "lexer/location.h"
 #include "lexer/token.h"
 #include "visitor.h"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
+#define TRY_IS(T, a) (dynamic_cast<T*>(a) != nullptr)
 
 namespace via
 {
@@ -43,9 +43,11 @@ struct Type
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
-struct TupleBinding
+struct AccessIdent
 {
-  Vec<const Token*> binds;
+  bool inst;
+  const Token* symbol;
+  Vec<const Type*> gens;
   SourceLoc loc;
 
   String dump() const;
@@ -54,48 +56,6 @@ struct TupleBinding
 struct Path
 {
   Vec<const Token*> path;
-  SourceLoc loc;
-
-  String dump() const;
-};
-
-struct LValue
-{
-  enum class Kind
-  {
-    SYM,  // Symbol
-    TPB,  // Tuple binding
-    SP,   // Static path
-    DP,   // Dynamic path
-  } kind;
-
-  union
-  {
-    const Token* sym;
-    const Path* path;
-    const TupleBinding* tpb;
-  };
-
-  SourceLoc loc;
-
-  String dump() const;
-};
-
-struct PlValue
-{
-  enum class Kind
-  {
-    SYM,  // Symbol
-    SP,   // Static path
-    DP,   // Dynamic path
-  } kind;
-
-  union
-  {
-    const Token* sym;
-    const Path* path;
-  };
-
   SourceLoc loc;
 
   String dump() const;
@@ -114,7 +74,7 @@ struct AttributeGroup
 {
   struct Attribute
   {
-    const Path* mStkPtr;
+    const Path* sp;
     Vec<const Token*> args;
   };
 
@@ -148,14 +108,15 @@ struct ExprDynAccess : public Expr
 {
   COMMON_HEADER(Expr)
   const Expr* expr;
-  const Token* index;
+  const AccessIdent* aid;
 };
 
 struct ExprStaticAccess : public Expr
 {
   COMMON_HEADER(Expr)
   const Expr* expr;
-  const Token* index;
+  const AccessIdent* aid;
+  Vec<const Type*> gens;
 };
 
 struct ExprUnary : public Expr
@@ -229,7 +190,7 @@ struct StmtVarDecl : public Stmt
 {
   COMMON_HEADER(Stmt)
   const Token* decl;
-  const LValue* lval;
+  const Expr* lval;
   const Expr* rval;
   const Type* type;
 };
@@ -263,7 +224,7 @@ struct StmtFor : public Stmt
 struct StmtForEach : public Stmt
 {
   COMMON_HEADER(Stmt)
-  const LValue* lval;
+  const Expr* lval;
   const Expr* iter;
   const StmtScope* br;
 };
@@ -352,7 +313,7 @@ struct StmtTypeDecl : public Stmt
 struct StmtUsing : public Stmt
 {
   COMMON_HEADER(Stmt);
-  const Path* mStkPtr;
+  const Path* sp;
   const StmtScope* scp;
 };
 

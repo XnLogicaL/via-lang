@@ -19,16 +19,16 @@ struct Token
     EOF_ = 0,  // end of file
     ILLEGAL,   // unrecognized lexeme
 
-    IDENT,  // identifier
-    STRING,
-    NIL,     // nil
-    MIDENT,  // macro identifier
-    INT,     // integer literal
-    BINT,    // binary integer literal
-    XINT,    // hexadecimal integer literal
-    FP,      // floating point literal
-    TRUE,    // true literal
-    FALSE,   // false literal
+    IDENTIFIER,        // identifier
+    IDENTIFIER_MACRO,  // macro identifier
+    LIT_NIL,           // nil
+    LIT_INT,           // integer literal
+    LIT_BINT,          // binary integer literal
+    LIT_XINT,          // hexadecimal integer literal
+    LIT_FLOAT,         // floating point literal
+    LIT_TRUE,          // true literal
+    LIT_FALSE,         // false literal
+    LIT_STRING,
 
     KW_VAR,     // var
     KW_CONST,   // const
@@ -44,8 +44,6 @@ struct Token
     KW_AND,     // and
     KW_OR,      // or
     KW_NOT,     // not
-    KW_SHL,     // shl
-    KW_SHR,     // shr
     KW_RETURN,  // return
     KW_AS,      // as
     KW_IMPORT,  // import
@@ -58,50 +56,58 @@ struct Token
     KW_FLOAT,   // float
     KW_STRING,  // string
 
-    DOT,                // .
-    COMMA,              // ,
-    SEMICOLON,          // ;
-    COLON,              // :
-    DBCOLON,            // ::
-    ARROW,              // ->
-    QUESTION,           // ?
-    PLUS,               // +
-    MINUS,              // -
-    ASTERISK,           // *
-    FSLASH,             // /
-    POW,                // **
-    PERCENT,            // %
-    AMPERSAND,          // &
-    TILDE,              // ~
-    CARET,              // ^
-    PIPE,               // |
-    BANG,               // !
-    INC,                // ++
-    DEC,                // --
-    LESSTHAN,           // <
-    GREATERTHAN,        // >
-    CONCAT,             // ..
-    LPAREN,             // (
-    RPAREN,             // )
-    LBRACKET,           // [
-    RBRACKET,           // ]
-    LCURLY,             // {
-    RCURLY,             // }
-    EQUALS,             // =
-    DBEQUALS,           // ==
-    PLUSEQUALS,         // +=
-    MINUSEQUALS,        // -=
-    ASTERISKEQUALS,     // *=
-    FSLASHEQUALS,       // /=
-    POWEQUALS,          // **=
-    PERCENTEQUALS,      // %=
-    AMPERSANDEQUALS,    // &=
-    CARETEQUALS,        // ^=
-    PIPEEQUALS,         // |=
-    BANGEQUALS,         // !=
-    LESSTHANEQUALS,     // <=
-    GREATERTHANEQUALS,  // >=
-    CONCATEQUALS,       // ..=
+    PERIOD,       // .
+    COMMA,        // ,
+    SEMICOLON,    // ;
+    COLON,        // :
+    COLON_COLON,  // ::
+    ARROW,        // ->
+    QUESTION,     // ?
+
+    PAREN_OPEN,     // (
+    PAREN_CLOSE,    // )
+    BRACKET_OPEN,   // [
+    BRACKET_CLOSE,  // ]
+    CURLY_OPEN,     // {
+    CURLY_CLOSE,    // }
+
+    OP_PLUS,       // +
+    OP_MINUS,      // -
+    OP_STAR,       // *
+    OP_SLASH,      // /
+    OP_STAR_STAR,  // **
+    OP_PERCENT,    // %
+    OP_AMP,        // &
+    OP_TILDE,      // ~
+    OP_CARET,      // ^
+    OP_PIPE,       // |
+    OP_SHL,        // <<
+    OP_SHR,        // >>
+    OP_BANG,       // !
+    OP_LT,         // <
+    OP_GT,         // >
+    OP_DOT_DOT,    // ..
+
+    OP_PLUS_PLUS,    // ++
+    OP_MINUS_MINUS,  // --
+
+    OP_EQ,            // =
+    OP_EQ_EQ,         // ==
+    OP_PLUS_EQ,       // +=
+    OP_MINUS_EQ,      // -=
+    OP_STAR_EQ,       // *=
+    OP_SLASH_EQ,      // /=
+    OP_STAR_STAR_EQ,  // **=
+    OP_PERCENT_EQ,    // %=
+    OP_AMP_EQ,        // &=
+    OP_CARET_EQ,      // ^=
+    OP_PIPE_EQ,       // |=
+    OP_SHL_EQ,        // <<=
+    OP_SHR_EQ,        // >>=
+    OP_BANG_EQ,       // !=
+    OP_LT_EQ,         // <=
+    OP_GT_EQ,         // >=
+    OP_DOT_DOT_EQ,    // ..=
   } kind;
 
   const char* lexeme;

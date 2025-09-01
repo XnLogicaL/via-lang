@@ -23,7 +23,7 @@ Optional<LocalRef> Frame::getLocal(StringView symbol)
 }
 
 void Frame::setLocal(StringView symbol,
-                     const ast::LValue* lval,
+                     const ast::Expr* lval,
                      const ast::Expr* rval,
                      const ast::Type* type,
                      u64 quals)

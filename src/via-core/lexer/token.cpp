@@ -16,7 +16,7 @@ SourceLoc Token::location(const String& source) const
 
 String Token::dump() const
 {
-  return fmt::format("[{:<12} '{}']", magic_enum::enum_name(kind),
+  return fmt::format("[{} '{}']", magic_enum::enum_name(kind),
                      (*lexeme == '\0') ? "<eof>" : toString());
 }
 

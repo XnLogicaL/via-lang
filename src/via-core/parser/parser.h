@@ -36,11 +36,9 @@ class Parser final
   const Token* expect(Token::Kind kind, const char* task);
 
   // Special
-  ast::TupleBinding* parseTupleBinding();
+  ast::AccessIdent* parseAccessIdent();
   ast::Path* parseStaticPath();
-  ast::Path* parseDynamicPath();
-  ast::LValue* parseLValue();
-  ast::PlValue* parsePLValue();
+  ast::Expr* parseLValue();
   ast::Parameter* parseParameter();
   ast::AttributeGroup* parseAttribGroup();
 
@@ -58,7 +56,7 @@ class Parser final
 
   // Statement
   ast::StmtScope* parseStmtScope();
-  ast::StmtVarDecl* parseStmtVarDecl(bool semicolon);
+  ast::StmtVarDecl* parseStmtVarDecl(bool allowSemicolon);
   ast::StmtFor* parseStmtFor();
   ast::StmtForEach* parseStmtForEach();
   ast::StmtIf* parseStmtIf();
