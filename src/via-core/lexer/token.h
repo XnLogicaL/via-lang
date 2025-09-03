@@ -68,8 +68,8 @@ struct Token
     PAREN_CLOSE,    // )
     BRACKET_OPEN,   // [
     BRACKET_CLOSE,  // ]
-    CURLY_OPEN,     // {
-    CURLY_CLOSE,    // }
+    BRACE_OPEN,     // {
+    BRACE_CLOSE,    // }
 
     OP_PLUS,       // +
     OP_MINUS,      // -

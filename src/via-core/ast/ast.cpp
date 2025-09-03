@@ -13,35 +13,17 @@ inline usize ZERO = 0;
 
 #define INDENT String(depth, ' ')
 
-template <typename T>
-static String dump(const Vec<T>& vec,
-                   Function<String(const std::remove_cv_t<T>&)>&& fn)
-{
-  std::ostringstream oss;
-  oss << '{';
-
-  for (usize i = 0; i < vec.size(); i++) {
-    oss << fn(vec[i]);
-    if (i != vec.size() - 1) {
-      oss << ", ";
-    }
-  }
-
-  oss << '}';
-  return oss.str();
-}
-
 String AccessIdent::dump() const
 {
-  return fmt::format("AccessIdent(instantiated={}, symbol={}, generics={})",
-                     inst, symbol->dump(), ast::dump(gens, [](const auto& tp) {
-                       return tp->dump(ZERO);
-                     }));
+  return fmt::format(
+      "AccessIdent(instantiated={}, symbol={}, generics={})", inst,
+      symbol->dump(),
+      debug::dump(gens, [](const auto& tp) { return tp->dump(ZERO); }));
 }
 
 String Path::dump() const
 {
-  return fmt::format("Path({})", ast::dump(path, [](const auto& node) {
+  return fmt::format("Path({})", debug::dump(path, [](const auto& node) {
                        return node->dump();
                      }));
 }
@@ -55,10 +37,10 @@ String Parameter::dump() const
 String AttributeGroup::dump() const
 {
   return fmt::format(
-      "AttributeGroup({})", ast::dump(ats, [](const auto& atr) {
+      "AttributeGroup({})", debug::dump(ats, [](const auto& atr) {
         return fmt::format(
             "Attribute(sp={}, args={})", atr.sp->dump(),
-            ast::dump(atr.args, [](const auto& arg) { return arg->dump(); }));
+            debug::dump(atr.args, [](const auto& arg) { return arg->dump(); }));
       }));
 }
 
@@ -103,7 +85,7 @@ String ExprCall::dump(usize&) const
 {
   return fmt::format(
       "ExprCall(callee={}, args={})", lval->dump(ZERO),
-      ast::dump(args, [](const auto& arg) { return arg->dump(ZERO); }));
+      debug::dump(args, [](const auto& arg) { return arg->dump(ZERO); }));
 }
 
 String ExprSubscript::dump(usize&) const
@@ -125,16 +107,16 @@ String ExprTernary::dump(usize&) const
 
 String ExprArray::dump(usize&) const
 {
-  return fmt::format("ExprArray(init={})", ast::dump(init, [](const auto& ini) {
-                       return ini->dump(ZERO);
-                     }));
+  return fmt::format(
+      "ExprArray(init={})",
+      debug::dump(init, [](const auto& ini) { return ini->dump(ZERO); }));
 }
 
 String ExprTuple::dump(usize&) const
 {
-  return fmt::format("ExprTuple(vals={})", ast::dump(vals, [](const auto& ini) {
-                       return ini->dump(ZERO);
-                     }));
+  return fmt::format(
+      "ExprTuple(vals={})",
+      debug::dump(vals, [](const auto& ini) { return ini->dump(ZERO); }));
 }
 
 String ExprLambda::dump(usize&) const
@@ -146,7 +128,7 @@ String StmtVarDecl::dump(usize& depth) const
 {
   return INDENT + fmt::format("StmtVarDecl(lval={}, rval={}, type={})",
                               lval->dump(ZERO), rval->dump(ZERO),
-                              type ? type->dump(ZERO) : "<no-annotated-type>");
+                              type ? type->dump(ZERO) : "<infered>");
 }
 
 String StmtScope::dump(usize& depth) const
@@ -193,8 +175,7 @@ String StmtFor::dump(usize& depth) const
   std::ostringstream oss;
   oss << INDENT
       << fmt::format("StmtFor(init={}, target={}, step={})\n", init->dump(ZERO),
-                     target->dump(ZERO),
-                     step ? step->dump(ZERO) : "<no-explicit-step>");
+                     target->dump(ZERO), step ? step->dump(ZERO) : "<infered>");
   depth++;
 
   for (const Stmt* stmt : br->stmts) {
@@ -285,7 +266,7 @@ String StmtModule::dump(usize& depth) const
 String StmtImport::dump(usize& depth) const
 {
   return INDENT +
-         fmt::format("StmtImport({})", ast::dump(path, [](const auto& node) {
+         fmt::format("StmtImport({})", debug::dump(path, [](const auto& node) {
                        return node->dump();
                      }));
 }
@@ -295,7 +276,7 @@ String StmtFunctionDecl::dump(usize& depth) const
   std::ostringstream oss;
   oss << INDENT + fmt::format("StmtFunctionDecl(name={}, ret={}, parms={})\n",
                               name->dump(), ret->dump(ZERO),
-                              ast::dump(parms, [](const auto& parm) {
+                              debug::dump(parms, [](const auto& parm) {
                                 return parm->dump();
                               }));
   depth++;
@@ -375,7 +356,7 @@ String TypeFunc::dump(usize&) const
 {
   return fmt::format(
       "TypeFunc(ret={}, parms={})", ret->dump(ZERO),
-      ast::dump(params, [](const auto& parm) { return parm->dump(); }));
+      debug::dump(params, [](const auto& parm) { return parm->dump(); }));
 }
 
 }  // namespace ast

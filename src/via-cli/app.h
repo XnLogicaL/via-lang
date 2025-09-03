@@ -19,9 +19,14 @@ inline auto& getApp()
                                       via::toString(getSemanticVersion()));
 
   cli.add_argument("input").default_value("").help("Target source file");
+
+  cli.add_argument("--include-dirs", "-I")
+      .default_value("")
+      .help("Comma seperated custom include directory paths");
+
   cli.add_argument("--dump", "-D")
       .nargs(1)
-      .choices("", "ttree", "ast", "ir")
+      .choices("", "ttree", "ast", "ir", "deftab", "symtab")
       .default_value("")
       .help("Dump the given tree");
 

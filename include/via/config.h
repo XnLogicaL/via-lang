@@ -48,9 +48,9 @@
 #endif
 
 #ifdef VIA_PLATFORM_WINDOWS
-  #define VIA_EXPORT __declspec(dllexport)
+  #define VIA_EXPORT extern "C" __declspec(dllexport)
 #else
-  #define VIA_EXPORT
+  #define VIA_EXPORT extern "C"
 #endif
 
 #define NO_COPY(target)                      \

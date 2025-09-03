@@ -30,6 +30,23 @@ void assertm(bool cond,
     String what = "<no-message-specified>",
     std::source_location __loc = std::source_location::current());
 
+template <typename T>
+String dump(const Vec<T>& vec, Function<String(const std::remove_cv_t<T>&)> fn)
+{
+  std::ostringstream oss;
+  oss << '{';
+
+  for (usize i = 0; i < vec.size(); i++) {
+    oss << fn(vec[i]);
+    if (i != vec.size() - 1) {
+      oss << ", ";
+    }
+  }
+
+  oss << '}';
+  return oss.str();
+}
+
 }  // namespace debug
 
 }  // namespace via

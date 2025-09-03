@@ -7,9 +7,13 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "module.h"
+#include "sema/type_context.h"
 
 namespace via
 {
+
+namespace config
+{}  // namespace config
 
 class ModuleManager
 {
@@ -17,13 +21,20 @@ class ModuleManager
   friend class via::Module;
 
  public:
+  auto& getAllocator() { return mAlloc; }
   auto& getModules() { return mModules; }
+  auto& getTypeCtx() { return mTypeCtx; }
+  auto& getSymbolTable() { return mSymbols; }
+  const auto& getImportPaths() const { return mImportPaths; }
+
   Module* getModule(fs::path name) { return mModules[name]; }
   void addModule(Module* m) { mModules[m->mPath] = m; }
   bool hasModule(fs::path name)
   {
     return mModules.find(name) != mModules.end();
   }
+
+  void addImportPath(fs::path path) { mImportPaths.push_back(path); }
 
  protected:
   bool isImporting(const std::string& name) const
@@ -40,8 +51,12 @@ class ModuleManager
   }
 
  private:
+  Allocator mAlloc;
   Vec<String> mImports;
+  Vec<fs::path> mImportPaths;
   Map<fs::path, Module*> mModules;
+  SymbolTable mSymbols;
+  sema::TypeContext mTypeCtx;
 };
 
 }  // namespace via

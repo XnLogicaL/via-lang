@@ -79,9 +79,25 @@ namespace via
 namespace sema
 {
 
+template <typename Tp, typename Key, typename... Args>
+static const Tp* instantiateBase(BumpAllocator<>& alloc,
+                                 Map<Key, const Tp*>& map,
+                                 Args&&... args)
+{
+  Key key(args...);
+  if (auto it = map.find(key); it != map.end()) {
+    return it->second;
+  } else {
+    auto* bt = alloc.emplace<Tp>(args...);
+    map[key] = bt;
+    return bt;
+  }
+}
+
 const BuiltinType* TypeContext::getBuiltinTypeInstance(BuiltinType::Kind kind)
 {
-  return mBuiltins[(u8)kind];
+  return instantiateBase<BuiltinType, BuiltinType::Kind>(mAlloc, mBuiltins,
+                                                         kind);
 }
 
 const ArrayType* TypeContext::getArrayTypeInstance(const Type* type)

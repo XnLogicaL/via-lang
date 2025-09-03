@@ -10,12 +10,13 @@ target_include_directories(via-cli
 )
 
 target_link_libraries(via-cli
-    PUBLIC
-        via::core
-        argparse
-        spdlog
-        magic_enum
-        fmt::fmt
+  PUBLIC
+    via::core
+    argparse
+    spdlog
+    magic_enum
+    fmt::fmt
+    csv2::csv2
 )
 
 add_executable(via::cli ALIAS via-cli)

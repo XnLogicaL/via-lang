@@ -13,42 +13,62 @@ namespace via
 {
 
 class Module;
+class ValueRef;
+class CallInfo;
+struct Def;
 
-struct Def
-{
-  virtual ~Def() = default;
+using NativeCallback = ValueRef (*)(CallInfo& ci);
 
-  static Def* from(Module* m, const ir::Entity* e);
-};
-
-struct Module;
 struct SymbolInfo
 {
   const Def* def;
   const Module* mod;
 };
 
+struct DefParm
+{
+  SymbolId symbol;
+  const sema::Type* type;
+};
+
+struct DefTableEntry
+{
+  SymbolId id;
+  const Def* def;
+};
+
+using DefTable = DefTableEntry[];
+
+struct Def
+{
+  virtual String dump() const = 0;
+
+  static Def* from(Allocator& alloc, const ir::Entity* e);
+  static Def* newFunction(Allocator& alloc,
+                          const NativeCallback fn,
+                          InitList<DefParm> parms,
+                          const sema::Type* ret);
+};
+
 struct FunctionDef : public Def
 {
-  struct Parm
+  enum class Kind
   {
-    SymbolId symbol;
-    sema::Type* type;
+    IR,
+    NATIVE,
+  } kind;
+
+  union
+  {
+    const ir::Function* ir;
+    NativeCallback ntv;
   };
 
   SymbolId symbol;
-  sema::Type* ret;
-  Vec<Parm> parms;
-  const ir::Function* decl;
-};
+  const sema::Type* ret;
+  Vec<DefParm> parms;
 
-struct ModuleDef : public Def
-{
-  SymbolId symbol;
-  Map<String, Def*> defs;
-  const ir::Module* decl;
-
-  Def* lookup(SymbolId symbol);
+  String dump() const override;
 };
 
 }  // namespace via

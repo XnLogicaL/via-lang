@@ -512,7 +512,7 @@ TypeDict* Parser::parseTypeDict()
 
   dt->val = parseType();
 
-  auto* end = expect(CURLY_CLOSE, "terminating dictionary type");
+  auto* end = expect(BRACE_CLOSE, "terminating dictionary type");
 
   dt->loc = {first->location(mSource).begin, end->location(mSource).end};
   return dt;
@@ -549,7 +549,7 @@ Type* Parser::parseType()
       return parseTypeBuiltin();
     case BRACKET_OPEN:
       return parseTypeArray();
-    case CURLY_OPEN:
+    case BRACE_OPEN:
       return parseTypeDict();
     case KW_FN:
       return parseTypeFunc();
@@ -569,8 +569,8 @@ StmtScope* Parser::parseStmtScope()
   if (first->kind == COLON) {
     scope->stmts.push_back(parseStmt());
     scope->loc = {loc.begin, scope->stmts.back()->loc.end};
-  } else if (first->kind == CURLY_OPEN) {
-    while (!match(CURLY_CLOSE)) {
+  } else if (first->kind == BRACE_OPEN) {
+    while (!match(BRACE_CLOSE)) {
       scope->stmts.push_back(parseStmt());
     }
 
@@ -733,9 +733,9 @@ StmtEnum* Parser::parseStmtEnum()
     ens->type = parseType();
   }
 
-  expect(CURLY_OPEN, "parsing enumerator list");
+  expect(BRACE_OPEN, "parsing enumerator list");
 
-  while (!match(CURLY_CLOSE)) {
+  while (!match(BRACE_CLOSE)) {
     auto* sym = advance();
     expect(OP_EQ, "parsing enumerator pair");
 
@@ -758,9 +758,9 @@ StmtModule* Parser::parseStmtModule()
   auto* mod = mAlloc.emplace<StmtModule>();
   mod->sym = advance();
 
-  expect(CURLY_OPEN, "parsing module body");
+  expect(BRACE_OPEN, "parsing module body");
 
-  if (!match(CURLY_CLOSE)) {
+  if (!match(BRACE_CLOSE)) {
     while (true) {
       auto* tok = peek();
       switch (tok->kind) {
@@ -794,7 +794,7 @@ StmtModule* Parser::parseStmtModule()
     }
   }
 
-  auto* last = expect(CURLY_CLOSE, "terminating module body");
+  auto* last = expect(BRACE_CLOSE, "terminating module body");
   mod->loc = {loc.begin, last->location(mSource).end};
   return mod;
 }
@@ -821,16 +821,16 @@ StmtImport* Parser::parseStmtImport()
         end = tok->location(mSource).end;
         break;
       }
-    } else if (tok->kind == CURLY_OPEN) {
+    } else if (tok->kind == BRACE_OPEN) {
       imp->kind = TailKind::ImportCompound;
 
-      while (!match(CURLY_CLOSE)) {
+      while (!match(BRACE_CLOSE)) {
         auto* member = expect(IDENTIFIER, "parsing compound import member");
         imp->tail.push_back(member);
         expect(COMMA, "parsing compound import");
       }
 
-      auto* last = expect(CURLY_CLOSE, "terminating compound import");
+      auto* last = expect(BRACE_CLOSE, "terminating compound import");
       end = last->location(mSource).end;
       break;
     } else if (tok->kind == OP_STAR) {
@@ -887,9 +887,9 @@ StmtStructDecl* Parser::parseStmtStructDecl()
   auto* strc = mAlloc.emplace<StmtStructDecl>();
   strc->name = expect(IDENTIFIER, "parsing struct name");
 
-  expect(CURLY_OPEN, "parsing struct body");
+  expect(BRACE_OPEN, "parsing struct body");
 
-  while (!match(CURLY_CLOSE)) {
+  while (!match(BRACE_CLOSE)) {
     auto* tok = peek();
     switch (tok->kind) {
       case KW_CONST:
@@ -918,7 +918,7 @@ StmtStructDecl* Parser::parseStmtStructDecl()
     }
   }
 
-  auto* last = expect(CURLY_CLOSE, "terminating struct body");
+  auto* last = expect(BRACE_CLOSE, "terminating struct body");
   strc->loc = {loc.begin, last->location(mSource).end};
   return strc;
 }

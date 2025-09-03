@@ -58,6 +58,9 @@ template <typename T>
 using Vec = std::vector<T>;
 
 template <typename T>
+using InitList = std::initializer_list<T>;
+
+template <typename T>
 using Box = std::unique_ptr<T>;
 
 template <typename T>

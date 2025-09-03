@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <magic_enum/magic_enum.hpp>
 #include "ast/ast.h"
 #include "memory.h"
 #include "type_visitor.h"
@@ -40,6 +41,7 @@ class Type
  public:
   bool isDependent() const { return flags & 0x1; }
   virtual void accept(TypeVisitor& vis, VisitInfo* vi) = 0;
+  virtual String dump() const { debug::unimplemented(); }
 
  public:
   const Kind kind;
@@ -66,6 +68,11 @@ struct BuiltinType : Type
   void accept(TypeVisitor& vis, VisitInfo* vi) override
   {
     vis.visit(*this, vi);
+  }
+
+  String dump() const override
+  {
+    return fmt::format("BuiltinType({})", magic_enum::enum_name(bt));
   }
 };
 

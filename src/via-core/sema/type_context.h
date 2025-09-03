@@ -116,15 +116,23 @@ class TypeContext final
   const FuncType* getFunctionTypeInstance(const Type* res,
                                           Vec<const Type*> tps);
   const UserType* getUserTypeInstance(const ast::StmtTypeDecl* decl);
-  const TemplateParamType* getTemplateParmInstance(u32 depth, u32 index);
+
+  const TemplateParamType* getTemplateParmInstance(u32 depth, u32 index)
+  {
+    debug::unimplemented();
+  }
+
   const TemplateSpecType* getTemplateSpecInstance(const ast::StmtTypeDecl* prim,
-                                                  Vec<const Type*> args);
+                                                  Vec<const Type*> args)
+  {
+    debug::unimplemented();
+  }
 
   const Type* instantiate(const Type* tp, const TypeEnv& env);
 
  private:
   BumpAllocator<> mAlloc;
-  Map<u8, const BuiltinType*> mBuiltins;
+  Map<BuiltinType::Kind, const BuiltinType*> mBuiltins;
   Map<const Type*, const ArrayType*> mArrays;
   Map<DictKey, const DictType*> mDicts;
   Map<FuncKey, const FuncType*> mFuncs;
