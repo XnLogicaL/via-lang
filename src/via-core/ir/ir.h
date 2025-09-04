@@ -42,7 +42,7 @@ struct Terminator
   virtual String dump() const = 0;
 };
 
-#define COMMON_HEADER()                             \
+#define NODE_FIELDS()                               \
   String dump() const override                      \
   {                                                 \
     debug::todo("dump");                            \
@@ -54,29 +54,29 @@ struct Terminator
 
 struct Return : public Terminator
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   const Expr* val;
 };
 
 struct Continue : public Terminator
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 };
 
 struct Break : public Terminator
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 };
 
 struct Br : public Terminator
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   SymbolId lbl;
 };
 
 struct CondBr : public Terminator
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Expr* cnd;
   SymbolId iftrue, iffalse;
 };
@@ -100,19 +100,19 @@ struct Parameter
 
 struct ExprConstant : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   sema::ConstValue cv;
 };
 
 struct ExprSymbol : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   SymbolId symbol;
 };
 
 struct ExprAccess : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   enum class Kind
   {
@@ -125,7 +125,7 @@ struct ExprAccess : public Expr
 
 struct ExprUnary : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   enum class Op
   {
@@ -139,7 +139,7 @@ struct ExprUnary : public Expr
 
 struct ExprBinary : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   enum class Op
   {
@@ -163,47 +163,47 @@ struct ExprBinary : public Expr
 
 struct ExprCall : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Expr* callee;
   Vec<Expr*> args;
 };
 
 struct ExprSubscript : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Expr *expr, *idx;
 };
 
 struct ExprCast : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Expr* expr;
   sema::Type* type;
 };
 
 struct ExprTuple : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Vec<Expr*> init;
 };
 
 struct Function;
 struct ExprLambda : public Expr
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   Function* fn;
 };
 
 struct StmtVarDecl : public Stmt
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
   SymbolId sym;
   Expr* expr;
 };
 
 struct Function : public Entity
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   using Entity::symbol;
 
@@ -220,28 +220,28 @@ struct Function : public Entity
 
 struct Module : public Entity
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   using Entity::symbol;
 };
 
 struct Type : public Entity
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   using Entity::symbol;
 };
 
 struct Enum : public Entity
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   using Entity::symbol;
 };
 
 struct Block : public Entity
 {
-  COMMON_HEADER()
+  NODE_FIELDS()
 
   using Entity::symbol;
 };

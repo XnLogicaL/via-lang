@@ -61,9 +61,9 @@ String ConstValue::toString() const
 
 String ConstValue::dump() const
 {
-  return fmt::format("{} [{} {}]",
-                     applyANSI("constant", Fg::Magenta, Bg::Black, Style::Bold),
-                     magic_enum::enum_name(kind()), toString());
+  return fmt::format(
+      "{} [{} {}]", ansiFormat("constant", Fg::Magenta, Bg::Black, Style::Bold),
+      magic_enum::enum_name(kind()), toString());
 }
 
 }  // namespace sema

@@ -18,15 +18,15 @@ Header::Header(const fs::path& binary, DiagContext& diags)
 String Header::dump() const
 {
   std::ostringstream oss;
-  oss << applyANSI("[section .text]\n", Fg::Yellow, Bg::Black,
-                   Style::Underline);
+  oss << ansiFormat("[section .text]\n", Fg::Yellow, Bg::Black,
+                    Style::Underline);
 
   for (const Instruction& insn : bytecode) {
     oss << "  " << insn.dump() << "\n";
   }
 
-  oss << applyANSI("[section .data]\n", Fg::Yellow, Bg::Black,
-                   Style::Underline);
+  oss << ansiFormat("[section .data]\n", Fg::Yellow, Bg::Black,
+                    Style::Underline);
 
   for (const sema::ConstValue& cv : consts) {
     oss << "  " << cv.dump() << "\n";

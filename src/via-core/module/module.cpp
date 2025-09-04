@@ -156,8 +156,8 @@ Result<Module*, String> Module::loadNativeObject(ModuleManager* mgr,
     }
 
     if (flags & DUMP_DEFTABLE) {
-      fmt::println("{}", applyANSI(fmt::format("[deftable .{}]", name),
-                                   Fg::Yellow, Bg::Black, Style::Bold));
+      fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
+                                    Fg::Yellow, Bg::Black, Style::Bold));
 
       for (const auto& def : m->mDefs) {
         fmt::println("  {}", def.second->dump());
@@ -252,8 +252,8 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
     if (flags & DUMP_IR)
       fmt::println("{}", debug::dump(m->mIr));
     if (flags & DUMP_DEFTABLE) {
-      fmt::println("{}", applyANSI(fmt::format("[deftable .{}]", name),
-                                   Fg::Yellow, Bg::Black, Style::Bold));
+      fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
+                                    Fg::Yellow, Bg::Black, Style::Bold));
 
       for (const auto& def : m->mDefs) {
         fmt::println("  {}", def.second->dump());

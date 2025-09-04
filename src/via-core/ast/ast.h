@@ -84,7 +84,7 @@ struct AttributeGroup
   String dump() const;
 };
 
-#define COMMON_HEADER(klass)                              \
+#define NODE_FIELDS(klass)                                \
   using klass::loc;                                       \
   String dump(usize& depth) const override;               \
   void accept(Visitor& vis, VisitInfo* vi) const override \
@@ -94,26 +94,26 @@ struct AttributeGroup
 
 struct ExprLit : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Token* tok;
 };
 
 struct ExprSymbol : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Token* sym;
 };
 
 struct ExprDynAccess : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr* expr;
   const AccessIdent* aid;
 };
 
 struct ExprStaticAccess : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr* expr;
   const AccessIdent* aid;
   Vec<const Type*> gens;
@@ -121,59 +121,59 @@ struct ExprStaticAccess : public Expr
 
 struct ExprUnary : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Token* op;
   const Expr* expr;
 };
 
 struct ExprBinary : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Token* op;
   const Expr *lhs, *rhs;
 };
 
 struct ExprGroup : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr* expr;
 };
 
 struct ExprCall : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr* lval;
   Vec<const Expr*> args;
 };
 
 struct ExprSubscript : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr *lval, *idx;
 };
 
 struct ExprCast : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr* expr;
   const Type* type;
 };
 
 struct ExprTernary : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   const Expr *cnd, *lhs, *rhs;
 };
 
 struct ExprArray : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   Vec<const Expr*> init;
 };
 
 struct ExprTuple : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   Vec<const Expr*> vals;
 };
 
@@ -181,14 +181,14 @@ struct StmtScope;
 
 struct ExprLambda : public Expr
 {
-  COMMON_HEADER(Expr)
+  NODE_FIELDS(Expr)
   Vec<const Parameter*> pms;
   const StmtScope* scope;
 };
 
 struct StmtVarDecl : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Token* decl;
   const Expr* lval;
   const Expr* rval;
@@ -197,7 +197,7 @@ struct StmtVarDecl : public Stmt
 
 struct StmtScope : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   Vec<const Stmt*> stmts;
 };
 
@@ -209,13 +209,13 @@ struct StmtIf : public Stmt
     const StmtScope* br;
   };
 
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   Vec<Branch> brs;
 };
 
 struct StmtFor : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const StmtVarDecl* init;
   const Expr *target, *step;
   const StmtScope* br;
@@ -223,7 +223,7 @@ struct StmtFor : public Stmt
 
 struct StmtForEach : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Expr* lval;
   const Expr* iter;
   const StmtScope* br;
@@ -231,21 +231,21 @@ struct StmtForEach : public Stmt
 
 struct StmtWhile : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Expr* cnd;
   const StmtScope* br;
 };
 
 struct StmtAssign : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Token* op;
   const Expr *lval, *rval;
 };
 
 struct StmtReturn : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Expr* expr;
 };
 
@@ -257,7 +257,7 @@ struct StmtEnum : public Stmt
     const Expr* expr;
   };
 
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
   const Token* sym;
   const Type* type;
   Vec<Pair> pairs;
@@ -265,14 +265,14 @@ struct StmtEnum : public Stmt
 
 struct StmtModule : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
   const Token* sym;
   Vec<const Stmt*> scp;
 };
 
 struct StmtImport : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
 
   enum class TailKind
   {
@@ -287,7 +287,7 @@ struct StmtImport : public Stmt
 
 struct StmtFunctionDecl : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
 
   const Token* name;
   const Type* ret;
@@ -297,7 +297,7 @@ struct StmtFunctionDecl : public Stmt
 
 struct StmtStructDecl : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
 
   const Token* name;
   Vec<const Stmt*> scp;
@@ -305,55 +305,55 @@ struct StmtStructDecl : public Stmt
 
 struct StmtTypeDecl : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
   const Token* sym;
   const Type* type;
 };
 
 struct StmtUsing : public Stmt
 {
-  COMMON_HEADER(Stmt);
+  NODE_FIELDS(Stmt);
   const Path* sp;
   const StmtScope* scp;
 };
 
 struct StmtEmpty : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
 };
 
 struct StmtExpr : public Stmt
 {
-  COMMON_HEADER(Stmt)
+  NODE_FIELDS(Stmt)
   const Expr* expr;
 };
 
 struct TypeBuiltin : public Type
 {
-  COMMON_HEADER(Type);
+  NODE_FIELDS(Type);
   const Token* tok;
 };
 
 struct TypeArray : public Type
 {
-  COMMON_HEADER(Type);
+  NODE_FIELDS(Type);
   const Type* type;
 };
 
 struct TypeDict : public Type
 {
-  COMMON_HEADER(Type);
+  NODE_FIELDS(Type);
   const Type *key, *val;
 };
 
 struct TypeFunc : public Type
 {
-  COMMON_HEADER(Type);
+  NODE_FIELDS(Type);
   const Type* ret;
   Vec<const Parameter*> params;
 };
 
-#undef COMMON_HEADER
+#undef NODE_FIELDS
 
 }  // namespace ast
 

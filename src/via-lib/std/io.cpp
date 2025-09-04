@@ -18,7 +18,7 @@ VIA_MODINIT_FUNC(io)
   using enum via::sema::BuiltinType::Kind;
 
   auto& symtab = mgr->getSymbolTable();
-  auto& types = mgr->getTypeCtx();
+  auto& types = mgr->getTypeContext();
   auto& alloc = mgr->getAllocator();
 
   static via::DefTable dt = {
@@ -34,5 +34,5 @@ VIA_MODINIT_FUNC(io)
       },
   };
 
-  return alloc.emplace<via::NativeModuleInfo>(1, dt);
+  return via::NativeModuleInfo::construct(alloc, 1, dt);
 }

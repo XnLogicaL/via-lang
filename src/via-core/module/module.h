@@ -24,6 +24,14 @@ struct NativeModuleInfo
 {
   const usize size;
   const DefTableEntry* dt;
+
+  static NativeModuleInfo* construct(Allocator& alloc,
+                                     usize sz,
+                                     const DefTableEntry* dt)
+  {
+    return alloc.emplace<NativeModuleInfo>(sz, dt);
+  }
+
   NativeModuleInfo(usize size, const DefTableEntry* dt) : size(size), dt(dt) {}
 };
 

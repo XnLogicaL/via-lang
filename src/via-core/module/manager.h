@@ -23,7 +23,7 @@ class ModuleManager
  public:
   auto& getAllocator() { return mAlloc; }
   auto& getModules() { return mModules; }
-  auto& getTypeCtx() { return mTypeCtx; }
+  auto& getTypeContext() { return mTypeCtx; }
   auto& getSymbolTable() { return mSymbols; }
   const auto& getImportPaths() const { return mImportPaths; }
 

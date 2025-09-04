@@ -62,9 +62,9 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
 
   logger->log(
       level, "{} {} {}", d.msg,
-      applyANSI("at", Fg::White, Bg::Black, Style::Faint),
-      applyANSI(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
-                Fg::Cyan));
+      ansiFormat("at", Fg::White, Bg::Black, Style::Faint),
+      ansiFormat(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
+                 Fg::Cyan));
 
   usize lineWidth = static_cast<usize>(std::log10(line)) + 1;
 
