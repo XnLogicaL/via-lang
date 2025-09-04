@@ -17,7 +17,7 @@ VIA_MODINIT_FUNC(io)
 {
   using enum via::sema::BuiltinType::Kind;
 
-  auto& symtab = mgr->getSymbolTable();
+  auto& symtab = via::SymbolTable::getInstance();
   auto& types = mgr->getTypeContext();
   auto& alloc = mgr->getAllocator();
 

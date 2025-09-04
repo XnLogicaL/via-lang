@@ -236,8 +236,10 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
         goto error;
       }
 
-      for (const ir::Entity* e : m->mIr) {
-        m->mDefs[e->symbol] = Def::from(m->getAllocator(), e);
+      for (const auto& node : m->mIr) {
+        if (auto sym = node->getSymbol()) {
+          m->mDefs[*sym] = Def::from(m->getAllocator(), node);
+        }
       }
     }
 
@@ -289,7 +291,7 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
     QualPath new_qs = qs;
     new_qs.pop_front();
 
-    SymbolId id = module->mManager->mSymbols.intern(new_qs);
+    SymbolId id = SymbolTable::getInstance().intern(new_qs);
 
     return SymbolInfo{
         .def = module->mDefs[id],

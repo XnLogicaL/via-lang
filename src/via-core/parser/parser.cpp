@@ -873,6 +873,8 @@ StmtFunctionDecl* Parser::parseStmtFuncDecl()
 
   if (optional(ARROW)) {
     fn->ret = parseType();
+  } else {
+    fn->ret = nullptr;
   }
 
   fn->scp = parseStmtScope();

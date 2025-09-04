@@ -36,6 +36,13 @@ class SymbolTable final : public InternTable<String, SymbolId>
   using InternTable::intern;
 
  public:
+  static SymbolTable& getInstance()
+  {
+    static SymbolTable symtab;
+    return symtab;
+  }
+
+ public:
   const auto& getSymbols() const { return mMap; }
   SymbolId intern(const QualPath& qs) { return intern(toString(qs)); }
 };

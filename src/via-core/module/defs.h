@@ -43,7 +43,7 @@ struct Def
 {
   virtual String dump() const = 0;
 
-  static Def* from(Allocator& alloc, const ir::Entity* e);
+  static Def* from(Allocator& alloc, const ir::Stmt* node);
   static Def* newFunction(Allocator& alloc,
                           const NativeCallback fn,
                           InitList<DefParm> parms,
@@ -60,7 +60,7 @@ struct FunctionDef : public Def
 
   union
   {
-    const ir::Function* ir;
+    const ir::StmtFuncDecl* ir;
     NativeCallback ntv;
   };
 

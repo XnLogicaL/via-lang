@@ -6,13 +6,13 @@
 namespace via
 {
 
-Def* Def::from(Allocator& alloc, const ir::Entity* e)
+Def* Def::from(Allocator& alloc, const ir::Stmt* node)
 {
-  if TRY_COERCE (const ir::Function, fn, e) {
+  if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
     auto* fndef = alloc.emplace<FunctionDef>();
     fndef->kind = FunctionDef::Kind::IR;
     fndef->ir = fn;
-    fndef->symbol = fn->symbol;
+    fndef->symbol = fn->sym;
     return fndef;
   }
 

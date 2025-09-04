@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                    via::ansiFormat("[global symbol table]", via::Fg::Yellow,
                                    via::Bg::Black, via::Style::Bold));
 
-      for (const auto& sym : mgr.getSymbolTable().getSymbols()) {
+      for (const auto& sym : via::SymbolTable::getInstance().getSymbols()) {
         fmt::println("  {}: {}", sym.second, sym.first);
       }
     }

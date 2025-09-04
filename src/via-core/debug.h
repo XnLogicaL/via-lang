@@ -30,11 +30,11 @@ void assertm(bool cond,
     String what = "<no-message-specified>",
     std::source_location __loc = std::source_location::current());
 
-template <typename T>
+template <typename T, char LDel = '{', char RDel = '}'>
 String dump(const Vec<T>& vec, Function<String(const std::remove_cv_t<T>&)> fn)
 {
   std::ostringstream oss;
-  oss << '{';
+  oss << LDel;
 
   for (usize i = 0; i < vec.size(); i++) {
     oss << fn(vec[i]);
@@ -43,7 +43,7 @@ String dump(const Vec<T>& vec, Function<String(const std::remove_cv_t<T>&)> fn)
     }
   }
 
-  oss << '}';
+  oss << RDel;
   return oss.str();
 }
 

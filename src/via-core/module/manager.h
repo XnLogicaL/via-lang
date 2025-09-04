@@ -24,7 +24,6 @@ class ModuleManager
   auto& getAllocator() { return mAlloc; }
   auto& getModules() { return mModules; }
   auto& getTypeContext() { return mTypeCtx; }
-  auto& getSymbolTable() { return mSymbols; }
   const auto& getImportPaths() const { return mImportPaths; }
 
   Module* getModule(fs::path name) { return mModules[name]; }
@@ -55,7 +54,6 @@ class ModuleManager
   Vec<String> mImports;
   Vec<fs::path> mImportPaths;
   Map<fs::path, Module*> mModules;
-  SymbolTable mSymbols;
   sema::TypeContext mTypeCtx;
 };
 

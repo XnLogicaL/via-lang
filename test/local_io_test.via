@@ -1,3 +1,11 @@
 import std::io;
 
 io::print();
+
+fn declare_nothing() -> nil {
+  var nothing = nil;
+}
+
+var nothing = nil;
+
+

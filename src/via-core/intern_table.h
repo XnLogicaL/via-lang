@@ -32,21 +32,24 @@ class InternTable
   Id intern(const T& t)
   {
     auto [it, inserted] = mMap.try_emplace(t, mNextId);
-    if (inserted)
+    if (inserted) {
+      mReverse[mNextId] = t;
       mNextId++;
+    }
     return it->second;
   }
 
   Optional<View> lookup(Id id) const
   {
-    if (auto it = mMap.find(id))
-      return it->first;
+    if (auto it = mReverse.find(id); it != mReverse.end())
+      return it->second;
     return nullopt;
   }
 
  protected:
   usize mNextId = 0;
   Map<T, Id> mMap;
+  Map<Id, T> mReverse;
 };
 
 }  // namespace via

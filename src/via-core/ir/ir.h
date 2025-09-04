@@ -19,83 +19,65 @@ namespace ir
 
 struct Expr
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String dump() const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
+  virtual String dump(usize& depth) const = 0;
 };
 
 struct Stmt
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String dump() const = 0;
-};
-
-struct Entity
-{
-  SymbolId symbol;
-  virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String dump() const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
+  virtual String dump(usize& depth) const = 0;
+  virtual Optional<SymbolId> getSymbol() const { return nullopt; }
 };
 
 struct Terminator
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) = 0;
-  virtual String dump() const = 0;
+  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
+  virtual String dump(usize& depth) const = 0;
 };
 
-#define NODE_FIELDS()                               \
-  String dump() const override                      \
-  {                                                 \
-    debug::todo("dump");                            \
-  }                                                 \
-  void accept(Visitor& vis, VisitInfo* vi) override \
-  {                                                 \
-    vis.visit(*this, vi);                           \
+#define NODE_FIELDS()                                     \
+  String dump(usize& depth) const override;               \
+  void accept(Visitor& vis, VisitInfo* vi) const override \
+  {                                                       \
+    vis.visit(*this, vi);                                 \
   }
 
-struct Return : public Terminator
+struct TrReturn : public Terminator
 {
   NODE_FIELDS()
   const Expr* val;
 };
 
-struct Continue : public Terminator
+struct TrContinue : public Terminator
 {
   NODE_FIELDS()
 };
 
-struct Break : public Terminator
+struct TrBreak : public Terminator
 {
   NODE_FIELDS()
 };
 
-struct Br : public Terminator
+struct TrBranch : public Terminator
 {
   NODE_FIELDS()
-  SymbolId lbl;
+  usize lbl;
 };
 
-struct CondBr : public Terminator
+struct TrCondBranch : public Terminator
 {
   NODE_FIELDS()
   Expr* cnd;
-  SymbolId iftrue, iffalse;
+  usize iftrue, iffalse;
 };
 
-struct BasicBlock
-{
-  SymbolId name;
-  Vec<Stmt*> stmts;
-  Terminator* term;
-
-  String dump();
-};
-
-struct Parameter
+struct Parm
 {
   SymbolId sym;
-  sema::Type* type;
+  const sema::Type* type;
 
-  String dump();
+  String dump() const;
 };
 
 struct ExprConstant : public Expr
@@ -120,7 +102,7 @@ struct ExprAccess : public Expr
     DYNAMIC,
   } kind;
 
-  QualPath qs;
+  Expr *lval, *idx;
 };
 
 struct ExprUnary : public Expr
@@ -147,7 +129,7 @@ struct ExprBinary : public Expr
     SUB,
     MUL,
     DIV,
-    OP_STAR_STAR,
+    POW,
     MOD,
     AND,
     OR,
@@ -178,7 +160,7 @@ struct ExprCast : public Expr
 {
   NODE_FIELDS()
   Expr* expr;
-  sema::Type* type;
+  const sema::Type* type;
 };
 
 struct ExprTuple : public Expr
@@ -191,7 +173,6 @@ struct Function;
 struct ExprLambda : public Expr
 {
   NODE_FIELDS()
-  Function* fn;
 };
 
 struct StmtVarDecl : public Stmt
@@ -201,11 +182,11 @@ struct StmtVarDecl : public Stmt
   Expr* expr;
 };
 
-struct Function : public Entity
+struct StmtBlock;
+
+struct StmtFuncDecl : public Stmt
 {
   NODE_FIELDS()
-
-  using Entity::symbol;
 
   enum class Kind
   {
@@ -214,41 +195,24 @@ struct Function : public Entity
   } kind;
 
   SymbolId sym;
-  sema::Type* ret;
-  Vec<Parameter> parms;
+  const sema::Type* ret;
+  Vec<Parm> parms;
+  StmtBlock* body;
+
+  Optional<SymbolId> getSymbol() const override { return sym; }
 };
 
-struct Module : public Entity
+struct StmtBlock : public Stmt
 {
   NODE_FIELDS()
-
-  using Entity::symbol;
-};
-
-struct Type : public Entity
-{
-  NODE_FIELDS()
-
-  using Entity::symbol;
-};
-
-struct Enum : public Entity
-{
-  NODE_FIELDS()
-
-  using Entity::symbol;
-};
-
-struct Block : public Entity
-{
-  NODE_FIELDS()
-
-  using Entity::symbol;
+  SymbolId name;
+  Vec<Stmt*> stmts;
+  Terminator* term;
 };
 
 }  // namespace ir
 
-using IrTree = Vec<ir::Entity*>;
+using IrTree = Vec<ir::Stmt*>;
 
 namespace debug
 {

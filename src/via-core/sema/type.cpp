@@ -10,8 +10,6 @@ namespace via
 namespace sema
 {
 
-using namespace ast;
-
 enum class UnaryOp : u8
 {
   NEG,
@@ -43,7 +41,7 @@ enum class BinaryOp : u8
   CONCAT,
 };
 
-static UnaryOp to_unary_op(Token::Kind kind)
+static UnaryOp toUnaryOp(Token::Kind kind)
 {
   using enum Token::Kind;
 
@@ -61,7 +59,7 @@ static UnaryOp to_unary_op(Token::Kind kind)
   debug::bug("Failed to get unary operator from token kind");
 }
 
-static BinaryOp to_binary_op(Token::Kind kind)
+static BinaryOp toBinaryOp(Token::Kind kind)
 {
   using enum Token::Kind;
 
@@ -115,8 +113,8 @@ static BinaryOp to_binary_op(Token::Kind kind)
 
 struct UnaryVisitInfo : VisitInfo
 {
-  Type* type = nullptr;
-  String fail;
+  const Type* type = nullptr;
+  String error = "<no-error>";
   Allocator& alloc;
   UnaryOp op;
 
@@ -135,8 +133,8 @@ struct UnaryVisitInfo : VisitInfo
 
 struct BinaryVisitInfo : VisitInfo
 {
-  Type* type = nullptr;
-  String fail;
+  const Type* type = nullptr;
+  String error = "<no-error>";
   Allocator& alloc;
   BinaryOp op;
 
@@ -178,7 +176,7 @@ struct UnaryVisitor : TypeVisitor
           vi->type = vi->alloc.emplace<BuiltinType>(Int);
         } else {
           vi->type = nullptr;
-          vi->fail = fmt::format("");
+          vi->error = fmt::format("");
         }
         break;
       default:
@@ -203,8 +201,8 @@ struct BinaryVisitor : TypeVisitor
 
 struct InferVisitInfo : VisitInfo
 {
-  Type* type = nullptr;
-  String fail;
+  const Type* type = nullptr;
+  String error = "<no-error>";
   Allocator& alloc;
 
   explicit InferVisitInfo(Allocator& alloc) : alloc(alloc) {}
@@ -219,9 +217,9 @@ struct InferVisitInfo : VisitInfo
   }
 };
 
-struct InferVisitor : Visitor
+struct InferVisitor : ast::Visitor
 {
-  void visit(const ExprLit& elit, VisitInfo* raw) override
+  void visit(const ast::ExprLit& elit, VisitInfo* raw) override
   {
     using enum Token::Kind;
     using enum BuiltinType::Kind;
@@ -256,7 +254,7 @@ struct InferVisitor : Visitor
     vi->type = vi->alloc.emplace<BuiltinType>(kind);
   }
 
-  void visit(const ExprSymbol& esym, VisitInfo* raw) override
+  void visit(const ast::ExprSymbol& esym, VisitInfo* raw) override
   {
     auto* vi = InferVisitInfo::from(raw);
     Frame& frame = stack::top();
@@ -269,12 +267,12 @@ struct InferVisitor : Visitor
     }
   }
 
-  void visit(const ExprUnary& eun, VisitInfo* raw) override
+  void visit(const ast::ExprUnary& eun, VisitInfo* raw) override
   {
     auto* vi = InferVisitInfo::from(raw);
 
     UnaryVisitor uvis;
-    UnaryVisitInfo uvi(vi->alloc, to_unary_op(eun.op->kind));
+    UnaryVisitInfo uvi(vi->alloc, toUnaryOp(eun.op->kind));
 
     if (auto ir = Type::infer(vi->alloc, eun.expr)) {
       ir.value()->accept(uvis, &uvi);
@@ -283,17 +281,47 @@ struct InferVisitor : Visitor
     vi->type = uvi.type;
   }
 
-  void visit(const ExprBinary&, VisitInfo* raw) override {}
-  void visit(const ExprGroup&, VisitInfo* raw) override {}
-  void visit(const ExprCall&, VisitInfo* raw) override {}
-  void visit(const ExprSubscript&, VisitInfo* raw) override {}
-  void visit(const ExprTuple&, VisitInfo* raw) override {}
-  void visit(const ExprLambda&, VisitInfo* raw) override {}
+  void visit(const ast::ExprBinary&, VisitInfo* raw) override {}
+  void visit(const ast::ExprGroup&, VisitInfo* raw) override {}
+  void visit(const ast::ExprCall&, VisitInfo* raw) override {}
+  void visit(const ast::ExprSubscript&, VisitInfo* raw) override {}
+  void visit(const ast::ExprTuple&, VisitInfo* raw) override {}
+  void visit(const ast::ExprLambda&, VisitInfo* raw) override {}
 
-  void visit(const TypeBuiltin&, VisitInfo* raw) override {}
-  void visit(const TypeArray&, VisitInfo* raw) override {}
-  void visit(const TypeDict&, VisitInfo* raw) override {}
-  void visit(const TypeFunc&, VisitInfo* raw) override {}
+  void visit(const ast::TypeBuiltin& tbt, VisitInfo* raw) override
+  {
+    using enum Token::Kind;
+    using enum BuiltinType::Kind;
+
+    auto* vi = InferVisitInfo::from(raw);
+    BuiltinType::Kind kind;
+
+    switch (tbt.tok->kind) {
+      case LIT_NIL:
+        kind = Nil;
+        break;
+      case KW_INT:
+        kind = Int;
+        break;
+      case KW_FLOAT:
+        kind = Float;
+        break;
+      case KW_BOOL:
+        kind = Bool;
+        break;
+      case KW_STRING:
+        kind = String;
+        break;
+      default:
+        debug::bug("unmapped builtin type token kind (wtf)");
+    }
+
+    vi->type = vi->alloc.emplace<BuiltinType>(kind);
+  }
+
+  void visit(const ast::TypeArray&, VisitInfo* raw) override {}
+  void visit(const ast::TypeDict&, VisitInfo* raw) override {}
+  void visit(const ast::TypeFunc&, VisitInfo* raw) override {}
 };
 
 Type::InferResult Type::infer(Allocator& alloc, const ast::Expr* expr)
@@ -303,7 +331,7 @@ Type::InferResult Type::infer(Allocator& alloc, const ast::Expr* expr)
   expr->accept(vis, &raw);
 
   if (raw.type == nullptr) {
-    return std::unexpected(raw.fail);
+    return std::unexpected(raw.error);
   } else {
     return raw.type;
   }
@@ -316,7 +344,7 @@ Type::InferResult Type::from(Allocator& alloc, const ast::Type* type)
   type->accept(vis, &raw);
 
   if (raw.type == nullptr) {
-    return std::unexpected(raw.fail);
+    return std::unexpected(raw.error);
   } else {
     return raw.type;
   }

@@ -32,7 +32,7 @@ class Type
     SubstParam,     // T -> Arg
   };
 
-  using InferResult = Result<Type*, String>;
+  using InferResult = Result<const Type*, String>;
 
  public:
   static InferResult from(Allocator& alloc, const ast::Type* type);
@@ -40,7 +40,7 @@ class Type
 
  public:
   bool isDependent() const { return flags & 0x1; }
-  virtual void accept(TypeVisitor& vis, VisitInfo* vi) = 0;
+  virtual void accept(TypeVisitor& vis, VisitInfo* vi) const = 0;
   virtual String dump() const { debug::unimplemented(); }
 
  public:
@@ -51,7 +51,7 @@ class Type
   explicit Type(Kind kind, u8 flags = 0) : kind(kind), flags(flags) {}
 };
 
-struct BuiltinType : Type
+struct BuiltinType : public Type
 {
   enum class Kind : u8
   {
@@ -65,7 +65,7 @@ struct BuiltinType : Type
   const Kind bt;
   explicit BuiltinType(Kind b) : Type(Type::Kind::Builtin, 0), bt(b) {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
@@ -76,20 +76,20 @@ struct BuiltinType : Type
   }
 };
 
-struct ArrayType : Type
+struct ArrayType : public Type
 {
   const Type* elem;
   explicit ArrayType(const Type* elem)
       : Type(Kind::Array, elem->isDependent()), elem(elem)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct DictType : Type
+struct DictType : public Type
 {
   const Type *key, *val;
   explicit DictType(const Type* key, const Type* val)
@@ -98,13 +98,13 @@ struct DictType : Type
         val(val)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct FuncType : Type
+struct FuncType : public Type
 {
   Vec<const Type*> params;
   const Type* result;
@@ -123,38 +123,38 @@ struct FuncType : Type
         result(rs)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct UserType : Type
+struct UserType : public Type
 {
   const ast::StmtTypeDecl* decl;
   explicit UserType(const ast::StmtTypeDecl* D) : Type(Kind::User, 0), decl(D)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct TemplateParamType : Type
+struct TemplateParamType : public Type
 {
   u32 depth, index;
   explicit TemplateParamType(u32 d, u32 i)
       : Type(Kind::TemplateParam, /*dependent*/ 1), depth(d), index(i)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct TemplateSpecType : Type
+struct TemplateSpecType : public Type
 {
   const ast::StmtTypeDecl* primary;
   Vec<const Type*> args;
@@ -164,13 +164,13 @@ struct TemplateSpecType : Type
       : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(prim), args(std::move(A))
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }
 };
 
-struct SubstParamType : Type
+struct SubstParamType : public Type
 {
   const TemplateParamType* parm;
   const Type* replacement;
@@ -178,7 +178,7 @@ struct SubstParamType : Type
       : Type(Kind::SubstParam, rs->isDependent()), parm(par), replacement(rs)
   {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) override
+  void accept(TypeVisitor& vis, VisitInfo* vi) const override
   {
     vis.visit(*this, vi);
   }

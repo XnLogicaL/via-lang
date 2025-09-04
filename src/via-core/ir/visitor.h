@@ -14,11 +14,11 @@ namespace via
 namespace ir
 {
 
-struct Return;
-struct Continue;
-struct Break;
-struct Br;
-struct CondBr;
+struct TrReturn;
+struct TrContinue;
+struct TrBreak;
+struct TrBranch;
+struct TrCondBranch;
 
 struct ExprConstant;
 struct ExprSymbol;
@@ -32,22 +32,18 @@ struct ExprTuple;
 struct ExprLambda;
 
 struct StmtVarDecl;
-
-struct Function;
-struct Module;
-struct Type;
-struct Enum;
-struct Block;
+struct StmtFuncDecl;
+struct StmtBlock;
 
 class Visitor
 {
  public:
   // clang-format off
-  virtual void visit(const Return&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Return)"); }
-  virtual void visit(const Continue&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Continue)"); }
-  virtual void visit(const Break&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Break)"); }
-  virtual void visit(const Br&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Br)"); }
-  virtual void visit(const CondBr&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(CondBr)"); }
+  virtual void visit(const TrReturn&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Return)"); }
+  virtual void visit(const TrContinue&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Continue)"); }
+  virtual void visit(const TrBreak&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Break)"); }
+  virtual void visit(const TrBranch&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Br)"); }
+  virtual void visit(const TrCondBranch&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(CondBr)"); }
 
   virtual void visit(const ExprConstant&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(ExprConstant)"); }
   virtual void visit(const ExprSymbol&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(ExprSymbol)"); }
@@ -61,12 +57,8 @@ class Visitor
   virtual void visit(const ExprLambda&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(ExprLambda)"); }
   
   virtual void visit(const StmtVarDecl&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(StmtVarDecl)"); }
-
-  virtual void visit(const Function&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Function)"); }
-  virtual void visit(const Module&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Module)"); }
-  virtual void visit(const Type&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Type)"); }
-  virtual void visit(const Enum&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Enum)"); }
-  virtual void visit(const Block&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Block)"); }
+  virtual void visit(const StmtFuncDecl&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Function)"); }
+  virtual void visit(const StmtBlock&, VisitInfo* vi) { debug::unimplemented("ir::Visitor(Block)"); }
   // clang-format on
 };
 
