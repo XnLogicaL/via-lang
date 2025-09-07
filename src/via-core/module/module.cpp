@@ -265,7 +265,7 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
     QualPath new_qs = path;
     new_qs.pop_front();
 
-    SymbolId id = SymbolTable::getInstance().intern(new_qs);
+    SymbolId id = SymbolTable::instance().intern(new_qs);
 
     return SymbolInfo{
       .symbol = module->mDefs[id],

@@ -4,13 +4,9 @@
 #include "stack.h"
 #include "debug.h"
 
-namespace via
-{
+namespace sema = via::sema;
 
-namespace sema
-{
-
-Option<LocalRef> Frame::getLocal(std::string_view symbol)
+via::Option<sema::LocalRef> sema::Frame::getLocal(std::string_view symbol)
 {
   for (i64 i = mLocals.size() - 1; i >= 0; --i) {
     Local& local = mLocals[i];
@@ -22,11 +18,11 @@ Option<LocalRef> Frame::getLocal(std::string_view symbol)
   return nullopt;
 }
 
-void Frame::setLocal(std::string_view symbol,
-                     const ast::Expr* lval,
-                     const ast::Expr* rval,
-                     const ast::Type* type,
-                     u64 quals)
+void sema::Frame::setLocal(std::string_view symbol,
+                           const ast::Expr* lval,
+                           const ast::Expr* rval,
+                           const ast::Type* type,
+                           u64 quals)
 {
   usize version;
   if (auto lref = getLocal(symbol)) {
@@ -38,43 +34,31 @@ void Frame::setLocal(std::string_view symbol,
   mLocals.emplace_back(symbol, lval, rval, type, version, quals);
 }
 
-namespace stack
-{
+static via::Vec<sema::Frame> stStack{sema::Frame()};
 
-static Vec<Frame> stack{Frame()};
-
-void reset()
+void sema::stack::reset()
 {
-  stack = Vec<Frame>{Frame()};
+  stStack.clear();
+  stStack.push_back({});
 }
 
-void push(Frame&& frame)
+void sema::stack::push(sema::Frame&& frame)
 {
-  stack.push_back(std::move(frame));
+  stStack.push_back(std::move(frame));
 }
 
-usize size()
+via::usize sema::stack::size()
 {
-  return stack.size();
+  return stStack.size();
 }
 
-Frame& top()
+sema::Frame& sema::stack::top()
 {
-  debug::assertm(!stack.empty());
-  return stack.back();
+  debug::assertm(!stStack.empty());
+  return stStack.back();
 }
 
-Frame* at(usize pos)
+sema::Frame* sema::stack::at(usize pos)
 {
-  if (pos > size()) {
-    return nullptr;
-  } else {
-    return &stack[pos];
-  }
+  return pos <= size() ? &stStack[pos] : nullptr;
 }
-
-}  // namespace stack
-
-}  // namespace sema
-
-}  // namespace via

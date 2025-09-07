@@ -27,7 +27,7 @@ class Error final
 {
  public:
   Error() = default;
-  Error(std::unique_ptr<ErrorInfo>&& err) noexcept : mPayload(std::move(err)) {}
+  Error(std::shared_ptr<ErrorInfo>&& err) noexcept : mPayload(std::move(err)) {}
 
   [[nodiscard]] static Error success() noexcept { return Error(); }
 
@@ -40,13 +40,13 @@ class Error final
   [[nodiscard]] std::string toString() const noexcept { return mPayload->msg; }
 
  private:
-  std::unique_ptr<ErrorInfo> mPayload{nullptr};
+  std::shared_ptr<ErrorInfo> mPayload{nullptr};
 };
 
 template <typename E = ErrorInfo, typename... Args>
 [[nodiscard]] Error make_error(Args&&... args) noexcept
 {
-  return Error(std::make_unique<E>(fwd<Args>(args)...));
+  return Error(std::make_shared<E>(fwd<Args>(args)...));
 }
 
 inline ErrorInfo::ErrorInfo(const Error& err) : msg(err.getError().msg) {}

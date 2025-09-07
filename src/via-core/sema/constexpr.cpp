@@ -3,27 +3,17 @@
 
 #include "constexpr.h"
 #include "debug.h"
-#include "type.h"
 
-namespace via
+namespace sema = via::sema;
+namespace ir = via::ir;
+
+bool isConstExpr(via::Module* m, const ir::Expr* expr)
 {
-
-namespace sema
-{
-
-using namespace ast;
-using enum ConstValue::Kind;
-
-bool isConstExpr(Module* m, const ir::Expr* expr)
-{
-  debug::unimplemented("isConstExpr");
+  via::debug::unimplemented("isConstExpr");
 }
 
-Expected<ConstValue> evalConstExpr(Module* m, const ir::Expr* expr)
+via::Expected<sema::ConstValue> evalConstExpr(via::Module* m,
+                                              const ir::Expr* expr)
 {
-  debug::unimplemented("evalConstExpr");
+  via::debug::unimplemented("evalConstExpr");
 }
-
-}  // namespace sema
-
-}  // namespace via

@@ -118,6 +118,12 @@ class Expected final
     return mStorage.val;
   }
 
+  [[nodiscard]] constexpr T valueOr(T orelse) const noexcept
+    requires(std::is_copy_constructible_v<T>)
+  {
+    return hasValue() ? getValue() : orelse;
+  }
+
   [[nodiscard]] constexpr T&& takeValue() noexcept
   {
     debug::assertm(hasValue(), "Bad Expected<T> access (takeValue)");
@@ -135,6 +141,11 @@ class Expected final
   {
     debug::assertm(hasError(), "Bad Expected<T> access (getError)");
     return mStorage.err;
+  }
+
+  [[nodiscard]] constexpr Error errorOr(Error orelse) const noexcept
+  {
+    return hasError() ? getError() : orelse;
   }
 
   [[nodiscard]] constexpr Error&& takeError() noexcept

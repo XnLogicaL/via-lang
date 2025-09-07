@@ -35,42 +35,56 @@ class Parser final
   const Token* advance();
   const Token* expect(Token::Kind kind, const char* task);
 
+  // clang-format off
   // Special
-  ast::AccessIdent* parseAccessIdent();
-  ast::Path* parseStaticPath();
-  ast::Expr* parseLValue();
-  ast::Parameter* parseParameter();
-  ast::AttributeGroup* parseAttribGroup();
+  const ast::AccessIdent*    parseAccessIdent();
+  const ast::Path*           parseStaticPath();
+  const ast::Expr*           parseLValue();
+  const ast::Parameter*      parseParameter();
+  const ast::AttributeGroup* parseAttribGroup();
 
   // Expression
-  ast::Expr* parseExprPrimary();
-  ast::Expr* parseExprAffix();
-  ast::Expr* parseExpr(int minPrec = 0);
+  const ast::ExprLit*          parseExprLit();
+  const ast::ExprSymbol*       parseExprSymbol();
+  const ast::Expr*             parseExprGroupOrTuple();
+  const ast::ExprDynAccess*    parseExprDynAccess(const ast::Expr* expr);
+  const ast::ExprStaticAccess* parseExprStAccess(const ast::Expr* expr);
+  const ast::ExprUnary*        parseExprUnary(const ast::Expr* expr);
+  const ast::ExprCall*         parseExprCall(const ast::Expr* expr);
+  const ast::ExprSubscript*    parseExprSubscript(const ast::Expr* expr);
+  const ast::ExprCast*         parseExprCast(const ast::Expr* expr);
+  const ast::ExprTernary*      parseExprTernary(const ast::Expr* expr);
+  const ast::ExprArray*        parseExprArray();
+  const ast::ExprLambda*       parseExprLambda();
+  const ast::Expr*             parseExprPrimary();
+  const ast::Expr*             parseExprAffix();
+  const ast::Expr*             parseExpr(int minPrec = 0);
 
   // Types
-  ast::TypeBuiltin* parseTypeBuiltin();
-  ast::TypeArray* parseTypeArray();
-  ast::TypeDict* parseTypeDict();
-  ast::TypeFunc* parseTypeFunc();
-  ast::Type* parseType();
+  const ast::TypeBuiltin* parseTypeBuiltin();
+  const ast::TypeArray*   parseTypeArray();
+  const ast::TypeDict*    parseTypeDict();
+  const ast::TypeFunc*    parseTypeFunc();
+  const ast::Type*        parseType();
 
   // Statement
-  ast::StmtScope* parseStmtScope();
-  ast::StmtVarDecl* parseStmtVarDecl(bool allowSemicolon);
-  ast::StmtFor* parseStmtFor();
-  ast::StmtForEach* parseStmtForEach();
-  ast::StmtIf* parseStmtIf();
-  ast::StmtWhile* parseStmtWhile();
-  ast::StmtAssign* parseStmtAssign(ast::Expr* lhs);
-  ast::StmtReturn* parseStmtReturn();
-  ast::StmtEnum* parseStmtEnum();
-  ast::StmtModule* parseStmtModule();
-  ast::StmtImport* parseStmtImport();
-  ast::StmtFunctionDecl* parseStmtFuncDecl();
-  ast::StmtStructDecl* parseStmtStructDecl();
-  ast::StmtTypeDecl* parseStmtTypeDecl();
-  ast::StmtUsing* parseStmtUsingDecl();
-  ast::Stmt* parseStmt();
+  const ast::StmtScope*        parseStmtScope();
+  const ast::StmtVarDecl*      parseStmtVarDecl(bool allowSemicolon);
+  const ast::StmtFor*          parseStmtFor();
+  const ast::StmtForEach*      parseStmtForEach();
+  const ast::StmtIf*           parseStmtIf();
+  const ast::StmtWhile*        parseStmtWhile();
+  const ast::StmtAssign*       parseStmtAssign(const ast::Expr* expr);
+  const ast::StmtReturn*       parseStmtReturn();
+  const ast::StmtEnum*         parseStmtEnum();
+  const ast::StmtModule*       parseStmtModule();
+  const ast::StmtImport*       parseStmtImport();
+  const ast::StmtFunctionDecl* parseStmtFuncDecl();
+  const ast::StmtStructDecl*   parseStmtStructDecl();
+  const ast::StmtTypeDecl*     parseStmtTypeDecl();
+  const ast::StmtUsing*        parseStmtUsingDecl();
+  const ast::Stmt*             parseStmt();
+  // clang-format on
 
  private:
   DiagContext& mDiag;

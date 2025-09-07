@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <mutex>
 #include <sstream>
 #include "intern_table.h"
 
@@ -35,16 +36,22 @@ class SymbolTable final : public InternTable<std::string, SymbolId>
  public:
   using InternTable::intern;
 
- public:
-  static SymbolTable& getInstance()
+  static SymbolTable& instance()
   {
-    static SymbolTable symtab;
-    return symtab;
+    static SymbolTable inst;
+    return inst;
   }
 
- public:
   const auto& getSymbols() const { return mMap; }
-  SymbolId intern(const QualPath& path) { return intern(toString(path)); }
+
+  SymbolId intern(const QualPath& path)
+  {
+    std::lock_guard<std::mutex> lock(mMutex);
+    return intern(toString(path));
+  }
+
+ private:
+  mutable std::mutex mMutex;
 };
 
 }  // namespace via

@@ -7,13 +7,9 @@
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 
-namespace via
-{
+namespace sema = via::sema;
 
-namespace sema
-{
-
-Option<ConstValue> ConstValue::fromToken(const Token& tok)
+via::Option<sema::ConstValue> sema::ConstValue::fromToken(const Token& tok)
 {
   switch (tok.kind) {
     case Token::Kind::LIT_NIL:
@@ -39,7 +35,7 @@ Option<ConstValue> ConstValue::fromToken(const Token& tok)
   return nullopt;
 }
 
-std::string ConstValue::toString() const
+std::string sema::ConstValue::toString() const
 {
   using enum Kind;
 
@@ -61,13 +57,9 @@ std::string ConstValue::toString() const
   return "<unknown-cv-type>";
 }
 
-std::string ConstValue::dump() const
+std::string sema::ConstValue::dump() const
 {
   return fmt::format(
     "{} [{} {}]", ansiFormat("constant", Fg::Magenta, Bg::Black, Style::Bold),
     magic_enum::enum_name(kind()), toString());
 }
-
-}  // namespace sema
-
-}  // namespace via

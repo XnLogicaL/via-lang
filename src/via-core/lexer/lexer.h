@@ -25,8 +25,8 @@ class Lexer final
   TokenTree tokenize();
 
  private:
-  char advance(int ahead = 1);
-  char peek(int ahead = 0);
+  char advance(isize ahead = 1);
+  char peek(isize ahead = 0);
   Token* readNumber();
   Token* readString();
   Token* readSymbol();
@@ -34,10 +34,10 @@ class Lexer final
   bool skipComment();
 
  private:
+  Allocator mAlloc;
   const std::string& mFile;
   const char* mCursor;
   const char* mEnd;
-  Allocator mAlloc;
 };
 
 namespace debug

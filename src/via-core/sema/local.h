@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
+#include "type.h"
 
 namespace via
 {
@@ -27,7 +28,7 @@ class Local final
   Local(std::string_view symbol,
         const ast::Expr* lval,
         const ast::Expr* rval,
-        const ast::Type* type,
+        sema::Type* type,
         usize version = 0,
         u64 quals = 0ULL)
       : mVersion(version),
@@ -42,9 +43,9 @@ class Local final
   usize getVersion() const { return mVersion; }
   u64 getQualifiers() const { return mQuals; }
   std::string_view getSymbol() const { return mSymbol; }
-  const ast::Expr* getLVal() const { return mLVal; }
-  const ast::Expr* getRVal() const { return mRVal; }
-  const ast::Type* getType() const { return mType; }
+  const ast::Expr* getAstLVal() const { return mLVal; }
+  const ast::Expr* getAstRVal() const { return mRVal; }
+  sema::Type* getType() const { return mType; }
 
  protected:
   const usize mVersion = 0;
@@ -52,7 +53,7 @@ class Local final
   const std::string_view mSymbol = "<invalid-local>";
   const ast::Expr* mLVal = nullptr;
   const ast::Expr* mRVal = nullptr;
-  const ast::Type* mType = nullptr;
+  sema::Type* mType = nullptr;
 };
 
 struct LocalRef

@@ -2,237 +2,166 @@
 // Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
 
 #include "builder.h"
-#include "iota.h"
-#include "module/module.h"
+#include "ir/ir.h"
+#include "sema/stack.h"
 
-namespace via
+namespace ast = via::ast;
+namespace ir = via::ir;
+namespace sema = via::sema;
+
+using Dk = via::Diagnosis::Kind;
+using Ak = ir::ExprAccess::Kind;
+using Btk = sema::BuiltinType::Kind;
+
+via::SymbolTable& symbolTable = via::SymbolTable::instance();
+
+static via::SymbolId internSymbol(const std::string& symbol)
 {
-
-namespace ir
-{
-
-using enum Diagnosis::Kind;
-
-static SymbolId internSymbol(const std::string& symbol)
-{
-  return SymbolTable::getInstance().intern(symbol);
+  return via::SymbolTable::instance().intern(symbol);
 }
 
-static SymbolId internSymbol(const Token& symbol)
+static via::SymbolId internSymbol(const via::Token& symbol)
 {
-  return SymbolTable::getInstance().intern(symbol.toString());
+  return via::SymbolTable::instance().intern(symbol.toString());
 }
 
-struct ExprVisitInfo : public VisitInfo
+ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
 {
-  DiagContext* diags;
-  via::Module* module;
-  ir::Expr* result;
+  auto* constant = mAlloc.emplace<ir::ExprConstant>();
+  constant->value = *sema::ConstValue::fromToken(*exprLit->tok);
+  constant->type = *sema::Type::infer(mAlloc, exprLit);
+  return constant;
+}
 
-  static ExprVisitInfo* from(VisitInfo* raw)
-  {
-    if TRY_COERCE (ExprVisitInfo, vi, raw) {
-      return vi;
-    } else {
-      debug::bug("invalid ExprVisitInfo");
-    }
-  }
-};
-
-class ExprVisitor final : public ast::Visitor
+ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
 {
- public:
-  void visit(const ast::ExprLit& elit, VisitInfo* raw) override
-  {
-    auto* vi = ExprVisitInfo::from(raw);
-    auto& alloc = vi->module->getAllocator();
+  std::string symbol = exprSym->sym->toString();
+  sema::Frame& frame = sema::stack::top();
 
-    auto* econst = alloc.emplace<ExprConstant>();
-    auto cvr = sema::ConstValue::fromToken(*elit.tok);
-
-    debug::assertm(cvr.has_value(),
-                   "could not construct ConstValue from literal expression");
-
-    econst->cv = *cvr;
-    vi->result = econst;
+  if (auto local = frame.getLocal(symbol)) {
+    auto* sym = mAlloc.emplace<ir::ExprSymbol>();
+    sym->symbol = symbolTable.intern(symbol);
+    sym->type = local->local.getType();
+    sym->local = &local.getValue();
+    return sym;
+  } else {
+    mDiags.report<Dk::Error>(
+      exprSym->loc, fmt::format("Use of undefined symbol '{}'", symbol));
+    return nullptr;
   }
+}
 
-  void visit(const ast::ExprSymbol&, VisitInfo* vi) override {}
-  void visit(const ast::ExprDynAccess&, VisitInfo* vi) override {}
-  void visit(const ast::ExprStaticAccess&, VisitInfo* vi) override {}
-  void visit(const ast::ExprUnary&, VisitInfo* vi) override {}
-  void visit(const ast::ExprBinary&, VisitInfo* vi) override {}
-  void visit(const ast::ExprGroup&, VisitInfo* vi) override {}
-  void visit(const ast::ExprCall&, VisitInfo* vi) override {}
-  void visit(const ast::ExprSubscript&, VisitInfo* vi) override {}
-  void visit(const ast::ExprCast&, VisitInfo* vi) override {}
-  void visit(const ast::ExprTernary&, VisitInfo* vi) override {}
-  void visit(const ast::ExprArray&, VisitInfo* vi) override {}
-  void visit(const ast::ExprTuple&, VisitInfo* vi) override {}
-  void visit(const ast::ExprLambda&, VisitInfo* vi) override {}
-};
-
-struct StmtVisitInfo : public VisitInfo
+ir::Expr* via::IRBuilder::lowerExprStaticAccess(
+  const ast::ExprStaticAccess* exprStAcc)
 {
-  DiagContext* diags;
-  via::Module* module;
-  ExprVisitor* evis;
-  ir::Stmt* result = nullptr;
+  auto* access = mAlloc.emplace<ir::ExprAccess>();
+  access->kind = Ak::STATIC;
+  access->idx = nullptr;  // TODO
+  access->lval = lowerExpr(exprStAcc->expr);
+  access->type = *sema::Type::infer(mAlloc, exprStAcc);
+  return access;
+}
 
-  static StmtVisitInfo* from(VisitInfo* raw)
-  {
-    if TRY_COERCE (StmtVisitInfo, vi, raw) {
-      return vi;
-    } else {
-      debug::bug("invalid StmtVisitInfo");
-    }
-  }
-};
-
-class StmtVisitor final : public ast::Visitor
+ir::Expr* via::IRBuilder::lowerExprDynamicAccess(
+  const ast::ExprDynAccess* exprDynAcc)
 {
- public:
-  void visit(const ast::StmtVarDecl& stmtVarDecl, VisitInfo* raw) override
-  {
-    auto* vi = StmtVisitInfo::from(raw);
-    auto& alloc = vi->module->getAllocator();
+  auto* access = mAlloc.emplace<ir::ExprAccess>();
+  access->kind = Ak::DYNAMIC;
+  access->idx = nullptr;  // TODO
+  access->lval = lowerExpr(exprDynAcc->expr);
+  return access;
+}
 
-    ExprVisitInfo evi;
-    evi.diags = vi->diags;
-    evi.module = vi->module;
+ir::Expr* via::IRBuilder::lowerExprUnary(const ast::ExprUnary* exprUnary)
+{
+  auto* unary = mAlloc.emplace<ir::ExprUnary>();
+  unary->op = toUnaryOp(exprUnary->op->kind);
+  unary->type = *sema::Type::infer(mAlloc, exprUnary->expr);
 
-    stmtVarDecl.rval->accept(*vi->evis, &evi);
-
-    auto* decl = alloc.emplace<StmtVarDecl>();
-    decl->expr = evi.result;
-
-    if TRY_COERCE (const ast::ExprSymbol, esym, stmtVarDecl.lval) {
-      decl->sym = internSymbol(*esym->sym);
-    } else {
-      debug::assertm(false, "bad lvalue in variable decl");
-    }
-
-    vi->result = decl;
-  }
-
-  void visit(const ast::StmtScope& sscp, VisitInfo* raw) override
-  {
-    auto* vi = StmtVisitInfo::from(raw);
-    auto& alloc = vi->module->getAllocator();
-
-    auto* block = alloc.emplace<StmtBlock>();
-    block->name = internSymbol(std::to_string(iota()));
-
-    for (const auto& stmt : sscp.stmts) {
-      stmt->accept(*this, vi);
-      block->stmts.push_back(vi->result);
-    }
-
-    vi->result = block;
-  }
-
-  void visit(const ast::StmtIf&, VisitInfo* raw) override {}
-  void visit(const ast::StmtFor&, VisitInfo* raw) override {}
-  void visit(const ast::StmtForEach&, VisitInfo* raw) override {}
-  void visit(const ast::StmtWhile&, VisitInfo* raw) override {}
-  void visit(const ast::StmtAssign&, VisitInfo* raw) override {}
-  void visit(const ast::StmtReturn&, VisitInfo* raw) override {}
-  void visit(const ast::StmtEnum&, VisitInfo* raw) override {}
-
-  void visit(const ast::StmtImport& stmtImport, VisitInfo* raw) override
-  {
-    using enum ast::StmtImport::TailKind;
-
-    auto* vi = StmtVisitInfo::from(raw);
-    QualPath path;
-
-    for (const Token* tok : stmtImport.path) {
-      path.push_back(tok->toString());
-    }
-
-    switch (stmtImport.kind) {
-      case Import: {
-        auto result = vi->module->resolveImport(path);
-        if (!result.has_value()) {
-          vi->diags->report<Error>(stmtImport.loc, result.error());
-        }
-      } break;
-      default:
-        debug::unimplemented("import tail");
-    }
-  }
-
-  void visit(const ast::StmtModule&, VisitInfo* raw) override {}
-
-  void visit(const ast::StmtFunctionDecl& sfn, VisitInfo* raw) override
-  {
-    auto* vi = StmtVisitInfo::from(raw);
-    auto& alloc = vi->module->getAllocator();
-    auto* fn = alloc.emplace<StmtFuncDecl>();
-    fn->kind = StmtFuncDecl::Kind::IR;
-    fn->sym = internSymbol(*sfn.name);
-
-    if (sfn.ret != nullptr) {
-      if (auto ret = sema::Type::from(alloc, sfn.ret)) {
-        fn->ret = *ret;
+  switch (unary->op) {
+    case UnaryOp::REF:
+      if (ast::isLValue(exprUnary->expr)) {
+        unary->expr = lowerExpr(exprUnary->expr);
       } else {
-        vi->diags->report<Error>(
-          sfn.ret->loc,
-          fmt::format("Function '{}' has invalid return type '{}'",
-                      sfn.name->toStringView(), ret.error()));
+        mDiags.report<Dk::Error>(
+          exprUnary->expr->loc,
+          "Invalid unary operation '&' (REF) on a non-lvalue expression");
       }
-    } else {
-      debug::unimplemented();
-    }
-
-    for (const auto& astParm : sfn.parms) {
-      Parm parm;
-      parm.sym = internSymbol(*astParm->sym);
-
-      if (auto type = sema::Type::from(alloc, sfn.ret)) {
-        parm.type = *type;
+      break;
+    case UnaryOp::NEG:
+      if (unary->type->isArithmetic()) {
+        unary->expr = lowerExpr(exprUnary->expr);
       } else {
-        vi->diags->report<Error>(
-          sfn.ret->loc,
-          fmt::format("Function parameter '{}' has invalid type '{}'",
-                      astParm->sym->toStringView(), type.error()));
+        mDiags.report<Dk::Error>(
+          exprUnary->expr->loc,
+          fmt::format("Invalid unary expression '-' (NEG) on non-arithmetic "
+                      "expression of type '{}'",
+                      unary->type->dump()));
       }
-    }
-
-    sfn.scp->accept(*this, vi);
-    fn->body = dynamic_cast<StmtBlock*>(vi->result);
-    vi->result = fn;
+      break;
+    case UnaryOp::NOT:
+      unary->type = mTypeCtx.getBuiltinTypeInstance(Btk::Bool);
+      unary->expr = lowerExpr(exprUnary->expr);
+      break;
+    case UnaryOp::BNOT:
+      if (unary->type->isIntegral()) {
+        unary->expr = lowerExpr(exprUnary->expr);
+      } else {
+        mDiags.report<Dk::Error>(
+          exprUnary->expr->loc,
+          fmt::format("Invalid unary expression '~' (BNOT) on non-integral "
+                      "expression of type '{}'",
+                      unary->type->dump()));
+      }
+      break;
   }
 
-  void visit(const ast::StmtStructDecl&, VisitInfo* raw) override {}
-  void visit(const ast::StmtTypeDecl&, VisitInfo* raw) override {}
-  void visit(const ast::StmtUsing&, VisitInfo* raw) override {}
-  void visit(const ast::StmtEmpty&, VisitInfo* raw) override {}
-  void visit(const ast::StmtExpr&, VisitInfo* raw) override {}
-};
+  return unary;
+}
 
-IrTree Builder::build()
+ir::Expr* via::IRBuilder::lowerExprBinary(const ast::ExprBinary* exprBinary)
 {
-  IrTree tree;
-  ExprVisitor evis;
-  StmtVisitInfo vi;
-  vi.diags = &mDiags;
-  vi.module = mModule;
-  vi.evis = &evis;
-
-  StmtVisitor vis;
-
-  for (const ast::Stmt* stmt : mAst) {
-    stmt->accept(vis, &vi);
-    if (vi.result != nullptr) {
-      tree.push_back(vi.result);
-      vi.result = nullptr;
-    }
+  if (auto type = sema::Type::infer(mAlloc, exprBinary)) {
+    auto* binary = mAlloc.emplace<ir::ExprBinary>();
+    binary->op = toBinaryOp(exprBinary->op->kind);
+    binary->lhs = lowerExpr(exprBinary->lhs);
+    binary->rhs = lowerExpr(exprBinary->rhs);
+    binary->type = *type;
+    return binary;
+  } else {
+    mDiags.report<Dk::Error>(exprBinary->loc, "Invalid binary expression");
+    return nullptr;
   }
+}
 
+ir::Expr* via::IRBuilder::lowerExprGroup(const ast::ExprGroup* exprGroup)
+{
+  return lowerExpr(exprGroup->expr);
+}
+
+ir::Expr* via::IRBuilder::lowerExprCall(const ast::ExprCall* exprCall) {}
+
+ir::Expr* via::IRBuilder::lowerExprSubscript(
+  const ast::ExprSubscript* exprSubsc)
+{}
+
+ir::Expr* via::IRBuilder::lowerExprCast(const ast::ExprCast* exprCast) {}
+
+ir::Expr* via::IRBuilder::lowerExprTernary(const ast::ExprTernary* exprTernary)
+{}
+
+ir::Expr* via::IRBuilder::lowerExprArray(const ast::ExprArray* exprArray) {}
+
+ir::Expr* via::IRBuilder::lowerExprTuple(const ast::ExprTuple* exprTuple) {}
+
+ir::Expr* via::IRBuilder::lowerExprLambda(const ast::ExprLambda* exprLambda) {}
+
+ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr) {}
+
+via::IRTree via::IRBuilder::build()
+{
+  sema::stack::reset();
+
+  IRTree tree;
   return tree;
 }
-
-}  // namespace ir
-
-}  // namespace via

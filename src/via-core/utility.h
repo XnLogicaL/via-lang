@@ -36,25 +36,6 @@ template <typename T>
 }
 
 template <typename To, typename From>
-[[nodiscard]] inline constexpr bool isa(const From& val)
-{
-  return To::classof(&val);
-}
-
-template <typename To, typename From>
-[[nodiscard]] inline constexpr To* cast(From* val)
-{
-  debug::assertm(isa<To>(val) && "Invalid cast!");
-  return static_cast<To*>(val);
-}
-
-template <typename To, typename From>
-[[nodiscard]] constexpr To* dyn_cast(From* val)
-{
-  return isa<To>(val) ? static_cast<To*>(val) : nullptr;
-}
-
-template <typename To, typename From>
   requires(std::is_default_constructible_v<To> && sizeof(To) == sizeof(From))
 [[nodiscard]] inline constexpr To pun_cast(const From& src) noexcept
 {

@@ -98,6 +98,7 @@ class Module final
  public:
   auto getKind() const { return mKind; }
   auto& getAllocator() { return mAlloc; }
+  auto* getManager() { return mManager; }
 
   Option<SymbolInfo> lookup(const QualPath& path);
   Expected<Module*> resolveImport(const QualPath& path);
@@ -110,7 +111,7 @@ class Module final
   u32 mPerms, mFlags;
   std::string mName;
   fs::path mPath;
-  IrTree mIr;
+  IRTree mIr;
   Vec<Module*> mImports;
   Map<SymbolId, const Def*> mDefs;
   Module* mImportee = nullptr;

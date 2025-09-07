@@ -55,7 +55,21 @@ class Option final
   [[nodiscard]] constexpr T& getValue() noexcept { return mStorage.val; }
   [[nodiscard]] constexpr const T& getValue() const noexcept
   {
+    debug::assertm(hasValue(), "Bad Option<T> access");
     return mStorage.val;
+  }
+
+  [[nodiscard]] constexpr T&& takeValue() noexcept
+  {
+    debug::assertm(hasValue(), "Bad Option<T> access");
+    mHasValue = false;
+    return std::move(mStorage.val);
+  }
+
+  [[nodiscard]] constexpr T valueOr(T orelse) const noexcept
+    requires(std::is_copy_constructible_v<T>)
+  {
+    return hasValue() ? getValue() : orelse;
   }
 
  private:

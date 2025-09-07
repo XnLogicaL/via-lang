@@ -8,36 +8,29 @@
   #define VIA_HAVE_BUILTIN_CTZLL
 #endif
 
-namespace via
-{
+namespace sema = via::sema;
 
-namespace sema
-{
+static via::Vec<via::u16> stRegisters(via::config::kRegisterCount / 8);
 
-namespace registers
+void sema::registers::reset()
 {
-
-static Vec<u16> regs(config::kRegisterCount / 8);
-
-void reset()
-{
-  std::memset(regs.data(), 0, config::kRegisterCount / 8);
+  std::memset(stRegisters.data(), 0, via::config::kRegisterCount / 8);
 }
 
-u16 alloc()
+via::u16 sema::registers::alloc()
 {
-  for (u16 i = 0; i < regs.size(); i++) {
+  for (u16 i = 0; i < stRegisters.size(); i++) {
 #ifdef VIA_HAVE_BUILTIN_CTZLL
-    u64 word = regs[i];
-    if (word != Limits<u64>::max()) {  // has at least one zero bit
-      u64 inv = ~word;                 // invert zeros to ones
-      i32 bit = __builtin_ctzll(inv);  // index of first zero bit
-      regs[i] |= (1ULL << bit);        // mark as occupied
+    u64 word = stRegisters[i];
+    if (word != Limits<u64>::max()) {   // has at least one zero bit
+      u64 inv = ~word;                  // invert zeros to ones
+      i32 bit = __builtin_ctzll(inv);   // index of first zero bit
+      stRegisters[i] |= (1ULL << bit);  // mark as occupied
       return i * 64 + bit;
     }
 #else
     for (u16 j = 0; j < 64; j++) {
-      u64* addr = regs.data() + i;
+      u64* addr = stRegisters.data() + i;
       u64 mask = (1ULL << j);
 
       if ((*addr & mask) == 0ULL) {
@@ -51,15 +44,9 @@ u16 alloc()
   debug::bug("semantic register allocation failure");
 }
 
-void free(u16 reg)
+void sema::registers::free(via::u16 reg)
 {
   u16 word = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
-  regs[word] &= mask;  // mark bit as free
+  stRegisters[word] &= mask;  // mark bit as free
 }
-
-}  // namespace registers
-
-}  // namespace sema
-
-}  // namespace via

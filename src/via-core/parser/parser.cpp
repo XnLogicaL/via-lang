@@ -9,27 +9,27 @@
   auto* first = advance(); \
   auto loc = first->location(mSource);
 
-namespace via
-{
-
-using enum Token::Kind;
-using namespace ast;
+using enum via::Token::Kind;
+using namespace via::ast;
 
 struct ParserError
 {
  public:
-  SourceLoc loc;
+  via::SourceLoc loc;
   std::string msg;
 
-  explicit ParserError(SourceLoc loc, std::string msg) : loc(loc), msg(msg) {}
+  explicit ParserError(via::SourceLoc loc, std::string msg) : loc(loc), msg(msg)
+  {}
 
   template <typename... Args>
-  explicit ParserError(SourceLoc loc, Fmt<Args...> form, Args... args)
+  explicit ParserError(via::SourceLoc loc,
+                       fmt::format_string<Args...> form,
+                       Args... args)
       : loc(loc), msg(fmt::format(form, std::forward<Args>(args)...))
   {}
 };
 
-static bool isExprInitial(Token::Kind kind)
+static bool isExprInitial(via::Token::Kind kind)
 {
   switch (kind) {
     case IDENTIFIER:
@@ -51,7 +51,7 @@ static bool isExprInitial(Token::Kind kind)
   }
 }
 
-static int binPrec(Token::Kind kind)
+static int binPrec(via::Token::Kind kind)
 {
   switch (kind) {
     case KW_OR:
@@ -88,22 +88,22 @@ static int binPrec(Token::Kind kind)
   }
 }
 
-const Token* Parser::peek(int ahead)
+const via::Token* via::Parser::peek(int ahead)
 {
   return mCursor[ahead];
 }
 
-const Token* Parser::advance()
+const via::Token* via::Parser::advance()
 {
   return *(mCursor++);
 }
 
-bool Parser::match(Token::Kind kind, int ahead)
+bool via::Parser::match(Token::Kind kind, int ahead)
 {
   return peek(ahead)->kind == kind;
 }
 
-bool Parser::optional(Token::Kind kind)
+bool via::Parser::optional(Token::Kind kind)
 {
   if (match(kind)) {
     advance();
@@ -113,7 +113,7 @@ bool Parser::optional(Token::Kind kind)
   return false;
 }
 
-const Token* Parser::expect(Token::Kind kind, const char* task)
+const via::Token* via::Parser::expect(Token::Kind kind, const char* task)
 {
   if (!match(kind)) {
     const Token& unexp = *peek();
@@ -125,7 +125,7 @@ const Token* Parser::expect(Token::Kind kind, const char* task)
   return advance();
 }
 
-AccessIdent* Parser::parseAccessIdent()
+const AccessIdent* via::Parser::parseAccessIdent()
 {
   auto* aid = mAlloc.emplace<AccessIdent>();
   aid->symbol = expect(IDENTIFIER, "while parsing access identifier");
@@ -158,7 +158,7 @@ AccessIdent* Parser::parseAccessIdent()
   return aid;
 }
 
-Path* Parser::parseStaticPath()
+const Path* via::Parser::parseStaticPath()
 {
   auto* sp = mAlloc.emplace<Path>();
 
@@ -177,19 +177,17 @@ Path* Parser::parseStaticPath()
   return sp;
 }
 
-Expr* Parser::parseLValue()
+const Expr* via::Parser::parseLValue()
 {
-  Expr* expr = parseExpr();
-  if (TRY_IS(ExprSymbol, expr) || TRY_IS(ExprStaticAccess, expr) ||
-      TRY_IS(ExprDynAccess, expr) || TRY_IS(ExprSubscript, expr) ||
-      TRY_IS(ExprTuple, expr)) {
+  const Expr* expr = parseExpr();
+  if (isLValue(expr)) {
     return expr;
   } else {
     throw ParserError(expr->loc, "Unexpected expression while parsing lvalue");
   }
 }
 
-Parameter* Parser::parseParameter()
+const Parameter* via::Parser::parseParameter()
 {
   SAVE_FIRST()
 
@@ -206,7 +204,7 @@ Parameter* Parser::parseParameter()
   return par;
 }
 
-AttributeGroup* Parser::parseAttribGroup()
+const AttributeGroup* via::Parser::parseAttribGroup()
 {
   SAVE_FIRST()
   expect(BRACKET_OPEN, "parsing attribute group");
@@ -215,8 +213,8 @@ AttributeGroup* Parser::parseAttribGroup()
 
   while (true) {
     atg->ats.push_back({
-        .sp = parseStaticPath(),
-        .args = {},
+      .sp = parseStaticPath(),
+      .args = {},
     });
 
     if (match(BRACKET_CLOSE)) {
@@ -231,7 +229,199 @@ AttributeGroup* Parser::parseAttribGroup()
   return atg;
 }
 
-Expr* Parser::parseExprPrimary()
+const ExprLit* via::Parser::parseExprLit()
+{
+  auto* tok = peek();
+  auto* lit = mAlloc.emplace<ExprLit>();
+  lit->tok = tok;
+  lit->loc = tok->location(mSource);
+  return lit;
+}
+
+const ExprSymbol* via::Parser::parseExprSymbol()
+{
+  auto* tok = peek();
+  auto* lit = mAlloc.emplace<ExprSymbol>();
+  lit->sym = tok;
+  lit->loc = tok->location(mSource);
+  return lit;
+}
+
+const Expr* via::Parser::parseExprGroupOrTuple()
+{
+  auto loc = peek()->location(mSource);
+  auto* first = parseExpr();
+
+  if (match(COMMA)) {
+    Vec<const Expr*> vals;
+    vals.push_back(first);
+
+    while (match(COMMA)) {
+      advance();
+      vals.push_back(parseExpr());
+    }
+
+    expect(PAREN_CLOSE, "parsing tuple expression");
+
+    auto* tup = mAlloc.emplace<ExprTuple>();
+    tup->vals = std::move(vals);
+    tup->loc = {loc.begin, peek(-1)->location(mSource).end};
+
+    return tup;
+  }
+
+  expect(PAREN_CLOSE, "parsing grouping expression");
+
+  auto* group = mAlloc.emplace<ExprGroup>();
+  group->expr = first;
+  group->loc = {loc.begin, peek(-1)->location(mSource).end};
+  return group;
+}
+
+const ExprUnary* via::Parser::parseExprUnary(const ast::Expr* expr)
+{
+  auto* un = mAlloc.emplace<ExprUnary>();
+  un->op = advance();
+  un->expr = parseExprAffix();
+  un->loc = {un->op->location(mSource).begin, un->expr->loc.end};
+  return un;
+}
+
+const ExprDynAccess* via::Parser::parseExprDynAccess(const ast::Expr* expr)
+{
+  advance();  // consume '.'
+
+  auto* da = mAlloc.emplace<ExprDynAccess>();
+  da->expr = expr;
+  da->aid = parseAccessIdent();
+  da->loc = {da->expr->loc.begin, da->aid->loc.end};
+  return da;
+}
+
+const ExprStaticAccess* via::Parser::parseExprStAccess(const ast::Expr* expr)
+{
+  advance();  // consume '::'
+
+  auto* sa = mAlloc.emplace<ExprStaticAccess>();
+  sa->expr = expr;
+  sa->aid = parseAccessIdent();
+  sa->loc = {sa->expr->loc.begin, sa->aid->loc.end};
+  return sa;
+}
+
+const ExprCall* via::Parser::parseExprCall(const ast::Expr* expr)
+{
+  advance();  // consume '('
+
+  Vec<const Expr*> args;
+
+  if (!match(PAREN_CLOSE)) {
+    do
+      args.push_back(parseExpr());
+    while (match(COMMA) && advance());
+
+    expect(PAREN_CLOSE, "parsing function call");
+  } else
+    advance();  // consume ')'
+
+  auto* call = mAlloc.emplace<ExprCall>();
+  call->lval = expr;
+  call->args = std::move(args);
+  call->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
+  return call;
+}
+
+const ExprSubscript* via::Parser::parseExprSubscript(const ast::Expr* expr)
+{
+  advance();  // consume '['
+
+  const Expr* idx = parseExpr();
+
+  expect(BRACKET_CLOSE, "parsing subscript expression");
+
+  auto* subs = mAlloc.emplace<ExprSubscript>();
+  subs->lval = expr;
+  subs->idx = idx;
+  subs->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
+  return subs;
+}
+
+const ExprCast* via::Parser::parseExprCast(const ast::Expr* expr)
+{
+  advance();
+
+  auto* cast = mAlloc.emplace<ExprCast>();
+  cast->expr = expr;
+  cast->type = parseType();
+  cast->loc = {expr->loc.begin, cast->type->loc.end};
+  return cast;
+}
+
+const ExprTernary* via::Parser::parseExprTernary(const ast::Expr* expr)
+{
+  advance();
+
+  auto* tern = mAlloc.emplace<ExprTernary>();
+  tern->lhs = expr;
+  tern->cnd = parseExpr();
+
+  expect(KW_ELSE, "parsing ternary expression");
+
+  tern->rhs = parseExpr();
+  tern->loc = {expr->loc.begin, tern->rhs->loc.end};
+  return tern;
+}
+
+const ExprArray* via::Parser::parseExprArray()
+{
+  auto loc = peek()->location(mSource);
+  auto* arr = mAlloc.emplace<ExprArray>();
+
+  if (!match(BRACKET_CLOSE)) {
+    while (true) {
+      arr->init.push_back(parseExpr());
+
+      if (match(BRACKET_CLOSE)) {
+        optional(COMMA);  // trailing comma
+        break;
+      } else {
+        expect(COMMA, "parsing array initializer");
+      }
+    }
+  }
+
+  auto* last = expect(BRACKET_CLOSE, "terminating array initializer");
+  arr->loc = {loc.begin, last->location(mSource).end};
+  return arr;
+}
+
+const ExprLambda* via::Parser::parseExprLambda()
+{
+  auto loc = peek()->location(mSource);
+  auto* fn = mAlloc.emplace<ExprLambda>();
+
+  expect(PAREN_OPEN, "parsing lambda parameter list");
+
+  if (!match(PAREN_CLOSE)) {
+    while (true) {
+      fn->pms.push_back(parseParameter());
+
+      if (match(PAREN_CLOSE)) {
+        break;
+      } else {
+        expect(COMMA, "parsing lambda parameter list");
+      }
+    }
+
+    expect(PAREN_CLOSE, "terminating lambda parameter list");
+  }
+
+  fn->scope = parseStmtScope();
+  fn->loc = {loc.begin, fn->scope->loc.end};
+  return fn;
+}
+
+const Expr* via::Parser::parseExprPrimary()
 {
   SAVE_FIRST()
 
@@ -244,121 +434,34 @@ Expr* Parser::parseExprPrimary()
     case LIT_FLOAT:
     case LIT_TRUE:
     case LIT_FALSE:
-    case LIT_STRING: {
-      auto* lit = mAlloc.emplace<ExprLit>();
-      lit->tok = first;
-      lit->loc = loc;
-      return lit;
-    }
-
-    // Symbol expression
-    case IDENTIFIER: {
-      auto* sym = mAlloc.emplace<ExprSymbol>();
-      sym->sym = first;
-      sym->loc = loc;
-      return sym;
-    }
-
-    // Group or tuple expression
-    case PAREN_OPEN: {
-      Expr* first = parseExpr();
-
-      if (match(COMMA)) {
-        Vec<const Expr*> vals;
-        vals.push_back(first);
-
-        while (match(COMMA)) {
-          advance();
-          vals.push_back(parseExpr());
-        }
-
-        expect(PAREN_CLOSE, "parsing tuple expression");
-
-        auto* tup = mAlloc.emplace<ExprTuple>();
-        tup->vals = std::move(vals);
-        tup->loc = {loc.begin, peek(-1)->location(mSource).end};
-
-        return tup;
-      }
-
-      expect(PAREN_CLOSE, "parsing grouping expression");
-
-      auto* group = mAlloc.emplace<ExprGroup>();
-      group->expr = first;
-      group->loc = {loc.begin, peek(-1)->location(mSource).end};
-      return group;
-    }
-
-    // Array expression
-    case BRACKET_OPEN: {
-      auto* arr = mAlloc.emplace<ExprArray>();
-
-      if (!match(BRACKET_CLOSE)) {
-        while (true) {
-          arr->init.push_back(parseExpr());
-
-          if (match(BRACKET_CLOSE)) {
-            optional(COMMA);  // trailing comma
-            break;
-          } else {
-            expect(COMMA, "parsing array initializer");
-          }
-        }
-      }
-
-      auto* last = expect(BRACKET_CLOSE, "terminating array initializer");
-      arr->loc = {loc.begin, last->location(mSource).end};
-      return arr;
-    }
-
-    // Lambda expression
-    case KW_FN: {
-      auto* fn = mAlloc.emplace<ExprLambda>();
-
-      expect(PAREN_OPEN, "parsing lambda parameter list");
-
-      if (!match(PAREN_CLOSE)) {
-        while (true) {
-          fn->pms.push_back(parseParameter());
-
-          if (match(PAREN_CLOSE)) {
-            break;
-          } else {
-            expect(COMMA, "parsing lambda parameter list");
-          }
-        }
-
-        expect(PAREN_CLOSE, "terminating lambda parameter list");
-      }
-
-      fn->scope = parseStmtScope();
-      fn->loc = {loc.begin, fn->scope->loc.end};
-      return fn;
-    }
-
+    case LIT_STRING:
+      return parseExprLit();
+    case IDENTIFIER:
+      return parseExprSymbol();
+    case PAREN_OPEN:
+      return parseExprGroupOrTuple();
+    case BRACKET_OPEN:
+      return parseExprArray();
+    case KW_FN:
+      return parseExprLambda();
     default:
       throw ParserError(
-          loc, "Unexpected token '{}' ({}) while parsing primary expression",
-          first->toString(), magic_enum::enum_name(first->kind));
+        loc, "Unexpected token '{}' ({}) while parsing primary expression",
+        first->toString(), magic_enum::enum_name(first->kind));
   }
 }
 
-Expr* Parser::parseExprAffix()
+const Expr* via::Parser::parseExprAffix()
 {
-  Expr* expr;
+  const Expr* expr;
 
   switch (peek()->kind) {
     case KW_NOT:
     case OP_MINUS:
     case OP_TILDE:
-    case OP_AMP: {
-      auto* un = mAlloc.emplace<ExprUnary>();
-      un->op = advance();
-      un->expr = parseExprAffix();
-      un->loc = {un->op->location(mSource).begin, un->expr->loc.end};
-      expr = un;
+    case OP_AMP:
+      expr = parseExprUnary(expr);
       break;
-    }
     default:
       expr = parseExprPrimary();
       break;
@@ -368,102 +471,33 @@ Expr* Parser::parseExprAffix()
     auto* first = peek();
 
     switch (first->kind) {
-      // Cast expression
-      case KW_AS: {
-        advance();
-
-        auto* cast = mAlloc.emplace<ExprCast>();
-        cast->expr = expr;
-        cast->type = parseType();
-        cast->loc = {expr->loc.begin, cast->type->loc.end};
-        expr = cast;
+      case KW_AS:
+        expr = parseExprCast(expr);
         break;
-      }
-
-      // Ternary expression
-      case KW_IF: {
-        advance();
-
-        auto* tern = mAlloc.emplace<ExprTernary>();
-        tern->lhs = expr;
-        tern->cnd = parseExpr();
-
-        expect(KW_ELSE, "parsing ternary expression");
-
-        tern->rhs = parseExpr();
-        tern->loc = {expr->loc.begin, tern->rhs->loc.end};
-        expr = tern;
+      case KW_IF:
+        expr = parseExprTernary(expr);
         break;
-      }
-
-      case PAREN_OPEN: {  // Function call
-        advance();        // consume '('
-
-        Vec<const Expr*> args;
-
-        if (!match(PAREN_CLOSE)) {
-          do
-            args.push_back(parseExpr());
-          while (match(COMMA) && advance());
-
-          expect(PAREN_CLOSE, "parsing function call");
-        } else
-          advance();  // consume ')'
-
-        auto* call = mAlloc.emplace<ExprCall>();
-        call->lval = expr;
-        call->args = std::move(args);
-        call->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
-        expr = call;
+      case PAREN_OPEN:
+        expr = parseExprCall(expr);
         break;
-      }
-
-      case BRACKET_OPEN: {  // Subscript
-        advance();          // consume '['
-
-        Expr* idx = parseExpr();
-
-        expect(BRACKET_CLOSE, "parsing subscript expression");
-
-        auto* subs = mAlloc.emplace<ExprSubscript>();
-        subs->lval = expr;
-        subs->idx = idx;
-        subs->loc = {expr->loc.begin, peek(-1)->location(mSource).end};
-        expr = subs;
+      case BRACKET_OPEN:
+        expr = parseExprSubscript(expr);
         break;
-      }
-
-      case PERIOD: {  // Dynamic access
-        advance();    // consume '.'
-
-        auto* da = mAlloc.emplace<ExprDynAccess>();
-        da->expr = expr;
-        da->aid = parseAccessIdent();
-        da->loc = {da->expr->loc.begin, da->aid->loc.end};
-        expr = da;
+      case PERIOD:
+        expr = parseExprDynAccess(expr);
         break;
-      }
-
-      case COLON_COLON: {  // Static access
-        advance();         // consume '::'
-
-        auto* sa = mAlloc.emplace<ExprStaticAccess>();
-        sa->expr = expr;
-        sa->aid = parseAccessIdent();
-        sa->loc = {sa->expr->loc.begin, sa->aid->loc.end};
-        expr = sa;
+      case COLON_COLON:
+        expr = parseExprStAccess(expr);
         break;
-      }
-
       default:
         return expr;
     }
   }
 }
 
-Expr* Parser::parseExpr(int minPrec)
+const Expr* via::Parser::parseExpr(int minPrec)
 {
-  Expr* lhs = parseExprAffix();
+  const Expr* lhs = parseExprAffix();
 
   int prec;
   while ((prec = binPrec(peek()->kind), prec >= minPrec)) {
@@ -478,7 +512,7 @@ Expr* Parser::parseExpr(int minPrec)
   return lhs;
 }
 
-TypeBuiltin* Parser::parseTypeBuiltin()
+const TypeBuiltin* via::Parser::parseTypeBuiltin()
 {
   SAVE_FIRST()
 
@@ -488,7 +522,7 @@ TypeBuiltin* Parser::parseTypeBuiltin()
   return bt;
 }
 
-TypeArray* Parser::parseTypeArray()
+const TypeArray* via::Parser::parseTypeArray()
 {
   SAVE_FIRST();
 
@@ -501,7 +535,7 @@ TypeArray* Parser::parseTypeArray()
   return at;
 }
 
-TypeDict* Parser::parseTypeDict()
+const TypeDict* via::Parser::parseTypeDict()
 {
   SAVE_FIRST();
 
@@ -518,7 +552,7 @@ TypeDict* Parser::parseTypeDict()
   return dt;
 }
 
-TypeFunc* Parser::parseTypeFunc()
+const TypeFunc* via::Parser::parseTypeFunc()
 {
   SAVE_FIRST()
   expect(PAREN_OPEN, "parsing function type parameter list");
@@ -537,7 +571,7 @@ TypeFunc* Parser::parseTypeFunc()
   return fn;
 }
 
-Type* Parser::parseType()
+const Type* via::Parser::parseType()
 {
   auto* tok = peek();
   switch (tok->kind) {
@@ -560,7 +594,7 @@ Type* Parser::parseType()
   }
 }
 
-StmtScope* Parser::parseStmtScope()
+const StmtScope* via::Parser::parseStmtScope()
 {
   SAVE_FIRST()
 
@@ -582,7 +616,7 @@ StmtScope* Parser::parseStmtScope()
   return scope;
 }
 
-StmtVarDecl* Parser::parseStmtVarDecl(bool semicolon)
+const StmtVarDecl* via::Parser::parseStmtVarDecl(bool semicolon)
 {
   SAVE_FIRST()
 
@@ -608,7 +642,7 @@ StmtVarDecl* Parser::parseStmtVarDecl(bool semicolon)
   return vars;
 }
 
-StmtFor* Parser::parseStmtFor()
+const StmtFor* via::Parser::parseStmtFor()
 {
   SAVE_FIRST()
 
@@ -634,7 +668,7 @@ StmtFor* Parser::parseStmtFor()
   return fors;
 }
 
-StmtForEach* Parser::parseStmtForEach()
+const StmtForEach* via::Parser::parseStmtForEach()
 {
   SAVE_FIRST()
 
@@ -649,7 +683,7 @@ StmtForEach* Parser::parseStmtForEach()
   return fors;
 }
 
-StmtIf* Parser::parseStmtIf()
+const StmtIf* via::Parser::parseStmtIf()
 {
   using Branch = StmtIf::Branch;
 
@@ -682,7 +716,7 @@ StmtIf* Parser::parseStmtIf()
   return ifs;
 }
 
-StmtWhile* Parser::parseStmtWhile()
+const StmtWhile* via::Parser::parseStmtWhile()
 {
   SAVE_FIRST()
 
@@ -693,10 +727,10 @@ StmtWhile* Parser::parseStmtWhile()
   return whs;
 }
 
-StmtAssign* Parser::parseStmtAssign(Expr* lhs)
+const StmtAssign* via::Parser::parseStmtAssign(const Expr* expr)
 {
   auto as = mAlloc.emplace<StmtAssign>();
-  as->lval = lhs;
+  as->lval = expr;
   as->op = advance();
   as->rval = parseExpr();
   as->loc = {as->lval->loc.begin, as->rval->loc.end};
@@ -704,7 +738,7 @@ StmtAssign* Parser::parseStmtAssign(Expr* lhs)
   return as;
 }
 
-StmtReturn* Parser::parseStmtReturn()
+const StmtReturn* via::Parser::parseStmtReturn()
 {
   SAVE_FIRST()
 
@@ -722,7 +756,7 @@ StmtReturn* Parser::parseStmtReturn()
   return ret;
 }
 
-StmtEnum* Parser::parseStmtEnum()
+const StmtEnum* via::Parser::parseStmtEnum()
 {
   SAVE_FIRST()
 
@@ -740,8 +774,8 @@ StmtEnum* Parser::parseStmtEnum()
     expect(OP_EQ, "parsing enumerator pair");
 
     ens->pairs.push_back({
-        .sym = sym,
-        .expr = parseExpr(),
+      .sym = sym,
+      .expr = parseExpr(),
     });
 
     expect(COMMA, "parsing enumerator pair");
@@ -751,7 +785,7 @@ StmtEnum* Parser::parseStmtEnum()
   return ens;
 }
 
-StmtModule* Parser::parseStmtModule()
+const StmtModule* via::Parser::parseStmtModule()
 {
   SAVE_FIRST()
 
@@ -799,7 +833,7 @@ StmtModule* Parser::parseStmtModule()
   return mod;
 }
 
-StmtImport* Parser::parseStmtImport()
+const StmtImport* via::Parser::parseStmtImport()
 {
   using TailKind = StmtImport::TailKind;
 
@@ -849,7 +883,7 @@ StmtImport* Parser::parseStmtImport()
   return imp;
 }
 
-StmtFunctionDecl* Parser::parseStmtFuncDecl()
+const StmtFunctionDecl* via::Parser::parseStmtFuncDecl()
 {
   SAVE_FIRST()
 
@@ -882,7 +916,7 @@ StmtFunctionDecl* Parser::parseStmtFuncDecl()
   return fn;
 }
 
-StmtStructDecl* Parser::parseStmtStructDecl()
+const StmtStructDecl* via::Parser::parseStmtStructDecl()
 {
   SAVE_FIRST()
 
@@ -914,9 +948,9 @@ StmtStructDecl* Parser::parseStmtStructDecl()
         break;
       default:
         throw ParserError(
-            tok->location(mSource),
-            "Unexpected token '{}' ({}) while parsing struct body",
-            tok->toString(), magic_enum::enum_name(tok->kind));
+          tok->location(mSource),
+          "Unexpected token '{}' ({}) while parsing struct body",
+          tok->toString(), magic_enum::enum_name(tok->kind));
     }
   }
 
@@ -925,7 +959,7 @@ StmtStructDecl* Parser::parseStmtStructDecl()
   return strc;
 }
 
-StmtTypeDecl* Parser::parseStmtTypeDecl()
+const StmtTypeDecl* via::Parser::parseStmtTypeDecl()
 {
   SAVE_FIRST()
 
@@ -941,7 +975,7 @@ StmtTypeDecl* Parser::parseStmtTypeDecl()
   return ty;
 }
 
-StmtUsing* Parser::parseStmtUsingDecl()
+const StmtUsing* via::Parser::parseStmtUsingDecl()
 {
   SAVE_FIRST();
 
@@ -952,7 +986,7 @@ StmtUsing* Parser::parseStmtUsingDecl()
   return usn;
 }
 
-Stmt* Parser::parseStmt()
+const Stmt* via::Parser::parseStmt()
 {
   switch (peek()->kind) {
     case KW_IF:
@@ -1005,7 +1039,7 @@ Stmt* Parser::parseStmt()
                       first->toString(), magic_enum::enum_name(first->kind));
   }
 
-  Expr* expr = parseExpr();
+  const Expr* expr = parseExpr();
 
   switch (peek()->kind) {
     case OP_EQ:
@@ -1036,7 +1070,7 @@ Stmt* Parser::parseStmt()
   }
 }
 
-SyntaxTree Parser::parse()
+via::SyntaxTree via::Parser::parse()
 {
   SyntaxTree nodes;
 
@@ -1051,5 +1085,3 @@ SyntaxTree Parser::parse()
 
   return nodes;
 }
-
-}  // namespace via

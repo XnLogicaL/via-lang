@@ -8,13 +8,40 @@
 #include <via/types.h>
 #include "lexer/location.h"
 #include "lexer/token.h"
-#include "visitor.h"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
 #define TRY_IS(T, a) (dynamic_cast<T*>(a) != nullptr)
 
 namespace via
 {
+
+enum class UnaryOp
+{
+  REF,   // &
+  NEG,   // -
+  NOT,   // not
+  BNOT,  // ~
+};
+
+enum class BinaryOp
+{
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  POW,
+  MOD,
+  AND,
+  OR,
+  BAND,
+  BOR,
+  BXOR,
+  BSHL,
+  BSHR,
+};
+
+UnaryOp toUnaryOp(Token::Kind kind) noexcept;
+BinaryOp toBinaryOp(Token::Kind kind) noexcept;
 
 namespace ast
 {
@@ -24,7 +51,6 @@ struct Expr
   SourceLoc loc;
 
   virtual std::string dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
 struct Stmt
@@ -32,7 +58,6 @@ struct Stmt
   SourceLoc loc;
 
   virtual std::string dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
 struct Type
@@ -40,7 +65,6 @@ struct Type
   SourceLoc loc;
 
   virtual std::string dump(usize& depth) const = 0;
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
 struct AccessIdent
@@ -84,13 +108,9 @@ struct AttributeGroup
   std::string dump() const;
 };
 
-#define NODE_FIELDS(klass)                                \
-  using klass::loc;                                       \
-  std::string dump(usize& depth) const override;          \
-  void accept(Visitor& vis, VisitInfo* vi) const override \
-  {                                                       \
-    vis.visit(*this, vi);                                 \
-  }
+#define NODE_FIELDS(base) \
+  using base::loc;        \
+  std::string dump(usize& depth) const override;
 
 struct ExprLit : public Expr
 {
@@ -354,6 +374,8 @@ struct TypeFunc : public Type
 };
 
 #undef NODE_FIELDS
+
+bool isLValue(const Expr* expr) noexcept;
 
 }  // namespace ast
 

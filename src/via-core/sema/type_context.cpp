@@ -3,6 +3,8 @@
 
 #include "type_context.h"
 
+namespace sema = via::sema;
+
 static inline size_t hashCombine(size_t seed, size_t v) noexcept
 {
   return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
@@ -23,32 +25,32 @@ static inline size_t hashRange(It first, It last, size_t seed, ElemHash hash)
   return seed;
 }
 
-size_t std::hash<via::sema::DictKey>::operator()(
-    const via::sema::DictKey& key) const noexcept
+size_t std::hash<sema::DictKey>::operator()(
+  const sema::DictKey& key) const noexcept
 {
   size_t seed = hashPtr(key.key);
   seed = hashCombine(seed, hashPtr(key.val));
   return seed;
 }
 
-bool std::equal_to<via::sema::DictKey>::operator()(
-    const via::sema::DictKey& a,
-    const via::sema::DictKey& b) const noexcept
+bool std::equal_to<sema::DictKey>::operator()(
+  const sema::DictKey& a,
+  const sema::DictKey& b) const noexcept
 {
   return a.key == b.key && a.val == b.val;
 }
 
-size_t std::hash<via::sema::FuncKey>::operator()(
-    const via::sema::FuncKey& key) const noexcept
+size_t std::hash<sema::FuncKey>::operator()(
+  const sema::FuncKey& key) const noexcept
 {
   size_t seed = hashPtr(key.result);
   seed = hashRange(key.tps.begin(), key.tps.end(), seed, hashPtr);
   return seed;
 }
 
-bool std::equal_to<via::sema::FuncKey>::operator()(
-    const via::sema::FuncKey& a,
-    const via::sema::FuncKey& b) const noexcept
+bool std::equal_to<sema::FuncKey>::operator()(
+  const sema::FuncKey& a,
+  const sema::FuncKey& b) const noexcept
 {
   if (a.result != b.result)
     return false;
@@ -60,28 +62,22 @@ bool std::equal_to<via::sema::FuncKey>::operator()(
   return true;
 }
 
-size_t std::hash<via::sema::UserKey>::operator()(
-    const via::sema::UserKey& key) const noexcept
+size_t std::hash<sema::UserKey>::operator()(
+  const sema::UserKey& key) const noexcept
 {
   return hashPtr(key.decl);
 }
 
-bool std::equal_to<via::sema::UserKey>::operator()(
-    const via::sema::UserKey& a,
-    const via::sema::UserKey& b) const noexcept
+bool std::equal_to<sema::UserKey>::operator()(
+  const sema::UserKey& a,
+  const sema::UserKey& b) const noexcept
 {
   return a.decl == b.decl;
 }
 
-namespace via
-{
-
-namespace sema
-{
-
 template <typename Tp, typename Key, typename... Args>
-static const Tp* instantiateBase(BumpAllocator<>& alloc,
-                                 Map<Key, const Tp*>& map,
+static const Tp* instantiateBase(via::BumpAllocator<>& alloc,
+                                 via::Map<Key, const Tp*>& map,
                                  Args&&... args)
 {
   Key key(args...);
@@ -94,41 +90,45 @@ static const Tp* instantiateBase(BumpAllocator<>& alloc,
   }
 }
 
-const BuiltinType* TypeContext::getBuiltinTypeInstance(BuiltinType::Kind kind)
+const sema::BuiltinType* sema::TypeContext::getBuiltinTypeInstance(
+  BuiltinType::Kind kind)
 {
   return instantiateBase<BuiltinType, BuiltinType::Kind>(mAlloc, mBuiltins,
                                                          kind);
 }
 
-const ArrayType* TypeContext::getArrayTypeInstance(const Type* type)
+const sema::ArrayType* sema::TypeContext::getArrayTypeInstance(const Type* type)
 {
   return mArrays[type];
 }
 
-const DictType* TypeContext::getDictTypeInstance(const Type* key,
-                                                 const Type* val)
+const sema::DictType* sema::TypeContext::getDictTypeInstance(const Type* key,
+                                                             const Type* val)
 {
   return mDicts[DictKey{
-      .key = key,
-      .val = val,
+    .key = key,
+    .val = val,
   }];
 }
 
-const FuncType* TypeContext::getFunctionTypeInstance(const Type* res,
-                                                     Vec<const Type*> tps)
+const sema::FuncType* sema::TypeContext::getFunctionTypeInstance(
+  const Type* res,
+  Vec<const Type*> tps)
 {
   return mFuncs[FuncKey{
-      .result = res,
-      .tps = tps,
+    .result = res,
+    .tps = tps,
   }];
 }
 
-const UserType* TypeContext::getUserTypeInstance(const ast::StmtTypeDecl* decl)
+const sema::UserType* sema::TypeContext::getUserTypeInstance(
+  const ast::StmtTypeDecl* decl)
 {
   return mUsers[UserKey{.decl = decl}];
 }
 
-const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
+const sema::Type* sema::TypeContext::instantiate(const Type* tp,
+                                                 const TypeEnv& env)
 {
   switch (tp->kind) {
     case Type::Kind::Builtin:
@@ -205,7 +205,3 @@ const Type* TypeContext::instantiate(const Type* tp, const TypeEnv& env)
 
   return tp;  // defensive
 }
-
-}  // namespace sema
-
-}  // namespace via

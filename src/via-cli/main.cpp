@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     csv2::Reader<csv2::delimiter<','>, csv2::quote_character<'\''>,
                  csv2::first_row_is_header<false>,
                  csv2::trim_policy::trim_whitespace>
-        csvReader;
+      csvReader;
 
     std::string rawDumpMode, rawIncludeDirs;
     fs::path path;
@@ -124,14 +124,15 @@ int main(int argc, char* argv[])
     auto module = Module::loadSourceFile(&mgr, nullptr, path.stem().c_str(),
                                          path, Module::Perms::ALL, flags);
 
-    assert(module.has_value(), module.error_or("<no-error>"));
+    assert(module.hasValue(),
+           module.errorOr(via::make_error("<no-error>")).toString());
 
     if (rawDumpMode == "symtab") {
       fmt::println("{}",
                    via::ansiFormat("[global symbol table]", via::Fg::Yellow,
                                    via::Bg::Black, via::Style::Bold));
 
-      for (const auto& sym : via::SymbolTable::getInstance().getSymbols()) {
+      for (const auto& sym : via::SymbolTable::instance().getSymbols()) {
         fmt::println("  {}: {}", sym.second, sym.first);
       }
     }

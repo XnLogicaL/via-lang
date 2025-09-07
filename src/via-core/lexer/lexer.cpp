@@ -5,97 +5,93 @@
 #include <fmt/core.h>
 #include <cstring>
 
-namespace via
-{
+using enum via::Token::Kind;
 
 // max 3-char symbol lookahead
 struct TokenReprPair
 {
   const char* str;
-  Token::Kind kind;
+  via::Token::Kind kind;
 };
 
 static constexpr TokenReprPair kLexKeywords[] = {
-    {"var", Token::Kind::KW_VAR},       {"const", Token::Kind::KW_CONST},
-    {"fn", Token::Kind::KW_FN},         {"type", Token::Kind::KW_TYPE},
-    {"while", Token::Kind::KW_WHILE},   {"for", Token::Kind::KW_FOR},
-    {"if", Token::Kind::KW_IF},         {"in", Token::Kind::KW_IN},
-    {"of", Token::Kind::KW_OF},         {"else", Token::Kind::KW_ELSE},
-    {"do", Token::Kind::KW_DO},         {"and", Token::Kind::KW_AND},
-    {"or", Token::Kind::KW_OR},         {"not", Token::Kind::KW_NOT},
-    {"return", Token::Kind::KW_RETURN}, {"as", Token::Kind::KW_AS},
-    {"import", Token::Kind::KW_IMPORT}, {"mod", Token::Kind::KW_MODULE},
-    {"struct", Token::Kind::KW_STRUCT}, {"enum", Token::Kind::KW_ENUM},
-    {"using", Token::Kind::KW_USING},   {"bool", Token::Kind::KW_BOOL},
-    {"int", Token::Kind::KW_INT},       {"float", Token::Kind::KW_FLOAT},
-    {"string", Token::Kind::KW_STRING},
+  {"var", KW_VAR},       {"const", KW_CONST},   {"fn", KW_FN},
+  {"type", KW_TYPE},     {"while", KW_WHILE},   {"for", KW_FOR},
+  {"if", KW_IF},         {"in", KW_IN},         {"of", KW_OF},
+  {"else", KW_ELSE},     {"do", KW_DO},         {"and", KW_AND},
+  {"or", KW_OR},         {"not", KW_NOT},       {"return", KW_RETURN},
+  {"as", KW_AS},         {"import", KW_IMPORT}, {"mod", KW_MODULE},
+  {"struct", KW_STRUCT}, {"enum", KW_ENUM},     {"using", KW_USING},
+  {"bool", KW_BOOL},     {"isize", KW_INT},     {"float", KW_FLOAT},
+  {"string", KW_STRING},
 };
 
 static constexpr TokenReprPair kLexSymbols[] = {
-    {".", Token::Kind::PERIOD},
-    {",", Token::Kind::COMMA},
-    {";", Token::Kind::SEMICOLON},
-    {":", Token::Kind::COLON},
-    {"::", Token::Kind::COLON_COLON},
-    {"->", Token::Kind::ARROW},
-    {"?", Token::Kind::QUESTION},
-    {"+", Token::Kind::OP_PLUS},
-    {"-", Token::Kind::OP_MINUS},
-    {"*", Token::Kind::OP_STAR},
-    {"/", Token::Kind::OP_SLASH},
-    {"**", Token::Kind::OP_STAR_STAR},
-    {"%", Token::Kind::OP_PERCENT},
-    {"&", Token::Kind::OP_AMP},
-    {"~", Token::Kind::OP_TILDE},
-    {"^", Token::Kind::OP_CARET},
-    {"|", Token::Kind::OP_PIPE},
-    {"<<", Token::Kind::OP_SHL},
-    {">>", Token::Kind::OP_SHR},
-    {"!", Token::Kind::OP_BANG},
-    {"++", Token::Kind::OP_PLUS_PLUS},
-    {"--", Token::Kind::OP_MINUS_MINUS},
-    {"<", Token::Kind::OP_LT},
-    {">", Token::Kind::OP_GT},
-    {"..", Token::Kind::OP_DOT_DOT},
-    {"(", Token::Kind::PAREN_OPEN},
-    {")", Token::Kind::PAREN_CLOSE},
-    {"[", Token::Kind::BRACKET_OPEN},
-    {"]", Token::Kind::BRACKET_CLOSE},
-    {"{", Token::Kind::BRACE_OPEN},
-    {"}", Token::Kind::BRACE_CLOSE},
-    {"=", Token::Kind::OP_EQ},
-    {"==", Token::Kind::OP_EQ_EQ},
-    {"+=", Token::Kind::OP_PLUS_EQ},
-    {"*=", Token::Kind::OP_STAR_EQ},
-    {"/=", Token::Kind::OP_SLASH_EQ},
-    {"**=", Token::Kind::OP_STAR_STAR_EQ},
-    {"%=", Token::Kind::OP_PERCENT_EQ},
-    {"&=", Token::Kind::OP_AMP_EQ},
-    {"^=", Token::Kind::OP_CARET_EQ},
-    {"|=", Token::Kind::OP_PIPE_EQ},
-    {"<<=", Token::Kind::OP_SHL_EQ},
-    {">>=", Token::Kind::OP_SHR_EQ},
-    {"!=", Token::Kind::OP_BANG_EQ},
-    {"<=", Token::Kind::OP_LT_EQ},
-    {">=", Token::Kind::OP_GT_EQ},
-    {"..=", Token::Kind::OP_DOT_DOT_EQ},
+  {".", PERIOD},
+  {",", COMMA},
+  {";", SEMICOLON},
+  {":", COLON},
+  {"::", COLON_COLON},
+  {"->", ARROW},
+  {"?", QUESTION},
+  {"+", OP_PLUS},
+  {"-", OP_MINUS},
+  {"*", OP_STAR},
+  {"/", OP_SLASH},
+  {"**", OP_STAR_STAR},
+  {"%", OP_PERCENT},
+  {"&", OP_AMP},
+  {"~", OP_TILDE},
+  {"^", OP_CARET},
+  {"|", OP_PIPE},
+  {"<<", OP_SHL},
+  {">>", OP_SHR},
+  {"!", OP_BANG},
+  {"++", OP_PLUS_PLUS},
+  {"--", OP_MINUS_MINUS},
+  {"<", OP_LT},
+  {">", OP_GT},
+  {"..", OP_DOT_DOT},
+  {"(", PAREN_OPEN},
+  {")", PAREN_CLOSE},
+  {"[", BRACKET_OPEN},
+  {"]", BRACKET_CLOSE},
+  {"{", BRACE_OPEN},
+  {"}", BRACE_CLOSE},
+  {"=", OP_EQ},
+  {"==", OP_EQ_EQ},
+  {"+=", OP_PLUS_EQ},
+  {"*=", OP_STAR_EQ},
+  {"/=", OP_SLASH_EQ},
+  {"**=", OP_STAR_STAR_EQ},
+  {"%=", OP_PERCENT_EQ},
+  {"&=", OP_AMP_EQ},
+  {"^=", OP_CARET_EQ},
+  {"|=", OP_PIPE_EQ},
+  {"<<=", OP_SHL_EQ},
+  {">>=", OP_SHR_EQ},
+  {"!=", OP_BANG_EQ},
+  {"<=", OP_LT_EQ},
+  {">=", OP_GT_EQ},
+  {"..=", OP_DOT_DOT_EQ},
 };
 
-static consteval usize stringLength(const char* str)
+static consteval via::usize stringLength(const char* str)
 {
-  usize len = 0;
-  while (str[len] != '\0')
+  via::usize len = 0;
+  while (str[len] != '\0') {
     ++len;
+  }
 
   return len;
 }
 
-static consteval usize maxSymbolSize()
+static consteval via::usize maxSymbolSize()
 {
-  usize maxSize = 0;
+  via::usize maxSize = 0;
 
   for (const auto& sym : kLexSymbols) {
-    usize size = stringLength(sym.str);
+    via::usize size = stringLength(sym.str);
     if (size > maxSize) {
       maxSize = size;
     }
@@ -104,15 +100,14 @@ static consteval usize maxSymbolSize()
   return maxSize;
 }
 
-static bool isNumeric(Token::Kind* kind, char c)
+static bool isNumeric(via::Token::Kind* kind, char c)
 {
   switch (*kind) {
-    case Token::Kind::LIT_INT:
-      return isdigit(c) ||
-             (c == '.' && *kind != Token::Kind::LIT_FLOAT);  // decimal
-    case Token::Kind::LIT_XINT:
+    case LIT_INT:
+      return isdigit(c) || (c == '.' && *kind != LIT_FLOAT);  // decimal
+    case LIT_XINT:
       return isxdigit(c);  // hexadecimal
-    case Token::Kind::LIT_BINT:
+    case LIT_BINT:
       return c == '0' || c == '1';  // binary
     default:
       break;
@@ -136,30 +131,30 @@ static bool isStringDelimiter(char c)
   return c == '"' || c == '\'' || c == '`';
 }
 
-char Lexer::advance(int ahead)
+char via::Lexer::advance(isize ahead)
 {
   char c = *mCursor;
   mCursor += ahead;
   return mCursor < mEnd ? c : '\0';
 }
 
-char Lexer::peek(int ahead)
+char via::Lexer::peek(isize ahead)
 {
   return mCursor + ahead < mEnd ? *(mCursor + ahead) : '\0';
 }
 
-Token* Lexer::readNumber()
+via::Token* via::Lexer::readNumber()
 {
   Token* token = mAlloc.emplace<Token>();
-  token->kind = Token::Kind::LIT_INT;
+  token->kind = LIT_INT;
   token->lexeme = mCursor;
   token->size = 0;
 
   if (peek() == '0') {
     if (peek(1) == 'x')
-      token->kind = Token::Kind::LIT_XINT;
+      token->kind = LIT_XINT;
     else if (peek(1) == 'b')
-      token->kind = Token::Kind::LIT_BINT;
+      token->kind = LIT_BINT;
     else
       goto decimal;
 
@@ -171,10 +166,10 @@ decimal:
   char c;
   while ((c = peek()), isNumeric(&token->kind, c)) {
     if (c == '.') {
-      if (token->kind == Token::Kind::LIT_INT)
-        token->kind = Token::Kind::LIT_FLOAT;
+      if (token->kind == LIT_INT)
+        token->kind = LIT_FLOAT;
       else {
-        token->kind = Token::Kind::ILLEGAL;
+        token->kind = ILLEGAL;
         break;
       }
     }
@@ -186,10 +181,10 @@ decimal:
   return token;
 }
 
-Token* Lexer::readString()
+via::Token* via::Lexer::readString()
 {
   Token* token = mAlloc.emplace<Token>();
-  token->kind = Token::Kind::LIT_STRING;
+  token->kind = LIT_STRING;
   token->lexeme = mCursor;
 
   char del = advance();
@@ -213,16 +208,16 @@ Token* Lexer::readString()
 
   if (!closed) {
     token->size = 1;
-    token->kind = Token::Kind::ILLEGAL;
+    token->kind = ILLEGAL;
   }
 
   return token;
 }
 
-Token* Lexer::readIdentifier()
+via::Token* via::Lexer::readIdentifier()
 {
   Token* token = mAlloc.emplace<Token>();
-  token->kind = Token::Kind::IDENTIFIER;
+  token->kind = IDENTIFIER;
   token->lexeme = mCursor;
   token->size = 0;
 
@@ -244,37 +239,37 @@ Token* Lexer::readIdentifier()
 
   if (token->size == strlen("nil") &&
       strncmp(token->lexeme, "nil", token->size) == 0)
-    token->kind = Token::Kind::LIT_NIL;
+    token->kind = LIT_NIL;
   else if (token->size == strlen("true") &&
            strncmp(token->lexeme, "true", token->size) == 0)
-    token->kind = Token::Kind::LIT_TRUE;
+    token->kind = LIT_TRUE;
   else if (token->size == strlen("false") &&
            strncmp(token->lexeme, "false", token->size) == 0)
-    token->kind = Token::Kind::LIT_FALSE;
+    token->kind = LIT_FALSE;
 
-  if (token->kind == Token::Kind::IDENTIFIER && c == '!') {
+  if (token->kind == IDENTIFIER && c == '!') {
     token->size++;
-    token->kind = Token::Kind::IDENTIFIER_MACRO;
+    token->kind = IDENTIFIER_MACRO;
     advance();
   }
 
   return token;
 }
 
-Token* Lexer::readSymbol()
+via::Token* via::Lexer::readSymbol()
 {
   Token* token = mAlloc.emplace<Token>();
   token->lexeme = mCursor;
-  token->kind = Token::Kind::ILLEGAL;
+  token->kind = ILLEGAL;
   token->size = 1;
 
-  int matchSize = 0;
-  auto matchKind = Token::Kind::ILLEGAL;
+  isize matchSize = 0;
+  auto matchKind = ILLEGAL;
 
   char buf[4] = {};
 
-  for (int len = maxSymbolSize(); len >= 1; --len) {
-    for (int i = 0; i < len; ++i) {
+  for (isize len = maxSymbolSize(); len >= 1; --len) {
+    for (isize i = 0; i < len; ++i) {
       buf[i] = mCursor[i];
     }
 
@@ -290,11 +285,11 @@ Token* Lexer::readSymbol()
   }
 
 found:
-  if (matchKind != Token::Kind::ILLEGAL) {
+  if (matchKind != ILLEGAL) {
     token->kind = matchKind;
     token->size = matchSize;
 
-    for (int i = 0; i < matchSize; ++i) {
+    for (isize i = 0; i < matchSize; ++i) {
       advance();
     }
   } else {
@@ -304,7 +299,7 @@ found:
   return token;
 }
 
-bool Lexer::skipComment()
+bool via::Lexer::skipComment()
 {
   if (peek() != '/') {
     return false;
@@ -346,7 +341,7 @@ bool Lexer::skipComment()
   return false;
 }
 
-TokenTree Lexer::tokenize()
+via::TokenTree via::Lexer::tokenize()
 {
   TokenTree toks;
 
@@ -375,7 +370,7 @@ TokenTree Lexer::tokenize()
   }
 
   Token* eof = mAlloc.emplace<Token>();
-  eof->kind = Token::Kind::EOF_;
+  eof->kind = EOF_;
   eof->lexeme = mCursor;
   eof->size = 0;
 
@@ -383,20 +378,12 @@ TokenTree Lexer::tokenize()
   return toks;
 }
 
-namespace debug
-{
-
-[[nodiscard]] std::string dump(const TokenTree& tt)
+[[nodiscard]] std::string dump(const via::TokenTree& tt)
 {
   std::ostringstream oss;
-
   for (const auto* tk : tt) {
     oss << tk->dump() << "\n";
   }
 
   return oss.str();
 }
-
-}  // namespace debug
-
-}  // namespace via

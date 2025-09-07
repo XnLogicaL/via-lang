@@ -8,10 +8,8 @@
 #include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
 #include "ast/ast.h"
-#include "error.h"
 #include "expected.h"
 #include "memory.h"
-#include "type_visitor.h"
 
 namespace via
 {
@@ -39,8 +37,9 @@ class Type
   static Expected<Type*> infer(Allocator& alloc, const ast::Expr* expr);
 
  public:
-  bool isDependent() const { return flags & 0x1; }
-  virtual void accept(TypeVisitor& vis, VisitInfo* vi) const = 0;
+  bool isDependent() const noexcept { return flags & 0x1; }
+  bool isIntegral() const noexcept;
+  bool isArithmetic() const noexcept;
   virtual std::string dump() const { debug::unimplemented(); }
 
  public:
@@ -65,11 +64,6 @@ struct BuiltinType : public Type
   const Kind bt;
   explicit BuiltinType(Kind b) : Type(Type::Kind::Builtin, 0), bt(b) {}
 
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
-
   std::string dump() const override
   {
     return fmt::format("BuiltinType({})", magic_enum::enum_name(bt));
@@ -82,11 +76,6 @@ struct ArrayType : public Type
   explicit ArrayType(const Type* elem)
       : Type(Kind::Array, elem->isDependent()), elem(elem)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct DictType : public Type
@@ -97,11 +86,6 @@ struct DictType : public Type
         key(key),
         val(val)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct FuncType : public Type
@@ -122,11 +106,6 @@ struct FuncType : public Type
         params(std::move(ps)),
         result(rs)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct UserType : public Type
@@ -134,11 +113,6 @@ struct UserType : public Type
   const ast::StmtTypeDecl* decl;
   explicit UserType(const ast::StmtTypeDecl* D) : Type(Kind::User, 0), decl(D)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct TemplateParamType : public Type
@@ -147,11 +121,6 @@ struct TemplateParamType : public Type
   explicit TemplateParamType(u32 d, u32 i)
       : Type(Kind::TemplateParam, /*dependent*/ 1), depth(d), index(i)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct TemplateSpecType : public Type
@@ -163,11 +132,6 @@ struct TemplateSpecType : public Type
                             bool dep)
       : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(prim), args(std::move(A))
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 struct SubstParamType : public Type
@@ -177,11 +141,6 @@ struct SubstParamType : public Type
   explicit SubstParamType(const TemplateParamType* par, const Type* rs)
       : Type(Kind::SubstParam, rs->isDependent()), parm(par), replacement(rs)
   {}
-
-  void accept(TypeVisitor& vis, VisitInfo* vi) const override
-  {
-    vis.visit(*this, vi);
-  }
 };
 
 }  // namespace sema

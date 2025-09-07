@@ -15,7 +15,7 @@ VIA_MOD_FUNC(print)
 
 VIA_MODINIT_FUNC(io)
 {
-  auto& symtab = via::SymbolTable::getInstance();
+  auto& symtab = via::SymbolTable::instance();
   auto& types = mgr->getTypeContext();
   auto& alloc = mgr->getAllocator();
 

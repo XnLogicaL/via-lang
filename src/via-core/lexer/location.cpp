@@ -3,10 +3,7 @@
 
 #include "location.h"
 
-namespace via
-{
-
-RelSourceLoc SourceLoc::toRelative(const std::string& source) const
+via::RelSourceLoc via::SourceLoc::toRelative(const std::string& source) const
 {
   usize line = 1;
   usize init = 0;
@@ -21,5 +18,3 @@ RelSourceLoc SourceLoc::toRelative(const std::string& source) const
   usize column = begin - init;
   return {line, column};
 }
-
-}  // namespace via

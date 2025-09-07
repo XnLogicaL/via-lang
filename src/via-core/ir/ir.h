@@ -9,8 +9,8 @@
 #include "module/symbol.h"
 #include "option.h"
 #include "sema/const_value.h"
+#include "sema/local.h"
 #include "sema/type.h"
-#include "visitor.h"
 
 namespace via
 {
@@ -20,29 +20,22 @@ namespace ir
 
 struct Expr
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
+  const sema::Type* type;
   virtual std::string dump(usize& depth) const = 0;
 };
 
 struct Stmt
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
   virtual std::string dump(usize& depth) const = 0;
   virtual Option<SymbolId> getSymbol() const { return nullopt; }
 };
 
 struct Terminator
 {
-  virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
   virtual std::string dump(usize& depth) const = 0;
 };
 
-#define NODE_FIELDS()                                     \
-  std::string dump(usize& depth) const override;          \
-  void accept(Visitor& vis, VisitInfo* vi) const override \
-  {                                                       \
-    vis.visit(*this, vi);                                 \
-  }
+#define NODE_FIELDS() std::string dump(usize& depth) const override;
 
 struct TrReturn : public Terminator
 {
@@ -76,26 +69,32 @@ struct TrCondBranch : public Terminator
 struct Parm
 {
   SymbolId sym;
-  const sema::Type* type;
+  sema::Type* type;
 
   std::string dump() const;
 };
 
+#undef NODE_FIELDS
+#define NODE_FIELDS(base) \
+  using base::type;       \
+  std::string dump(usize& depth) const override;
+
 struct ExprConstant : public Expr
 {
-  NODE_FIELDS()
-  sema::ConstValue cv;
+  NODE_FIELDS(Expr)
+  sema::ConstValue value;
 };
 
 struct ExprSymbol : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
   SymbolId symbol;
+  sema::LocalRef* local;
 };
 
 struct ExprAccess : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
 
   enum class Kind
   {
@@ -108,73 +107,64 @@ struct ExprAccess : public Expr
 
 struct ExprUnary : public Expr
 {
-  NODE_FIELDS()
-
-  enum class Op
-  {
-    NEG,
-    NOT,
-    BNOT,
-  } op;
-
+  NODE_FIELDS(Expr)
+  UnaryOp op;
   Expr* expr;
 };
 
 struct ExprBinary : public Expr
 {
-  NODE_FIELDS()
-
-  enum class Op
-  {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    POW,
-    MOD,
-    AND,
-    OR,
-    BAND,
-    BOR,
-    BXOR,
-    BSHL,
-    BSHR,
-  } op;
-
+  NODE_FIELDS(Expr)
+  BinaryOp op;
   Expr *lhs, *rhs;
 };
 
 struct ExprCall : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
   Expr* callee;
   Vec<Expr*> args;
 };
 
 struct ExprSubscript : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
   Expr *expr, *idx;
 };
 
 struct ExprCast : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
   Expr* expr;
   const sema::Type* type;
 };
 
+struct ExprTernary : public Expr
+{
+  NODE_FIELDS(Expr)
+  Expr *cnd, *iftrue, *iffalse;
+};
+
+struct ExprArray : public Expr
+{
+  NODE_FIELDS(Expr)
+  Vec<Expr*> exprs;
+};
+
 struct ExprTuple : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
   Vec<Expr*> init;
 };
 
 struct Function;
 struct ExprLambda : public Expr
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Expr)
 };
+
+#undef NODE_FIELDS
+#define NODE_FIELDS() std::string dump(usize& depth) const override;
 
 struct StmtVarDecl : public Stmt
 {
@@ -213,12 +203,12 @@ struct StmtBlock : public Stmt
 
 }  // namespace ir
 
-using IrTree = Vec<ir::Stmt*>;
+using IRTree = Vec<ir::Stmt*>;
 
 namespace debug
 {
 
-[[nodiscard]] std::string dump(const IrTree& ir);
+[[nodiscard]] std::string dump(const IRTree& ir);
 
 }
 

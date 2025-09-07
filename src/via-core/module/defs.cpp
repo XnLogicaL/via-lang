@@ -3,10 +3,7 @@
 
 #include "defs.h"
 
-namespace via
-{
-
-Def* Def::from(Allocator& alloc, const ir::Stmt* node)
+via::Def* via::Def::from(Allocator& alloc, const ir::Stmt* node)
 {
   if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
     auto* fndef = alloc.emplace<FunctionDef>();
@@ -19,10 +16,10 @@ Def* Def::from(Allocator& alloc, const ir::Stmt* node)
   return nullptr;
 }
 
-Def* Def::newFunction(Allocator& alloc,
-                      const NativeCallback fn,
-                      const sema::Type* ret,
-                      std::initializer_list<DefParm>&& parms)
+via::Def* via::Def::newFunction(Allocator& alloc,
+                                const NativeCallback fn,
+                                const sema::Type* ret,
+                                std::initializer_list<DefParm>&& parms)
 {
   auto* fndef = alloc.emplace<FunctionDef>();
   fndef->kind = ImplKind::NATIVE;
@@ -33,17 +30,14 @@ Def* Def::newFunction(Allocator& alloc,
   return fndef;
 }
 
-std::string FunctionDef::dump() const
+std::string via::FunctionDef::dump() const
 {
   return fmt::format(
-      "FunctionDef(symbol={}, ret={}, parms={}, kind={}, code={})", symbol,
-      ret->dump(),
-      debug::dump(parms,
-                  [](const auto& parm) {
-                    return fmt::format("{}: {}", parm.symbol,
-                                       parm.type->dump());
-                  }),
-      magic_enum::enum_name(kind), reinterpret_cast<const void*>(code.native));
+    "FunctionDef(symbol={}, ret={}, parms={}, kind={}, code={})", symbol,
+    ret->dump(),
+    debug::dump(parms,
+                [](const auto& parm) {
+                  return fmt::format("{}: {}", parm.symbol, parm.type->dump());
+                }),
+    magic_enum::enum_name(kind), reinterpret_cast<const void*>(code.native));
 }
-
-}  // namespace via
