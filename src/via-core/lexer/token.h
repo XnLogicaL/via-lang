@@ -1,8 +1,13 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_TOKEN_H_
-#define VIA_CORE_TOKEN_H_
+#pragma once
 
 #include <fmt/ranges.h>
 #include <via/config.h>
@@ -128,5 +133,3 @@ inline std::string toString(const Token& tok)
 }
 
 }  // namespace via
-
-#endif

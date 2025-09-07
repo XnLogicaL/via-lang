@@ -1,5 +1,11 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
 #include "stack.h"
 #include "debug.h"
@@ -21,7 +27,7 @@ via::Option<sema::LocalRef> sema::Frame::getLocal(std::string_view symbol)
 void sema::Frame::setLocal(std::string_view symbol,
                            const ast::Expr* lval,
                            const ast::Expr* rval,
-                           const ast::Type* type,
+                           const sema::Type* type,
                            u64 quals)
 {
   usize version;

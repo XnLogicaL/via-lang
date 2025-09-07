@@ -8,12 +8,31 @@
 ** ===================================================== */
 
 #pragma once
-#include "config.h"
 
-#ifdef VIA_PLATFORM_UNKNOWN
-  #error Unknown/unsupported platform. List of supported platforms: Windows, Linux, IOS, OSX, BSD, EMSCRIPTEN or any UNIX/POSIX compliant OS.
-#endif
+#include <via/config.h>
+#include <via/types.h>
+#include "instruction.h"
 
-#ifdef VIA_COMPILER_UNKNOWN
-  #error Unknown/unsupported compiler. List of supported compilers: MSVC, GCC, CLANG or any adapters for these compilers like MinGW or Msys.
-#endif
+namespace via
+{
+
+namespace sema
+{
+
+class ConstValue;
+
+}
+
+struct Executable
+{
+  static constexpr u32 kmagic = 0x2E766961;  // .via
+
+  u32 magic;
+  u64 flags;
+  Vec<sema::ConstValue> consts;
+  Vec<Instruction> bytecode;
+
+  std::string dump() const;
+};
+
+}  // namespace via

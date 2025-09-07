@@ -1,21 +1,16 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_TYPES_H_
-#define VIA_TYPES_H_
+#pragma once
 
-#include <fmt/format.h>
-#include <cassert>
-#include <deque>
-#include <expected>
 #include <filesystem>
-#include <functional>
-#include <limits>
-#include <memory>
-#include <optional>
 #include <unordered_map>
-#include <unordered_set>
-#include <variant>
 #include <vector>
 
 namespace via
@@ -26,15 +21,6 @@ namespace fs = std::filesystem;
 using std::literals::operator""s;
 using std::literals::operator""sv;
 
-template <typename T>
-using Ref = std::reference_wrapper<T>;
-
-template <typename Sig>
-using Function = std::function<Sig>;
-
-template <typename... Args>
-using Fmt = fmt::format_string<Args...>;
-
 template <typename K,
           typename V,
           typename Hash = std::hash<K>,
@@ -42,31 +28,7 @@ template <typename K,
 using Map = std::unordered_map<K, V, Hash, Eq>;
 
 template <typename T>
-using Set = std::unordered_set<T>;
-
-template <typename T, const size_t Size>
-using Array = std::array<T, Size>;
-
-template <typename T>
-using Deque = std::deque<T>;
-
-template <typename T>
 using Vec = std::vector<T>;
-
-template <typename T>
-using Box = std::unique_ptr<T>;
-
-template <typename T>
-using Atomic = std::atomic<T>;
-
-template <typename T>
-using Rc = std::shared_ptr<T>;
-
-template <typename T>
-using Arc = Atomic<Rc<T>>;
-
-template <typename T, typename U>
-using Pair = std::pair<T, U>;
 
 using u8 = uint8_t;
 using u16 = uint16_t;
@@ -85,9 +47,4 @@ using iptr = intptr_t;
 using f32 = float;
 using f64 = double;
 
-template <typename T>
-using Limits = std::numeric_limits<T>;
-
 }  // namespace via
-
-#endif

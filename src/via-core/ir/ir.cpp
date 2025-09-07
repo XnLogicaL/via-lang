@@ -1,5 +1,11 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
 #include "ir.h"
 
@@ -44,7 +50,7 @@ std::string ir::Parm::dump() const
 
 std::string ir::ExprConstant::dump(usize&) const
 {
-  return cv.dump();
+  return value.dump();
 }
 
 std::string ir::ExprSymbol::dump(usize&) const
@@ -84,7 +90,7 @@ std::string ir::ExprSubscript::dump(usize&) const
 
 std::string ir::ExprCast::dump(usize&) const
 {
-  return fmt::format("cast {}, {}", expr->dump(ZERO), type->dump());
+  return fmt::format("cast {}, {}", expr->dump(ZERO), "");
 }
 
 std::string ir::ExprTuple::dump(usize&) const

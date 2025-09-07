@@ -1,8 +1,13 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_ERROR_H_
-#define VIA_CORE_ERROR_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
@@ -52,5 +57,3 @@ template <typename E = ErrorInfo, typename... Args>
 inline ErrorInfo::ErrorInfo(const Error& err) : msg(err.getError().msg) {}
 
 }  // namespace via
-
-#endif

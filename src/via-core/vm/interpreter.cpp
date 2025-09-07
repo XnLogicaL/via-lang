@@ -1,38 +1,33 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
 #include "interpreter.h"
+#include <cmath>
 #include "constexpr_ipow.h"
 #include "debug.h"
 #include "value.h"
+#include "value_ref.h"
 
-namespace via
+via::ValueRef via::Interpreter::pushLocal(ValueRef val)
 {
-
-Stack<uptr>& Interpreter::getStack()
-{
-  return stack;
+  mStack.push(reinterpret_cast<uptr>(val.get()));
+  return getLocal(mStack.size() - 1);
 }
 
-Allocator& Interpreter::getAllocator()
+void via::Interpreter::setLocal(usize mStkPtr, ValueRef val)
 {
-  return alloc;
+  *mStack.at(mStkPtr) = reinterpret_cast<uptr>(val.get());
 }
 
-ValueRef Interpreter::pushLocal(ValueRef val)
+via::ValueRef via::Interpreter::getLocal(usize mStkPtr)
 {
-  stack.push((uptr)val.get());
-  return getLocal(stack.size() - 1);
-}
-
-void Interpreter::setLocal(usize mStkPtr, ValueRef val)
-{
-  *stack.at(mStkPtr) = reinterpret_cast<uptr>(val.get());
-}
-
-ValueRef Interpreter::getLocal(usize mStkPtr)
-{
-  return reinterpret_cast<Value*>(stack.at(mStkPtr))->makeRef();
+  return ValueRef(this, reinterpret_cast<Value*>(mStack.at(mStkPtr)));
 }
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
@@ -44,91 +39,90 @@ ValueRef Interpreter::getLocal(usize mStkPtr)
   #define DISPATCH_OP(op) &&case_##op
   #define DISPATCH_TABLE()                                                    \
     DISPATCH_OP(NOP), DISPATCH_OP(HALT), DISPATCH_OP(EXTRAARG1),              \
-        DISPATCH_OP(EXTRAARG2), DISPATCH_OP(EXTRAARG3), DISPATCH_OP(MOVE),    \
-        DISPATCH_OP(XCHG), DISPATCH_OP(COPY), DISPATCH_OP(COPYREF),           \
-        DISPATCH_OP(LOADTRUE), DISPATCH_OP(LOADFALSE), DISPATCH_OP(NEWSTR),   \
-        DISPATCH_OP(NEWSTR2), DISPATCH_OP(NEWARR), DISPATCH_OP(NEWARR2),      \
-        DISPATCH_OP(NEWDICT), DISPATCH_OP(NEWTUPLE), DISPATCH_OP(NEWCLOSURE), \
-        DISPATCH_OP(IADD1), DISPATCH_OP(IADD2), DISPATCH_OP(IADD1K),          \
-        DISPATCH_OP(IADD2K), DISPATCH_OP(FADD1), DISPATCH_OP(FADD2),          \
-        DISPATCH_OP(FADD1K), DISPATCH_OP(FADD2K), DISPATCH_OP(ISUB1),         \
-        DISPATCH_OP(ISUB2), DISPATCH_OP(ISUB1K), DISPATCH_OP(ISUB2K),         \
-        DISPATCH_OP(ISUB2KX), DISPATCH_OP(FSUB1), DISPATCH_OP(FSUB2),         \
-        DISPATCH_OP(FSUB1K), DISPATCH_OP(FSUB2K), DISPATCH_OP(FSUB2KX),       \
-        DISPATCH_OP(IMUL1), DISPATCH_OP(IMUL2), DISPATCH_OP(IMUL1K),          \
-        DISPATCH_OP(IMUL2K), DISPATCH_OP(FMUL1), DISPATCH_OP(FMUL2),          \
-        DISPATCH_OP(FMUL1K), DISPATCH_OP(FMUL2K), DISPATCH_OP(IDIV1),         \
-        DISPATCH_OP(IDIV2), DISPATCH_OP(IDIV1K), DISPATCH_OP(IDIV2K),         \
-        DISPATCH_OP(IDIV2KX), DISPATCH_OP(FDIV1), DISPATCH_OP(FDIV2),         \
-        DISPATCH_OP(FDIV1K), DISPATCH_OP(FDIV2K), DISPATCH_OP(FDIV2KX),       \
-        DISPATCH_OP(IPOW1), DISPATCH_OP(IPOW2), DISPATCH_OP(IPOW1K),          \
-        DISPATCH_OP(IPOW2K), DISPATCH_OP(IPOW2KX), DISPATCH_OP(FPOW1),        \
-        DISPATCH_OP(FPOW2), DISPATCH_OP(FPOW1K), DISPATCH_OP(FPOW2K),         \
-        DISPATCH_OP(FPOW2KX), DISPATCH_OP(IMOD1), DISPATCH_OP(IMOD2),         \
-        DISPATCH_OP(IMOD1K), DISPATCH_OP(IMOD2K), DISPATCH_OP(IMOD2KX),       \
-        DISPATCH_OP(FMOD1), DISPATCH_OP(FMOD2), DISPATCH_OP(FMOD1K),          \
-        DISPATCH_OP(FMOD2K), DISPATCH_OP(FMOD2KX), DISPATCH_OP(INEG),         \
-        DISPATCH_OP(INEGK), DISPATCH_OP(FNEG), DISPATCH_OP(FNEGK),            \
-        DISPATCH_OP(BAND1), DISPATCH_OP(BAND2), DISPATCH_OP(BAND1K),          \
-        DISPATCH_OP(BAND2K), DISPATCH_OP(BOR1), DISPATCH_OP(BOR2),            \
-        DISPATCH_OP(BOR1K), DISPATCH_OP(BOR2K), DISPATCH_OP(BXOR1),           \
-        DISPATCH_OP(BXOR2), DISPATCH_OP(BXOR1K), DISPATCH_OP(BXOR2K),         \
-        DISPATCH_OP(BSHL1), DISPATCH_OP(BSHL2), DISPATCH_OP(BSHL1K),          \
-        DISPATCH_OP(BSHL2K), DISPATCH_OP(BSHR1), DISPATCH_OP(BSHR2),          \
-        DISPATCH_OP(BSHR1K), DISPATCH_OP(BSHR2K), DISPATCH_OP(BNOT),          \
-        DISPATCH_OP(BNOTK), DISPATCH_OP(AND), DISPATCH_OP(ANDK),              \
-        DISPATCH_OP(OR), DISPATCH_OP(ORK), DISPATCH_OP(IEQ),                  \
-        DISPATCH_OP(IEQK), DISPATCH_OP(FEQ), DISPATCH_OP(FEQK),               \
-        DISPATCH_OP(BEQ), DISPATCH_OP(BEQK), DISPATCH_OP(SEQ),                \
-        DISPATCH_OP(SEQK), DISPATCH_OP(INEQ), DISPATCH_OP(INEQK),             \
-        DISPATCH_OP(FNEQ), DISPATCH_OP(FNEQK), DISPATCH_OP(BNEQ),             \
-        DISPATCH_OP(BNEQK), DISPATCH_OP(SNEQ), DISPATCH_OP(SNEQK),            \
-        DISPATCH_OP(IS), DISPATCH_OP(ILT), DISPATCH_OP(ILTK),                 \
-        DISPATCH_OP(FLT), DISPATCH_OP(FLTK), DISPATCH_OP(IGT),                \
-        DISPATCH_OP(IGTK), DISPATCH_OP(FGT), DISPATCH_OP(FGTK),               \
-        DISPATCH_OP(ILTEQ), DISPATCH_OP(ILTEQK), DISPATCH_OP(FLTEQ),          \
-        DISPATCH_OP(FLTEQK), DISPATCH_OP(IGTEQ), DISPATCH_OP(IGTEQK),         \
-        DISPATCH_OP(FGTEQ), DISPATCH_OP(FGTEQK), DISPATCH_OP(NOT),            \
-        DISPATCH_OP(JMP), DISPATCH_OP(JMPIF), DISPATCH_OP(PUSH),              \
-        DISPATCH_OP(PUSHK), DISPATCH_OP(GETARG), DISPATCH_OP(GETARGREF),      \
-        DISPATCH_OP(SETARG), DISPATCH_OP(GETLOCAL), DISPATCH_OP(GETLOCALREF), \
-        DISPATCH_OP(SETLOCAL), DISPATCH_OP(BTOI), DISPATCH_OP(FTOI),          \
-        DISPATCH_OP(STOI), DISPATCH_OP(ITOF), DISPATCH_OP(BTOF),              \
-        DISPATCH_OP(STOF), DISPATCH_OP(ITOB), DISPATCH_OP(STOB),              \
-        DISPATCH_OP(ITOS), DISPATCH_OP(FTOS), DISPATCH_OP(BTOS),              \
-        DISPATCH_OP(ARTOS), DISPATCH_OP(DTTOS), DISPATCH_OP(FNTOS),           \
-        DISPATCH_OP(CAPTURE), DISPATCH_OP(CALL), DISPATCH_OP(PCALL),          \
-        DISPATCH_OP(RET), DISPATCH_OP(RETNIL), DISPATCH_OP(RETTRUE),          \
-        DISPATCH_OP(RETFALSE), DISPATCH_OP(RETK), DISPATCH_OP(GETUPV),        \
-        DISPATCH_OP(GETUPVREF), DISPATCH_OP(SETUPV), DISPATCH_OP(ARRGET),     \
-        DISPATCH_OP(ARRSET), DISPATCH_OP(ARRGETLEN), DISPATCH_OP(DICTGET),    \
-        DISPATCH_OP(DICTSET), DISPATCH_OP(DICTGETLEN),                        \
-        DISPATCH_OP(NEWINSTANCE), DISPATCH_OP(GETSUPER),                      \
-        DISPATCH_OP(GETSTATIC), DISPATCH_OP(GETDYNAMIC),                      \
-        DISPATCH_OP(SETSTATIC), DISPATCH_OP(SETDYNAMIC),                      \
-        DISPATCH_OP(CALLSTATIC), DISPATCH_OP(PCALLSTATIC),                    \
-        DISPATCH_OP(CALLDYNAMIC), DISPATCH_OP(PCALLDYNAMIC)
+      DISPATCH_OP(EXTRAARG2), DISPATCH_OP(EXTRAARG3), DISPATCH_OP(MOVE),      \
+      DISPATCH_OP(XCHG), DISPATCH_OP(COPY), DISPATCH_OP(COPYREF),             \
+      DISPATCH_OP(LOADTRUE), DISPATCH_OP(LOADFALSE), DISPATCH_OP(NEWSTR),     \
+      DISPATCH_OP(NEWSTR2), DISPATCH_OP(NEWARR), DISPATCH_OP(NEWARR2),        \
+      DISPATCH_OP(NEWDICT), DISPATCH_OP(NEWTUPLE), DISPATCH_OP(NEWCLOSURE),   \
+      DISPATCH_OP(IADD1), DISPATCH_OP(IADD2), DISPATCH_OP(IADD1K),            \
+      DISPATCH_OP(IADD2K), DISPATCH_OP(FADD1), DISPATCH_OP(FADD2),            \
+      DISPATCH_OP(FADD1K), DISPATCH_OP(FADD2K), DISPATCH_OP(ISUB1),           \
+      DISPATCH_OP(ISUB2), DISPATCH_OP(ISUB1K), DISPATCH_OP(ISUB2K),           \
+      DISPATCH_OP(ISUB2KX), DISPATCH_OP(FSUB1), DISPATCH_OP(FSUB2),           \
+      DISPATCH_OP(FSUB1K), DISPATCH_OP(FSUB2K), DISPATCH_OP(FSUB2KX),         \
+      DISPATCH_OP(IMUL1), DISPATCH_OP(IMUL2), DISPATCH_OP(IMUL1K),            \
+      DISPATCH_OP(IMUL2K), DISPATCH_OP(FMUL1), DISPATCH_OP(FMUL2),            \
+      DISPATCH_OP(FMUL1K), DISPATCH_OP(FMUL2K), DISPATCH_OP(IDIV1),           \
+      DISPATCH_OP(IDIV2), DISPATCH_OP(IDIV1K), DISPATCH_OP(IDIV2K),           \
+      DISPATCH_OP(IDIV2KX), DISPATCH_OP(FDIV1), DISPATCH_OP(FDIV2),           \
+      DISPATCH_OP(FDIV1K), DISPATCH_OP(FDIV2K), DISPATCH_OP(FDIV2KX),         \
+      DISPATCH_OP(IPOW1), DISPATCH_OP(IPOW2), DISPATCH_OP(IPOW1K),            \
+      DISPATCH_OP(IPOW2K), DISPATCH_OP(IPOW2KX), DISPATCH_OP(FPOW1),          \
+      DISPATCH_OP(FPOW2), DISPATCH_OP(FPOW1K), DISPATCH_OP(FPOW2K),           \
+      DISPATCH_OP(FPOW2KX), DISPATCH_OP(IMOD1), DISPATCH_OP(IMOD2),           \
+      DISPATCH_OP(IMOD1K), DISPATCH_OP(IMOD2K), DISPATCH_OP(IMOD2KX),         \
+      DISPATCH_OP(FMOD1), DISPATCH_OP(FMOD2), DISPATCH_OP(FMOD1K),            \
+      DISPATCH_OP(FMOD2K), DISPATCH_OP(FMOD2KX), DISPATCH_OP(INEG),           \
+      DISPATCH_OP(INEGK), DISPATCH_OP(FNEG), DISPATCH_OP(FNEGK),              \
+      DISPATCH_OP(BAND1), DISPATCH_OP(BAND2), DISPATCH_OP(BAND1K),            \
+      DISPATCH_OP(BAND2K), DISPATCH_OP(BOR1), DISPATCH_OP(BOR2),              \
+      DISPATCH_OP(BOR1K), DISPATCH_OP(BOR2K), DISPATCH_OP(BXOR1),             \
+      DISPATCH_OP(BXOR2), DISPATCH_OP(BXOR1K), DISPATCH_OP(BXOR2K),           \
+      DISPATCH_OP(BSHL1), DISPATCH_OP(BSHL2), DISPATCH_OP(BSHL1K),            \
+      DISPATCH_OP(BSHL2K), DISPATCH_OP(BSHR1), DISPATCH_OP(BSHR2),            \
+      DISPATCH_OP(BSHR1K), DISPATCH_OP(BSHR2K), DISPATCH_OP(BNOT),            \
+      DISPATCH_OP(BNOTK), DISPATCH_OP(AND), DISPATCH_OP(ANDK),                \
+      DISPATCH_OP(OR), DISPATCH_OP(ORK), DISPATCH_OP(IEQ), DISPATCH_OP(IEQK), \
+      DISPATCH_OP(FEQ), DISPATCH_OP(FEQK), DISPATCH_OP(BEQ),                  \
+      DISPATCH_OP(BEQK), DISPATCH_OP(SEQ), DISPATCH_OP(SEQK),                 \
+      DISPATCH_OP(INEQ), DISPATCH_OP(INEQK), DISPATCH_OP(FNEQ),               \
+      DISPATCH_OP(FNEQK), DISPATCH_OP(BNEQ), DISPATCH_OP(BNEQK),              \
+      DISPATCH_OP(SNEQ), DISPATCH_OP(SNEQK), DISPATCH_OP(IS),                 \
+      DISPATCH_OP(ILT), DISPATCH_OP(ILTK), DISPATCH_OP(FLT),                  \
+      DISPATCH_OP(FLTK), DISPATCH_OP(IGT), DISPATCH_OP(IGTK),                 \
+      DISPATCH_OP(FGT), DISPATCH_OP(FGTK), DISPATCH_OP(ILTEQ),                \
+      DISPATCH_OP(ILTEQK), DISPATCH_OP(FLTEQ), DISPATCH_OP(FLTEQK),           \
+      DISPATCH_OP(IGTEQ), DISPATCH_OP(IGTEQK), DISPATCH_OP(FGTEQ),            \
+      DISPATCH_OP(FGTEQK), DISPATCH_OP(NOT), DISPATCH_OP(JMP),                \
+      DISPATCH_OP(JMPIF), DISPATCH_OP(PUSH), DISPATCH_OP(PUSHK),              \
+      DISPATCH_OP(GETARG), DISPATCH_OP(GETARGREF), DISPATCH_OP(SETARG),       \
+      DISPATCH_OP(GETLOCAL), DISPATCH_OP(GETLOCALREF), DISPATCH_OP(SETLOCAL), \
+      DISPATCH_OP(BTOI), DISPATCH_OP(FTOI), DISPATCH_OP(STOI),                \
+      DISPATCH_OP(ITOF), DISPATCH_OP(BTOF), DISPATCH_OP(STOF),                \
+      DISPATCH_OP(ITOB), DISPATCH_OP(STOB), DISPATCH_OP(ITOS),                \
+      DISPATCH_OP(FTOS), DISPATCH_OP(BTOS), DISPATCH_OP(ARTOS),               \
+      DISPATCH_OP(DTTOS), DISPATCH_OP(FNTOS), DISPATCH_OP(CAPTURE),           \
+      DISPATCH_OP(CALL), DISPATCH_OP(PCALL), DISPATCH_OP(RET),                \
+      DISPATCH_OP(RETNIL), DISPATCH_OP(RETTRUE), DISPATCH_OP(RETFALSE),       \
+      DISPATCH_OP(RETK), DISPATCH_OP(GETUPV), DISPATCH_OP(GETUPVREF),         \
+      DISPATCH_OP(SETUPV), DISPATCH_OP(ARRGET), DISPATCH_OP(ARRSET),          \
+      DISPATCH_OP(ARRGETLEN), DISPATCH_OP(DICTGET), DISPATCH_OP(DICTSET),     \
+      DISPATCH_OP(DICTGETLEN), DISPATCH_OP(NEWINSTANCE),                      \
+      DISPATCH_OP(GETSUPER), DISPATCH_OP(GETSTATIC), DISPATCH_OP(GETDYNAMIC), \
+      DISPATCH_OP(SETSTATIC), DISPATCH_OP(SETDYNAMIC),                        \
+      DISPATCH_OP(CALLSTATIC), DISPATCH_OP(PCALLSTATIC),                      \
+      DISPATCH_OP(CALLDYNAMIC), DISPATCH_OP(PCALLDYNAMIC)
 #else
   #define CASE(op) case op:
 #endif
 
 #define K getConstant
 
-#define L(id) reinterpret_cast<Value*>(stack.at(id))
-#define LSET(id, val) *stack.at(id) = reinterpret_cast<uptr>(val);
+#define L(id) reinterpret_cast<Value*>(mStack.at(id))
+#define LSET(id, val) *mStack.at(id) = reinterpret_cast<uptr>(val);
 #define LFREE(id)       \
   if (R(id) != nullptr) \
-    reinterpret_cast<Value*>(stack.at(id))->mRc--;
+    reinterpret_cast<Value*>(mStack.at(id))->mRc--;
 
-#define R(id) regs[id]
-#define RSET(id, val) regs[id] = val
+#define R(id) mRegisters[id]
+#define RSET(id, val) mRegisters[id] = val
 #define RFREE(id)                  \
   [[likely]] if (R(id) != nullptr) \
     R(id)->mRc--;
 
-void Interpreter::execute()
+void via::Interpreter::execute()
 {
-  using enum Opcode;
+  using enum OpCode;
 
 #ifdef HAS_CGOTO
   #ifdef VIA_COMPILER_GCC
@@ -671,13 +665,13 @@ dispatch:
     CASE(SEQ)
     {
       R(a)->mData.boolean =
-          std::strcmp(R(b)->mData.string, R(c)->mData.string) == 0;
+        std::strcmp(R(b)->mData.string, R(c)->mData.string) == 0;
       goto dispatch;
     }
     CASE(SEQK)
     {
       R(a)->mData.boolean =
-          std::strcmp(R(b)->mData.string, K(c)->mData.string) == 0;
+        std::strcmp(R(b)->mData.string, K(c)->mData.string) == 0;
       goto dispatch;
     }
     CASE(INEQ)
@@ -713,13 +707,13 @@ dispatch:
     CASE(SNEQ)
     {
       R(a)->mData.boolean =
-          std::strcmp(R(b)->mData.string, R(c)->mData.string) == 1;
+        std::strcmp(R(b)->mData.string, R(c)->mData.string) == 1;
       goto dispatch;
     }
     CASE(SNEQK)
     {
       R(a)->mData.boolean =
-          std::strcmp(R(b)->mData.string, K(c)->mData.string) == 1;
+        std::strcmp(R(b)->mData.string, K(c)->mData.string) == 1;
       goto dispatch;
     }
     CASE(IS)
@@ -814,18 +808,18 @@ dispatch:
     }
     CASE(JMP)
     {
-      pc = lbt[a];
+      pc = mLabels[a];
       goto dispatch;
     }
     CASE(JMPIF)
     {
       if (R(a)->asCBool())
-        pc = lbt[b];
+        pc = mLabels[b];
       goto dispatch;
     }
     CASE(PUSH)
     {
-      pushLocal(R(a)->makeRef());
+      pushLocal(ValueRef(this, R(a)));
       goto dispatch;
     }
     CASE(PUSHK)
@@ -911,5 +905,3 @@ dispatch:
 #endif
 exit:
 }
-
-}  // namespace via

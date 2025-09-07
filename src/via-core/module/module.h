@@ -1,17 +1,20 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_MODULE_H_
-#define VIA_CORE_MODULE_H_
+#pragma once
 
-#include <bytecode/builder.h>
 #include <lexer/lexer.h>
 #include <parser/parser.h>
 #include <via/config.h>
 #include <via/types.h>
 #include "defs.h"
 #include "expected.h"
-#include "module/symbol.h"
 #include "option.h"
 
 #define VIA_MODINIT_FUNC(id) \
@@ -119,5 +122,3 @@ class Module final
 };
 
 }  // namespace via
-
-#endif

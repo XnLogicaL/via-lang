@@ -1,14 +1,18 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_UTILITY_H_
-#define VIA_CORE_UTILITY_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
+#include <cstring>
 #include <type_traits>
-#include <utility>
-#include "debug.h"
 
 namespace via
 {
@@ -36,7 +40,8 @@ template <typename T>
 }
 
 template <typename To, typename From>
-  requires(std::is_default_constructible_v<To> && sizeof(To) == sizeof(From))
+  requires(sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<To> &&
+           std::is_trivially_copyable_v<From>)
 [[nodiscard]] inline constexpr To pun_cast(const From& src) noexcept
 {
   To dst;
@@ -45,5 +50,3 @@ template <typename To, typename From>
 }
 
 }  // namespace via
-
-#endif

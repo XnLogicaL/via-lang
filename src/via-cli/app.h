@@ -1,8 +1,13 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CLI_APP_H_
-#define VIA_CLI_APP_H_
+#pragma once
 
 #include <via/via.h>
 #include <argparse/argparse.hpp>
@@ -21,14 +26,14 @@ inline auto& getApp()
   cli.add_argument("input").default_value("").help("Target source file");
 
   cli.add_argument("--include-dirs", "-I")
-      .default_value("")
-      .help("Comma seperated custom include directory paths");
+    .default_value("")
+    .help("Comma seperated custom include directory paths");
 
   cli.add_argument("--dump", "-D")
-      .nargs(1)
-      .choices("", "ttree", "ast", "ir", "deftab", "symtab")
-      .default_value("")
-      .help("Dump the given tree");
+    .nargs(1)
+    .choices("", "ttree", "ast", "ir", "deftab", "symtab")
+    .default_value("")
+    .help("Dump the given tree");
 
   return cli;
 }
@@ -36,5 +41,3 @@ inline auto& getApp()
 }  // namespace cli
 
 }  // namespace via
-
-#endif

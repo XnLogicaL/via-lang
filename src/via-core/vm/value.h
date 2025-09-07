@@ -1,19 +1,21 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_VM_VALUE_H_
-#define VIA_VM_VALUE_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
 #include "interpreter.h"
 #include "option.h"
-#include "value_ref.h"
 
 namespace via
 {
-
-class Interpreter;
 
 class Value final
 {
@@ -42,40 +44,86 @@ class Value final
   friend class Interpreter;
 
  public:
-  static Value* construct(Interpreter* ctx);
-  static Value* construct(Interpreter* ctx, int_type int_);
-  static Value* construct(Interpreter* ctx, float_type float_);
-  static Value* construct(Interpreter* ctx, bool boolean);
-  static Value* construct(Interpreter* ctx, char* string);
+  static inline Value* construct(Interpreter* ctx)
+  {
+    return constructImpl(ctx, Kind::Nil);
+  }
+
+  static inline Value* construct(Interpreter* ctx, Value::int_type int_)
+  {
+    return constructImpl(ctx, Kind::Int, {.int_ = int_});
+  }
+
+  static inline Value* construct(Interpreter* ctx, Value::float_type float_)
+  {
+    return constructImpl(ctx, Kind::Float, {.float_ = float_});
+  }
+
+  static inline Value* construct(Interpreter* ctx, bool boolean)
+  {
+    return constructImpl(ctx, Kind::Boolean, {.boolean = boolean});
+  }
+
+  static inline Value* construct(Interpreter* ctx, char* string)
+  {
+    debug::assertm(
+      ctx->getAllocator().owns(string),
+      "Value construction via a string literal requires it to be allocated by "
+      "the corresponding Value::ctx");
+    return constructImpl(ctx, Kind::String, {.string = string});
+  }
 
  public:
-  Kind kind() const { return mKind; }
-  Union& data() { return mData; }
-  const Union& data() const { return mData; }
-  Interpreter* context() const { return mCtx; }
+  inline auto kind() const { return mKind; }
+  inline auto& data() { return mData; }
+  inline const auto& data() const { return mData; }
+  inline auto* context() const { return mCtx; }
 
-  void free();
-  Value* clone();
-  ValueRef makeRef();
+  inline void free()
+  {
+    switch (mKind) {
+      case Kind::String:
+        mCtx->getAllocator().free(mData.string);
+        break;
+      default:
+        // Trivial types don't require explicit destruction
+        break;
+    }
+
+    mKind = Kind::Nil;
+  }
+
+  inline Value* clone() { return constructImpl(mCtx, mKind, mData); }
 
   // Totally safe access methods
-  int_type getInt() const { return mData.int_; }
-  float_type getFloat() const { return mData.float_; }
-  bool getBool() const { return mData.boolean; }
-  char* getString() const { return mData.string; }
+  inline int_type getInt() const { return mData.int_; }
+  inline float_type getFloat() const { return mData.float_; }
+  inline bool getBool() const { return mData.boolean; }
+  inline char* getString() const { return mData.string; }
 
-  Option<int_type> asCInt() const;
-  Option<float_type> asCFloat() const;
-  bool asCBool() const;
-  char* asCString() const;
+  inline Option<int_type> asCInt() const { return nullopt; /* PLACEHOLDER */ }
+  inline Option<float_type> asCFloat() const
+  {
+    return nullopt; /* PLACEHOLDER */
+  }
+  inline bool asCBool() const { return false; /* PLACEHOLDER */ }
+  inline char* asCString() const { return nullptr; /* PLACEHOLDER */ }
 
-  Value* asInt() const;
-  Value* asFloat() const;
-  Value* asBool() const;
-  Value* asString() const;
+  inline Value* asInt() const { return nullptr; /* PLACEHOLDER */ }
+  inline Value* asFloat() const { return nullptr; /* PLACEHOLDER */ }
+  inline Value* asBool() const { return nullptr; /* PLACEHOLDER */ }
+  inline Value* asString() const { return nullptr; /* PLACEHOLDER */ }
 
  private:
-  static Value* constructImpl(Interpreter* mCtx, Kind kind, Union data = {});
+  static inline Value* constructImpl(Interpreter* ctx,
+                                     Value::Kind kind,
+                                     Value::Union data = {})
+  {
+    Value* ptr = ctx->getAllocator().emplace<Value>();
+    ptr->mKind = kind;
+    ptr->mData = data;
+    return ptr;
+  }
 
  private:
   Kind mKind = Kind::Nil;
@@ -85,5 +133,3 @@ class Value final
 };
 
 }  // namespace via
-
-#endif

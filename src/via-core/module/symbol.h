@@ -1,11 +1,17 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_MODULE_SYMBOL_H_
-#define VIA_CORE_MODULE_SYMBOL_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
+#include <deque>
 #include <mutex>
 #include <sstream>
 #include "intern_table.h"
@@ -14,7 +20,7 @@ namespace via
 {
 
 using SymbolId = u64;
-using QualPath = Deque<std::string>;
+using QualPath = std::deque<std::string>;
 
 inline std::string toString(const QualPath& path)
 {
@@ -55,5 +61,3 @@ class SymbolTable final : public InternTable<std::string, SymbolId>
 };
 
 }  // namespace via
-
-#endif

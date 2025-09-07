@@ -1,12 +1,15 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_H_
-#define VIA_H_
+#pragma once
 
 #include <ast/ast.h>
-#include <ast/visitor.h>
-#include <bytecode/builder.h>
 #include <color.h>
 #include <constexpr_ipow.h>
 #include <constexpr_stof.h>
@@ -25,7 +28,6 @@
 #include <parser/parser.h>
 #include <sema/const_value.h>
 #include <sema/constexpr.h>
-#include <sema/control_path.h>
 #include <sema/register.h>
 #include <semver.h>
 #include <vm/header.h>
@@ -35,5 +37,3 @@
 #include <vm/value.h>
 #include <vm/value_ref.h>
 #include "policy.h"
-
-#endif

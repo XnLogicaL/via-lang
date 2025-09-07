@@ -1,11 +1,17 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_DEBUG_H_
-#define VIA_CORE_DEBUG_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
+#include <functional>
 #include <source_location>
 
 namespace via
@@ -19,20 +25,20 @@ void assertm(bool cond,
              std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void bug(
-    std::string what,
-    std::source_location __loc = std::source_location::current());
+  std::string what,
+  std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void todo(
-    std::string what,
-    std::source_location __loc = std::source_location::current());
+  std::string what,
+  std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void unimplemented(
-    std::string what = "<no-message-specified>",
-    std::source_location __loc = std::source_location::current());
+  std::string what = "<no-message-specified>",
+  std::source_location __loc = std::source_location::current());
 
 template <typename T, char LDel = '{', char RDel = '}'>
 std::string dump(const Vec<T>& vec,
-                 Function<std::string(const std::remove_cv_t<T>&)> fn)
+                 std::function<std::string(const std::remove_cv_t<T>&)> fn)
 {
   std::ostringstream oss;
   oss << LDel;
@@ -51,5 +57,3 @@ std::string dump(const Vec<T>& vec,
 }  // namespace debug
 
 }  // namespace via
-
-#endif

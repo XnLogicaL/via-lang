@@ -1,5 +1,11 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
 #include "diagnostics.h"
 #include "color.h"
@@ -59,13 +65,13 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
   ++line;                                       // 1-based
   col = static_cast<u64>(ptr - lineBegin) + 1;  // 1-based
   lineView =
-      std::string_view(lineBegin, static_cast<usize>(lineEnd - lineBegin));
+    std::string_view(lineBegin, static_cast<usize>(lineEnd - lineBegin));
 
   logger->log(
-      level, "{} {} {}", d.msg,
-      ansiFormat("at", Fg::White, Bg::Black, Style::Faint),
-      ansiFormat(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
-                 Fg::Cyan));
+    level, "{} {} {}", d.msg,
+    ansiFormat("at", Fg::White, Bg::Black, Style::Faint),
+    ansiFormat(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
+               Fg::Cyan));
 
   usize lineWidth = static_cast<usize>(std::log10(line)) + 1;
 

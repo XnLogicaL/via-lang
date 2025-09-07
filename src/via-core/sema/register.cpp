@@ -1,7 +1,15 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
 #include "register.h"
+#include <cstring>
+#include <limits>
 #include "debug.h"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
@@ -22,10 +30,10 @@ via::u16 sema::registers::alloc()
   for (u16 i = 0; i < stRegisters.size(); i++) {
 #ifdef VIA_HAVE_BUILTIN_CTZLL
     u64 word = stRegisters[i];
-    if (word != Limits<u64>::max()) {   // has at least one zero bit
-      u64 inv = ~word;                  // invert zeros to ones
-      i32 bit = __builtin_ctzll(inv);   // index of first zero bit
-      stRegisters[i] |= (1ULL << bit);  // mark as occupied
+    if (word != std::numeric_limits<u64>::max()) {  // has at least one zero bit
+      u64 inv = ~word;                              // invert zeros to ones
+      i32 bit = __builtin_ctzll(inv);               // index of first zero bit
+      stRegisters[i] |= (1ULL << bit);              // mark as occupied
       return i * 64 + bit;
     }
 #else

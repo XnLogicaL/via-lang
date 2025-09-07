@@ -1,13 +1,18 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_VM_INTERPRETER_H_
-#define VIA_VM_INTERPRETER_H_
+#pragma once
 
 #include <via/config.h>
 #include <via/types.h>
 #include "debug.h"
-#include "header.h"
+#include "executable.h"
 #include "instruction.h"
 #include "stack.h"
 
@@ -32,18 +37,18 @@ inline constexpr usize kRegisterCount = UINT16_MAX + 1;
 class Interpreter final
 {
  public:
-  Interpreter(const Header* H)
-      : H(H),
-        pc(H->bytecode.data()),
-        stack(&alloc),
-        regs(config::vm::kRegisterCount)
+  Interpreter(const Executable* header)
+      : mHeader(header),
+        pc(header->bytecode.data()),
+        mStack(&mAlloc),
+        mRegisters(config::vm::kRegisterCount)
   {
-    debug::assertm(!H->bytecode.empty(), "illformed header");
+    debug::assertm(!header->bytecode.empty(), "illformed header");
   }
 
  public:
-  Stack<uptr>& getStack();
-  Allocator& getAllocator();
+  Stack<uptr>& getStack() { return mStack; }
+  Allocator& getAllocator() { return mAlloc; }
 
   ValueRef getConstant(u16 id);
 
@@ -54,18 +59,16 @@ class Interpreter final
   void execute();
 
  private:
-  const Header* H;
+  const Executable* mHeader;
 
-  Stack<uptr> stack;
-  Vec<Value*> regs;
-  Vec<Instruction*> lbt;
+  Stack<uptr> mStack;
+  Vec<Value*> mRegisters;
+  Vec<Instruction*> mLabels;
 
-  Allocator alloc;
+  Allocator mAlloc;
 
   const uptr* fp;  // frame pointer
   const Instruction* pc;
 };
 
 }  // namespace via
-
-#endif

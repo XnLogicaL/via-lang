@@ -1,8 +1,13 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CORE_DIAG_H_
-#define VIA_CORE_DIAG_H_
+#pragma once
 
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
@@ -51,8 +56,8 @@ class DiagContext final
   void report(SourceLoc loc, fmt::format_string<Args...> fmt, Args&&... args)
   {
     mDiags.emplace_back(
-        K, loc,
-        fmt::format(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+      K, loc,
+      fmt::format(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
   }
 
   [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return mDiags; }
@@ -84,5 +89,3 @@ class DiagContext final
 };
 
 }  // namespace via
-
-#endif

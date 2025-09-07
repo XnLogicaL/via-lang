@@ -1,8 +1,13 @@
-// This file is a part of the via Programming Language project
-// Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
 
-#ifndef VIA_CONFIG_H_
-#define VIA_CONFIG_H_
+#pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
   #define VIA_PLATFORM_WINDOWS
@@ -20,7 +25,7 @@
     #define VIA_PLATFORM_OSX
   #endif
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
-    defined(__bsdi__) || defined(__DragonFly__)
+  defined(__bsdi__) || defined(__DragonFly__)
   #define VIA_PLATFORM_BSD
 #elifdef __EMSCRIPTEN__
   #define VIA_PLATFORM_EMSCRIPTEN
@@ -29,7 +34,7 @@
 #endif
 
 #if defined(VIA_PLATFORM_LINUX) || defined(VIA_PLATFORM_OSX) || \
-    defined(VIA_PLATFORM_BSD)
+  defined(VIA_PLATFORM_BSD)
   #define VIA_PLATFORM_POSIX
 #endif
 
@@ -157,5 +162,3 @@ inline constexpr usize kVersion = 10;
 }
 
 }  // namespace via
-
-#endif
