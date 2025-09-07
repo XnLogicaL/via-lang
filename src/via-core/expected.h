@@ -46,8 +46,7 @@ class Expected final
   };
 
  public:
-  constexpr Expected(T&& val) noexcept : mStorage(fwd<T>(val)), mHasValue(true)
-  {}
+  constexpr Expected(T val) noexcept : mStorage(fwd<T>(val)), mHasValue(true) {}
 
   template <typename E>
   constexpr Expected(Unexpected<E>&& err) noexcept
@@ -107,7 +106,13 @@ class Expected final
   [[nodiscard]] constexpr bool hasValue() const noexcept { return mHasValue; }
   [[nodiscard]] constexpr bool hasError() const noexcept { return !mHasValue; }
 
-  [[nodiscard]] constexpr T& getValue() const noexcept
+  [[nodiscard]] constexpr T& getValue() noexcept
+  {
+    debug::assertm(hasValue(), "Bad Expected<T> access (getValue)");
+    return mStorage.val;
+  }
+
+  [[nodiscard]] constexpr const T& getValue() const noexcept
   {
     debug::assertm(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
@@ -120,13 +125,19 @@ class Expected final
     return mv(mStorage.val);
   }
 
-  [[nodiscard]] constexpr ErrorInfo& getError() const noexcept
+  [[nodiscard]] constexpr Error& getError() noexcept
   {
     debug::assertm(hasError(), "Bad Expected<T> access (getError)");
     return mStorage.err;
   }
 
-  [[nodiscard]] constexpr ErrorInfo&& takeError() noexcept
+  [[nodiscard]] constexpr const Error& getError() const noexcept
+  {
+    debug::assertm(hasError(), "Bad Expected<T> access (getError)");
+    return mStorage.err;
+  }
+
+  [[nodiscard]] constexpr Error&& takeError() noexcept
   {
     debug::assertm(hasError(), "Bad Expected<T> access (takeError)");
     mHasValue = true;

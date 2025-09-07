@@ -123,8 +123,8 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
     auto symbol = fmt::format("{}{}", config::kInitCallbackPrefix, name);
     auto callback = loadSymbol(path, symbol.c_str());
     if (callback.hasError()) {
-      return Unexpected(
-        fmt::format("Failed to load native module: {}", callback.getError()));
+      return Unexpected(fmt::format("Failed to load native module: {}",
+                                    callback.getError().toString()));
     }
 
     auto* moduleInfo = (*callback)(manager);
@@ -176,7 +176,7 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
   auto file = readFile(path);
   if (!file.hasValue()) {
     manager->popImport();
-    return Unexpected(file.getError());
+    return Unexpected(file.takeError());
   }
 
   {
