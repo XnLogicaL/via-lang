@@ -54,26 +54,17 @@ static struct WinLibraryManager
 } windowsLibs;
 #endif
 
-static via::Expected<via::NativeModuleInitCallback> loadSymbol(
+static via::Expected<via::NativeModuleInitCallback> osLoadSymbol(
   const via::fs::path& path,
   const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
-  void* handle = dlopen(path.c_str(), RTLD_NOW);
-  if (handle == nullptr) {
-    goto error;
-  }
-
-  {
-    void* func = dlsym(handle, symbol);
-    if (func == nullptr) {
-      goto error;
+  if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
+    if (void* init = dlsym(handle, symbol)) {
+      return reinterpret_cast<via::NativeModuleInitCallback>(init);
     }
-
-    return reinterpret_cast<via::NativeModuleInitCallback>(func);
   }
 
-error:
   return via::Unexpected(dlerror());
 #else
   return via::Unexpected(
@@ -96,9 +87,9 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
   manager->pushImport(name);
 
   if (manager->hasModule(name)) {
-    if (Module* m = manager->getModule(name); m->mPath == path) {
+    if (Module* module = manager->getModule(name); module->mPath == path) {
       manager->popImport();
-      return m;
+      return module;
     }
   }
 
@@ -109,19 +100,19 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
   }
 
   {
-    Module* m = stModuleAllocator.emplace<Module>();
-    m->mKind = Kind::NATIVE;
-    m->mManager = manager;
-    m->mImportee = importee;
-    m->mPerms = perms;
-    m->mFlags = flags;
-    m->mName = name;
-    m->mPath = path;
+    Module* module = stModuleAllocator.emplace<Module>();
+    module->mKind = Kind::NATIVE;
+    module->mManager = manager;
+    module->mImportee = importee;
+    module->mPerms = perms;
+    module->mFlags = flags;
+    module->mName = name;
+    module->mPath = path;
 
-    manager->addModule(m);
+    manager->addModule(module);
 
     auto symbol = fmt::format("{}{}", config::kInitCallbackPrefix, name);
-    auto callback = loadSymbol(path, symbol.c_str());
+    auto callback = osLoadSymbol(path, symbol.c_str());
     if (callback.hasError()) {
       return Unexpected(fmt::format("Failed to load native module: {}",
                                     callback.getError().toString()));
@@ -133,20 +124,20 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
 
     for (usize i = 0; i < moduleInfo->size; i++) {
       const auto& entry = moduleInfo->begin[i];
-      m->mDefs[entry.id] = entry.def;
+      module->mDefs[entry.id] = entry.def;
     }
 
     if (flags & DUMP_DEFTABLE) {
       fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
                                     Fg::Yellow, Bg::Black, Style::Bold));
 
-      for (const auto& def : m->mDefs) {
+      for (const auto& def : module->mDefs) {
         fmt::println("  {}", def.second->dump());
       }
     }
 
     manager->popImport();
-    return m;
+    return module;
   }
 
   manager->popImport();
@@ -167,9 +158,9 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
   manager->pushImport(name);
 
   if (manager->hasModule(name)) {
-    if (Module* m = manager->getModule(name); m->mPath == path) {
+    if (Module* module = manager->getModule(name); module->mPath == path) {
       manager->popImport();
-      return m;
+      return module;
     }
   }
 
@@ -180,16 +171,16 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
   }
 
   {
-    Module* m = stModuleAllocator.emplace<Module>();
-    m->mKind = Kind::SOURCE;
-    m->mManager = manager;
-    m->mImportee = importee;
-    m->mPerms = perms;
-    m->mFlags = flags;
-    m->mName = name;
-    m->mPath = path;
+    Module* module = stModuleAllocator.emplace<Module>();
+    module->mKind = Kind::SOURCE;
+    module->mManager = manager;
+    module->mImportee = importee;
+    module->mPerms = perms;
+    module->mFlags = flags;
+    module->mName = name;
+    module->mPath = path;
 
-    manager->addModule(m);
+    manager->addModule(module);
 
     DiagContext diags(path.string(), name, *file);
 
@@ -209,17 +200,17 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
       sema::registers::reset();
       sema::stack::reset();
 
-      ir::Builder irb(m, ast, diags);
-      m->mIr = irb.build();
+      ir::Builder irb(module, ast, diags);
+      module->mIr = irb.build();
 
       failed = diags.hasErrors();
       if (failed) {
         goto error;
       }
 
-      for (const auto& node : m->mIr) {
+      for (const auto& node : module->mIr) {
         if (auto symbol = node->getSymbol()) {
-          m->mDefs[*symbol] = Def::from(m->getAllocator(), node);
+          module->mDefs[*symbol] = Def::from(module->getAllocator(), node);
         }
       }
     }
@@ -233,12 +224,12 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
     if (flags & DUMP_AST)
       fmt::println("{}", debug::dump(ast));
     if (flags & DUMP_IR)
-      fmt::println("{}", debug::dump(m->mIr));
+      fmt::println("{}", debug::dump(module->mIr));
     if (flags & DUMP_DEFTABLE) {
       fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
                                     Fg::Yellow, Bg::Black, Style::Bold));
 
-      for (const auto& def : m->mDefs) {
+      for (const auto& def : module->mDefs) {
         fmt::println("  {}", def.second->dump());
       }
     }
@@ -253,7 +244,7 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
       }
     } else {
       manager->popImport();
-      return m;
+      return module;
     }
   }
 
