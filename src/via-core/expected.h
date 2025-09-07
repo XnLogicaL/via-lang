@@ -40,32 +40,33 @@ class Expected final
     T val;
     Error err;
 
-    Storage(T&& val) noexcept : val(mv(val)) {}
-    Storage(Error&& err) noexcept : err(mv(err)) {}
-    ~Storage() noexcept {}
+    constexpr Storage(T&& val) noexcept : val(mv(val)) {}
+    constexpr Storage(Error&& err) noexcept : err(mv(err)) {}
+    constexpr ~Storage() noexcept {}
   };
 
  public:
-  Expected(T&& val) noexcept : mStorage(fwd<T>(val)), mHasValue(true) {}
+  constexpr Expected(T&& val) noexcept : mStorage(fwd<T>(val)), mHasValue(true)
+  {}
 
   template <typename E>
-  Expected(Unexpected<E>&& err) noexcept
+  constexpr Expected(Unexpected<E>&& err) noexcept
       : mStorage(fwd<Error>(make_error<E>(err.takeError()))), mHasValue(false)
   {
     debug::assertm(mStorage.err.hasError(),
                    "Cannot construct Expected<T> with successful Error");
   }
 
-  Expected(const Expected& other) = delete;
+  constexpr Expected(const Expected& other) = delete;
 
-  Expected(Expected&& other)
+  constexpr Expected(Expected&& other)
       : mHasValue(other.hasValue()), mStorage(other.mTakeStorage())
   {
     // UB if we don't do this lol
     other.mIsValid = false;
   }
 
-  ~Expected() noexcept
+  constexpr ~Expected() noexcept
   {
     if (!mIsValid)
       return;
@@ -77,8 +78,8 @@ class Expected final
     }
   }
 
-  Expected& operator=(const Expected& other) = delete;
-  Expected& operator=(Expected&& other)
+  constexpr Expected& operator=(const Expected& other) = delete;
+  constexpr Expected& operator=(Expected&& other)
   {
     if (this != other) {
       if (other.hasValue()) {
@@ -96,34 +97,36 @@ class Expected final
     return *this;
   }
 
-  operator bool() const noexcept { return hasValue(); }
-  T& operator*() const noexcept { return getValue(); }
-  T* operator->() const noexcept { return &getValue(); }
+  constexpr operator bool() const noexcept { return hasValue(); }
+  constexpr T& operator*() noexcept { return getValue(); }
+  constexpr T* operator->() noexcept { return &getValue(); }
+  constexpr const T& operator*() const noexcept { return getValue(); }
+  constexpr const T* operator->() const noexcept { return &getValue(); }
 
  public:
-  [[nodiscard]] bool hasValue() const noexcept { return mHasValue; }
-  [[nodiscard]] bool hasError() const noexcept { return !mHasValue; }
+  [[nodiscard]] constexpr bool hasValue() const noexcept { return mHasValue; }
+  [[nodiscard]] constexpr bool hasError() const noexcept { return !mHasValue; }
 
-  [[nodiscard]] T& getValue() const noexcept
+  [[nodiscard]] constexpr T& getValue() const noexcept
   {
     debug::assertm(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
   }
 
-  [[nodiscard]] T&& takeValue() noexcept
+  [[nodiscard]] constexpr T&& takeValue() noexcept
   {
     debug::assertm(hasValue(), "Bad Expected<T> access (takeValue)");
     mHasValue = false;
     return mv(mStorage.val);
   }
 
-  [[nodiscard]] ErrorInfo& getError() const noexcept
+  [[nodiscard]] constexpr ErrorInfo& getError() const noexcept
   {
     debug::assertm(hasError(), "Bad Expected<T> access (getError)");
     return mStorage.err;
   }
 
-  [[nodiscard]] ErrorInfo&& takeError() noexcept
+  [[nodiscard]] constexpr ErrorInfo&& takeError() noexcept
   {
     debug::assertm(hasError(), "Bad Expected<T> access (takeError)");
     mHasValue = true;
@@ -131,7 +134,7 @@ class Expected final
   }
 
  private:
-  [[nodiscard]] Storage&& mTakeStorage() { return mv(mStorage); }
+  [[nodiscard]] constexpr Storage&& mTakeStorage() { return mv(mStorage); }
 
  private:
   Storage mStorage;
