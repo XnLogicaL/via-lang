@@ -7,14 +7,14 @@
 namespace via
 {
 
-SourceLoc Token::location(const String& source) const
+SourceLoc Token::location(const std::string& source) const
 {
   const usize begin = lexeme - source.cbegin().base();
   const usize end = begin + size;
   return {begin, end};
 }
 
-String Token::dump() const
+std::string Token::dump() const
 {
   return fmt::format("[{} '{}']", magic_enum::enum_name(kind),
                      (*lexeme == '\0') ? "<eof>" : toString());

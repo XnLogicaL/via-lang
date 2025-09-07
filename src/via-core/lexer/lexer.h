@@ -17,7 +17,7 @@ using TokenTree = Vec<Token*>;
 class Lexer final
 {
  public:
-  Lexer(const String& file)
+  Lexer(const std::string& file)
       : mFile(file), mCursor(file.data()), mEnd(file.data() + file.size() - 1)
   {}
 
@@ -34,7 +34,7 @@ class Lexer final
   bool skipComment();
 
  private:
-  const String& mFile;
+  const std::string& mFile;
   const char* mCursor;
   const char* mEnd;
   Allocator mAlloc;
@@ -43,7 +43,7 @@ class Lexer final
 namespace debug
 {
 
-[[nodiscard]] String dump(const TokenTree& tt);
+[[nodiscard]] std::string dump(const TokenTree& tt);
 
 }
 

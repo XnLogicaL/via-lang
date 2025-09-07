@@ -51,7 +51,7 @@ class ModuleManager
 
  private:
   Allocator mAlloc;
-  Vec<String> mImports;
+  Vec<std::string> mImports;
   Vec<fs::path> mImportPaths;
   Map<fs::path, Module*> mModules;
   sema::TypeContext mTypeCtx;

@@ -10,8 +10,8 @@ Def* Def::from(Allocator& alloc, const ir::Stmt* node)
 {
   if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
     auto* fndef = alloc.emplace<FunctionDef>();
-    fndef->kind = FunctionDef::Kind::IR;
-    fndef->ir = fn;
+    fndef->kind = ImplKind::SOURCE;
+    fndef->code.source = fn;
     fndef->symbol = fn->sym;
     return fndef;
   }
@@ -21,19 +21,19 @@ Def* Def::from(Allocator& alloc, const ir::Stmt* node)
 
 Def* Def::newFunction(Allocator& alloc,
                       const NativeCallback fn,
-                      InitList<DefParm> parms,
-                      const sema::Type* ret)
+                      const sema::Type* ret,
+                      std::initializer_list<DefParm>&& parms)
 {
   auto* fndef = alloc.emplace<FunctionDef>();
-  fndef->kind = FunctionDef::Kind::NATIVE;
-  fndef->ntv = fn;
+  fndef->kind = ImplKind::NATIVE;
+  fndef->code.native = fn;
   fndef->parms = parms;
   fndef->ret = ret;
 
   return fndef;
 }
 
-String FunctionDef::dump() const
+std::string FunctionDef::dump() const
 {
   return fmt::format(
       "FunctionDef(symbol={}, ret={}, parms={}, kind={}, code={})", symbol,
@@ -43,7 +43,7 @@ String FunctionDef::dump() const
                     return fmt::format("{}: {}", parm.symbol,
                                        parm.type->dump());
                   }),
-      magic_enum::enum_name(kind), reinterpret_cast<const void*>(ntv));
+      magic_enum::enum_name(kind), reinterpret_cast<const void*>(code.native));
 }
 
 }  // namespace via

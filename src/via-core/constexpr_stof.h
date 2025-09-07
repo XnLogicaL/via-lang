@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "option.h"
 
 namespace via
 {
@@ -18,7 +19,7 @@ inline constexpr bool is_digit(char c)
 // Based on:
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::floating_point T>
-constexpr Optional<T> stof(StringView str, usize* pos = nullptr)
+constexpr Option<T> stof(std::string_view str, usize* pos = nullptr)
 {
   size_t i = 0;
   const size_t n = str.size();

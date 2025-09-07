@@ -386,7 +386,7 @@ TokenTree Lexer::tokenize()
 namespace debug
 {
 
-[[nodiscard]] String dump(const TokenTree& tt)
+[[nodiscard]] std::string dump(const TokenTree& tt)
 {
   std::ostringstream oss;
 

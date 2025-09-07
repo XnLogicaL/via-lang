@@ -10,7 +10,7 @@ namespace via
 namespace sema
 {
 
-Optional<LocalRef> Frame::getLocal(StringView symbol)
+Option<LocalRef> Frame::getLocal(std::string_view symbol)
 {
   for (i64 i = mLocals.size() - 1; i >= 0; --i) {
     Local& local = mLocals[i];
@@ -22,7 +22,7 @@ Optional<LocalRef> Frame::getLocal(StringView symbol)
   return nullopt;
 }
 
-void Frame::setLocal(StringView symbol,
+void Frame::setLocal(std::string_view symbol,
                      const ast::Expr* lval,
                      const ast::Expr* rval,
                      const ast::Type* type,

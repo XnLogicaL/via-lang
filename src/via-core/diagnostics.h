@@ -23,14 +23,14 @@ struct Diagnosis
   };
 
   Kind kind = Kind::Info;
-  SourceLoc loc;  // Absolute location in the source buffer
-  String msg;     // Human-readable message
+  SourceLoc loc;    // Absolute location in the source buffer
+  std::string msg;  // Human-readable message
 };
 
 class DiagContext final
 {
  public:
-  DiagContext(String path, String name, const String& source)
+  DiagContext(std::string path, std::string name, const std::string& source)
       : mPath(path), mName(name), mSource(source)
   {}
 
@@ -41,7 +41,7 @@ class DiagContext final
   void clear() noexcept { mDiags.clear(); }
 
   template <Diagnosis::Kind K>
-  void report(SourceLoc loc, String msg)
+  void report(SourceLoc loc, std::string msg)
   {
     mDiags.emplace_back(K, loc, std::move(msg));
   }
@@ -71,15 +71,15 @@ class DiagContext final
     return false;
   }
 
-  [[nodiscard]] const String& source() const noexcept { return mSource; }
+  [[nodiscard]] const std::string& source() const noexcept { return mSource; }
 
  private:
   // Helper to pretty-print a single diagnosis line with source context.
   void emitOnce(const Diagnosis& d, spdlog::logger* logger) const;
 
  private:
-  String mPath, mName;
-  const String& mSource;
+  std::string mPath, mName;
+  const std::string& mSource;
   Vec<Diagnosis> mDiags{};
 };
 

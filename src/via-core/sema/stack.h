@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "local.h"
+#include "option.h"
 
 namespace via
 {
@@ -19,8 +20,8 @@ class Frame final
  public:
   Local& top() { return mLocals.back(); }
 
-  Optional<LocalRef> getLocal(StringView symbol);
-  void setLocal(StringView symbol,
+  Option<LocalRef> getLocal(std::string_view symbol);
+  void setLocal(std::string_view symbol,
                 const ast::Expr* lval,
                 const ast::Expr* rval,
                 const ast::Type* type,

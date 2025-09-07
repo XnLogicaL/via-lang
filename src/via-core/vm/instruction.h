@@ -236,7 +236,7 @@ struct Instruction
   Opcode op = Opcode::NOP;
   u16 a, b, c;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 }  // namespace via

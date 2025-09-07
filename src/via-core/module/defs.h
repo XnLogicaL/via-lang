@@ -19,10 +19,22 @@ struct Def;
 
 using NativeCallback = ValueRef (*)(CallInfo& ci);
 
+enum class ImplKind
+{
+  SOURCE,
+  NATIVE,
+};
+
+union ImplStorage
+{
+  const ir::StmtFuncDecl* source;
+  NativeCallback native;
+};
+
 struct SymbolInfo
 {
-  const Def* def;
-  const Module* mod;
+  const Def* symbol;
+  const Module* module;
 };
 
 struct DefParm
@@ -41,34 +53,24 @@ using DefTable = DefTableEntry[];
 
 struct Def
 {
-  virtual String dump() const = 0;
+  virtual std::string dump() const = 0;
 
   static Def* from(Allocator& alloc, const ir::Stmt* node);
   static Def* newFunction(Allocator& alloc,
                           const NativeCallback fn,
-                          InitList<DefParm> parms,
-                          const sema::Type* ret);
+                          const sema::Type* ret,
+                          std::initializer_list<DefParm>&& parms);
 };
 
 struct FunctionDef : public Def
 {
-  enum class Kind
-  {
-    IR,
-    NATIVE,
-  } kind;
-
-  union
-  {
-    const ir::StmtFuncDecl* ir;
-    NativeCallback ntv;
-  };
-
+  ImplKind kind;
+  ImplStorage code;
   SymbolId symbol;
-  const sema::Type* ret;
   Vec<DefParm> parms;
+  const sema::Type* ret;
 
-  String dump() const override;
+  std::string dump() const override;
 };
 
 }  // namespace via

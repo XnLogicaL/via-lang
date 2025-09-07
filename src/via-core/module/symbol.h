@@ -13,24 +13,24 @@ namespace via
 {
 
 using SymbolId = u64;
-using QualPath = Deque<String>;
+using QualPath = Deque<std::string>;
 
-inline String toString(const QualPath& qs)
+inline std::string toString(const QualPath& path)
 {
   std::ostringstream oss;
 
-  for (usize i = 0; i < qs.size(); i++) {
+  for (usize i = 0; i < path.size(); i++) {
     if (i > 0) {
       oss << "::";
     }
 
-    oss << qs[i];
+    oss << path[i];
   }
 
   return oss.str();
 }
 
-class SymbolTable final : public InternTable<String, SymbolId>
+class SymbolTable final : public InternTable<std::string, SymbolId>
 {
  public:
   using InternTable::intern;
@@ -44,7 +44,7 @@ class SymbolTable final : public InternTable<String, SymbolId>
 
  public:
   const auto& getSymbols() const { return mMap; }
-  SymbolId intern(const QualPath& qs) { return intern(toString(qs)); }
+  SymbolId intern(const QualPath& path) { return intern(toString(path)); }
 };
 
 }  // namespace via

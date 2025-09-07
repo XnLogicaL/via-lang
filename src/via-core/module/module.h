@@ -10,7 +10,9 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "defs.h"
+#include "expected.h"
 #include "module/symbol.h"
+#include "option.h"
 
 #define VIA_MODINIT_FUNC(id) \
   VIA_EXPORT const via::NativeModuleInfo* viainit_##id(via::ModuleManager* mgr)
@@ -20,28 +22,38 @@
 namespace via
 {
 
+namespace config
+{
+
+inline constexpr const char kInitCallbackPrefix[] = "viainit_";
+
+}
+
 struct NativeModuleInfo
 {
   const usize size;
-  const DefTableEntry* dt;
+  const DefTableEntry* begin;
+
+  explicit NativeModuleInfo(usize size, const DefTableEntry* begin)
+      : size(size), begin(begin)
+  {}
 
   static NativeModuleInfo* construct(Allocator& alloc,
-                                     usize sz,
-                                     const DefTableEntry* dt)
+                                     usize size,
+                                     const DefTableEntry* begin)
   {
-    return alloc.emplace<NativeModuleInfo>(sz, dt);
+    return alloc.emplace<NativeModuleInfo>(size, begin);
   }
-
-  NativeModuleInfo(usize size, const DefTableEntry* dt) : size(size), dt(dt) {}
 };
 
 class ModuleManager;
+
+using NativeModuleInitCallback = NativeModuleInfo* (*)(ModuleManager* mgr);
+
 class Module final
 {
  public:
   friend class ModuleManager;
-
-  using InitCallback = NativeModuleInfo* (*)(ModuleManager* mgr);
 
   enum class Kind : u8
   {
@@ -69,32 +81,34 @@ class Module final
   };
 
  public:
-  static Result<Module*, String> loadSourceFile(ModuleManager* mgr,
-                                                Module* importee,
-                                                const char* name,
-                                                fs::path path,
-                                                u32 perms = 0,
-                                                u32 flags = 0);
+  static Expected<Module*> loadSourceFile(ModuleManager* mgr,
+                                          Module* importee,
+                                          const char* name,
+                                          fs::path path,
+                                          u32 perms = 0,
+                                          u32 flags = 0);
 
-  static Result<Module*, String> loadNativeObject(ModuleManager* mgr,
-                                                  Module* importee,
-                                                  const char* name,
-                                                  fs::path path,
-                                                  u32 perms = 0,
-                                                  u32 flags = 0);
+  static Expected<Module*> loadNativeObject(ModuleManager* mgr,
+                                            Module* importee,
+                                            const char* name,
+                                            fs::path path,
+                                            u32 perms = 0,
+                                            u32 flags = 0);
 
  public:
-  String dump() const;
-  Kind getKind() const { return mKind; }
-  Allocator& getAllocator() { return mAlloc; }
-  Optional<SymbolInfo> lookup(const QualPath& qs);
-  Result<Module*, String> resolveImport(const QualPath& qs);
+  auto getKind() const { return mKind; }
+  auto& getAllocator() { return mAlloc; }
+
+  Option<SymbolInfo> lookup(const QualPath& path);
+  Expected<Module*> resolveImport(const QualPath& path);
+
+  std::string dump() const;
 
  protected:
   Allocator mAlloc;
   Kind mKind;
   u32 mPerms, mFlags;
-  String mName;
+  std::string mName;
   fs::path mPath;
   IrTree mIr;
   Vec<Module*> mImports;

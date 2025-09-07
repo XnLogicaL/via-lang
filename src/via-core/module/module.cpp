@@ -16,31 +16,27 @@
   #include <windows.h>
 #endif
 
-namespace via
-{
+// Modules are supposed to be allocated in a linear fashion, so we can get
+// away with this
+static via::Allocator stModuleAllocator;
 
-static Allocator moduleAlloc;
-
-static Result<String, String> readFile(const fs::path& path)
+static via::Expected<std::string> readFile(const via::fs::path& path)
 {
   std::ifstream ifs(path);
   if (!ifs.is_open()) {
-    return std::unexpected(
-        fmt::format("No such file or directory: '{}'", path.string()));
+    return via::Unexpected(
+      fmt::format("No such file or directory: '{}'", path.string()));
   }
 
-  String line;
-  String content;
+  std::ostringstream oss;
+  std::string line;
+
   while (std::getline(ifs, line)) {
-    content += line;
-    content += '\n';
+    oss << line << '\n';
   }
 
-  return content;
+  return oss.str();
 }
-
-namespace native
-{
 
 #ifdef VIA_PLATFORM_WINDOWS
 static struct WinLibraryManager
@@ -58,8 +54,9 @@ static struct WinLibraryManager
 } windowsLibs;
 #endif
 
-static Result<Module::InitCallback, String> loadSymbol(const fs::path& path,
-                                                       const char* symbol)
+static via::Expected<via::NativeModuleInitCallback> loadSymbol(
+  const via::fs::path& path,
+  const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
   void* handle = dlopen(path.c_str(), RTLD_NOW);
@@ -68,91 +65,75 @@ static Result<Module::InitCallback, String> loadSymbol(const fs::path& path,
   }
 
   {
-    void* sym = dlsym(handle, symbol);
-    if (sym == nullptr) {
+    void* func = dlsym(handle, symbol);
+    if (func == nullptr) {
       goto error;
     }
 
-    return reinterpret_cast<Module::InitCallback>(sym);
+    return reinterpret_cast<via::NativeModuleInitCallback>(func);
   }
 
 error:
-  return std::unexpected(dlerror());
-#elifdef VIA_PLATFORM_WINDOWS
-  // LoadLibrary accepts LPCWSTR or LPCSTR depending on unicode macros; we
-  // assume ANSI path.
-  HMODULE handle = LoadLibraryA(path.string().c_str());
-  if (!handle)
-    return nullptr;
-  windowsLibs.add(handle);
-  FARPROC proc = GetProcAddress(handle, symbol);
-  return reinterpret_cast<ModuleInitFunc>(proc);
+  return via::Unexpected(dlerror());
 #else
-  (void)path;
-  (void)symbol;
-  return nullptr;
+  return via::Unexpected(
+    "Native modules not supported on host operating system");
 #endif
 }
 
-static String getSymbol(const char* name)
+via::Expected<via::Module*> via::Module::loadNativeObject(
+  ModuleManager* manager,
+  Module* importee,
+  const char* name,
+  fs::path path,
+  u32 perms,
+  u32 flags)
 {
-  return fmt::format("viainit_{}", name);
-}
-
-}  // namespace native
-
-Result<Module*, String> Module::loadNativeObject(ModuleManager* mgr,
-                                                 Module* importee,
-                                                 const char* name,
-                                                 fs::path path,
-                                                 u32 perms,
-                                                 u32 flags)
-{
-  if (mgr->isImporting(name)) {
-    return std::unexpected("Recursive import detected");
+  if (manager->isImporting(name)) {
+    return Unexpected("Recursive import detected");
   }
 
-  mgr->pushImport(name);
+  manager->pushImport(name);
 
-  if (mgr->hasModule(name)) {
-    if (Module* m = mgr->getModule(name); m->mPath == path) {
-      mgr->popImport();
+  if (manager->hasModule(name)) {
+    if (Module* m = manager->getModule(name); m->mPath == path) {
+      manager->popImport();
       return m;
     }
   }
 
   auto file = readFile(path);
-  if (!file.has_value()) {
-    mgr->popImport();
-    return std::unexpected(file.error());
+  if (!file.hasValue()) {
+    manager->popImport();
+    return Unexpected(file.getError());
   }
 
   {
-    Module* m = moduleAlloc.emplace<Module>();
+    Module* m = stModuleAllocator.emplace<Module>();
     m->mKind = Kind::NATIVE;
-    m->mManager = mgr;
+    m->mManager = manager;
     m->mImportee = importee;
     m->mPerms = perms;
     m->mFlags = flags;
     m->mName = name;
     m->mPath = path;
 
-    mgr->addModule(m);
+    manager->addModule(m);
 
-    auto symbol = native::getSymbol(name);
-    auto callback = native::loadSymbol(path, symbol.c_str());
-    if (!callback) {
-      return std::unexpected(
-          fmt::format("Failed to load native module: {}", callback.error()));
+    auto symbol = fmt::format("{}{}", config::kInitCallbackPrefix, name);
+    auto callback = loadSymbol(path, symbol.c_str());
+    if (callback.hasError()) {
+      return Unexpected(
+        fmt::format("Failed to load native module: {}", callback.getError()));
     }
 
-    auto* moduleInfo = (*callback)(mgr);
+    auto* moduleInfo = (*callback)(manager);
 
-    debug::assertm(moduleInfo->dt != nullptr);
+    debug::assertm(moduleInfo->begin != nullptr);
 
     for (usize i = 0; i < moduleInfo->size; i++) {
-      const DefTableEntry& dte = moduleInfo->dt[i];
-      m->mDefs[dte.id] = dte.def;
+      const auto& entry = moduleInfo->begin[i];
+      m->mDefs[entry.id] = entry.def;
     }
 
     if (flags & DUMP_DEFTABLE) {
@@ -164,58 +145,58 @@ Result<Module*, String> Module::loadNativeObject(ModuleManager* mgr,
       }
     }
 
-    mgr->popImport();
+    manager->popImport();
     return m;
   }
 
-  mgr->popImport();
+  manager->popImport();
   return nullptr;
 }
 
-Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
-                                               Module* importee,
-                                               const char* name,
-                                               fs::path path,
-                                               u32 perms,
-                                               u32 flags)
+via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
+                                                        Module* importee,
+                                                        const char* name,
+                                                        fs::path path,
+                                                        u32 perms,
+                                                        u32 flags)
 {
-  if (mgr->isImporting(name)) {
-    return std::unexpected("Recursive import detected");
+  if (manager->isImporting(name)) {
+    return Unexpected("Recursive import detected");
   }
 
-  mgr->pushImport(name);
+  manager->pushImport(name);
 
-  if (mgr->hasModule(name)) {
-    if (Module* m = mgr->getModule(name); m->mPath == path) {
-      mgr->popImport();
+  if (manager->hasModule(name)) {
+    if (Module* m = manager->getModule(name); m->mPath == path) {
+      manager->popImport();
       return m;
     }
   }
 
   auto file = readFile(path);
-  if (!file.has_value()) {
-    mgr->popImport();
-    return std::unexpected(file.error());
+  if (!file.hasValue()) {
+    manager->popImport();
+    return Unexpected(file.getError());
   }
 
   {
-    Module* m = moduleAlloc.emplace<Module>();
+    Module* m = stModuleAllocator.emplace<Module>();
     m->mKind = Kind::SOURCE;
-    m->mManager = mgr;
+    m->mManager = manager;
     m->mImportee = importee;
     m->mPerms = perms;
     m->mFlags = flags;
     m->mName = name;
     m->mPath = path;
 
-    mgr->addModule(m);
+    manager->addModule(m);
 
     DiagContext diags(path.string(), name, *file);
 
     Lexer lexer(*file);
-    auto tt = lexer.tokenize();
+    auto ttree = lexer.tokenize();
 
-    Parser parser(*file, tt, diags);
+    Parser parser(*file, ttree, diags);
     auto ast = parser.parse();
 
     bool failed = diags.hasErrors();
@@ -237,8 +218,8 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
       }
 
       for (const auto& node : m->mIr) {
-        if (auto sym = node->getSymbol()) {
-          m->mDefs[*sym] = Def::from(m->getAllocator(), node);
+        if (auto symbol = node->getSymbol()) {
+          m->mDefs[*symbol] = Def::from(m->getAllocator(), node);
         }
       }
     }
@@ -248,7 +229,7 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
     diags.clear();
 
     if (flags & DUMP_TTREE)
-      fmt::println("{}", debug::dump(tt));
+      fmt::println("{}", debug::dump(ttree));
     if (flags & DUMP_AST)
       fmt::println("{}", debug::dump(ast));
     if (flags & DUMP_IR)
@@ -263,39 +244,41 @@ Result<Module*, String> Module::loadSourceFile(ModuleManager* mgr,
     }
 
     if (failed) {
-      for (Module* m = importee; m != nullptr; m = m->mImportee)
-        spdlog::info("Imported by module '{}'", m->mName);
+      for (Module* module = importee; module != nullptr;
+           module = module->mImportee)
+        spdlog::info("Imported by module '{}'", module->mName);
 
       if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
         spdlog::warn("Dump may be invalid due to compilation failure");
       }
     } else {
-      mgr->popImport();
+      manager->popImport();
       return m;
     }
   }
 
-  mgr->popImport();
+  manager->popImport();
   return nullptr;
 }
 
-[[nodiscard]] Optional<SymbolInfo> Module::lookup(const QualPath& qs)
+[[nodiscard]] via::Option<via::SymbolInfo> via::Module::lookup(
+  const QualPath& path)
 {
   if (mManager == nullptr) {
-    return nullopt;
+    return via::nullopt;
   }
 
   const auto& modules = mManager->getModules();
-  if (auto it = modules.find(qs[0]); it != modules.end()) {
+  if (auto it = modules.find(path[0]); it != modules.end()) {
     Module* module = it->second;
-    QualPath new_qs = qs;
+    QualPath new_qs = path;
     new_qs.pop_front();
 
     SymbolId id = SymbolTable::getInstance().intern(new_qs);
 
     return SymbolInfo{
-        .def = module->mDefs[id],
-        .mod = module,
+      .symbol = module->mDefs[id],
+      .module = module,
     };
   } else {
     return nullopt;
@@ -311,54 +294,55 @@ struct ModuleInfo
     NATIVE,
   } kind;
 
-  fs::path path;
+  via::fs::path path;
 };
 
 struct ModuleCandidate
 {
   ModuleInfo::Kind kind;
-  String filename;
+  std::string name;
 };
 
-static Optional<ModuleInfo> resolveImportPath(fs::path root,
-                                              const QualPath& qs,
-                                              const ModuleManager& mgr)
+static via::Option<ModuleInfo> resolveImportPath(
+  via::fs::path root,
+  const via::QualPath& path,
+  const via::ModuleManager& manager)
 {
-  debug::assertm(!qs.empty(), "bad import path");
+  via::debug::assertm(!path.empty(), "bad import path");
 
-  QualPath slice = qs;
-  String moduleName = slice.back();
-  slice.pop_back();
+  via::QualPath pathSlice = path;
+  auto& moduleName = pathSlice.back();
+  pathSlice.pop_back();
 
   // Lambda to try candidates in a given base path
   auto tryCandidatesInPath =
-      [&](const fs::path& basePath) -> Optional<ModuleInfo> {
-    fs::path path = basePath;
-    for (const auto& node : slice) {
+    [&](const via::fs::path& basePath) -> via::Option<ModuleInfo> {
+    via::fs::path path = basePath;
+    for (const auto& node : pathSlice) {
       path /= node;
     }
 
     ModuleCandidate candidates[] = {
-        {ModuleInfo::Kind::SOURCE, moduleName + ".via"},
-        {ModuleInfo::Kind::BINARY, moduleName + ".viac"},
+      {ModuleInfo::Kind::SOURCE, moduleName + ".via"},
+      {ModuleInfo::Kind::BINARY, moduleName + ".viac"},
 #ifdef VIA_PLATFORM_LINUX
-        {ModuleInfo::Kind::NATIVE, moduleName + ".so"},
+      {ModuleInfo::Kind::NATIVE, moduleName + ".so"},
 #elifdef VIA_PLATFORM_WINDOWS
-        {ModuleInfo::Kind::NATIVE, moduleName + ".dll"},
+      {ModuleInfo::Kind::NATIVE, moduleName + ".dll"},
 #endif
     };
 
-    auto tryPath = [&](const fs::path& candidate,
-                       ModuleInfo::Kind kind) -> Optional<ModuleInfo> {
-      if (fs::exists(candidate) && fs::is_regular_file(candidate)) {
+    auto tryPath = [&](const via::fs::path& candidate,
+                       ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
+      if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate)) {
         return ModuleInfo{.kind = kind, .path = candidate};
       } else {
-        return nullopt;
+        return via::nullopt;
       }
     };
 
     for (const auto& c : candidates) {
-      if (auto result = tryPath(path / c.filename, c.kind)) {
+      if (auto result = tryPath(path / c.name, c.kind)) {
         return result;
       }
     }
@@ -369,41 +353,39 @@ static Optional<ModuleInfo> resolveImportPath(fs::path root,
       return result;
     }
 
-    return nullopt;
+    return via::nullopt;
   };
 
-  for (const auto& importPath : mgr.getImportPaths()) {
+  for (const auto& importPath : manager.getImportPaths()) {
     if (auto result = tryCandidatesInPath(importPath)) {
       return result;
     }
   }
 
-  return nullopt;
+  return via::nullopt;
 }
 
-Result<Module*, String> Module::resolveImport(const QualPath& qs)
+via::Expected<via::Module*> via::Module::resolveImport(const QualPath& path)
 {
   debug::assertm(mManager, "unmanaged module detected");
 
-  auto module = resolveImportPath(mPath, qs, *mManager);
-  if (!module.has_value()) {
-    return std::unexpected(fmt::format("Module '{}' not found", toString(qs)));
+  auto module = resolveImportPath(mPath, path, *mManager);
+  if (!module.hasValue()) {
+    return Unexpected(fmt::format("Module '{}' not found", toString(path)));
   }
 
   if ((mPerms & Perms::IMPORT) == 0u) {
-    return std::unexpected("Current module lacks import capabilties");
+    return Unexpected("Current module lacks import capabilties");
   }
 
   switch (module->kind) {
     case ModuleInfo::Kind::SOURCE:
-      return Module::loadSourceFile(mManager, this, qs.back().c_str(),
+      return Module::loadSourceFile(mManager, this, path.back().c_str(),
                                     module->path, mPerms, mFlags);
     case ModuleInfo::Kind::NATIVE:
-      return Module::loadNativeObject(mManager, this, qs.back().c_str(),
+      return Module::loadNativeObject(mManager, this, path.back().c_str(),
                                       module->path, mPerms, mFlags);
     default:
       debug::todo("module types");
   }
 }
-
-}  // namespace via

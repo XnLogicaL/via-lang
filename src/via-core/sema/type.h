@@ -8,6 +8,8 @@
 #include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
 #include "ast/ast.h"
+#include "error.h"
+#include "expected.h"
 #include "memory.h"
 #include "type_visitor.h"
 
@@ -32,16 +34,14 @@ class Type
     SubstParam,     // T -> Arg
   };
 
-  using InferResult = Result<const Type*, String>;
-
  public:
-  static InferResult from(Allocator& alloc, const ast::Type* type);
-  static InferResult infer(Allocator& alloc, const ast::Expr* expr);
+  static Expected<Type*> from(Allocator& alloc, const ast::Type* type);
+  static Expected<Type*> infer(Allocator& alloc, const ast::Expr* expr);
 
  public:
   bool isDependent() const { return flags & 0x1; }
   virtual void accept(TypeVisitor& vis, VisitInfo* vi) const = 0;
-  virtual String dump() const { debug::unimplemented(); }
+  virtual std::string dump() const { debug::unimplemented(); }
 
  public:
   const Kind kind;
@@ -70,7 +70,7 @@ struct BuiltinType : public Type
     vis.visit(*this, vi);
   }
 
-  String dump() const override
+  std::string dump() const override
   {
     return fmt::format("BuiltinType({})", magic_enum::enum_name(bt));
   }

@@ -15,23 +15,24 @@ namespace debug
 {
 
 void assertm(bool cond,
-             String message = "<no-message-specified>",
+             std::string message = "<no-message-specified>",
              std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void bug(
-    String what,
+    std::string what,
     std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void todo(
-    String what,
+    std::string what,
     std::source_location __loc = std::source_location::current());
 
 [[noreturn]] void unimplemented(
-    String what = "<no-message-specified>",
+    std::string what = "<no-message-specified>",
     std::source_location __loc = std::source_location::current());
 
 template <typename T, char LDel = '{', char RDel = '}'>
-String dump(const Vec<T>& vec, Function<String(const std::remove_cv_t<T>&)> fn)
+std::string dump(const Vec<T>& vec,
+                 Function<std::string(const std::remove_cv_t<T>&)> fn)
 {
   std::ostringstream oss;
   oss << LDel;

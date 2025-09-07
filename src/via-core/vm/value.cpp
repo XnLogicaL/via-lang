@@ -42,13 +42,13 @@ Value* Value::construct(Interpreter* ctx, char* string)
       ctx->getAllocator().owns(string),
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
-  return constructImpl(ctx, Kind::String, {.string = string});
+  return constructImpl(ctx, Kind::std::string, {.string = string});
 }
 
 void Value::free()
 {
   switch (mKind) {
-    case Kind::String:
+    case Kind::std::string:
       mCtx->getAllocator().free(mData.string);
       break;
     default:

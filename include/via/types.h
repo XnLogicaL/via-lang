@@ -13,7 +13,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -29,9 +28,6 @@ using std::literals::operator""sv;
 
 template <typename T>
 using Ref = std::reference_wrapper<T>;
-
-using String = std::string;
-using StringView = std::string_view;
 
 template <typename Sig>
 using Function = std::function<Sig>;
@@ -58,9 +54,6 @@ template <typename T>
 using Vec = std::vector<T>;
 
 template <typename T>
-using InitList = std::initializer_list<T>;
-
-template <typename T>
 using Box = std::unique_ptr<T>;
 
 template <typename T>
@@ -74,17 +67,6 @@ using Arc = Atomic<Rc<T>>;
 
 template <typename T, typename U>
 using Pair = std::pair<T, U>;
-
-template <typename T, typename E>
-using Result = std::expected<T, E>;
-
-template <typename... Ts>
-using Variant = std::variant<Ts...>;
-using monostate = std::monostate;
-
-template <typename T>
-using Optional = std::optional<T>;
-inline constexpr auto nullopt = std::nullopt;
 
 using u8 = uint8_t;
 using u16 = uint16_t;

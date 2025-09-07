@@ -15,7 +15,7 @@ Header::Header(const fs::path& binary, DiagContext& diags)
   debug::unimplemented("Header construction from binary file");
 }
 
-String Header::dump() const
+std::string Header::dump() const
 {
   std::ostringstream oss;
   oss << ansiFormat("[section .text]\n", Fg::Yellow, Bg::Black,

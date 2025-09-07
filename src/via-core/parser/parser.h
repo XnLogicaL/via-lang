@@ -19,7 +19,7 @@ namespace via
 class Parser final
 {
  public:
-  Parser(const String& source, const TokenTree& tokens, DiagContext& diag)
+  Parser(const std::string& source, const TokenTree& tokens, DiagContext& diag)
       : mSource(source), mCursor(tokens.cbegin().base()), mDiag(diag)
   {}
 
@@ -74,7 +74,7 @@ class Parser final
 
  private:
   DiagContext& mDiag;
-  const String& mSource;
+  const std::string& mSource;
   const Token* const* mCursor;
   Allocator mAlloc;
 };

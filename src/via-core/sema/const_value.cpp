@@ -13,7 +13,7 @@ namespace via
 namespace sema
 {
 
-Optional<ConstValue> ConstValue::fromToken(const Token& tok)
+Option<ConstValue> ConstValue::fromToken(const Token& tok)
 {
   switch (tok.kind) {
     case Token::Kind::LIT_NIL:
@@ -39,19 +39,21 @@ Optional<ConstValue> ConstValue::fromToken(const Token& tok)
   return nullopt;
 }
 
-String ConstValue::toString() const
+std::string ConstValue::toString() const
 {
+  using enum Kind;
+
   switch (kind()) {
-    case Kind::Nil:
+    case Nil:
       return "nil";
-    case Kind::Boolean:
-      return value<Kind::Boolean>() ? "true" : "false";
-    case Kind::Int:
-      return std::to_string(value<Kind::Int>());
-    case Kind::Float:
-      return std::to_string(value<Kind::Float>());
-    case Kind::String:
-      return fmt::format("\"{}\"", value<Kind::String>());
+    case Boolean:
+      return value<Boolean>() ? "true" : "false";
+    case Int:
+      return std::to_string(value<Int>());
+    case Float:
+      return std::to_string(value<Float>());
+    case String:
+      return fmt::format("\"{}\"", value<String>());
     default:
       break;
   }
@@ -59,11 +61,11 @@ String ConstValue::toString() const
   return "<unknown-cv-type>";
 }
 
-String ConstValue::dump() const
+std::string ConstValue::dump() const
 {
   return fmt::format(
-      "{} [{} {}]", ansiFormat("constant", Fg::Magenta, Bg::Black, Style::Bold),
-      magic_enum::enum_name(kind()), toString());
+    "{} [{} {}]", ansiFormat("constant", Fg::Magenta, Bg::Black, Style::Bold),
+    magic_enum::enum_name(kind()), toString());
 }
 
 }  // namespace sema

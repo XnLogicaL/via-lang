@@ -13,7 +13,7 @@ namespace ir
 
 using enum Diagnosis::Kind;
 
-static SymbolId internSymbol(const String& symbol)
+static SymbolId internSymbol(const std::string& symbol)
 {
   return SymbolTable::getInstance().intern(symbol);
 }
@@ -144,15 +144,15 @@ class StmtVisitor final : public ast::Visitor
     using enum ast::StmtImport::TailKind;
 
     auto* vi = StmtVisitInfo::from(raw);
-    QualPath qs;
+    QualPath path;
 
     for (const Token* tok : stmtImport.path) {
-      qs.push_back(tok->toString());
+      path.push_back(tok->toString());
     }
 
     switch (stmtImport.kind) {
       case Import: {
-        auto result = vi->module->resolveImport(qs);
+        auto result = vi->module->resolveImport(path);
         if (!result.has_value()) {
           vi->diags->report<Error>(stmtImport.loc, result.error());
         }
@@ -177,9 +177,9 @@ class StmtVisitor final : public ast::Visitor
         fn->ret = *ret;
       } else {
         vi->diags->report<Error>(
-            sfn.ret->loc,
-            fmt::format("Function '{}' has invalid return type '{}'",
-                        sfn.name->toStringView(), ret.error()));
+          sfn.ret->loc,
+          fmt::format("Function '{}' has invalid return type '{}'",
+                      sfn.name->toStringView(), ret.error()));
       }
     } else {
       debug::unimplemented();
@@ -193,9 +193,9 @@ class StmtVisitor final : public ast::Visitor
         parm.type = *type;
       } else {
         vi->diags->report<Error>(
-            sfn.ret->loc,
-            fmt::format("Function parameter '{}' has invalid type '{}'",
-                        astParm->sym->toStringView(), type.error()));
+          sfn.ret->loc,
+          fmt::format("Function parameter '{}' has invalid type '{}'",
+                      astParm->sym->toStringView(), type.error()));
       }
     }
 

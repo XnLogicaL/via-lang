@@ -113,13 +113,16 @@ struct Token
   const char* lexeme;
   usize size;
 
-  String dump() const;
-  String toString() const { return String(lexeme, size); }
-  StringView toStringView() const { return StringView(lexeme, size); }
-  SourceLoc location(const String& source) const;
+  std::string dump() const;
+  std::string toString() const { return std::string(lexeme, size); }
+  std::string_view toStringView() const
+  {
+    return std::string_view(lexeme, size);
+  }
+  SourceLoc location(const std::string& source) const;
 };
 
-inline String toString(const Token& tok)
+inline std::string toString(const Token& tok)
 {
   return tok.dump();
 }

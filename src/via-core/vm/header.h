@@ -32,7 +32,7 @@ struct Header
   Header() = default;
   Header(const std::filesystem::path& binary, DiagContext& diags);
 
-  String dump() const;
+  std::string dump() const;
 };
 
 }  // namespace via

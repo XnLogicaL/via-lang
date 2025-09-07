@@ -6,7 +6,7 @@
 namespace via
 {
 
-[[noreturn]] void panic(String message)
+[[noreturn]] void panic(std::string message)
 {
   spdlog::error("panic: {}", message);
   std::terminate();

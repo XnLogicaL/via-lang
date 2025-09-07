@@ -30,7 +30,7 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
   }
 
   u64 line = 0, col = 0;
-  StringView lineView;
+  std::string_view lineView;
 
   if (d.loc.begin >= mSource.size()) {
     logger->log(level, "{}", d.msg);
@@ -58,7 +58,8 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
 
   ++line;                                       // 1-based
   col = static_cast<u64>(ptr - lineBegin) + 1;  // 1-based
-  lineView = StringView(lineBegin, static_cast<usize>(lineEnd - lineBegin));
+  lineView =
+      std::string_view(lineBegin, static_cast<usize>(lineEnd - lineBegin));
 
   logger->log(
       level, "{} {} {}", d.msg,
@@ -71,12 +72,13 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
   spdlog::set_pattern("%v");
   logger->log(spdlog::level::off, " {} | {}", line, lineView);
 
-  String caret(lineView.size(), ' ');
+  std::string caret(lineView.size(), ' ');
   if (col > 0 && col - 1 < caret.size()) {
     caret[col - 1] = '^';
   }
 
-  logger->log(spdlog::level::off, " {} | {}", String(lineWidth, ' '), caret);
+  logger->log(spdlog::level::off, " {} | {}", std::string(lineWidth, ' '),
+              caret);
   spdlog::set_pattern("%^%l:%$ %v");
 }
 

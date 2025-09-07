@@ -22,7 +22,7 @@ struct SourceLoc
   usize end;
 
   // Returns the absolute location as a relative location.
-  RelSourceLoc toRelative(const String& source) const;
+  RelSourceLoc toRelative(const std::string& source) const;
 };
 
 }  // namespace via

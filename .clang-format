@@ -12,3 +12,4 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 IndentPPDirectives: BeforeHash
+ContinuationIndentWidth: 2

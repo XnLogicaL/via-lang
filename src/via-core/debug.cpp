@@ -15,7 +15,7 @@ namespace debug
   std::unreachable();
 }
 
-void assertm(bool cond, String message, std::source_location __loc)
+void assertm(bool cond, std::string message, std::source_location __loc)
 {
 #ifndef NDEBUG
   if (!cond) {
@@ -24,19 +24,19 @@ void assertm(bool cond, String message, std::source_location __loc)
 #endif
 }
 
-[[noreturn]] void bug(String what, std::source_location __loc)
+[[noreturn]] void bug(std::string what, std::source_location __loc)
 {
   debug::assertm(false, fmt::format("internal bug detected: {}", what), __loc);
   invoke_ub();
 }
 
-[[noreturn]] void todo(String what, std::source_location __loc)
+[[noreturn]] void todo(std::string what, std::source_location __loc)
 {
   debug::assertm(false, fmt::format("todo: {}", what), __loc);
   invoke_ub();
 }
 
-[[noreturn]] void unimplemented(String what, std::source_location __loc)
+[[noreturn]] void unimplemented(std::string what, std::source_location __loc)
 {
   debug::assertm(false, fmt::format("unimplemented: {}", what), __loc);
   invoke_ub();

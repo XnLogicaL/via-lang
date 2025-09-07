@@ -6,6 +6,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "option.h"
 
 namespace via
 {
@@ -17,9 +18,9 @@ struct View
 };
 
 template <>
-struct View<String>
+struct View<std::string>
 {
-  using type = StringView;
+  using type = std::string_view;
 };
 
 template <typename T, typename Id = u64>
@@ -39,7 +40,7 @@ class InternTable
     return it->second;
   }
 
-  Optional<View> lookup(Id id) const
+  Option<View> lookup(Id id) const
   {
     if (auto it = mReverse.find(id); it != mReverse.end())
       return it->second;

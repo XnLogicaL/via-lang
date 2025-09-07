@@ -6,7 +6,7 @@
 namespace via
 {
 
-RelSourceLoc SourceLoc::toRelative(const String& source) const
+RelSourceLoc SourceLoc::toRelative(const std::string& source) const
 {
   usize line = 1;
   usize init = 0;

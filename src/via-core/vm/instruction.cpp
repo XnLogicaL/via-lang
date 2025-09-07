@@ -369,7 +369,7 @@ static char getOperandPrefix(Operand kind)
   return 0x00;
 }
 
-String Instruction::dump() const
+std::string Instruction::dump() const
 {
   const u16 ops[] = {a, b, c};
   const InstructionLayout* il = nullptr;
@@ -396,7 +396,7 @@ String Instruction::dump() const
       break;
     }
 
-    String realPrefix;
+    std::string realPrefix;
 
     char pref;
     if ((pref = getOperandPrefix(*ok), pref == 0))

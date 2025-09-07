@@ -15,23 +15,24 @@ VIA_MOD_FUNC(print)
 
 VIA_MODINIT_FUNC(io)
 {
-  using enum via::sema::BuiltinType::Kind;
-
   auto& symtab = via::SymbolTable::getInstance();
   auto& types = mgr->getTypeContext();
   auto& alloc = mgr->getAllocator();
 
   static via::DefTable dt = {
-      {
-          symtab.intern("print"),
-          via::Def::newFunction(
-              alloc, io::print,
-              {{
-                  .symbol = symtab.intern("__s"),
-                  .type = types.getBuiltinTypeInstance(String),
-              }},
-              types.getBuiltinTypeInstance(Nil)),
-      },
+    {
+      symtab.intern("print"),
+      via::Def::newFunction(
+        alloc, io::print,
+        types.getBuiltinTypeInstance(via::sema::BuiltinType::Kind::Nil),
+        {
+          {
+            .symbol = symtab.intern("__s"),
+            .type = types.getBuiltinTypeInstance(
+              via::sema::BuiltinType::Kind::String),
+          },
+        }),
+    },
   };
 
   return via::NativeModuleInfo::construct(alloc, 1, dt);

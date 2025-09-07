@@ -11,7 +11,7 @@
 namespace via
 {
 
-[[noreturn]] void panic(String message);
+[[noreturn]] void panic(std::string message);
 
 template <typename... Args>
 [[noreturn]] void panic(fmt::format_string<Args...> fmt, Args&&... args)

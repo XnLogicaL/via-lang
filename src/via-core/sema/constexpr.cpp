@@ -19,7 +19,7 @@ bool isConstExpr(Module* m, const ir::Expr* expr)
   debug::unimplemented("isConstExpr");
 }
 
-Result<ConstValue, via::String> evalConstExpr(Module* m, const ir::Expr* expr)
+Expected<ConstValue> evalConstExpr(Module* m, const ir::Expr* expr)
 {
   debug::unimplemented("evalConstExpr");
 }

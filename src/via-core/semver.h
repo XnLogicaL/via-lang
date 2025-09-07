@@ -30,7 +30,7 @@ consteval Version getSemanticVersion()
   };
 }
 
-inline String toString(const Version& v)
+inline std::string toString(const Version& v)
 {
   return fmt::format("{}.{}.{}", v.major, v.minor, v.patch);
 }

@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "const_value.h"
+#include "expected.h"
 #include "ir/ir.h"
 
 namespace via
@@ -18,7 +19,7 @@ namespace sema
 {
 
 bool isConstExpr(Module* m, const ir::Expr* expr);
-Result<ConstValue, String> evalConstExpr(Module* m, const ir::Expr* expr);
+Expected<ConstValue> evalConstExpr(Module* m, const ir::Expr* expr);
 
 }  // namespace sema
 

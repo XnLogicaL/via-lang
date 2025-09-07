@@ -24,7 +24,7 @@ class Local final
 
  public:
   Local() = default;
-  Local(StringView symbol,
+  Local(std::string_view symbol,
         const ast::Expr* lval,
         const ast::Expr* rval,
         const ast::Type* type,
@@ -41,7 +41,7 @@ class Local final
  public:
   usize getVersion() const { return mVersion; }
   u64 getQualifiers() const { return mQuals; }
-  StringView getSymbol() const { return mSymbol; }
+  std::string_view getSymbol() const { return mSymbol; }
   const ast::Expr* getLVal() const { return mLVal; }
   const ast::Expr* getRVal() const { return mRVal; }
   const ast::Type* getType() const { return mType; }
@@ -49,7 +49,7 @@ class Local final
  protected:
   const usize mVersion = 0;
   const u64 mQuals = 0ULL;
-  const StringView mSymbol = "<invalid-local>";
+  const std::string_view mSymbol = "<invalid-local>";
   const ast::Expr* mLVal = nullptr;
   const ast::Expr* mRVal = nullptr;
   const ast::Type* mType = nullptr;

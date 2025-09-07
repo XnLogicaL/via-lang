@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "interpreter.h"
+#include "option.h"
 #include "value_ref.h"
 
 namespace via
@@ -63,8 +64,8 @@ class Value final
   bool getBool() const { return mData.boolean; }
   char* getString() const { return mData.string; }
 
-  Optional<int_type> asCInt() const;
-  Optional<float_type> asCFloat() const;
+  Option<int_type> asCInt() const;
+  Option<float_type> asCFloat() const;
   bool asCBool() const;
   char* asCString() const;
 

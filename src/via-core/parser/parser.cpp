@@ -19,9 +19,9 @@ struct ParserError
 {
  public:
   SourceLoc loc;
-  String msg;
+  std::string msg;
 
-  explicit ParserError(SourceLoc loc, String msg) : loc(loc), msg(msg) {}
+  explicit ParserError(SourceLoc loc, std::string msg) : loc(loc), msg(msg) {}
 
   template <typename... Args>
   explicit ParserError(SourceLoc loc, Fmt<Args...> form, Args... args)

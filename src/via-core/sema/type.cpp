@@ -114,7 +114,7 @@ static BinaryOp toBinaryOp(Token::Kind kind)
 struct UnaryVisitInfo : VisitInfo
 {
   const Type* type = nullptr;
-  String error = "<no-error>";
+  std::string error = "<no-error>";
   Allocator& alloc;
   UnaryOp op;
 
@@ -134,7 +134,7 @@ struct UnaryVisitInfo : VisitInfo
 struct BinaryVisitInfo : VisitInfo
 {
   const Type* type = nullptr;
-  String error = "<no-error>";
+  std::string error = "<no-error>";
   Allocator& alloc;
   BinaryOp op;
 
@@ -202,7 +202,7 @@ struct BinaryVisitor : TypeVisitor
 struct InferVisitInfo : VisitInfo
 {
   const Type* type = nullptr;
-  String error = "<no-error>";
+  std::string error = "<no-error>";
   Allocator& alloc;
 
   explicit InferVisitInfo(Allocator& alloc) : alloc(alloc) {}
@@ -244,7 +244,7 @@ struct InferVisitor : ast::Visitor
         kind = Float;
         break;
       case LIT_STRING:
-        kind = String;
+        kind = std::string;
         break;
       default:
         debug::bug("inference visitor: bad literal token");
@@ -258,7 +258,7 @@ struct InferVisitor : ast::Visitor
   {
     auto* vi = InferVisitInfo::from(raw);
     Frame& frame = stack::top();
-    StringView symbol = esym.sym->toStringView();
+    std::string_view symbol = esym.sym->toStringView();
 
     if (auto lref = frame.getLocal(symbol)) {
       lref->local.getType()->accept(*this, raw);
@@ -310,7 +310,7 @@ struct InferVisitor : ast::Visitor
         kind = Bool;
         break;
       case KW_STRING:
-        kind = String;
+        kind = std::string;
         break;
       default:
         debug::bug("unmapped builtin type token kind (wtf)");

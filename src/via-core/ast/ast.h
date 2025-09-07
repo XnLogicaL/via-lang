@@ -23,7 +23,7 @@ struct Expr
 {
   SourceLoc loc;
 
-  virtual String dump(usize& depth) const = 0;
+  virtual std::string dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -31,7 +31,7 @@ struct Stmt
 {
   SourceLoc loc;
 
-  virtual String dump(usize& depth) const = 0;
+  virtual std::string dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -39,7 +39,7 @@ struct Type
 {
   SourceLoc loc;
 
-  virtual String dump(usize& depth) const = 0;
+  virtual std::string dump(usize& depth) const = 0;
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
 };
 
@@ -50,7 +50,7 @@ struct AccessIdent
   Vec<const Type*> gens;
   SourceLoc loc;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 struct Path
@@ -58,7 +58,7 @@ struct Path
   Vec<const Token*> path;
   SourceLoc loc;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 struct Parameter
@@ -67,7 +67,7 @@ struct Parameter
   const Type* type;
   SourceLoc loc;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 struct AttributeGroup
@@ -81,12 +81,12 @@ struct AttributeGroup
   Vec<Attribute> ats;
   SourceLoc loc;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 #define NODE_FIELDS(klass)                                \
   using klass::loc;                                       \
-  String dump(usize& depth) const override;               \
+  std::string dump(usize& depth) const override;          \
   void accept(Visitor& vis, VisitInfo* vi) const override \
   {                                                       \
     vis.visit(*this, vi);                                 \
@@ -362,7 +362,7 @@ using SyntaxTree = Vec<const ast::Stmt*>;
 namespace debug
 {
 
-[[nodiscard]] String dump(const SyntaxTree& ast);
+[[nodiscard]] std::string dump(const SyntaxTree& ast);
 
 }
 

@@ -7,6 +7,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "module/symbol.h"
+#include "option.h"
 #include "sema/const_value.h"
 #include "sema/type.h"
 #include "visitor.h"
@@ -20,24 +21,24 @@ namespace ir
 struct Expr
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
-  virtual String dump(usize& depth) const = 0;
+  virtual std::string dump(usize& depth) const = 0;
 };
 
 struct Stmt
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
-  virtual String dump(usize& depth) const = 0;
-  virtual Optional<SymbolId> getSymbol() const { return nullopt; }
+  virtual std::string dump(usize& depth) const = 0;
+  virtual Option<SymbolId> getSymbol() const { return nullopt; }
 };
 
 struct Terminator
 {
   virtual void accept(Visitor& vis, VisitInfo* vi) const = 0;
-  virtual String dump(usize& depth) const = 0;
+  virtual std::string dump(usize& depth) const = 0;
 };
 
 #define NODE_FIELDS()                                     \
-  String dump(usize& depth) const override;               \
+  std::string dump(usize& depth) const override;          \
   void accept(Visitor& vis, VisitInfo* vi) const override \
   {                                                       \
     vis.visit(*this, vi);                                 \
@@ -77,7 +78,7 @@ struct Parm
   SymbolId sym;
   const sema::Type* type;
 
-  String dump() const;
+  std::string dump() const;
 };
 
 struct ExprConstant : public Expr
@@ -199,7 +200,7 @@ struct StmtFuncDecl : public Stmt
   Vec<Parm> parms;
   StmtBlock* body;
 
-  Optional<SymbolId> getSymbol() const override { return sym; }
+  Option<SymbolId> getSymbol() const override { return sym; }
 };
 
 struct StmtBlock : public Stmt
@@ -217,7 +218,7 @@ using IrTree = Vec<ir::Stmt*>;
 namespace debug
 {
 
-[[nodiscard]] String dump(const IrTree& ir);
+[[nodiscard]] std::string dump(const IrTree& ir);
 
 }
 
