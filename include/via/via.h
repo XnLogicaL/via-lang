@@ -30,7 +30,7 @@
 #include <sema/constexpr.h>
 #include <sema/register.h>
 #include <semver.h>
-#include <vm/header.h>
+#include <vm/executable.h>
 #include <vm/instruction.h>
 #include <vm/interpreter.h>
 #include <vm/stack.h>

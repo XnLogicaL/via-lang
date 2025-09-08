@@ -44,8 +44,10 @@ class Type
 
  public:
   bool isDependent() const noexcept { return flags & 0x1; }
-  bool isIntegral() const noexcept;
-  bool isArithmetic() const noexcept;
+  bool isArithmetic() const noexcept { return isIntegral() || isFloat(); }
+
+  virtual bool isIntegral() const noexcept { return false; }
+  virtual bool isFloat() const noexcept { return false; }
   virtual std::string dump() const { debug::unimplemented(); }
 
  public:
@@ -69,6 +71,9 @@ struct BuiltinType : public Type
 
   const Kind bt;
   explicit BuiltinType(Kind b) : Type(Type::Kind::Builtin, 0), bt(b) {}
+
+  bool isIntegral() const noexcept override { return bt == Kind::Int; }
+  bool isFloat() const noexcept override { return bt == Kind::Float; }
 
   std::string dump() const override
   {

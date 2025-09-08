@@ -77,10 +77,10 @@ std::string ir::ExprBinary::dump(usize&) const
 
 std::string ir::ExprCall::dump(usize&) const
 {
-  return fmt::format("call {}, {}", callee->dump(ZERO),
-                     debug::dump<Expr*, '[', ']'>(args, [](const auto& expr) {
-                       return expr->dump(ZERO);
-                     }));
+  return fmt::format(
+    "call {}, {}", callee->dump(ZERO),
+    debug::dump<const Expr*, '[', ']'>(
+      args, [](const auto& expr) { return expr->dump(ZERO); }));
 }
 
 std::string ir::ExprSubscript::dump(usize&) const

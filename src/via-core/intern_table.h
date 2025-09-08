@@ -17,13 +17,13 @@ namespace via
 {
 
 template <typename T>
-struct View
+struct view
 {
   using type = std::reference_wrapper<T>;
 };
 
 template <>
-struct View<std::string>
+struct view<std::string>
 {
   using type = std::string_view;
 };
@@ -32,23 +32,24 @@ template <typename T, typename Id = u64>
 class InternTable
 {
  public:
-  using View = View<T>::type;
+  using view_type = typename view<T>::type;
 
  public:
-  Id intern(const T& t)
+  Id intern(const T& val)
   {
-    auto [it, inserted] = mMap.try_emplace(t, mNextId);
+    auto [it, inserted] = mMap.try_emplace(val, mNextId);
     if (inserted) {
-      mReverse[mNextId] = t;
+      mReverse[mNextId] = val;
       mNextId++;
     }
     return it->second;
   }
 
-  Option<View> lookup(Id id) const
+  Option<view_type> lookup(Id id) const
   {
-    if (auto it = mReverse.find(id); it != mReverse.end())
-      return it->second;
+    if (auto it = mReverse.find(id); it != mReverse.end()) {
+      return view_type(it->second);
+    }
     return nullopt;
   }
 

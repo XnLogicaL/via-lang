@@ -2,7 +2,7 @@
 
 mod flags {
   struct FlagContext {
-    var flags: int = 0;
+    var flags: int = 0,
 
     fn append(flag: int) -> nil {
       self.flags |= flag;
@@ -18,7 +18,7 @@ mod main {
   fn call() -> nil {
     using module {
       enum CLIFlags of int {
-        DoSomeBs = 1 shl 1,
+        DoSomeBs = 1 << 1,
       }
 
       var ctx = FlagContext::new();

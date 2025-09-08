@@ -14,6 +14,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "lexer/location.h"
+#include "utility.h"
 
 namespace via
 {

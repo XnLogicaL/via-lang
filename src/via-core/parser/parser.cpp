@@ -829,7 +829,7 @@ const StmtModule* via::Parser::parseStmtModule()
         default:
           throw ParserError(tok->location(mSource),
                             "Unexpected token '{}' ({}) while parsing module",
-                            magic_enum::enum_name(tok->kind), tok->toString());
+                            tok->toString(), magic_enum::enum_name(tok->kind));
       }
     }
   }

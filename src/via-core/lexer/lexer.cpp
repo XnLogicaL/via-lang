@@ -28,7 +28,7 @@ static constexpr TokenReprPair kLexKeywords[] = {
   {"or", KW_OR},         {"not", KW_NOT},       {"return", KW_RETURN},
   {"as", KW_AS},         {"import", KW_IMPORT}, {"mod", KW_MODULE},
   {"struct", KW_STRUCT}, {"enum", KW_ENUM},     {"using", KW_USING},
-  {"bool", KW_BOOL},     {"isize", KW_INT},     {"float", KW_FLOAT},
+  {"bool", KW_BOOL},     {"int", KW_INT},       {"float", KW_FLOAT},
   {"string", KW_STRING},
 };
 
@@ -384,7 +384,7 @@ via::TokenTree via::Lexer::tokenize()
   return toks;
 }
 
-[[nodiscard]] std::string dump(const via::TokenTree& tt)
+[[nodiscard]] std::string via::debug::dump(const via::TokenTree& tt)
 {
   std::ostringstream oss;
   for (const auto* tk : tt) {

@@ -11,7 +11,6 @@
 #include "ir/ir.h"
 #include "sema/stack.h"
 
-namespace ast = via::ast;
 namespace ir = via::ir;
 namespace sema = via::sema;
 
@@ -127,17 +126,30 @@ ir::Expr* via::IRBuilder::lowerExprUnary(const ast::ExprUnary* exprUnary)
 
 ir::Expr* via::IRBuilder::lowerExprBinary(const ast::ExprBinary* exprBinary)
 {
-  if (auto type = sema::Type::infer(mAlloc, exprBinary)) {
-    auto* binary = mAlloc.emplace<ir::ExprBinary>();
-    binary->op = toBinaryOp(exprBinary->op->kind);
-    binary->lhs = lowerExpr(exprBinary->lhs);
-    binary->rhs = lowerExpr(exprBinary->rhs);
-    binary->type = *type;
-    return binary;
-  } else {
-    mDiags.report<Dk::Error>(exprBinary->loc, "Invalid binary expression");
-    return nullptr;
+  auto* binary = mAlloc.emplace<ir::ExprBinary>();
+  binary->op = toBinaryOp(exprBinary->op->kind);
+  binary->lhs = lowerExpr(exprBinary->lhs);
+  binary->rhs = lowerExpr(exprBinary->rhs);
+
+  switch (binary->op) {
+    case BinaryOp::ADD:
+    case BinaryOp::SUB:
+    case BinaryOp::MUL:
+    case BinaryOp::DIV:
+    case BinaryOp::POW:
+    case BinaryOp::MOD:
+    case BinaryOp::AND:
+    case BinaryOp::OR:
+    case BinaryOp::BAND:
+    case BinaryOp::BOR:
+    case BinaryOp::BXOR:
+    case BinaryOp::BSHL:
+    case BinaryOp::BSHR:
+    default:
+      break;
   }
+
+  return binary;
 }
 
 ir::Expr* via::IRBuilder::lowerExprGroup(const ast::ExprGroup* exprGroup)
@@ -145,24 +157,68 @@ ir::Expr* via::IRBuilder::lowerExprGroup(const ast::ExprGroup* exprGroup)
   return lowerExpr(exprGroup->expr);
 }
 
-ir::Expr* via::IRBuilder::lowerExprCall(const ast::ExprCall* exprCall) {}
+ir::Expr* via::IRBuilder::lowerExprCall(const ast::ExprCall* exprCall)
+{
+  return nullptr;
+}
 
 ir::Expr* via::IRBuilder::lowerExprSubscript(
   const ast::ExprSubscript* exprSubsc)
-{}
+{
+  return nullptr;
+}
 
-ir::Expr* via::IRBuilder::lowerExprCast(const ast::ExprCast* exprCast) {}
+ir::Expr* via::IRBuilder::lowerExprCast(const ast::ExprCast* exprCast)
+{
+  return nullptr;
+}
 
 ir::Expr* via::IRBuilder::lowerExprTernary(const ast::ExprTernary* exprTernary)
-{}
+{
+  return nullptr;
+}
 
-ir::Expr* via::IRBuilder::lowerExprArray(const ast::ExprArray* exprArray) {}
+ir::Expr* via::IRBuilder::lowerExprArray(const ast::ExprArray* exprArray)
+{
+  return nullptr;
+}
 
-ir::Expr* via::IRBuilder::lowerExprTuple(const ast::ExprTuple* exprTuple) {}
+ir::Expr* via::IRBuilder::lowerExprTuple(const ast::ExprTuple* exprTuple)
+{
+  return nullptr;
+}
 
-ir::Expr* via::IRBuilder::lowerExprLambda(const ast::ExprLambda* exprLambda) {}
+ir::Expr* via::IRBuilder::lowerExprLambda(const ast::ExprLambda* exprLambda)
+{
+  return nullptr;
+}
 
-ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr) {}
+ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr)
+{
+#define CASE(type, handler)               \
+  if TRY_COERCE (const type, inner, expr) \
+    return handler(inner);
+
+  CASE(ast::ExprLit, lowerExprLit)
+  CASE(ast::ExprSymbol, lowerExprSymbol)
+  CASE(ast::ExprStaticAccess, lowerExprStaticAccess)
+  CASE(ast::ExprDynAccess, lowerExprDynamicAccess)
+  CASE(ast::ExprUnary, lowerExprUnary)
+  CASE(ast::ExprBinary, lowerExprBinary)
+  CASE(ast::ExprGroup, lowerExprGroup)
+  CASE(ast::ExprCall, lowerExprCall)
+  CASE(ast::ExprSubscript, lowerExprSubscript)
+  CASE(ast::ExprCast, lowerExprCast)
+  CASE(ast::ExprTernary, lowerExprTernary)
+  CASE(ast::ExprArray, lowerExprArray)
+  CASE(ast::ExprTuple, lowerExprTuple)
+  CASE(ast::ExprLambda, lowerExprLambda)
+
+  debug::bug(
+    fmt::format("unhandled case IRBuilder::lowerExpr({})", TYPENAME(*expr)));
+
+#undef CASE
+}
 
 via::IRTree via::IRBuilder::build()
 {

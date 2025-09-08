@@ -35,47 +35,46 @@ struct Stmt
   virtual Option<SymbolId> getSymbol() const { return nullopt; }
 };
 
-struct Terminator
+struct Term
 {
   virtual std::string dump(usize& depth) const = 0;
 };
 
 #define NODE_FIELDS() std::string dump(usize& depth) const override;
 
-struct TrReturn : public Terminator
+struct TrReturn : public Term
 {
   NODE_FIELDS()
   const Expr* val;
 };
 
-struct TrContinue : public Terminator
+struct TrContinue : public Term
 {
   NODE_FIELDS()
 };
 
-struct TrBreak : public Terminator
+struct TrBreak : public Term
 {
   NODE_FIELDS()
 };
 
-struct TrBranch : public Terminator
+struct TrBranch : public Term
 {
   NODE_FIELDS()
   usize lbl;
 };
 
-struct TrCondBranch : public Terminator
+struct TrCondBranch : public Term
 {
   NODE_FIELDS()
-  Expr* cnd;
+  const Expr* cnd;
   usize iftrue, iffalse;
 };
 
 struct Parm
 {
   SymbolId sym;
-  sema::Type* type;
-
+  const sema::Type* type;
   std::string dump() const;
 };
 
@@ -107,59 +106,59 @@ struct ExprAccess : public Expr
     DYNAMIC,
   } kind;
 
-  Expr *lval, *idx;
+  const Expr *lval, *idx;
 };
 
 struct ExprUnary : public Expr
 {
   NODE_FIELDS(Expr)
   UnaryOp op;
-  Expr* expr;
+  const Expr* expr;
 };
 
 struct ExprBinary : public Expr
 {
   NODE_FIELDS(Expr)
   BinaryOp op;
-  Expr *lhs, *rhs;
+  const Expr *lhs, *rhs;
 };
 
 struct ExprCall : public Expr
 {
   NODE_FIELDS(Expr)
-  Expr* callee;
-  Vec<Expr*> args;
+  const Expr* callee;
+  Vec<const Expr*> args;
 };
 
 struct ExprSubscript : public Expr
 {
   NODE_FIELDS(Expr)
-  Expr *expr, *idx;
+  const Expr *expr, *idx;
 };
 
 struct ExprCast : public Expr
 {
   NODE_FIELDS(Expr)
-  Expr* expr;
-  const sema::Type* type;
+  const Expr* expr;
+  const sema::Type* cast;
 };
 
 struct ExprTernary : public Expr
 {
   NODE_FIELDS(Expr)
-  Expr *cnd, *iftrue, *iffalse;
+  const Expr *cnd, *iftrue, *iffalse;
 };
 
 struct ExprArray : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<Expr*> exprs;
+  Vec<const Expr*> exprs;
 };
 
 struct ExprTuple : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<Expr*> init;
+  Vec<const Expr*> init;
 };
 
 struct Function;
@@ -175,7 +174,7 @@ struct StmtVarDecl : public Stmt
 {
   NODE_FIELDS()
   SymbolId sym;
-  Expr* expr;
+  const Expr* expr;
 };
 
 struct StmtBlock;
@@ -193,7 +192,7 @@ struct StmtFuncDecl : public Stmt
   SymbolId sym;
   const sema::Type* ret;
   Vec<Parm> parms;
-  StmtBlock* body;
+  const StmtBlock* body;
 
   Option<SymbolId> getSymbol() const override { return sym; }
 };
@@ -202,8 +201,8 @@ struct StmtBlock : public Stmt
 {
   NODE_FIELDS()
   SymbolId name;
-  Vec<Stmt*> stmts;
-  Terminator* term;
+  Vec<const Stmt*> stmts;
+  const Term* term;
 };
 
 }  // namespace ir
