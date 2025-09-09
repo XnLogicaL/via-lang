@@ -13,23 +13,23 @@
 #ifdef VIA_PLATFORM_UNIX
   #include <unistd.h>
 
-static bool checkConsoleSupport()
+static bool checkTerminalSupport()
 {
   if (!isatty(fileno(stdout))) {
     return false;
   }
 
   const char* term = std::getenv("TERM");
-  if (!term) {
+  if (term == nullptr) {
     return false;
   }
 
-  return std::strcmp(term, "dumb") == 1;
+  return strcmp(term, "dumb") != 0;
 }
 #elifdef VIA_PLATFORM_WINDOWS
   #include <windows.h>
 
-static bool checkConsoleSupport()
+static bool checkTerminalSupport()
 {
   HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
   if (hOut == INVALID_HANDLE_VALUE) {
@@ -50,24 +50,11 @@ static bool checkConsoleSupport()
   return true;
 }
 #else
-struct InitCall
+static bool checkTerminalSupport()
 {
-  template <typename T>
-  inline constexpr InitCall(T&& callback)
-  {
-    callback();
-  }
-};
-
-static bool checkConsoleSupport()
-{
-  if constexpr (via::config::kDebugEnabled) {
-    [[maybe_unused]] static InitCall _warning([]() {
-      std::println(std::cout,
-                   "host console does not support ANSI escape codes, consider "
-                   "using one that does");
-    });
-  }
+  std::println(std::cout,
+               "host terminal does not support ANSI escape codes, consider "
+               "using one that does");
   return false;
 }
 #endif
@@ -77,7 +64,8 @@ std::string via::ansi(std::string string,
                       Bg background,
                       Style style)
 {
-  if (checkConsoleSupport()) {
+  static bool hasTerminalSupport = checkTerminalSupport();
+  if (hasTerminalSupport) {
     // Construct ANSI escape code and apply the color formatting to the text
     return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
            std::to_string(static_cast<int>(foreground)) + ";" +
