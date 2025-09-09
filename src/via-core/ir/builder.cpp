@@ -51,7 +51,7 @@ ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
     return sym;
   } else {
     mDiags.report<Dk::Error>(
-      exprSym->loc, fmt::format("Use of undefined symbol '{}'", symbol));
+      exprSym->loc, std::format("Use of undefined symbol '{}'", symbol));
     return nullptr;
   }
 }
@@ -99,7 +99,7 @@ ir::Expr* via::IRBuilder::lowerExprUnary(const ast::ExprUnary* exprUnary)
       } else {
         mDiags.report<Dk::Error>(
           exprUnary->expr->loc,
-          fmt::format("Invalid unary expression '-' (NEG) on non-arithmetic "
+          std::format("Invalid unary expression '-' (NEG) on non-arithmetic "
                       "expression of type '{}'",
                       unary->type->dump()));
       }
@@ -114,7 +114,7 @@ ir::Expr* via::IRBuilder::lowerExprUnary(const ast::ExprUnary* exprUnary)
       } else {
         mDiags.report<Dk::Error>(
           exprUnary->expr->loc,
-          fmt::format("Invalid unary expression '~' (BNOT) on non-integral "
+          std::format("Invalid unary expression '~' (BNOT) on non-integral "
                       "expression of type '{}'",
                       unary->type->dump()));
       }
@@ -215,7 +215,7 @@ ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr)
   CASE(ast::ExprLambda, lowerExprLambda)
 
   debug::bug(
-    fmt::format("unhandled case IRBuilder::lowerExpr({})", TYPENAME(*expr)));
+    std::format("unhandled case IRBuilder::lowerExpr({})", TYPENAME(*expr)));
 
 #undef CASE
 }

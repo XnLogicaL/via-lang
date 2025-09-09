@@ -60,7 +60,7 @@ via::usize sema::stack::size()
 
 sema::Frame& sema::stack::top()
 {
-  debug::assertm(!stStack.empty());
+  debug::require(!stStack.empty());
   return stStack.back();
 }
 

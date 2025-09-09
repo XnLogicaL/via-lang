@@ -61,13 +61,13 @@ class Option final
   [[nodiscard]] constexpr T& getValue() noexcept { return mStorage.val; }
   [[nodiscard]] constexpr const T& getValue() const noexcept
   {
-    debug::assertm(hasValue(), "Bad Option<T> access");
+    debug::require(hasValue(), "Bad Option<T> access");
     return mStorage.val;
   }
 
   [[nodiscard]] constexpr T&& takeValue() noexcept
   {
-    debug::assertm(hasValue(), "Bad Option<T> access");
+    debug::require(hasValue(), "Bad Option<T> access");
     mHasValue = false;
     return std::move(mStorage.val);
   }

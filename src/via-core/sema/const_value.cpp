@@ -9,7 +9,7 @@
 
 #include "const_value.h"
 #include <magic_enum/magic_enum.hpp>
-#include "color.h"
+#include "ansi.h"
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 
@@ -55,7 +55,7 @@ std::string sema::ConstValue::toString() const
     case Float:
       return std::to_string(value<Float>());
     case String:
-      return fmt::format("\"{}\"", value<String>());
+      return std::format("\"{}\"", value<String>());
     default:
       break;
   }
@@ -65,7 +65,7 @@ std::string sema::ConstValue::toString() const
 
 std::string sema::ConstValue::dump() const
 {
-  return fmt::format(
-    "{} [{} {}]", ansiFormat("constant", Fg::Magenta, Bg::Black, Style::Bold),
-    magic_enum::enum_name(kind()), toString());
+  return std::format("{} [{} {}]",
+                     ansi("constant", Fg::Magenta, Bg::Black, Style::Bold),
+                     magic_enum::enum_name(kind()), toString());
 }

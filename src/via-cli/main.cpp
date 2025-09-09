@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
 
   const fs::path corePath = getCoreLangBaseDir();
 
+  via::debug::require(false, "this is supposed to fail lol");
+
   try {
     auto& cli = via::cli::getApp();
 
@@ -134,12 +136,12 @@ int main(int argc, char* argv[])
            module.errorOr(via::make_error("<no-error>")).toString());
 
     if (rawDumpMode == "symtab") {
-      fmt::println("{}",
-                   via::ansiFormat("[global symbol table]", via::Fg::Yellow,
-                                   via::Bg::Black, via::Style::Bold));
+      std::println(std::cout, "{}",
+                   via::ansi("[global symbol table]", via::Fg::Yellow,
+                             via::Bg::Black, via::Style::Bold));
 
       for (const auto& sym : via::SymbolTable::instance().getSymbols()) {
-        fmt::println("  {}: {}", sym.second, sym.first);
+        std::println(std::cout, "  {}: {}", sym.second, sym.first);
       }
     }
   } catch (int code) {

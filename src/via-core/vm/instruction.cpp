@@ -10,7 +10,7 @@
 #include "instruction.h"
 #include <cstring>
 #include <iomanip>
-#include "color.h"
+#include "ansi.h"
 
 using OpCode = via::OpCode;
 
@@ -388,7 +388,7 @@ std::string via::Instruction::dump() const
 
   std::ostringstream oss;
   oss << std::left << std::setfill(' ') << std::setw(20);
-  oss << ansiFormat(il->op_str, Fg::Magenta, Bg::Black, Style::Bold) << " ";
+  oss << ansi(il->op_str, Fg::Magenta, Bg::Black, Style::Bold) << " ";
 
   for (size_t i = 0; u16 operand : ops) {
     // disgusting addressing hack

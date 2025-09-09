@@ -66,7 +66,7 @@ class Value final
 
   static inline Value* construct(Interpreter* ctx, char* string)
   {
-    debug::assertm(
+    debug::require(
       ctx->getAllocator().owns(string),
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");

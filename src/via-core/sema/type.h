@@ -77,7 +77,7 @@ struct BuiltinType : public Type
 
   std::string dump() const override
   {
-    return fmt::format("BuiltinType({})", magic_enum::enum_name(bt));
+    return std::format("BuiltinType({})", magic_enum::enum_name(bt));
   }
 };
 

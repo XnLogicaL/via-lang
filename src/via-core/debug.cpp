@@ -8,46 +8,59 @@
 ** ===================================================== */
 
 #include "debug.h"
-#include "panic.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <cpptrace/cpptrace.hpp>
+#include <iostream>
 
-namespace via
-{
-
-namespace debug
-{
-
-[[noreturn]] static void invoke_ub()
-{
-  std::unreachable();
-}
-
-void assertm(bool cond, std::string message, std::source_location __loc)
-{
-#ifndef NDEBUG
-  if (!cond) {
-    panic(message);
-  }
+#ifdef NDEBUG
+  #define __CRASH_IMPL(MSG)
+  #define __ASSERT_IMPL(COND, MSG)
+  #define __UNREACHABLE() std::unreachable()
+#else
+  #define __CRASH_IMPL(MSG) (::logError(MSG), ::via::debug::panic())
+  #define __ASSERT_IMPL(COND, MSG) (!COND) ? __CRASH_IMPL(MSG) : void(0)
+  #define __UNREACHABLE()
 #endif
-}
 
-[[noreturn]] void bug(std::string what, std::source_location __loc)
+static void logError(std::string message)
 {
-  debug::assertm(false, fmt::format("internal bug detected: {}", what), __loc);
-  invoke_ub();
+  static auto stderrLogger = spdlog::stderr_color_mt("std::cerr");
+  stderrLogger->log(via::config::kCrashLoggerLevel, message);
 }
 
-[[noreturn]] void todo(std::string what, std::source_location __loc)
+[[noreturn]] void via::debug::panic() noexcept
 {
-  debug::assertm(false, fmt::format("todo: {}", what), __loc);
-  invoke_ub();
+  logError("program execution raised a panic");
+  cpptrace::generate_trace().print(std::cerr);
+  std::abort();
 }
 
-[[noreturn]] void unimplemented(std::string what, std::source_location __loc)
+void via::debug::require(bool cond, std::string message)
 {
-  debug::assertm(false, fmt::format("unimplemented: {}", what), __loc);
-  invoke_ub();
+  __ASSERT_IMPL(
+    cond, std::format("program execution reached failing `require()` call: {}",
+                      message));
+  __UNREACHABLE();
 }
 
-}  // namespace debug
+[[noreturn]] void via::debug::bug(std::string what)
+{
+  __ASSERT_IMPL(
+    false, std::format("program execution reached `bug()` call: {}", what));
+  __UNREACHABLE();
+}
 
-}  // namespace via
+[[noreturn]] void via::debug::todo(std::string what)
+{
+  __ASSERT_IMPL(
+    false, std::format("program execution reached `todo()` call: {}", what));
+  __UNREACHABLE();
+}
+
+[[noreturn]] void via::debug::unimplemented(std::string what)
+{
+  __ASSERT_IMPL(
+    false,
+    std::format("program execution reached `unimplemented()` call: {}", what));
+  __UNREACHABLE();
+}

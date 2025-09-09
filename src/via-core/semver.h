@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <fmt/core.h>
 #include <via/config.h>
 #include <via/types.h>
 #include "constexpr_ipow.h"
@@ -38,7 +37,7 @@ consteval Version getSemanticVersion()
 
 inline std::string toString(const Version& v)
 {
-  return fmt::format("{}.{}.{}", v.major, v.minor, v.patch);
+  return std::format("{}.{}.{}", v.major, v.minor, v.patch);
 }
 
 }  // namespace via

@@ -13,7 +13,7 @@ target_link_libraries(via-core
     mimalloc
     spdlog
     magic_enum
-    fmt::fmt
+    cpptrace::cpptrace
 )
 
 add_library(via::core ALIAS via-core)

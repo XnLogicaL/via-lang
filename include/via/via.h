@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <ansi.h>
 #include <ast/ast.h>
-#include <color.h>
 #include <constexpr_ipow.h>
 #include <constexpr_stof.h>
 #include <constexpr_stoi.h>
@@ -24,7 +24,6 @@
 #include <module/manager.h>
 #include <module/module.h>
 #include <module/symbol.h>
-#include <panic.h>
 #include <parser/parser.h>
 #include <sema/const_value.h>
 #include <sema/constexpr.h>
@@ -37,3 +36,4 @@
 #include <vm/value.h>
 #include <vm/value_ref.h>
 #include "policy.h"
+

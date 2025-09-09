@@ -19,7 +19,7 @@ inline via::usize ZERO = 0;
 
 std::string ir::TrReturn::dump(usize& depth) const
 {
-  return INDENT + fmt::format("return {}", val->dump(ZERO));
+  return INDENT + std::format("return {}", val->dump(ZERO));
 }
 
 std::string ir::TrContinue::dump(usize& depth) const
@@ -34,18 +34,18 @@ std::string ir::TrBreak::dump(usize& depth) const
 
 std::string ir::TrBranch::dump(usize& depth) const
 {
-  return INDENT + fmt::format("br {}", lbl);
+  return INDENT + std::format("br {}", lbl);
 }
 
 std::string ir::TrCondBranch::dump(usize& depth) const
 {
   return INDENT +
-         fmt::format("condbr {} ? {} : {}", cnd->dump(ZERO), iftrue, iffalse);
+         std::format("condbr {} ? {} : {}", cnd->dump(ZERO), iftrue, iffalse);
 }
 
 std::string ir::Parm::dump() const
 {
-  return fmt::format("{}: {}", SYMBOL(sym), type->dump());
+  return std::format("{}: {}", SYMBOL(sym), type->dump());
 }
 
 std::string ir::ExprConstant::dump(usize&) const
@@ -60,24 +60,24 @@ std::string ir::ExprSymbol::dump(usize&) const
 
 std::string ir::ExprAccess::dump(usize&) const
 {
-  return fmt::format("access {}{}{}", lval->dump(ZERO),
+  return std::format("access {}{}{}", lval->dump(ZERO),
                      kind == Kind::STATIC ? "::" : ".", idx->dump(ZERO));
 }
 
 std::string ir::ExprUnary::dump(usize&) const
 {
-  return fmt::format("unop {} {}", magic_enum::enum_name(op), expr->dump(ZERO));
+  return std::format("unop {} {}", magic_enum::enum_name(op), expr->dump(ZERO));
 }
 
 std::string ir::ExprBinary::dump(usize&) const
 {
-  return fmt::format("binop {} {} {}", lhs->dump(ZERO),
+  return std::format("binop {} {} {}", lhs->dump(ZERO),
                      magic_enum::enum_name(op), rhs->dump(ZERO));
 }
 
 std::string ir::ExprCall::dump(usize&) const
 {
-  return fmt::format(
+  return std::format(
     "call {}, {}", callee->dump(ZERO),
     debug::dump<const Expr*, '[', ']'>(
       args, [](const auto& expr) { return expr->dump(ZERO); }));
@@ -85,12 +85,12 @@ std::string ir::ExprCall::dump(usize&) const
 
 std::string ir::ExprSubscript::dump(usize&) const
 {
-  return fmt::format("subscr {}, {}", expr->dump(ZERO), idx->dump(ZERO));
+  return std::format("subscr {}, {}", expr->dump(ZERO), idx->dump(ZERO));
 }
 
 std::string ir::ExprCast::dump(usize&) const
 {
-  return fmt::format("cast {}, {}", expr->dump(ZERO), "");
+  return std::format("cast {}, {}", expr->dump(ZERO), "");
 }
 
 std::string ir::ExprTuple::dump(usize&) const
@@ -105,14 +105,14 @@ std::string ir::ExprLambda::dump(usize&) const
 
 std::string ir::StmtVarDecl::dump(usize& depth) const
 {
-  return INDENT + fmt::format("{} = {}", SYMBOL(sym), expr->dump(ZERO));
+  return INDENT + std::format("{} = {}", SYMBOL(sym), expr->dump(ZERO));
 }
 
 std::string ir::StmtFuncDecl::dump(usize& depth) const
 {
   std::ostringstream oss;
   oss << INDENT
-      << fmt::format("fn {}{}:\n", SYMBOL(sym),
+      << std::format("fn {}{}:\n", SYMBOL(sym),
                      debug::dump<Parm, '(', ')'>(
                        parms, [](const auto& parm) { return parm.dump(); }));
 

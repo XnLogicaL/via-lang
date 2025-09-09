@@ -72,13 +72,13 @@ class ValueRef final
 
   Value* operator->() const
   {
-    debug::assertm(!isNullRef(), "attempt to read NULL reference (operator->)");
+    debug::require(!isNullRef(), "attempt to read NULL reference (operator->)");
     return mPtr;
   }
 
   Value& operator*() const
   {
-    debug::assertm(!isNullRef(), "attempt to read NULL reference (operator*)");
+    debug::require(!isNullRef(), "attempt to read NULL reference (operator*)");
     return *mPtr;
   }
 
@@ -88,7 +88,7 @@ class ValueRef final
 
   void free()
   {
-    debug::assertm(!isNullRef(), "free called on NULL reference");
+    debug::require(!isNullRef(), "free called on NULL reference");
 
     if (--mPtr->mRc == 0) {
       mPtr->free();
@@ -98,7 +98,7 @@ class ValueRef final
 
   usize getRefCount() const
   {
-    debug::assertm(!isNullRef(), "getRefCount() called on NULL reference");
+    debug::require(!isNullRef(), "getRefCount() called on NULL reference");
     return mPtr->mRc;
   }
 

@@ -9,32 +9,43 @@
 
 #pragma once
 
+#include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
 #include <functional>
-#include <source_location>
 
 namespace via
 {
 
+namespace config
+{
+
+// What to print when debug functions aren't provided a message
+inline constexpr const char* kCrashLoggerNoMessage = "<no-message>";
+
+// Logging level for crashes
+inline constexpr spdlog::level::level_enum kCrashLoggerLevel =
+  spdlog::level::err;
+
+#ifdef NDEBUG
+inline constexpr bool kDebugEnabled = false;
+#else
+inline constexpr bool kDebugEnabled = true;
+#endif
+
+}  // namespace config
+
 namespace debug
 {
 
-void assertm(bool cond,
-             std::string message = "<no-message-specified>",
-             std::source_location __loc = std::source_location::current());
+[[noreturn]] void panic() noexcept;
 
-[[noreturn]] void bug(
-  std::string what,
-  std::source_location __loc = std::source_location::current());
+void require(bool cond, std::string message = config::kCrashLoggerNoMessage);
 
-[[noreturn]] void todo(
-  std::string what,
-  std::source_location __loc = std::source_location::current());
-
+[[noreturn]] void bug(std::string what);
+[[noreturn]] void todo(std::string what = config::kCrashLoggerNoMessage);
 [[noreturn]] void unimplemented(
-  std::string what = "<no-message-specified>",
-  std::source_location __loc = std::source_location::current());
+  std::string what = config::kCrashLoggerNoMessage);
 
 template <typename T, char LDel = '{', char RDel = '}'>
 std::string dump(const Vec<T>& vec,

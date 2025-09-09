@@ -58,7 +58,7 @@ class Expected final
   constexpr Expected(Unexpected<E>&& err) noexcept
       : mStorage(fwd<Error>(make_error<E>(err.takeError()))), mHasValue(false)
   {
-    debug::assertm(mStorage.err.hasError(),
+    debug::require(mStorage.err.hasError(),
                    "Cannot construct Expected<T> with successful Error");
   }
 
@@ -114,13 +114,13 @@ class Expected final
 
   [[nodiscard]] constexpr T& getValue() noexcept
   {
-    debug::assertm(hasValue(), "Bad Expected<T> access (getValue)");
+    debug::require(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
   }
 
   [[nodiscard]] constexpr const T& getValue() const noexcept
   {
-    debug::assertm(hasValue(), "Bad Expected<T> access (getValue)");
+    debug::require(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
   }
 
@@ -132,20 +132,20 @@ class Expected final
 
   [[nodiscard]] constexpr T&& takeValue() noexcept
   {
-    debug::assertm(hasValue(), "Bad Expected<T> access (takeValue)");
+    debug::require(hasValue(), "Bad Expected<T> access (takeValue)");
     mHasValue = false;
     return mv(mStorage.val);
   }
 
   [[nodiscard]] constexpr Error& getError() noexcept
   {
-    debug::assertm(hasError(), "Bad Expected<T> access (getError)");
+    debug::require(hasError(), "Bad Expected<T> access (getError)");
     return mStorage.err;
   }
 
   [[nodiscard]] constexpr const Error& getError() const noexcept
   {
-    debug::assertm(hasError(), "Bad Expected<T> access (getError)");
+    debug::require(hasError(), "Bad Expected<T> access (getError)");
     return mStorage.err;
   }
 
@@ -156,7 +156,7 @@ class Expected final
 
   [[nodiscard]] constexpr Error&& takeError() noexcept
   {
-    debug::assertm(hasError(), "Bad Expected<T> access (takeError)");
+    debug::require(hasError(), "Bad Expected<T> access (takeError)");
     mHasValue = true;
     return mv(mStorage.err);
   }

@@ -8,7 +8,6 @@
 ** ===================================================== */
 
 #include "parser.h"
-#include <fmt/core.h>
 #include <magic_enum/magic_enum.hpp>
 
 #define SAVE_FIRST()       \
@@ -29,9 +28,9 @@ struct ParserError
 
   template <typename... Args>
   explicit ParserError(via::SourceLoc loc,
-                       fmt::format_string<Args...> form,
+                       std::format_string<Args...> form,
                        Args... args)
-      : loc(loc), msg(fmt::format(form, std::forward<Args>(args)...))
+      : loc(loc), msg(std::format(form, std::forward<Args>(args)...))
   {}
 };
 

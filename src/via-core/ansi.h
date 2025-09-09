@@ -51,16 +51,9 @@ enum class Style
   Underline = 4,
 };
 
-constexpr std::string ansiFormat(std::string str,
-                                 Fg foreground_color,
-                                 Bg background_color = Bg::Black,
-                                 Style style = Style::Reset)
-{
-  // Construct ANSI escape code and apply the color formatting to the text
-  return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
-         std::to_string(static_cast<int>(foreground_color)) + ";" +
-         std::to_string(static_cast<int>(background_color)) + "m" + str +
-         "\033[0m";
-}
+std::string ansi(std::string string,
+                 Fg foreground,
+                 Bg background = Bg::Black,
+                 Style style = Style::Reset);
 
 }  // namespace via

@@ -15,7 +15,6 @@ target_link_libraries(via-cli
     argparse
     spdlog
     magic_enum
-    fmt::fmt
     csv2::csv2
 )
 

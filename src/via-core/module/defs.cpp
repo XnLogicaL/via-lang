@@ -38,12 +38,12 @@ via::Def* via::Def::newFunction(Allocator& alloc,
 
 std::string via::FunctionDef::dump() const
 {
-  return fmt::format(
+  return std::format(
     "FunctionDef(symbol={}, ret={}, parms={}, kind={}, code={})", symbol,
     ret->dump(),
     debug::dump(parms,
                 [](const auto& parm) {
-                  return fmt::format("{}: {}", parm.symbol, parm.type->dump());
+                  return std::format("{}: {}", parm.symbol, parm.type->dump());
                 }),
     magic_enum::enum_name(kind), reinterpret_cast<const void*>(code.native));
 }

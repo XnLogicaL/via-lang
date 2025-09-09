@@ -43,7 +43,7 @@ class Interpreter final
         mStack(&mAlloc),
         mRegisters(config::vm::kRegisterCount)
   {
-    debug::assertm(!header->bytecode.empty(), "illformed header");
+    debug::require(!header->bytecode.empty(), "illformed header");
   }
 
  public:

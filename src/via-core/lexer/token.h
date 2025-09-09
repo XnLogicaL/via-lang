@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <fmt/ranges.h>
 #include <via/config.h>
 #include <via/types.h>
 #include "location.h"
@@ -124,6 +123,7 @@ struct Token
   {
     return std::string_view(lexeme, size);
   }
+
   SourceLoc location(const std::string& source) const;
 };
 

@@ -8,7 +8,6 @@
 ** ===================================================== */
 
 #include "lexer.h"
-#include <fmt/core.h>
 #include <cstring>
 
 using enum via::Token::Kind;

@@ -9,7 +9,8 @@
 
 #include "module.h"
 #include <fstream>
-#include "color.h"
+#include <iostream>
+#include "ansi.h"
 #include "debug.h"
 #include "ir/builder.h"
 #include "manager.h"
@@ -31,7 +32,7 @@ static via::Expected<std::string> readFile(const via::fs::path& path)
   std::ifstream ifs(path);
   if (!ifs.is_open()) {
     return via::Unexpected(
-      fmt::format("No such file or directory: '{}'", path.string()));
+      std::format("No such file or directory: '{}'", path.string()));
   }
 
   std::ostringstream oss;
@@ -117,16 +118,16 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
 
     manager->addModule(module);
 
-    auto symbol = fmt::format("{}{}", config::kInitCallbackPrefix, name);
+    auto symbol = std::format("{}{}", config::kInitCallbackPrefix, name);
     auto callback = osLoadSymbol(path, symbol.c_str());
     if (callback.hasError()) {
-      return Unexpected(fmt::format("Failed to load native module: {}",
+      return Unexpected(std::format("Failed to load native module: {}",
                                     callback.getError().toString()));
     }
 
     auto* moduleInfo = (*callback)(manager);
 
-    debug::assertm(moduleInfo->begin != nullptr);
+    debug::require(moduleInfo->begin != nullptr);
 
     for (usize i = 0; i < moduleInfo->size; i++) {
       const auto& entry = moduleInfo->begin[i];
@@ -134,11 +135,12 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
     }
 
     if (flags & DUMP_DEFTABLE) {
-      fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
-                                    Fg::Yellow, Bg::Black, Style::Bold));
+      std::println(std::cout, "{}",
+                   ansi(std::format("[deftable .{}]", name), Fg::Yellow,
+                        Bg::Black, Style::Bold));
 
       for (const auto& def : module->mDefs) {
-        fmt::println("  {}", def.second->dump());
+        std::println(std::cout, "  {}", def.second->dump());
       }
     }
 
@@ -226,17 +228,18 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
     diags.clear();
 
     if (flags & DUMP_TTREE)
-      fmt::println("{}", debug::dump(ttree));
+      std::println(std::cout, "{}", debug::dump(ttree));
     if (flags & DUMP_AST)
-      fmt::println("{}", debug::dump(ast));
+      std::println(std::cout, "{}", debug::dump(ast));
     if (flags & DUMP_IR)
-      fmt::println("{}", debug::dump(module->mIr));
+      std::println(std::cout, "{}", debug::dump(module->mIr));
     if (flags & DUMP_DEFTABLE) {
-      fmt::println("{}", ansiFormat(fmt::format("[deftable .{}]", name),
-                                    Fg::Yellow, Bg::Black, Style::Bold));
+      std::println(std::cout, "{}",
+                   ansi(std::format("[deftable .{}]", name), Fg::Yellow,
+                        Bg::Black, Style::Bold));
 
       for (const auto& def : module->mDefs) {
-        fmt::println("  {}", def.second->dump());
+        std::println(std::cout, "  {}", def.second->dump());
       }
     }
 
@@ -305,7 +308,7 @@ static via::Option<ModuleInfo> resolveImportPath(
   const via::QualPath& path,
   const via::ModuleManager& manager)
 {
-  via::debug::assertm(!path.empty(), "bad import path");
+  via::debug::require(!path.empty(), "bad import path");
 
   via::QualPath pathSlice = path;
   auto& moduleName = pathSlice.back();
@@ -364,11 +367,11 @@ static via::Option<ModuleInfo> resolveImportPath(
 
 via::Expected<via::Module*> via::Module::resolveImport(const QualPath& path)
 {
-  debug::assertm(mManager, "unmanaged module detected");
+  debug::require(mManager, "unmanaged module detected");
 
   auto module = resolveImportPath(mPath, path, *mManager);
   if (!module.hasValue()) {
-    return Unexpected(fmt::format("Module '{}' not found", toString(path)));
+    return Unexpected(std::format("Module '{}' not found", toString(path)));
   }
 
   if ((mPerms & Perms::IMPORT) == 0u) {

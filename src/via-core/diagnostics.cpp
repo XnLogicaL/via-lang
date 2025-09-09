@@ -8,7 +8,7 @@
 ** ===================================================== */
 
 #include "diagnostics.h"
-#include "color.h"
+#include "ansi.h"
 
 namespace via
 {
@@ -68,10 +68,9 @@ void DiagContext::emitOnce(const Diagnosis& d, spdlog::logger* logger) const
     std::string_view(lineBegin, static_cast<usize>(lineEnd - lineBegin));
 
   logger->log(
-    level, "{} {} {}", d.msg,
-    ansiFormat("at", Fg::White, Bg::Black, Style::Faint),
-    ansiFormat(fmt::format("[{}:{}:{}] module({})", mPath, line, col, mName),
-               Fg::Cyan));
+    level, "{} {} {}", d.msg, ansi("at", Fg::White, Bg::Black, Style::Faint),
+    ansi(std::format("[{}:{}:{}] module({})", mPath, line, col, mName),
+         Fg::Cyan));
 
   usize lineWidth = static_cast<usize>(std::log10(line)) + 1;
 

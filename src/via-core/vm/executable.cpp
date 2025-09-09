@@ -8,21 +8,19 @@
 ** ===================================================== */
 
 #include "executable.h"
-#include "color.h"
+#include "ansi.h"
 #include "sema/const_value.h"
 
 std::string via::Executable::dump() const
 {
   std::ostringstream oss;
-  oss << ansiFormat("[section .text]\n", Fg::Yellow, Bg::Black,
-                    Style::Underline);
+  oss << ansi("[section .text]\n", Fg::Yellow, Bg::Black, Style::Underline);
 
   for (const Instruction& insn : bytecode) {
     oss << "  " << insn.dump() << "\n";
   }
 
-  oss << ansiFormat("[section .data]\n", Fg::Yellow, Bg::Black,
-                    Style::Underline);
+  oss << ansi("[section .data]\n", Fg::Yellow, Bg::Black, Style::Underline);
 
   for (const sema::ConstValue& cv : consts) {
     oss << "  " << cv.dump() << "\n";

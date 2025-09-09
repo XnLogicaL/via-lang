@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
@@ -50,15 +49,6 @@ class DiagContext final
   void report(SourceLoc loc, std::string msg)
   {
     mDiags.emplace_back(K, loc, std::move(msg));
-  }
-
-  /// Push a diagnosis using fmt-style formatting.
-  template <Diagnosis::Kind K, typename... Args>
-  void report(SourceLoc loc, fmt::format_string<Args...> fmt, Args&&... args)
-  {
-    mDiags.emplace_back(
-      K, loc,
-      fmt::format(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
   }
 
   [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return mDiags; }
