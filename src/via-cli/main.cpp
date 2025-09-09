@@ -71,8 +71,6 @@ int main(int argc, char* argv[])
 
   const fs::path corePath = getCoreLangBaseDir();
 
-  via::debug::require(false, "this is supposed to fail lol");
-
   try {
     auto& cli = via::cli::getApp();
 

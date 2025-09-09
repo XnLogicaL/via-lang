@@ -38,10 +38,10 @@ inline constexpr bool kDebugEnabled = true;
 namespace debug
 {
 
-[[noreturn]] void panic() noexcept;
-
+// Basically `assert`
 void require(bool cond, std::string message = config::kCrashLoggerNoMessage);
 
+[[noreturn]] void panic() noexcept;
 [[noreturn]] void bug(std::string what);
 [[noreturn]] void todo(std::string what = config::kCrashLoggerNoMessage);
 [[noreturn]] void unimplemented(
