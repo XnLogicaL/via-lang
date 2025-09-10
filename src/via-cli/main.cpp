@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                                          path, Module::Perms::ALL, flags);
 
     assert(module.hasValue(),
-           module.errorOr(via::make_error("<no-error>")).toString());
+           module.errorOr(via::Error::fail("<no-error>")).toString());
 
     if (rawDumpMode == "symtab") {
       std::println(std::cout, "{}",

@@ -204,10 +204,6 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
     }
 
     {
-      // reset semantic state
-      sema::registers::reset();
-      sema::stack::reset();
-
       IRBuilder irb(module, ast, diags);
       module->mIr = irb.build();
 
@@ -261,30 +257,6 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
   return nullptr;
 }
 
-[[nodiscard]] via::Option<via::SymbolInfo> via::Module::lookup(
-  const QualPath& path)
-{
-  if (mManager == nullptr) {
-    return via::nullopt;
-  }
-
-  const auto& modules = mManager->getModules();
-  if (auto it = modules.find(path[0]); it != modules.end()) {
-    Module* module = it->second;
-    QualPath new_qs = path;
-    new_qs.pop_front();
-
-    SymbolId id = SymbolTable::instance().intern(new_qs);
-
-    return SymbolInfo{
-      .symbol = module->mDefs[id],
-      .module = module,
-    };
-  } else {
-    return nullopt;
-  }
-}
-
 struct ModuleInfo
 {
   enum class Kind
@@ -305,12 +277,12 @@ struct ModuleCandidate
 
 static via::Option<ModuleInfo> resolveImportPath(
   via::fs::path root,
-  const via::QualPath& path,
+  const via::QualName& path,
   const via::ModuleManager& manager)
 {
   via::debug::require(!path.empty(), "bad import path");
 
-  via::QualPath pathSlice = path;
+  via::QualName pathSlice = path;
   auto& moduleName = pathSlice.back();
   pathSlice.pop_back();
 
@@ -365,7 +337,15 @@ static via::Option<ModuleInfo> resolveImportPath(
   return via::nullopt;
 }
 
-via::Expected<via::Module*> via::Module::resolveImport(const QualPath& path)
+via::Option<const via::Def*> via::Module::lookup(via::SymbolId symbol)
+{
+  if (auto it = mDefs.find(symbol); it != mDefs.end()) {
+    return it->second;
+  }
+  return nullopt;
+}
+
+via::Expected<via::Module*> via::Module::resolveImport(const QualName& path)
 {
   debug::require(mManager, "unmanaged module detected");
 

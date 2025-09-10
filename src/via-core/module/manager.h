@@ -35,6 +35,17 @@ class ModuleManager
 
   void addImportPath(fs::path path) { mImportPaths.push_back(path); }
 
+  Module* getModuleByName(std::string name)
+  {
+    for (const auto& [_, module] : mModules) {
+      if (module->mName == name) {
+        return module;
+      }
+    }
+
+    return nullptr;
+  }
+
  protected:
   bool isImporting(const std::string& name) const
   {

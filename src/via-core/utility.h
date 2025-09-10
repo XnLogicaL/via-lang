@@ -116,32 +116,31 @@
 namespace via
 {
 
-template <typename T, typename Base>
-[[nodiscard]] constexpr bool isa(const Base& expr) noexcept
+template <std::integral T = int>
+constexpr T iota() noexcept
 {
-  return dynamic_cast<T*>(&expr) != nullptr;
+  static T data(0);
+  return data++;
 }
 
 template <typename T>
-[[nodiscard]] inline constexpr T&& fwd(
-  typename std::remove_reference_t<T>& val) noexcept
+[[nodiscard]] inline constexpr T&& fwd(std::remove_reference_t<T>& val) noexcept
 {
   return static_cast<T&&>(val);
 }
 
 template <typename T>
-[[nodiscard]] constexpr typename std::remove_reference_t<T>&& mv(
-  T&& val) noexcept
+[[nodiscard]] constexpr std::remove_reference_t<T>&& mv(T&& val) noexcept
 {
-  return static_cast<typename std::remove_reference_t<T>&&>(val);
+  return static_cast<std::remove_reference_t<T>&&>(val);
 }
 
 template <typename T>
   requires(!std::is_lvalue_reference_v<T>)
 [[nodiscard]] inline constexpr T&& fwd(
-  typename std::remove_reference_t<T>&& val) noexcept
+  std::remove_reference_t<T>&& val) noexcept
 {
-  return static_cast<T&&>(val);
+  return static_cast<std::remove_reference_t<T>&&>(val);
 }
 
 template <typename To, typename From>

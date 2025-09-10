@@ -16,10 +16,11 @@ inline via::usize ZERO = 0;
 #define INDENT std::string(depth, ' ')
 #define SYMBOL(id) \
   (via::SymbolTable::instance().lookup(id).valueOr("<unknown-symbol>"))
+#define DUMP_IF(PTR, ...) (PTR ? PTR->dump(__VA_ARGS__) : "<null>")
 
 std::string ir::TrReturn::dump(usize& depth) const
 {
-  return INDENT + std::format("return {}", val->dump(ZERO));
+  return INDENT + std::format("return {}", DUMP_IF(val, ZERO));
 }
 
 std::string ir::TrContinue::dump(usize& depth) const
@@ -39,13 +40,13 @@ std::string ir::TrBranch::dump(usize& depth) const
 
 std::string ir::TrCondBranch::dump(usize& depth) const
 {
-  return INDENT +
-         std::format("condbr {} ? {} : {}", cnd->dump(ZERO), iftrue, iffalse);
+  return INDENT + std::format("condbr {} ? {} : {}", DUMP_IF(cnd, ZERO), iftrue,
+                              iffalse);
 }
 
 std::string ir::Parm::dump() const
 {
-  return std::format("{}: {}", SYMBOL(sym), type->dump());
+  return std::format("{}: {}", SYMBOL(sym), DUMP_IF(type));
 }
 
 std::string ir::ExprConstant::dump(usize&) const
@@ -60,37 +61,38 @@ std::string ir::ExprSymbol::dump(usize&) const
 
 std::string ir::ExprAccess::dump(usize&) const
 {
-  return std::format("access {}{}{}", lval->dump(ZERO),
-                     kind == Kind::STATIC ? "::" : ".", idx->dump(ZERO));
+  return std::format("access {}{}{}", DUMP_IF(root, ZERO),
+                     kind == Kind::STATIC ? "::" : ".", SYMBOL(index));
 }
 
 std::string ir::ExprUnary::dump(usize&) const
 {
-  return std::format("unop {} {}", magic_enum::enum_name(op), expr->dump(ZERO));
+  return std::format("unop {} {}", magic_enum::enum_name(op),
+                     DUMP_IF(expr, ZERO));
 }
 
 std::string ir::ExprBinary::dump(usize&) const
 {
-  return std::format("binop {} {} {}", lhs->dump(ZERO),
-                     magic_enum::enum_name(op), rhs->dump(ZERO));
+  return std::format("binop {} {} {}", DUMP_IF(lhs, ZERO),
+                     magic_enum::enum_name(op), DUMP_IF(rhs, ZERO));
 }
 
 std::string ir::ExprCall::dump(usize&) const
 {
   return std::format(
-    "call {}, {}", callee->dump(ZERO),
+    "call {}, {}", DUMP_IF(callee, ZERO),
     debug::dump<const Expr*, '[', ']'>(
-      args, [](const auto& expr) { return expr->dump(ZERO); }));
+      args, [](const auto& expr) { return DUMP_IF(expr, ZERO); }));
 }
 
 std::string ir::ExprSubscript::dump(usize&) const
 {
-  return std::format("subscr {}, {}", expr->dump(ZERO), idx->dump(ZERO));
+  return std::format("subscr {}, {}", DUMP_IF(expr, ZERO), idx->dump(ZERO));
 }
 
 std::string ir::ExprCast::dump(usize&) const
 {
-  return std::format("cast {}, {}", expr->dump(ZERO), "");
+  return std::format("cast {}, {}", DUMP_IF(expr, ZERO), "");
 }
 
 std::string ir::ExprTuple::dump(usize&) const
@@ -105,7 +107,7 @@ std::string ir::ExprLambda::dump(usize&) const
 
 std::string ir::StmtVarDecl::dump(usize& depth) const
 {
-  return INDENT + std::format("{} = {}", SYMBOL(sym), expr->dump(ZERO));
+  return INDENT + std::format("{} = {}", SYMBOL(sym), DUMP_IF(expr, ZERO));
 }
 
 std::string ir::StmtFuncDecl::dump(usize& depth) const
@@ -119,7 +121,7 @@ std::string ir::StmtFuncDecl::dump(usize& depth) const
   oss << INDENT << "{\n";
   depth++;
 
-  oss << body->dump(depth) << "\n";
+  oss << DUMP_IF(body, depth) << "\n";
 
   depth--;
   oss << INDENT << '}';
@@ -133,12 +135,17 @@ std::string ir::StmtBlock::dump(usize& depth) const
   depth++;
 
   for (const Stmt* stmt : stmts) {
-    oss << stmt->dump(depth) << "\n";
+    oss << DUMP_IF(stmt, depth) << "\n";
   }
 
-  oss << INDENT << (term ? term->dump(ZERO) : "<no-terminator>");
+  oss << INDENT << (term ? DUMP_IF(term, ZERO) : "<no-terminator>");
   depth--;
   return oss.str();
+}
+
+std::string ir::StmtExpr::dump(usize& depth) const
+{
+  return INDENT + DUMP_IF(expr, ZERO);
 }
 
 [[nodiscard]] std::string via::debug::dump(const IRTree& ir)
@@ -147,7 +154,7 @@ std::string ir::StmtBlock::dump(usize& depth) const
   usize depth = 0;
 
   for (const auto& node : ir) {
-    oss << node->dump(depth) << "\n";
+    oss << DUMP_IF(node, depth) << "\n";
   }
 
   return oss.str();

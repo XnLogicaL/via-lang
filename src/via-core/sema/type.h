@@ -39,10 +39,6 @@ class Type
   };
 
  public:
-  static Expected<Type*> from(Allocator& alloc, const ast::Type* type);
-  static Expected<Type*> infer(Allocator& alloc, const ast::Expr* expr);
-
- public:
   bool isDependent() const noexcept { return flags & 0x1; }
   bool isArithmetic() const noexcept { return isIntegral() || isFloat(); }
 

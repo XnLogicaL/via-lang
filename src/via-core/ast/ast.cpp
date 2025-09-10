@@ -115,13 +115,14 @@ std::string ast::ExprSymbol::dump(usize&) const
 
 std::string ast::ExprDynAccess::dump(usize&) const
 {
-  return std::format("ExprDynAccess({}, {})", expr->dump(ZERO),
-                     expr->dump(ZERO));
+  return std::format("ExprDynAccess({}, {})", root->dump(ZERO),
+                     index->toString());
 }
 
 std::string ast::ExprStaticAccess::dump(usize&) const
 {
-  return std::format("ExprStaticAccess({}, {})", expr->dump(ZERO), aid->dump());
+  return std::format("ExprStaticAccess({}, {})", root->dump(ZERO),
+                     index->toString());
 }
 
 std::string ast::ExprUnary::dump(usize&) const

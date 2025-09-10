@@ -56,7 +56,7 @@ class Expected final
 
   template <typename E>
   constexpr Expected(Unexpected<E>&& err) noexcept
-      : mStorage(fwd<Error>(make_error<E>(err.takeError()))), mHasValue(false)
+      : mStorage(fwd<Error>(Error::fail<E>(err.takeError()))), mHasValue(false)
   {
     debug::require(mStorage.err.hasError(),
                    "Cannot construct Expected<T> with successful Error");

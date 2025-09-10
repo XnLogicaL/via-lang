@@ -25,14 +25,15 @@ inline constexpr usize kRegisterCount = UINT16_MAX;
 namespace sema
 {
 
-namespace registers
+class RegisterState
 {
+ public:
+  u16 alloc();
+  void free(u16 reg);
 
-void reset();
-u16 alloc();
-void free(u16 reg);
-
-}  // namespace registers
+ private:
+  Vec<u16> mBuffer{config::kRegisterCount / 8};
+};
 
 }  // namespace sema
 

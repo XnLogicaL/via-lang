@@ -58,6 +58,7 @@ using DefTable = DefTableEntry[];
 
 struct Def
 {
+  virtual SymbolId getIdentity() const = 0;
   virtual std::string dump() const = 0;
 
   static Def* from(Allocator& alloc, const ir::Stmt* node);
@@ -75,6 +76,7 @@ struct FunctionDef : public Def
   Vec<DefParm> parms;
   const sema::Type* ret;
 
+  SymbolId getIdentity() const override { return symbol; }
   std::string dump() const override;
 };
 

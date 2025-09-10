@@ -14,6 +14,10 @@
   auto* first = advance(); \
   auto loc = first->location(mSource);
 
+#define SAVE_FIRST_DONT_ADVANCE_THO() \
+  auto* first = peek();               \
+  auto loc = first->location(mSource);
+
 using enum via::Token::Kind;
 using namespace via::ast;
 
@@ -236,25 +240,23 @@ const AttributeGroup* via::Parser::parseAttribGroup()
 
 const ExprLit* via::Parser::parseExprLit()
 {
-  auto* tok = peek();
   auto* lit = mAlloc.emplace<ExprLit>();
-  lit->tok = tok;
-  lit->loc = tok->location(mSource);
+  lit->tok = advance();
+  lit->loc = lit->tok->location(mSource);
   return lit;
 }
 
 const ExprSymbol* via::Parser::parseExprSymbol()
 {
-  auto* tok = peek();
-  auto* lit = mAlloc.emplace<ExprSymbol>();
-  lit->sym = tok;
-  lit->loc = tok->location(mSource);
-  return lit;
+  auto* symbol = mAlloc.emplace<ExprSymbol>();
+  symbol->sym = advance();
+  symbol->loc = symbol->sym->location(mSource);
+  return symbol;
 }
 
 const Expr* via::Parser::parseExprGroupOrTuple()
 {
-  auto loc = peek()->location(mSource);
+  auto loc = advance()->location(mSource);
   auto* first = parseExpr();
 
   if (match(COMMA)) {
@@ -297,9 +299,9 @@ const ExprDynAccess* via::Parser::parseExprDynAccess(const ast::Expr* expr)
   advance();  // consume '.'
 
   auto* da = mAlloc.emplace<ExprDynAccess>();
-  da->expr = expr;
-  da->aid = parseAccessIdent();
-  da->loc = {da->expr->loc.begin, da->aid->loc.end};
+  da->root = expr;
+  da->index = expect(IDENTIFIER, "parsing dynamic access specifier");
+  da->loc = {da->root->loc.begin, da->index->location(mSource).end};
   return da;
 }
 
@@ -308,9 +310,9 @@ const ExprStaticAccess* via::Parser::parseExprStAccess(const ast::Expr* expr)
   advance();  // consume '::'
 
   auto* sa = mAlloc.emplace<ExprStaticAccess>();
-  sa->expr = expr;
-  sa->aid = parseAccessIdent();
-  sa->loc = {sa->expr->loc.begin, sa->aid->loc.end};
+  sa->root = expr;
+  sa->index = expect(IDENTIFIER, "parsing static access specifier");
+  sa->loc = {sa->root->loc.begin, sa->index->location(mSource).end};
   return sa;
 }
 
@@ -428,7 +430,7 @@ const ExprLambda* via::Parser::parseExprLambda()
 
 const Expr* via::Parser::parseExprPrimary()
 {
-  SAVE_FIRST()
+  SAVE_FIRST_DONT_ADVANCE_THO()
 
   switch (first->kind) {
     // Literal expression
@@ -473,9 +475,7 @@ const Expr* via::Parser::parseExprAffix()
   }
 
   while (true) {
-    auto* first = peek();
-
-    switch (first->kind) {
+    switch (peek()->kind) {
       case KW_AS:
         expr = parseExprCast(expr);
         break;

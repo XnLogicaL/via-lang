@@ -20,9 +20,9 @@ namespace via
 {
 
 using SymbolId = u64;
-using QualPath = std::deque<std::string>;
+using QualName = std::deque<std::string>;
 
-inline std::string toString(const QualPath& path)
+inline std::string toString(const QualName& path)
 {
   std::ostringstream oss;
 
@@ -50,7 +50,7 @@ class SymbolTable final : public InternTable<std::string, SymbolId>
 
   const auto& getSymbols() const { return mMap; }
 
-  SymbolId intern(const QualPath& path)
+  SymbolId intern(const QualName& path)
   {
     std::lock_guard<std::mutex> lock(mMutex);
     return intern(toString(path));

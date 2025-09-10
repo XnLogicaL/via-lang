@@ -38,18 +38,21 @@ inline constexpr bool kDebugEnabled = true;
 namespace debug
 {
 
-// Basically `assert`
-void require(bool cond, std::string message = config::kCrashLoggerNoMessage);
+#define MSG_PARM std::string message = config::kCrashLoggerNoMessage
 
+// Basically `assert`
+void require(bool cond, MSG_PARM) noexcept;
 [[noreturn]] void panic() noexcept;
-[[noreturn]] void bug(std::string what);
-[[noreturn]] void todo(std::string what = config::kCrashLoggerNoMessage);
-[[noreturn]] void unimplemented(
-  std::string what = config::kCrashLoggerNoMessage);
+[[noreturn]] void bug(MSG_PARM) noexcept;
+[[noreturn]] void todo(MSG_PARM) noexcept;
+[[noreturn]] void unimplemented(MSG_PARM) noexcept;
+
+#undef MSG_PARM
 
 template <typename T, char LDel = '{', char RDel = '}'>
-std::string dump(const Vec<T>& vec,
-                 std::function<std::string(const std::remove_cv_t<T>&)> fn)
+inline std::string dump(
+  const Vec<T>& vec,
+  std::function<std::string(const std::remove_cv_t<T>&)> fn)
 {
   std::ostringstream oss;
   oss << LDel;

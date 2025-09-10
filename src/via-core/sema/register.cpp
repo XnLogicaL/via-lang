@@ -18,22 +18,15 @@
 
 namespace sema = via::sema;
 
-static via::Vec<via::u16> stRegisters(via::config::kRegisterCount / 8);
-
-void sema::registers::reset()
+via::u16 sema::RegisterState::alloc()
 {
-  std::memset(stRegisters.data(), 0, via::config::kRegisterCount / 8);
-}
-
-via::u16 sema::registers::alloc()
-{
-  for (u16 i = 0; i < stRegisters.size(); i++) {
+  for (u16 i = 0; i < mBuffer.size(); i++) {
 #ifdef VIA_HAVE_BUILTIN_CTZLL
-    u64 word = stRegisters[i];
+    u64 word = mBuffer[i];
     if (word != std::numeric_limits<u64>::max()) {  // has at least one zero bit
       u64 inv = ~word;                              // invert zeros to ones
       i32 bit = __builtin_ctzll(inv);               // index of first zero bit
-      stRegisters[i] |= (1ULL << bit);              // mark as occupied
+      mBuffer[i] |= (1ULL << bit);                  // mark as occupied
       return i * 64 + bit;
     }
 #else
@@ -52,9 +45,9 @@ via::u16 sema::registers::alloc()
   debug::bug("semantic register allocation failure");
 }
 
-void sema::registers::free(via::u16 reg)
+void sema::RegisterState::free(via::u16 reg)
 {
   u16 word = reg / 64, bit = reg % 64;
   u64 mask = ~(1ULL << bit);
-  stRegisters[word] &= mask;  // mark bit as free
+  mBuffer[word] &= mask;  // mark bit as free
 }

@@ -93,7 +93,6 @@ struct ExprSymbol : public Expr
 {
   NODE_FIELDS(Expr)
   SymbolId symbol;
-  sema::LocalRef* local;
 };
 
 struct ExprAccess : public Expr
@@ -106,7 +105,8 @@ struct ExprAccess : public Expr
     DYNAMIC,
   } kind;
 
-  const Expr *lval, *idx;
+  const Expr* root;
+  SymbolId index;
 };
 
 struct ExprUnary : public Expr
@@ -205,9 +205,15 @@ struct StmtBlock : public Stmt
   const Term* term;
 };
 
+struct StmtExpr : public Stmt
+{
+  NODE_FIELDS()
+  const Expr* expr;
+};
+
 }  // namespace ir
 
-using IRTree = Vec<ir::Stmt*>;
+using IRTree = Vec<const ir::Stmt*>;
 
 namespace debug
 {

@@ -9,13 +9,17 @@
 
 #pragma once
 
+#if 1
+  #include "config.h"
+  #include "policy.h"
+#endif
+
 #include <ansi.h>
 #include <ast/ast.h>
 #include <constexpr_ipow.h>
 #include <constexpr_stof.h>
 #include <constexpr_stoi.h>
 #include <diagnostics.h>
-#include <iota.h>
 #include <lexer/lexer.h>
 #include <lexer/location.h>
 #include <lexer/token.h>
@@ -29,11 +33,11 @@
 #include <sema/constexpr.h>
 #include <sema/register.h>
 #include <semver.h>
+#include <utility.h>
 #include <vm/executable.h>
 #include <vm/instruction.h>
 #include <vm/interpreter.h>
 #include <vm/stack.h>
 #include <vm/value.h>
 #include <vm/value_ref.h>
-#include "policy.h"
 

@@ -30,37 +30,41 @@ static void logError(std::string message)
 
 [[noreturn]] void via::debug::panic() noexcept
 {
-  logError("program execution raised a panic");
+  logError("program execution panicked");
   cpptrace::generate_trace().print(std::cerr);
   std::abort();
 }
 
-void via::debug::require(bool cond, std::string message)
+void via::debug::require(bool cond, std::string message) noexcept
 {
   __ASSERT_IMPL(
-    cond, std::format("program execution reached failing `require()` call: {}",
-                      message));
+    cond,
+    std::format("program execution reached failing `debug::require()` call: {}",
+                message));
   __UNREACHABLE();
 }
 
-[[noreturn]] void via::debug::bug(std::string what)
-{
-  __ASSERT_IMPL(
-    false, std::format("program execution reached `bug()` call: {}", what));
-  __UNREACHABLE();
-}
-
-[[noreturn]] void via::debug::todo(std::string what)
-{
-  __ASSERT_IMPL(
-    false, std::format("program execution reached `todo()` call: {}", what));
-  __UNREACHABLE();
-}
-
-[[noreturn]] void via::debug::unimplemented(std::string what)
+[[noreturn]] void via::debug::bug(std::string message) noexcept
 {
   __ASSERT_IMPL(
     false,
-    std::format("program execution reached `unimplemented()` call: {}", what));
+    std::format("program execution reached `debug::bug()` call: {}", message));
+  __UNREACHABLE();
+}
+
+[[noreturn]] void via::debug::todo(std::string message) noexcept
+{
+  __ASSERT_IMPL(
+    false,
+    std::format("program execution reached `debug::todo()` call: {}", message));
+  __UNREACHABLE();
+}
+
+[[noreturn]] void via::debug::unimplemented(std::string message) noexcept
+{
+  __ASSERT_IMPL(
+    false,
+    std::format("program execution reached `debug::unimplemented()` call: {}",
+                message));
   __UNREACHABLE();
 }

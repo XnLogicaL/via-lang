@@ -11,6 +11,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <stack>
 #include "local.h"
 #include "option.h"
 
@@ -40,16 +41,7 @@ class Frame final
   Vec<Local> mLocals;
 };
 
-namespace stack
-{
-
-void reset();
-void push(Frame&& frame);
-usize size();
-Frame& top();
-Frame* at(usize pos);
-
-}  // namespace stack
+using StackState = std::stack<Frame>;
 
 }  // namespace sema
 

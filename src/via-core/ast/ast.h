@@ -132,16 +132,15 @@ struct ExprSymbol : public Expr
 struct ExprDynAccess : public Expr
 {
   NODE_FIELDS(Expr)
-  const Expr* expr;
-  const AccessIdent* aid;
+  const Expr* root;
+  const Token* index;
 };
 
 struct ExprStaticAccess : public Expr
 {
   NODE_FIELDS(Expr)
-  const Expr* expr;
-  const AccessIdent* aid;
-  Vec<const Type*> gens;
+  const Expr* root;
+  const Token* index;
 };
 
 struct ExprUnary : public Expr

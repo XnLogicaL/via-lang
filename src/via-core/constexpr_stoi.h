@@ -21,7 +21,6 @@ namespace via
 template <std::integral T>
 constexpr Option<T> stoi(std::string_view str, usize* pos = nullptr)
 {
-  using namespace std::literals;
   const auto digits = "0123456789abcdefABCDEF"sv;
   const usize begin = str.find_first_of(digits);
   if (begin == std::string_view::npos)

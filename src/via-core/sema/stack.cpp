@@ -39,32 +39,3 @@ void sema::Frame::setLocal(std::string_view symbol,
 
   mLocals.emplace_back(symbol, lval, rval, type, version, quals);
 }
-
-static via::Vec<sema::Frame> stStack{sema::Frame()};
-
-void sema::stack::reset()
-{
-  stStack.clear();
-  stStack.push_back({});
-}
-
-void sema::stack::push(sema::Frame&& frame)
-{
-  stStack.push_back(std::move(frame));
-}
-
-via::usize sema::stack::size()
-{
-  return stStack.size();
-}
-
-sema::Frame& sema::stack::top()
-{
-  debug::require(!stStack.empty());
-  return stStack.back();
-}
-
-sema::Frame* sema::stack::at(usize pos)
-{
-  return pos <= size() ? &stStack[pos] : nullptr;
-}

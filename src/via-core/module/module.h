@@ -103,8 +103,8 @@ class Module final
   auto& getAllocator() { return mAlloc; }
   auto* getManager() { return mManager; }
 
-  Option<SymbolInfo> lookup(const QualPath& path);
-  Expected<Module*> resolveImport(const QualPath& path);
+  Option<const Def*> lookup(SymbolId symbol);
+  Expected<Module*> resolveImport(const QualName& path);
 
   std::string dump() const;
 

@@ -52,9 +52,9 @@ static bool checkTerminalSupport()
 #else
 static bool checkTerminalSupport()
 {
-  std::println(std::cout,
-               "host terminal does not support ANSI escape codes, consider "
-               "using one that does");
+  spdlog::warn(
+    "host terminal does not support ANSI escape codes, consider "
+    "using one that does");
   return false;
 }
 #endif

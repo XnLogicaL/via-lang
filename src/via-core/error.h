@@ -17,7 +17,6 @@ namespace via
 {
 
 class Error;
-
 class ErrorInfo
 {
  public:
@@ -36,6 +35,12 @@ class Error final
 
   [[nodiscard]] static Error success() noexcept { return Error(); }
 
+  template <typename E = ErrorInfo, typename... Args>
+  [[nodiscard]] static Error fail(Args&&... args) noexcept
+  {
+    return Error(std::make_shared<E>(fwd<Args>(args)...));
+  }
+
   operator bool() const noexcept { return !hasError(); }
   ErrorInfo& operator*() const noexcept { return getError(); }
 
@@ -47,12 +52,6 @@ class Error final
  private:
   std::shared_ptr<ErrorInfo> mPayload{nullptr};
 };
-
-template <typename E = ErrorInfo, typename... Args>
-[[nodiscard]] Error make_error(Args&&... args) noexcept
-{
-  return Error(std::make_shared<E>(fwd<Args>(args)...));
-}
 
 inline ErrorInfo::ErrorInfo(const Error& err) : msg(err.getError().msg) {}
 
