@@ -88,6 +88,7 @@ class Module final
                                           Module* importee,
                                           const char* name,
                                           fs::path path,
+                                          const ast::StmtImport* decl,
                                           u32 perms = 0,
                                           u32 flags = 0);
 
@@ -95,16 +96,20 @@ class Module final
                                             Module* importee,
                                             const char* name,
                                             fs::path path,
+                                            const ast::StmtImport* decl,
                                             u32 perms = 0,
                                             u32 flags = 0);
 
  public:
+  auto getName() const { return mName; }
   auto getKind() const { return mKind; }
   auto& getAllocator() { return mAlloc; }
   auto* getManager() { return mManager; }
+  auto* getImportDecl() { return mDecl; }
 
   Option<const Def*> lookup(SymbolId symbol);
-  Expected<Module*> resolveImport(const QualName& path);
+  Expected<Module*> resolveImport(const QualName& path,
+                                  const ast::StmtImport* importDecl);
 
   std::string dump() const;
 
@@ -119,6 +124,7 @@ class Module final
   Map<SymbolId, const Def*> mDefs;
   Module* mImportee = nullptr;
   ModuleManager* mManager = nullptr;
+  const ast::StmtImport* mDecl = nullptr;
 };
 
 }  // namespace via

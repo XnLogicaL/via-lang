@@ -14,11 +14,13 @@
 #include "module/symbol.h"
 #include "option.h"
 #include "sema/const_value.h"
-#include "sema/local.h"
 #include "sema/type.h"
 
 namespace via
 {
+
+class Module;
+struct Def;
 
 namespace ir
 {
@@ -109,6 +111,14 @@ struct ExprAccess : public Expr
   SymbolId index;
 };
 
+struct ExprModuleAccess : public Expr
+{
+  NODE_FIELDS(Expr)
+  Module* module;
+  SymbolId index;
+  const Def* def;
+};
+
 struct ExprUnary : public Expr
 {
   NODE_FIELDS(Expr)
@@ -175,6 +185,7 @@ struct StmtVarDecl : public Stmt
   NODE_FIELDS()
   SymbolId sym;
   const Expr* expr;
+  const sema::Type* declType;
 };
 
 struct StmtBlock;

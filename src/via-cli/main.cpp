@@ -7,6 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
+#include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/spdlog.h>
 #include <via/via.h>
 #include <csv2/reader.hpp>
@@ -67,6 +68,14 @@ static fs::path getCoreLangBaseDir()
 
 int main(int argc, char* argv[])
 {
+  auto console = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+
+  std::string infoCode = console->cyan.data();
+  infoCode += console->bold.data();
+
+  console->set_color(spdlog::level::info, std::string_view(infoCode.c_str()));
+
+  spdlog::set_default_logger(std::make_shared<spdlog::logger>("main", console));
   spdlog::set_pattern("%^%l:%$ %v");
 
   const fs::path corePath = getCoreLangBaseDir();
@@ -112,8 +121,8 @@ int main(int argc, char* argv[])
                    corePath.string());
     }
 
-    ModuleManager mgr;
-    mgr.addImportPath(path.parent_path());
+    ModuleManager manager;
+    manager.addImportPath(path.parent_path());
 
     if (!rawIncludeDirs.empty()) {
       assert(csvReader.parse(rawIncludeDirs), "bad import path list");
@@ -122,13 +131,14 @@ int main(int argc, char* argv[])
         for (const auto cell : row) {
           std::string path;
           cell.read_value(path);
-          mgr.addImportPath(path);
+          manager.addImportPath(path);
         }
       }
     }
 
-    auto module = Module::loadSourceFile(&mgr, nullptr, path.stem().c_str(),
-                                         path, Module::Perms::ALL, flags);
+    auto module =
+      Module::loadSourceFile(&manager, nullptr, path.stem().c_str(), path,
+                             nullptr, Module::Perms::ALL, flags);
 
     assert(module.hasValue(),
            module.errorOr(via::Error::fail("<no-error>")).toString());
@@ -138,7 +148,7 @@ int main(int argc, char* argv[])
                    via::ansi("[global symbol table]", via::Fg::Yellow,
                              via::Bg::Black, via::Style::Bold));
 
-      for (const auto& sym : via::SymbolTable::instance().getSymbols()) {
+      for (const auto& sym : manager.getSymbolTable().getSymbols()) {
         std::println(std::cout, "  {}: {}", sym.second, sym.first);
       }
     }

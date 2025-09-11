@@ -1,11 +1,12 @@
 import std::io;
 
-io::print();
+io::print(10);
 
 fn declare_nothing() -> nil {
+  import std::io;
   var nothing = nil;
+  return 30;
 }
 
-var nothing = nil;
-
-
+var bad_decl_one: int = 10;
+var bad_decl_two: int = nil;

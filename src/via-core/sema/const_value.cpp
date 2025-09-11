@@ -60,12 +60,10 @@ std::string sema::ConstValue::toString() const
       break;
   }
 
-  return "<unknown-cv-type>";
+  debug::bug("unmapped cv type");
 }
 
 std::string sema::ConstValue::dump() const
 {
-  return std::format("{} [{} {}]",
-                     ansi("constant", Fg::Magenta, Bg::Black, Style::Bold),
-                     magic_enum::enum_name(kind()), toString());
+  return std::format("[{} {}]", magic_enum::enum_name(kind()), toString());
 }

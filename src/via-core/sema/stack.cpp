@@ -12,7 +12,7 @@
 
 namespace sema = via::sema;
 
-via::Option<sema::LocalRef> sema::Frame::getLocal(std::string_view symbol)
+via::Option<sema::LocalRef> sema::Frame::getLocal(via::SymbolId symbol)
 {
   for (i64 i = mLocals.size() - 1; i >= 0; --i) {
     Local& local = mLocals[i];
@@ -24,10 +24,9 @@ via::Option<sema::LocalRef> sema::Frame::getLocal(std::string_view symbol)
   return nullopt;
 }
 
-void sema::Frame::setLocal(std::string_view symbol,
-                           const ast::Expr* lval,
-                           const ast::Expr* rval,
-                           const sema::Type* type,
+void sema::Frame::setLocal(via::SymbolId symbol,
+                           const ast::StmtVarDecl* astDecl,
+                           const ir::StmtVarDecl* irDecl,
                            u64 quals)
 {
   usize version;
@@ -37,5 +36,5 @@ void sema::Frame::setLocal(std::string_view symbol,
     version = 0;
   }
 
-  mLocals.emplace_back(symbol, lval, rval, type, version, quals);
+  mLocals.emplace_back(symbol, astDecl, irDecl, version, quals);
 }

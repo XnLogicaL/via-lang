@@ -29,6 +29,7 @@ class IRBuilder final
         mAst(ast),
         mAlloc(m->getAllocator()),
         mTypeCtx(m->getManager()->getTypeContext()),
+        mSymbolTable(m->getManager()->getSymbolTable()),
         mDiags(diags)
   {}
 
@@ -39,7 +40,26 @@ class IRBuilder final
   const sema::Type* typeOf(const ast::Expr* expr) noexcept;
   const sema::Type* typeOf(const ast::Type* type) noexcept;
 
+  inline ir::StmtBlock* endBlock() noexcept
+  {
+    mShouldPushBlock = true;
+    return mCurrentBlock;
+  }
+
+  inline ir::StmtBlock* newBlock(SymbolId symbol) noexcept
+  {
+    ir::StmtBlock* block = mCurrentBlock;
+    mShouldPushBlock = false;
+    mCurrentBlock = mAlloc.emplace<ir::StmtBlock>();
+    mCurrentBlock->name = symbol;
+    return block;
+  }
+
   // clang-format off
+  auto internSymbol(std::string symbol) { return mSymbolTable.intern(symbol); }
+  auto internSymbol(const via::Token& symbol) { return mSymbolTable.intern(symbol.toString()); }
+  auto iotaSymbol() { return internSymbol(std::to_string(via::iota<via::usize>())); }
+
   const ir::Expr* lowerExprLit(const ast::ExprLit* exprLit);
   const ir::Expr* lowerExprSymbol(const ast::ExprSymbol* exprSym);
   const ir::Expr* lowerExprStaticAccess(const ast::ExprStaticAccess* exprStAcc);
@@ -82,6 +102,9 @@ class IRBuilder final
   DiagContext& mDiags;
   sema::StackState mStack;
   sema::TypeContext& mTypeCtx;
+  SymbolTable& mSymbolTable;
+  bool mShouldPushBlock;
+  ir::StmtBlock* mCurrentBlock;
 };
 
 }  // namespace via

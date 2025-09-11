@@ -287,7 +287,8 @@ std::string ast::StmtAssign::dump(usize& depth) const
 
 std::string ast::StmtReturn::dump(usize& depth) const
 {
-  return INDENT + std::format("StmtReturn({})", expr->dump(ZERO));
+  return INDENT +
+         std::format("StmtReturn({})", expr ? expr->dump(ZERO) : "<null>");
 }
 
 std::string ast::StmtEnum::dump(usize& depth) const

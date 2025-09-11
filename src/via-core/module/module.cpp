@@ -84,6 +84,7 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
   Module* importee,
   const char* name,
   fs::path path,
+  const ast::StmtImport* decl,
   u32 perms,
   u32 flags)
 {
@@ -115,6 +116,7 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
     module->mFlags = flags;
     module->mName = name;
     module->mPath = path;
+    module->mDecl = decl;
 
     manager->addModule(module);
 
@@ -152,12 +154,14 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
   return nullptr;
 }
 
-via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
-                                                        Module* importee,
-                                                        const char* name,
-                                                        fs::path path,
-                                                        u32 perms,
-                                                        u32 flags)
+via::Expected<via::Module*> via::Module::loadSourceFile(
+  ModuleManager* manager,
+  Module* importee,
+  const char* name,
+  fs::path path,
+  const ast::StmtImport* importDecl,
+  u32 perms,
+  u32 flags)
 {
   if (manager->isImporting(name)) {
     return Unexpected("Recursive import detected");
@@ -187,6 +191,7 @@ via::Expected<via::Module*> via::Module::loadSourceFile(ModuleManager* manager,
     module->mFlags = flags;
     module->mName = name;
     module->mPath = path;
+    module->mDecl = importDecl;
 
     manager->addModule(module);
 
@@ -276,7 +281,7 @@ struct ModuleCandidate
 };
 
 static via::Option<ModuleInfo> resolveImportPath(
-  via::fs::path root,
+  const via::fs::path& root,
   const via::QualName& path,
   const via::ModuleManager& manager)
 {
@@ -345,7 +350,9 @@ via::Option<const via::Def*> via::Module::lookup(via::SymbolId symbol)
   return nullopt;
 }
 
-via::Expected<via::Module*> via::Module::resolveImport(const QualName& path)
+via::Expected<via::Module*> via::Module::resolveImport(
+  const QualName& path,
+  const ast::StmtImport* importDecl)
 {
   debug::require(mManager, "unmanaged module detected");
 
@@ -361,10 +368,10 @@ via::Expected<via::Module*> via::Module::resolveImport(const QualName& path)
   switch (module->kind) {
     case ModuleInfo::Kind::SOURCE:
       return Module::loadSourceFile(mManager, this, path.back().c_str(),
-                                    module->path, mPerms, mFlags);
+                                    module->path, importDecl, mPerms, mFlags);
     case ModuleInfo::Kind::NATIVE:
       return Module::loadNativeObject(mManager, this, path.back().c_str(),
-                                      module->path, mPerms, mFlags);
+                                      module->path, importDecl, mPerms, mFlags);
     default:
       debug::todo("module types");
   }

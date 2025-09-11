@@ -13,6 +13,7 @@
 #include <via/types.h>
 #include <stack>
 #include "local.h"
+#include "module/symbol.h"
 #include "option.h"
 
 namespace via
@@ -21,22 +22,24 @@ namespace via
 namespace sema
 {
 
+class Module;
+
 class Frame final
 {
  public:
   Local& top() { return mLocals.back(); }
 
-  Option<LocalRef> getLocal(std::string_view symbol);
-  void setLocal(std::string_view symbol,
-                const ast::Expr* lval,
-                const ast::Expr* rval,
-                const sema::Type* type,
+  Option<LocalRef> getLocal(SymbolId symbol);
+  void setLocal(SymbolId symbol,
+                const ast::StmtVarDecl* astDecl,
+                const ir::StmtVarDecl* irDecl,
                 u64 quals = 0ULL);
 
   void save() { mStkPtr = mLocals.size(); }
   void restore() { mLocals.resize(mStkPtr); }
 
  private:
+  Module* mModule;
   usize mStkPtr;
   Vec<Local> mLocals;
 };

@@ -23,18 +23,6 @@ using Btk = sema::BuiltinType::Kind;
   if TRY_COERCE (const TYPE, inner, NODE) \
     return HANDLER(inner);
 
-via::SymbolTable& symbolTable = via::SymbolTable::instance();
-
-static via::SymbolId internSymbol(const std::string& symbol)
-{
-  return via::SymbolTable::instance().intern(symbol);
-}
-
-static via::SymbolId internSymbol(const via::Token& symbol)
-{
-  return via::SymbolTable::instance().intern(symbol.toString());
-}
-
 const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
 {
   using enum Token::Kind;
@@ -66,13 +54,13 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
         debug::bug("unhandled literal expression");
     }
 
-    return mAlloc.emplace<sema::BuiltinType>(kind);
+    return mTypeCtx.getBuiltinTypeInstance(kind);
   } else if TRY_COERCE (const ast::ExprSymbol, sym, expr) {
     sema::Frame& frame = mStack.top();
 
     // Local variable
-    if (auto local = frame.getLocal(sym->sym->toStringView())) {
-      return local->local.getType();
+    if (auto local = frame.getLocal(internSymbol(sym->sym->toString()))) {
+      return local->local.getIrDecl()->declType;
     }
 
     debug::todo("check other kinds of symbols");
@@ -102,7 +90,7 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
             unary->expr->loc,
             std::format("Invalid unary expression '-' (NEG) on non-arithmetic "
                         "expression of type '{}'",
-                        type->dump()));
+                        type->toString()));
         }
       } break;
       case UnaryOp::NOT:
@@ -114,7 +102,7 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
             unary->expr->loc,
             std::format("Invalid unary expression '~' (BNOT) on non-integral "
                         "expression of type '{}'",
-                        type->dump()));
+                        type->toString()));
         }
       } break;
     }
@@ -122,7 +110,41 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
     return nullptr;
   }
 
-  debug::bug("unhandled typeOf(expr)");
+  debug::bug("unhandled typeOf(ast_expr)");
+}
+
+const sema::Type* via::IRBuilder::typeOf(const ast::Type* type) noexcept
+{
+  using enum Token::Kind;
+  using enum sema::BuiltinType::Kind;
+
+  if TRY_COERCE (const ast::TypeBuiltin, typeBuiltin, type) {
+    sema::BuiltinType::Kind kind;
+
+    switch (typeBuiltin->tok->kind) {
+      case LIT_NIL:
+        kind = Nil;
+        break;
+      case KW_BOOL:
+        kind = Bool;
+        break;
+      case KW_INT:
+        kind = Int;
+        break;
+      case KW_FLOAT:
+        kind = Float;
+        break;
+      case KW_STRING:
+        kind = String;
+        break;
+      default:
+        debug::bug("unmapped builtin type token");
+    }
+
+    return mTypeCtx.getBuiltinTypeInstance(kind);
+  }
+
+  debug::bug("unhandled typeOf(ast_type)");
 }
 
 const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
@@ -139,11 +161,11 @@ const ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
   sema::Frame& frame = mStack.top();
 
   auto* sym = mAlloc.emplace<ir::ExprSymbol>();
-  sym->symbol = symbolTable.intern(symbol);
+  sym->symbol = mSymbolTable.intern(symbol);
 
   // Local-level symbol
-  if (auto local = frame.getLocal(symbol)) {
-    sym->type = local->local.getType();
+  if (auto local = frame.getLocal(internSymbol(symbol))) {
+    sym->type = local->local.getIrDecl()->declType;
     return sym;
   }
 
@@ -157,21 +179,16 @@ const ir::Expr* via::IRBuilder::lowerExprStaticAccess(
 {
   // Check for module thing
   if TRY_COERCE (const ast::ExprSymbol, rootSymbol, exprStAcc->root) {
-    std::string symbol = rootSymbol->sym->toString();
     ModuleManager* manager = mModule->getManager();
 
-    if (Module* module = manager->getModuleByName(symbol)) {
-      SymbolId lowSymbolId = internSymbol(exprStAcc->index->toString());
-      if (auto def = module->lookup(lowSymbolId)) {
-        auto ident = def.getValue()->getIdentity();
-        auto finalSymbol = std::format(
-          "module<{}>::{}", symbol,
-          SymbolTable::instance().lookup(ident).valueOr("<unknown>"));
-
-        auto* access = mAlloc.emplace<ir::ExprSymbol>();
-        access->symbol = internSymbol(finalSymbol);
-        access->type = nullptr; /* TODO */
-        return access;
+    if (auto* module = manager->getModuleByName(rootSymbol->sym->toString())) {
+      SymbolId low = internSymbol(exprStAcc->index->toString());
+      if (auto def = module->lookup(low)) {
+        auto* maccess = mAlloc.emplace<ir::ExprModuleAccess>();
+        maccess->module = module;
+        maccess->index = low;
+        maccess->def = *def;
+        return maccess;
       }
     }
   }
@@ -293,7 +310,33 @@ const ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr)
 const ir::Stmt* via::IRBuilder::lowerStmtVarDecl(
   const ast::StmtVarDecl* stmtVarDecl)
 {
-  return nullptr;
+  auto* decl = mAlloc.emplace<ir::StmtVarDecl>();
+  decl->expr = lowerExpr(stmtVarDecl->rval);
+
+  if TRY_COERCE (const ast::ExprSymbol, lval, stmtVarDecl->lval) {
+    auto* rvalType = typeOf(stmtVarDecl->rval);
+
+    if (stmtVarDecl->type != nullptr) {
+      decl->declType = typeOf(stmtVarDecl->type);
+
+      if (decl->declType != rvalType) {
+        mDiags.report<Dk::Error>(
+          stmtVarDecl->rval->loc,
+          std::format(
+            "Expression type '{}' does not match declaration type '{}'",
+            rvalType->toString(), decl->declType->toString()));
+      }
+    } else {
+      decl->declType = rvalType;
+    }
+
+    decl->sym = internSymbol(lval->sym->toString());
+  } else {
+    debug::bug("bad lvalue");
+  }
+
+  mStack.top().setLocal(decl->sym, stmtVarDecl, decl);
+  return decl;
 }
 
 const ir::Stmt* via::IRBuilder::lowerStmtScope(const ast::StmtScope* stmtScope)
@@ -331,7 +374,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtAssign(
 const ir::Stmt* via::IRBuilder::lowerStmtReturn(
   const ast::StmtReturn* stmtReturn)
 {
-  return nullptr;
+  auto* term = mAlloc.emplace<ir::TrReturn>();
+  term->val = stmtReturn->expr ? lowerExpr(stmtReturn->expr) : nullptr;
+
+  ir::StmtBlock* block = endBlock();
+  block->term = term;
+  return block;
 }
 
 const ir::Stmt* via::IRBuilder::lowerStmtEnum(const ast::StmtEnum* stmtEnum)
@@ -348,13 +396,31 @@ const ir::Stmt* via::IRBuilder::lowerStmtModule(
 const ir::Stmt* via::IRBuilder::lowerStmtImport(
   const ast::StmtImport* stmtImport)
 {
-  QualName path;
-
-  for (const Token* tok : stmtImport->path) {
-    path.push_back(tok->toString());
+  if (mStack.size() > 1) {
+    mDiags.report<Dk::Error>(
+      stmtImport->loc,
+      "Import statements are only allowed in root scope of a module");
+    return nullptr;
   }
 
-  if (auto result = mModule->resolveImport(path); result.hasError()) {
+  QualName qualName;
+  for (const Token* tok : stmtImport->path) {
+    qualName.push_back(tok->toString());
+  }
+
+  std::string name = qualName.back();
+  if (auto module = mModule->getManager()->getModuleByName(name)) {
+    mDiags.report<Dk::Error>(
+      stmtImport->loc,
+      std::format("Module '{}' imported more than once", name));
+
+    if (auto* importDecl = module->getImportDecl()) {
+      mDiags.report<Dk::Info>(importDecl->loc, "Previously imported here");
+    }
+  }
+
+  auto result = mModule->resolveImport(qualName, stmtImport);
+  if (result.hasError()) {
     mDiags.report<Dk::Error>(stmtImport->loc, result.takeError().toString());
   }
 
@@ -364,7 +430,51 @@ const ir::Stmt* via::IRBuilder::lowerStmtImport(
 const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   const ast::StmtFunctionDecl* stmtFunctionDecl)
 {
-  return nullptr;
+  auto* fndecl = mAlloc.emplace<ir::StmtFuncDecl>();
+  fndecl->kind = ir::StmtFuncDecl::Kind::IR;
+  fndecl->sym = internSymbol(stmtFunctionDecl->name->toString());
+  fndecl->ret = stmtFunctionDecl->ret ? typeOf(stmtFunctionDecl->ret) : nullptr;
+
+  if (fndecl->ret == nullptr) {
+    mDiags.report<Dk::Error>(
+      stmtFunctionDecl->loc,
+      "Compiler infered return types are not implemented");
+  }
+
+  for (const auto& parm : stmtFunctionDecl->parms) {
+    ir::Parm newParm;
+    newParm.sym = internSymbol(parm->sym->toString());
+    newParm.type = typeOf(parm->type);
+
+    fndecl->parms.push_back(newParm);
+  }
+
+  auto* block = mAlloc.emplace<ir::StmtBlock>();
+  block->name = internSymbol("entry");
+
+  mStack.push({});
+
+  for (const auto& stmt : stmtFunctionDecl->scp->stmts) {
+    if TRY_COERCE (const ast::StmtReturn, ret, stmt) {
+      auto* term = mAlloc.emplace<ir::TrReturn>();
+      term->val = ret->expr ? lowerExpr(ret->expr) : nullptr;
+      block->term = term;
+      break;
+    }
+
+    block->stmts.push_back(lowerStmt(stmt));
+  }
+
+  mStack.pop();
+
+  if (block->term == nullptr) {
+    auto* term = mAlloc.emplace<ir::TrReturn>();
+    term->val = nullptr;
+    block->term = term;
+  }
+
+  fndecl->body = block;
+  return fndecl;
 }
 
 const ir::Stmt* via::IRBuilder::lowerStmtStructDecl(
@@ -419,16 +529,23 @@ const ir::Stmt* via::IRBuilder::lowerStmt(const ast::Stmt* stmt)
 
 via::IRTree via::IRBuilder::build()
 {
-  // Push root stack frame
-  mStack.push({});
+  mStack.push({});         // Push root stack frame
+  newBlock(iotaSymbol());  // Push block
 
   IRTree tree;
 
   for (const auto& astStmt : mAst) {
     if (const ir::Stmt* loweredStmt = lowerStmt(astStmt)) {
-      tree.push_back(loweredStmt);
+      mCurrentBlock->stmts.push_back(loweredStmt);
+    }
+
+    if (mShouldPushBlock) {
+      ir::StmtBlock* block = newBlock(iotaSymbol());
+      tree.push_back(block);
     }
   }
 
+  // Push last block (it likely will not have a terminator)
+  tree.push_back(endBlock());
   return tree;
 }

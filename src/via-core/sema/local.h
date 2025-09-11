@@ -12,6 +12,8 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
+#include "ir/ir.h"
+#include "module/symbol.h"
 #include "type.h"
 
 namespace via
@@ -30,35 +32,31 @@ class Local final
 
  public:
   Local() = default;
-  Local(std::string_view symbol,
-        const ast::Expr* lval,
-        const ast::Expr* rval,
-        const sema::Type* type,
+  Local(SymbolId symbol,
+        const ast::StmtVarDecl* astDecl,
+        const ir::StmtVarDecl* irDecl,
         usize version = 0,
         u64 quals = 0ULL)
       : mVersion(version),
         mQuals(quals),
         mSymbol(symbol),
-        mLVal(lval),
-        mRVal(rval),
-        mType(type)
+        mAstDecl(astDecl),
+        mIrDecl(irDecl)
   {}
 
  public:
-  usize getVersion() const { return mVersion; }
-  u64 getQualifiers() const { return mQuals; }
-  std::string_view getSymbol() const { return mSymbol; }
-  const ast::Expr* getAstLVal() const { return mLVal; }
-  const ast::Expr* getAstRVal() const { return mRVal; }
-  const sema::Type* getType() const { return mType; }
+  auto getVersion() const { return mVersion; }
+  auto getQualifiers() const { return mQuals; }
+  auto getSymbol() const { return mSymbol; }
+  const auto* getAstDecl() const { return mAstDecl; }
+  const auto* getIrDecl() const { return mIrDecl; }
 
  protected:
   const usize mVersion = 0;
   const u64 mQuals = 0ULL;
-  const std::string_view mSymbol = "<invalid-local>";
-  const ast::Expr* mLVal = nullptr;
-  const ast::Expr* mRVal = nullptr;
-  const sema::Type* mType = nullptr;
+  const SymbolId mSymbol = -1;
+  const ast::StmtVarDecl* mAstDecl = nullptr;
+  const ir::StmtVarDecl* mIrDecl = nullptr;
 };
 
 struct LocalRef

@@ -12,6 +12,7 @@
 #include <via/config.h>
 #include <via/types.h>
 #include <magic_enum/magic_enum.hpp>
+#include "ansi.h"
 #include "ast/ast.h"
 #include "debug.h"
 #include "expected.h"
@@ -45,6 +46,7 @@ class Type
   virtual bool isIntegral() const noexcept { return false; }
   virtual bool isFloat() const noexcept { return false; }
   virtual std::string dump() const { debug::unimplemented(); }
+  virtual std::string toString() const { debug::unimplemented(); }
 
  public:
   const Kind kind;
@@ -74,6 +76,19 @@ struct BuiltinType : public Type
   std::string dump() const override
   {
     return std::format("BuiltinType({})", magic_enum::enum_name(bt));
+  }
+
+  std::string toString() const override
+  {
+    auto rawEnumName = magic_enum::enum_name(bt);
+
+    std::string name;
+    name.resize(rawEnumName.length());
+
+    std::transform(rawEnumName.begin(), rawEnumName.end(), name.begin(),
+                   ::tolower);
+
+    return ansi(name, Fg::Magenta);
   }
 };
 

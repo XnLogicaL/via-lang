@@ -12,7 +12,6 @@
 #include <via/config.h>
 #include <via/types.h>
 #include <deque>
-#include <mutex>
 #include <sstream>
 #include "intern_table.h"
 
@@ -42,22 +41,8 @@ class SymbolTable final : public InternTable<std::string, SymbolId>
  public:
   using InternTable::intern;
 
-  static SymbolTable& instance()
-  {
-    static SymbolTable inst;
-    return inst;
-  }
-
   const auto& getSymbols() const { return mMap; }
-
-  SymbolId intern(const QualName& path)
-  {
-    std::lock_guard<std::mutex> lock(mMutex);
-    return intern(toString(path));
-  }
-
- private:
-  mutable std::mutex mMutex;
+  SymbolId intern(const QualName& path) { return intern(toString(path)); }
 };
 
 }  // namespace via
