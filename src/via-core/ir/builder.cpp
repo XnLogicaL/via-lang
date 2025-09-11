@@ -9,6 +9,7 @@
 
 #include "builder.h"
 #include "ir/ir.h"
+#include "sema/control_path.h"
 #include "sema/stack.h"
 #include "utility.h"
 
@@ -152,6 +153,7 @@ const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
   auto* constant = mAlloc.emplace<ir::ExprConstant>();
   constant->value = *sema::ConstValue::fromToken(*exprLit->tok);
   constant->type = typeOf(exprLit);
+  constant->loc = exprLit->loc;
   return constant;
 }
 
@@ -162,6 +164,7 @@ const ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
 
   auto* sym = mAlloc.emplace<ir::ExprSymbol>();
   sym->symbol = mSymbolTable.intern(symbol);
+  sym->loc = exprSym->loc;
 
   // Local-level symbol
   if (auto local = frame.getLocal(internSymbol(symbol))) {
@@ -198,6 +201,7 @@ const ir::Expr* via::IRBuilder::lowerExprStaticAccess(
   access->root = lowerExpr(exprStAcc->root);
   access->index = internSymbol(*exprStAcc->index);
   access->type = typeOf(exprStAcc);
+  access->loc = exprStAcc->loc;
   return access;
 }
 
@@ -209,6 +213,7 @@ const ir::Expr* via::IRBuilder::lowerExprDynamicAccess(
   access->root = lowerExpr(exprDynAcc->root);
   access->index = internSymbol(*exprDynAcc->index);
   access->type = typeOf(exprDynAcc);
+  access->loc = exprDynAcc->loc;
   return access;
 }
 
@@ -218,6 +223,7 @@ const ir::Expr* via::IRBuilder::lowerExprUnary(const ast::ExprUnary* exprUnary)
   unary->op = toUnaryOp(exprUnary->op->kind);
   unary->type = typeOf(exprUnary);
   unary->expr = lowerExpr(exprUnary->expr);
+  unary->loc = exprUnary->loc;
   return unary;
 }
 
@@ -229,6 +235,7 @@ const ir::Expr* via::IRBuilder::lowerExprBinary(
   binary->lhs = lowerExpr(exprBinary->lhs);
   binary->rhs = lowerExpr(exprBinary->rhs);
   binary->type = typeOf(exprBinary);
+  binary->loc = exprBinary->loc;
   return binary;
 }
 
@@ -241,6 +248,7 @@ const ir::Expr* via::IRBuilder::lowerExprCall(const ast::ExprCall* exprCall)
 {
   auto* call = mAlloc.emplace<ir::ExprCall>();
   call->callee = lowerExpr(exprCall->lval);
+  call->loc = exprCall->loc;
   call->type = nullptr; /* TODO: Type of this expression should be the return
                            type of the callee function. */
   call->args = [&]() {
@@ -312,6 +320,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtVarDecl(
 {
   auto* decl = mAlloc.emplace<ir::StmtVarDecl>();
   decl->expr = lowerExpr(stmtVarDecl->rval);
+  decl->loc = stmtVarDecl->loc;
 
   if TRY_COERCE (const ast::ExprSymbol, lval, stmtVarDecl->lval) {
     auto* rvalType = typeOf(stmtVarDecl->rval);
@@ -375,7 +384,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtReturn(
   const ast::StmtReturn* stmtReturn)
 {
   auto* term = mAlloc.emplace<ir::TrReturn>();
+  term->loc = stmtReturn->loc;
   term->val = stmtReturn->expr ? lowerExpr(stmtReturn->expr) : nullptr;
+  term->type =
+    stmtReturn->expr
+      ? typeOf(stmtReturn->expr)
+      : mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
 
   ir::StmtBlock* block = endBlock();
   block->term = term;
@@ -457,7 +471,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   for (const auto& stmt : stmtFunctionDecl->scp->stmts) {
     if TRY_COERCE (const ast::StmtReturn, ret, stmt) {
       auto* term = mAlloc.emplace<ir::TrReturn>();
+      term->loc = ret->loc;
       term->val = ret->expr ? lowerExpr(ret->expr) : nullptr;
+      term->type =
+        ret->expr
+          ? typeOf(ret->expr)
+          : mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
       block->term = term;
       break;
     }
@@ -470,10 +489,47 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   if (block->term == nullptr) {
     auto* term = mAlloc.emplace<ir::TrReturn>();
     term->val = nullptr;
+    term->type = mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
     block->term = term;
   }
 
+  const sema::Type* expectedRetType = fndecl->ret;
+
+  for (const auto& term : sema::analyzeControlPaths(block)) {
+    if TRY_COERCE (const ir::TrReturn, ret, term) {
+      if (!expectedRetType) {
+        expectedRetType = ret->type;
+      } else if (expectedRetType != ret->type) {
+        if (fndecl->ret) {
+          mDiags.report<Dk::Error>(
+            ret->loc,
+            std::format("Function return type '{}' does not match type "
+                        "'{}' returned by control path",
+                        fndecl->ret->toString(), ret->type->toString()));
+        } else {
+          mDiags.report<Dk::Error>(ret->loc,
+                                   "All code paths must return the same type "
+                                   "for function with inferred return type");
+        }
+        break;
+      }
+    } else {
+      mDiags.report<Dk::Error>(term->loc,
+                               "All control paths must return from function");
+      break;
+    }
+  }
+
+  if (fndecl->ret && expectedRetType && fndecl->ret != expectedRetType) {
+    mDiags.report<Dk::Error>(
+      block->loc,
+      std::format("Function return type '{}' does not match inferred "
+                  "return type '{}' from all control paths",
+                  fndecl->ret->toString(), expectedRetType->toString()));
+  }
+
   fndecl->body = block;
+  fndecl->loc = stmtFunctionDecl->loc;
   return fndecl;
 }
 
@@ -498,6 +554,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtExpr(const ast::StmtExpr* stmtExpr)
 {
   auto* expr = mAlloc.emplace<ir::StmtExpr>();
   expr->expr = lowerExpr(stmtExpr->expr);
+  expr->loc = stmtExpr->loc;
   return expr;
 }
 

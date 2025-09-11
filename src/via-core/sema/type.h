@@ -88,7 +88,7 @@ struct BuiltinType : public Type
     std::transform(rawEnumName.begin(), rawEnumName.end(), name.begin(),
                    ::tolower);
 
-    return ansi(name, Fg::Magenta);
+    return ansi(name, Fg::Magenta, Bg::Black, Style::Bold);
   }
 };
 

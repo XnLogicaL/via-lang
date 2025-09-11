@@ -37,13 +37,13 @@ std::string ir::TrBreak::dump(usize& depth) const
 
 std::string ir::TrBranch::dump(usize& depth) const
 {
-  return INDENT + std::format("br {}", lbl);
+  return INDENT + std::format("br {}", target->name);
 }
 
 std::string ir::TrCondBranch::dump(usize& depth) const
 {
-  return INDENT +
-         std::format("cndbr {} ? {} : {}", DUMP_IF(cnd, ZERO), iftrue, iffalse);
+  return INDENT + std::format("cndbr {} ? {} : {}", DUMP_IF(cnd, ZERO),
+                              trueTarget->name, falseTarget->name);
 }
 
 std::string ir::Parm::dump() const

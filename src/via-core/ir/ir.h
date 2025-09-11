@@ -27,50 +27,58 @@ namespace ir
 
 struct Expr
 {
+  SourceLoc loc;
   const sema::Type* type;
   virtual std::string dump(usize& depth) const = 0;
 };
 
 struct Stmt
 {
+  SourceLoc loc;
   virtual std::string dump(usize& depth) const = 0;
   virtual Option<SymbolId> getSymbol() const { return nullopt; }
 };
 
 struct Term
 {
+  SourceLoc loc;
   virtual std::string dump(usize& depth) const = 0;
 };
 
-#define NODE_FIELDS() std::string dump(usize& depth) const override;
+#define NODE_FIELDS(BASE) \
+  using BASE::loc;        \
+  std::string dump(usize& depth) const override;
 
 struct TrReturn : public Term
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Term)
   const Expr* val;
+  const sema::Type* type;
 };
 
 struct TrContinue : public Term
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Term)
 };
 
 struct TrBreak : public Term
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Term)
 };
+
+struct StmtBlock;
 
 struct TrBranch : public Term
 {
-  NODE_FIELDS()
-  usize lbl;
+  NODE_FIELDS(Term)
+  const StmtBlock* target;
 };
 
 struct TrCondBranch : public Term
 {
-  NODE_FIELDS()
+  NODE_FIELDS(Term)
   const Expr* cnd;
-  usize iftrue, iffalse;
+  const StmtBlock *trueTarget, *falseTarget;
 };
 
 struct Parm
@@ -81,8 +89,9 @@ struct Parm
 };
 
 #undef NODE_FIELDS
-#define NODE_FIELDS(base) \
-  using base::type;       \
+#define NODE_FIELDS(BASE) \
+  using BASE::type;       \
+  using BASE::loc;        \
   std::string dump(usize& depth) const override;
 
 struct ExprConstant : public Expr
