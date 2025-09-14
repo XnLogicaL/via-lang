@@ -29,29 +29,30 @@ struct Expr
 {
   SourceLoc loc;
   const sema::Type* type;
-  virtual std::string dump(usize& depth) const = 0;
+  virtual std::string dump(const SymbolTable* symtab, usize& depth) const = 0;
 };
 
 struct Stmt
 {
   SourceLoc loc;
-  virtual std::string dump(usize& depth) const = 0;
+  virtual std::string dump(const SymbolTable* symtab, usize& depth) const = 0;
   virtual Option<SymbolId> getSymbol() const { return nullopt; }
 };
 
 struct Term
 {
   SourceLoc loc;
-  virtual std::string dump(usize& depth) const = 0;
+  virtual std::string dump(const SymbolTable* symtab, usize& depth) const = 0;
 };
 
 #define NODE_FIELDS(BASE) \
   using BASE::loc;        \
-  std::string dump(usize& depth) const override;
+  std::string dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct TrReturn : public Term
 {
   NODE_FIELDS(Term)
+  bool implicit;
   const Expr* val;
   const sema::Type* type;
 };
@@ -83,16 +84,16 @@ struct TrCondBranch : public Term
 
 struct Parm
 {
-  SymbolId sym;
+  SymbolId symbol;
   const sema::Type* type;
-  std::string dump() const;
+  std::string dump(const SymbolTable* symtab, usize& depth) const;
 };
 
 #undef NODE_FIELDS
 #define NODE_FIELDS(BASE) \
   using BASE::type;       \
   using BASE::loc;        \
-  std::string dump(usize& depth) const override;
+  std::string dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct ExprConstant : public Expr
 {
@@ -187,12 +188,13 @@ struct ExprLambda : public Expr
 };
 
 #undef NODE_FIELDS
-#define NODE_FIELDS() std::string dump(usize& depth) const override;
+#define NODE_FIELDS() \
+  std::string dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct StmtVarDecl : public Stmt
 {
   NODE_FIELDS()
-  SymbolId sym;
+  SymbolId symbol;
   const Expr* expr;
   const sema::Type* declType;
 };
@@ -209,12 +211,12 @@ struct StmtFuncDecl : public Stmt
     NATIVE,
   } kind;
 
-  SymbolId sym;
+  SymbolId symbol;
   const sema::Type* ret;
   Vec<Parm> parms;
   const StmtBlock* body;
 
-  Option<SymbolId> getSymbol() const override { return sym; }
+  Option<SymbolId> getSymbol() const override { return symbol; }
 };
 
 struct StmtBlock : public Stmt
@@ -238,7 +240,7 @@ using IRTree = Vec<const ir::Stmt*>;
 namespace debug
 {
 
-[[nodiscard]] std::string dump(const IRTree& ir);
+[[nodiscard]] std::string dump(const SymbolTable& symtab, const IRTree& ir);
 
 }
 

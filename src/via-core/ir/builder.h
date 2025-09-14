@@ -58,7 +58,7 @@ class IRBuilder final
   // clang-format off
   auto internSymbol(std::string symbol) { return mSymbolTable.intern(symbol); }
   auto internSymbol(const via::Token& symbol) { return mSymbolTable.intern(symbol.toString()); }
-  auto iotaSymbol() { return internSymbol(std::to_string(via::iota<via::usize>())); }
+  auto nextLabelSymbol() { return internSymbol(std::format(".LB{}", iota<usize>())); }
 
   const ir::Expr* lowerExprLit(const ast::ExprLit* exprLit);
   const ir::Expr* lowerExprSymbol(const ast::ExprSymbol* exprSym);

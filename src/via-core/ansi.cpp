@@ -53,16 +53,16 @@ static bool checkTerminalSupport()
 static bool checkTerminalSupport()
 {
   spdlog::warn(
-    "host terminal does not support ANSI escape codes, consider "
-    "using one that does");
+    "host terminal does not support ANSI escape codes, compiler output may be "
+    "unreadable");
   return false;
 }
 #endif
 
-std::string via::ansi(std::string string,
-                      Fg foreground,
-                      Bg background,
-                      Style style)
+std::string via::ansi::format(std::string string,
+                              Foreground foreground,
+                              Background background,
+                              Style style)
 {
   static bool hasTerminalSupport = checkTerminalSupport();
   if (hasTerminalSupport) {

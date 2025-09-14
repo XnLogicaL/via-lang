@@ -29,13 +29,11 @@ VIA_MODINIT_FUNC(io)
     {
       symtab.intern("print"),
       via::Def::newFunction(
-        alloc, io::print,
-        types.getBuiltinTypeInstance(via::sema::BuiltinType::Kind::Nil),
+        alloc, io::print, types.getBuiltin(via::sema::BuiltinType::Kind::NIL),
         {
           {
             .symbol = symtab.intern("__s"),
-            .type = types.getBuiltinTypeInstance(
-              via::sema::BuiltinType::Kind::String),
+            .type = types.getBuiltin(via::sema::BuiltinType::Kind::STRING),
           },
         }),
     },

@@ -15,8 +15,11 @@
 namespace via
 {
 
+namespace ansi
+{
+
 // ANSI text foreground color codes.
-enum class Fg
+enum class Foreground
 {
   Red = 31,
   Green = 32,
@@ -29,7 +32,7 @@ enum class Fg
 };
 
 // ANSI text background color codes.
-enum class Bg
+enum class Background
 {
   Red = 41,
   Green = 42,
@@ -51,9 +54,11 @@ enum class Style
   Underline = 4,
 };
 
-std::string ansi(std::string string,
-                 Fg foreground,
-                 Bg background = Bg::Black,
-                 Style style = Style::Reset);
+std::string format(std::string string,
+                   Foreground foreground,
+                   Background background = Background::Black,
+                   Style style = Style::Reset);
+
+}  // namespace ansi
 
 }  // namespace via

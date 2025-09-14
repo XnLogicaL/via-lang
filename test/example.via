@@ -1,3 +1,0 @@
-import std::io;
-
-fn print(a: string) -> nil {}

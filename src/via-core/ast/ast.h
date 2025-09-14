@@ -92,7 +92,7 @@ struct Path
 
 struct Parameter
 {
-  const Token* sym;
+  const Token* symbol;
   const Type* type;
   SourceLoc loc;
 
@@ -126,7 +126,7 @@ struct ExprLit : public Expr
 struct ExprSymbol : public Expr
 {
   NODE_FIELDS(Expr)
-  const Token* sym;
+  const Token* symbol;
 };
 
 struct ExprDynAccess : public Expr
@@ -277,12 +277,12 @@ struct StmtEnum : public Stmt
 {
   struct Pair
   {
-    const Token* sym;
+    const Token* symbol;
     const Expr* expr;
   };
 
   NODE_FIELDS(Stmt);
-  const Token* sym;
+  const Token* symbol;
   const Type* type;
   Vec<Pair> pairs;
 };
@@ -290,8 +290,8 @@ struct StmtEnum : public Stmt
 struct StmtModule : public Stmt
 {
   NODE_FIELDS(Stmt);
-  const Token* sym;
-  Vec<const Stmt*> scp;
+  const Token* symbol;
+  Vec<const Stmt*> scope;
 };
 
 struct StmtImport : public Stmt
@@ -316,7 +316,7 @@ struct StmtFunctionDecl : public Stmt
   const Token* name;
   const Type* ret;
   Vec<const Parameter*> parms;
-  const StmtScope* scp;
+  const StmtScope* scope;
 };
 
 struct StmtStructDecl : public Stmt
@@ -324,13 +324,13 @@ struct StmtStructDecl : public Stmt
   NODE_FIELDS(Stmt);
 
   const Token* name;
-  Vec<const Stmt*> scp;
+  Vec<const Stmt*> scope;
 };
 
 struct StmtTypeDecl : public Stmt
 {
   NODE_FIELDS(Stmt);
-  const Token* sym;
+  const Token* symbol;
   const Type* type;
 };
 
@@ -338,7 +338,7 @@ struct StmtUsing : public Stmt
 {
   NODE_FIELDS(Stmt);
   const Path* sp;
-  const StmtScope* scp;
+  const StmtScope* scope;
 };
 
 struct StmtEmpty : public Stmt

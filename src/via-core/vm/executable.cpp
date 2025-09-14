@@ -14,13 +14,15 @@
 std::string via::Executable::dump() const
 {
   std::ostringstream oss;
-  oss << ansi("[section .text]\n", Fg::Yellow, Bg::Black, Style::Underline);
+  oss << ansi::format("[section .text]\n", ansi::Foreground::Yellow,
+                      ansi::Background::Black, ansi::Style::Underline);
 
   for (const Instruction& insn : bytecode) {
     oss << "  " << insn.dump() << "\n";
   }
 
-  oss << ansi("[section .data]\n", Fg::Yellow, Bg::Black, Style::Underline);
+  oss << ansi::format("[section .data]\n", ansi::Foreground::Yellow,
+                      ansi::Background::Black, ansi::Style::Underline);
 
   for (const sema::ConstValue& cv : consts) {
     oss << "  " << cv.dump() << "\n";

@@ -138,8 +138,9 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
 
     if (flags & DUMP_DEFTABLE) {
       std::println(std::cout, "{}",
-                   ansi(std::format("[deftable .{}]", name), Fg::Yellow,
-                        Bg::Black, Style::Bold));
+                   ansi::format(std::format("[deftable .{}]", name),
+                                ansi::Foreground::Yellow,
+                                ansi::Background::Black, ansi::Style::Bold));
 
       for (const auto& def : module->mDefs) {
         std::println(std::cout, "  {}", def.second->dump());
@@ -233,11 +234,13 @@ via::Expected<via::Module*> via::Module::loadSourceFile(
     if (flags & DUMP_AST)
       std::println(std::cout, "{}", debug::dump(ast));
     if (flags & DUMP_IR)
-      std::println(std::cout, "{}", debug::dump(module->mIr));
+      std::println(std::cout, "{}",
+                   debug::dump(manager->getSymbolTable(), module->mIr));
     if (flags & DUMP_DEFTABLE) {
       std::println(std::cout, "{}",
-                   ansi(std::format("[deftable .{}]", name), Fg::Yellow,
-                        Bg::Black, Style::Bold));
+                   ansi::format(std::format("[deftable .{}]", name),
+                                ansi::Foreground::Yellow,
+                                ansi::Background::Black, ansi::Style::Bold));
 
       for (const auto& def : module->mDefs) {
         std::println(std::cout, "  {}", def.second->dump());

@@ -115,12 +115,12 @@ class TypeContext final
  public:
   TypeContext() : mAlloc(8 * 1024 * 1024) {}
 
-  const BuiltinType* getBuiltinTypeInstance(BuiltinType::Kind kind);
-  const ArrayType* getArrayTypeInstance(const Type* type);
-  const DictType* getDictTypeInstance(const Type* key, const Type* val);
-  const FuncType* getFunctionTypeInstance(const Type* res,
+  const BuiltinType* getBuiltin(BuiltinType::Kind kind);
+  const ArrayType* getArray(const Type* type);
+  const DictType* getDict(const Type* key, const Type* val);
+  const FuncType* getFunction(const Type* res,
                                           Vec<const Type*> tps);
-  const UserType* getUserTypeInstance(const ast::StmtTypeDecl* decl);
+  const UserType* getUser(const ast::StmtTypeDecl* decl);
 
   const TemplateParamType* getTemplateParmInstance(u32 depth, u32 index)
   {

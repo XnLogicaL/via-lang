@@ -1,0 +1,31 @@
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
+
+import std::io;
+
+io::print(10);
+
+fn function_one(parm: int) -> int {
+  return a;
+}
+
+fn function_two(parm: bool) -> int {
+  if parm {
+    return 1;
+  } else if not parm {
+    return 0;
+  }
+}
+
+fn function_three(parm: bool) -> int {
+  return 1 if parm else 0;
+}
+
+var decl_one: int = 10;
+var decl_two = nil;

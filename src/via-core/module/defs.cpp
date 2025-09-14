@@ -15,7 +15,7 @@ via::Def* via::Def::from(Allocator& alloc, const ir::Stmt* node)
     auto* fndef = alloc.emplace<FunctionDef>();
     fndef->kind = ImplKind::SOURCE;
     fndef->code.source = fn;
-    fndef->symbol = fn->sym;
+    fndef->symbol = fn->symbol;
     return fndef;
   }
 

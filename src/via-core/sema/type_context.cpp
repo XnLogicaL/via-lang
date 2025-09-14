@@ -96,19 +96,19 @@ static const Tp* instantiateBase(via::BumpAllocator<>& alloc,
   }
 }
 
-const sema::BuiltinType* sema::TypeContext::getBuiltinTypeInstance(
+const sema::BuiltinType* sema::TypeContext::getBuiltin(
   BuiltinType::Kind kind)
 {
   return instantiateBase<BuiltinType, BuiltinType::Kind>(mAlloc, mBuiltins,
                                                          kind);
 }
 
-const sema::ArrayType* sema::TypeContext::getArrayTypeInstance(const Type* type)
+const sema::ArrayType* sema::TypeContext::getArray(const Type* type)
 {
   return mArrays[type];
 }
 
-const sema::DictType* sema::TypeContext::getDictTypeInstance(const Type* key,
+const sema::DictType* sema::TypeContext::getDict(const Type* key,
                                                              const Type* val)
 {
   return mDicts[DictKey{
@@ -117,7 +117,7 @@ const sema::DictType* sema::TypeContext::getDictTypeInstance(const Type* key,
   }];
 }
 
-const sema::FuncType* sema::TypeContext::getFunctionTypeInstance(
+const sema::FuncType* sema::TypeContext::getFunction(
   const Type* res,
   Vec<const Type*> tps)
 {
@@ -127,7 +127,7 @@ const sema::FuncType* sema::TypeContext::getFunctionTypeInstance(
   }];
 }
 
-const sema::UserType* sema::TypeContext::getUserTypeInstance(
+const sema::UserType* sema::TypeContext::getUser(
   const ast::StmtTypeDecl* decl)
 {
   return mUsers[UserKey{.decl = decl}];
@@ -165,7 +165,7 @@ const sema::Type* sema::TypeContext::instantiate(const Type* tp,
     case Type::Kind::Array: {
       auto* at = static_cast<const ArrayType*>(tp);
       auto* tmp = instantiate(at->elem, env);
-      return (tmp == at->elem) ? tp : getArrayTypeInstance(tmp);
+      return (tmp == at->elem) ? tp : getArray(tmp);
     }
 
     case Type::Kind::Dict: {
@@ -173,7 +173,7 @@ const sema::Type* sema::TypeContext::instantiate(const Type* tp,
       auto* key = instantiate(dt->key, env);
       auto* val = instantiate(dt->val, env);
       return (key == dt->key && val == dt->val) ? tp
-                                                : getDictTypeInstance(key, val);
+                                                : getDict(key, val);
     }
 
     case Type::Kind::Function: {
@@ -190,7 +190,7 @@ const sema::Type* sema::TypeContext::instantiate(const Type* tp,
 
       auto* rs = instantiate(ft->result, env);
       same &= (rs == ft->result);
-      return same ? tp : getFunctionTypeInstance(rs, tps);
+      return same ? tp : getFunction(rs, tps);
     }
 
     case Type::Kind::TemplateSpec: {

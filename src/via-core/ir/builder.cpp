@@ -34,37 +34,40 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
 
     switch (lit->tok->kind) {
       case LIT_NIL:
-        kind = Nil;
+        kind = NIL;
         break;
       case LIT_TRUE:
       case LIT_FALSE:
-        kind = Bool;
+        kind = BOOL;
         break;
       case LIT_INT:
       case LIT_XINT:
       case LIT_BINT:
-        kind = Int;
+        kind = INT;
         break;
       case LIT_FLOAT:
-        kind = Float;
+        kind = FLOAT;
         break;
       case LIT_STRING:
-        kind = String;
+        kind = STRING;
         break;
       default:
-        debug::bug("unhandled literal expression");
+        debug::bug("invalid literal expression");
     }
 
-    return mTypeCtx.getBuiltinTypeInstance(kind);
-  } else if TRY_COERCE (const ast::ExprSymbol, sym, expr) {
+    return mTypeCtx.getBuiltin(kind);
+  } else if TRY_COERCE (const ast::ExprSymbol, symbol, expr) {
     sema::Frame& frame = mStack.top();
 
     // Local variable
-    if (auto local = frame.getLocal(internSymbol(sym->sym->toString()))) {
+    if (auto local = frame.getLocal(internSymbol(symbol->symbol->toString()))) {
       return local->local.getIrDecl()->declType;
     }
 
-    debug::todo("check other kinds of symbols");
+    mDiags.report<Dk::Error>(symbol->loc,
+                             std::format("Use of undefined symbol '{}'",
+                                         symbol->symbol->toStringView()));
+    return nullptr;
   } else if TRY_COERCE (const ast::ExprDynAccess, dyna, expr) {
     return nullptr;
   } else if TRY_COERCE (const ast::ExprStaticAccess, sta, expr) {
@@ -95,7 +98,7 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
         }
       } break;
       case UnaryOp::NOT:
-        return mTypeCtx.getBuiltinTypeInstance(Btk::Bool);
+        return mTypeCtx.getBuiltin(Btk::BOOL);
       case UnaryOp::BNOT: {
         if (type->isIntegral()) {
         } else {
@@ -109,9 +112,20 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
     }
 
     return nullptr;
+  } else if TRY_COERCE (const ast::ExprTernary, ternary, expr) {
+    const sema::Type *lhs = typeOf(ternary->lhs), *rhs = typeOf(ternary->rhs);
+    if (lhs == rhs) {
+      return lhs;
+    } else {
+      mDiags.report<Dk::Error>(
+        ternary->loc,
+        std::format("Results of ternary expression '{}' and '{}' do not match",
+                    lhs->toString(), rhs->toString()));
+    }
+    return nullptr;
   }
 
-  debug::bug("unhandled typeOf(ast_expr)");
+  debug::unimplemented(std::format("typeOf({})", TYPENAME(*expr)));
 }
 
 const sema::Type* via::IRBuilder::typeOf(const ast::Type* type) noexcept
@@ -124,28 +138,28 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Type* type) noexcept
 
     switch (typeBuiltin->tok->kind) {
       case LIT_NIL:
-        kind = Nil;
+        kind = NIL;
         break;
       case KW_BOOL:
-        kind = Bool;
+        kind = BOOL;
         break;
       case KW_INT:
-        kind = Int;
+        kind = INT;
         break;
       case KW_FLOAT:
-        kind = Float;
+        kind = FLOAT;
         break;
       case KW_STRING:
-        kind = String;
+        kind = STRING;
         break;
       default:
         debug::bug("unmapped builtin type token");
     }
 
-    return mTypeCtx.getBuiltinTypeInstance(kind);
+    return mTypeCtx.getBuiltin(kind);
   }
 
-  debug::bug("unhandled typeOf(ast_type)");
+  debug::unimplemented(std::format("typeOf({})", TYPENAME(*type)));
 }
 
 const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
@@ -159,21 +173,21 @@ const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
 
 const ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
 {
-  std::string symbol = exprSym->sym->toString();
+  std::string symbolStr = exprSym->symbol->toString();
   sema::Frame& frame = mStack.top();
 
-  auto* sym = mAlloc.emplace<ir::ExprSymbol>();
-  sym->symbol = mSymbolTable.intern(symbol);
-  sym->loc = exprSym->loc;
+  auto* symbol = mAlloc.emplace<ir::ExprSymbol>();
+  symbol->symbol = mSymbolTable.intern(symbolStr);
+  symbol->loc = exprSym->loc;
 
   // Local-level symbol
-  if (auto local = frame.getLocal(internSymbol(symbol))) {
-    sym->type = local->local.getIrDecl()->declType;
-    return sym;
+  if (auto local = frame.getLocal(internSymbol(symbolStr))) {
+    symbol->type = local->local.getIrDecl()->declType;
+    return symbol;
   }
 
-  mDiags.report<Dk::Error>(exprSym->loc,
-                           std::format("Use of undefined symbol '{}'", symbol));
+  mDiags.report<Dk::Error>(
+    exprSym->loc, std::format("Use of undefined symbol '{}'", symbolStr));
   return nullptr;
 }
 
@@ -184,7 +198,8 @@ const ir::Expr* via::IRBuilder::lowerExprStaticAccess(
   if TRY_COERCE (const ast::ExprSymbol, rootSymbol, exprStAcc->root) {
     ModuleManager* manager = mModule->getManager();
 
-    if (auto* module = manager->getModuleByName(rootSymbol->sym->toString())) {
+    if (auto* module =
+          manager->getModuleByName(rootSymbol->symbol->toString())) {
       SymbolId low = internSymbol(exprStAcc->index->toString());
       if (auto def = module->lookup(low)) {
         auto* maccess = mAlloc.emplace<ir::ExprModuleAccess>();
@@ -311,8 +326,8 @@ const ir::Expr* via::IRBuilder::lowerExpr(const ast::Expr* expr)
   PMR_CASE(expr, ast::ExprTuple, lowerExprTuple)
   PMR_CASE(expr, ast::ExprLambda, lowerExprLambda)
 
-  debug::bug(
-    std::format("unhandled case IRBuilder::lowerExpr({})", TYPENAME(*expr)));
+  debug::unimplemented(
+    std::format("case IRBuilder::lowerExpr({})", TYPENAME(*expr)));
 }
 
 const ir::Stmt* via::IRBuilder::lowerStmtVarDecl(
@@ -339,12 +354,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtVarDecl(
       decl->declType = rvalType;
     }
 
-    decl->sym = internSymbol(lval->sym->toString());
+    decl->symbol = internSymbol(lval->symbol->toString());
   } else {
     debug::bug("bad lvalue");
   }
 
-  mStack.top().setLocal(decl->sym, stmtVarDecl, decl);
+  mStack.top().setLocal(decl->symbol, stmtVarDecl, decl);
   return decl;
 }
 
@@ -384,12 +399,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtReturn(
   const ast::StmtReturn* stmtReturn)
 {
   auto* term = mAlloc.emplace<ir::TrReturn>();
+  term->implicit = false;
   term->loc = stmtReturn->loc;
   term->val = stmtReturn->expr ? lowerExpr(stmtReturn->expr) : nullptr;
-  term->type =
-    stmtReturn->expr
-      ? typeOf(stmtReturn->expr)
-      : mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
+  term->type = stmtReturn->expr
+                 ? typeOf(stmtReturn->expr)
+                 : mTypeCtx.getBuiltin(sema::BuiltinType::Kind::NIL);
 
   ir::StmtBlock* block = endBlock();
   block->term = term;
@@ -446,7 +461,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
 {
   auto* fndecl = mAlloc.emplace<ir::StmtFuncDecl>();
   fndecl->kind = ir::StmtFuncDecl::Kind::IR;
-  fndecl->sym = internSymbol(stmtFunctionDecl->name->toString());
+  fndecl->symbol = internSymbol(stmtFunctionDecl->name->toString());
   fndecl->ret = stmtFunctionDecl->ret ? typeOf(stmtFunctionDecl->ret) : nullptr;
 
   if (fndecl->ret == nullptr) {
@@ -457,7 +472,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
 
   for (const auto& parm : stmtFunctionDecl->parms) {
     ir::Parm newParm;
-    newParm.sym = internSymbol(parm->sym->toString());
+    newParm.symbol = internSymbol(parm->symbol->toString());
     newParm.type = typeOf(parm->type);
 
     fndecl->parms.push_back(newParm);
@@ -468,15 +483,15 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
 
   mStack.push({});
 
-  for (const auto& stmt : stmtFunctionDecl->scp->stmts) {
+  for (const auto& stmt : stmtFunctionDecl->scope->stmts) {
     if TRY_COERCE (const ast::StmtReturn, ret, stmt) {
       auto* term = mAlloc.emplace<ir::TrReturn>();
+      term->implicit = false;
       term->loc = ret->loc;
       term->val = ret->expr ? lowerExpr(ret->expr) : nullptr;
-      term->type =
-        ret->expr
-          ? typeOf(ret->expr)
-          : mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
+      term->type = ret->expr
+                     ? typeOf(ret->expr)
+                     : mTypeCtx.getBuiltin(sema::BuiltinType::Kind::NIL);
       block->term = term;
       break;
     }
@@ -487,9 +502,19 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   mStack.pop();
 
   if (block->term == nullptr) {
+    SourceLoc loc{stmtFunctionDecl->scope->loc.end - 1,
+                  stmtFunctionDecl->scope->loc.end};
+
+    auto* nil = mAlloc.emplace<ir::ExprConstant>();
+    nil->loc = loc;
+    nil->type = mTypeCtx.getBuiltin(sema::BuiltinType::Kind::NIL);
+    nil->value = sema::ConstValue();
+
     auto* term = mAlloc.emplace<ir::TrReturn>();
-    term->val = nullptr;
-    term->type = mTypeCtx.getBuiltinTypeInstance(sema::BuiltinType::Kind::Nil);
+    term->implicit = true;
+    term->loc = loc;
+    term->val = nil;
+    term->type = mTypeCtx.getBuiltin(sema::BuiltinType::Kind::NIL);
     block->term = term;
   }
 
@@ -497,6 +522,11 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
 
   for (const auto& term : sema::analyzeControlPaths(block)) {
     if TRY_COERCE (const ir::TrReturn, ret, term) {
+      if (!ret->type) {
+        // Already failed, no need to diagnose further
+        continue;
+      }
+
       if (!expectedRetType) {
         expectedRetType = ret->type;
       } else if (expectedRetType != ret->type) {
@@ -509,7 +539,13 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
         } else {
           mDiags.report<Dk::Error>(ret->loc,
                                    "All code paths must return the same type "
-                                   "for function with inferred return type");
+                                   "in function with inferred return type");
+        }
+
+        if (ret->implicit) {
+          mDiags.report<Dk::Info>(ret->loc,
+                                  std::format("Implicitly returning '{}' here",
+                                              ret->type->toString()));
         }
         break;
       }
@@ -580,14 +616,14 @@ const ir::Stmt* via::IRBuilder::lowerStmt(const ast::Stmt* stmt)
   if TRY_COERCE (const ast::StmtEmpty, _, stmt)
     return nullptr;
 
-  debug::bug(
-    std::format("unhandled case IRBuilder::lowerStmt({})", TYPENAME(*stmt)));
+  debug::unimplemented(
+    std::format("case IRBuilder::lowerStmt({})", TYPENAME(*stmt)));
 }
 
 via::IRTree via::IRBuilder::build()
 {
-  mStack.push({});         // Push root stack frame
-  newBlock(iotaSymbol());  // Push block
+  mStack.push({});              // Push root stack frame
+  newBlock(nextLabelSymbol());  // Push block
 
   IRTree tree;
 
@@ -597,7 +633,7 @@ via::IRTree via::IRBuilder::build()
     }
 
     if (mShouldPushBlock) {
-      ir::StmtBlock* block = newBlock(iotaSymbol());
+      ir::StmtBlock* block = newBlock(nextLabelSymbol());
       tree.push_back(block);
     }
   }

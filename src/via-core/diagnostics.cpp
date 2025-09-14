@@ -20,21 +20,21 @@ void via::DiagContext::emit(spdlog::logger* logger) const
 void via::DiagContext::emitOnce(const Diagnosis& d,
                                 spdlog::logger* logger) const
 {
-  Fg foreground;
+  ansi::Foreground foreground;
   spdlog::level::level_enum level;
 
   switch (d.kind) {
     case Diagnosis::Kind::Info:
       level = spdlog::level::info;
-      foreground = Fg::Cyan;
+      foreground = ansi::Foreground::Cyan;
       break;
     case Diagnosis::Kind::Warn:
       level = spdlog::level::warn;
-      foreground = Fg::Yellow;
+      foreground = ansi::Foreground::Yellow;
       break;
     case Diagnosis::Kind::Error:
       level = spdlog::level::err;
-      foreground = Fg::Red;
+      foreground = ansi::Foreground::Red;
       break;
   }
 
@@ -67,8 +67,10 @@ void via::DiagContext::emitOnce(const Diagnosis& d,
     std::string_view(lineBegin, static_cast<usize>(lineEnd - lineBegin));
 
   logger->log(level, "{} {} {}", d.msg,
-              ansi("at", Fg::White, Bg::Black, Style::Faint),
-              ansi(std::format("[{}:{}:{}]", mPath, line, col), Fg::Cyan));
+              ansi::format("at", ansi::Foreground::White,
+                           ansi::Background::Black, ansi::Style::Faint),
+              ansi::format(std::format("[{}:{}:{}]", mPath, line, col),
+                           ansi::Foreground::Cyan));
 
   usize lineWidth = static_cast<usize>(std::log10(line)) + 1;
 
@@ -83,8 +85,8 @@ void via::DiagContext::emitOnce(const Diagnosis& d,
     highlightedLine.reserve(lineView.size() + 32);
     highlightedLine.append(lineView.substr(0, spanBegin));
     highlightedLine.append(
-      ansi(std::string(lineView.substr(spanBegin, spanEnd - spanBegin)),
-           foreground, Bg::Black, Style::Bold));
+      ansi::format(std::string(lineView.substr(spanBegin, spanEnd - spanBegin)),
+                   foreground, ansi::Background::Black, ansi::Style::Bold));
     highlightedLine.append(lineView.substr(spanEnd));
   } else {
     highlightedLine = std::string(lineView);
@@ -102,7 +104,8 @@ void via::DiagContext::emitOnce(const Diagnosis& d,
   }
 
   logger->log(spdlog::level::off, " {} | {}", std::string(lineWidth, ' '),
-              ansi(caret, foreground, Bg::Black, Style::Bold));
+              ansi::format(caret, foreground, ansi::Background::Black,
+                           ansi::Style::Bold));
 
   spdlog::set_pattern("%^%l:%$ %v");
 }

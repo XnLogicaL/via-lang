@@ -25,11 +25,11 @@ class Value final
 
   enum class Kind
   {
-    Nil,
-    Int,
-    Float,
-    Boolean,
-    String,
+    NIL,
+    INT,
+    FLOAT,
+    BOOL,
+    STRING,
   };
 
   union Union
@@ -46,22 +46,22 @@ class Value final
  public:
   static inline Value* construct(Interpreter* ctx)
   {
-    return constructImpl(ctx, Kind::Nil);
+    return constructImpl(ctx, Kind::NIL);
   }
 
   static inline Value* construct(Interpreter* ctx, Value::int_type int_)
   {
-    return constructImpl(ctx, Kind::Int, {.int_ = int_});
+    return constructImpl(ctx, Kind::INT, {.int_ = int_});
   }
 
   static inline Value* construct(Interpreter* ctx, Value::float_type float_)
   {
-    return constructImpl(ctx, Kind::Float, {.float_ = float_});
+    return constructImpl(ctx, Kind::FLOAT, {.float_ = float_});
   }
 
   static inline Value* construct(Interpreter* ctx, bool boolean)
   {
-    return constructImpl(ctx, Kind::Boolean, {.boolean = boolean});
+    return constructImpl(ctx, Kind::BOOL, {.boolean = boolean});
   }
 
   static inline Value* construct(Interpreter* ctx, char* string)
@@ -70,7 +70,7 @@ class Value final
       ctx->getAllocator().owns(string),
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
-    return constructImpl(ctx, Kind::String, {.string = string});
+    return constructImpl(ctx, Kind::STRING, {.string = string});
   }
 
  public:
@@ -82,7 +82,7 @@ class Value final
   inline void free()
   {
     switch (mKind) {
-      case Kind::String:
+      case Kind::STRING:
         mCtx->getAllocator().free(mData.string);
         break;
       default:
@@ -90,7 +90,7 @@ class Value final
         break;
     }
 
-    mKind = Kind::Nil;
+    mKind = Kind::NIL;
   }
 
   inline Value* clone() { return constructImpl(mCtx, mKind, mData); }
@@ -126,7 +126,7 @@ class Value final
   }
 
  private:
-  Kind mKind = Kind::Nil;
+  Kind mKind = Kind::NIL;
   Union mData = {};
   usize mRc = 0;
   Interpreter* mCtx = nullptr;

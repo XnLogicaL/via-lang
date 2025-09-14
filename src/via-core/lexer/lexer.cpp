@@ -95,8 +95,8 @@ static consteval via::usize maxSymbolSize()
 {
   via::usize maxSize = 0;
 
-  for (const auto& sym : kLexSymbols) {
-    via::usize size = stringLength(sym.str);
+  for (const auto& symbol : kLexSymbols) {
+    via::usize size = stringLength(symbol.str);
     if (size > maxSize) {
       maxSize = size;
     }
@@ -280,9 +280,9 @@ via::Token* via::Lexer::readSymbol()
 
     buf[len] = '\0';
 
-    for (const auto& sym : kLexSymbols) {
-      if (len == strlen(sym.str) && strcmp(buf, sym.str) == 0) {
-        matchKind = sym.kind;
+    for (const auto& symbol : kLexSymbols) {
+      if (len == strlen(symbol.str) && strcmp(buf, symbol.str) == 0) {
+        matchKind = symbol.kind;
         matchSize = len;
         goto found;
       }

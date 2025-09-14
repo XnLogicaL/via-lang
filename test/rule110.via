@@ -1,9 +1,19 @@
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
+
 import std::io;
 import std::array;
+import std::runtime;
 
-fn r110(width: int, steps: int) -> nil {
+fn r110(width: int, steps: int) {
     // Initialize the row with all 0s except the middle cell
-    var row = array::create::<int>(WIDTH, 0);
+    var row = array::create::<int>(width, 0);
     row[width / 2] = 1;
 
     for var t = 0, steps {
@@ -16,33 +26,23 @@ fn r110(width: int, steps: int) -> nil {
 
         // Compute next row using map with index access
         array::transform(&row, fn (i: int, _: int) {
-            var left = 0 if i == 0 else row[i-1];   
-            var right = 0 if i == width-1 else row[i+1];
-            var center = row[i];
-
-            var index = (left << 2) | (center >> 1) | right;
+            const left = 0 if i == 0 else row[i-1];   
+            const right = 0 if i == width-1 else row[i+1];
+            const center = row[i];
+            const index = (left << 2) | (center >> 1) | right;
             return (0b01101110 >> index) & 1;
         });
     }
 }
 
-r110(31, 15);
+#throws fn get_args() -> (int, int) {
+    const argv = runtime::argv();
+    return (
+        argv[1] as int,
+        argv[2] as int
+    );
+}
 
-/*
-
-StmtImport({[IDENTIFIER 'std'], [IDENTIFIER 'io']})
-StmtImport({[IDENTIFIER 'std'], [IDENTIFIER 'array']})
-StmtFunctionDecl(name=[IDENTIFIER 'r110'], ret=TypeBuiltin([LIT_NIL 'nil']), parms={Parameter(sym=[IDENTIFIER 'width'], type=TypeBuiltin([KW_INT 'int'])), Parameter(sym=[IDENTIFIER 'steps'], type=TypeBuiltin([KW_INT 'int']))})
- StmtVarDecl(lval=ExprSymbol([IDENTIFIER 'row']), rval=ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'array']), AccessIdent(instantiated=true, symbol=[IDENTIFIER 'create'], generics={TypeBuiltin([KW_INT 'int'])})), args={ExprSymbol([IDENTIFIER 'WIDTH']), ExprLit([LIT_INT '0'])}), type=<no-annotated-type>)
- StmtAssign(op=[OP_EQ '='], lval=ExprSubscript(ExprSymbol([IDENTIFIER 'row']), ExprBinary([OP_SLASH '/'], ExprSymbol([IDENTIFIER 'width']), ExprLit([LIT_INT '2']))), rval=ExprLit([LIT_INT '1']))
- StmtFor(init=StmtVarDecl(lval=ExprSymbol([IDENTIFIER 't']), rval=ExprLit([LIT_INT '0']), type=<no-annotated-type>), target=ExprSymbol([IDENTIFIER 'steps']), step=<no-explicit-step>)
-  StmtForEach(lval=ExprTuple(vals={ExprSymbol([IDENTIFIER 'i']), ExprSymbol([IDENTIFIER 'cell'])}), iter=ExprSymbol([IDENTIFIER 'row']))
-   StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'io']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'print'], generics={})), args={ExprTernary(cnd=ExprBinary([OP_EQ_EQ '=='], ExprSymbol([IDENTIFIER 'cell']), ExprLit([LIT_INT '1'])), lhs=ExprLit([LIT_STRING '"#"']), rhs=ExprLit([LIT_STRING '" "']))}))
-  EndForEach()
-  StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'io']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'println'], generics={})), args={}))
-  StmtExpr(ExprCall(callee=ExprStaticAccess(ExprSymbol([IDENTIFIER 'array']), AccessIdent(instantiated=false, symbol=[IDENTIFIER 'transform'], generics={})), args={ExprUnary([OP_AMP '&'], ExprSymbol([IDENTIFIER 'row'])), ExprLambda(<lambda>)}))
- EndFor()
-EndFunctionDecl()
-StmtExpr(ExprCall(callee=ExprSymbol([IDENTIFIER 'r110']), args={ExprLit([LIT_INT '31']), ExprLit([LIT_INT '15'])}))
-
-*/
+if var result = try get_args() {
+    r110(result...);
+}

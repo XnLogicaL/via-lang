@@ -388,7 +388,9 @@ std::string via::Instruction::dump() const
 
   std::ostringstream oss;
   oss << std::left << std::setfill(' ') << std::setw(20);
-  oss << ansi(il->op_str, Fg::Magenta, Bg::Black, Style::Bold) << " ";
+  oss << ansi::format(il->op_str, ansi::Foreground::Magenta,
+                      ansi::Background::Black, ansi::Style::Bold)
+      << " ";
 
   for (size_t i = 0; u16 operand : ops) {
     // disgusting addressing hack

@@ -89,7 +89,7 @@ std::string ast::Path::dump() const
 
 std::string ast::Parameter::dump() const
 {
-  return std::format("Parameter(sym={}, type={})", sym->dump(),
+  return std::format("Parameter(symbol={}, type={})", symbol->dump(),
                      type->dump(ZERO));
 }
 
@@ -110,7 +110,7 @@ std::string ast::ExprLit::dump(usize&) const
 
 std::string ast::ExprSymbol::dump(usize&) const
 {
-  return std::format("ExprSymbol({})", sym->dump());
+  return std::format("ExprSymbol({})", symbol->dump());
 }
 
 std::string ast::ExprDynAccess::dump(usize&) const
@@ -295,12 +295,12 @@ std::string ast::StmtEnum::dump(usize& depth) const
 {
   std::ostringstream oss;
   oss << INDENT
-      << std::format("StmtEnum(sym={}, type={})\n", sym->dump(),
+      << std::format("StmtEnum(symbol={}, type={})\n", symbol->dump(),
                      type->dump(ZERO));
   depth++;
 
   for (const auto& entry : pairs) {
-    oss << std::format("EnumEntry(sym={}, expr={})\n", entry.sym->dump(),
+    oss << std::format("EnumEntry(symbol={}, expr={})\n", entry.symbol->dump(),
                        entry.expr->dump(ZERO));
   }
 
@@ -312,10 +312,10 @@ std::string ast::StmtEnum::dump(usize& depth) const
 std::string ast::StmtModule::dump(usize& depth) const
 {
   std::ostringstream oss;
-  oss << INDENT << std::format("StmtModule({})\n", sym->dump());
+  oss << INDENT << std::format("StmtModule({})\n", symbol->dump());
   depth++;
 
-  for (const auto& stmt : scp) {
+  for (const auto& stmt : scope) {
     oss << stmt->dump(depth) << "\n";
   }
 
@@ -342,7 +342,7 @@ std::string ast::StmtFunctionDecl::dump(usize& depth) const
                               }));
   depth++;
 
-  for (const auto& stmt : scp->stmts) {
+  for (const auto& stmt : scope->stmts) {
     oss << stmt->dump(depth) << "\n";
   }
 
@@ -357,7 +357,7 @@ std::string ast::StmtStructDecl::dump(usize& depth) const
   oss << INDENT + std::format("StmtStructDecl({})\n", name->dump());
   depth++;
 
-  for (const auto& stmt : scp) {
+  for (const auto& stmt : scope) {
     oss << stmt->dump(depth) << "\n";
   }
 
@@ -368,8 +368,8 @@ std::string ast::StmtStructDecl::dump(usize& depth) const
 
 std::string ast::StmtTypeDecl::dump(usize& depth) const
 {
-  return INDENT + std::format("StmtTypeDecl(sym={}, type={})", sym->dump(),
-                              type->dump(ZERO));
+  return INDENT + std::format("StmtTypeDecl(symbol={}, type={})",
+                              symbol->dump(), type->dump(ZERO));
 }
 
 std::string ast::StmtUsing::dump(usize& depth) const
@@ -378,7 +378,7 @@ std::string ast::StmtUsing::dump(usize& depth) const
   oss << INDENT + std::format("StmtUsing({})\n", sp->dump());
   depth++;
 
-  for (const auto& stmt : scp->stmts) {
+  for (const auto& stmt : scope->stmts) {
     oss << stmt->dump(depth) << "\n";
   }
 

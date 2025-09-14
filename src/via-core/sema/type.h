@@ -60,25 +60,25 @@ struct BuiltinType : public Type
 {
   enum class Kind : u8
   {
-    Nil,
-    Bool,
-    Int,
-    Float,
-    String
+    NIL,
+    BOOL,
+    INT,
+    FLOAT,
+    STRING
   };
 
   const Kind bt;
   explicit BuiltinType(Kind b) : Type(Type::Kind::Builtin, 0), bt(b) {}
 
-  bool isIntegral() const noexcept override { return bt == Kind::Int; }
-  bool isFloat() const noexcept override { return bt == Kind::Float; }
+  bool isIntegral() const noexcept override { return bt == Kind::INT; }
+  bool isFloat() const noexcept override { return bt == Kind::FLOAT; }
 
-  std::string dump() const override
+  std::string dump() const noexcept override
   {
-    return std::format("BuiltinType({})", magic_enum::enum_name(bt));
+    return std::format("BuiltinType( {} )", magic_enum::enum_name(bt));
   }
 
-  std::string toString() const override
+  std::string toString() const noexcept override
   {
     auto rawEnumName = magic_enum::enum_name(bt);
 
@@ -88,7 +88,8 @@ struct BuiltinType : public Type
     std::transform(rawEnumName.begin(), rawEnumName.end(), name.begin(),
                    ::tolower);
 
-    return ansi(name, Fg::Magenta, Bg::Black, Style::Bold);
+    return ansi::format(name, ansi::Foreground::Magenta,
+                        ansi::Background::Black, ansi::Style::Bold);
   }
 };
 

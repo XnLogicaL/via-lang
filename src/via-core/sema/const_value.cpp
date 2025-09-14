@@ -46,16 +46,16 @@ std::string sema::ConstValue::toString() const
   using enum Kind;
 
   switch (kind()) {
-    case Nil:
+    case NIL:
       return "nil";
-    case Boolean:
-      return value<Boolean>() ? "true" : "false";
-    case Int:
-      return std::to_string(value<Int>());
-    case Float:
-      return std::to_string(value<Float>());
-    case String:
-      return std::format("\"{}\"", value<String>());
+    case BOOL:
+      return value<BOOL>() ? "true" : "false";
+    case INT:
+      return std::to_string(value<INT>());
+    case FLOAT:
+      return std::to_string(value<FLOAT>());
+    case STRING:
+      return std::format("\"{}\"", value<STRING>());
     default:
       break;
   }

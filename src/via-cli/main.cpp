@@ -145,11 +145,12 @@ int main(int argc, char* argv[])
 
     if (rawDumpMode == "symtab") {
       std::println(std::cout, "{}",
-                   via::ansi("[global symbol table]", via::Fg::Yellow,
-                             via::Bg::Black, via::Style::Bold));
+                   via::ansi::format(
+                     "[global symbol table]", via::ansi::Foreground::Yellow,
+                     via::ansi::Background::Black, via::ansi::Style::Bold));
 
-      for (const auto& sym : manager.getSymbolTable().getSymbols()) {
-        std::println(std::cout, "  {}: {}", sym.second, sym.first);
+      for (const auto& symbol : manager.getSymbolTable().getSymbols()) {
+        std::println(std::cout, "  {}: {}", symbol.second, symbol.first);
       }
     }
   } catch (int code) {

@@ -201,7 +201,7 @@ const Parameter* via::Parser::parseParameter()
   SAVE_FIRST()
 
   auto* par = mAlloc.emplace<Parameter>();
-  par->sym = first;
+  par->symbol = first;
 
   if (optional(COLON)) {
     par->type = parseType();
@@ -249,8 +249,8 @@ const ExprLit* via::Parser::parseExprLit()
 const ExprSymbol* via::Parser::parseExprSymbol()
 {
   auto* symbol = mAlloc.emplace<ExprSymbol>();
-  symbol->sym = advance();
-  symbol->loc = symbol->sym->location(mSource);
+  symbol->symbol = advance();
+  symbol->loc = symbol->symbol->location(mSource);
   return symbol;
 }
 
@@ -613,7 +613,11 @@ const StmtScope* via::Parser::parseStmtScope()
       scope->stmts.push_back(parseStmt());
     }
 
-    advance();
+    auto* last = advance();
+    scope->loc = {
+      first->location(mSource).begin,
+      last->location(mSource).end,
+    };
   } else
     throw ParserError(loc, "Expected ':' or '{{' while parsing scope, got '{}'",
                       first->toString());
@@ -766,7 +770,7 @@ const StmtEnum* via::Parser::parseStmtEnum()
   SAVE_FIRST()
 
   auto ens = mAlloc.emplace<StmtEnum>();
-  ens->sym = advance();
+  ens->symbol = advance();
 
   if (optional(KW_OF)) {
     ens->type = parseType();
@@ -775,11 +779,11 @@ const StmtEnum* via::Parser::parseStmtEnum()
   expect(BRACE_OPEN, "parsing enumerator list");
 
   while (!match(BRACE_CLOSE)) {
-    auto* sym = advance();
+    auto* symbol = advance();
     expect(OP_EQ, "parsing enumerator pair");
 
     ens->pairs.push_back({
-      .sym = sym,
+      .symbol = symbol,
       .expr = parseExpr(),
     });
 
@@ -795,7 +799,7 @@ const StmtModule* via::Parser::parseStmtModule()
   SAVE_FIRST()
 
   auto* mod = mAlloc.emplace<StmtModule>();
-  mod->sym = advance();
+  mod->symbol = advance();
 
   expect(BRACE_OPEN, "parsing module body");
 
@@ -805,25 +809,25 @@ const StmtModule* via::Parser::parseStmtModule()
       switch (tok->kind) {
         case KW_CONST:
         case KW_VAR:
-          mod->scp.push_back(parseStmtVarDecl(true));
+          mod->scope.push_back(parseStmtVarDecl(true));
           break;
         case KW_FN:
-          mod->scp.push_back(parseStmtFuncDecl());
+          mod->scope.push_back(parseStmtFuncDecl());
           break;
         case KW_STRUCT:
-          mod->scp.push_back(parseStmtStructDecl());
+          mod->scope.push_back(parseStmtStructDecl());
           break;
         case KW_TYPE:
-          mod->scp.push_back(parseStmtTypeDecl());
+          mod->scope.push_back(parseStmtTypeDecl());
           break;
         case KW_MODULE:
-          mod->scp.push_back(parseStmtModule());
+          mod->scope.push_back(parseStmtModule());
           break;
         case KW_USING:
-          mod->scp.push_back(parseStmtUsingDecl());
+          mod->scope.push_back(parseStmtUsingDecl());
           break;
         case KW_ENUM:
-          mod->scp.push_back(parseStmtEnum());
+          mod->scope.push_back(parseStmtEnum());
           break;
         default:
           throw ParserError(tok->location(mSource),
@@ -916,8 +920,8 @@ const StmtFunctionDecl* via::Parser::parseStmtFuncDecl()
     fn->ret = nullptr;
   }
 
-  fn->scp = parseStmtScope();
-  fn->loc = {loc.begin, fn->scp->loc.end};
+  fn->scope = parseStmtScope();
+  fn->loc = {loc.begin, fn->scope->loc.end};
   return fn;
 }
 
@@ -935,21 +939,21 @@ const StmtStructDecl* via::Parser::parseStmtStructDecl()
     switch (tok->kind) {
       case KW_CONST:
       case KW_VAR:
-        strc->scp.push_back(parseStmtVarDecl(false));
+        strc->scope.push_back(parseStmtVarDecl(false));
         expect(COMMA, "terminating struct member");
         break;
       case KW_FN:
-        strc->scp.push_back(parseStmtFuncDecl());
+        strc->scope.push_back(parseStmtFuncDecl());
         break;
       case KW_TYPE:
-        strc->scp.push_back(parseStmtTypeDecl());
+        strc->scope.push_back(parseStmtTypeDecl());
         expect(COMMA, "terminating struct member");
         break;
       case KW_USING:
-        strc->scp.push_back(parseStmtUsingDecl());
+        strc->scope.push_back(parseStmtUsingDecl());
         break;
       case KW_ENUM:
-        strc->scp.push_back(parseStmtEnum());
+        strc->scope.push_back(parseStmtEnum());
         break;
       default:
         throw ParserError(
@@ -969,7 +973,7 @@ const StmtTypeDecl* via::Parser::parseStmtTypeDecl()
   SAVE_FIRST()
 
   auto* ty = mAlloc.emplace<StmtTypeDecl>();
-  ty->sym = advance();
+  ty->symbol = advance();
 
   expect(OP_EQ, "parsing type declaration");
 
@@ -986,8 +990,8 @@ const StmtUsing* via::Parser::parseStmtUsingDecl()
 
   auto* usn = mAlloc.emplace<StmtUsing>();
   usn->sp = parseStaticPath();
-  usn->scp = parseStmtScope();
-  usn->loc = {loc.begin, usn->scp->loc.end};
+  usn->scope = parseStmtScope();
+  usn->loc = {loc.begin, usn->scope->loc.end};
   return usn;
 }
 

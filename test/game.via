@@ -1,0 +1,45 @@
+/* ===================================================== **
+**  This file is a part of the via Programming Language  **
+** ----------------------------------------------------- **
+**           Copyright (C) XnLogicaL 2024-2025           **
+**              Licensed under GNU GPLv3.0               **
+** ----------------------------------------------------- **
+**         https://github.com/XnLogicaL/via-lang         **
+** ===================================================== */
+
+// This file explores what a standalone 2D game using raylib
+// could look like written in the via programming language.
+
+#pragma(optimize 3)
+
+import vendor::raylib as rl;
+
+#inline fn main() {
+  #comptime const screenWidth = 800;
+  #comptime const screenHeight = 450;
+
+  rl::InitWindow(screenWidth, screenHeight, "");
+  rl::SetTargetFPS(60);
+
+  var ballPosition = rl::Vector2::new(
+    (screenWidth / 2) as float,
+    (screenHeight / 2) as float
+  ); 
+
+  whilex rl::WindowShouldClose() {
+    if rl::IsKeyDown(KEY_RIGHT): ballPosition.x += 2;
+    if rl::IsKeyDown(KEY_LEFT):  ballPosition.x -= 2;
+    if rl::IsKeyDown(KEY_UP):    ballPosition.y -= 2;
+    if rl::IsKeyDown(KEY_DOWN):  ballPosition.y += 2;
+
+    rl::BeginDrawing();
+      rl::ClearBackground(rl::RAYWHITE);
+      rl::DrawText("move the ball with arrow keys", 10, 10, 20, rl::DARKGRAY);
+      rl::DrawCircleV(ballPosition, 50, rl::MAROON);
+    rl::EndDrawing();
+  }
+
+  rl::CloseWindow();
+}
+
+main();

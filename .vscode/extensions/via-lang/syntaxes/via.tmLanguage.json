@@ -20,7 +20,7 @@
     },
     {
       "name": "keyword.control.via",
-      "match": "\\b(var|const|fn|type|while|for|if|in|of|else|do|and|or|not|as|return|mod|enum|struct|import|using|bool|int|float|string)\\b"
+      "match": "\\b(var|const|fn|type|while|whilex|for|if|ifx|in|of|else|do|and|or|not|as|return|mod|enum|struct|import|using|self|operator|try|bool|int|float|string)\\b"
     },
     {
       "name": "variable.language.self.via",
@@ -127,8 +127,8 @@
       }
     },
     {
-      "match": "\\$\\[static\\]",
-      "name": "variable.name.property.via"
+      "name": "keyword.directive.attribute.via",
+      "match": "(?<!\\w)#[A-Za-z_][A-Za-z0-9_]+\\b"
     },
     {
       "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b",
