@@ -12,24 +12,42 @@
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
+#include "ansi.h"
 #include "lexer/location.h"
 #include "utility.h"
 
 namespace via
 {
 
+enum class Level : u8
+{
+  INFO,
+  WARNING,
+  ERROR,
+};
+
+struct Footnote
+{
+  const enum class Kind : u8 {
+    NOTE,
+    HINT,
+  } kind = Kind::NOTE;
+
+  const bool valid = false;
+  const std::string message = "";
+
+  Footnote() = default;
+  Footnote(Kind kind, std::string message)
+      : kind(kind), valid(true), message(message)
+  {}
+};
+
 struct Diagnosis
 {
-  enum class Kind : u8
-  {
-    Info,
-    Warn,
-    Error,
-  };
-
-  Kind kind = Kind::Info;
-  SourceLoc loc;    // Absolute location in the source buffer
-  std::string msg;  // Human-readable message
+  const Level level;
+  const SourceLoc location;   // Absolute location in the source buffer
+  const std::string message;  // Human-readable message
+  const Footnote footnote = {};
 };
 
 class DiagContext final
@@ -45,22 +63,21 @@ class DiagContext final
   void emit(spdlog::logger* logger = spdlog::default_logger().get()) const;
   void clear() noexcept { mDiags.clear(); }
 
-  template <Diagnosis::Kind K>
-  void report(SourceLoc loc, std::string msg)
+  void report(Diagnosis diag) noexcept { mDiags.push_back(std::move(diag)); }
+
+  template <Level Lv>
+  void report(SourceLoc location, std::string message, Footnote footnote = {})
   {
-    mDiags.emplace_back(K, loc, std::move(msg));
+    mDiags.emplace_back(Lv, location, message, footnote);
   }
 
-  [[nodiscard]] Vec<Diagnosis>& diagnostics() noexcept { return mDiags; }
-  [[nodiscard]] const Vec<Diagnosis>& diagnostics() const noexcept
-  {
-    return mDiags;
-  }
+  [[nodiscard]] auto& diagnostics() noexcept { return mDiags; }
+  [[nodiscard]] const auto& diagnostics() const noexcept { return mDiags; }
 
   [[nodiscard]] bool hasErrors() const noexcept
   {
-    for (const auto& d : mDiags) {
-      if (d.kind == Diagnosis::Kind::Error)
+    for (const auto& diag : mDiags) {
+      if (diag.level == Level::ERROR)
         return true;
     }
 
@@ -76,7 +93,34 @@ class DiagContext final
  private:
   std::string mPath, mName;
   const std::string& mSource;
-  Vec<Diagnosis> mDiags{};
+  std::vector<Diagnosis> mDiags{};
 };
+
+inline std::string toString(Level level) noexcept
+{
+  switch (level) {
+    case Level::INFO:
+      return ansi::format("info:", ansi::Foreground::Cyan,
+                          ansi::Background::Black, ansi::Style::Bold);
+    case Level::WARNING:
+      return ansi::format("warning:", ansi::Foreground::Yellow,
+                          ansi::Background::Black, ansi::Style::Bold);
+    case Level::ERROR:
+      return ansi::format("error:", ansi::Foreground::Red,
+                          ansi::Background::Black, ansi::Style::Bold);
+  }
+}
+
+inline std::string toString(Footnote::Kind kind) noexcept
+{
+  switch (kind) {
+    case Footnote::Kind::HINT:
+      return ansi::format("hint:", ansi::Foreground::Green,
+                          ansi::Background::Black, ansi::Style::Bold);
+    case Footnote::Kind::NOTE:
+      return ansi::format("note:", ansi::Foreground::Blue,
+                          ansi::Background::Black, ansi::Style::Bold);
+  }
+}
 
 }  // namespace via

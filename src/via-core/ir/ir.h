@@ -147,7 +147,7 @@ struct ExprCall : public Expr
 {
   NODE_FIELDS(Expr)
   const Expr* callee;
-  Vec<const Expr*> args;
+  std::vector<const Expr*> args;
 };
 
 struct ExprSubscript : public Expr
@@ -172,13 +172,13 @@ struct ExprTernary : public Expr
 struct ExprArray : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<const Expr*> exprs;
+  std::vector<const Expr*> exprs;
 };
 
 struct ExprTuple : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<const Expr*> init;
+  std::vector<const Expr*> init;
 };
 
 struct Function;
@@ -200,7 +200,6 @@ struct StmtVarDecl : public Stmt
 };
 
 struct StmtBlock;
-
 struct StmtFuncDecl : public Stmt
 {
   NODE_FIELDS()
@@ -213,7 +212,7 @@ struct StmtFuncDecl : public Stmt
 
   SymbolId symbol;
   const sema::Type* ret;
-  Vec<Parm> parms;
+  std::vector<Parm> parms;
   const StmtBlock* body;
 
   Option<SymbolId> getSymbol() const override { return symbol; }
@@ -223,7 +222,7 @@ struct StmtBlock : public Stmt
 {
   NODE_FIELDS()
   SymbolId name;
-  Vec<const Stmt*> stmts;
+  std::vector<const Stmt*> stmts;
   const Term* term;
 };
 
@@ -235,7 +234,7 @@ struct StmtExpr : public Stmt
 
 }  // namespace ir
 
-using IRTree = Vec<const ir::Stmt*>;
+using IRTree = std::vector<const ir::Stmt*>;
 
 namespace debug
 {

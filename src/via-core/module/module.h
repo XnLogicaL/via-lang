@@ -15,7 +15,9 @@
 #include <via/types.h>
 #include "defs.h"
 #include "expected.h"
+#include "ir/builder.h"
 #include "option.h"
+#include "vm/executable.h"
 
 #define VIA_MODINIT_FUNC(id) \
   VIA_EXPORT const via::NativeModuleInfo* viainit_##id(via::ModuleManager* mgr)
@@ -79,7 +81,7 @@ class Module final
     DUMP_TTREE = 1 << 0,
     DUMP_AST = 1 << 1,
     DUMP_IR = 1 << 2,
-    DUMP_BYTECODE = 1 << 3,
+    DUMP_EXE = 1 << 3,
     DUMP_DEFTABLE = 1 << 4,
   };
 
@@ -120,8 +122,9 @@ class Module final
   std::string mName;
   fs::path mPath;
   IRTree mIr;
-  Vec<Module*> mImports;
-  Map<SymbolId, const Def*> mDefs;
+  Executable* mExecutable;
+  std::vector<Module*> mImports;
+  std::unordered_map<SymbolId, const Def*> mDefs;
   Module* mImportee = nullptr;
   ModuleManager* mManager = nullptr;
   const ast::StmtImport* mDecl = nullptr;

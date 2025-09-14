@@ -8,7 +8,6 @@
 ** ===================================================== */
 
 #include "stack.h"
-#include "debug.h"
 
 namespace sema = via::sema;
 
@@ -25,9 +24,9 @@ via::Option<sema::LocalRef> sema::Frame::getLocal(via::SymbolId symbol)
 }
 
 void sema::Frame::setLocal(via::SymbolId symbol,
-                           const ast::StmtVarDecl* astDecl,
-                           const ir::StmtVarDecl* irDecl,
-                           u64 quals)
+                           const ast::Stmt* astDecl,
+                           const ir::Stmt* irDecl,
+                           u8 quals)
 {
   usize version;
   if (auto lref = getLocal(symbol)) {

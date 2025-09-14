@@ -83,7 +83,7 @@ bool std::equal_to<sema::UserKey>::operator()(
 
 template <typename Tp, typename Key, typename... Args>
 static const Tp* instantiateBase(via::BumpAllocator<>& alloc,
-                                 via::Map<Key, const Tp*>& map,
+                                 via::std::unordered_map<Key, const Tp*>& map,
                                  Args&&... args)
 {
   Key key(args...);
@@ -96,8 +96,7 @@ static const Tp* instantiateBase(via::BumpAllocator<>& alloc,
   }
 }
 
-const sema::BuiltinType* sema::TypeContext::getBuiltin(
-  BuiltinType::Kind kind)
+const sema::BuiltinType* sema::TypeContext::getBuiltin(BuiltinType::Kind kind)
 {
   return instantiateBase<BuiltinType, BuiltinType::Kind>(mAlloc, mBuiltins,
                                                          kind);
@@ -109,7 +108,7 @@ const sema::ArrayType* sema::TypeContext::getArray(const Type* type)
 }
 
 const sema::DictType* sema::TypeContext::getDict(const Type* key,
-                                                             const Type* val)
+                                                 const Type* val)
 {
   return mDicts[DictKey{
     .key = key,
@@ -119,7 +118,7 @@ const sema::DictType* sema::TypeContext::getDict(const Type* key,
 
 const sema::FuncType* sema::TypeContext::getFunction(
   const Type* res,
-  Vec<const Type*> tps)
+  std::vector<const Type*> tps)
 {
   return mFuncs[FuncKey{
     .result = res,
@@ -127,8 +126,7 @@ const sema::FuncType* sema::TypeContext::getFunction(
   }];
 }
 
-const sema::UserType* sema::TypeContext::getUser(
-  const ast::StmtTypeDecl* decl)
+const sema::UserType* sema::TypeContext::getUser(const ast::StmtTypeDecl* decl)
 {
   return mUsers[UserKey{.decl = decl}];
 }
@@ -172,13 +170,12 @@ const sema::Type* sema::TypeContext::instantiate(const Type* tp,
       auto* dt = static_cast<const DictType*>(tp);
       auto* key = instantiate(dt->key, env);
       auto* val = instantiate(dt->val, env);
-      return (key == dt->key && val == dt->val) ? tp
-                                                : getDict(key, val);
+      return (key == dt->key && val == dt->val) ? tp : getDict(key, val);
     }
 
     case Type::Kind::Function: {
       auto* ft = static_cast<const FuncType*>(tp);
-      Vec<const Type*> tps;
+      std::vector<const Type*> tps;
       tps.reserve(ft->params.size());
 
       bool same = true;
@@ -195,7 +192,7 @@ const sema::Type* sema::TypeContext::instantiate(const Type* tp,
 
     case Type::Kind::TemplateSpec: {
       auto* S = static_cast<const TemplateSpecType*>(tp);
-      Vec<const Type*> args;
+      std::vector<const Type*> args;
       args.reserve(S->args.size());
 
       bool same = true;

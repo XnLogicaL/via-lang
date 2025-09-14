@@ -63,9 +63,9 @@ class ModuleManager
 
  private:
   Allocator mAlloc;
-  Vec<std::string> mImports;
-  Vec<fs::path> mImportPaths;
-  Map<fs::path, Module*> mModules;
+  std::vector<std::string> mImports;
+  std::vector<fs::path> mImportPaths;
+  std::unordered_map<fs::path, Module*> mModules;
   sema::TypeContext mTypeCtx;
   SymbolTable mSymbolTable;
 };

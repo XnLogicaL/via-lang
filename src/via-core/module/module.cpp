@@ -12,7 +12,6 @@
 #include <iostream>
 #include "ansi.h"
 #include "debug.h"
-#include "ir/builder.h"
 #include "manager.h"
 #include "sema/register.h"
 #include "sema/stack.h"
@@ -48,7 +47,7 @@ static via::Expected<std::string> readFile(const via::fs::path& path)
 #ifdef VIA_PLATFORM_WINDOWS
 static struct WinLibraryManager
 {
-  Vec<HMODULE> libs;
+  std::vector<HMODULE> libs;
 
   ~WinLibraryManager()
   {
@@ -180,7 +179,7 @@ via::Expected<via::Module*> via::Module::loadSourceFile(
   auto file = readFile(path);
   if (!file.hasValue()) {
     manager->popImport();
-    return Unexpected(file.takeError());
+    return Unexpected(file.getError());
   }
 
   {
@@ -223,6 +222,11 @@ via::Expected<via::Module*> via::Module::loadSourceFile(
           module->mDefs[*symbol] = Def::from(module->getAllocator(), node);
         }
       }
+
+      {
+        auto* exe = Executable::buildFromIR(module, module->mIr);
+        module->mExecutable = exe;
+      }
     }
 
   error:
@@ -236,6 +240,8 @@ via::Expected<via::Module*> via::Module::loadSourceFile(
     if (flags & DUMP_IR)
       std::println(std::cout, "{}",
                    debug::dump(manager->getSymbolTable(), module->mIr));
+    if (flags & DUMP_EXE)
+      std::println(std::cout, "{}", module->mExecutable->dump());
     if (flags & DUMP_DEFTABLE) {
       std::println(std::cout, "{}",
                    ansi::format(std::format("[deftable .{}]", name),

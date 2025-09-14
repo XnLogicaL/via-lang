@@ -17,7 +17,7 @@
 namespace via
 {
 
-using TokenTree = Vec<Token*>;
+using TokenTree = std::vector<Token*>;
 
 class Lexer final
 {

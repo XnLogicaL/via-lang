@@ -51,7 +51,7 @@ void require(bool cond, MSG_PARM) noexcept;
 
 template <typename T, char LDel = '{', char RDel = '}'>
 inline std::string dump(
-  const Vec<T>& vec,
+  const std::vector<T>& vec,
   std::function<std::string(const std::remove_cv_t<T>&)> fn)
 {
   std::ostringstream oss;

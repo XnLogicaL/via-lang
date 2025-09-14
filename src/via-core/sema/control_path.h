@@ -19,7 +19,8 @@ namespace via
 namespace sema
 {
 
-Vec<const ir::Term*> analyzeControlPaths(const ir::StmtBlock* entry) noexcept;
+std::vector<const ir::Term*> analyzeControlPaths(
+  const ir::StmtBlock* entry) noexcept;
 }
 
 }  // namespace via

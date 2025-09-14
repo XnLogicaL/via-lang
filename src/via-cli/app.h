@@ -31,7 +31,7 @@ inline auto& getApp()
 
   cli.add_argument("--dump", "-D")
     .nargs(1)
-    .choices("", "ttree", "ast", "ir", "deftab", "symtab")
+    .choices("", "ttree", "ast", "ir", "exe", "deftab", "symtab")
     .default_value("")
     .help("Dump the given tree");
 

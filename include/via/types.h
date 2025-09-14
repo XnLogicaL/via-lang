@@ -10,8 +10,6 @@
 #pragma once
 
 #include <filesystem>
-#include <unordered_map>
-#include <vector>
 
 namespace via
 {
@@ -20,15 +18,6 @@ namespace fs = std::filesystem;
 
 using std::literals::operator""s;
 using std::literals::operator""sv;
-
-template <typename K,
-          typename V,
-          typename Hash = std::hash<K>,
-          typename Eq = std::equal_to<K>>
-using Map = std::unordered_map<K, V, Hash, Eq>;
-
-template <typename T>
-using Vec = std::vector<T>;
 
 using u8 = uint8_t;
 using u16 = uint16_t;

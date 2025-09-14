@@ -12,27 +12,85 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "instruction.h"
+#include "ir/ir.h"
+#include "sema/const_value.h"
+#include "sema/register.h"
 
 namespace via
 {
 
-namespace sema
+namespace config
 {
-
-class ConstValue;
-
+inline constexpr u32 kMagic = 0x2E766961;  // .via
 }
 
-struct Executable
+class Module;
+class Executable final
 {
-  static constexpr u32 kmagic = 0x2E766961;  // .via
+ public:
+  enum Flags : u64
+  {
+  };
 
-  u32 magic;
-  u64 flags;
-  Vec<sema::ConstValue> consts;
-  Vec<Instruction> bytecode;
+ public:
+  static Executable* buildFromIR(Module* module,
+                                 const IRTree& ir,
+                                 u64 flags = 0) noexcept;
 
+  static Executable* buildFromBinary(Module* module,
+                                     const std::vector<unsigned char>& bytes,
+                                     u64 flags = 0) noexcept;
+
+ public:
+  auto flags() const noexcept { return mFlags; }
+  auto& constants() const noexcept { return mConstants; }
+  auto& bytecode() const noexcept { return mBytecode; }
   std::string dump() const;
+
+ private:
+  usize programCounter() const noexcept { return mBytecode.size() - 1; }
+  usize setLabel() noexcept
+  {
+    mLabelTable.push_back(programCounter());
+    return mLabelTable.size() - 1;
+  }
+
+  void pushInstr(OpCode op, std::array<u16, 3>&& ops = {}) noexcept
+  {
+    mBytecode.emplace_back(op, ops[0], ops[1], ops[2]);
+  }
+
+  // clang-format off
+  void lowerExprConstant(const ir::ExprConstant* exprConstant, u16 dst) noexcept;
+  void lowerExprSymbol(const ir::ExprSymbol* exprSymbol, u16 dst) noexcept;
+  void lowerExprAccess(const ir::ExprAccess* exprAccess, u16 dst) noexcept;
+  void lowerExprModuleAccess(const ir::ExprModuleAccess* exprModuleAccess, u16 dst) noexcept;
+  void lowerExprUnary(const ir::ExprUnary* exprUnary, u16 dst) noexcept;
+  void lowerExprBinary(const ir::ExprBinary* exprBinary, u16 dst) noexcept;
+  void lowerExprCall(const ir::ExprCall* exprCall, u16 dst) noexcept;
+  void lowerExprSubscript(const ir::ExprSubscript* exprSubs, u16 dst) noexcept;
+  void lowerExprCast(const ir::ExprCast* exprCast, u16 dst) noexcept;
+  void lowerExprTernary(const ir::ExprTernary* exprTernary, u16 dst) noexcept;
+  void lowerExprArray(const ir::ExprArray* exprArray, u16 dst) noexcept;
+  void lowerExprTuple(const ir::ExprTuple* exprTuple, u16 dst) noexcept;
+  void lowerExprLambda(const ir::ExprLambda* exprLambda, u16 dst) noexcept;
+  void lowerExpr(const ir::Expr* expr, u16 dst) noexcept;
+
+  void lowerStmtVarDecl(const ir::StmtVarDecl* stmtVarDecl) noexcept;
+  void lowerStmtFuncDecl(const ir::StmtFuncDecl* stmtFuncDecl) noexcept;
+  void lowerStmtBlock(const ir::StmtBlock* stmtBlock) noexcept;
+  void lowerStmtExpr(const ir::StmtExpr* stmtExpr) noexcept;
+  void lowerStmt(const ir::Stmt* stmt) noexcept;
+  // clang-format on
+
+  void lowerJumps() noexcept;
+
+ private:
+  u64 mFlags;
+  sema::RegisterState mRegState;
+  std::vector<sema::ConstValue> mConstants;
+  std::vector<Instruction> mBytecode;
+  std::vector<usize> mLabelTable;
 };
 
 }  // namespace via

@@ -1,13 +1,9 @@
-/* ===================================================== **
-**  This file is a part of the via Programming Language  **
-** ----------------------------------------------------- **
-**           Copyright (C) XnLogicaL 2024-2025           **
-**              Licensed under GNU GPLv3.0               **
-** ----------------------------------------------------- **
-**         https://github.com/XnLogicaL/via-lang         **
-** ===================================================== */
-
 #pragma once
+
+#include <cassert>
+#include <new>
+#include <type_traits>
+#include <utility>
 
 #include <via/config.h>
 #include <via/types.h>
@@ -27,11 +23,15 @@ class Unexpected final
 
   template <typename... Args>
     requires(std::is_constructible_v<E, Args...>)
-  Unexpected(Args&&... args) : mUnexp(fwd<Args>(args)...)
+  explicit Unexpected(Args&&... args) : mUnexp(std::forward<Args>(args)...)
   {}
 
- public:
-  [[nodiscard]] E&& takeError() { return mv(mUnexp); }
+  // Move out the error value by value
+  [[nodiscard]] E takeError() && { return std::move(mUnexp); }
+
+  // If you need an lvalue overload, you must decide semantics.
+  // We'll delete it to avoid accidental copies:
+  [[nodiscard]] E takeError() & = delete;
 
  private:
   E mUnexp;
@@ -40,137 +40,202 @@ class Unexpected final
 template <typename T>
 class Expected final
 {
+  static_assert(!std::is_same_v<T, Error>,
+                "Expected<T> cannot be instantiated with Error type");
+
  public:
-  union Storage
+  Expected() = delete;
+
+  // Construct with value
+  constexpr Expected(T val) noexcept(std::is_nothrow_move_constructible_v<T>)
   {
-    T val;
-    Error err;
+    new (&mStorage.val) T(std::move(val));
+    mHasValue = true;
+    mIsValid = true;
+  }
 
-    constexpr Storage(T&& val) noexcept : val(mv(val)) {}
-    constexpr Storage(Error&& err) noexcept : err(mv(err)) {}
-    constexpr ~Storage() noexcept {}
-  };
-
- public:
-  constexpr Expected(T val) noexcept : mStorage(fwd<T>(val)), mHasValue(true) {}
-
+  // Construct from an Unexpected<E>
   template <typename E>
+    requires(std::is_constructible_v<Error, Error> ||
+             true)  // allow; we call Error::fail<E>
   constexpr Expected(Unexpected<E>&& err) noexcept
-      : mStorage(fwd<Error>(Error::fail<E>(err.takeError()))), mHasValue(false)
   {
+    new (&mStorage.err) Error(Error::fail<E>(std::move(err).takeError()));
     debug::require(mStorage.err.hasError(),
                    "Cannot construct Expected<T> with successful Error");
+    mHasValue = false;
+    mIsValid = true;
   }
 
-  constexpr Expected(const Expected& other) = delete;
+  // Deleted copy
+  Expected(const Expected& other) = delete;
+  Expected& operator=(const Expected& other) = delete;
 
-  constexpr Expected(Expected&& other)
-      : mHasValue(other.hasValue()), mStorage(other.mTakeStorage())
+  // Move constructor
+  constexpr Expected(Expected&& other) noexcept(
+    std::is_nothrow_move_constructible_v<T>&&
+      std::is_nothrow_move_constructible_v<Error>)
+      : mHasValue(false), mIsValid(false)  // will be set below if we construct
   {
-    // UB if we don't do this lol
-    other.mIsValid = false;
-  }
-
-  constexpr ~Expected() noexcept
-  {
-    if (!mIsValid)
+    if (!other.mIsValid) {
+      // other is already invalid/moved-from: we remain invalid
       return;
-
-    if (mHasValue) {
-      mStorage.val.~T();
-    } else {
-      mStorage.err.~Error();
     }
+
+    if (other.mHasValue) {
+      new (&mStorage.val) T(std::move(other.mStorage.val));
+      mHasValue = true;
+      mIsValid = true;
+    } else {
+      new (&mStorage.err) Error(std::move(other.mStorage.err));
+      mHasValue = false;
+      mIsValid = true;
+    }
+
+    // leave `other` in a safe (non-destroying) state
+    other.destroyActive();
   }
 
-  constexpr Expected& operator=(const Expected& other) = delete;
-  constexpr Expected& operator=(Expected&& other)
+  // Move assignment
+  constexpr Expected& operator=(Expected&& other) noexcept(
+    std::is_nothrow_move_constructible_v<T>&&
+      std::is_nothrow_move_constructible_v<Error>)
   {
-    if (this != other) {
-      if (other.hasValue()) {
-        mHasValue = true;
-        mStorage.val = other.takeValue();
-      } else {
-        mHasValue = false;
-        mStorage.err = other.takeError();
-      }
+    if (this == &other)
+      return *this;
 
-      // UB if we don't do this lol
-      other.mIsValid = false;
+    destroyActive();
+
+    if (!other.mIsValid) {
+      // other empty -> remain empty / invalid
+      mIsValid = false;
+      mHasValue = false;
+      return *this;
     }
 
+    if (other.mHasValue) {
+      new (&mStorage.val) T(std::move(other.mStorage.val));
+      mHasValue = true;
+      mIsValid = true;
+    } else {
+      new (&mStorage.err) Error(std::move(other.mStorage.err));
+      mHasValue = false;
+      mIsValid = true;
+    }
+
+    other.destroyActive();
     return *this;
   }
 
-  constexpr operator bool() const noexcept { return hasValue(); }
-  constexpr T& operator*() noexcept { return getValue(); }
-  constexpr T* operator->() noexcept { return &getValue(); }
-  constexpr const T& operator*() const noexcept { return getValue(); }
-  constexpr const T* operator->() const noexcept { return &getValue(); }
+  ~Expected() noexcept { destroyActive(); }
 
- public:
-  [[nodiscard]] constexpr bool hasValue() const noexcept { return mHasValue; }
-  [[nodiscard]] constexpr bool hasError() const noexcept { return !mHasValue; }
+  constexpr explicit operator bool() const noexcept { return hasValue(); }
 
-  [[nodiscard]] constexpr T& getValue() noexcept
+  T& operator*() & noexcept { return getValue(); }
+  T* operator->() noexcept { return &getValue(); }
+  const T& operator*() const& noexcept { return getValue(); }
+  const T* operator->() const noexcept { return &getValue(); }
+
+  [[nodiscard]] constexpr bool hasValue() const noexcept
+  {
+    return mIsValid && mHasValue;
+  }
+  [[nodiscard]] constexpr bool hasError() const noexcept
+  {
+    return mIsValid && !mHasValue;
+  }
+
+  [[nodiscard]] T& getValue() & noexcept
   {
     debug::require(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
   }
 
-  [[nodiscard]] constexpr const T& getValue() const noexcept
+  [[nodiscard]] const T& getValue() const& noexcept
   {
     debug::require(hasValue(), "Bad Expected<T> access (getValue)");
     return mStorage.val;
   }
 
-  [[nodiscard]] constexpr T valueOr(T orelse) const noexcept
+  [[nodiscard]] Error& getError() & noexcept
+  {
+    debug::require(hasError(), "Bad Expected<T> access (getError)");
+    return mStorage.err;
+  }
+
+  [[nodiscard]] const Error& getError() const& noexcept
+  {
+    debug::require(hasError(), "Bad Expected<T> access (getError)");
+    return mStorage.err;
+  }
+
+  // Take value by value (moves out). Leaves *this invalid (no active member).
+  [[nodiscard]] T takeValue() && noexcept(
+    std::is_nothrow_move_constructible_v<T>)
+  {
+    debug::require(hasValue(), "Bad Expected<T> access (takeValue)");
+    T tmp = std::move(mStorage.val);
+    mStorage.val.~T();
+    mIsValid = false;  // prevent destructor from trying to destroy anything
+    mHasValue = false;
+    return tmp;
+  }
+
+  // Take error by value (moves out). Leaves *this invalid.
+  [[nodiscard]] Error takeError() && noexcept(
+    std::is_nothrow_move_constructible_v<Error>)
+  {
+    debug::require(hasError(), "Bad Expected<T> access (takeError)");
+    Error tmp = std::move(mStorage.err);
+    mStorage.err.~Error();
+    mIsValid = false;
+    mHasValue = false;
+    return tmp;
+  }
+
+  // valueOr: return copy of value or fallback
+  [[nodiscard]] T valueOr(const T& orelse) const& noexcept
     requires(std::is_copy_constructible_v<T>)
   {
     return hasValue() ? getValue() : orelse;
   }
 
-  [[nodiscard]] constexpr T&& takeValue() noexcept
-  {
-    debug::require(hasValue(), "Bad Expected<T> access (takeValue)");
-    mHasValue = false;
-    return mv(mStorage.val);
-  }
-
-  [[nodiscard]] constexpr Error& getError() noexcept
-  {
-    debug::require(hasError(), "Bad Expected<T> access (getError)");
-    return mStorage.err;
-  }
-
-  [[nodiscard]] constexpr const Error& getError() const noexcept
-  {
-    debug::require(hasError(), "Bad Expected<T> access (getError)");
-    return mStorage.err;
-  }
-
-  [[nodiscard]] constexpr Error errorOr(Error orelse) const noexcept
+  // errorOr: return copy of error or fallback
+  [[nodiscard]] Error errorOr(const Error& orelse) const& noexcept
   {
     return hasError() ? getError() : orelse;
   }
 
-  [[nodiscard]] constexpr Error&& takeError() noexcept
+ private:
+  // Storage union with non-trivial members: we manage construction/destruction
+  // manually.
+  union Storage
   {
-    debug::require(hasError(), "Bad Expected<T> access (takeError)");
-    mHasValue = true;
-    return mv(mStorage.err);
+    Storage() noexcept {}
+    ~Storage() noexcept {}
+
+    T val;
+    Error err;
+  };
+
+  // Destroy the active member if present. After this call, object is considered
+  // invalid.
+  void destroyActive() noexcept
+  {
+    if (!mIsValid)
+      return;
+    if (mHasValue) {
+      mStorage.val.~T();
+    } else {
+      mStorage.err.~Error();
+    }
+    mIsValid = false;
   }
 
  private:
-  [[nodiscard]] constexpr Storage&& mTakeStorage() { return mv(mStorage); }
-
- private:
   Storage mStorage;
-  bool mHasValue;
-
-  // TODO: Get rid of this when move constructors/operators no longer call the
-  // destructor of the moved value
-  bool mIsValid = true;
+  bool mHasValue = false;
+  bool mIsValid = false;
 };
 
 }  // namespace via

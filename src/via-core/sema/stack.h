@@ -31,9 +31,9 @@ class Frame final
 
   Option<LocalRef> getLocal(SymbolId symbol);
   void setLocal(SymbolId symbol,
-                const ast::StmtVarDecl* astDecl,
-                const ir::StmtVarDecl* irDecl,
-                u64 quals = 0ULL);
+                const ast::Stmt* astDecl,
+                const ir::Stmt* irDecl,
+                u8 quals = 0ULL);
 
   void save() { mStkPtr = mLocals.size(); }
   void restore() { mLocals.resize(mStkPtr); }
@@ -41,7 +41,7 @@ class Frame final
  private:
   Module* mModule;
   usize mStkPtr;
-  Vec<Local> mLocals;
+  std::vector<Local> mLocals;
 };
 
 using StackState = std::stack<Frame>;

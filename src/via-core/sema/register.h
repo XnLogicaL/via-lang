@@ -32,7 +32,7 @@ class RegisterState
   void free(u16 reg);
 
  private:
-  Vec<u16> mBuffer{config::kRegisterCount / 8};
+  std::vector<u16> mBuffer{config::kRegisterCount / 8};
 };
 
 }  // namespace sema

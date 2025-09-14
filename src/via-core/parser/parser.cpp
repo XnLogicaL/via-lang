@@ -24,17 +24,11 @@ using namespace via::ast;
 struct ParserError
 {
  public:
-  via::SourceLoc loc;
-  std::string msg;
-
-  explicit ParserError(via::SourceLoc loc, std::string msg) : loc(loc), msg(msg)
-  {}
+  via::Diagnosis diag;
 
   template <typename... Args>
-  explicit ParserError(via::SourceLoc loc,
-                       std::format_string<Args...> form,
-                       Args... args)
-      : loc(loc), msg(std::format(form, std::forward<Args>(args)...))
+    requires std::is_constructible_v<via::Diagnosis, via::Level, Args...>
+  explicit ParserError(Args&&... args) : diag(via::Level::ERROR, args...)
   {}
 };
 
@@ -126,9 +120,10 @@ const via::Token* via::Parser::expect(Token::Kind kind, const char* task)
 {
   if (!match(kind)) {
     const Token& unexp = *peek();
-    throw ParserError(unexp.location(mSource),
-                      "Unexpected token '{}' ({}) while {}", unexp.toString(),
-                      magic_enum::enum_name(unexp.kind), task);
+    throw ParserError(
+      unexp.location(mSource),
+      std::format("Unexpected token '{}' ({}) while {}", unexp.toString(),
+                  magic_enum::enum_name(unexp.kind), task));
   }
 
   return advance();
@@ -260,7 +255,7 @@ const Expr* via::Parser::parseExprGroupOrTuple()
   auto* first = parseExpr();
 
   if (match(COMMA)) {
-    Vec<const Expr*> vals;
+    std::vector<const Expr*> vals;
     vals.push_back(first);
 
     while (match(COMMA)) {
@@ -320,7 +315,7 @@ const ExprCall* via::Parser::parseExprCall(const ast::Expr* expr)
 {
   advance();  // consume '('
 
-  Vec<const Expr*> args;
+  std::vector<const Expr*> args;
 
   if (!match(PAREN_CLOSE)) {
     do
@@ -453,8 +448,14 @@ const Expr* via::Parser::parseExprPrimary()
       return parseExprLambda();
     default:
       throw ParserError(
-        loc, "Unexpected token '{}' ({}) while parsing primary expression",
-        first->toString(), magic_enum::enum_name(first->kind));
+        loc,
+        std::format(
+          "Unexpected token '{}' ({}) while parsing primary expression",
+          first->toString(), magic_enum::enum_name(first->kind)),
+        Footnote(Footnote::Kind::HINT,
+                 "Expected INT | BINARY_INT | HEX_INT | 'nil' | FLOAT | 'true' "
+                 "| 'false' | "
+                 "STRING | IDENTIFIER | '(' | ')' | 'fn'"));
   }
 }
 
@@ -593,9 +594,13 @@ const Type* via::Parser::parseType()
     case KW_FN:
       return parseTypeFunc();
     default:
-      throw ParserError(tok->location(mSource),
-                        "Unexpected token '{}' ({}) while parsing type",
-                        magic_enum::enum_name(tok->kind), tok->toString());
+      throw ParserError(
+        tok->location(mSource),
+        std::format("Unexpected token '{}' ({}) while parsing type",
+                    tok->toString(), magic_enum::enum_name(tok->kind)),
+        Footnote(Footnote::Kind::HINT,
+                 "Expected 'nil' | 'bool' | 'int' | 'float' | "
+                 "'string' | '[' | '{' | 'fn'"));
   }
 }
 
@@ -619,8 +624,10 @@ const StmtScope* via::Parser::parseStmtScope()
       last->location(mSource).end,
     };
   } else
-    throw ParserError(loc, "Expected ':' or '{{' while parsing scope, got '{}'",
-                      first->toString());
+    throw ParserError(loc,
+                      std::format("Unexpected token '{}' while parsing scope",
+                                  first->toString()),
+                      Footnote(Footnote::Kind::HINT, "Expected ':' | '{'"));
 
   return scope;
 }
@@ -830,9 +837,10 @@ const StmtModule* via::Parser::parseStmtModule()
           mod->scope.push_back(parseStmtEnum());
           break;
         default:
-          throw ParserError(tok->location(mSource),
-                            "Unexpected token '{}' ({}) while parsing module",
-                            tok->toString(), magic_enum::enum_name(tok->kind));
+          throw ParserError(
+            tok->location(mSource),
+            std::format("Unexpected token '{}' ({}) while parsing module",
+                        tok->toString(), magic_enum::enum_name(tok->kind)));
       }
     }
   }
@@ -881,9 +889,10 @@ const StmtImport* via::Parser::parseStmtImport()
       end = tok->location(mSource).end;
       break;
     } else {
-      throw ParserError(tok->location(mSource),
-                        "Unexpected token '{}' ({}) while parsing import path",
-                        tok->toString(), magic_enum::enum_name(tok->kind));
+      throw ParserError(
+        tok->location(mSource),
+        std::format("Unexpected token '{}' ({}) while parsing import path",
+                    tok->toString(), magic_enum::enum_name(tok->kind)));
     }
   }
 
@@ -958,8 +967,8 @@ const StmtStructDecl* via::Parser::parseStmtStructDecl()
       default:
         throw ParserError(
           tok->location(mSource),
-          "Unexpected token '{}' ({}) while parsing struct body",
-          tok->toString(), magic_enum::enum_name(tok->kind));
+          std::format("Unexpected token '{}' ({}) while parsing struct body",
+                      tok->toString(), magic_enum::enum_name(tok->kind)));
     }
   }
 
@@ -1043,9 +1052,10 @@ const Stmt* via::Parser::parseStmt()
   const Token* first = peek();
   if (!isExprInitial(first->kind)) {
   unexpected_token:
-    throw ParserError(first->location(mSource),
-                      "Unexpected token '{}' ({}) while parsing statement",
-                      first->toString(), magic_enum::enum_name(first->kind));
+    throw ParserError(
+      first->location(mSource),
+      std::format("Unexpected token '{}' ({}) while parsing statement",
+                  first->toString(), magic_enum::enum_name(first->kind)));
   }
 
   const Expr* expr = parseExpr();
@@ -1087,7 +1097,7 @@ via::SyntaxTree via::Parser::parse()
     try {
       nodes.push_back(parseStmt());
     } catch (const ParserError& e) {
-      mDiag.report<Diagnosis::Kind::Error>(e.loc, e.msg);
+      mDiag.report(e.diag);
       break;
     }
   }

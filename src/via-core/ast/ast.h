@@ -22,7 +22,6 @@ namespace via
 
 enum class UnaryOp
 {
-  REF,   // &
   NEG,   // -
   NOT,   // not
   BNOT,  // ~
@@ -30,19 +29,19 @@ enum class UnaryOp
 
 enum class BinaryOp
 {
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  POW,
-  MOD,
-  AND,
-  OR,
-  BAND,
-  BOR,
-  BXOR,
-  BSHL,
-  BSHR,
+  ADD,   // +
+  SUB,   // -
+  MUL,   // *
+  DIV,   // /
+  POW,   // **
+  MOD,   // %
+  AND,   // and
+  OR,    // or
+  BAND,  // &
+  BOR,   // |
+  BXOR,  // ^
+  BSHL,  // <<
+  BSHR,  // >>
 };
 
 UnaryOp toUnaryOp(Token::Kind kind) noexcept;
@@ -76,7 +75,7 @@ struct AccessIdent
 {
   bool inst;
   const Token* symbol;
-  Vec<const Type*> gens;
+  std::vector<const Type*> gens;
   SourceLoc loc;
 
   std::string dump() const;
@@ -84,7 +83,7 @@ struct AccessIdent
 
 struct Path
 {
-  Vec<const Token*> path;
+  std::vector<const Token*> path;
   SourceLoc loc;
 
   std::string dump() const;
@@ -104,10 +103,10 @@ struct AttributeGroup
   struct Attribute
   {
     const Path* sp;
-    Vec<const Token*> args;
+    std::vector<const Token*> args;
   };
 
-  Vec<Attribute> ats;
+  std::vector<Attribute> ats;
   SourceLoc loc;
 
   std::string dump() const;
@@ -167,7 +166,7 @@ struct ExprCall : public Expr
 {
   NODE_FIELDS(Expr)
   const Expr* lval;
-  Vec<const Expr*> args;
+  std::vector<const Expr*> args;
 };
 
 struct ExprSubscript : public Expr
@@ -192,13 +191,13 @@ struct ExprTernary : public Expr
 struct ExprArray : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<const Expr*> init;
+  std::vector<const Expr*> init;
 };
 
 struct ExprTuple : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<const Expr*> vals;
+  std::vector<const Expr*> vals;
 };
 
 struct StmtScope;
@@ -206,7 +205,7 @@ struct StmtScope;
 struct ExprLambda : public Expr
 {
   NODE_FIELDS(Expr)
-  Vec<const Parameter*> pms;
+  std::vector<const Parameter*> pms;
   const StmtScope* scope;
 };
 
@@ -222,7 +221,7 @@ struct StmtVarDecl : public Stmt
 struct StmtScope : public Stmt
 {
   NODE_FIELDS(Stmt)
-  Vec<const Stmt*> stmts;
+  std::vector<const Stmt*> stmts;
 };
 
 struct StmtIf : public Stmt
@@ -234,7 +233,7 @@ struct StmtIf : public Stmt
   };
 
   NODE_FIELDS(Stmt)
-  Vec<Branch> brs;
+  std::vector<Branch> brs;
 };
 
 struct StmtFor : public Stmt
@@ -284,14 +283,14 @@ struct StmtEnum : public Stmt
   NODE_FIELDS(Stmt);
   const Token* symbol;
   const Type* type;
-  Vec<Pair> pairs;
+  std::vector<Pair> pairs;
 };
 
 struct StmtModule : public Stmt
 {
   NODE_FIELDS(Stmt);
   const Token* symbol;
-  Vec<const Stmt*> scope;
+  std::vector<const Stmt*> scope;
 };
 
 struct StmtImport : public Stmt
@@ -305,8 +304,8 @@ struct StmtImport : public Stmt
     ImportCompound,  // a::{b...}
   } kind;
 
-  Vec<const Token*> path;
-  Vec<const Token*> tail;
+  std::vector<const Token*> path;
+  std::vector<const Token*> tail;
 };
 
 struct StmtFunctionDecl : public Stmt
@@ -315,7 +314,7 @@ struct StmtFunctionDecl : public Stmt
 
   const Token* name;
   const Type* ret;
-  Vec<const Parameter*> parms;
+  std::vector<const Parameter*> parms;
   const StmtScope* scope;
 };
 
@@ -324,7 +323,7 @@ struct StmtStructDecl : public Stmt
   NODE_FIELDS(Stmt);
 
   const Token* name;
-  Vec<const Stmt*> scope;
+  std::vector<const Stmt*> scope;
 };
 
 struct StmtTypeDecl : public Stmt
@@ -374,7 +373,7 @@ struct TypeFunc : public Type
 {
   NODE_FIELDS(Type);
   const Type* ret;
-  Vec<const Parameter*> params;
+  std::vector<const Parameter*> params;
 };
 
 #undef NODE_FIELDS
@@ -383,7 +382,7 @@ bool isLValue(const Expr* expr) noexcept;
 
 }  // namespace ast
 
-using SyntaxTree = Vec<const ast::Stmt*>;
+using SyntaxTree = std::vector<const ast::Stmt*>;
 
 namespace debug
 {

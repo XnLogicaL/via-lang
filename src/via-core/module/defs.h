@@ -73,7 +73,7 @@ struct FunctionDef : public Def
   ImplKind kind;
   ImplStorage code;
   SymbolId symbol;
-  Vec<DefParm> parms;
+  std::vector<DefParm> parms;
   const sema::Type* ret;
 
   SymbolId getIdentity() const override { return symbol; }

@@ -25,18 +25,18 @@ namespace sema
 class Local final
 {
  public:
-  enum class Qualifier : u64
+  enum Qual : u8
   {
-    Const = 1ULL >> 63,
+    CONST = 1 << 0,
   };
 
  public:
   Local() = default;
   Local(SymbolId symbol,
-        const ast::StmtVarDecl* astDecl,
-        const ir::StmtVarDecl* irDecl,
+        const ast::Stmt* astDecl,
+        const ir::Stmt* irDecl,
         usize version = 0,
-        u64 quals = 0ULL)
+        u8 quals = 0ULL)
       : mVersion(version),
         mQuals(quals),
         mSymbol(symbol),
@@ -53,10 +53,10 @@ class Local final
 
  protected:
   const usize mVersion = 0;
-  const u64 mQuals = 0ULL;
+  const u8 mQuals = 0ULL;
   const SymbolId mSymbol = -1;
-  const ast::StmtVarDecl* mAstDecl = nullptr;
-  const ir::StmtVarDecl* mIrDecl = nullptr;
+  const ast::Stmt* mAstDecl = nullptr;
+  const ir::Stmt* mIrDecl = nullptr;
 };
 
 struct LocalRef

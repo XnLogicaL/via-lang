@@ -55,8 +55,8 @@ class InternTable
 
  protected:
   usize mNextId = 0;
-  Map<T, Id> mMap;
-  Map<Id, T> mReverse;
+  std::unordered_map<T, Id> mMap;
+  std::unordered_map<Id, T> mReverse;
 };
 
 }  // namespace via

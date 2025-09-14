@@ -21,8 +21,6 @@ inline via::usize ZERO = 0;
 via::UnaryOp via::toUnaryOp(Tk kind) noexcept
 {
   switch (kind) {
-    case Tk::OP_AMP:
-      return UnaryOp::REF;
     case Tk::OP_MINUS:
       return UnaryOp::NOT;
     case Tk::KW_NOT:

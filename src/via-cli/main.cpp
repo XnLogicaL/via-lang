@@ -112,6 +112,8 @@ int main(int argc, char* argv[])
         flags |= Module::Flags::DUMP_AST;
       else if (rawDumpMode == "ir")
         flags |= Module::Flags::DUMP_IR;
+      else if (rawDumpMode == "exe")
+        flags |= Module::Flags::DUMP_EXE;
       else if (rawDumpMode == "deftab")
         flags |= via::Module::DUMP_DEFTABLE;
     }

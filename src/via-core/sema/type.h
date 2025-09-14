@@ -113,10 +113,11 @@ struct DictType : public Type
 
 struct FuncType : public Type
 {
-  Vec<const Type*> params;
+  std::vector<const Type*> params;
   const Type* result;
 
-  static u8 computeDependence(const Vec<const Type*>& ps, const Type* rs)
+  static u8 computeDependence(const std::vector<const Type*>& ps,
+                              const Type* rs)
   {
     bool dep = rs->isDependent();
     for (auto* p : ps)
@@ -124,7 +125,7 @@ struct FuncType : public Type
     return dep ? 1 : 0;
   }
 
-  explicit FuncType(Vec<const Type*> ps, const Type* rs)
+  explicit FuncType(std::vector<const Type*> ps, const Type* rs)
       : Type(Kind::Function, computeDependence(ps, rs)),
         params(std::move(ps)),
         result(rs)
@@ -149,9 +150,9 @@ struct TemplateParamType : public Type
 struct TemplateSpecType : public Type
 {
   const ast::StmtTypeDecl* primary;
-  Vec<const Type*> args;
+  std::vector<const Type*> args;
   explicit TemplateSpecType(const ast::StmtTypeDecl* prim,
-                            Vec<const Type*> A,
+                            std::vector<const Type*> A,
                             bool dep)
       : Type(Kind::TemplateSpec, dep ? 1 : 0), primary(prim), args(std::move(A))
   {}

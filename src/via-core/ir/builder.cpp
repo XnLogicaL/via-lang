@@ -16,13 +16,96 @@
 namespace ir = via::ir;
 namespace sema = via::sema;
 
-using Dk = via::Diagnosis::Kind;
 using Ak = ir::ExprAccess::Kind;
 using Btk = sema::BuiltinType::Kind;
+using LocalQual = sema::Local::Qual;
 
 #define PMR_CASE(NODE, TYPE, HANDLER)     \
   if TRY_COERCE (const TYPE, inner, NODE) \
     return HANDLER(inner);
+
+#define UNARY_OP_CASE(VALID, RESULT)                                    \
+  {                                                                     \
+    .validTypes = [](const sema::Type* type) -> bool { return VALID; }, \
+    .resultType = [](sema::TypeContext* ctx,                            \
+                     const sema::Type* type) -> const sema::Type* {     \
+      return RESULT;                                                    \
+    },                                                                  \
+  }
+
+struct UnaryOpInfo
+{
+  std::function<bool(const sema::Type*)> validTypes;  // predicate
+  std::function<const sema::Type*(sema::TypeContext*, const sema::Type*)>
+    resultType;  // compute result
+};
+
+static const UnaryOpInfo sUnaryOpTable[] = {
+  /* UnaryOp::NEG */ UNARY_OP_CASE(type->isArithmetic(), type),
+  /* UnaryOp::NOT */ UNARY_OP_CASE(true, ctx->getBuiltin(Btk::BOOL)),
+  /* UnaryOp::BNOT */ UNARY_OP_CASE(type->isIntegral(), type),
+};
+
+#define BINARY_OP_CASE(VALID, RESULT)                                        \
+  {                                                                          \
+    .validTypes = [](const sema::Type* lhs, const sema::Type* rhs) -> bool { \
+      return VALID;                                                          \
+    },                                                                       \
+    .resultType = [](sema::TypeContext* ctx, const sema::Type* lhs,          \
+                     const sema::Type* rhs) -> const sema::Type* {           \
+      return RESULT;                                                         \
+    },                                                                       \
+  }
+
+struct BinaryOpInfo
+{
+  std::function<bool(const sema::Type*, const sema::Type*)>
+    validTypes;  // predicate
+  std::function<
+    const sema::Type*(sema::TypeContext*, const sema::Type*, const sema::Type*)>
+    resultType;  // compute result
+};
+
+#define BINARY_OP_PROMOTE(LHS, RHS) \
+  ctx->getBuiltin((LHS->isFloat() || RHS->isFloat()) ? Btk::FLOAT : Btk::INT)
+
+static const BinaryOpInfo sBinaryOpTable[] = {
+  /* BinaryOp::ADD */
+  BINARY_OP_CASE(lhs->isArithmetic() && rhs->isArithmetic(),
+                 BINARY_OP_PROMOTE(lhs, rhs)),
+  /* BinaryOp::SUB */
+  BINARY_OP_CASE(lhs->isArithmetic() && rhs->isArithmetic(),
+                 BINARY_OP_PROMOTE(lhs, rhs)),
+  /* BinaryOp::MUL */
+  BINARY_OP_CASE(lhs->isArithmetic() && rhs->isArithmetic(),
+                 BINARY_OP_PROMOTE(lhs, rhs)),
+  /* BinaryOp::DIV */
+  BINARY_OP_CASE(lhs->isArithmetic() && rhs->isArithmetic(),
+                 ctx->getBuiltin(Btk::FLOAT)),
+  /* BinaryOp::POW */
+  BINARY_OP_CASE(lhs->isArithmetic() && rhs->isArithmetic(),
+                 BINARY_OP_PROMOTE(lhs, rhs)),
+  /* BinaryOp::MOD */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+  /* BinaryOp::AND */ BINARY_OP_CASE(true, ctx->getBuiltin(Btk::BOOL)),
+  /* BinaryOp::OR */ BINARY_OP_CASE(true, ctx->getBuiltin(Btk::BOOL)),
+  /* BinaryOp::BAND */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+  /* BinaryOp::BOR */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+  /* BinaryOp::BXOR */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+  /* BinaryOp::BSHL */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+  /* BinaryOp::BSHR */
+  BINARY_OP_CASE(lhs->isIntegral() && rhs->isIntegral(),
+                 ctx->getBuiltin(Btk::INT)),
+};
 
 const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
 {
@@ -58,66 +141,72 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
     return mTypeCtx.getBuiltin(kind);
   } else if TRY_COERCE (const ast::ExprSymbol, symbol, expr) {
     sema::Frame& frame = mStack.top();
+    std::string symbolStr = symbol->symbol->toString();
 
     // Local variable
     if (auto local = frame.getLocal(internSymbol(symbol->symbol->toString()))) {
-      return local->local.getIrDecl()->declType;
+      auto* irDecl = local->local.getIrDecl();
+      if TRY_COERCE (const ir::StmtVarDecl, varDecl, irDecl) {
+        return varDecl->declType;
+      } else if TRY_COERCE (const ir::StmtFuncDecl, funcDecl, irDecl) {
+        std::vector<const sema::Type*> parms;
+        for (const auto& parm : funcDecl->parms)
+          parms.push_back(parm.type);
+        return mTypeCtx.getFunction(funcDecl->ret, parms);
+      }
     }
 
-    mDiags.report<Dk::Error>(symbol->loc,
-                             std::format("Use of undefined symbol '{}'",
-                                         symbol->symbol->toStringView()));
+    mDiags.report<Level::ERROR>(
+      symbol->loc, std::format("Use of undefined symbol '{}'", symbolStr),
+      Footnote(Footnote::Kind::HINT,
+               std::format("did you mistype '{}' or forget to declare it?",
+                           symbolStr)));
     return nullptr;
   } else if TRY_COERCE (const ast::ExprDynAccess, dyna, expr) {
     return nullptr;
   } else if TRY_COERCE (const ast::ExprStaticAccess, sta, expr) {
     return nullptr;
   } else if TRY_COERCE (const ast::ExprUnary, unary, expr) {
-    UnaryOp op = toUnaryOp(unary->op->kind);
-    auto* type = typeOf(unary->expr);
+    auto* inner = typeOf(unary->expr);
 
-    switch (op) {
-      case UnaryOp::REF:
-        if (ast::isLValue(unary->expr)) {
-          return type;
-        } else {
-          mDiags.report<Dk::Error>(
-            unary->expr->loc,
-            "Invalid unary operation '&' (REF) on a non-lvalue expression");
-        }
-        break;
-      case UnaryOp::NEG: {
-        if (type->isArithmetic()) {
-          return type;
-        } else {
-          mDiags.report<Dk::Error>(
-            unary->expr->loc,
-            std::format("Invalid unary expression '-' (NEG) on non-arithmetic "
-                        "expression of type '{}'",
-                        type->toString()));
-        }
-      } break;
-      case UnaryOp::NOT:
-        return mTypeCtx.getBuiltin(Btk::BOOL);
-      case UnaryOp::BNOT: {
-        if (type->isIntegral()) {
-        } else {
-          mDiags.report<Dk::Error>(
-            unary->expr->loc,
-            std::format("Invalid unary expression '~' (BNOT) on non-integral "
-                        "expression of type '{}'",
-                        type->toString()));
-        }
-      } break;
+    UnaryOp op = toUnaryOp(unary->op->kind);
+    UnaryOpInfo info = sUnaryOpTable[static_cast<u8>(op)];
+
+    if (!info.validTypes(inner)) {
+      mDiags.report<Level::ERROR>(
+        unary->loc, std::format("Invalid unary operation '{}' ({}) on "
+                                "incompatible type '{}'",
+                                unary->op->toString(),
+                                magic_enum::enum_name(op), inner->toString()));
+      return nullptr;
     }
 
-    return nullptr;
+    return info.resultType(&mTypeCtx, inner);
+  } else if TRY_COERCE (const ast::ExprBinary, binary, expr) {
+    auto* lhs = typeOf(binary->lhs);
+    auto* rhs = typeOf(binary->rhs);
+
+    BinaryOp op = toBinaryOp(binary->op->kind);
+    BinaryOpInfo info = sBinaryOpTable[static_cast<u8>(op)];
+
+    if (!info.validTypes(lhs, rhs)) {
+      mDiags.report<Level::ERROR>(
+        binary->loc,
+        std::format("Invalid binary operation '{}' ({}) on "
+                    "incompatible types '{}' (LEFT) "
+                    "'{}' (RIGHT)",
+                    binary->op->toString(), magic_enum::enum_name(op),
+                    lhs->toString(), rhs->toString()));
+      return nullptr;
+    }
+
+    return info.resultType(&mTypeCtx, lhs, rhs);
   } else if TRY_COERCE (const ast::ExprTernary, ternary, expr) {
     const sema::Type *lhs = typeOf(ternary->lhs), *rhs = typeOf(ternary->rhs);
     if (lhs == rhs) {
       return lhs;
     } else {
-      mDiags.report<Dk::Error>(
+      mDiags.report<Level::ERROR>(
         ternary->loc,
         std::format("Results of ternary expression '{}' and '{}' do not match",
                     lhs->toString(), rhs->toString()));
@@ -165,9 +254,9 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Type* type) noexcept
 const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
 {
   auto* constant = mAlloc.emplace<ir::ExprConstant>();
+  constant->loc = exprLit->loc;
   constant->value = *sema::ConstValue::fromToken(*exprLit->tok);
   constant->type = typeOf(exprLit);
-  constant->loc = exprLit->loc;
   return constant;
 }
 
@@ -177,18 +266,10 @@ const ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
   sema::Frame& frame = mStack.top();
 
   auto* symbol = mAlloc.emplace<ir::ExprSymbol>();
-  symbol->symbol = mSymbolTable.intern(symbolStr);
   symbol->loc = exprSym->loc;
-
-  // Local-level symbol
-  if (auto local = frame.getLocal(internSymbol(symbolStr))) {
-    symbol->type = local->local.getIrDecl()->declType;
-    return symbol;
-  }
-
-  mDiags.report<Dk::Error>(
-    exprSym->loc, std::format("Use of undefined symbol '{}'", symbolStr));
-  return nullptr;
+  symbol->symbol = mSymbolTable.intern(symbolStr);
+  symbol->type = typeOf(exprSym);
+  return symbol;
 }
 
 const ir::Expr* via::IRBuilder::lowerExprStaticAccess(
@@ -267,7 +348,7 @@ const ir::Expr* via::IRBuilder::lowerExprCall(const ast::ExprCall* exprCall)
   call->type = nullptr; /* TODO: Type of this expression should be the return
                            type of the callee function. */
   call->args = [&]() {
-    Vec<const ir::Expr*> args;
+    std::vector<const ir::Expr*> args;
     for (const auto& astArg : exprCall->args) {
       args.push_back(lowerExpr(astArg));
     }
@@ -344,7 +425,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtVarDecl(
       decl->declType = typeOf(stmtVarDecl->type);
 
       if (decl->declType != rvalType) {
-        mDiags.report<Dk::Error>(
+        mDiags.report<Level::ERROR>(
           stmtVarDecl->rval->loc,
           std::format(
             "Expression type '{}' does not match declaration type '{}'",
@@ -426,7 +507,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtImport(
   const ast::StmtImport* stmtImport)
 {
   if (mStack.size() > 1) {
-    mDiags.report<Dk::Error>(
+    mDiags.report<Level::ERROR>(
       stmtImport->loc,
       "Import statements are only allowed in root scope of a module");
     return nullptr;
@@ -439,18 +520,18 @@ const ir::Stmt* via::IRBuilder::lowerStmtImport(
 
   std::string name = qualName.back();
   if (auto module = mModule->getManager()->getModuleByName(name)) {
-    mDiags.report<Dk::Error>(
+    mDiags.report<Level::ERROR>(
       stmtImport->loc,
       std::format("Module '{}' imported more than once", name));
 
     if (auto* importDecl = module->getImportDecl()) {
-      mDiags.report<Dk::Info>(importDecl->loc, "Previously imported here");
+      mDiags.report<Level::INFO>(importDecl->loc, "Previously imported here");
     }
   }
 
   auto result = mModule->resolveImport(qualName, stmtImport);
   if (result.hasError()) {
-    mDiags.report<Dk::Error>(stmtImport->loc, result.takeError().toString());
+    mDiags.report<Level::ERROR>(stmtImport->loc, result.getError().toString());
   }
 
   return nullptr;
@@ -464,10 +545,12 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   fndecl->symbol = internSymbol(stmtFunctionDecl->name->toString());
   fndecl->ret = stmtFunctionDecl->ret ? typeOf(stmtFunctionDecl->ret) : nullptr;
 
+  // TODO: Get rid of this
   if (fndecl->ret == nullptr) {
-    mDiags.report<Dk::Error>(
+    mDiags.report<Level::ERROR>(
       stmtFunctionDecl->loc,
       "Compiler infered return types are not implemented");
+    return nullptr;
   }
 
   for (const auto& parm : stmtFunctionDecl->parms) {
@@ -530,39 +613,45 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
       if (!expectedRetType) {
         expectedRetType = ret->type;
       } else if (expectedRetType != ret->type) {
+        Footnote implicitReturnNote =
+          ret->implicit
+            ? Footnote(Footnote::Kind::NOTE, std::format("Implicit return here",
+                                                         ret->type->toString()))
+            : Footnote();
+
         if (fndecl->ret) {
-          mDiags.report<Dk::Error>(
+          mDiags.report<Level::ERROR>(
             ret->loc,
             std::format("Function return type '{}' does not match type "
                         "'{}' returned by control path",
-                        fndecl->ret->toString(), ret->type->toString()));
+                        fndecl->ret->toString(), ret->type->toString()),
+            implicitReturnNote);
         } else {
-          mDiags.report<Dk::Error>(ret->loc,
-                                   "All code paths must return the same type "
-                                   "in function with inferred return type");
-        }
-
-        if (ret->implicit) {
-          mDiags.report<Dk::Info>(ret->loc,
-                                  std::format("Implicitly returning '{}' here",
-                                              ret->type->toString()));
+          mDiags.report<Level::ERROR>(
+            ret->loc,
+            "All code paths must return the same type "
+            "in function with inferred return type",
+            implicitReturnNote);
         }
         break;
       }
     } else {
-      mDiags.report<Dk::Error>(term->loc,
-                               "All control paths must return from function");
+      mDiags.report<Level::ERROR>(
+        term->loc, "All control paths must return from function");
       break;
     }
   }
 
   if (fndecl->ret && expectedRetType && fndecl->ret != expectedRetType) {
-    mDiags.report<Dk::Error>(
+    mDiags.report<Level::ERROR>(
       block->loc,
       std::format("Function return type '{}' does not match inferred "
                   "return type '{}' from all control paths",
                   fndecl->ret->toString(), expectedRetType->toString()));
   }
+
+  sema::Frame& frame = mStack.top();
+  frame.setLocal(fndecl->symbol, stmtFunctionDecl, fndecl, LocalQual::CONST);
 
   fndecl->body = block;
   fndecl->loc = stmtFunctionDecl->loc;

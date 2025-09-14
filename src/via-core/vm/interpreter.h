@@ -37,13 +37,13 @@ inline constexpr usize kRegisterCount = UINT16_MAX + 1;
 class Interpreter final
 {
  public:
-  Interpreter(const Executable* header)
-      : mHeader(header),
-        pc(header->bytecode.data()),
+  Interpreter(const Executable* exe)
+      : mExecutable(exe),
+        pc(exe->bytecode().data()),
         mStack(&mAlloc),
         mRegisters(config::vm::kRegisterCount)
   {
-    debug::require(!header->bytecode.empty(), "illformed header");
+    debug::require(!exe->bytecode().empty(), "illformed header");
   }
 
  public:
@@ -59,14 +59,14 @@ class Interpreter final
   void execute();
 
  private:
-  const Executable* mHeader;
+  const Executable* mExecutable;
 
   Stack<uptr> mStack;
-  Vec<Value*> mRegisters;
-  Vec<Instruction*> mLabels;
+  std::vector<Value*> mRegisters;
 
   Allocator mAlloc;
 
+  uptr* sp;        // saved stack pointer
   const uptr* fp;  // frame pointer
   const Instruction* pc;
 };

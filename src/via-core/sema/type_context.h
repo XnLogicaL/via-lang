@@ -84,7 +84,7 @@ struct DictKey
 struct FuncKey
 {
   const Type* result;
-  Vec<const Type*> tps;
+  std::vector<const Type*> tps;
 };
 
 struct UserKey
@@ -107,7 +107,7 @@ class TypeEnv final
   static usize key(u32 d, u32 i) { return (u64(d) << 32) | i; }
 
  private:
-  Map<u64, const Type*> m_map;
+  std::unordered_map<u64, const Type*> m_map;
 };
 
 class TypeContext final
@@ -118,8 +118,7 @@ class TypeContext final
   const BuiltinType* getBuiltin(BuiltinType::Kind kind);
   const ArrayType* getArray(const Type* type);
   const DictType* getDict(const Type* key, const Type* val);
-  const FuncType* getFunction(const Type* res,
-                                          Vec<const Type*> tps);
+  const FuncType* getFunction(const Type* res, std::vector<const Type*> tps);
   const UserType* getUser(const ast::StmtTypeDecl* decl);
 
   const TemplateParamType* getTemplateParmInstance(u32 depth, u32 index)
@@ -128,7 +127,7 @@ class TypeContext final
   }
 
   const TemplateSpecType* getTemplateSpecInstance(const ast::StmtTypeDecl* prim,
-                                                  Vec<const Type*> args)
+                                                  std::vector<const Type*> args)
   {
     debug::unimplemented();
   }
@@ -137,11 +136,11 @@ class TypeContext final
 
  private:
   BumpAllocator<> mAlloc;
-  Map<BuiltinType::Kind, const BuiltinType*> mBuiltins;
-  Map<const Type*, const ArrayType*> mArrays;
-  Map<DictKey, const DictType*> mDicts;
-  Map<FuncKey, const FuncType*> mFuncs;
-  Map<UserKey, const UserType*> mUsers;
+  std::unordered_map<BuiltinType::Kind, const BuiltinType*> mBuiltins;
+  std::unordered_map<const Type*, const ArrayType*> mArrays;
+  std::unordered_map<DictKey, const DictType*> mDicts;
+  std::unordered_map<FuncKey, const FuncType*> mFuncs;
+  std::unordered_map<UserKey, const UserType*> mUsers;
 };
 
 }  // namespace sema

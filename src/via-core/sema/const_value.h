@@ -14,7 +14,6 @@
 #include <variant>
 #include "lexer/token.h"
 #include "option.h"
-#include "vm/value.h"
 
 namespace via
 {
@@ -26,10 +25,18 @@ class ConstValue final
 {
  public:
   using nil_type = std::monostate;
-  using int_type = Value::int_type;
-  using float_type = Value::float_type;
+  using int_type = i64;
+  using float_type = f64;
 
-  using Kind = Value::Kind;
+  enum class Kind
+  {
+    NIL,
+    BOOL,
+    INT,
+    FLOAT,
+    STRING,
+  };
+
   using Union = std::variant<nil_type, int_type, float_type, bool, std::string>;
 
  public:

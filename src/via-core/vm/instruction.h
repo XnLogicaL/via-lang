@@ -168,8 +168,12 @@ enum class OpCode : u16
   NOT,
 
   // control flow opcodes
-  JMP,    // jmp        <lbl>
-  JMPIF,  // jmpif      <cnd: *bool> <lbl>
+  JMP,         // jmp        <off>
+  JMPIF,       // jmpif      <off> <cnd: *bool>
+  JMPIFX,      // jmpifx     <off> <cnd: *bool>
+  JMPBACK,     // jmpback    <off>
+  JMPBACKIF,   // jmpbackif  <off> <cnd: *bool>
+  JMPBACKIFX,  // jmpbackifx <off> <cnd: *bool>
 
   // stack opcodes
   SAVESP,       // savesp
@@ -182,6 +186,15 @@ enum class OpCode : u16
   GETLOCAL,     // getlocal     <dst: *> <idx>
   GETLOCALREF,  // getlocalref  <dst: *> <idx>
   SETLOCAL,     // setlocal     <src: *> <idx>
+
+  // function opcodes
+  CALL,      // call     <callee: *function> <argc>
+  PCALL,     // pcall    <callee: *function> <argc>
+  RET,       // ret      <val: *>
+  RETNIL,    // retnil
+  RETTRUE,   // rettrue
+  RETFALSE,  // retfalse
+  RETK,      // retk       <val: $>
 
   // cast opcodes
   BTOI,   // btoi   <dst: *> <src: *bool>
@@ -198,42 +211,6 @@ enum class OpCode : u16
   ARTOS,  // artos  <dst: *> <src: *arr>
   DTTOS,  // dttos  <dst: *> <src: *dict>
   FNTOS,  // fntos  <dst: *> <src: *fn>
-
-  // function opcodes
-  CAPTURE,    // capture  <stk>
-  CALL,       // call     <callee: *function> <argc>
-  PCALL,      // pcall    <callee: *function> <argc>
-  RET,        // ret      <val: *>
-  RETNIL,     // retnil
-  RETTRUE,    // rettrue
-  RETFALSE,   // retfalse
-  RETK,       // retk       <val: $>
-  GETUPV,     // getupv     <dst: *> <id>
-  GETUPVREF,  // getupvref  <dst: *> <id>
-  SETUPV,     // setupv     <src: *> <id>
-
-  // array opcodes
-  ARRGET,     // arrget <dst: *> <arr: *> <idx>
-  ARRSET,     // arrset <src: *> <arr: *> <idx>
-  ARRGETLEN,  // arrgetlen <dst: *> <arr: *>
-
-  // dict opcodes
-  DICTGET,     // dictget <dst: *> <dict: *> <key: *>
-  DICTSET,     // dictset <src: *> <dict: *> <key: *>
-  DICTGETLEN,  // dictgetlen <dst: *> <dict: *>
-
-  // object opcodes
-  NEWINSTANCE,   // newinstance <dst: *> <klass: *>
-                 // ...extraarg2<idx, val: *>
-  GETSUPER,      // getsuper <dst: *> <inst: *>
-  GETSTATIC,     // getstatic <dst: *> <obj: *> <idx>
-  GETDYNAMIC,    // getdynamic <dst: *> <inst: *> <idx>
-  SETSTATIC,     // setstatic <src: *> <obj: *> <idx>
-  SETDYNAMIC,    // setdynamic <src: *> <inst: *> <idx>
-  CALLSTATIC,    // callstatic <obj: *> <idx> <argc>
-  PCALLSTATIC,   // pcallstatic <obj: *> <idx> <argc>
-  CALLDYNAMIC,   // calldynamic <inst: *> <idx> <argc>
-  PCALLDYNAMIC,  // pcalldynamic <inst: *> <idx> <argc>
 };
 
 struct Instruction
