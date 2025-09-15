@@ -12,9 +12,10 @@
 #include <iostream>
 #include "ansi.h"
 #include "debug.h"
+#include "ir/builder.h"
+#include "ir/ir.h"
 #include "manager.h"
-#include "sema/register.h"
-#include "sema/stack.h"
+#include "vm/interpreter.h"
 
 #ifdef VIA_PLATFORM_UNIX
   #include <dlfcn.h>
@@ -106,52 +107,47 @@ via::Expected<via::Module*> via::Module::loadNativeObject(
     return Unexpected(file.getError());
   }
 
-  {
-    Module* module = stModuleAllocator.emplace<Module>();
-    module->mKind = Kind::NATIVE;
-    module->mManager = manager;
-    module->mImportee = importee;
-    module->mPerms = perms;
-    module->mFlags = flags;
-    module->mName = name;
-    module->mPath = path;
-    module->mDecl = decl;
+  Module* module = stModuleAllocator.emplace<Module>();
+  module->mKind = Kind::NATIVE;
+  module->mManager = manager;
+  module->mImportee = importee;
+  module->mPerms = perms;
+  module->mFlags = flags;
+  module->mName = name;
+  module->mPath = path;
+  module->mDecl = decl;
 
-    manager->addModule(module);
+  manager->addModule(module);
 
-    auto symbol = std::format("{}{}", config::kInitCallbackPrefix, name);
-    auto callback = osLoadSymbol(path, symbol.c_str());
-    if (callback.hasError()) {
-      return Unexpected(std::format("Failed to load native module: {}",
-                                    callback.getError().toString()));
+  auto symbol = std::format("{}{}", config::kInitCallbackPrefix, name);
+  auto callback = osLoadSymbol(path, symbol.c_str());
+  if (callback.hasError()) {
+    return Unexpected(std::format("Failed to load native module: {}",
+                                  callback.getError().toString()));
+  }
+
+  auto* moduleInfo = (*callback)(manager);
+
+  debug::require(moduleInfo->begin != nullptr);
+
+  for (usize i = 0; i < moduleInfo->size; i++) {
+    const auto& entry = moduleInfo->begin[i];
+    module->mDefs[entry.id] = entry.def;
+  }
+
+  if (flags & DUMP_DEFTABLE) {
+    std::println(std::cout, "{}",
+                 ansi::format(std::format("[deftable .{}]", name),
+                              ansi::Foreground::Yellow, ansi::Background::Black,
+                              ansi::Style::Bold));
+
+    for (const auto& def : module->mDefs) {
+      std::println(std::cout, "  {}", def.second->dump());
     }
-
-    auto* moduleInfo = (*callback)(manager);
-
-    debug::require(moduleInfo->begin != nullptr);
-
-    for (usize i = 0; i < moduleInfo->size; i++) {
-      const auto& entry = moduleInfo->begin[i];
-      module->mDefs[entry.id] = entry.def;
-    }
-
-    if (flags & DUMP_DEFTABLE) {
-      std::println(std::cout, "{}",
-                   ansi::format(std::format("[deftable .{}]", name),
-                                ansi::Foreground::Yellow,
-                                ansi::Background::Black, ansi::Style::Bold));
-
-      for (const auto& def : module->mDefs) {
-        std::println(std::cout, "  {}", def.second->dump());
-      }
-    }
-
-    manager->popImport();
-    return module;
   }
 
   manager->popImport();
-  return nullptr;
+  return module;
 }
 
 via::Expected<via::Module*> via::Module::loadSourceFile(
@@ -182,89 +178,90 @@ via::Expected<via::Module*> via::Module::loadSourceFile(
     return Unexpected(file.getError());
   }
 
+  Module* module = stModuleAllocator.emplace<Module>();
+  module->mKind = Kind::SOURCE;
+  module->mManager = manager;
+  module->mImportee = importee;
+  module->mPerms = perms;
+  module->mFlags = flags;
+  module->mName = name;
+  module->mPath = path;
+  module->mDecl = importDecl;
+
+  manager->addModule(module);
+
+  DiagContext diags(path.string(), name, *file);
+
+  Lexer lexer(*file);
+  auto ttree = lexer.tokenize();
+
+  Parser parser(*file, ttree, diags);
+  auto ast = parser.parse();
+
+  bool failed = diags.hasErrors();
+  if (failed) {
+    goto error;
+  }
+
   {
-    Module* module = stModuleAllocator.emplace<Module>();
-    module->mKind = Kind::SOURCE;
-    module->mManager = manager;
-    module->mImportee = importee;
-    module->mPerms = perms;
-    module->mFlags = flags;
-    module->mName = name;
-    module->mPath = path;
-    module->mDecl = importDecl;
+    IRBuilder irb(module, ast, diags);
+    module->mIr = irb.build();
 
-    manager->addModule(module);
-
-    DiagContext diags(path.string(), name, *file);
-
-    Lexer lexer(*file);
-    auto ttree = lexer.tokenize();
-
-    Parser parser(*file, ttree, diags);
-    auto ast = parser.parse();
-
-    bool failed = diags.hasErrors();
+    failed = diags.hasErrors();
     if (failed) {
       goto error;
     }
 
+    for (const auto& node : module->mIr) {
+      if (auto symbol = node->getSymbol()) {
+        module->mDefs[*symbol] = Def::from(module->getAllocator(), node);
+      }
+    }
+
     {
-      IRBuilder irb(module, ast, diags);
-      module->mIr = irb.build();
+      Executable* exe = Executable::buildFromIR(module, module->mIr);
+      module->mExecutable = exe;
 
-      failed = diags.hasErrors();
-      if (failed) {
-        goto error;
-      }
-
-      for (const auto& node : module->mIr) {
-        if (auto symbol = node->getSymbol()) {
-          module->mDefs[*symbol] = Def::from(module->getAllocator(), node);
-        }
-      }
-
-      {
-        auto* exe = Executable::buildFromIR(module, module->mIr);
-        module->mExecutable = exe;
-      }
+      Interpreter interp{exe};
+      interp.execute();
     }
+  }
 
-  error:
-    diags.emit();
-    diags.clear();
+error:
+  diags.emit();
+  diags.clear();
 
-    if (flags & DUMP_TTREE)
-      std::println(std::cout, "{}", debug::dump(ttree));
-    if (flags & DUMP_AST)
-      std::println(std::cout, "{}", debug::dump(ast));
-    if (flags & DUMP_IR)
-      std::println(std::cout, "{}",
-                   debug::dump(manager->getSymbolTable(), module->mIr));
-    if (flags & DUMP_EXE)
-      std::println(std::cout, "{}", module->mExecutable->dump());
-    if (flags & DUMP_DEFTABLE) {
-      std::println(std::cout, "{}",
-                   ansi::format(std::format("[deftable .{}]", name),
-                                ansi::Foreground::Yellow,
-                                ansi::Background::Black, ansi::Style::Bold));
+  if (flags & DUMP_TTREE)
+    std::println(std::cout, "{}", debug::dump(ttree));
+  if (flags & DUMP_AST)
+    std::println(std::cout, "{}", debug::dump(ast));
+  if (flags & DUMP_IR)
+    std::println(std::cout, "{}",
+                 debug::dump(manager->getSymbolTable(), module->mIr));
+  if (flags & DUMP_EXE)
+    std::println(std::cout, "{}", module->mExecutable->dump());
+  if (flags & DUMP_DEFTABLE) {
+    std::println(std::cout, "{}",
+                 ansi::format(std::format("[deftable .{}]", name),
+                              ansi::Foreground::Yellow, ansi::Background::Black,
+                              ansi::Style::Bold));
 
-      for (const auto& def : module->mDefs) {
-        std::println(std::cout, "  {}", def.second->dump());
-      }
+    for (const auto& def : module->mDefs) {
+      std::println(std::cout, "  {}", def.second->dump());
     }
+  }
 
-    if (failed) {
-      for (Module* module = importee; module != nullptr;
-           module = module->mImportee)
-        spdlog::info("Imported by module '{}'", module->mName);
+  if (failed) {
+    for (Module* module = importee; module != nullptr;
+         module = module->mImportee)
+      spdlog::info(std::format("Imported by module '{}'", module->mName));
 
-      if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
-        spdlog::warn("Dump may be invalid due to compilation failure");
-      }
-    } else {
-      manager->popImport();
-      return module;
+    if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
+      spdlog::warn("Dump may be invalid due to compilation failure");
     }
+  } else {
+    manager->popImport();
+    return module;
   }
 
   manager->popImport();

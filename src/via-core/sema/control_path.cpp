@@ -13,7 +13,7 @@
 namespace ir = via::ir;
 namespace sema = via::sema;
 
-via::std::vector<const ir::Term*> sema::analyzeControlPaths(
+std::vector<const ir::Term*> sema::analyzeControlPaths(
   const ir::StmtBlock* entry) noexcept
 {
   std::unordered_set<const ir::StmtBlock*> visited;

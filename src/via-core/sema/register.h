@@ -11,6 +11,8 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <bitset>
+#include "debug.h"
 
 namespace via
 {
@@ -28,11 +30,26 @@ namespace sema
 class RegisterState
 {
  public:
-  u16 alloc();
-  void free(u16 reg);
+  inline u16 alloc() noexcept
+  {
+    for (usize i = 0; i < config::kRegisterCount; ++i) {
+      if (!mBuffer.test(i)) {  // free register
+        mBuffer.set(i);        // mark as occupied
+        return static_cast<u16>(i);
+      }
+    }
+    debug::bug("semantic register allocation failure");
+  }
+
+  inline void free(u16 reg) noexcept
+  {
+    debug::require(reg <= config::kRegisterCount,
+                   "invalid semantic register to free");
+    mBuffer.reset(reg);  // mark as free
+  }
 
  private:
-  std::vector<u16> mBuffer{config::kRegisterCount / 8};
+  std::bitset<config::kRegisterCount> mBuffer;
 };
 
 }  // namespace sema

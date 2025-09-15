@@ -7,28 +7,38 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "memory.h"
-#include <cstring>
+#pragma once
+
+#include <via/config.h>
+#include <via/types.h>
+#include "module/symbol.h"
 
 namespace via
 {
 
-[[nodiscard]] void* Allocator::alloc(usize size)
+namespace sema
 {
-  return mi_heap_malloc(mHeap, size);
-}
 
-[[nodiscard]] char* Allocator::strdup(const char* str)
+class BytecodeLocal final
 {
-  usize len = strlen(str);
-  char* buf = alloc<char>(len + 1);
-  memcpy(buf, str, len + 1);
-  return buf;
-}
+ public:
+  struct Ref
+  {
+    u16 id;
+    BytecodeLocal& local;
+  };
 
-void Allocator::free(void* ptr)
-{
-  mi_free(ptr);
-}
+ public:
+  BytecodeLocal() = default;
+  BytecodeLocal(SymbolId symbol) : mSymbol(symbol) {}
+
+ public:
+  SymbolId getSymbol() const noexcept { return mSymbol; }
+
+ protected:
+  SymbolId mSymbol;
+};
+
+}  // namespace sema
 
 }  // namespace via

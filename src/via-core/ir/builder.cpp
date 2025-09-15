@@ -18,7 +18,7 @@ namespace sema = via::sema;
 
 using Ak = ir::ExprAccess::Kind;
 using Btk = sema::BuiltinType::Kind;
-using LocalQual = sema::Local::Qual;
+using LocalQual = sema::IRLocal::Qual;
 
 #define PMR_CASE(NODE, TYPE, HANDLER)     \
   if TRY_COERCE (const TYPE, inner, NODE) \
@@ -140,7 +140,7 @@ const sema::Type* via::IRBuilder::typeOf(const ast::Expr* expr) noexcept
 
     return mTypeCtx.getBuiltin(kind);
   } else if TRY_COERCE (const ast::ExprSymbol, symbol, expr) {
-    sema::Frame& frame = mStack.top();
+    auto& frame = mStack.top();
     std::string symbolStr = symbol->symbol->toString();
 
     // Local variable
@@ -262,8 +262,8 @@ const ir::Expr* via::IRBuilder::lowerExprLit(const ast::ExprLit* exprLit)
 
 const ir::Expr* via::IRBuilder::lowerExprSymbol(const ast::ExprSymbol* exprSym)
 {
+  auto& frame = mStack.top();
   std::string symbolStr = exprSym->symbol->toString();
-  sema::Frame& frame = mStack.top();
 
   auto* symbol = mAlloc.emplace<ir::ExprSymbol>();
   symbol->loc = exprSym->loc;
@@ -562,7 +562,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
   }
 
   auto* block = mAlloc.emplace<ir::StmtBlock>();
-  block->name = internSymbol("entry");
+  block->id = iota<usize>();
 
   mStack.push({});
 
@@ -650,7 +650,7 @@ const ir::Stmt* via::IRBuilder::lowerStmtFunctionDecl(
                   fndecl->ret->toString(), expectedRetType->toString()));
   }
 
-  sema::Frame& frame = mStack.top();
+  auto& frame = mStack.top();
   frame.setLocal(fndecl->symbol, stmtFunctionDecl, fndecl, LocalQual::CONST);
 
   fndecl->body = block;
@@ -711,8 +711,8 @@ const ir::Stmt* via::IRBuilder::lowerStmt(const ast::Stmt* stmt)
 
 via::IRTree via::IRBuilder::build()
 {
-  mStack.push({});              // Push root stack frame
-  newBlock(nextLabelSymbol());  // Push block
+  mStack.push({});          // Push root stack frame
+  newBlock(iota<usize>());  // Push block
 
   IRTree tree;
 
@@ -722,7 +722,7 @@ via::IRTree via::IRBuilder::build()
     }
 
     if (mShouldPushBlock) {
-      ir::StmtBlock* block = newBlock(nextLabelSymbol());
+      ir::StmtBlock* block = newBlock(iota<usize>());
       tree.push_back(block);
     }
   }

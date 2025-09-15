@@ -32,14 +32,14 @@ template <typename T>
 class Stack final
 {
  public:
-  Stack(Allocator* pAlloc)
+  Stack(Allocator& pAlloc)
       : mAlloc(pAlloc),
-        mBasePtr(mAlloc->alloc<T>(config::vm::kStackSize)),
+        mBasePtr(mAlloc.alloc<T>(config::vm::kStackSize)),
         mStkPtr(mBasePtr)
   {}
 
  public:
-  Allocator* getAllocator() { return mAlloc; }
+  Allocator& getAllocator() { return mAlloc; }
 
   usize size() const { return mStkPtr - mBasePtr; }
   void jump(T* dst) { mStkPtr = dst; }
@@ -52,7 +52,7 @@ class Stack final
   T* end() { return mStkPtr - 1; }
 
  private:
-  Allocator* mAlloc;
+  Allocator& mAlloc;
   T* const mBasePtr;
   T* mStkPtr;
 };

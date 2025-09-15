@@ -40,14 +40,15 @@ std::string ir::TrBreak::dump(const SymbolTable* symtab, usize& depth) const
 
 std::string ir::TrBranch::dump(const SymbolTable* symtab, usize& depth) const
 {
-  return INDENT + std::format("br {}", target->name);
+  return INDENT + std::format("br {}", target->id);
 }
 
 std::string ir::TrCondBranch::dump(const SymbolTable* symtab,
                                    usize& depth) const
 {
-  return INDENT + std::format("cndbr {} ? {} : {}", DUMP_IF(cnd, symtab, ZERO),
-                              trueTarget->name, falseTarget->name);
+  return INDENT + std::format("cndbr {} ? .LB{} : .LB{}",
+                              DUMP_IF(cnd, symtab, ZERO), trueTarget->id,
+                              falseTarget->id);
 }
 
 std::string ir::Parm::dump(const SymbolTable* symtab, usize& depth) const
@@ -79,14 +80,14 @@ std::string ir::ExprModuleAccess::dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::ExprUnary::dump(const SymbolTable* symtab, usize&) const
 {
-  return std::format("unop( {}: {} )", magic_enum::enum_name(op),
+  return std::format("({} {})", magic_enum::enum_name(op),
                      DUMP_IF(expr, symtab, ZERO));
 }
 
 std::string ir::ExprBinary::dump(const SymbolTable* symtab, usize&) const
 {
-  return std::format("binop( {}: {}, {})", magic_enum::enum_name(op),
-                     DUMP_IF(lhs, symtab, ZERO), DUMP_IF(rhs, symtab, ZERO));
+  return std::format("({} {} {})", DUMP_IF(lhs, symtab, ZERO),
+                     magic_enum::enum_name(op), DUMP_IF(rhs, symtab, ZERO));
 }
 
 std::string ir::ExprCall::dump(const SymbolTable* symtab, usize&) const
@@ -105,7 +106,20 @@ std::string ir::ExprSubscript::dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::ExprCast::dump(const SymbolTable* symtab, usize&) const
 {
-  return std::format("{} as {}", DUMP_IF(expr, symtab, ZERO), "");
+  return std::format("({} as {})", DUMP_IF(expr, symtab, ZERO), "");
+}
+
+std::string ir::ExprTernary::dump(const SymbolTable* symtab, usize&) const
+{
+  return std::format("({} ? {} : {})", DUMP_IF(cnd, symtab, ZERO),
+                     DUMP_IF(iftrue, symtab, ZERO),
+                     DUMP_IF(iffalse, symtab, ZERO));
+}
+
+std::string ir::ExprArray::dump(const SymbolTable* symtab, usize&) const
+{
+  return debug::dump<const Expr*, '[', ']'>(
+    exprs, [&](const auto& expr) { return DUMP_IF(expr, symtab, ZERO); });
 }
 
 std::string ir::ExprTuple::dump(const SymbolTable* symtab, usize&) const
@@ -150,7 +164,7 @@ std::string ir::StmtFuncDecl::dump(const SymbolTable* symtab,
 std::string ir::StmtBlock::dump(const SymbolTable* symtab, usize& depth) const
 {
   std::ostringstream oss;
-  oss << INDENT << "block " << SYMBOL(name) << ":\n";
+  oss << INDENT << "block .LB" << id << ":\n";
   oss << INDENT << "{\n";
   depth++;
 

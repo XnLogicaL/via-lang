@@ -23,7 +23,7 @@ class Unexpected final
 
   template <typename... Args>
     requires(std::is_constructible_v<E, Args...>)
-  explicit Unexpected(Args&&... args) : mUnexp(std::forward<Args>(args)...)
+  explicit Unexpected(Args&&... args) : mUnexp(E(std::forward<Args>(args)...))
   {}
 
   // Move out the error value by value
@@ -47,7 +47,7 @@ class Expected final
   Expected() = delete;
 
   // Construct with value
-  constexpr Expected(T val) noexcept(std::is_nothrow_move_constructible_v<T>)
+  Expected(T val) noexcept(std::is_nothrow_move_constructible_v<T>)
   {
     new (&mStorage.val) T(std::move(val));
     mHasValue = true;
@@ -56,9 +56,7 @@ class Expected final
 
   // Construct from an Unexpected<E>
   template <typename E>
-    requires(std::is_constructible_v<Error, Error> ||
-             true)  // allow; we call Error::fail<E>
-  constexpr Expected(Unexpected<E>&& err) noexcept
+  Expected(Unexpected<E>&& err) noexcept
   {
     new (&mStorage.err) Error(Error::fail<E>(std::move(err).takeError()));
     debug::require(mStorage.err.hasError(),
@@ -72,7 +70,7 @@ class Expected final
   Expected& operator=(const Expected& other) = delete;
 
   // Move constructor
-  constexpr Expected(Expected&& other) noexcept(
+  Expected(Expected&& other) noexcept(
     std::is_nothrow_move_constructible_v<T>&&
       std::is_nothrow_move_constructible_v<Error>)
       : mHasValue(false), mIsValid(false)  // will be set below if we construct
@@ -97,7 +95,7 @@ class Expected final
   }
 
   // Move assignment
-  constexpr Expected& operator=(Expected&& other) noexcept(
+  Expected& operator=(Expected&& other) noexcept(
     std::is_nothrow_move_constructible_v<T>&&
       std::is_nothrow_move_constructible_v<Error>)
   {
@@ -129,18 +127,16 @@ class Expected final
 
   ~Expected() noexcept { destroyActive(); }
 
-  constexpr explicit operator bool() const noexcept { return hasValue(); }
+  operator bool() const noexcept { return hasValue(); }
 
   T& operator*() & noexcept { return getValue(); }
   T* operator->() noexcept { return &getValue(); }
   const T& operator*() const& noexcept { return getValue(); }
   const T* operator->() const noexcept { return &getValue(); }
 
-  [[nodiscard]] constexpr bool hasValue() const noexcept
-  {
-    return mIsValid && mHasValue;
-  }
-  [[nodiscard]] constexpr bool hasError() const noexcept
+ public:
+  [[nodiscard]] bool hasValue() const noexcept { return mIsValid && mHasValue; }
+  [[nodiscard]] bool hasError() const noexcept
   {
     return mIsValid && !mHasValue;
   }

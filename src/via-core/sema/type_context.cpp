@@ -83,7 +83,7 @@ bool std::equal_to<sema::UserKey>::operator()(
 
 template <typename Tp, typename Key, typename... Args>
 static const Tp* instantiateBase(via::BumpAllocator<>& alloc,
-                                 via::std::unordered_map<Key, const Tp*>& map,
+                                 std::unordered_map<Key, const Tp*>& map,
                                  Args&&... args)
 {
   Key key(args...);

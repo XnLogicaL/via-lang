@@ -34,14 +34,29 @@ inline constexpr usize kRegisterCount = UINT16_MAX + 1;
 
 }  // namespace config
 
+struct Snapshot
+{
+  const std::unique_ptr<uptr[]> stack;
+  const std::unique_ptr<Value*[]> registers;
+  const uptr stackPtr;
+  const uptr framePtr;
+  const Instruction programCounter;
+};
+
 class Interpreter final
 {
+ public:
+  // Internal executor
+  template <bool, bool>
+  friend void __execute(Interpreter*);
+
  public:
   Interpreter(const Executable* exe)
       : mExecutable(exe),
         pc(exe->bytecode().data()),
-        mStack(&mAlloc),
-        mRegisters(config::vm::kRegisterCount)
+        mAlloc(),
+        mStack(mAlloc),
+        mRegisters(std::make_unique<Value*[]>(config::vm::kRegisterCount))
   {
     debug::require(!exe->bytecode().empty(), "illformed header");
   }
@@ -57,14 +72,16 @@ class Interpreter final
   void setLocal(usize mStkPtr, ValueRef val);
 
   void execute();
+  void executeOnce();
 
- private:
+  Snapshot createStateSnapshot();
+
+ protected:
   const Executable* mExecutable;
+  Allocator mAlloc;
 
   Stack<uptr> mStack;
-  std::vector<Value*> mRegisters;
-
-  Allocator mAlloc;
+  std::unique_ptr<Value*[]> mRegisters;
 
   uptr* sp;        // saved stack pointer
   const uptr* fp;  // frame pointer

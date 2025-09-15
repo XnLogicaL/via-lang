@@ -37,13 +37,13 @@ class ConstValue final
     STRING,
   };
 
-  using Union = std::variant<nil_type, int_type, float_type, bool, std::string>;
+  using Union = std::variant<nil_type, bool, int_type, float_type, std::string>;
 
  public:
   constexpr explicit ConstValue() : u(nil_type()) {}
+  constexpr explicit ConstValue(bool boolean) : u(boolean) {}
   constexpr explicit ConstValue(int_type int_) : u(int_) {}
   constexpr explicit ConstValue(float_type float_) : u(float_) {}
-  constexpr explicit ConstValue(bool boolean) : u(boolean) {}
   constexpr explicit ConstValue(std::string string) : u(string) {}
 
   static Option<ConstValue> fromToken(const Token& tok);

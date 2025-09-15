@@ -11,6 +11,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <vector>
 #include "lexer/location.h"
 #include "lexer/token.h"
 
@@ -22,26 +23,26 @@ namespace via
 
 enum class UnaryOp
 {
-  NEG,   // -
-  NOT,   // not
-  BNOT,  // ~
+  NEG = 0,  // -
+  NOT,      // not
+  BNOT,     // ~
 };
 
 enum class BinaryOp
 {
-  ADD,   // +
-  SUB,   // -
-  MUL,   // *
-  DIV,   // /
-  POW,   // **
-  MOD,   // %
-  AND,   // and
-  OR,    // or
-  BAND,  // &
-  BOR,   // |
-  BXOR,  // ^
-  BSHL,  // <<
-  BSHR,  // >>
+  ADD = 0,  // +
+  SUB,      // -
+  MUL,      // *
+  DIV,      // /
+  POW,      // **
+  MOD,      // %
+  AND,      // and
+  OR,       // or
+  BAND,     // &
+  BOR,      // |
+  BXOR,     // ^
+  BSHL,     // <<
+  BSHR,     // >>
 };
 
 UnaryOp toUnaryOp(Token::Kind kind) noexcept;

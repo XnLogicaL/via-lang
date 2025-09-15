@@ -9,7 +9,6 @@
 
 #include "const_value.h"
 #include <magic_enum/magic_enum.hpp>
-#include "ansi.h"
 #include "constexpr_stof.h"
 #include "constexpr_stoi.h"
 

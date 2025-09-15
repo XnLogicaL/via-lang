@@ -11,8 +11,10 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include <vector>
 #include "memory.h"
 #include "token.h"
+
 
 namespace via
 {

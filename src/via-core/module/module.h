@@ -15,7 +15,6 @@
 #include <via/types.h>
 #include "defs.h"
 #include "expected.h"
-#include "ir/builder.h"
 #include "option.h"
 #include "vm/executable.h"
 

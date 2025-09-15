@@ -12,7 +12,6 @@
 #include <via/config.h>
 #include <via/types.h>
 #include <stack>
-#include "local.h"
 #include "module/symbol.h"
 #include "option.h"
 
@@ -24,16 +23,40 @@ namespace sema
 
 class Module;
 
+template <typename Local>
 class Frame final
 {
  public:
+  using Ref = struct Local::Ref;
+
+ public:
   Local& top() { return mLocals.back(); }
 
-  Option<LocalRef> getLocal(SymbolId symbol);
-  void setLocal(SymbolId symbol,
-                const ast::Stmt* astDecl,
-                const ir::Stmt* irDecl,
-                u8 quals = 0ULL);
+  Option<Ref> getLocal(SymbolId symbol)
+  {
+    for (i64 i = mLocals.size() - 1; i >= 0; --i) {
+      Local& local = mLocals[i];
+      if (local.getSymbol() == symbol) {
+        return Ref{.id = static_cast<u16>(i), .local = local};
+      }
+    }
+
+    return nullopt;
+  }
+
+  template <typename... Args>
+    requires(std::is_constructible_v<Local, SymbolId, Args...>)
+  void setLocal(SymbolId symbol, Args&&... args)
+  {
+    usize version;
+    if (auto lref = getLocal(symbol)) {
+      version = lref->local.getVersion() + 1;
+    } else {
+      version = 0;
+    }
+
+    mLocals.emplace_back(symbol, args...);
+  }
 
   void save() { mStkPtr = mLocals.size(); }
   void restore() { mLocals.resize(mStkPtr); }
@@ -44,7 +67,8 @@ class Frame final
   std::vector<Local> mLocals;
 };
 
-using StackState = std::stack<Frame>;
+template <typename Local>
+using StackState = std::stack<Frame<Local>>;
 
 }  // namespace sema
 

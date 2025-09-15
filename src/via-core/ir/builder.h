@@ -14,6 +14,7 @@
 #include "ir.h"
 #include "module/manager.h"
 #include "module/module.h"
+#include "sema/ir_local.h"
 #include "sema/stack.h"
 #include "sema/type_context.h"
 
@@ -46,19 +47,18 @@ class IRBuilder final
     return mCurrentBlock;
   }
 
-  inline ir::StmtBlock* newBlock(SymbolId symbol) noexcept
+  inline ir::StmtBlock* newBlock(usize id) noexcept
   {
     ir::StmtBlock* block = mCurrentBlock;
     mShouldPushBlock = false;
     mCurrentBlock = mAlloc.emplace<ir::StmtBlock>();
-    mCurrentBlock->name = symbol;
+    mCurrentBlock->id = id;
     return block;
   }
 
   // clang-format off
   auto internSymbol(std::string symbol) { return mSymbolTable.intern(symbol); }
   auto internSymbol(const via::Token& symbol) { return mSymbolTable.intern(symbol.toString()); }
-  auto nextLabelSymbol() { return internSymbol(std::format(".LB{}", iota<usize>())); }
 
   const ir::Expr* lowerExprLit(const ast::ExprLit* exprLit);
   const ir::Expr* lowerExprSymbol(const ast::ExprSymbol* exprSym);
@@ -100,7 +100,7 @@ class IRBuilder final
   const SyntaxTree& mAst;
   Allocator& mAlloc;
   DiagContext& mDiags;
-  sema::StackState mStack;
+  sema::StackState<sema::IRLocal> mStack;
   sema::TypeContext& mTypeCtx;
   SymbolTable& mSymbolTable;
   bool mShouldPushBlock;

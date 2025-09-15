@@ -132,11 +132,11 @@ class Allocator final
   NO_MOVE(Allocator);
 
  public:
-  void free(void* ptr);
+  void free(void* ptr) { mi_free(ptr); }
 
-  [[nodiscard]] void* alloc(usize size);
-  [[nodiscard]] char* strdup(const char* str);
   [[nodiscard]] bool owns(void* ptr) { return mi_heap_check_owned(mHeap, ptr); }
+
+  [[nodiscard]] void* alloc(usize size) { return mi_heap_malloc(mHeap, size); }
 
   template <typename T>
   [[nodiscard]] T* alloc()
@@ -166,6 +166,16 @@ class Allocator final
     T* mem = (T*)mi_heap_malloc(mHeap, count * sizeof(T));
     detail::constructRangeAt(mem, count, std::forward<Args>(args)...);
     return mem;
+  }
+
+  [[nodiscard]] char* strdup(const char* str)
+  {
+    return mi_heap_strdup(mHeap, str);
+  }
+
+  [[nodiscard]] char* strndup(const char* str, usize n)
+  {
+    return mi_heap_strndup(mHeap, str, n);
   }
 
  private:

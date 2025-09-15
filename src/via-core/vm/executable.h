@@ -13,8 +13,10 @@
 #include <via/types.h>
 #include "instruction.h"
 #include "ir/ir.h"
+#include "sema/bytecode_local.h"
 #include "sema/const_value.h"
 #include "sema/register.h"
+#include "sema/stack.h"
 
 namespace via
 {
@@ -49,10 +51,16 @@ class Executable final
 
  private:
   usize programCounter() const noexcept { return mBytecode.size() - 1; }
-  usize setLabel() noexcept
+  usize constantId() const noexcept { return mConstants.size() - 1; }
+  usize setLabel(usize id) noexcept
   {
-    mLabelTable.push_back(programCounter());
+    mLabelTable[id] = programCounter();
     return mLabelTable.size() - 1;
+  }
+
+  void pushConstant(sema::ConstValue cvalue) noexcept
+  {
+    mConstants.push_back(std::move(cvalue));
   }
 
   void pushInstr(OpCode op, std::array<u16, 3>&& ops = {}) noexcept
@@ -87,10 +95,12 @@ class Executable final
 
  private:
   u64 mFlags;
+  u16 mGarbageReg;
   sema::RegisterState mRegState;
-  std::vector<sema::ConstValue> mConstants;
+  sema::StackState<sema::BytecodeLocal> mStack;
   std::vector<Instruction> mBytecode;
-  std::vector<usize> mLabelTable;
+  std::vector<sema::ConstValue> mConstants;
+  std::unordered_map<usize, usize> mLabelTable;
 };
 
 }  // namespace via

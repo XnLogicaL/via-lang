@@ -13,6 +13,7 @@
 #include <via/types.h>
 #include "interpreter.h"
 #include "option.h"
+#include "sema/const_value.h"
 
 namespace via
 {
@@ -21,7 +22,7 @@ class Value final
 {
  public:
   using int_type = i64;
-  using float_type = f32;
+  using float_type = f64;
 
   enum class Kind
   {
@@ -42,6 +43,9 @@ class Value final
 
   friend class ValueRef;
   friend class Interpreter;
+
+  template <bool, bool>
+  friend void __execute(Interpreter*);
 
  public:
   static inline Value* construct(Interpreter* ctx)
@@ -71,6 +75,32 @@ class Value final
       "Value construction via a string literal requires it to be allocated by "
       "the corresponding Value::ctx");
     return constructImpl(ctx, Kind::STRING, {.string = string});
+  }
+
+  static inline Value* construct(Interpreter* ctx, const sema::ConstValue& cv)
+  {
+    using enum sema::ConstValue::Kind;
+
+    auto& alloc = ctx->getAllocator();
+
+    switch (cv.kind()) {
+      case NIL:
+        return construct(ctx);
+      case BOOL:
+        return construct(ctx, cv.value<BOOL>());
+      case INT:
+        return construct(ctx, cv.value<INT>());
+      case FLOAT:
+        return construct(ctx, cv.value<FLOAT>());
+      case STRING: {
+        auto buf = alloc.strdup(cv.value<STRING>().c_str());
+        return construct(ctx, buf);
+      }
+      default:
+        break;
+    }
+
+    debug::unimplemented();
   }
 
  public:
@@ -122,6 +152,7 @@ class Value final
     Value* ptr = ctx->getAllocator().emplace<Value>();
     ptr->mKind = kind;
     ptr->mData = data;
+    ptr->mCtx = ctx;
     return ptr;
   }
 

@@ -1,8 +1,4 @@
 import std::io;
 
-fn main() -> nil {
-  var x = 2 + 3;
-  io::print(x);
-}
-
-main();
+var x = 2 + 3;
+io::print(x);

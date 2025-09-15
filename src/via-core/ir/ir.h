@@ -221,7 +221,7 @@ struct StmtFuncDecl : public Stmt
 struct StmtBlock : public Stmt
 {
   NODE_FIELDS()
-  SymbolId name;
+  usize id;
   std::vector<const Stmt*> stmts;
   const Term* term;
 };

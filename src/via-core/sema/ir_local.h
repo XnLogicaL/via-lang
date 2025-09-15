@@ -22,7 +22,7 @@ namespace via
 namespace sema
 {
 
-class Local final
+class IRLocal final
 {
  public:
   enum Qual : u8
@@ -30,13 +30,19 @@ class Local final
     CONST = 1 << 0,
   };
 
+  struct Ref
+  {
+    u16 id;
+    IRLocal& local;
+  };
+
  public:
-  Local() = default;
-  Local(SymbolId symbol,
-        const ast::Stmt* astDecl,
-        const ir::Stmt* irDecl,
-        usize version = 0,
-        u8 quals = 0ULL)
+  IRLocal() = default;
+  IRLocal(SymbolId symbol,
+          const ast::Stmt* astDecl,
+          const ir::Stmt* irDecl,
+          usize version = 0,
+          u8 quals = 0ULL)
       : mVersion(version),
         mQuals(quals),
         mSymbol(symbol),
@@ -57,12 +63,6 @@ class Local final
   const SymbolId mSymbol = -1;
   const ast::Stmt* mAstDecl = nullptr;
   const ir::Stmt* mIrDecl = nullptr;
-};
-
-struct LocalRef
-{
-  u16 id;
-  Local& local;
 };
 
 }  // namespace sema
