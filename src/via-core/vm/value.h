@@ -11,156 +11,157 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "interpreter.h"
-#include "option.h"
+#include "machine.h"
 #include "sema/const_value.h"
+#include "support/option.h"
 
-namespace via
-{
+namespace via {
 
+class Closure;
 class Value final
 {
- public:
-  using int_type = i64;
-  using float_type = f64;
+  public:
+    enum class Kind
+    {
+        NIL,
+        INT,
+        FLOAT,
+        BOOL,
+        STRING,
+        CLOSURE,
+    };
 
-  enum class Kind
-  {
-    NIL,
-    INT,
-    FLOAT,
-    BOOL,
-    STRING,
-  };
+    union Union {
+        i64 integer;
+        f64 float_;
+        bool boolean;
+        char* string;
+        Closure* closure;
+    };
 
-  union Union
-  {
-    int_type int_;
-    float_type float_;
-    bool boolean;
-    char* string;
-  };
+    friend class ValueRef;
+    friend class VirtualMachine;
 
-  friend class ValueRef;
-  friend class Interpreter;
+    template <bool, bool>
+    friend void execute_impl(VirtualMachine*);
 
-  template <bool, bool>
-  friend void __execute(Interpreter*);
-
- public:
-  static inline Value* construct(Interpreter* ctx)
-  {
-    return constructImpl(ctx, Kind::NIL);
-  }
-
-  static inline Value* construct(Interpreter* ctx, Value::int_type int_)
-  {
-    return constructImpl(ctx, Kind::INT, {.int_ = int_});
-  }
-
-  static inline Value* construct(Interpreter* ctx, Value::float_type float_)
-  {
-    return constructImpl(ctx, Kind::FLOAT, {.float_ = float_});
-  }
-
-  static inline Value* construct(Interpreter* ctx, bool boolean)
-  {
-    return constructImpl(ctx, Kind::BOOL, {.boolean = boolean});
-  }
-
-  static inline Value* construct(Interpreter* ctx, char* string)
-  {
-    debug::require(
-      ctx->getAllocator().owns(string),
-      "Value construction via a string literal requires it to be allocated by "
-      "the corresponding Value::ctx");
-    return constructImpl(ctx, Kind::STRING, {.string = string});
-  }
-
-  static inline Value* construct(Interpreter* ctx, const sema::ConstValue& cv)
-  {
-    using enum sema::ConstValue::Kind;
-
-    auto& alloc = ctx->getAllocator();
-
-    switch (cv.kind()) {
-      case NIL:
-        return construct(ctx);
-      case BOOL:
-        return construct(ctx, cv.value<BOOL>());
-      case INT:
-        return construct(ctx, cv.value<INT>());
-      case FLOAT:
-        return construct(ctx, cv.value<FLOAT>());
-      case STRING: {
-        auto buf = alloc.strdup(cv.value<STRING>().c_str());
-        return construct(ctx, buf);
-      }
-      default:
-        break;
+  public:
+    static Value* construct(VirtualMachine* vm) { return construct_impl(vm, Kind::NIL); }
+    static Value* construct(VirtualMachine* vm, i64 integer)
+    {
+        return construct_impl(vm, Kind::INT, {.integer = integer});
     }
 
-    debug::unimplemented();
-  }
-
- public:
-  inline auto kind() const { return mKind; }
-  inline auto& data() { return mData; }
-  inline const auto& data() const { return mData; }
-  inline auto* context() const { return mCtx; }
-
-  inline void free()
-  {
-    switch (mKind) {
-      case Kind::STRING:
-        mCtx->getAllocator().free(mData.string);
-        break;
-      default:
-        // Trivial types don't require explicit destruction
-        break;
+    static Value* construct(VirtualMachine* vm, f64 float_)
+    {
+        return construct_impl(vm, Kind::FLOAT, {.float_ = float_});
     }
 
-    mKind = Kind::NIL;
-  }
+    static Value* construct(VirtualMachine* vm, bool boolean)
+    {
+        return construct_impl(vm, Kind::BOOL, {.boolean = boolean});
+    }
 
-  inline Value* clone() { return constructImpl(mCtx, mKind, mData); }
+    static Value* construct(VirtualMachine* vm, char* string)
+    {
+        debug::require(
+            vm->get_allocator().owns(string),
+            "Value construction via string requires it to be allocated by "
+            "the corresponding Value::vm"
+        );
+        return construct_impl(vm, Kind::STRING, {.string = string});
+    }
 
-  // Totally safe access methods
-  inline int_type getInt() const { return mData.int_; }
-  inline float_type getFloat() const { return mData.float_; }
-  inline bool getBool() const { return mData.boolean; }
-  inline char* getString() const { return mData.string; }
+    static Value* construct(VirtualMachine* vm, Closure* closure)
+    {
+        debug::require(
+            vm->get_allocator().owns(closure),
+            "Value construction via closure object requires it to be allocated by "
+            "the corresponding Value::vm"
+        );
+        return construct_impl(vm, Kind::CLOSURE, {.closure = closure});
+    }
 
-  inline Option<int_type> asCInt() const { return nullopt; /* PLACEHOLDER */ }
-  inline Option<float_type> asCFloat() const
-  {
-    return nullopt; /* PLACEHOLDER */
-  }
-  inline bool asCBool() const { return false; /* PLACEHOLDER */ }
-  inline char* asCString() const { return nullptr; /* PLACEHOLDER */ }
+    static Value* construct(VirtualMachine* vm, const sema::ConstValue& cv)
+    {
+        using enum sema::ConstValue::Kind;
 
-  inline Value* asInt() const { return nullptr; /* PLACEHOLDER */ }
-  inline Value* asFloat() const { return nullptr; /* PLACEHOLDER */ }
-  inline Value* asBool() const { return nullptr; /* PLACEHOLDER */ }
-  inline Value* asString() const { return nullptr; /* PLACEHOLDER */ }
+        auto& alloc = vm->get_allocator();
 
- private:
-  static inline Value* constructImpl(Interpreter* ctx,
-                                     Value::Kind kind,
-                                     Value::Union data = {})
-  {
-    Value* ptr = ctx->getAllocator().emplace<Value>();
-    ptr->mKind = kind;
-    ptr->mData = data;
-    ptr->mCtx = ctx;
-    return ptr;
-  }
+        switch (cv.kind()) {
+            case NIL:
+                return construct(vm);
+            case BOOL:
+                return construct(vm, cv.value<BOOL>());
+            case INT:
+                return construct(vm, cv.value<INT>());
+            case FLOAT:
+                return construct(vm, cv.value<FLOAT>());
+            case STRING: {
+                auto buf = alloc.strdup(cv.value<STRING>().c_str());
+                return construct(vm, buf);
+            }
+            default:
+                break;
+        }
 
- private:
-  Kind mKind = Kind::NIL;
-  Union mData = {};
-  usize mRc = 0;
-  Interpreter* mCtx = nullptr;
+        debug::unimplemented();
+    }
+
+  public:
+    inline auto kind() const { return m_kind; }
+    inline auto& data() { return m_data; }
+    inline const auto& data() const { return m_data; }
+    inline auto* context() const { return vm; }
+
+    inline void free()
+    {
+        switch (m_kind) {
+            case Kind::STRING:
+            case Kind::CLOSURE:
+                vm->get_allocator().free(std::bit_cast<void*>(m_data));
+                break;
+            default:
+                // Trivial types don't require explicit destruction
+                break;
+        }
+
+        m_kind = Kind::NIL;
+    }
+
+    inline Value* clone() { return construct_impl(vm, m_kind, m_data); }
+
+    // Totally safe access methods
+    inline i64 get_int() const { return m_data.integer; }
+    inline f64 get_float() const { return m_data.float_; }
+    inline bool get_bool() const { return m_data.boolean; }
+    inline char* get_string() const { return m_data.string; }
+
+    inline Option<i64> as_cint() const { return nullopt; /* PLACEHOLDER */ }
+    inline Option<f64> as_cfloat() const { return nullopt; /* PLACEHOLDER */ }
+    inline bool as_cbool() const { return false; /* PLACEHOLDER */ }
+    inline char* as_cstring() const { return nullptr; /* PLACEHOLDER */ }
+
+    inline Value* as_int() const { return nullptr; /* PLACEHOLDER */ }
+    inline Value* as_float() const { return nullptr; /* PLACEHOLDER */ }
+    inline Value* as_bool() const { return nullptr; /* PLACEHOLDER */ }
+    inline Value* as_string() const { return nullptr; /* PLACEHOLDER */ }
+
+  private:
+    static inline Value* construct_impl(VirtualMachine* vm, Value::Kind kind, Value::Union data = {})
+    {
+        Value* ptr = vm->get_allocator().emplace<Value>();
+        ptr->m_kind = kind;
+        ptr->m_data = data;
+        ptr->vm = vm;
+        return ptr;
+    }
+
+  private:
+    Kind m_kind = Kind::NIL;
+    Union m_data = {};
+    usize m_rc = 0;
+    VirtualMachine* vm = nullptr;
 };
 
-}  // namespace via
+} // namespace via

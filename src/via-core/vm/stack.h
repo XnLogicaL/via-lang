@@ -11,50 +11,44 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "memory.h"
+#include "support/memory.h"
 
-namespace via
-{
+namespace via {
+namespace config {
+namespace vm {
 
-namespace config
-{
-
-namespace vm
-{
-
-inline constexpr usize kStackSize = 8192;
+CONSTANT usize STACK_SIZE = 8192;
 
 }
-
-}  // namespace config
+} // namespace config
 
 template <typename T>
 class Stack final
 {
- public:
-  Stack(Allocator& pAlloc)
-      : mAlloc(pAlloc),
-        mBasePtr(mAlloc.alloc<T>(config::vm::kStackSize)),
-        mStkPtr(mBasePtr)
-  {}
+  public:
+    Stack(Allocator& pAlloc) :
+        m_alloc(pAlloc),
+        m_base_ptr(m_alloc.alloc<T>(config::vm::STACK_SIZE)),
+        m_stack_ptr(m_base_ptr)
+    {}
 
- public:
-  Allocator& getAllocator() { return mAlloc; }
+  public:
+    Allocator& get_allocator() { return m_alloc; }
 
-  usize size() const { return mStkPtr - mBasePtr; }
-  void jump(T* dst) { mStkPtr = dst; }
-  void jump(usize dst) { mStkPtr = mBasePtr + dst; }
-  void push(T val) { *(mStkPtr++) = val; }
-  T pop() { return *(--mStkPtr); }
-  T* top() { return mStkPtr - 1; }
-  T* at(usize idx) { return mBasePtr + idx; }
-  T* begin() { return mBasePtr; }
-  T* end() { return mStkPtr - 1; }
+    inline usize size() const { return m_stack_ptr - m_base_ptr; }
+    inline void jump(T* dst) { m_stack_ptr = dst; }
+    inline void jump(usize dst) { m_stack_ptr = m_base_ptr + dst; }
+    inline void push(T val) { *(m_stack_ptr++) = val; }
+    inline T pop() { return *(--m_stack_ptr); }
+    inline T* top() { return m_stack_ptr - 1; }
+    inline T* at(usize idx) { return m_base_ptr + idx; }
+    inline T* begin() { return m_base_ptr; }
+    inline T* end() { return m_stack_ptr - 1; }
 
- private:
-  Allocator& mAlloc;
-  T* const mBasePtr;
-  T* mStkPtr;
+  private:
+    Allocator& m_alloc;
+    T* const m_base_ptr;
+    T* m_stack_ptr;
 };
 
-}  // namespace via
+} // namespace via

@@ -13,97 +13,105 @@
 #include <via/types.h>
 #include "value.h"
 
-namespace via
-{
+namespace via {
 
-class Interpreter;
+class VirtualMachine;
 class ValueRef final
 {
- public:
-  ValueRef(Interpreter* ctx) : mPtr(nullptr) {}
-  ValueRef(Interpreter* ctx, Value* mPtr) : mPtr(mPtr) {}
+  public:
+    ValueRef(VirtualMachine* vm) :
+        m_ptr(nullptr)
+    {}
+    ValueRef(VirtualMachine* vm, Value* ptr) :
+        m_ptr(ptr)
+    {}
 
-  ValueRef(const ValueRef& other) : mPtr(other.mPtr)
-  {
-    if (!other.isNullRef()) {
-      other.mPtr->mRc++;
-    }
-  }
-
-  ValueRef(ValueRef&& other) : mPtr(other.mPtr) { other.mPtr = nullptr; }
-
-  ~ValueRef()
-  {
-    if (!isNullRef()) {
-      free();
-    }
-  }
-
-  ValueRef& operator=(const ValueRef& other)
-  {
-    if (this != &other) {
-      if (!other.isNullRef()) {
-        other.mPtr->mRc++;
-      }
-
-      if (!isNullRef()) {
-        free();
-      }
-
-      this->mPtr = other.mPtr;
+    ValueRef(const ValueRef& other) :
+        m_ptr(other.m_ptr)
+    {
+        if (!other.is_null()) {
+            other.m_ptr->m_rc++;
+        }
     }
 
-    return *this;
-  }
-
-  ValueRef& operator=(ValueRef&& other)
-  {
-    if (this != &other) {
-      if (!isNullRef()) {
-        free();
-      }
-
-      mPtr = other.mPtr;
-      other.mPtr = nullptr;
+    ValueRef(ValueRef&& other) :
+        m_ptr(other.m_ptr)
+    {
+        other.m_ptr = nullptr;
     }
 
-    return *this;
-  }
-
-  Value* operator->() const
-  {
-    debug::require(!isNullRef(), "attempt to read NULL reference (operator->)");
-    return mPtr;
-  }
-
-  Value& operator*() const
-  {
-    debug::require(!isNullRef(), "attempt to read NULL reference (operator*)");
-    return *mPtr;
-  }
-
- public:
-  Value* get() const { return mPtr; }
-  bool isNullRef() const { return mPtr == nullptr; }
-
-  void free()
-  {
-    debug::require(!isNullRef(), "free called on NULL reference");
-
-    if (--mPtr->mRc == 0) {
-      mPtr->free();
-      mPtr = nullptr;
+    ~ValueRef()
+    {
+        if (!is_null()) {
+            free();
+        }
     }
-  }
 
-  usize getRefCount() const
-  {
-    debug::require(!isNullRef(), "getRefCount() called on NULL reference");
-    return mPtr->mRc;
-  }
+    ValueRef& operator=(const ValueRef& other)
+    {
+        if (this != &other) {
+            if (!other.is_null()) {
+                other.m_ptr->m_rc++;
+            }
 
- private:
-  Value* mPtr;
+            if (!is_null()) {
+                free();
+            }
+
+            this->m_ptr = other.m_ptr;
+        }
+
+        return *this;
+    }
+
+    ValueRef& operator=(ValueRef&& other)
+    {
+        if (this != &other) {
+            if (!is_null()) {
+                free();
+            }
+
+            m_ptr = other.m_ptr;
+            other.m_ptr = nullptr;
+        }
+
+        return *this;
+    }
+
+    Value* operator->() const
+    {
+        debug::require(!is_null(), "attempt to read NULL reference (operator->)");
+        return m_ptr;
+    }
+
+    Value& operator*() const
+    {
+        debug::require(!is_null(), "attempt to read NULL reference (operator*)");
+        return *m_ptr;
+    }
+
+  public:
+    Value* get() const { return m_ptr; }
+    bool is_null() const { return m_ptr == nullptr; }
+
+    void free()
+    {
+        debug::require(!is_null(), "free called on NULL reference");
+
+        if (--m_ptr->m_rc == 0) {
+            m_ptr->free();
+            m_ptr = nullptr;
+        }
+    }
+
+    usize ref_count() const
+    {
+        debug::require(!is_null(), "ref_count() called on NULL reference");
+        return m_ptr->m_rc;
+    }
+
+  private:
+    Value* m_ptr;
 };
 
-}  // namespace via
+} // namespace via

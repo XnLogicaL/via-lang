@@ -9,36 +9,31 @@
 
 #pragma once
 
+#include <functional>
 #include <spdlog/spdlog.h>
 #include <via/config.h>
 #include <via/types.h>
-#include <functional>
 
-namespace via
-{
-
-namespace config
-{
+namespace via {
+namespace config {
 
 // What to print when debug functions aren't provided a message
-inline constexpr const char* kCrashLoggerNoMessage = "<no-message>";
+CONSTANT const char* CRASH_LOGGER_NO_MESSAGE = "<no-message>";
 
 // Logging level for crashes
-inline constexpr spdlog::level::level_enum kCrashLoggerLevel =
-  spdlog::level::err;
+CONSTANT spdlog::level::level_enum CRASH_LOGGER_LEVEL = spdlog::level::err;
 
 #ifdef NDEBUG
-inline constexpr bool kDebugEnabled = false;
+CONSTANT bool DEBUG_ENABLED = false;
 #else
-inline constexpr bool kDebugEnabled = true;
+CONSTANT bool DEBUG_ENABLED = true;
 #endif
 
-}  // namespace config
+} // namespace config
 
-namespace debug
-{
+namespace debug {
 
-#define MSG_PARM std::string message = config::kCrashLoggerNoMessage
+#define MSG_PARM std::string message = config::CRASH_LOGGER_NO_MESSAGE
 
 // Basically `assert`
 void require(bool cond, MSG_PARM) noexcept;
@@ -50,24 +45,21 @@ void require(bool cond, MSG_PARM) noexcept;
 #undef MSG_PARM
 
 template <typename T, char LDel = '{', char RDel = '}'>
-inline std::string dump(
-  const std::vector<T>& vec,
-  std::function<std::string(const std::remove_cv_t<T>&)> fn)
+inline std::string get_dump(const std::vector<T>& vec, std::function<std::string(const std::remove_cv_t<T>&)> fn)
 {
-  std::ostringstream oss;
-  oss << LDel;
+    std::ostringstream oss;
+    oss << LDel;
 
-  for (usize i = 0; i < vec.size(); i++) {
-    oss << fn(vec[i]);
-    if (i != vec.size() - 1) {
-      oss << ", ";
+    for (usize i = 0; i < vec.size(); i++) {
+        oss << fn(vec[i]);
+        if (i != vec.size() - 1) {
+            oss << ", ";
+        }
     }
-  }
 
-  oss << RDel;
-  return oss.str();
+    oss << RDel;
+    return oss.str();
 }
 
-}  // namespace debug
-
-}  // namespace via
+} // namespace debug
+} // namespace via

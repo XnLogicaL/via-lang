@@ -17,94 +17,95 @@
 #include "sema/ir_local.h"
 #include "sema/stack.h"
 #include "sema/type_context.h"
+#include "support/type_traits.h" // derived_from
 
-namespace via
+namespace via {
+
+class IRBuilder;
+
+namespace detail {
+
+template <derived_from<ast::Expr, ast::Type> Type>
+const sema::Type* ast_type_of(IRBuilder&, const Type*) noexcept
 {
+    debug::todo(std::format("type_of<{}>()", TYPENAME(Type)));
+}
+
+template <derived_from<ast::Expr> Expr>
+const ir::Expr* ast_lower_expr(IRBuilder&, const Expr*) noexcept
+{
+    debug::todo(std::format("lower_expr<{}>()", TYPENAME(Expr)));
+}
+
+template <derived_from<ast::Stmt> Stmt>
+const ir::Stmt* ast_lower_stmt(IRBuilder&, const Stmt*) noexcept
+{
+    debug::todo(std::format("lower_stmt<{}>()", TYPENAME(Stmt)));
+}
+
+} // namespace detail
 
 class Module;
 class IRBuilder final
 {
- public:
-  IRBuilder(via::Module* m, const SyntaxTree& ast, DiagContext& diags)
-      : mModule(m),
-        mAst(ast),
-        mAlloc(m->getAllocator()),
-        mTypeCtx(m->getManager()->getTypeContext()),
-        mSymbolTable(m->getManager()->getSymbolTable()),
-        mDiags(diags)
-  {}
+  public:
+    template <derived_from<ast::Expr, ast::Type> Type>
+    friend const sema::Type* detail::ast_type_of(IRBuilder&, const Type*) noexcept;
 
- public:
-  IRTree build();
+    template <derived_from<ast::Expr> Expr>
+    friend const ir::Expr* detail::ast_lower_expr(IRBuilder&, const Expr*) noexcept;
 
- private:
-  const sema::Type* typeOf(const ast::Expr* expr) noexcept;
-  const sema::Type* typeOf(const ast::Type* type) noexcept;
+    template <derived_from<ast::Stmt> Stmt>
+    friend const ir::Stmt* detail::ast_lower_stmt(IRBuilder&, const Stmt*) noexcept;
 
-  inline ir::StmtBlock* endBlock() noexcept
-  {
-    mShouldPushBlock = true;
-    return mCurrentBlock;
-  }
+  public:
+    IRBuilder(via::Module* module, const SyntaxTree& ast, DiagContext& diags) :
+        m_module(module),
+        m_ast(ast),
+        m_alloc(module->get_allocator()),
+        m_type_ctx(module->get_manager()->get_type_context()),
+        m_symbol_table(module->get_manager()->get_symbol_table()),
+        m_diags(diags)
+    {}
 
-  inline ir::StmtBlock* newBlock(usize id) noexcept
-  {
-    ir::StmtBlock* block = mCurrentBlock;
-    mShouldPushBlock = false;
-    mCurrentBlock = mAlloc.emplace<ir::StmtBlock>();
-    mCurrentBlock->id = id;
-    return block;
-  }
+  public:
+    IRTree build();
 
-  // clang-format off
-  auto internSymbol(std::string symbol) { return mSymbolTable.intern(symbol); }
-  auto internSymbol(const via::Token& symbol) { return mSymbolTable.intern(symbol.toString()); }
+  private:
+    const sema::Type* type_of(const ast::Expr* expr) noexcept;
+    const sema::Type* type_of(const ast::Type* type) noexcept;
 
-  const ir::Expr* lowerExprLit(const ast::ExprLit* exprLit);
-  const ir::Expr* lowerExprSymbol(const ast::ExprSymbol* exprSym);
-  const ir::Expr* lowerExprStaticAccess(const ast::ExprStaticAccess* exprStAcc);
-  const ir::Expr* lowerExprDynamicAccess(const ast::ExprDynAccess* exprDynAcc);
-  const ir::Expr* lowerExprUnary(const ast::ExprUnary* exprUnary);
-  const ir::Expr* lowerExprBinary(const ast::ExprBinary* exprBinary);
-  const ir::Expr* lowerExprGroup(const ast::ExprGroup* exprGroup);
-  const ir::Expr* lowerExprCall(const ast::ExprCall* exprCall);
-  const ir::Expr* lowerExprSubscript(const ast::ExprSubscript* exprSubsc);
-  const ir::Expr* lowerExprCast(const ast::ExprCast* exprCast);
-  const ir::Expr* lowerExprTernary(const ast::ExprTernary* exprTernary);
-  const ir::Expr* lowerExprArray(const ast::ExprArray* exprArray);
-  const ir::Expr* lowerExprTuple(const ast::ExprTuple* exprTuple);
-  const ir::Expr* lowerExprLambda(const ast::ExprLambda* exprLambda);
-  const ir::Expr* lowerExpr(const ast::Expr* expr);
+    inline ir::StmtBlock* end_block() noexcept
+    {
+        m_should_push_block = true;
+        return m_current_block;
+    }
 
-  const ir::Stmt* lowerStmtVarDecl(const ast::StmtVarDecl* stmtVarDecl);
-  const ir::Stmt* lowerStmtScope(const ast::StmtScope* stmtScope);
-  const ir::Stmt* lowerStmtIf(const ast::StmtIf* stmtIf);
-  const ir::Stmt* lowerStmtFor(const ast::StmtFor* stmtFor);
-  const ir::Stmt* lowerStmtForEach(const ast::StmtForEach* StmtForEach);
-  const ir::Stmt* lowerStmtWhile(const ast::StmtWhile* StmtWhile);
-  const ir::Stmt* lowerStmtAssign(const ast::StmtAssign* StmtAssign);
-  const ir::Stmt* lowerStmtReturn(const ast::StmtReturn* stmtReturn);
-  const ir::Stmt* lowerStmtEnum(const ast::StmtEnum* stmtEnum);
-  const ir::Stmt* lowerStmtModule(const ast::StmtModule* stmtModule);
-  const ir::Stmt* lowerStmtImport(const ast::StmtImport* stmtImport);
-  const ir::Stmt* lowerStmtFunctionDecl(const ast::StmtFunctionDecl* stmtFunctionDecl);
-  const ir::Stmt* lowerStmtStructDecl(const ast::StmtStructDecl* stmtStructDecl);
-  const ir::Stmt* lowerStmtTypeDecl(const ast::StmtTypeDecl* stmtTypeDecl);
-  const ir::Stmt* lowerStmtUsing(const ast::StmtUsing* stmtUsing);
-  const ir::Stmt* lowerStmtExpr(const ast::StmtExpr* stmtExpr);
-  const ir::Stmt* lowerStmt(const ast::Stmt* stmt);
-  // clang-format on
+    inline ir::StmtBlock* new_block(usize id) noexcept
+    {
+        ir::StmtBlock* block = m_current_block;
+        m_should_push_block = false;
+        m_current_block = m_alloc.emplace<ir::StmtBlock>();
+        m_current_block->id = id;
+        return block;
+    }
 
- private:
-  via::Module* mModule;
-  const SyntaxTree& mAst;
-  Allocator& mAlloc;
-  DiagContext& mDiags;
-  sema::StackState<sema::IRLocal> mStack;
-  sema::TypeContext& mTypeCtx;
-  SymbolTable& mSymbolTable;
-  bool mShouldPushBlock;
-  ir::StmtBlock* mCurrentBlock;
+    auto intern_symbol(std::string symbol) noexcept { return m_symbol_table.intern(symbol); }
+    auto intern_symbol(const via::Token& symbol) noexcept { return m_symbol_table.intern(symbol.to_string()); }
+
+    const ir::Expr* lower_expr(const ast::Expr* expr);
+    const ir::Stmt* lower_stmt(const ast::Stmt* stmt);
+
+  private:
+    via::Module* m_module;
+    const SyntaxTree& m_ast;
+    Allocator& m_alloc;
+    DiagContext& m_diags;
+    sema::StackState<sema::IRLocal> m_stack;
+    sema::TypeContext& m_type_ctx;
+    SymbolTable& m_symbol_table;
+    bool m_should_push_block;
+    ir::StmtBlock* m_current_block;
 };
 
-}  // namespace via
+} // namespace via

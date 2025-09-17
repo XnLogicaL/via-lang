@@ -9,67 +9,61 @@
 
 #pragma once
 
+#include <stack>
 #include <via/config.h>
 #include <via/types.h>
-#include <stack>
 #include "module/symbol.h"
-#include "option.h"
+#include "support/option.h"
 
-namespace via
-{
-
-namespace sema
-{
+namespace via {
+namespace sema {
 
 class Module;
 
 template <typename Local>
 class Frame final
 {
- public:
-  using Ref = struct Local::Ref;
+  public:
+    using Ref = struct Local::Ref;
 
- public:
-  Local& top() { return mLocals.back(); }
+  public:
+    Local& top() { return m_locals.back(); }
+    Option<Ref> get_local(SymbolId symbol)
+    {
+        for (i64 i = m_locals.size() - 1; i >= 0; --i) {
+            Local& local = m_locals[i];
+            if (local.get_symbol() == symbol) {
+                return Ref{.id = static_cast<u16>(i), .local = local};
+            }
+        }
 
-  Option<Ref> getLocal(SymbolId symbol)
-  {
-    for (i64 i = mLocals.size() - 1; i >= 0; --i) {
-      Local& local = mLocals[i];
-      if (local.getSymbol() == symbol) {
-        return Ref{.id = static_cast<u16>(i), .local = local};
-      }
+        return nullopt;
     }
 
-    return nullopt;
-  }
+    template <typename... Args>
+        requires(std::is_constructible_v<Local, SymbolId, Args...>)
+    void set_local(SymbolId symbol, Args&&... args)
+    {
+        usize version;
+        if (auto lref = get_local(symbol))
+            version = lref->local.get_version() + 1;
+        else
+            version = 0;
 
-  template <typename... Args>
-    requires(std::is_constructible_v<Local, SymbolId, Args...>)
-  void setLocal(SymbolId symbol, Args&&... args)
-  {
-    usize version;
-    if (auto lref = getLocal(symbol)) {
-      version = lref->local.getVersion() + 1;
-    } else {
-      version = 0;
+        m_locals.emplace_back(symbol, args...);
     }
 
-    mLocals.emplace_back(symbol, args...);
-  }
+    void save() { m_stack_ptr = m_locals.size(); }
+    void restore() { m_locals.resize(m_stack_ptr); }
 
-  void save() { mStkPtr = mLocals.size(); }
-  void restore() { mLocals.resize(mStkPtr); }
-
- private:
-  Module* mModule;
-  usize mStkPtr;
-  std::vector<Local> mLocals;
+  private:
+    Module* m_module;
+    usize m_stack_ptr;
+    std::vector<Local> m_locals;
 };
 
 template <typename Local>
 using StackState = std::stack<Frame<Local>>;
 
-}  // namespace sema
-
-}  // namespace via
+} // namespace sema
+} // namespace via

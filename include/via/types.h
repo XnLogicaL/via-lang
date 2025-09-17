@@ -10,10 +10,9 @@
 #pragma once
 
 #include <filesystem>
+#include <stdfloat>
 
-namespace via
-{
-
+namespace via {
 namespace fs = std::filesystem;
 
 using std::literals::operator""s;
@@ -36,4 +35,4 @@ using iptr = intptr_t;
 using f32 = float;
 using f64 = double;
 
-}  // namespace via
+} // namespace via

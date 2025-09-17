@@ -13,14 +13,10 @@
 #include <via/types.h>
 #include "ir/ir.h"
 
-namespace via
-{
+namespace via {
+namespace sema {
 
-namespace sema
-{
+std::vector<const ir::Term*> get_control_paths(const ir::StmtBlock* entry) noexcept;
 
-std::vector<const ir::Term*> analyzeControlPaths(
-  const ir::StmtBlock* entry) noexcept;
 }
-
-}  // namespace via
+} // namespace via

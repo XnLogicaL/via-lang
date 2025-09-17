@@ -12,150 +12,149 @@
 #include <via/config.h>
 #include <via/types.h>
 
-namespace via
-{
+namespace via {
 
 // xmacros are goated
 #define OPCODE_LIST \
-  X(NOP)            \
-  X(HALT)           \
-  X(EXTRAARG1)      \
-  X(EXTRAARG2)      \
-  X(EXTRAARG3)      \
-  X(MOVE)           \
-  X(XCHG)           \
-  X(COPY)           \
-  X(COPYREF)        \
-  X(LOADK)          \
-  X(LOADTRUE)       \
-  X(LOADFALSE)      \
-  X(NEWSTR)         \
-  X(NEWARR)         \
-  X(NEWDICT)        \
-  X(NEWTUPLE)       \
-  X(NEWCLOSURE)     \
-  X(ENDCLOSURE)     \
-  X(IADD)           \
-  X(IADDK)          \
-  X(FADD)           \
-  X(FADDK)          \
-  X(ISUB)           \
-  X(ISUBK)          \
-  X(FSUB)           \
-  X(FSUBK)          \
-  X(IMUL)           \
-  X(IMULK)          \
-  X(FMUL)           \
-  X(FMULK)          \
-  X(IDIV)           \
-  X(IDIVK)          \
-  X(FDIV)           \
-  X(FDIVK)          \
-  X(INEG)           \
-  X(INEGK)          \
-  X(FNEG)           \
-  X(FNEGK)          \
-  X(BAND)           \
-  X(BANDK)          \
-  X(BOR)            \
-  X(BORK)           \
-  X(BXOR)           \
-  X(BXORK)          \
-  X(BSHL)           \
-  X(BSHLK)          \
-  X(BSHR)           \
-  X(BSHRK)          \
-  X(BNOT)           \
-  X(BNOTK)          \
-  X(AND)            \
-  X(ANDK)           \
-  X(OR)             \
-  X(ORK)            \
-  X(IEQ)            \
-  X(IEQK)           \
-  X(FEQ)            \
-  X(FEQK)           \
-  X(BEQ)            \
-  X(BEQK)           \
-  X(SEQ)            \
-  X(SEQK)           \
-  X(INEQ)           \
-  X(INEQK)          \
-  X(FNEQ)           \
-  X(FNEQK)          \
-  X(BNEQ)           \
-  X(BNEQK)          \
-  X(SNEQ)           \
-  X(SNEQK)          \
-  X(IS)             \
-  X(ILT)            \
-  X(ILTK)           \
-  X(FLT)            \
-  X(FLTK)           \
-  X(IGT)            \
-  X(IGTK)           \
-  X(FGT)            \
-  X(FGTK)           \
-  X(ILTEQ)          \
-  X(ILTEQK)         \
-  X(FLTEQ)          \
-  X(FLTEQK)         \
-  X(IGTEQ)          \
-  X(IGTEQK)         \
-  X(FGTEQ)          \
-  X(FGTEQK)         \
-  X(NOT)            \
-  X(JMP)            \
-  X(JMPIF)          \
-  X(JMPIFX)         \
-  X(JMPBACK)        \
-  X(JMPBACKIF)      \
-  X(JMPBACKIFX)     \
-  X(SAVESP)         \
-  X(RESTSP)         \
-  X(PUSH)           \
-  X(PUSHK)          \
-  X(GETARG)         \
-  X(GETARGREF)      \
-  X(SETARG)         \
-  X(GETLOCAL)       \
-  X(GETLOCALREF)    \
-  X(SETLOCAL)       \
-  X(CALL)           \
-  X(PCALL)          \
-  X(RET)            \
-  X(RETNIL)         \
-  X(RETTRUE)        \
-  X(RETFALSE)       \
-  X(RETK)           \
-  X(BTOI)           \
-  X(FTOI)           \
-  X(STOI)           \
-  X(ITOF)           \
-  X(BTOF)           \
-  X(STOF)           \
-  X(ITOB)           \
-  X(STOB)           \
-  X(ITOS)           \
-  X(FTOS)           \
-  X(BTOS)           \
-  X(ARTOS)          \
-  X(DTTOS)          \
-  X(FNTOS)
+    X(NOP)          \
+    X(HALT)         \
+    X(EXTRAARG1)    \
+    X(EXTRAARG2)    \
+    X(EXTRAARG3)    \
+    X(MOVE)         \
+    X(XCHG)         \
+    X(COPY)         \
+    X(COPYREF)      \
+    X(LOADK)        \
+    X(LOADTRUE)     \
+    X(LOADFALSE)    \
+    X(NEWSTR)       \
+    X(NEWARR)       \
+    X(NEWDICT)      \
+    X(NEWTUPLE)     \
+    X(NEWCLOSURE)   \
+    X(ENDCLOSURE)   \
+    X(IADD)         \
+    X(IADDK)        \
+    X(FADD)         \
+    X(FADDK)        \
+    X(ISUB)         \
+    X(ISUBK)        \
+    X(FSUB)         \
+    X(FSUBK)        \
+    X(IMUL)         \
+    X(IMULK)        \
+    X(FMUL)         \
+    X(FMULK)        \
+    X(IDIV)         \
+    X(IDIVK)        \
+    X(FDIV)         \
+    X(FDIVK)        \
+    X(INEG)         \
+    X(INEGK)        \
+    X(FNEG)         \
+    X(FNEGK)        \
+    X(BAND)         \
+    X(BANDK)        \
+    X(BOR)          \
+    X(BORK)         \
+    X(BXOR)         \
+    X(BXORK)        \
+    X(BSHL)         \
+    X(BSHLK)        \
+    X(BSHR)         \
+    X(BSHRK)        \
+    X(BNOT)         \
+    X(BNOTK)        \
+    X(AND)          \
+    X(ANDK)         \
+    X(OR)           \
+    X(ORK)          \
+    X(IEQ)          \
+    X(IEQK)         \
+    X(FEQ)          \
+    X(FEQK)         \
+    X(BEQ)          \
+    X(BEQK)         \
+    X(SEQ)          \
+    X(SEQK)         \
+    X(INEQ)         \
+    X(INEQK)        \
+    X(FNEQ)         \
+    X(FNEQK)        \
+    X(BNEQ)         \
+    X(BNEQK)        \
+    X(SNEQ)         \
+    X(SNEQK)        \
+    X(IS)           \
+    X(ILT)          \
+    X(ILTK)         \
+    X(FLT)          \
+    X(FLTK)         \
+    X(IGT)          \
+    X(IGTK)         \
+    X(FGT)          \
+    X(FGTK)         \
+    X(ILTEQ)        \
+    X(ILTEQK)       \
+    X(FLTEQ)        \
+    X(FLTEQK)       \
+    X(IGTEQ)        \
+    X(IGTEQK)       \
+    X(FGTEQ)        \
+    X(FGTEQK)       \
+    X(NOT)          \
+    X(JMP)          \
+    X(JMPIF)        \
+    X(JMPIFX)       \
+    X(JMPBACK)      \
+    X(JMPBACKIF)    \
+    X(JMPBACKIFX)   \
+    X(SAVESP)       \
+    X(RESTSP)       \
+    X(PUSH)         \
+    X(PUSHK)        \
+    X(GETARG)       \
+    X(GETARGREF)    \
+    X(SETARG)       \
+    X(GETLOCAL)     \
+    X(GETLOCALREF)  \
+    X(SETLOCAL)     \
+    X(CALL)         \
+    X(PCALL)        \
+    X(RET)          \
+    X(RETNIL)       \
+    X(RETTRUE)      \
+    X(RETFALSE)     \
+    X(RETK)         \
+    X(BTOI)         \
+    X(FTOI)         \
+    X(STOI)         \
+    X(ITOF)         \
+    X(BTOF)         \
+    X(STOF)         \
+    X(ITOB)         \
+    X(STOB)         \
+    X(ITOS)         \
+    X(FTOS)         \
+    X(BTOS)         \
+    X(ARTOS)        \
+    X(DTTOS)        \
+    X(FNTOS)
 
 enum class OpCode : u16
 {
 #define X(OP) OP,
-  OPCODE_LIST
+    OPCODE_LIST
 #undef X
 };
 
 struct Instruction
 {
-  OpCode op = OpCode::NOP;
-  u16 a, b, c;
+    OpCode op = OpCode::NOP;
+    u16 a, b, c;
 
-  std::string dump() const;
+    std::string get_dump() const;
 };
 
-}  // namespace via
+} // namespace via

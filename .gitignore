@@ -1,6 +1,7 @@
 local
 build
+cmake-build-debug
+.idea
 .cache
-compile_commands.json
 scripts/__pycache__
 CMakeFiles

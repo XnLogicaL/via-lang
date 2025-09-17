@@ -11,48 +11,53 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "utility.h"
+#include "support/utility.h"
 
-namespace via
-{
+namespace via {
 
 class Error;
 class ErrorInfo
 {
- public:
-  ErrorInfo(std::string msg) : msg(std::move(msg)) {}
-  ErrorInfo(const Error& err);
+  public:
+    ErrorInfo(const Error& err);
+    ErrorInfo(std::string msg) :
+        msg(std::move(msg))
+    {}
 
- public:
-  const std::string msg;
+  public:
+    const std::string msg;
 };
 
 class Error final
 {
- public:
-  Error() = default;
-  Error(std::shared_ptr<ErrorInfo>&& err) noexcept : mPayload(std::move(err)) {}
+  public:
+    Error() = default;
+    Error(std::shared_ptr<ErrorInfo>&& err) noexcept :
+        m_payload(std::move(err))
+    {}
 
-  [[nodiscard]] static Error success() noexcept { return Error(); }
+    [[nodiscard]] static Error success() noexcept { return Error(); }
 
-  template <typename E = ErrorInfo, typename... Args>
-  [[nodiscard]] static Error fail(Args&&... args) noexcept
-  {
-    return Error(std::make_shared<E>(fwd<Args>(args)...));
-  }
+    template <typename E = ErrorInfo, typename... Args>
+    [[nodiscard]] static Error fail(Args&&... args) noexcept
+    {
+        return Error(std::make_shared<E>(forward<Args>(args)...));
+    }
 
-  operator bool() const noexcept { return !hasError(); }
-  ErrorInfo& operator*() const noexcept { return getError(); }
+    operator bool() const noexcept { return !has_error(); }
+    ErrorInfo& operator*() const noexcept { return get_error(); }
 
- public:
-  [[nodiscard]] bool hasError() const noexcept { return mPayload.get(); }
-  [[nodiscard]] ErrorInfo& getError() const noexcept { return *mPayload; }
-  [[nodiscard]] std::string toString() const noexcept { return mPayload->msg; }
+  public:
+    [[nodiscard]] bool has_error() const noexcept { return m_payload.get(); }
+    [[nodiscard]] ErrorInfo& get_error() const noexcept { return *m_payload; }
+    [[nodiscard]] std::string to_string() const noexcept { return m_payload->msg; }
 
- private:
-  std::shared_ptr<ErrorInfo> mPayload{nullptr};
+  private:
+    std::shared_ptr<ErrorInfo> m_payload{nullptr};
 };
 
-inline ErrorInfo::ErrorInfo(const Error& err) : msg(err.getError().msg) {}
+inline ErrorInfo::ErrorInfo(const Error& err) :
+    msg(err.get_error().msg)
+{}
 
-}  // namespace via
+} // namespace via

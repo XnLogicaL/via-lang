@@ -10,15 +10,11 @@
 #pragma once
 
 #if 1
-  #include "config.h"
-  #include "policy.h"
+    #include "config.h"
+    #include "policy.h"
 #endif
 
-#include <ansi.h>
 #include <ast/ast.h>
-#include <constexpr_ipow.h>
-#include <constexpr_stof.h>
-#include <constexpr_stoi.h>
 #include <diagnostics.h>
 #include <lexer/lexer.h>
 #include <lexer/location.h>
@@ -30,14 +26,17 @@
 #include <module/symbol.h>
 #include <parser/parser.h>
 #include <sema/const_value.h>
-#include <sema/constexpr.h>
 #include <sema/register.h>
-#include <semver.h>
-#include <utility.h>
+#include <support/ansi.h>
+#include <support/conversions.h>
+#include <support/expected.h>
+#include <support/math.h>
+#include <support/option.h>
+#include <support/type_traits.h>
+#include <support/utility.h>
 #include <vm/executable.h>
 #include <vm/instruction.h>
-#include <vm/interpreter.h>
+#include <vm/machine.h>
 #include <vm/stack.h>
 #include <vm/value.h>
 #include <vm/value_ref.h>
-

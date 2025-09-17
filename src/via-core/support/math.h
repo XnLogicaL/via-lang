@@ -11,33 +11,30 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "constexpr_ipow.h"
 
-namespace via
+namespace via {
+
+template <std::integral T = int>
+constexpr T iota() noexcept
 {
-
-struct Version
-{
-  usize major, minor, patch;
-};
-
-template <usize P = 1>
-consteval Version getSemanticVersion()
-{
-  constexpr usize ver = config::kVersion;
-  constexpr usize major = ipow<usize>(100, P);
-  constexpr usize minor = ipow<usize>(10, P);
-
-  return {
-    .major = ver / major,
-    .minor = (ver / minor) % minor,
-    .patch = ver % minor,
-  };
+    static T data{0};
+    return data++;
 }
 
-inline std::string toString(const Version& v)
+template <std::integral T = int>
+constexpr T ipow(T base, T exp)
 {
-  return std::format("{}.{}.{}", v.major, v.minor, v.patch);
+    T result = 1;
+    for (;;) {
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        if (!exp)
+            break;
+        base *= base;
+    }
+
+    return result;
 }
 
-}  // namespace via
+} // namespace via

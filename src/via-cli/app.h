@@ -9,35 +9,28 @@
 
 #pragma once
 
-#include <via/via.h>
 #include <argparse/argparse.hpp>
+#include <via/via.h>
 
-namespace via
+namespace via {
+namespace cli {
+
+inline auto& app_instance() noexcept
 {
+    static argparse::ArgumentParser cli("via", "0.1.0");
 
-namespace cli
-{
+    cli.add_argument("input").default_value("").help("Target source file");
 
-inline auto& getApp()
-{
-  static argparse::ArgumentParser cli("via",
-                                      via::toString(getSemanticVersion()));
+    cli.add_argument("--include-dirs", "-I").default_value("").help("Comma seperated custom include directory paths");
 
-  cli.add_argument("input").default_value("").help("Target source file");
+    cli.add_argument("--dump", "-D")
+        .nargs(1)
+        .choices("", "ttree", "ast", "ir", "exe", "deftab", "symtab")
+        .default_value("")
+        .help("Dump the given tree");
 
-  cli.add_argument("--include-dirs", "-I")
-    .default_value("")
-    .help("Comma seperated custom include directory paths");
-
-  cli.add_argument("--dump", "-D")
-    .nargs(1)
-    .choices("", "ttree", "ast", "ir", "exe", "deftab", "symtab")
-    .default_value("")
-    .help("Dump the given tree");
-
-  return cli;
+    return cli;
 }
 
-}  // namespace cli
-
-}  // namespace via
+} // namespace cli
+} // namespace via

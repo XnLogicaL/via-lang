@@ -9,18 +9,15 @@
 
 #include "location.h"
 
-via::RelSourceLoc via::SourceLoc::toRelative(const std::string& source) const
+via::RelSourceLoc::RelSourceLoc(const std::string& source, SourceLoc loc)
 {
-  usize line = 1;
-  usize init = 0;
-
-  for (usize i = 0; i < begin; ++i) {
-    if (source[i] == '\n') {
-      ++line;
-      init = i + 1;
+    usize init = 0;
+    for (usize i = 0; i < loc.begin; ++i) {
+        if (source[i] == '\n') {
+            ++line;
+            init = i + 1;
+        }
     }
-  }
 
-  usize column = begin - init;
-  return {line, column};
+    offset = loc.begin - init;
 }

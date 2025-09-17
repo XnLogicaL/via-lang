@@ -12,13 +12,12 @@
 
 via::SourceLoc via::Token::location(const std::string& source) const
 {
-  const usize begin = lexeme - source.cbegin().base();
-  const usize end = begin + size;
-  return {begin, end};
+    const usize begin = lexeme - source.cbegin().base();
+    const usize end = begin + size;
+    return {begin, end};
 }
 
-std::string via::Token::dump() const
+std::string via::Token::get_dump() const
 {
-  return std::format("[{} '{}']", magic_enum::enum_name(kind),
-                     (*lexeme == '\0') ? "<eof>" : toString());
+    return std::format("[{} '{}']", magic_enum::enum_name(kind), (*lexeme == '\0') ? "<eof>" : to_string());
 }

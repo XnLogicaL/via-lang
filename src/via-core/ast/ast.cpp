@@ -18,422 +18,411 @@ inline via::usize ZERO = 0;
 
 #define INDENT std::string(depth, ' ')
 
-via::UnaryOp via::toUnaryOp(Tk kind) noexcept
+via::UnaryOp via::to_unary_op(Tk kind) noexcept
 {
-  switch (kind) {
-    case Tk::OP_MINUS:
-      return UnaryOp::NOT;
-    case Tk::KW_NOT:
-      return UnaryOp::NOT;
-    case Tk::OP_TILDE:
-      return UnaryOp::BNOT;
-    default:
-      break;
-  }
+    switch (kind) {
+        case Tk::OP_MINUS:
+            return UnaryOp::NOT;
+        case Tk::KW_NOT:
+            return UnaryOp::NOT;
+        case Tk::OP_TILDE:
+            return UnaryOp::BNOT;
+        default:
+            break;
+    }
 
-  via::debug::bug("unmapped UnaryOp TokenKind");
+    via::debug::bug("unmapped UnaryOp TokenKind");
 }
 
-via::BinaryOp via::toBinaryOp(Tk kind) noexcept
+via::BinaryOp via::to_binary_op(Tk kind) noexcept
 {
-  switch (kind) {
-    case Tk::OP_PLUS:
-      return BinaryOp::ADD;
-    case Tk::OP_MINUS:
-      return BinaryOp::SUB;
-    case Tk::OP_STAR:
-      return BinaryOp::MUL;
-    case Tk::OP_SLASH:
-      return BinaryOp::DIV;
-    case Tk::OP_STAR_STAR:
-      return BinaryOp::POW;
-    case Tk::OP_PERCENT:
-      return BinaryOp::MOD;
-    case Tk::KW_AND:
-      return BinaryOp::AND;
-    case Tk::KW_OR:
-      return BinaryOp::OR;
-    case Tk::OP_AMP:
-      return BinaryOp::BAND;
-    case Tk::OP_PIPE:
-      return BinaryOp::BOR;
-    case Tk::OP_CARET:
-      return BinaryOp::BXOR;
-    case Tk::OP_SHL:
-      return BinaryOp::BSHL;
-    case Tk::OP_SHR:
-      return BinaryOp::BSHR;
-    default:
-      break;
-  }
+    switch (kind) {
+        case Tk::OP_PLUS:
+            return BinaryOp::ADD;
+        case Tk::OP_MINUS:
+            return BinaryOp::SUB;
+        case Tk::OP_STAR:
+            return BinaryOp::MUL;
+        case Tk::OP_SLASH:
+            return BinaryOp::DIV;
+        case Tk::OP_STAR_STAR:
+            return BinaryOp::POW;
+        case Tk::OP_PERCENT:
+            return BinaryOp::MOD;
+        case Tk::KW_AND:
+            return BinaryOp::AND;
+        case Tk::KW_OR:
+            return BinaryOp::OR;
+        case Tk::OP_AMP:
+            return BinaryOp::BAND;
+        case Tk::OP_PIPE:
+            return BinaryOp::BOR;
+        case Tk::OP_CARET:
+            return BinaryOp::BXOR;
+        case Tk::OP_SHL:
+            return BinaryOp::BSHL;
+        case Tk::OP_SHR:
+            return BinaryOp::BSHR;
+        default:
+            break;
+    }
 
-  via::debug::bug("unmapped BinaryOp TokenKind");
+    via::debug::bug("unmapped BinaryOp TokenKind");
 }
 
-std::string ast::AccessIdent::dump() const
+std::string ast::Path::get_dump() const
 {
-  return std::format(
-    "AccessIdent(instantiated={}, symbol={}, generics={})", inst,
-    symbol->dump(),
-    debug::dump(gens, [](const auto& tp) { return tp->dump(ZERO); }));
+    return std::format("Path({})", debug::get_dump(path, [](const auto& node) { return node->get_dump(); }));
 }
 
-std::string ast::Path::dump() const
+std::string ast::Parameter::get_dump() const
 {
-  return std::format("Path({})", debug::dump(path, [](const auto& node) {
-                       return node->dump();
-                     }));
+    return std::format("Parameter(symbol={}, type={})", symbol->get_dump(), type->get_dump(ZERO));
 }
 
-std::string ast::Parameter::dump() const
+std::string ast::AttributeGroup::get_dump() const
 {
-  return std::format("Parameter(symbol={}, type={})", symbol->dump(),
-                     type->dump(ZERO));
+    return std::format("AttributeGroup({})", debug::get_dump(ats, [](const auto& atr) {
+                           return std::format(
+                               "Attribute(sp={}, args={})",
+                               atr.sp->get_dump(),
+                               debug::get_dump(atr.args, [](const auto& arg) { return arg->get_dump(); })
+                           );
+                       }));
 }
 
-std::string ast::AttributeGroup::dump() const
+std::string ast::ExprLiteral::get_dump(usize&) const
 {
-  return std::format(
-    "AttributeGroup({})", debug::dump(ats, [](const auto& atr) {
-      return std::format(
-        "Attribute(sp={}, args={})", atr.sp->dump(),
-        debug::dump(atr.args, [](const auto& arg) { return arg->dump(); }));
-    }));
+    return std::format("ExprLiteral({})", tok->get_dump());
 }
 
-std::string ast::ExprLit::dump(usize&) const
+std::string ast::ExprSymbol::get_dump(usize&) const
 {
-  return std::format("ExprLit({})", tok->dump());
+    return std::format("ExprSymbol({})", symbol->get_dump());
 }
 
-std::string ast::ExprSymbol::dump(usize&) const
+std::string ast::ExprDynAccess::get_dump(usize&) const
 {
-  return std::format("ExprSymbol({})", symbol->dump());
+    return std::format("ExprDynAccess({}, {})", root->get_dump(ZERO), index->to_string());
 }
 
-std::string ast::ExprDynAccess::dump(usize&) const
+std::string ast::ExprStaticAccess::get_dump(usize&) const
 {
-  return std::format("ExprDynAccess({}, {})", root->dump(ZERO),
-                     index->toString());
+    return std::format("ExprStaticAccess({}, {})", root->get_dump(ZERO), index->to_string());
 }
 
-std::string ast::ExprStaticAccess::dump(usize&) const
+std::string ast::ExprUnary::get_dump(usize&) const
 {
-  return std::format("ExprStaticAccess({}, {})", root->dump(ZERO),
-                     index->toString());
+    return std::format("ExprUnary({}, {})", op->get_dump(), expr->get_dump(ZERO));
 }
 
-std::string ast::ExprUnary::dump(usize&) const
+std::string ast::ExprBinary::get_dump(usize&) const
 {
-  return std::format("ExprUnary({}, {})", op->dump(), expr->dump(ZERO));
+    return std::format("ExprBinary({}, {}, {})", op->get_dump(), lhs->get_dump(ZERO), rhs->get_dump(ZERO));
 }
 
-std::string ast::ExprBinary::dump(usize&) const
+std::string ast::ExprGroup::get_dump(usize&) const
 {
-  return std::format("ExprBinary({}, {}, {})", op->dump(), lhs->dump(ZERO),
-                     rhs->dump(ZERO));
+    return std::format("ExprGroup({})", expr->get_dump(ZERO));
 }
 
-std::string ast::ExprGroup::dump(usize&) const
+std::string ast::ExprCall::get_dump(usize&) const
 {
-  return std::format("ExprGroup({})", expr->dump(ZERO));
+    return std::format("ExprCall(callee={}, args={})", lval->get_dump(ZERO), debug::get_dump(args, [](const auto& arg) {
+                           return arg->get_dump(ZERO);
+                       }));
 }
 
-std::string ast::ExprCall::dump(usize&) const
+std::string ast::ExprSubscript::get_dump(usize&) const
 {
-  return std::format(
-    "ExprCall(callee={}, args={})", lval->dump(ZERO),
-    debug::dump(args, [](const auto& arg) { return arg->dump(ZERO); }));
+    return std::format("ExprSubscript({}, {})", lval->get_dump(ZERO), idx->get_dump(ZERO));
 }
 
-std::string ast::ExprSubscript::dump(usize&) const
+std::string ast::ExprCast::get_dump(usize&) const
 {
-  return std::format("ExprSubscript({}, {})", lval->dump(ZERO),
-                     idx->dump(ZERO));
+    return std::format("ExprCast({}, {})", expr->get_dump(ZERO), type->get_dump(ZERO));
 }
 
-std::string ast::ExprCast::dump(usize&) const
+std::string ast::ExprTernary::get_dump(usize&) const
 {
-  return std::format("ExprCast({}, {})", expr->dump(ZERO), type->dump(ZERO));
+    return std::format(
+        "ExprTernary(cnd={}, lhs={}, rhs={})",
+        cnd->get_dump(ZERO),
+        lhs->get_dump(ZERO),
+        rhs->get_dump(ZERO)
+    );
 }
 
-std::string ast::ExprTernary::dump(usize&) const
+std::string ast::ExprArray::get_dump(usize&) const
 {
-  return std::format("ExprTernary(cnd={}, lhs={}, rhs={})", cnd->dump(ZERO),
-                     lhs->dump(ZERO), rhs->dump(ZERO));
+    return std::format("ExprArray(init={})", debug::get_dump(init, [](const auto& ini) {
+                           return ini->get_dump(ZERO);
+                       }));
 }
 
-std::string ast::ExprArray::dump(usize&) const
+std::string ast::ExprTuple::get_dump(usize&) const
 {
-  return std::format(
-    "ExprArray(init={})",
-    debug::dump(init, [](const auto& ini) { return ini->dump(ZERO); }));
+    return std::format("ExprTuple(vals={})", debug::get_dump(vals, [](const auto& ini) {
+                           return ini->get_dump(ZERO);
+                       }));
 }
 
-std::string ast::ExprTuple::dump(usize&) const
+std::string ast::ExprLambda::get_dump(usize&) const
 {
-  return std::format(
-    "ExprTuple(vals={})",
-    debug::dump(vals, [](const auto& ini) { return ini->dump(ZERO); }));
+    return std::format("ExprLambda(<lambda>)");
 }
 
-std::string ast::ExprLambda::dump(usize&) const
+std::string ast::StmtVarDecl::get_dump(usize& depth) const
 {
-  return std::format("ExprLambda(<lambda>)");
+    return INDENT + std::format(
+                        "StmtVarDecl(lval={}, rval={}, type={})",
+                        lval->get_dump(ZERO),
+                        rval->get_dump(ZERO),
+                        type ? type->get_dump(ZERO) : "<infered>"
+                    );
 }
 
-std::string ast::StmtVarDecl::dump(usize& depth) const
+std::string ast::StmtScope::get_dump(usize& depth) const
 {
-  return INDENT + std::format("StmtVarDecl(lval={}, rval={}, type={})",
-                              lval->dump(ZERO), rval->dump(ZERO),
-                              type ? type->dump(ZERO) : "<infered>");
-}
-
-std::string ast::StmtScope::dump(usize& depth) const
-{
-  std::ostringstream oss;
-  oss << INDENT << "StmtScope()\n";
-  depth++;
-
-  for (const Stmt* stmt : stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
-
-  depth--;
-  oss << INDENT << "EndScope()";
-  return oss.str();
-}
-
-std::string ast::StmtIf::dump(usize& depth) const
-{
-  std::ostringstream oss;
-  oss << INDENT << "StmtIf()\n";
-  depth++;
-
-  for (const auto& br : brs) {
-    oss << INDENT
-        << std::format("Branch({})\n", br.cnd ? br.cnd->dump(ZERO) : "");
+    std::ostringstream oss;
+    oss << INDENT << "StmtScope()\n";
     depth++;
 
-    for (const Stmt* stmt : br.br->stmts) {
-      oss << stmt->dump(depth) << "\n";
+    for (const Stmt* stmt: stmts) {
+        oss << stmt->get_dump(depth) << "\n";
     }
 
     depth--;
-    oss << INDENT << "EndBranch()\n";
-  }
-
-  depth--;
-  oss << INDENT << "EndIf()";
-  return oss.str();
+    oss << INDENT << "EndScope()";
+    return oss.str();
 }
 
-std::string ast::StmtFor::dump(usize& depth) const
+std::string ast::StmtIf::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT
-      << std::format("StmtFor(init={}, target={}, step={})\n", init->dump(ZERO),
-                     target->dump(ZERO), step ? step->dump(ZERO) : "<infered>");
-  depth++;
+    std::ostringstream oss;
+    oss << INDENT << "StmtIf()\n";
+    depth++;
 
-  for (const Stmt* stmt : br->stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
+    for (const auto& br: brs) {
+        oss << INDENT << std::format("Branch({})\n", br.cnd ? br.cnd->get_dump(ZERO) : "");
+        depth++;
 
-  depth--;
-  oss << INDENT << "EndFor()";
-  return oss.str();
+        for (const Stmt* stmt: br.br->stmts) {
+            oss << stmt->get_dump(depth) << "\n";
+        }
+
+        depth--;
+        oss << INDENT << "EndBranch()\n";
+    }
+
+    depth--;
+    oss << INDENT << "EndIf()";
+    return oss.str();
 }
 
-std::string ast::StmtForEach::dump(usize& depth) const
+std::string ast::StmtFor::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT
-      << std::format("StmtForEach(lval={}, iter={})\n", lval->dump(ZERO),
-                     iter->dump(ZERO));
-  depth++;
+    std::ostringstream oss;
+    oss << INDENT
+        << std::format(
+               "StmtFor(init={}, target={}, step={})\n",
+               init->get_dump(ZERO),
+               target->get_dump(ZERO),
+               step ? step->get_dump(ZERO) : "<infered>"
+           );
+    depth++;
 
-  for (const Stmt* stmt : br->stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
+    for (const Stmt* stmt: br->stmts) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
 
-  depth--;
-  oss << INDENT << "EndForEach()";
-  return oss.str();
+    depth--;
+    oss << INDENT << "EndFor()";
+    return oss.str();
 }
 
-std::string ast::StmtWhile::dump(usize& depth) const
+std::string ast::StmtForEach::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT << std::format("StmtWhile(cnd={})\n", cnd->dump(ZERO));
-  depth++;
+    std::ostringstream oss;
+    oss << INDENT << std::format("StmtForEach(lval={}, iter={})\n", lval->get_dump(ZERO), iter->get_dump(ZERO));
+    depth++;
 
-  for (const Stmt* stmt : br->stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
+    for (const Stmt* stmt: br->stmts) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
 
-  depth--;
-  oss << INDENT << "EndWhile()";
-  return oss.str();
+    depth--;
+    oss << INDENT << "EndForEach()";
+    return oss.str();
 }
 
-std::string ast::StmtAssign::dump(usize& depth) const
+std::string ast::StmtWhile::get_dump(usize& depth) const
 {
-  return INDENT + std::format("StmtAssign(op={}, lval={}, rval={})", op->dump(),
-                              lval->dump(ZERO), rval->dump(ZERO));
+    std::ostringstream oss;
+    oss << INDENT << std::format("StmtWhile(cnd={})\n", cnd->get_dump(ZERO));
+    depth++;
+
+    for (const Stmt* stmt: br->stmts) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
+
+    depth--;
+    oss << INDENT << "EndWhile()";
+    return oss.str();
 }
 
-std::string ast::StmtReturn::dump(usize& depth) const
+std::string ast::StmtAssign::get_dump(usize& depth) const
 {
-  return INDENT +
-         std::format("StmtReturn({})", expr ? expr->dump(ZERO) : "<null>");
+    return INDENT + std::format(
+                        "StmtAssign(op={}, lval={}, rval={})",
+                        op->get_dump(),
+                        lval->get_dump(ZERO),
+                        rval->get_dump(ZERO)
+                    );
 }
 
-std::string ast::StmtEnum::dump(usize& depth) const
+std::string ast::StmtReturn::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT
-      << std::format("StmtEnum(symbol={}, type={})\n", symbol->dump(),
-                     type->dump(ZERO));
-  depth++;
-
-  for (const auto& entry : pairs) {
-    oss << std::format("EnumEntry(symbol={}, expr={})\n", entry.symbol->dump(),
-                       entry.expr->dump(ZERO));
-  }
-
-  depth--;
-  oss << INDENT << "EndEnum()";
-  return oss.str();
+    return INDENT + std::format("StmtReturn({})", expr ? expr->get_dump(ZERO) : "<null>");
 }
 
-std::string ast::StmtModule::dump(usize& depth) const
+std::string ast::StmtEnum::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT << std::format("StmtModule({})\n", symbol->dump());
-  depth++;
+    std::ostringstream oss;
+    oss << INDENT << std::format("StmtEnum(symbol={}, type={})\n", symbol->get_dump(), type->get_dump(ZERO));
+    depth++;
 
-  for (const auto& stmt : scope) {
-    oss << stmt->dump(depth) << "\n";
-  }
+    for (const auto& entry: pairs) {
+        oss << std::format("EnumEntry(symbol={}, expr={})\n", entry.symbol->get_dump(), entry.expr->get_dump(ZERO));
+    }
 
-  depth--;
-  oss << INDENT << "EndModule()";
-  return oss.str();
+    depth--;
+    oss << INDENT << "EndEnum()";
+    return oss.str();
 }
 
-std::string ast::StmtImport::dump(usize& depth) const
+std::string ast::StmtModule::get_dump(usize& depth) const
 {
-  return INDENT +
-         std::format("StmtImport({})", debug::dump(path, [](const auto& node) {
-                       return node->dump();
-                     }));
+    std::ostringstream oss;
+    oss << INDENT << std::format("StmtModule({})\n", symbol->get_dump());
+    depth++;
+
+    for (const auto& stmt: scope) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
+
+    depth--;
+    oss << INDENT << "EndModule()";
+    return oss.str();
 }
 
-std::string ast::StmtFunctionDecl::dump(usize& depth) const
+std::string ast::StmtImport::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT + std::format("StmtFunctionDecl(name={}, ret={}, parms={})\n",
-                              name->dump(), ret->dump(ZERO),
-                              debug::dump(parms, [](const auto& parm) {
-                                return parm->dump();
-                              }));
-  depth++;
-
-  for (const auto& stmt : scope->stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
-
-  depth--;
-  oss << INDENT << "EndFunctionDecl()";
-  return oss.str();
+    return INDENT +
+           std::format("StmtImport({})", debug::get_dump(path, [](const auto& node) { return node->get_dump(); }));
 }
 
-std::string ast::StmtStructDecl::dump(usize& depth) const
+std::string ast::StmtFunctionDecl::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT + std::format("StmtStructDecl({})\n", name->dump());
-  depth++;
+    std::ostringstream oss;
+    oss << INDENT + std::format(
+                        "StmtFunctionDecl(name={}, ret={}, parms={})\n",
+                        name->get_dump(),
+                        ret->get_dump(ZERO),
+                        debug::get_dump(parms, [](const auto& parm) { return parm->get_dump(); })
+                    );
+    depth++;
 
-  for (const auto& stmt : scope) {
-    oss << stmt->dump(depth) << "\n";
-  }
+    for (const auto& stmt: scope->stmts) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
 
-  depth--;
-  oss << INDENT << "EndStructDecl()";
-  return oss.str();
+    depth--;
+    oss << INDENT << "EndFunctionDecl()";
+    return oss.str();
 }
 
-std::string ast::StmtTypeDecl::dump(usize& depth) const
+std::string ast::StmtStructDecl::get_dump(usize& depth) const
 {
-  return INDENT + std::format("StmtTypeDecl(symbol={}, type={})",
-                              symbol->dump(), type->dump(ZERO));
+    std::ostringstream oss;
+    oss << INDENT + std::format("StmtStructDecl({})\n", name->get_dump());
+    depth++;
+
+    for (const auto& stmt: scope) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
+
+    depth--;
+    oss << INDENT << "EndStructDecl()";
+    return oss.str();
 }
 
-std::string ast::StmtUsing::dump(usize& depth) const
+std::string ast::StmtTypeDecl::get_dump(usize& depth) const
 {
-  std::ostringstream oss;
-  oss << INDENT + std::format("StmtUsing({})\n", sp->dump());
-  depth++;
-
-  for (const auto& stmt : scope->stmts) {
-    oss << stmt->dump(depth) << "\n";
-  }
-
-  depth--;
-  oss << INDENT << "EndUsing()";
-  return oss.str();
+    return INDENT + std::format("StmtTypeDecl(symbol={}, type={})", symbol->get_dump(), type->get_dump(ZERO));
 }
 
-std::string ast::StmtEmpty::dump(usize& depth) const
+std::string ast::StmtUsing::get_dump(usize& depth) const
 {
-  return INDENT + "StmtEmpty()";
+    std::ostringstream oss;
+    oss << INDENT + std::format("StmtUsing({})\n", sp->get_dump());
+    depth++;
+
+    for (const auto& stmt: scope->stmts) {
+        oss << stmt->get_dump(depth) << "\n";
+    }
+
+    depth--;
+    oss << INDENT << "EndUsing()";
+    return oss.str();
 }
 
-std::string ast::StmtExpr::dump(usize& depth) const
+std::string ast::StmtEmpty::get_dump(usize& depth) const
 {
-  return INDENT + std::format("StmtExpr({})", expr->dump(ZERO));
+    return INDENT + "StmtEmpty()";
 }
 
-std::string ast::TypeBuiltin::dump(usize&) const
+std::string ast::StmtExpr::get_dump(usize& depth) const
 {
-  return std::format("TypeBuiltin({})", tok->dump());
+    return INDENT + std::format("StmtExpr({})", expr->get_dump(ZERO));
 }
 
-std::string ast::TypeArray::dump(usize&) const
+std::string ast::TypeBuiltin::get_dump(usize&) const
 {
-  return std::format("TypeArray({})", type->dump(ZERO));
+    return std::format("TypeBuiltin({})", tok->get_dump());
 }
 
-std::string ast::TypeDict::dump(usize&) const
+std::string ast::TypeArray::get_dump(usize&) const
 {
-  return std::format("TypeDict(key={}, val={})", key->dump(ZERO),
-                     val->dump(ZERO));
+    return std::format("TypeArray({})", type->get_dump(ZERO));
 }
 
-std::string ast::TypeFunc::dump(usize&) const
+std::string ast::TypeDict::get_dump(usize&) const
 {
-  return std::format(
-    "TypeFunc(ret={}, parms={})", ret->dump(ZERO),
-    debug::dump(params, [](const auto& parm) { return parm->dump(); }));
+    return std::format("TypeDict(key={}, val={})", key->get_dump(ZERO), val->get_dump(ZERO));
+}
+
+std::string ast::TypeFunc::get_dump(usize&) const
+{
+    return std::format("TypeFunc(ret={}, parms={})", ret->get_dump(ZERO), debug::get_dump(params, [](const auto& parm) {
+                           return parm->get_dump();
+                       }));
 }
 
 bool ast::isLValue(const Expr* expr) noexcept
 {
-  return TRY_IS(const ExprSymbol, expr) ||
-         TRY_IS(const ExprStaticAccess, expr) ||
-         TRY_IS(const ExprDynAccess, expr) ||
-         TRY_IS(const ExprSubscript, expr) || TRY_IS(const ExprTuple, expr);
+    return TRY_IS(const ExprSymbol, expr) || TRY_IS(const ExprStaticAccess, expr) ||
+           TRY_IS(const ExprDynAccess, expr) || TRY_IS(const ExprSubscript, expr) || TRY_IS(const ExprTuple, expr);
 }
 
-[[nodiscard]] std::string via::debug::dump(const via::SyntaxTree& ast)
+[[nodiscard]] std::string via::debug::get_dump(const via::SyntaxTree& ast)
 {
-  std::ostringstream oss;
-  usize depth = 0;
+    std::ostringstream oss;
+    usize depth = 0;
 
-  for (const auto* st : ast) {
-    oss << st->dump(depth) << "\n";
-  }
+    for (const auto* st: ast) {
+        oss << st->get_dump(depth) << "\n";
+    }
 
-  return oss.str();
+    return oss.str();
 }

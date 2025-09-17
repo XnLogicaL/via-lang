@@ -9,49 +9,43 @@
 
 #pragma once
 
+#include <bitset>
 #include <via/config.h>
 #include <via/types.h>
-#include <bitset>
 #include "debug.h"
 
-namespace via
-{
+namespace via {
+namespace config {
 
-namespace config
-{
-
-inline constexpr usize kRegisterCount = UINT16_MAX;
+CONSTANT usize REGISTER_COUNT = UINT16_MAX;
 
 }
 
-namespace sema
-{
+namespace sema {
 
 class RegisterState
 {
- public:
-  inline u16 alloc() noexcept
-  {
-    for (usize i = 0; i < config::kRegisterCount; ++i) {
-      if (!mBuffer.test(i)) {  // free register
-        mBuffer.set(i);        // mark as occupied
-        return static_cast<u16>(i);
-      }
+  public:
+    inline u16 alloc() noexcept
+    {
+        for (usize i = 0; i < config::REGISTER_COUNT; ++i) {
+            if (!m_buffer.test(i)) { // free register
+                m_buffer.set(i);     // mark as occupied
+                return static_cast<u16>(i);
+            }
+        }
+        debug::bug("semantic register allocation failure");
     }
-    debug::bug("semantic register allocation failure");
-  }
 
-  inline void free(u16 reg) noexcept
-  {
-    debug::require(reg <= config::kRegisterCount,
-                   "invalid semantic register to free");
-    mBuffer.reset(reg);  // mark as free
-  }
+    inline void free(u16 reg) noexcept
+    {
+        debug::require(reg <= config::REGISTER_COUNT, "invalid semantic register to free");
+        m_buffer.reset(reg); // mark as free
+    }
 
- private:
-  std::bitset<config::kRegisterCount> mBuffer;
+  private:
+    std::bitset<config::REGISTER_COUNT> m_buffer;
 };
 
-}  // namespace sema
-
-}  // namespace via
+} // namespace sema
+} // namespace via

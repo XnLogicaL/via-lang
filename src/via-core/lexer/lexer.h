@@ -9,49 +9,47 @@
 
 #pragma once
 
+#include <vector>
 #include <via/config.h>
 #include <via/types.h>
-#include <vector>
-#include "memory.h"
+#include "support/memory.h"
 #include "token.h"
 
-
-namespace via
-{
+namespace via {
 
 using TokenTree = std::vector<Token*>;
 
 class Lexer final
 {
- public:
-  Lexer(const std::string& file)
-      : mFile(file), mCursor(file.data()), mEnd(file.data() + file.size() - 1)
-  {}
+  public:
+    Lexer(const std::string& source) :
+        m_source(source),
+        m_cursor(source.data()),
+        m_end(source.data() + source.size() - 1)
+    {}
 
- public:
-  TokenTree tokenize();
+  public:
+    TokenTree tokenize();
 
- private:
-  char advance(isize ahead = 1);
-  char peek(isize ahead = 0);
-  Token* readNumber();
-  Token* readString();
-  Token* readSymbol();
-  Token* readIdentifier();
-  bool skipComment();
+  private:
+    char advance(isize ahead = 1);
+    char peek(isize ahead = 0);
+    Token* read_number();
+    Token* read_string();
+    Token* read_operator();
+    Token* read_identifier();
+    bool skip_comment();
 
- private:
-  Allocator mAlloc;
-  const std::string& mFile;
-  const char* mCursor;
-  const char* mEnd;
+  private:
+    Allocator m_alloc;
+    const std::string& m_source;
+    const char* m_cursor;
+    const char* m_end;
 };
 
-namespace debug
-{
+namespace debug {
 
-[[nodiscard]] std::string dump(const TokenTree& tt);
+[[nodiscard]] std::string get_dump(const TokenTree& tt);
 
 }
-
-}  // namespace via
+} // namespace via

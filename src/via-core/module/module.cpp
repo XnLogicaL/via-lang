@@ -10,375 +10,387 @@
 #include "module.h"
 #include <fstream>
 #include <iostream>
-#include "ansi.h"
 #include "debug.h"
 #include "ir/builder.h"
 #include "ir/ir.h"
 #include "manager.h"
-#include "vm/interpreter.h"
+#include "support/ansi.h"
+#include "vm/machine.h"
 
 #ifdef VIA_PLATFORM_UNIX
-  #include <dlfcn.h>
+    #include <dlfcn.h>
 #elif defined(VIA_PLATFORM_WINDOWS)
-  #include <windows.h>
+    #include <windows.h>
 #endif
 
 // Modules are supposed to be allocated in a linear fashion, so we can get
 // away with this
-static via::Allocator stModuleAllocator;
+static via::Allocator module_allocator;
 
-static via::Expected<std::string> readFile(const via::fs::path& path)
+static via::Expected<std::string> read_file(const via::fs::path& path)
 {
-  std::ifstream ifs(path);
-  if (!ifs.is_open()) {
-    return via::Unexpected(
-      std::format("No such file or directory: '{}'", path.string()));
-  }
+    std::ifstream ifs(path);
+    if (!ifs.is_open()) {
+        return via::Unexpected(std::format("No such file or directory: '{}'", path.string()));
+    }
 
-  std::ostringstream oss;
-  std::string line;
+    std::ostringstream oss;
+    std::string line;
 
-  while (std::getline(ifs, line)) {
-    oss << line << '\n';
-  }
+    while (std::getline(ifs, line)) {
+        oss << line << '\n';
+    }
 
-  return oss.str();
+    return oss.str();
 }
 
 #ifdef VIA_PLATFORM_WINDOWS
 static struct WinLibraryManager
 {
-  std::vector<HMODULE> libs;
+    std::vector<HMODULE> libs;
 
-  ~WinLibraryManager()
-  {
-    for (HMODULE handle : libs) {
-      FreeLibrary(handle);
+    ~WinLibraryManager()
+    {
+        for (const HMODULE handle: libs) {
+            FreeLibrary(handle);
+        }
     }
-  }
 
-  void add(HMODULE handle) { libs.push_back(handle); }
+    void push(const HMODULE handle) { libs.push_back(handle); }
 } windowsLibs;
 #endif
 
-static via::Expected<via::NativeModuleInitCallback> osLoadSymbol(
-  const via::fs::path& path,
-  const char* symbol)
+static via::Expected<via::NativeModuleInitCallback> load_dylib_symbol(const via::fs::path& path, const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
-  if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
-    if (void* init = dlsym(handle, symbol)) {
-      return reinterpret_cast<via::NativeModuleInitCallback>(init);
+    if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
+        if (void* init = dlsym(handle, symbol)) {
+            return reinterpret_cast<via::NativeModuleInitCallback>(init);
+        }
     }
-  }
 
-  return via::Unexpected(dlerror());
+    return via::Unexpected(dlerror());
 #else
-  return via::Unexpected(
-    "Native modules not supported on host operating system");
+    return via::Unexpected("Native modules not supported on host operating system");
 #endif
 }
 
-via::Expected<via::Module*> via::Module::loadNativeObject(
-  ModuleManager* manager,
-  Module* importee,
-  const char* name,
-  fs::path path,
-  const ast::StmtImport* decl,
-  u32 perms,
-  u32 flags)
+via::Expected<via::Module*> via::Module::load_native_object(
+    ModuleManager* manager,
+    Module* importee,
+    const char* name,
+    const fs::path& path,
+    const ast::StmtImport* decl,
+    const u32 perms,
+    const u32 flags
+)
 {
-  if (manager->isImporting(name)) {
-    return Unexpected("Recursive import detected");
-  }
-
-  manager->pushImport(name);
-
-  if (manager->hasModule(name)) {
-    if (Module* module = manager->getModule(name); module->mPath == path) {
-      manager->popImport();
-      return module;
+    if (manager->is_current_import(name)) {
+        return Unexpected("Recursive import detected");
     }
-  }
 
-  auto file = readFile(path);
-  if (!file.hasValue()) {
-    manager->popImport();
-    return Unexpected(file.getError());
-  }
+    manager->push_import(name);
 
-  Module* module = stModuleAllocator.emplace<Module>();
-  module->mKind = Kind::NATIVE;
-  module->mManager = manager;
-  module->mImportee = importee;
-  module->mPerms = perms;
-  module->mFlags = flags;
-  module->mName = name;
-  module->mPath = path;
-  module->mDecl = decl;
-
-  manager->addModule(module);
-
-  auto symbol = std::format("{}{}", config::kInitCallbackPrefix, name);
-  auto callback = osLoadSymbol(path, symbol.c_str());
-  if (callback.hasError()) {
-    return Unexpected(std::format("Failed to load native module: {}",
-                                  callback.getError().toString()));
-  }
-
-  auto* moduleInfo = (*callback)(manager);
-
-  debug::require(moduleInfo->begin != nullptr);
-
-  for (usize i = 0; i < moduleInfo->size; i++) {
-    const auto& entry = moduleInfo->begin[i];
-    module->mDefs[entry.id] = entry.def;
-  }
-
-  if (flags & DUMP_DEFTABLE) {
-    std::println(std::cout, "{}",
-                 ansi::format(std::format("[deftable .{}]", name),
-                              ansi::Foreground::Yellow, ansi::Background::Black,
-                              ansi::Style::Bold));
-
-    for (const auto& def : module->mDefs) {
-      std::println(std::cout, "  {}", def.second->dump());
+    if (manager->has_module(name)) {
+        if (Module* module = manager->get_module(name); module->m_path == path) {
+            manager->pop_import();
+            return module;
+        }
     }
-  }
 
-  manager->popImport();
-  return module;
+    auto file = read_file(path);
+    if (!file.has_value()) {
+        manager->pop_import();
+        return Unexpected(file.get_error());
+    }
+
+    auto* module = module_allocator.emplace<Module>();
+    module->m_kind = Kind::NATIVE;
+    module->m_manager = manager;
+    module->m_importee = importee;
+    module->m_perms = perms;
+    module->m_flags = flags;
+    module->m_name = name;
+    module->m_path = path;
+    module->m_ast_decl = decl;
+
+    manager->push_module(module);
+
+    auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
+    auto callback = load_dylib_symbol(path, symbol.c_str());
+    if (callback.has_error()) {
+        return Unexpected(std::format("Failed to load native module: {}", callback.get_error().to_string()));
+    }
+
+    auto* module_info = (*callback)(manager);
+
+    debug::require(module_info->begin != nullptr);
+
+    for (usize i = 0; i < module_info->size; i++) {
+        const auto& entry = module_info->begin[i];
+        module->m_defs[entry.id] = entry.def;
+    }
+
+    if (flags & DUMP_DEFTABLE) {
+        std::println(
+            std::cout,
+            "{}",
+            ansi::format(
+                std::format("[deftable .{}]", name),
+                ansi::Foreground::Yellow,
+                ansi::Background::Black,
+                ansi::Style::Bold
+            )
+        );
+
+        for (const auto& def: module->m_defs) {
+            std::println(std::cout, "  {}", def.second->get_dump());
+        }
+    }
+
+    manager->pop_import();
+    return module;
 }
 
-via::Expected<via::Module*> via::Module::loadSourceFile(
-  ModuleManager* manager,
-  Module* importee,
-  const char* name,
-  fs::path path,
-  const ast::StmtImport* importDecl,
-  u32 perms,
-  u32 flags)
+via::Expected<via::Module*> via::Module::load_source_file(
+    ModuleManager* manager,
+    Module* importee,
+    const char* name,
+    const fs::path& path,
+    const ast::StmtImport* ast_decl,
+    const u32 perms,
+    const u32 flags
+)
 {
-  if (manager->isImporting(name)) {
-    return Unexpected("Recursive import detected");
-  }
-
-  manager->pushImport(name);
-
-  if (manager->hasModule(name)) {
-    if (Module* module = manager->getModule(name); module->mPath == path) {
-      manager->popImport();
-      return module;
-    }
-  }
-
-  auto file = readFile(path);
-  if (!file.hasValue()) {
-    manager->popImport();
-    return Unexpected(file.getError());
-  }
-
-  Module* module = stModuleAllocator.emplace<Module>();
-  module->mKind = Kind::SOURCE;
-  module->mManager = manager;
-  module->mImportee = importee;
-  module->mPerms = perms;
-  module->mFlags = flags;
-  module->mName = name;
-  module->mPath = path;
-  module->mDecl = importDecl;
-
-  manager->addModule(module);
-
-  DiagContext diags(path.string(), name, *file);
-
-  Lexer lexer(*file);
-  auto ttree = lexer.tokenize();
-
-  Parser parser(*file, ttree, diags);
-  auto ast = parser.parse();
-
-  bool failed = diags.hasErrors();
-  if (failed) {
-    goto error;
-  }
-
-  {
-    IRBuilder irb(module, ast, diags);
-    module->mIr = irb.build();
-
-    failed = diags.hasErrors();
-    if (failed) {
-      goto error;
+    if (manager->is_current_import(name)) {
+        return Unexpected("Recursive import detected");
     }
 
-    for (const auto& node : module->mIr) {
-      if (auto symbol = node->getSymbol()) {
-        module->mDefs[*symbol] = Def::from(module->getAllocator(), node);
-      }
+    manager->push_import(name);
+
+    if (manager->has_module(name)) {
+        if (Module* module = manager->get_module(name); module->m_path == path) {
+            manager->pop_import();
+            return module;
+        }
     }
+
+    auto file = read_file(path);
+    if (!file.has_value()) {
+        manager->pop_import();
+        return Unexpected(file.get_error());
+    }
+
+    auto* module = module_allocator.emplace<Module>();
+    module->m_kind = Kind::SOURCE;
+    module->m_manager = manager;
+    module->m_importee = importee;
+    module->m_perms = perms;
+    module->m_flags = flags;
+    module->m_name = name;
+    module->m_path = path;
+    module->m_ast_decl = ast_decl;
+
+    manager->push_module(module);
+
+    DiagContext diags(path.string(), name, *file);
+
+    Lexer lexer(*file);
+    auto ttree = lexer.tokenize();
+
+    Parser parser(*file, ttree, diags);
+    auto ast = parser.parse();
+
+    bool failed = diags.has_errors();
+    if (failed)
+        goto error;
 
     {
-      Executable* exe = Executable::buildFromIR(module, module->mIr);
-      module->mExecutable = exe;
+        IRBuilder ir_builder(module, ast, diags);
+        module->m_ir = ir_builder.build();
 
-      Interpreter interp{exe};
-      interp.execute();
+        failed = diags.has_errors();
+        if (failed)
+            goto error;
+
+        for (const auto& node: module->m_ir) {
+            if (auto symbol = node->get_symbol()) {
+                module->m_defs[*symbol] = Def::from(module->get_allocator(), node);
+            }
+        }
+        {
+            Executable* exe = Executable::build_from_ir(module, module->m_ir);
+            module->m_exe = exe;
+
+            VirtualMachine interp{exe};
+            interp.execute();
+        }
     }
-  }
 
 error:
-  diags.emit();
-  diags.clear();
+    diags.emit();
+    diags.clear();
 
-  if (flags & DUMP_TTREE)
-    std::println(std::cout, "{}", debug::dump(ttree));
-  if (flags & DUMP_AST)
-    std::println(std::cout, "{}", debug::dump(ast));
-  if (flags & DUMP_IR)
-    std::println(std::cout, "{}",
-                 debug::dump(manager->getSymbolTable(), module->mIr));
-  if (flags & DUMP_EXE)
-    std::println(std::cout, "{}", module->mExecutable->dump());
-  if (flags & DUMP_DEFTABLE) {
-    std::println(std::cout, "{}",
-                 ansi::format(std::format("[deftable .{}]", name),
-                              ansi::Foreground::Yellow, ansi::Background::Black,
-                              ansi::Style::Bold));
+    if (flags & DUMP_TTREE)
+        std::println(std::cout, "{}", debug::get_dump(ttree));
+    if (flags & DUMP_AST)
+        std::println(std::cout, "{}", debug::get_dump(ast));
+    if (flags & DUMP_IR)
+        std::println(std::cout, "{}", debug::get_dump(manager->get_symbol_table(), module->m_ir));
+    if (flags & DUMP_EXE)
+        std::println(std::cout, "{}", module->m_exe->get_dump());
+    if (flags & DUMP_DEFTABLE) {
+        std::println(
+            std::cout,
+            "{}",
+            ansi::format(
+                std::format("[deftable .{}]", name),
+                ansi::Foreground::Yellow,
+                ansi::Background::Black,
+                ansi::Style::Bold
+            )
+        );
 
-    for (const auto& def : module->mDefs) {
-      std::println(std::cout, "  {}", def.second->dump());
+        for (const auto& def: module->m_defs) {
+            std::println(std::cout, "  {}", def.second->get_dump());
+        }
     }
-  }
 
-  if (failed) {
-    for (Module* module = importee; module != nullptr;
-         module = module->mImportee)
-      spdlog::info(std::format("Imported by module '{}'", module->mName));
+    if (failed) {
+        for (Module* module = importee; module != nullptr; module = module->m_importee)
+            spdlog::info(std::format("Imported by module '{}'", module->m_name));
 
-    if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
-      spdlog::warn("Dump may be invalid due to compilation failure");
+        if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
+            spdlog::warn("Dump may be invalid due to compilation failure");
+        }
     }
-  } else {
-    manager->popImport();
-    return module;
-  }
+    else {
+        manager->pop_import();
+        return module;
+    }
 
-  manager->popImport();
-  return nullptr;
+    manager->pop_import();
+    return nullptr;
 }
 
 struct ModuleInfo
 {
-  enum class Kind
-  {
-    SOURCE,
-    BINARY,
-    NATIVE,
-  } kind;
+    enum class Kind
+    {
+        SOURCE,
+        BINARY,
+        NATIVE,
+    } kind;
 
-  via::fs::path path;
+    via::fs::path path;
 };
 
 struct ModuleCandidate
 {
-  ModuleInfo::Kind kind;
-  std::string name;
+    ModuleInfo::Kind kind;
+    std::string name;
 };
 
-static via::Option<ModuleInfo> resolveImportPath(
-  const via::fs::path& root,
-  const via::QualName& path,
-  const via::ModuleManager& manager)
+static via::Option<ModuleInfo>
+resolveImportPath(const via::fs::path& root, const via::QualName& path, const via::ModuleManager& manager)
 {
-  via::debug::require(!path.empty(), "bad import path");
+    via::debug::require(!path.empty(), "bad import path");
 
-  via::QualName pathSlice = path;
-  auto& moduleName = pathSlice.back();
-  pathSlice.pop_back();
+    auto path_slice = path;
+    auto& module_name = path_slice.back();
+    path_slice.pop_back();
 
-  // Lambda to try candidates in a given base path
-  auto tryCandidatesInPath =
-    [&](const via::fs::path& basePath) -> via::Option<ModuleInfo> {
-    via::fs::path path = basePath;
-    for (const auto& node : pathSlice) {
-      path /= node;
-    }
+    // Lambda to try candidates in a given base path
+    auto try_dir_candidates = [&](const via::fs::path& dir) -> via::Option<ModuleInfo> {
+        via::fs::path path = dir;
+        for (const auto& node: path_slice) {
+            path /= node;
+        }
 
-    ModuleCandidate candidates[] = {
-      {ModuleInfo::Kind::SOURCE, moduleName + ".via"},
-      {ModuleInfo::Kind::BINARY, moduleName + ".viac"},
+        ModuleCandidate candidates[] = {
+            {ModuleInfo::Kind::SOURCE, module_name + ".via"},
+            {ModuleInfo::Kind::BINARY, module_name + ".viac"},
 #ifdef VIA_PLATFORM_LINUX
-      {ModuleInfo::Kind::NATIVE, moduleName + ".so"},
+            {ModuleInfo::Kind::NATIVE, module_name + ".so"},
 #elifdef VIA_PLATFORM_WINDOWS
-      {ModuleInfo::Kind::NATIVE, moduleName + ".dll"},
+            {ModuleInfo::Kind::NATIVE, module_name + ".dll"},
 #endif
-    };
+        };
 
-    auto tryPath = [&](const via::fs::path& candidate,
-                       ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
-      if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate)) {
-        return ModuleInfo{.kind = kind, .path = candidate};
-      } else {
+        auto try_path = [&](const via::fs::path& candidate, ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
+            if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate))
+                return ModuleInfo{.kind = kind, .path = candidate};
+            else
+                return via::nullopt;
+        };
+
+        for (const auto& c: candidates) {
+            if (auto result = try_path(path / c.name, c.kind)) {
+                return result;
+            }
+        }
+
+        // Fallback: module in a subfolder "module.via"
+        auto module_path = path / module_name / "module.via";
+        if (auto result = try_path(module_path, ModuleInfo::Kind::SOURCE)) {
+            return result;
+        }
+
         return via::nullopt;
-      }
     };
 
-    for (const auto& c : candidates) {
-      if (auto result = tryPath(path / c.name, c.kind)) {
-        return result;
-      }
-    }
-
-    // Fallback: module in a subfolder "module.via"
-    auto modulePath = path / moduleName / "module.via";
-    if (auto result = tryPath(modulePath, ModuleInfo::Kind::SOURCE)) {
-      return result;
+    for (const auto& import_path: manager.get_import_paths()) {
+        if (auto result = try_dir_candidates(import_path)) {
+            return result;
+        }
     }
 
     return via::nullopt;
-  };
-
-  for (const auto& importPath : manager.getImportPaths()) {
-    if (auto result = tryCandidatesInPath(importPath)) {
-      return result;
-    }
-  }
-
-  return via::nullopt;
 }
 
 via::Option<const via::Def*> via::Module::lookup(via::SymbolId symbol)
 {
-  if (auto it = mDefs.find(symbol); it != mDefs.end()) {
-    return it->second;
-  }
-  return nullopt;
+    if (auto it = m_defs.find(symbol); it != m_defs.end()) {
+        return it->second;
+    }
+    return nullopt;
 }
 
-via::Expected<via::Module*> via::Module::resolveImport(
-  const QualName& path,
-  const ast::StmtImport* importDecl)
+via::Expected<via::Module*> via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
 {
-  debug::require(mManager, "unmanaged module detected");
+    debug::require(m_manager, "unmanaged module detected");
 
-  auto module = resolveImportPath(mPath, path, *mManager);
-  if (!module.hasValue()) {
-    return Unexpected(std::format("Module '{}' not found", toString(path)));
-  }
+    auto module = resolveImportPath(m_path, path, *m_manager);
+    if (!module.has_value()) {
+        return Unexpected(std::format("Module '{}' not found", to_string(path)));
+    }
 
-  if ((mPerms & Perms::IMPORT) == 0u) {
-    return Unexpected("Current module lacks import capabilties");
-  }
+    if ((m_perms & Perms::IMPORT) == 0u) {
+        return Unexpected("Current module lacks import capabilties");
+    }
 
-  switch (module->kind) {
-    case ModuleInfo::Kind::SOURCE:
-      return Module::loadSourceFile(mManager, this, path.back().c_str(),
-                                    module->path, importDecl, mPerms, mFlags);
-    case ModuleInfo::Kind::NATIVE:
-      return Module::loadNativeObject(mManager, this, path.back().c_str(),
-                                      module->path, importDecl, mPerms, mFlags);
-    default:
-      debug::todo("module types");
-  }
+    switch (module->kind) {
+        case ModuleInfo::Kind::SOURCE:
+            return Module::load_source_file(
+                m_manager,
+                this,
+                path.back().c_str(),
+                module->path,
+                ast_decl,
+                m_perms,
+                m_flags
+            );
+        case ModuleInfo::Kind::NATIVE:
+            return Module::load_native_object(
+                m_manager,
+                this,
+                path.back().c_str(),
+                module->path,
+                ast_decl,
+                m_perms,
+                m_flags
+            );
+        default:
+            debug::todo("module types");
+    }
 }

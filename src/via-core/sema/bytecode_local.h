@@ -13,32 +13,30 @@
 #include <via/types.h>
 #include "module/symbol.h"
 
-namespace via
-{
-
-namespace sema
-{
+namespace via {
+namespace sema {
 
 class BytecodeLocal final
 {
- public:
-  struct Ref
-  {
-    u16 id;
-    BytecodeLocal& local;
-  };
+  public:
+    struct Ref
+    {
+        u16 id;
+        BytecodeLocal& local;
+    };
 
- public:
-  BytecodeLocal() = default;
-  BytecodeLocal(SymbolId symbol) : mSymbol(symbol) {}
+  public:
+    BytecodeLocal() = default;
+    BytecodeLocal(SymbolId symbol) :
+        m_symbol(symbol)
+    {}
 
- public:
-  SymbolId getSymbol() const noexcept { return mSymbol; }
+  public:
+    SymbolId get_symbol() const noexcept { return m_symbol; }
 
- protected:
-  SymbolId mSymbol;
+  protected:
+    SymbolId m_symbol;
 };
 
-}  // namespace sema
-
-}  // namespace via
+} // namespace sema
+} // namespace via

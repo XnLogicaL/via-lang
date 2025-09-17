@@ -11,52 +11,51 @@
 
 #include <via/config.h>
 #include <via/types.h>
-#include "option.h"
+#include "support/option.h"
 
-namespace via
-{
+namespace via {
 
 template <typename T>
 struct view
 {
-  using type = std::reference_wrapper<T>;
+    using type = std::reference_wrapper<T>;
 };
 
 template <>
 struct view<std::string>
 {
-  using type = std::string_view;
+    using type = std::string_view;
 };
 
 template <typename T, typename Id = u64>
 class InternTable
 {
- public:
-  using view_type = typename view<T>::type;
+  public:
+    using view_type = typename view<T>::type;
 
- public:
-  Id intern(const T& val)
-  {
-    auto [it, inserted] = mMap.try_emplace(val, mNextId);
-    if (inserted) {
-      mReverse[mNextId] = val;
-      mNextId++;
+  public:
+    Id intern(const T& val)
+    {
+        auto [it, inserted] = m_map.try_emplace(val, m_next_id);
+        if (inserted) {
+            m_reverse[m_next_id] = val;
+            m_next_id++;
+        }
+        return it->second;
     }
-    return it->second;
-  }
 
-  Option<view_type> lookup(Id id) const
-  {
-    if (auto it = mReverse.find(id); it != mReverse.end()) {
-      return view_type(it->second);
+    Option<view_type> lookup(Id id) const
+    {
+        if (auto it = m_reverse.find(id); it != m_reverse.end()) {
+            return view_type(it->second);
+        }
+        return nullopt;
     }
-    return nullopt;
-  }
 
- protected:
-  usize mNextId = 0;
-  std::unordered_map<T, Id> mMap;
-  std::unordered_map<Id, T> mReverse;
+  protected:
+    usize m_next_id = 0;
+    std::unordered_map<T, Id> m_map;
+    std::unordered_map<Id, T> m_reverse;
 };
 
-}  // namespace via
+} // namespace via

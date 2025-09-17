@@ -11,21 +11,31 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "instruction.h"
+#include "machine.h"
 
 namespace via {
 
-struct SourceLoc
+class Closure final
 {
-    usize begin;
-    usize end;
-};
+  public:
+    Closure(const usize argc, const Instruction* pc) :
+        m_argc(argc),
+        m_bytecode(pc)
+    {}
 
-struct RelSourceLoc
-{
-    usize line;
-    usize offset;
+    static Closure* construct(VirtualMachine* vm, const usize argc, const Instruction* pc) noexcept
+    {
+        return vm->get_allocator().emplace<Closure>(argc, pc);
+    }
 
-    RelSourceLoc(const std::string& source, SourceLoc loc);
+  public:
+    auto argc() const noexcept { return m_argc; }
+    auto* bytecode() const noexcept { return m_bytecode; }
+
+  private:
+    const usize m_argc;
+    const Instruction* m_bytecode;
 };
 
 } // namespace via
