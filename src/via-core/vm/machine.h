@@ -25,53 +25,77 @@ CONSTANT usize REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
 }
 } // namespace config
 
+class VirtualMachine;
+
+namespace detail {
+
+template <bool SingleStep, bool OverridePC>
+void __execute(VirtualMachine* vm);
+
+}
+
+enum CallFlags : u64
+{
+    CF_NONE = 0,
+    CF_PROTECT = 1 << 0,
+    CF_ALL = std::numeric_limits<u64>::max(),
+};
+
 class Value;
 class Snapshot
 {
   public:
+    explicit Snapshot(VirtualMachine* vm) noexcept;
+
+  public:
+    std::string to_string() const noexcept;
+
+  public:
     const uptr stack_ptr;
     const uptr frame_ptr;
     const Instruction program_counter;
-    const std::unique_ptr<uptr[]> stack;
-    const std::unique_ptr<Value*[]> registers;
+    const std::vector<uptr> stack;
+    const std::vector<Value*> registers;
 };
 
 class ValueRef;
+class ModuleManager;
 class VirtualMachine final
 {
   public:
-    // Internal executor
     template <bool, bool>
-    friend void execute_impl(VirtualMachine*);
+    friend void detail::__execute(VirtualMachine*);
+    friend class Snapshot;
 
   public:
-    VirtualMachine(const Executable* exe) :
-        m_exe(exe),
-        m_pc(exe->bytecode().data()),
-        m_alloc(),
-        m_stack(m_alloc),
-        m_registers(std::make_unique<Value*[]>(config::vm::REGISTER_COUNT))
+    VirtualMachine(Module* module, const Executable* exe)
+        : m_exe(exe),
+          m_module(module),
+          m_pc(exe->bytecode().data()),
+          m_alloc(),
+          m_stack(m_alloc),
+          m_registers(std::make_unique<Value*[]>(config::vm::REGISTER_COUNT))
     {
         debug::require(!exe->bytecode().empty(), "illformed header");
     }
 
   public:
     Stack<uptr>& get_stack() { return m_stack; }
-    Allocator& get_allocator() { return m_alloc; }
+    ScopedAllocator& get_allocator() { return m_alloc; }
     ValueRef get_constant(u16 id);
-    ValueRef push_local(ValueRef val);
+    void push_local(ValueRef val);
     ValueRef get_local(usize sp);
-    void set_local(usize sp, ValueRef val);
-    void call(ValueRef callee);
+    void call(ValueRef callee, CallFlags flags = CF_NONE);
+    void return_(ValueRef value);
     void execute();
     void execute_one();
-    Snapshot create_snapshot();
 
   protected:
     const Executable* m_exe;
-    Allocator m_alloc;
-    uptr* m_sp;       // saved stack pointer
-    const uptr* m_fp; // frame pointer
+    Module* m_module;
+    ScopedAllocator m_alloc;
+    uptr* m_sp;           // saved stack pointer
+    uptr* m_fp = nullptr; // frame pointer
     const Instruction* m_pc;
     Stack<uptr> m_stack;
     std::unique_ptr<Value*[]> m_registers;

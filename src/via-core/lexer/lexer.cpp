@@ -20,11 +20,15 @@ struct TokenReprPair
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-    {"var", KW_VAR},     {"const", KW_CONST},   {"fn", KW_FN},      {"type", KW_TYPE},     {"while", KW_WHILE},
-    {"for", KW_FOR},     {"if", KW_IF},         {"in", KW_IN},      {"of", KW_OF},         {"else", KW_ELSE},
-    {"do", KW_DO},       {"and", KW_AND},       {"or", KW_OR},      {"not", KW_NOT},       {"return", KW_RETURN},
-    {"as", KW_AS},       {"import", KW_IMPORT}, {"mod", KW_MODULE}, {"struct", KW_STRUCT}, {"enum", KW_ENUM},
-    {"using", KW_USING}, {"bool", KW_BOOL},     {"int", KW_INT},    {"float", KW_FLOAT},   {"string", KW_STRING},
+    {"var", KW_VAR},       {"const", KW_CONST},   {"fn", KW_FN},
+    {"type", KW_TYPE},     {"while", KW_WHILE},   {"for", KW_FOR},
+    {"if", KW_IF},         {"in", KW_IN},         {"of", KW_OF},
+    {"else", KW_ELSE},     {"do", KW_DO},         {"and", KW_AND},
+    {"or", KW_OR},         {"not", KW_NOT},       {"return", KW_RETURN},
+    {"as", KW_AS},         {"import", KW_IMPORT}, {"mod", KW_MODULE},
+    {"struct", KW_STRUCT}, {"enum", KW_ENUM},     {"using", KW_USING},
+    {"bool", KW_BOOL},     {"int", KW_INT},       {"float", KW_FLOAT},
+    {"string", KW_STRING},
 };
 
 static constexpr TokenReprPair OPERATORS[] = {
@@ -104,14 +108,14 @@ static consteval via::usize max_operator_length()
 static bool is_numeric(via::Token::Kind* kind, char c)
 {
     switch (*kind) {
-        case LIT_INT:
-            return isdigit(c) || (c == '.' && *kind != LIT_FLOAT); // decimal
-        case LIT_XINT:
-            return isxdigit(c); // hexadecimal
-        case LIT_BINT:
-            return c == '0' || c == '1'; // binary
-        default:
-            break;
+    case LIT_INT:
+        return isdigit(c) || (c == '.' && *kind != LIT_FLOAT); // decimal
+    case LIT_XINT:
+        return isxdigit(c); // hexadecimal
+    case LIT_BINT:
+        return c == '0' || c == '1'; // binary
+    default:
+        break;
     }
 
     return false;
@@ -241,9 +245,11 @@ via::Token* via::Lexer::read_identifier()
 
     if (token->size == strlen("nil") && strncmp(token->lexeme, "nil", token->size) == 0)
         token->kind = LIT_NIL;
-    else if (token->size == strlen("true") && strncmp(token->lexeme, "true", token->size) == 0)
+    else if (token->size == strlen("true") &&
+             strncmp(token->lexeme, "true", token->size) == 0)
         token->kind = LIT_TRUE;
-    else if (token->size == strlen("false") && strncmp(token->lexeme, "false", token->size) == 0)
+    else if (token->size == strlen("false") &&
+             strncmp(token->lexeme, "false", token->size) == 0)
         token->kind = LIT_FALSE;
 
     if (token->kind == IDENTIFIER && c == '!') {

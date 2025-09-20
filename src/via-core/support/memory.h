@@ -10,34 +10,50 @@
 #pragma once
 
 #include <mimalloc.h>
+#include <mimalloc/internal.h>
+#include <vector>
 #include <via/config.h>
 #include <via/types.h>
-#include "support/utility.h"
+#include "debug.h"
+#include "utility.h"
 
 namespace via {
 namespace detail {
 
-template <typename T, typename... Args>
-void construct_at(T* dst, Args&&... args)
+struct ObjectEntry
 {
-    (void) (new (dst) T(std::forward<Args>(args)...));
+    void* ptr;
+    void (*dtor)(void*);
+    inline void operator()() const noexcept { dtor(ptr); }
+};
+
+using ObjectRegistry = std::vector<ObjectEntry>;
+
+template <typename T, typename... Args>
+[[gnu::hot]] inline void __construct_at(ObjectRegistry* registry, T* dst, Args&&... args)
+{
+    new (dst) T(forward<Args>(args)...);
+    registry->push_back({.ptr = dst, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
 }
 
 template <typename T, typename... Args>
-void construct_range_at(T* dst, usize sz, Args&&... args)
+[[gnu::hot]] inline void
+__construct_range_at(ObjectRegistry* registry, T* dst, usize size, Args&&... args)
 {
-    for (usize i = 0; i < sz; i++)
-        construct_at(dst + i, std::forward<Args>(args)...);
+    for (T* ptr = dst; ptr < dst + size; ptr++) {
+        __construct_at(registry, ptr, forward<Args>(args)...);
+        registry->push_back({.ptr = ptr, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
+    }
 }
 
 } // namespace detail
 
-struct StdAllocator
+struct DefaultAllocator
 {
     template <typename T>
-    static T* alloc(usize sz)
+    static T* alloc(usize size)
     {
-        return (T*) std::calloc(sz, sizeof(T));
+        return (T*) std::malloc(size * sizeof(T));
     }
 
     template <typename T>
@@ -56,9 +72,9 @@ struct MiAllocator
     }
 
     template <typename T>
-    static T* alloc(usize sz)
+    static T* alloc(usize size)
     {
-        return (T*) mi_heap_calloc(get_allocator(), sz, sizeof(T));
+        return (T*) mi_heap_calloc(get_allocator(), size, sizeof(T));
     }
 
     template <typename T>
@@ -68,107 +84,123 @@ struct MiAllocator
     }
 };
 
-template <typename Alloc = StdAllocator>
+template <typename Alloc = DefaultAllocator>
 class BumpAllocator final
 {
   public:
-    BumpAllocator(usize sz) :
-        m_base(Alloc::template alloc<std::byte>(sz)),
-        m_cursor(m_base)
+    BumpAllocator(usize size)
+        : m_base(Alloc::template alloc<std::byte>(size)),
+          m_cursor(m_base)
     {}
     ~BumpAllocator() { Alloc::template free<std::byte>(m_base); }
 
   public:
-    template <typename T>
-    [[nodiscard]] T* alloc()
+    [[nodiscard]] inline void* alloc(usize size)
     {
-        T* ptr = (T*) m_cursor;
-        m_cursor += sizeof(T);
-        detail::construct_at(ptr);
-        return ptr;
-    }
-
-    template <typename T>
-    [[nodiscard]] T* alloc(usize sz)
-    {
-        T* ptr = (T*) m_cursor;
-        m_cursor += sizeof(T) * sz;
-        detail::construct_range_at(ptr, sz);
+        void* ptr = m_cursor;
+        m_cursor += size;
         return ptr;
     }
 
     template <typename T, typename... Args>
-    [[nodiscard]] T* emplace(Args&&... args)
+    [[nodiscard]] inline T* emplace(Args&&... args)
     {
         T* ptr = (T*) m_cursor;
         m_cursor += sizeof(T);
-        detail::construct_at(ptr, std::forward<Args>(args)...);
+        detail::__construct_at(&m_registry, ptr, std::forward<Args>(args)...);
         return ptr;
     }
 
     template <typename T, typename... Args>
-    [[nodiscard]] T* emplace(usize sz, Args&&... args)
+    [[nodiscard]] inline T* emplace_array(usize size, Args&&... args)
     {
         T* ptr = (T*) m_cursor;
-        m_cursor += sizeof(T) * sz;
-        detail::construct_range_at(ptr, sz, std::forward<Args>(args)...);
+        m_cursor += sizeof(T) * size;
+        detail::__construct_range_at(&m_registry, ptr, size, std::forward<Args>(args)...);
         return ptr;
     }
 
   private:
     std::byte* m_base;
     std::byte* m_cursor;
+    detail::ObjectRegistry m_registry;
 };
 
-class Allocator final
+class ScopedAllocator final
 {
   public:
-    Allocator() = default;
-    ~Allocator() { mi_heap_destroy(m_heap); }
+    ScopedAllocator() = default;
+    ~ScopedAllocator()
+    {
+        for (const auto& entry: m_registry)
+            entry();
+        mi_heap_destroy(m_heap);
+    }
 
-    NO_COPY(Allocator);
-    NO_MOVE(Allocator);
+    NO_COPY(ScopedAllocator);
+    NO_MOVE(ScopedAllocator);
+
+    bool operator==(const ScopedAllocator& other) { return m_heap == other.m_heap; }
+    bool operator!=(const ScopedAllocator& other) { return m_heap != other.m_heap; }
 
   public:
-    void free(void* ptr) { mi_free(ptr); }
-    [[nodiscard]] bool owns(void* ptr) { return mi_heap_check_owned(m_heap, ptr); }
-    [[nodiscard]] void* alloc(usize size) { return mi_heap_malloc(m_heap, size); }
-
-    template <typename T>
-    [[nodiscard]] T* alloc()
+    [[nodiscard]] inline bool owns(void* ptr) noexcept
     {
-        return (T*) mi_heap_malloc(m_heap, sizeof(T));
+        return mi_heap_check_owned(m_heap, ptr);
+    }
+
+    [[nodiscard]] inline void* alloc(usize size) noexcept
+    {
+        return mi_heap_malloc(m_heap, size);
     }
 
     template <typename T>
-    [[nodiscard]] T* alloc(usize count)
+    inline void free(T* ptr) noexcept(std::is_nothrow_destructible_v<T>)
     {
-        return (T*) mi_heap_malloc(m_heap, count * sizeof(T));
+        debug::require(owns(ptr), "free() called on ptr not owned by allocator");
+
+        if constexpr (std::is_destructible_v<T>)
+            ptr->~T();
+        mi_free(ptr);
+    }
+
+    template <typename T, typename... Args>
+        requires(std::is_constructible_v<T, Args...>)
+    [[nodiscard]] inline T* emplace(Args&&... args)
+        noexcept(std::is_nothrow_constructible_v<T, Args...>)
+    {
+        T* buffer = (T*) alloc(sizeof(T));
+        detail::__construct_at(&m_registry, buffer, std::forward<Args>(args)...);
+        return buffer;
     }
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] T* emplace(Args&&... args)
+    [[nodiscard]] inline T* emplace_array(usize count, Args&&... args)
+        noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
-        T* mem = (T*) mi_heap_malloc(m_heap, sizeof(T));
-        detail::construct_at(mem, std::forward<Args>(args)...);
-        return mem;
+        T* buffer = (T*) alloc(count * sizeof(T));
+        detail::__construct_range_at(
+            &m_registry,
+            buffer,
+            count,
+            std::forward<Args>(args)...
+        );
+        return buffer;
     }
 
-    template <typename T, typename... Args>
-        requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] T* emplace(usize count, Args&&... args)
+    [[nodiscard]] inline char* strdup(const char* str) noexcept
     {
-        T* mem = (T*) mi_heap_malloc(m_heap, count * sizeof(T));
-        detail::construct_range_at(mem, count, std::forward<Args>(args)...);
-        return mem;
+        return mi_heap_strdup(m_heap, str);
     }
-
-    [[nodiscard]] char* strdup(const char* str) { return mi_heap_strdup(m_heap, str); }
-    [[nodiscard]] char* strndup(const char* str, usize n) { return mi_heap_strndup(m_heap, str, n); }
+    [[nodiscard]] inline char* strndup(const char* str, usize n) noexcept
+    {
+        return mi_heap_strndup(m_heap, str, n);
+    }
 
   private:
     mi_heap_t* m_heap = mi_heap_new();
+    detail::ObjectRegistry m_registry;
 };
 
 } // namespace via

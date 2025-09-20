@@ -22,10 +22,10 @@ using TokenTree = std::vector<Token*>;
 class Lexer final
 {
   public:
-    Lexer(const std::string& source) :
-        m_source(source),
-        m_cursor(source.data()),
-        m_end(source.data() + source.size() - 1)
+    Lexer(const std::string& source)
+        : m_source(source),
+          m_cursor(source.data()),
+          m_end(source.data() + source.size() - 1)
     {}
 
   public:
@@ -41,7 +41,7 @@ class Lexer final
     bool skip_comment();
 
   private:
-    Allocator m_alloc;
+    ScopedAllocator m_alloc;
     const std::string& m_source;
     const char* m_cursor;
     const char* m_end;

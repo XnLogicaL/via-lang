@@ -25,8 +25,16 @@ namespace via {
 template <typename Derived, typename... Bases>
 concept derived_from = (std::derived_from<Derived, Bases> || ...);
 
-namespace detail {
+template <typename T>
+concept default_constructible = std::is_default_constructible_v<T>;
 
+template <typename T>
+concept trivially_default_constructible = std::is_trivially_default_constructible_v<T>;
+
+template <typename T, template <typename> typename... Concepts>
+concept all = (Concepts<T>::value && ...);
+
+namespace detail {
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
 inline std::string __demangle(const char* name)
 {

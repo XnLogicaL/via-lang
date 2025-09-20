@@ -13,6 +13,7 @@
 #include <via/types.h>
 #include "ir/ir.h"
 #include "sema/type.h"
+#include "vm/closure.h"
 
 namespace via {
 
@@ -20,8 +21,6 @@ class Module;
 class ValueRef;
 class CallInfo;
 struct Def;
-
-using NativeCallback = ValueRef (*)(CallInfo& ci);
 
 enum class ImplKind
 {
@@ -59,9 +58,9 @@ struct Def
     virtual SymbolId get_identity() const = 0;
     virtual std::string get_dump() const = 0;
 
-    static Def* from(Allocator& alloc, const ir::Stmt* node);
+    static Def* from(ScopedAllocator& alloc, const ir::Stmt* node);
     static Def* function(
-        Allocator& alloc,
+        ScopedAllocator& alloc,
         const NativeCallback callback,
         const sema::Type* return_type,
         std::initializer_list<DefParm> parameters

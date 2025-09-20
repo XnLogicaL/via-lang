@@ -38,7 +38,10 @@ size_t std::hash<sema::DictKey>::operator()(const sema::DictKey& key) const noex
     return seed;
 }
 
-bool std::equal_to<sema::DictKey>::operator()(const sema::DictKey& a, const sema::DictKey& b) const noexcept
+bool std::equal_to<sema::DictKey>::operator()(
+    const sema::DictKey& a,
+    const sema::DictKey& b
+) const noexcept
 {
     return a.key == b.key && a.val == b.val;
 }
@@ -50,7 +53,10 @@ size_t std::hash<sema::FuncKey>::operator()(const sema::FuncKey& key) const noex
     return seed;
 }
 
-bool std::equal_to<sema::FuncKey>::operator()(const sema::FuncKey& a, const sema::FuncKey& b) const noexcept
+bool std::equal_to<sema::FuncKey>::operator()(
+    const sema::FuncKey& a,
+    const sema::FuncKey& b
+) const noexcept
 {
     if (a.result != b.result)
         return false;
@@ -67,13 +73,20 @@ size_t std::hash<sema::UserKey>::operator()(const sema::UserKey& key) const noex
     return hash_ptr(key.decl);
 }
 
-bool std::equal_to<sema::UserKey>::operator()(const sema::UserKey& a, const sema::UserKey& b) const noexcept
+bool std::equal_to<sema::UserKey>::operator()(
+    const sema::UserKey& a,
+    const sema::UserKey& b
+) const noexcept
 {
     return a.decl == b.decl;
 }
 
 template <typename Tp, typename Key, typename... Args>
-static const Tp* instantiate_base(via::BumpAllocator<>& alloc, std::unordered_map<Key, const Tp*>& map, Args&&... args)
+static const Tp* instantiate_base(
+    via::BumpAllocator<>& alloc,
+    std::unordered_map<Key, const Tp*>& map,
+    Args&&... args
+)
 {
     Key key(args...);
     if (auto it = map.find(key); it != map.end()) {
@@ -104,7 +117,8 @@ const sema::DictType* sema::TypeContext::get_dict(const Type* key, const Type* v
     }];
 }
 
-const sema::FuncType* sema::TypeContext::get_function(const Type* res, std::vector<const Type*> tps)
+const sema::FuncType*
+sema::TypeContext::get_function(const Type* res, std::vector<const Type*> tps)
 {
     return m_funcs[FuncKey{
         .result = res,
@@ -120,75 +134,75 @@ const sema::UserType* sema::TypeContext::get_user(const ast::StmtTypeDecl* decl)
 const sema::Type* sema::TypeContext::instantiate(const Type* tp, const TypeEnv& env)
 {
     switch (tp->kind) {
-        case Type::Kind::Builtin:
-        case Type::Kind::User:
-            return tp; // already canonical, no params
+    case Type::Kind::Builtin:
+    case Type::Kind::User:
+        return tp; // already canonical, no params
 
-        case Type::Kind::TemplateParam: {
-            auto* parm = static_cast<const TemplateParamType*>(tp);
+    case Type::Kind::TemplateParam: {
+        auto* parm = static_cast<const TemplateParamType*>(tp);
 
-            if (auto* rs = env.lookup(parm->depth, parm->index)) {
-                return rs; // fully substituted here
-            }
-
-            return tp; // still dependent
+        if (auto* rs = env.lookup(parm->depth, parm->index)) {
+            return rs; // fully substituted here
         }
 
-        case Type::Kind::SubstParam: {
-            auto* sbs = static_cast<const SubstParamType*>(tp);
-            auto* rs = instantiate(sbs->replacement, env);
+        return tp; // still dependent
+    }
 
-            if (rs == sbs->replacement) {
-                return tp;
-            }
+    case Type::Kind::SubstParam: {
+        auto* sbs = static_cast<const SubstParamType*>(tp);
+        auto* rs = instantiate(sbs->replacement, env);
 
-            return m_alloc.emplace<SubstParamType>(sbs->parm, rs);
+        if (rs == sbs->replacement) {
+            return tp;
         }
 
-        case Type::Kind::Array: {
-            auto* at = static_cast<const ArrayType*>(tp);
-            auto* tmp = instantiate(at->elem, env);
-            return (tmp == at->elem) ? tp : get_array(tmp);
+        return m_alloc.emplace<SubstParamType>(sbs->parm, rs);
+    }
+
+    case Type::Kind::Array: {
+        auto* at = static_cast<const ArrayType*>(tp);
+        auto* tmp = instantiate(at->elem, env);
+        return (tmp == at->elem) ? tp : get_array(tmp);
+    }
+
+    case Type::Kind::Dict: {
+        auto* dt = static_cast<const DictType*>(tp);
+        auto* key = instantiate(dt->key, env);
+        auto* val = instantiate(dt->val, env);
+        return (key == dt->key && val == dt->val) ? tp : get_dict(key, val);
+    }
+
+    case Type::Kind::Function: {
+        auto* ft = static_cast<const FuncType*>(tp);
+        std::vector<const Type*> tps;
+        tps.reserve(ft->params.size());
+
+        bool same = true;
+        for (auto* par: ft->params) {
+            auto* np = instantiate(par, env);
+            same &= (np == par);
+            tps.push_back(np);
         }
 
-        case Type::Kind::Dict: {
-            auto* dt = static_cast<const DictType*>(tp);
-            auto* key = instantiate(dt->key, env);
-            auto* val = instantiate(dt->val, env);
-            return (key == dt->key && val == dt->val) ? tp : get_dict(key, val);
+        auto* rs = instantiate(ft->result, env);
+        same &= (rs == ft->result);
+        return same ? tp : get_function(rs, tps);
+    }
+
+    case Type::Kind::TemplateSpec: {
+        auto* S = static_cast<const TemplateSpecType*>(tp);
+        std::vector<const Type*> args;
+        args.reserve(S->args.size());
+
+        bool same = true;
+        for (auto* arg: S->args) {
+            auto* na = instantiate(arg, env);
+            same &= (na == arg);
+            args.push_back(na);
         }
 
-        case Type::Kind::Function: {
-            auto* ft = static_cast<const FuncType*>(tp);
-            std::vector<const Type*> tps;
-            tps.reserve(ft->params.size());
-
-            bool same = true;
-            for (auto* par: ft->params) {
-                auto* np = instantiate(par, env);
-                same &= (np == par);
-                tps.push_back(np);
-            }
-
-            auto* rs = instantiate(ft->result, env);
-            same &= (rs == ft->result);
-            return same ? tp : get_function(rs, tps);
-        }
-
-        case Type::Kind::TemplateSpec: {
-            auto* S = static_cast<const TemplateSpecType*>(tp);
-            std::vector<const Type*> args;
-            args.reserve(S->args.size());
-
-            bool same = true;
-            for (auto* arg: S->args) {
-                auto* na = instantiate(arg, env);
-                same &= (na == arg);
-                args.push_back(na);
-            }
-
-            return same ? tp : get_template_spec(S->primary, args);
-        }
+        return same ? tp : get_template_spec(S->primary, args);
+    }
     }
 
     return tp; // defensive

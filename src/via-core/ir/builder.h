@@ -59,13 +59,13 @@ class IRBuilder final
     friend const ir::Stmt* detail::ast_lower_stmt(IRBuilder&, const Stmt*) noexcept;
 
   public:
-    IRBuilder(via::Module* module, const SyntaxTree& ast, DiagContext& diags) :
-        m_module(module),
-        m_ast(ast),
-        m_alloc(module->get_allocator()),
-        m_type_ctx(module->get_manager()->get_type_context()),
-        m_symbol_table(module->get_manager()->get_symbol_table()),
-        m_diags(diags)
+    IRBuilder(via::Module* module, const SyntaxTree& ast, DiagContext& diags)
+        : m_module(module),
+          m_ast(ast),
+          m_alloc(module->get_allocator()),
+          m_type_ctx(module->get_manager()->get_type_context()),
+          m_symbol_table(module->get_manager()->get_symbol_table()),
+          m_diags(diags)
     {}
 
   public:
@@ -90,8 +90,14 @@ class IRBuilder final
         return block;
     }
 
-    auto intern_symbol(std::string symbol) noexcept { return m_symbol_table.intern(symbol); }
-    auto intern_symbol(const via::Token& symbol) noexcept { return m_symbol_table.intern(symbol.to_string()); }
+    auto intern_symbol(std::string symbol) noexcept
+    {
+        return m_symbol_table.intern(symbol);
+    }
+    auto intern_symbol(const via::Token& symbol) noexcept
+    {
+        return m_symbol_table.intern(symbol.to_string());
+    }
 
     const ir::Expr* lower_expr(const ast::Expr* expr);
     const ir::Stmt* lower_stmt(const ast::Stmt* stmt);
@@ -99,7 +105,7 @@ class IRBuilder final
   private:
     via::Module* m_module;
     const SyntaxTree& m_ast;
-    Allocator& m_alloc;
+    ScopedAllocator& m_alloc;
     DiagContext& m_diags;
     sema::StackState<sema::IRLocal> m_stack;
     sema::TypeContext& m_type_ctx;

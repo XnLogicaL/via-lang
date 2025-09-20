@@ -22,8 +22,8 @@ class Unexpected final
 
     template <typename... Args>
         requires(std::is_constructible_v<E, Args...>)
-    explicit Unexpected(Args&&... args) :
-        m_unexp(E(std::forward<Args>(args)...))
+    explicit Unexpected(Args&&... args)
+        : m_unexp(E(std::forward<Args>(args)...))
     {}
 
     // Move out the error value by value
@@ -40,7 +40,10 @@ class Unexpected final
 template <typename T>
 class Expected final
 {
-    static_assert(!std::is_same_v<T, Error>, "Expected<T> cannot be instantiated with Error type");
+    static_assert(
+        !std::is_same_v<T, Error>,
+        "Expected<T> cannot be instantiated with Error type"
+    );
 
   public:
     Expected() = delete;
@@ -55,7 +58,10 @@ class Expected final
     Expected(Unexpected<E>&& err) noexcept
     {
         new (&m_storage.err) Error(Error::fail<E>(std::move(err).take_error()));
-        debug::require(m_storage.err.has_error(), "Cannot construct Expected<T> with successful Error");
+        debug::require(
+            m_storage.err.has_error(),
+            "Cannot construct Expected<T> with successful Error"
+        );
         m_has_value = false;
         m_is_valid = true;
     }
@@ -63,9 +69,9 @@ class Expected final
     NO_COPY(Expected)
 
     Expected(Expected&& other
-    ) noexcept(std::is_nothrow_move_constructible_v<T>&& std::is_nothrow_move_constructible_v<Error>) :
-        m_has_value(false),
-        m_is_valid(false)
+    ) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_constructible_v<Error>)
+        : m_has_value(false),
+          m_is_valid(false)
     {
         if (!other.m_is_valid) {
             // other is already invalid/moved-from: we remain invalid
@@ -88,7 +94,7 @@ class Expected final
     }
 
     Expected& operator=(Expected&& other
-    ) noexcept(std::is_nothrow_move_constructible_v<T>&& std::is_nothrow_move_constructible_v<Error>)
+    ) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_constructible_v<Error>)
     {
         if (this == &other)
             return *this;
@@ -164,7 +170,8 @@ class Expected final
         return tmp;
     }
 
-    [[nodiscard]] Error take_error() && noexcept(std::is_nothrow_move_constructible_v<Error>)
+    [[nodiscard]] Error
+    take_error() && noexcept(std::is_nothrow_move_constructible_v<Error>)
     {
         debug::require(has_error(), "Bad Expected<T> access (take_error)");
         Error tmp = std::move(m_storage.err);
@@ -180,7 +187,10 @@ class Expected final
         return has_value() ? get_value() : orelse;
     }
 
-    [[nodiscard]] Error error_or(const Error& orelse) const& noexcept { return has_error() ? get_error() : orelse; }
+    [[nodiscard]] Error error_or(const Error& orelse) const& noexcept
+    {
+        return has_error() ? get_error() : orelse;
+    }
 
   private:
     union Storage {

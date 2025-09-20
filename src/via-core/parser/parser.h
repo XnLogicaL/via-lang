@@ -23,14 +23,14 @@ namespace via {
 class Parser final
 {
   public:
-    Parser(const std::string& source, const TokenTree& ttree, DiagContext& diag) :
-        m_source(source),
-        m_cursor(ttree.cbegin().base()),
-        m_diags(diag)
+    Parser(const std::string& source, const TokenTree& ttree, DiagContext& diag)
+        : m_source(source),
+          m_cursor(ttree.cbegin().base()),
+          m_diags(diag)
     {}
 
   public:
-    Allocator& get_allocator() { return m_alloc; }
+    ScopedAllocator& get_allocator() { return m_alloc; }
     SyntaxTree parse();
 
   private:
@@ -93,7 +93,7 @@ class Parser final
     DiagContext& m_diags;
     const std::string& m_source;
     const Token* const* m_cursor;
-    Allocator m_alloc;
+    ScopedAllocator m_alloc;
 };
 
 } // namespace via

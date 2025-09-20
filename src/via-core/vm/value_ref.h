@@ -19,23 +19,26 @@ class VirtualMachine;
 class ValueRef final
 {
   public:
-    ValueRef(VirtualMachine* vm) :
-        m_ptr(nullptr)
+    friend class VirtualMachine;
+
+  public:
+    ValueRef(VirtualMachine* vm)
+        : m_ptr(nullptr)
     {}
-    ValueRef(VirtualMachine* vm, Value* ptr) :
-        m_ptr(ptr)
+    ValueRef(VirtualMachine* vm, Value* ptr)
+        : m_ptr(ptr)
     {}
 
-    ValueRef(const ValueRef& other) :
-        m_ptr(other.m_ptr)
+    ValueRef(const ValueRef& other)
+        : m_ptr(other.m_ptr)
     {
         if (!other.is_null()) {
             other.m_ptr->m_rc++;
         }
     }
 
-    ValueRef(ValueRef&& other) :
-        m_ptr(other.m_ptr)
+    ValueRef(ValueRef&& other)
+        : m_ptr(other.m_ptr)
     {
         other.m_ptr = nullptr;
     }
@@ -91,20 +94,17 @@ class ValueRef final
     }
 
   public:
-    Value* get() const { return m_ptr; }
-    bool is_null() const { return m_ptr == nullptr; }
+    inline Value* get() const { return m_ptr; }
+    inline bool is_null() const { return m_ptr == nullptr; }
 
-    void free()
+    inline void free()
     {
         debug::require(!is_null(), "free called on NULL reference");
-
-        if (--m_ptr->m_rc == 0) {
-            m_ptr->free();
-            m_ptr = nullptr;
-        }
+        m_ptr->unref();
+        m_ptr = nullptr;
     }
 
-    usize ref_count() const
+    inline usize ref_count() const
     {
         debug::require(!is_null(), "ref_count() called on NULL reference");
         return m_ptr->m_rc;

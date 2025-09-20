@@ -8,6 +8,7 @@
 ** ===================================================== */
 
 #include <csv2/reader.hpp>
+#include <replxx.hxx>
 #include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/spdlog.h>
 #include <via/via.h>
@@ -121,8 +122,19 @@ int main(int argc, char* argv[])
                 flags |= via::Module::DUMP_DEFTABLE;
         }
 
+        if (cli.get<bool>("--no-execute")) {
+            flags |= via::Module::NO_EXECUTION;
+        }
+
+        if (cli.get<bool>("--debug")) {
+            flags |= via::Module::DEBUG;
+        }
+
         if (!fs::exists(lang_dir)) {
-            spdlog::warn("Could not find language core directory (search location {})", lang_dir.string());
+            spdlog::warn(
+                "Could not find language core directory (search location {})",
+                lang_dir.string()
+            );
         }
 
         ModuleManager manager;
@@ -150,7 +162,10 @@ int main(int argc, char* argv[])
             flags
         );
 
-        assert(module.has_value(), module.error_or(via::Error::fail("<no-error>")).to_string());
+        assert(
+            module.has_value(),
+            module.error_or(via::Error::fail("<no-error>")).to_string()
+        );
 
         if (raw_dump_mode == "symtab") {
             std::println(

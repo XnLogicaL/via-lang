@@ -26,29 +26,57 @@ template <typename T>
 class Stack final
 {
   public:
-    Stack(Allocator& pAlloc) :
-        m_alloc(pAlloc),
-        m_base_ptr(m_alloc.alloc<T>(config::vm::STACK_SIZE)),
-        m_stack_ptr(m_base_ptr)
+    explicit Stack(ScopedAllocator& alloc)
+        : m_bp(alloc.emplace_array<T>(config::vm::STACK_SIZE)),
+          m_sp(m_bp)
     {}
 
-  public:
-    Allocator& get_allocator() { return m_alloc; }
+    inline usize size() const { return static_cast<usize>(m_sp - m_bp); }
+    inline usize capacity() const { return config::vm::STACK_SIZE; }
+    inline bool empty() const { return m_sp == m_bp; }
 
-    inline usize size() const { return m_stack_ptr - m_base_ptr; }
-    inline void jump(T* dst) { m_stack_ptr = dst; }
-    inline void jump(usize dst) { m_stack_ptr = m_base_ptr + dst; }
-    inline void push(T val) { *(m_stack_ptr++) = val; }
-    inline T pop() { return *(--m_stack_ptr); }
-    inline T* top() { return m_stack_ptr - 1; }
-    inline T* at(usize idx) { return m_base_ptr + idx; }
-    inline T* begin() { return m_base_ptr; }
-    inline T* end() { return m_stack_ptr - 1; }
+    inline void push(T val)
+    {
+        debug::require(size() < capacity(), "stack overflow");
+        *(m_sp++) = val;
+    }
+
+    inline T pop()
+    {
+        debug::require(!empty(), "stack underflow");
+        return *(--m_sp);
+    }
+
+    inline T& top()
+    {
+        debug::require(!empty(), "stack underflow");
+        return *(m_sp - 1);
+    }
+
+    inline const T& top() const
+    {
+        debug::require(!empty(), "stack underflow");
+        return *(m_sp - 1);
+    }
+
+    inline T& at(usize idx) { return m_bp[idx]; }
+    inline const T& at(usize idx) const { return m_bp[idx]; }
+
+    inline T* begin() { return m_bp; }
+    inline const T* begin() const { return m_bp; }
+
+    inline T* end() { return m_sp; }             // STL-compatible
+    inline const T* end() const { return m_sp; } // points past last element
+
+    inline T* base() { return m_bp; }
+    inline const T* base() const { return m_bp; }
+
+    inline void jump(T* dst) { m_sp = dst; }
+    inline void jump(usize dst) { m_sp = m_bp + dst; }
 
   private:
-    Allocator& m_alloc;
-    T* const m_base_ptr;
-    T* m_stack_ptr;
+    T* const m_bp;
+    T* m_sp;
 };
 
 } // namespace via

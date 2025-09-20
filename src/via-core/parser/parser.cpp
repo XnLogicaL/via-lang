@@ -10,12 +10,12 @@
 #include "parser.h"
 #include <magic_enum/magic_enum.hpp>
 
-#define SAVE_FIRST()         \
-    auto* first = advance(); \
+#define SAVE_FIRST()                                                                     \
+    auto* first = advance();                                                             \
     auto loc = first->location(m_source);
 
-#define SAVE_FIRST_DONT_ADVANCE_THO() \
-    auto* first = peek();             \
+#define SAVE_FIRST_DONT_ADVANCE_THO()                                                    \
+    auto* first = peek();                                                                \
     auto loc = first->location(m_source);
 
 using enum via::Token::Kind;
@@ -28,67 +28,67 @@ struct ParserError
 
     template <typename... Args>
         requires std::is_constructible_v<via::Diagnosis, via::Level, Args...>
-    explicit ParserError(Args&&... args) :
-        diag(via::Level::ERROR, args...)
+    explicit ParserError(Args&&... args)
+        : diag(via::Level::ERROR, args...)
     {}
 };
 
 static bool is_expr_start(via::Token::Kind kind)
 {
     switch (kind) {
-        case IDENTIFIER:
-        case LIT_INT:
-        case LIT_BINT:
-        case LIT_XINT:
-        case LIT_NIL:
-        case LIT_FLOAT:
-        case LIT_STRING:
-        case KW_NOT:
-        case KW_FN:
-        case PAREN_OPEN:
-        case OP_MINUS:
-        case OP_TILDE:
-        case OP_AMP:
-            return true;
-        default:
-            return false;
+    case IDENTIFIER:
+    case LIT_INT:
+    case LIT_BINT:
+    case LIT_XINT:
+    case LIT_NIL:
+    case LIT_FLOAT:
+    case LIT_STRING:
+    case KW_NOT:
+    case KW_FN:
+    case PAREN_OPEN:
+    case OP_MINUS:
+    case OP_TILDE:
+    case OP_AMP:
+        return true;
+    default:
+        return false;
     }
 }
 
 static int bin_prec(via::Token::Kind kind)
 {
     switch (kind) {
-        case KW_OR:
-            return 0;
-        case KW_AND:
-            return 1;
-        case OP_EQ_EQ:
-        case OP_BANG_EQ:
-        case OP_LT:
-        case OP_LT_EQ:
-        case OP_GT:
-        case OP_GT_EQ:
-            return 2;
-        case OP_AMP:
-            return 3;
-        case OP_CARET:
-            return 4;
-        case OP_PIPE:
-            return 5;
-        case OP_SHL:
-        case OP_SHR:
-            return 6;
-        case OP_PLUS:
-        case OP_MINUS:
-            return 7;
-        case OP_STAR:
-        case OP_SLASH:
-        case OP_PERCENT:
-            return 8;
-        case OP_STAR_STAR:
-            return 9;
-        default:
-            return -1;
+    case KW_OR:
+        return 0;
+    case KW_AND:
+        return 1;
+    case OP_EQ_EQ:
+    case OP_BANG_EQ:
+    case OP_LT:
+    case OP_LT_EQ:
+    case OP_GT:
+    case OP_GT_EQ:
+        return 2;
+    case OP_AMP:
+        return 3;
+    case OP_CARET:
+        return 4;
+    case OP_PIPE:
+        return 5;
+    case OP_SHL:
+    case OP_SHR:
+        return 6;
+    case OP_PLUS:
+    case OP_MINUS:
+        return 7;
+    case OP_STAR:
+    case OP_SLASH:
+    case OP_PERCENT:
+        return 8;
+    case OP_STAR_STAR:
+        return 9;
+    default:
+        return -1;
     }
 }
 
@@ -150,7 +150,10 @@ const Path* via::Parser::parse_static_path()
         }
     }
 
-    sp->loc = {sp->path.front()->location(m_source).begin, sp->path.back()->location(m_source).end};
+    sp->loc = {
+        sp->path.front()->location(m_source).begin,
+        sp->path.back()->location(m_source).end
+    };
     return sp;
 }
 
@@ -407,39 +410,39 @@ const Expr* via::Parser::parse_expr_primary()
     SAVE_FIRST_DONT_ADVANCE_THO()
 
     switch (first->kind) {
-        // Literal expression
-        case LIT_INT:
-        case LIT_BINT:
-        case LIT_XINT:
-        case LIT_NIL:
-        case LIT_FLOAT:
-        case LIT_TRUE:
-        case LIT_FALSE:
-        case LIT_STRING:
-            return parse_expr_literal();
-        case IDENTIFIER:
-            return parse_expr_symbol();
-        case PAREN_OPEN:
-            return parse_expr_group_or_tuple();
-        case BRACKET_OPEN:
-            return parse_expr_array();
-        case KW_FN:
-            return parse_expr_lambda();
-        default:
-            throw ParserError(
-                loc,
-                std::format(
-                    "Unexpected token '{}' ({}) while parsing primary expression",
-                    first->to_string(),
-                    magic_enum::enum_name(first->kind)
-                ),
-                Footnote(
-                    Footnote::Kind::HINT,
-                    "Expected INT | BINARY_INT | HEX_INT | 'nil' | FLOAT | 'true' "
-                    "| 'false' | "
-                    "STRING | IDENTIFIER | '(' | ')' | 'fn'"
-                )
-            );
+    // Literal expression
+    case LIT_INT:
+    case LIT_BINT:
+    case LIT_XINT:
+    case LIT_NIL:
+    case LIT_FLOAT:
+    case LIT_TRUE:
+    case LIT_FALSE:
+    case LIT_STRING:
+        return parse_expr_literal();
+    case IDENTIFIER:
+        return parse_expr_symbol();
+    case PAREN_OPEN:
+        return parse_expr_group_or_tuple();
+    case BRACKET_OPEN:
+        return parse_expr_array();
+    case KW_FN:
+        return parse_expr_lambda();
+    default:
+        throw ParserError(
+            loc,
+            std::format(
+                "Unexpected token '{}' ({}) while parsing primary expression",
+                first->to_string(),
+                magic_enum::enum_name(first->kind)
+            ),
+            Footnote(
+                Footnote::Kind::HINT,
+                "Expected INT | BINARY_INT | HEX_INT | 'nil' | FLOAT | 'true' "
+                "| 'false' | "
+                "STRING | IDENTIFIER | '(' | ')' | 'fn'"
+            )
+        );
     }
 }
 
@@ -448,39 +451,39 @@ const Expr* via::Parser::parse_expr_affix()
     const Expr* expr;
 
     switch (peek()->kind) {
-        case KW_NOT:
-        case OP_MINUS:
-        case OP_TILDE:
-        case OP_AMP:
-            expr = parse_expr_unary(expr);
-            break;
-        default:
-            expr = parse_expr_primary();
-            break;
+    case KW_NOT:
+    case OP_MINUS:
+    case OP_TILDE:
+    case OP_AMP:
+        expr = parse_expr_unary(expr);
+        break;
+    default:
+        expr = parse_expr_primary();
+        break;
     }
 
     while (true) {
         switch (peek()->kind) {
-            case KW_AS:
-                expr = parse_expr_cast(expr);
-                break;
-            case KW_IF:
-                expr = parse_expr_ternary(expr);
-                break;
-            case PAREN_OPEN:
-                expr = parse_expr_call(expr);
-                break;
-            case BRACKET_OPEN:
-                expr = parse_expr_subscript(expr);
-                break;
-            case PERIOD:
-                expr = parse_expr_dyn_access(expr);
-                break;
-            case COLON_COLON:
-                expr = parse_expr_st_access(expr);
-                break;
-            default:
-                return expr;
+        case KW_AS:
+            expr = parse_expr_cast(expr);
+            break;
+        case KW_IF:
+            expr = parse_expr_ternary(expr);
+            break;
+        case PAREN_OPEN:
+            expr = parse_expr_call(expr);
+            break;
+        case BRACKET_OPEN:
+            expr = parse_expr_subscript(expr);
+            break;
+        case PERIOD:
+            expr = parse_expr_dyn_access(expr);
+            break;
+        case COLON_COLON:
+            expr = parse_expr_st_access(expr);
+            break;
+        default:
+            return expr;
         }
     }
 }
@@ -565,32 +568,32 @@ const Type* via::Parser::parse_type()
 {
     auto* tok = peek();
     switch (tok->kind) {
-        case LIT_NIL:
-        case KW_BOOL:
-        case KW_INT:
-        case KW_FLOAT:
-        case KW_STRING:
-            return parse_type_builtin();
-        case BRACKET_OPEN:
-            return parse_type_array();
-        case BRACE_OPEN:
-            return parse_type_dict();
-        case KW_FN:
-            return parse_type_function();
-        default:
-            throw ParserError(
-                tok->location(m_source),
-                std::format(
-                    "Unexpected token '{}' ({}) while parsing type",
-                    tok->to_string(),
-                    magic_enum::enum_name(tok->kind)
-                ),
-                Footnote(
-                    Footnote::Kind::HINT,
-                    "Expected 'nil' | 'bool' | 'int' | 'float' | "
-                    "'string' | '[' | '{' | 'fn'"
-                )
-            );
+    case LIT_NIL:
+    case KW_BOOL:
+    case KW_INT:
+    case KW_FLOAT:
+    case KW_STRING:
+        return parse_type_builtin();
+    case BRACKET_OPEN:
+        return parse_type_array();
+    case BRACE_OPEN:
+        return parse_type_dict();
+    case KW_FN:
+        return parse_type_function();
+    default:
+        throw ParserError(
+            tok->location(m_source),
+            std::format(
+                "Unexpected token '{}' ({}) while parsing type",
+                tok->to_string(),
+                magic_enum::enum_name(tok->kind)
+            ),
+            Footnote(
+                Footnote::Kind::HINT,
+                "Expected 'nil' | 'bool' | 'int' | 'float' | "
+                "'string' | '[' | '{' | 'fn'"
+            )
+        );
     }
 }
 
@@ -660,7 +663,10 @@ const StmtFor* via::Parser::parse_stmt_for()
     fors->init = parse_stmt_var_decl(false);
 
     if (fors->init->decl->kind == KW_CONST) {
-        throw ParserError(fors->init->decl->location(m_source), "'const' variable not allowed in ranged for loop");
+        throw ParserError(
+            fors->init->decl->location(m_source),
+            "'const' variable not allowed in ranged for loop"
+        );
     }
 
     expect(COMMA, "parsing ranged for loop");
@@ -809,37 +815,37 @@ const StmtModule* via::Parser::parse_stmt_module()
         while (true) {
             auto* tok = peek();
             switch (tok->kind) {
-                case KW_CONST:
-                case KW_VAR:
-                    mod->scope.push_back(parse_stmt_var_decl(true));
-                    break;
-                case KW_FN:
-                    mod->scope.push_back(parse_stmt_func_decl());
-                    break;
-                case KW_STRUCT:
-                    mod->scope.push_back(parse_stmt_struct_decl());
-                    break;
-                case KW_TYPE:
-                    mod->scope.push_back(parse_stmt_type_decl());
-                    break;
-                case KW_MODULE:
-                    mod->scope.push_back(parse_stmt_module());
-                    break;
-                case KW_USING:
-                    mod->scope.push_back(parse_stmt_using_decl());
-                    break;
-                case KW_ENUM:
-                    mod->scope.push_back(parse_stmt_enum());
-                    break;
-                default:
-                    throw ParserError(
-                        tok->location(m_source),
-                        std::format(
-                            "Unexpected token '{}' ({}) while parsing module",
-                            tok->to_string(),
-                            magic_enum::enum_name(tok->kind)
-                        )
-                    );
+            case KW_CONST:
+            case KW_VAR:
+                mod->scope.push_back(parse_stmt_var_decl(true));
+                break;
+            case KW_FN:
+                mod->scope.push_back(parse_stmt_func_decl());
+                break;
+            case KW_STRUCT:
+                mod->scope.push_back(parse_stmt_struct_decl());
+                break;
+            case KW_TYPE:
+                mod->scope.push_back(parse_stmt_type_decl());
+                break;
+            case KW_MODULE:
+                mod->scope.push_back(parse_stmt_module());
+                break;
+            case KW_USING:
+                mod->scope.push_back(parse_stmt_using_decl());
+                break;
+            case KW_ENUM:
+                mod->scope.push_back(parse_stmt_enum());
+                break;
+            default:
+                throw ParserError(
+                    tok->location(m_source),
+                    std::format(
+                        "Unexpected token '{}' ({}) while parsing module",
+                        tok->to_string(),
+                        magic_enum::enum_name(tok->kind)
+                    )
+                );
             }
         }
     }
@@ -955,33 +961,33 @@ const StmtStructDecl* via::Parser::parse_stmt_struct_decl()
     while (!match(BRACE_CLOSE)) {
         auto* tok = peek();
         switch (tok->kind) {
-            case KW_CONST:
-            case KW_VAR:
-                strc->scope.push_back(parse_stmt_var_decl(false));
-                expect(COMMA, "terminating struct member");
-                break;
-            case KW_FN:
-                strc->scope.push_back(parse_stmt_func_decl());
-                break;
-            case KW_TYPE:
-                strc->scope.push_back(parse_stmt_type_decl());
-                expect(COMMA, "terminating struct member");
-                break;
-            case KW_USING:
-                strc->scope.push_back(parse_stmt_using_decl());
-                break;
-            case KW_ENUM:
-                strc->scope.push_back(parse_stmt_enum());
-                break;
-            default:
-                throw ParserError(
-                    tok->location(m_source),
-                    std::format(
-                        "Unexpected token '{}' ({}) while parsing struct body",
-                        tok->to_string(),
-                        magic_enum::enum_name(tok->kind)
-                    )
-                );
+        case KW_CONST:
+        case KW_VAR:
+            strc->scope.push_back(parse_stmt_var_decl(false));
+            expect(COMMA, "terminating struct member");
+            break;
+        case KW_FN:
+            strc->scope.push_back(parse_stmt_func_decl());
+            break;
+        case KW_TYPE:
+            strc->scope.push_back(parse_stmt_type_decl());
+            expect(COMMA, "terminating struct member");
+            break;
+        case KW_USING:
+            strc->scope.push_back(parse_stmt_using_decl());
+            break;
+        case KW_ENUM:
+            strc->scope.push_back(parse_stmt_enum());
+            break;
+        default:
+            throw ParserError(
+                tok->location(m_source),
+                std::format(
+                    "Unexpected token '{}' ({}) while parsing struct body",
+                    tok->to_string(),
+                    magic_enum::enum_name(tok->kind)
+                )
+            );
         }
     }
 
@@ -1020,46 +1026,46 @@ const StmtUsing* via::Parser::parse_stmt_using_decl()
 const Stmt* via::Parser::parse_stmt()
 {
     switch (peek()->kind) {
-        case KW_IF:
-            return parse_stmt_if();
-        case KW_WHILE:
-            return parse_stmt_while();
-        case KW_VAR:
-        case KW_CONST:
-            return parse_stmt_var_decl(true);
-        case KW_DO:
-            advance();
-            return parse_stmt_scope();
-        case KW_FOR:
-            // generic for loop
-            if (match(KW_VAR, 1))
-                return parse_stmt_for();
+    case KW_IF:
+        return parse_stmt_if();
+    case KW_WHILE:
+        return parse_stmt_while();
+    case KW_VAR:
+    case KW_CONST:
+        return parse_stmt_var_decl(true);
+    case KW_DO:
+        advance();
+        return parse_stmt_scope();
+    case KW_FOR:
+        // generic for loop
+        if (match(KW_VAR, 1))
+            return parse_stmt_for();
 
-            // for each loop
-            return parse_stmt_for_each();
-        case KW_RETURN:
-            return parse_stmt_return();
-        case KW_ENUM:
-            return parse_stmt_enum();
-        case KW_MODULE:
-            return parse_stmt_module();
-        case KW_IMPORT:
-            return parse_stmt_import();
-        case KW_FN:
-            return parse_stmt_func_decl();
-        case KW_STRUCT:
-            return parse_stmt_struct_decl();
-        case KW_TYPE:
-            return parse_stmt_type_decl();
-        case KW_USING:
-            return parse_stmt_using_decl();
-        case SEMICOLON: {
-            auto empty = m_alloc.emplace<StmtEmpty>();
-            empty->loc = advance()->location(m_source);
-            return empty;
-        }
-        default:
-            break;
+        // for each loop
+        return parse_stmt_for_each();
+    case KW_RETURN:
+        return parse_stmt_return();
+    case KW_ENUM:
+        return parse_stmt_enum();
+    case KW_MODULE:
+        return parse_stmt_module();
+    case KW_IMPORT:
+        return parse_stmt_import();
+    case KW_FN:
+        return parse_stmt_func_decl();
+    case KW_STRUCT:
+        return parse_stmt_struct_decl();
+    case KW_TYPE:
+        return parse_stmt_type_decl();
+    case KW_USING:
+        return parse_stmt_using_decl();
+    case SEMICOLON: {
+        auto empty = m_alloc.emplace<StmtEmpty>();
+        empty->loc = advance()->location(m_source);
+        return empty;
+    }
+    default:
+        break;
     }
 
     const Token* first = peek();
@@ -1078,32 +1084,32 @@ unexpected_token:
     const Expr* expr = parse_expr();
 
     switch (peek()->kind) {
-        case OP_EQ:
-        case OP_PLUS_EQ:
-        case OP_MINUS_EQ:
-        case OP_STAR_EQ:
-        case OP_SLASH_EQ:
-        case OP_STAR_STAR_EQ:
-        case OP_PERCENT_EQ:
-        case OP_PIPE_EQ:
-        case OP_AMP_EQ:
-            return parse_stmt_assign(expr);
-        default: {
-            auto es = m_alloc.emplace<StmtExpr>();
-            es->expr = expr;
-            es->loc = es->expr->loc;
+    case OP_EQ:
+    case OP_PLUS_EQ:
+    case OP_MINUS_EQ:
+    case OP_STAR_EQ:
+    case OP_SLASH_EQ:
+    case OP_STAR_STAR_EQ:
+    case OP_PERCENT_EQ:
+    case OP_PIPE_EQ:
+    case OP_AMP_EQ:
+        return parse_stmt_assign(expr);
+    default: {
+        auto es = m_alloc.emplace<StmtExpr>();
+        es->expr = expr;
+        es->loc = es->expr->loc;
 
-            if TRY_COERCE (const ExprCall, _, expr) {
-                goto valid_expr_stmt;
-            }
-            else {
-                goto unexpected_token;
-            }
+        if TRY_COERCE (const ExprCall, _, expr) {
+            goto valid_expr_stmt;
+        }
+        else {
+            goto unexpected_token;
+        }
 
 valid_expr_stmt:
-            optional(SEMICOLON);
-            return es;
-        }
+        optional(SEMICOLON);
+        return es;
+    }
     }
 }
 

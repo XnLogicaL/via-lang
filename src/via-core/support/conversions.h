@@ -76,10 +76,12 @@ constexpr Option<T> stoi(std::string_view str, usize* pos = nullptr)
     }
 
     if (pos != nullptr)
-        *pos =
-            begin +
-            (str.starts_with("0x") || str.starts_with("0X") || str.starts_with("0b") || str.starts_with("0B") ? 2 : 0) +
-            end;
+        *pos = begin +
+               (str.starts_with("0x") || str.starts_with("0X") || str.starts_with("0b") ||
+                        str.starts_with("0B")
+                    ? 2
+                    : 0) +
+               end;
 
     return result * sign;
 }

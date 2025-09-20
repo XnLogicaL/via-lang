@@ -16,13 +16,19 @@ inline via::usize ZERO = 0;
 
 #define INDENT std::string(depth * 2, ' ')
 #define SYMBOL(ID) (symtab->lookup(ID).value_or("<unknown-symbol>"))
-#define DUMP_IF(PTR, ...)             \
-    (PTR ? PTR->get_dump(__VA_ARGS__) \
-         : [](const SymbolTable* symtab = nullptr, usize& depth = ZERO) { return INDENT + "<null>"; }(__VA_ARGS__))
+#define DUMP_IF(PTR, ...)                                                                \
+    (PTR ? PTR->get_dump(__VA_ARGS__)                                                    \
+         : [](const SymbolTable* symtab = nullptr, usize& depth = ZERO) {                \
+               return INDENT + "<null>";                                                 \
+           }(__VA_ARGS__))
 
 std::string ir::TrReturn::get_dump(const SymbolTable* symtab, usize& depth) const
 {
-    return INDENT + std::format("return {} {}", DUMP_IF(val, symtab, ZERO), implicit ? "(implicit)" : "");
+    return INDENT + std::format(
+                        "return {} {}",
+                        DUMP_IF(val, symtab, ZERO),
+                        implicit ? "(implicit)" : ""
+                    );
 }
 
 std::string ir::TrContinue::get_dump(const SymbolTable* symtab, usize& depth) const
@@ -42,7 +48,12 @@ std::string ir::TrBranch::get_dump(const SymbolTable* symtab, usize& depth) cons
 
 std::string ir::TrCondBranch::get_dump(const SymbolTable* symtab, usize& depth) const
 {
-    return INDENT + std::format("cndbr {} ? .LB{} : .LB{}", DUMP_IF(cnd, symtab, ZERO), iftrue->id, iffalse->id);
+    return INDENT + std::format(
+                        "cndbr {} ? .LB{} : .LB{}",
+                        DUMP_IF(cnd, symtab, ZERO),
+                        iftrue->id,
+                        iffalse->id
+                    );
 }
 
 std::string ir::Parm::get_dump(const SymbolTable* symtab, usize& depth) const
@@ -62,12 +73,22 @@ std::string ir::ExprSymbol::get_dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::ExprAccess::get_dump(const SymbolTable* symtab, usize&) const
 {
-    return std::format("{}{}{}", DUMP_IF(root, symtab, ZERO), kind == Kind::DYNAMIC ? "." : "::", SYMBOL(index));
+    return std::format(
+        "{}{}{}",
+        DUMP_IF(root, symtab, ZERO),
+        kind == Kind::DYNAMIC ? "." : "::",
+        SYMBOL(index)
+    );
 }
 
 std::string ir::ExprModuleAccess::get_dump(const SymbolTable* symtab, usize&) const
 {
-    return std::format("module<{}>::{} def@{}", module->name(), SYMBOL(index), reinterpret_cast<const void*>(def));
+    return std::format(
+        "module<{}>::{} def@{}",
+        module->name(),
+        SYMBOL(index),
+        reinterpret_cast<const void*>(def)
+    );
 }
 
 std::string ir::ExprUnary::get_dump(const SymbolTable* symtab, usize&) const
@@ -77,7 +98,12 @@ std::string ir::ExprUnary::get_dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::ExprBinary::get_dump(const SymbolTable* symtab, usize&) const
 {
-    return std::format("({} {} {})", DUMP_IF(lhs, symtab, ZERO), magic_enum::enum_name(op), DUMP_IF(rhs, symtab, ZERO));
+    return std::format(
+        "({} {} {})",
+        DUMP_IF(lhs, symtab, ZERO),
+        magic_enum::enum_name(op),
+        DUMP_IF(rhs, symtab, ZERO)
+    );
 }
 
 std::string ir::ExprCall::get_dump(const SymbolTable* symtab, usize&) const
@@ -85,13 +111,20 @@ std::string ir::ExprCall::get_dump(const SymbolTable* symtab, usize&) const
     return std::format(
         "call( {}, args: {} )",
         DUMP_IF(callee, symtab, ZERO),
-        debug::get_dump<const Expr*>(args, [&](const auto& expr) { return DUMP_IF(expr, symtab, ZERO); })
+        debug::get_dump<const Expr*>(
+            args,
+            [&](const auto& expr) { return DUMP_IF(expr, symtab, ZERO); }
+        )
     );
 }
 
 std::string ir::ExprSubscript::get_dump(const SymbolTable* symtab, usize&) const
 {
-    return std::format("subscr( {}, {} )", DUMP_IF(expr, symtab, ZERO), DUMP_IF(idx, symtab, ZERO));
+    return std::format(
+        "subscr( {}, {} )",
+        DUMP_IF(expr, symtab, ZERO),
+        DUMP_IF(idx, symtab, ZERO)
+    );
 }
 
 std::string ir::ExprCast::get_dump(const SymbolTable* symtab, usize&) const
@@ -111,7 +144,9 @@ std::string ir::ExprTernary::get_dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::ExprArray::get_dump(const SymbolTable* symtab, usize&) const
 {
-    return debug::get_dump<const Expr*, '[', ']'>(exprs, [&](const auto& expr) { return DUMP_IF(expr, symtab, ZERO); });
+    return debug::get_dump<const Expr*, '[', ']'>(exprs, [&](const auto& expr) {
+        return DUMP_IF(expr, symtab, ZERO);
+    });
 }
 
 std::string ir::ExprTuple::get_dump(const SymbolTable* symtab, usize&) const
@@ -126,7 +161,12 @@ std::string ir::ExprLambda::get_dump(const SymbolTable* symtab, usize&) const
 
 std::string ir::StmtVarDecl::get_dump(const SymbolTable* symtab, usize& depth) const
 {
-    return INDENT + std::format("local {}: {} = {}", SYMBOL(symbol), DUMP_IF(declType), DUMP_IF(expr, symtab, ZERO));
+    return INDENT + std::format(
+                        "local {}: {} = {}",
+                        SYMBOL(symbol),
+                        DUMP_IF(declType),
+                        DUMP_IF(expr, symtab, ZERO)
+                    );
 }
 
 std::string ir::StmtFuncDecl::get_dump(const SymbolTable* symtab, usize& depth) const
@@ -136,7 +176,10 @@ std::string ir::StmtFuncDecl::get_dump(const SymbolTable* symtab, usize& depth) 
         << std::format(
                "function {} {} -> {}:\n",
                SYMBOL(symbol),
-               debug::get_dump<Parm, '(', ')'>(parms, [&](const auto& parm) { return parm.get_dump(symtab, ZERO); }),
+               debug::get_dump<Parm, '(', ')'>(
+                   parms,
+                   [&](const auto& parm) { return parm.get_dump(symtab, ZERO); }
+               ),
                ret->get_dump()
            );
     oss << INDENT << "{\n";
@@ -174,7 +217,8 @@ std::string ir::StmtExpr::get_dump(const SymbolTable* symtab, usize& depth) cons
     return INDENT + DUMP_IF(expr, symtab, ZERO);
 }
 
-[[nodiscard]] std::string via::debug::get_dump(const SymbolTable& symtab, const IRTree& ir)
+[[nodiscard]] std::string
+via::debug::get_dump(const SymbolTable& symtab, const IRTree& ir)
 {
     std::ostringstream oss;
     usize depth = 0;

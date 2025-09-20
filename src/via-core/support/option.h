@@ -29,11 +29,11 @@ class Option final
         T val;
         Nullopt null;
 
-        Storage() :
-            null()
+        Storage()
+            : null()
         {}
-        Storage(T&& val) :
-            val(move(val))
+        Storage(T&& val)
+            : val(move(val))
         {}
         Storage(const Storage&) {}
         Storage(Storage&&) {}
@@ -41,13 +41,13 @@ class Option final
     };
 
   public:
-    constexpr Option(Nullopt) noexcept :
-        m_has_value(false),
-        m_storage()
+    constexpr Option(Nullopt) noexcept
+        : m_has_value(false),
+          m_storage()
     {}
-    constexpr Option(T val) noexcept :
-        m_has_value(true),
-        m_storage(forward<T>(val))
+    constexpr Option(T val) noexcept
+        : m_has_value(true),
+          m_storage(forward<T>(val))
     {}
 
     constexpr ~Option() noexcept

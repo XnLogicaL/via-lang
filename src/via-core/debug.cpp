@@ -37,24 +37,42 @@ static void log_error(std::string message)
 
 void via::debug::require(bool cond, std::string message) noexcept
 {
-    __ASSERT_IMPL(cond, std::format("program execution reached failing `debug::require()` call: {}", message));
+    __ASSERT_IMPL(
+        cond,
+        std::format(
+            "program execution reached failing `debug::require()` call: {}",
+            message
+        )
+    );
     __UNREACHABLE();
 }
 
 [[noreturn]] void via::debug::bug(std::string message) noexcept
 {
-    __ASSERT_IMPL(false, std::format("program execution reached `debug::bug()` call: {}", message));
+    __ASSERT_IMPL(
+        false,
+        std::format("program execution reached `debug::bug()` call: {}", message)
+    );
     __UNREACHABLE();
 }
 
 [[noreturn]] void via::debug::todo(std::string message) noexcept
 {
-    __ASSERT_IMPL(false, std::format("program execution reached `debug::todo()` call: {}", message));
+    __ASSERT_IMPL(
+        false,
+        std::format("program execution reached `debug::todo()` call: {}", message)
+    );
     __UNREACHABLE();
 }
 
 [[noreturn]] void via::debug::unimplemented(std::string message) noexcept
 {
-    __ASSERT_IMPL(false, std::format("program execution reached `debug::unimplemented()` call: {}", message));
+    __ASSERT_IMPL(
+        false,
+        std::format(
+            "program execution reached `debug::unimplemented()` call: {}",
+            message
+        )
+    );
     __UNREACHABLE();
 }

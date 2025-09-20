@@ -10,12 +10,14 @@
 #include "module.h"
 #include <fstream>
 #include <iostream>
+#include <replxx.hxx>
 #include "debug.h"
 #include "ir/builder.h"
 #include "ir/ir.h"
 #include "manager.h"
 #include "support/ansi.h"
 #include "vm/machine.h"
+#include "vm/value.h"
 
 #ifdef VIA_PLATFORM_UNIX
     #include <dlfcn.h>
@@ -25,13 +27,15 @@
 
 // Modules are supposed to be allocated in a linear fashion, so we can get
 // away with this
-static via::Allocator module_allocator;
+static via::ScopedAllocator module_allocator;
 
 static via::Expected<std::string> read_file(const via::fs::path& path)
 {
     std::ifstream ifs(path);
     if (!ifs.is_open()) {
-        return via::Unexpected(std::format("No such file or directory: '{}'", path.string()));
+        return via::Unexpected(
+            std::format("No such file or directory: '{}'", path.string())
+        );
     }
 
     std::ostringstream oss;
@@ -60,7 +64,8 @@ static struct WinLibraryManager
 } windowsLibs;
 #endif
 
-static via::Expected<via::NativeModuleInitCallback> load_dylib_symbol(const via::fs::path& path, const char* symbol)
+static via::Expected<via::NativeModuleInitCallback>
+load_dylib_symbol(const via::fs::path& path, const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
     if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
@@ -119,7 +124,10 @@ via::Expected<via::Module*> via::Module::load_native_object(
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
     auto callback = load_dylib_symbol(path, symbol.c_str());
     if (callback.has_error()) {
-        return Unexpected(std::format("Failed to load native module: {}", callback.get_error().to_string()));
+        return Unexpected(std::format(
+            "Failed to load native module: {}",
+            callback.get_error().to_string()
+        ));
     }
 
     auto* module_info = (*callback)(manager);
@@ -218,12 +226,109 @@ via::Expected<via::Module*> via::Module::load_source_file(
                 module->m_defs[*symbol] = Def::from(module->get_allocator(), node);
             }
         }
-        {
-            Executable* exe = Executable::build_from_ir(module, module->m_ir);
-            module->m_exe = exe;
 
-            VirtualMachine interp{exe};
-            interp.execute();
+        Executable* exe = Executable::build_from_ir(module, module->m_ir);
+        module->m_exe = exe;
+
+        if ((flags & NO_EXECUTION) == 0) {
+            VirtualMachine vm(module, exe);
+
+            if (flags & DEBUG) {
+                replxx::Replxx repl;
+
+                std::println(std::cout, "Starting interactive VM debugger...");
+                std::println(
+                    std::cout,
+                    "  > step      steps the interpreter\n"
+                    "  > pc        dumps the interpreter program counter\n"
+                    "  > regs      dumps the interpreter register buffer\n"
+                    "  > stack     dumps the interpreter stack\n"
+                );
+
+                while (true) {
+                    const char* cinput = repl.input("> ");
+                    if (cinput == nullptr) {
+                        break;
+                    }
+
+                    std::string input(cinput);
+                    Snapshot snapshot(&vm);
+
+                    if (input == "step") {
+                        vm.execute_one();
+                    }
+                    else if (input == "pc") {
+                        std::println(
+                            std::cout,
+                            "{}",
+                            snapshot.program_counter.get_dump()
+                        );
+                    }
+                    else if (input == "regs") {
+                        for (usize index = 0; const auto& ptr: snapshot.registers) {
+                            if (ptr != nullptr) {
+                                std::println(
+                                    std::cout,
+                                    "R{} = {}",
+                                    index,
+                                    ptr->to_string()
+                                );
+                            }
+                            index++;
+                        }
+                    }
+                    else if (input == "stack") {
+                        std::println(std::cout, "size: {}", snapshot.stack.size());
+
+                        if (!snapshot.stack.empty()) {
+                            const uptr fp = snapshot.frame_ptr;
+                            const uptr* stk_base;
+
+                            if (fp != 0) {
+                                stk_base = snapshot.stack.begin().base() + fp;
+
+                                auto old_fp = (uptr*) *(stk_base - 0);
+                                auto ret_pc = (Instruction*) *(stk_base - 1);
+                                auto flags = (u64) * (stk_base - 2);
+                                auto callee = (Value*) *(stk_base - 3);
+
+                                std::cout << "Frame @ " << fp << "\n";
+                                std::cout << "  callee   = " << callee->to_string()
+                                          << "\n";
+                                std::cout << "  flags    = " << flags << "\n";
+                                std::cout << "  ret_pc   = " << (const void*) ret_pc
+                                          << "\n";
+                                std::cout << "  old_fp   = " << (const void*) old_fp
+                                          << "\n";
+                            }
+                            else {
+                                stk_base = snapshot.stack.begin().base() - 1;
+                            }
+
+                            for (auto* ptr = stk_base + 1;
+                                 ptr < snapshot.stack.end().base() - 1;
+                                 ++ptr) {
+                                if (fp != 0)
+                                    std::print(std::cout, "  ");
+
+                                auto* val = (Value*) *ptr;
+                                std::println(
+                                    std::cout,
+                                    "local {} = {}",
+                                    ptr - stk_base - 1,
+                                    val->to_string()
+                                );
+                            }
+                        }
+                    }
+                    else {
+                        std::println(std::cout, "{}", input);
+                    }
+                }
+            }
+            else {
+                vm.execute();
+            }
         }
     }
 
@@ -236,7 +341,11 @@ error:
     if (flags & DUMP_AST)
         std::println(std::cout, "{}", debug::get_dump(ast));
     if (flags & DUMP_IR)
-        std::println(std::cout, "{}", debug::get_dump(manager->get_symbol_table(), module->m_ir));
+        std::println(
+            std::cout,
+            "{}",
+            debug::get_dump(manager->get_symbol_table(), module->m_ir)
+        );
     if (flags & DUMP_EXE)
         std::println(std::cout, "{}", module->m_exe->get_dump());
     if (flags & DUMP_DEFTABLE) {
@@ -291,8 +400,11 @@ struct ModuleCandidate
     std::string name;
 };
 
-static via::Option<ModuleInfo>
-resolveImportPath(const via::fs::path& root, const via::QualName& path, const via::ModuleManager& manager)
+static via::Option<ModuleInfo> resolveImportPath(
+    const via::fs::path& root,
+    const via::QualName& path,
+    const via::ModuleManager& manager
+)
 {
     via::debug::require(!path.empty(), "bad import path");
 
@@ -317,7 +429,8 @@ resolveImportPath(const via::fs::path& root, const via::QualName& path, const vi
 #endif
         };
 
-        auto try_path = [&](const via::fs::path& candidate, ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
+        auto try_path = [&](const via::fs::path& candidate,
+                            ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
             if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate))
                 return ModuleInfo{.kind = kind, .path = candidate};
             else
@@ -356,7 +469,8 @@ via::Option<const via::Def*> via::Module::lookup(via::SymbolId symbol)
     return nullopt;
 }
 
-via::Expected<via::Module*> via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
+via::Expected<via::Module*>
+via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
 {
     debug::require(m_manager, "unmanaged module detected");
 
@@ -370,27 +484,27 @@ via::Expected<via::Module*> via::Module::import(const QualName& path, const ast:
     }
 
     switch (module->kind) {
-        case ModuleInfo::Kind::SOURCE:
-            return Module::load_source_file(
-                m_manager,
-                this,
-                path.back().c_str(),
-                module->path,
-                ast_decl,
-                m_perms,
-                m_flags
-            );
-        case ModuleInfo::Kind::NATIVE:
-            return Module::load_native_object(
-                m_manager,
-                this,
-                path.back().c_str(),
-                module->path,
-                ast_decl,
-                m_perms,
-                m_flags
-            );
-        default:
-            debug::todo("module types");
+    case ModuleInfo::Kind::SOURCE:
+        return Module::load_source_file(
+            m_manager,
+            this,
+            path.back().c_str(),
+            module->path,
+            ast_decl,
+            m_perms,
+            m_flags
+        );
+    case ModuleInfo::Kind::NATIVE:
+        return Module::load_native_object(
+            m_manager,
+            this,
+            path.back().c_str(),
+            module->path,
+            ast_decl,
+            m_perms,
+            m_flags
+        );
+    default:
+        debug::todo("module types");
     }
 }

@@ -23,18 +23,18 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     spdlog::level::level_enum level;
 
     switch (diag.level) {
-        case Level::INFO:
-            level = spdlog::level::info;
-            foreground = ansi::Foreground::Cyan;
-            break;
-        case Level::WARNING:
-            level = spdlog::level::warn;
-            foreground = ansi::Foreground::Yellow;
-            break;
-        case Level::ERROR:
-            level = spdlog::level::err;
-            foreground = ansi::Foreground::Red;
-            break;
+    case Level::INFO:
+        level = spdlog::level::info;
+        foreground = ansi::Foreground::Cyan;
+        break;
+    case Level::WARNING:
+        level = spdlog::level::warn;
+        foreground = ansi::Foreground::Yellow;
+        break;
+    case Level::ERROR:
+        level = spdlog::level::err;
+        foreground = ansi::Foreground::Red;
+        break;
     }
 
     if (diag.location.begin >= m_source.size()) {
@@ -63,12 +63,23 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         level,
         "{} {} {}",
         diag.message,
-        ansi::format("at", ansi::Foreground::White, ansi::Background::Black, ansi::Style::Faint),
+        ansi::format(
+            "at",
+            ansi::Foreground::White,
+            ansi::Background::Black,
+            ansi::Style::Faint
+        ),
         ansi::format(std::format("[{}:{}:{}]", m_path, line, col), ansi::Foreground::Cyan)
     );
 
-    usize span_begin = std::min(static_cast<usize>(diag.location.begin - (line_begin - begin)), line_view.size());
-    usize span_end = std::min(static_cast<usize>(diag.location.end - (line_begin - begin)), line_view.size());
+    usize span_begin = std::min(
+        static_cast<usize>(diag.location.begin - (line_begin - begin)),
+        line_view.size()
+    );
+    usize span_end = std::min(
+        static_cast<usize>(diag.location.end - (line_begin - begin)),
+        line_view.size()
+    );
 
     std::string hl_line;
     if (span_begin < span_end) {
@@ -100,7 +111,11 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
 
     // Trim trailing spaces in caret
     caret.erase(
-        std::find_if(caret.rbegin(), caret.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
+        std::find_if(
+            caret.rbegin(),
+            caret.rend(),
+            [](unsigned char ch) { return !std::isspace(ch); }
+        ).base(),
         caret.end()
     );
 
@@ -110,7 +125,12 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
             " {0} | {1}{2}\n {0} |",
             std::string(line_width, ' '),
             ansi::format(caret, foreground, ansi::Background::Black, ansi::Style::Bold),
-            diag.footnote.valid ? std::format("-- {} {}", to_string(diag.footnote.kind), diag.footnote.message) : ""
+            diag.footnote.valid ? std::format(
+                                      "-- {} {}",
+                                      to_string(diag.footnote.kind),
+                                      diag.footnote.message
+                                  )
+                                : ""
         )
     );
 

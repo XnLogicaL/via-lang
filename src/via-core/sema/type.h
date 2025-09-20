@@ -50,9 +50,9 @@ class Type
     const u8 flags;
 
   protected:
-    explicit Type(Kind kind, u8 flags = 0) :
-        kind(kind),
-        flags(flags)
+    explicit Type(Kind kind, u8 flags = 0)
+        : kind(kind),
+          flags(flags)
     {}
 };
 
@@ -68,9 +68,9 @@ struct BuiltinType: public Type
     };
 
     const Kind bt;
-    explicit BuiltinType(Kind b) :
-        Type(Type::Kind::Builtin, 0),
-        bt(b)
+    explicit BuiltinType(Kind b)
+        : Type(Type::Kind::Builtin, 0),
+          bt(b)
     {}
 
     bool is_integral() const noexcept override { return bt == Kind::INT; }
@@ -87,26 +87,31 @@ struct BuiltinType: public Type
         std::string name;
         name.resize(raw_name.length());
         std::transform(raw_name.begin(), raw_name.end(), name.begin(), ::tolower);
-        return ansi::format(name, ansi::Foreground::Magenta, ansi::Background::Black, ansi::Style::Bold);
+        return ansi::format(
+            name,
+            ansi::Foreground::Magenta,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
     }
 };
 
 struct ArrayType: public Type
 {
     const Type* elem;
-    explicit ArrayType(const Type* elem) :
-        Type(Kind::Array, elem->is_dependent()),
-        elem(elem)
+    explicit ArrayType(const Type* elem)
+        : Type(Kind::Array, elem->is_dependent()),
+          elem(elem)
     {}
 };
 
 struct DictType: public Type
 {
     const Type *key, *val;
-    explicit DictType(const Type* key, const Type* val) :
-        Type(Kind::Dict, (key->is_dependent() || val->is_dependent())),
-        key(key),
-        val(val)
+    explicit DictType(const Type* key, const Type* val)
+        : Type(Kind::Dict, (key->is_dependent() || val->is_dependent())),
+          key(key),
+          val(val)
     {}
 };
 
@@ -123,29 +128,29 @@ struct FuncType: public Type
         return dep ? 1 : 0;
     }
 
-    explicit FuncType(std::vector<const Type*> ps, const Type* rs) :
-        Type(Kind::Function, compute_dependence(ps, rs)),
-        params(std::move(ps)),
-        result(rs)
+    explicit FuncType(std::vector<const Type*> ps, const Type* rs)
+        : Type(Kind::Function, compute_dependence(ps, rs)),
+          params(std::move(ps)),
+          result(rs)
     {}
 };
 
 struct UserType: public Type
 {
     const ast::StmtTypeDecl* decl;
-    explicit UserType(const ast::StmtTypeDecl* D) :
-        Type(Kind::User, 0),
-        decl(D)
+    explicit UserType(const ast::StmtTypeDecl* D)
+        : Type(Kind::User, 0),
+          decl(D)
     {}
 };
 
 struct TemplateParamType: public Type
 {
     u32 depth, index;
-    explicit TemplateParamType(u32 d, u32 i) :
-        Type(Kind::TemplateParam, /*dependent*/ 1),
-        depth(d),
-        index(i)
+    explicit TemplateParamType(u32 d, u32 i)
+        : Type(Kind::TemplateParam, /*dependent*/ 1),
+          depth(d),
+          index(i)
     {}
 };
 
@@ -153,10 +158,14 @@ struct TemplateSpecType: public Type
 {
     const ast::StmtTypeDecl* primary;
     std::vector<const Type*> args;
-    explicit TemplateSpecType(const ast::StmtTypeDecl* prim, std::vector<const Type*> A, bool dep) :
-        Type(Kind::TemplateSpec, dep ? 1 : 0),
-        primary(prim),
-        args(std::move(A))
+    explicit TemplateSpecType(
+        const ast::StmtTypeDecl* prim,
+        std::vector<const Type*> A,
+        bool dep
+    )
+        : Type(Kind::TemplateSpec, dep ? 1 : 0),
+          primary(prim),
+          args(std::move(A))
     {}
 };
 
@@ -164,10 +173,10 @@ struct SubstParamType: public Type
 {
     const TemplateParamType* parm;
     const Type* replacement;
-    explicit SubstParamType(const TemplateParamType* par, const Type* rs) :
-        Type(Kind::SubstParam, rs->is_dependent()),
-        parm(par),
-        replacement(rs)
+    explicit SubstParamType(const TemplateParamType* par, const Type* rs)
+        : Type(Kind::SubstParam, rs->is_dependent()),
+          parm(par),
+          replacement(rs)
     {}
 };
 

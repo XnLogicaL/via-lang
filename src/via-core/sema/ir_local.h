@@ -34,12 +34,18 @@ class IRLocal final
 
   public:
     IRLocal() = default;
-    IRLocal(SymbolId symbol, const ast::Stmt* ast_decl, const ir::Stmt* ir_decl, usize version = 0, u8 quals = 0ULL) :
-        m_version(version),
-        m_quals(quals),
-        m_symbol(symbol),
-        m_ast_decl(ast_decl),
-        m_ir_decl(ir_decl)
+    IRLocal(
+        SymbolId symbol,
+        usize version,
+        const ast::Stmt* ast_decl,
+        const ir::Stmt* ir_decl,
+        u8 quals = 0ULL
+    )
+        : m_version(version),
+          m_quals(quals),
+          m_symbol(symbol),
+          m_ast_decl(ast_decl),
+          m_ir_decl(ir_decl)
     {}
 
   public:

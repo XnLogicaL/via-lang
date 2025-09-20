@@ -21,7 +21,12 @@ inline auto& app_instance() noexcept
 
     cli.add_argument("input").default_value("").help("Target source file");
 
-    cli.add_argument("--include-dirs", "-I").default_value("").help("Comma seperated custom include directory paths");
+    cli.add_argument("--no-execute").flag().help("Disable code execution");
+    cli.add_argument("--debug").flag();
+
+    cli.add_argument("--include-dirs", "-I")
+        .default_value("")
+        .help("Comma seperated custom include directory paths");
 
     cli.add_argument("--dump", "-D")
         .nargs(1)

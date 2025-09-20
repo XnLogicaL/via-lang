@@ -21,14 +21,14 @@ inline via::usize ZERO = 0;
 via::UnaryOp via::to_unary_op(Tk kind) noexcept
 {
     switch (kind) {
-        case Tk::OP_MINUS:
-            return UnaryOp::NOT;
-        case Tk::KW_NOT:
-            return UnaryOp::NOT;
-        case Tk::OP_TILDE:
-            return UnaryOp::BNOT;
-        default:
-            break;
+    case Tk::OP_MINUS:
+        return UnaryOp::NOT;
+    case Tk::KW_NOT:
+        return UnaryOp::NOT;
+    case Tk::OP_TILDE:
+        return UnaryOp::BNOT;
+    default:
+        break;
     }
 
     via::debug::bug("unmapped UnaryOp TokenKind");
@@ -37,34 +37,34 @@ via::UnaryOp via::to_unary_op(Tk kind) noexcept
 via::BinaryOp via::to_binary_op(Tk kind) noexcept
 {
     switch (kind) {
-        case Tk::OP_PLUS:
-            return BinaryOp::ADD;
-        case Tk::OP_MINUS:
-            return BinaryOp::SUB;
-        case Tk::OP_STAR:
-            return BinaryOp::MUL;
-        case Tk::OP_SLASH:
-            return BinaryOp::DIV;
-        case Tk::OP_STAR_STAR:
-            return BinaryOp::POW;
-        case Tk::OP_PERCENT:
-            return BinaryOp::MOD;
-        case Tk::KW_AND:
-            return BinaryOp::AND;
-        case Tk::KW_OR:
-            return BinaryOp::OR;
-        case Tk::OP_AMP:
-            return BinaryOp::BAND;
-        case Tk::OP_PIPE:
-            return BinaryOp::BOR;
-        case Tk::OP_CARET:
-            return BinaryOp::BXOR;
-        case Tk::OP_SHL:
-            return BinaryOp::BSHL;
-        case Tk::OP_SHR:
-            return BinaryOp::BSHR;
-        default:
-            break;
+    case Tk::OP_PLUS:
+        return BinaryOp::ADD;
+    case Tk::OP_MINUS:
+        return BinaryOp::SUB;
+    case Tk::OP_STAR:
+        return BinaryOp::MUL;
+    case Tk::OP_SLASH:
+        return BinaryOp::DIV;
+    case Tk::OP_STAR_STAR:
+        return BinaryOp::POW;
+    case Tk::OP_PERCENT:
+        return BinaryOp::MOD;
+    case Tk::KW_AND:
+        return BinaryOp::AND;
+    case Tk::KW_OR:
+        return BinaryOp::OR;
+    case Tk::OP_AMP:
+        return BinaryOp::BAND;
+    case Tk::OP_PIPE:
+        return BinaryOp::BOR;
+    case Tk::OP_CARET:
+        return BinaryOp::BXOR;
+    case Tk::OP_SHL:
+        return BinaryOp::BSHL;
+    case Tk::OP_SHR:
+        return BinaryOp::BSHR;
+    default:
+        break;
     }
 
     via::debug::bug("unmapped BinaryOp TokenKind");
@@ -72,12 +72,18 @@ via::BinaryOp via::to_binary_op(Tk kind) noexcept
 
 std::string ast::Path::get_dump() const
 {
-    return std::format("Path({})", debug::get_dump(path, [](const auto& node) { return node->get_dump(); }));
+    return std::format("Path({})", debug::get_dump(path, [](const auto& node) {
+                           return node->get_dump();
+                       }));
 }
 
 std::string ast::Parameter::get_dump() const
 {
-    return std::format("Parameter(symbol={}, type={})", symbol->get_dump(), type->get_dump(ZERO));
+    return std::format(
+        "Parameter(symbol={}, type={})",
+        symbol->get_dump(),
+        type->get_dump(ZERO)
+    );
 }
 
 std::string ast::AttributeGroup::get_dump() const
@@ -86,7 +92,10 @@ std::string ast::AttributeGroup::get_dump() const
                            return std::format(
                                "Attribute(sp={}, args={})",
                                atr.sp->get_dump(),
-                               debug::get_dump(atr.args, [](const auto& arg) { return arg->get_dump(); })
+                               debug::get_dump(
+                                   atr.args,
+                                   [](const auto& arg) { return arg->get_dump(); }
+                               )
                            );
                        }));
 }
@@ -108,7 +117,11 @@ std::string ast::ExprDynAccess::get_dump(usize&) const
 
 std::string ast::ExprStaticAccess::get_dump(usize&) const
 {
-    return std::format("ExprStaticAccess({}, {})", root->get_dump(ZERO), index->to_string());
+    return std::format(
+        "ExprStaticAccess({}, {})",
+        root->get_dump(ZERO),
+        index->to_string()
+    );
 }
 
 std::string ast::ExprUnary::get_dump(usize&) const
@@ -118,7 +131,12 @@ std::string ast::ExprUnary::get_dump(usize&) const
 
 std::string ast::ExprBinary::get_dump(usize&) const
 {
-    return std::format("ExprBinary({}, {}, {})", op->get_dump(), lhs->get_dump(ZERO), rhs->get_dump(ZERO));
+    return std::format(
+        "ExprBinary({}, {}, {})",
+        op->get_dump(),
+        lhs->get_dump(ZERO),
+        rhs->get_dump(ZERO)
+    );
 }
 
 std::string ast::ExprGroup::get_dump(usize&) const
@@ -128,14 +146,20 @@ std::string ast::ExprGroup::get_dump(usize&) const
 
 std::string ast::ExprCall::get_dump(usize&) const
 {
-    return std::format("ExprCall(callee={}, args={})", lval->get_dump(ZERO), debug::get_dump(args, [](const auto& arg) {
-                           return arg->get_dump(ZERO);
-                       }));
+    return std::format(
+        "ExprCall(callee={}, args={})",
+        lval->get_dump(ZERO),
+        debug::get_dump(args, [](const auto& arg) { return arg->get_dump(ZERO); })
+    );
 }
 
 std::string ast::ExprSubscript::get_dump(usize&) const
 {
-    return std::format("ExprSubscript({}, {})", lval->get_dump(ZERO), idx->get_dump(ZERO));
+    return std::format(
+        "ExprSubscript({}, {})",
+        lval->get_dump(ZERO),
+        idx->get_dump(ZERO)
+    );
 }
 
 std::string ast::ExprCast::get_dump(usize&) const
@@ -204,7 +228,8 @@ std::string ast::StmtIf::get_dump(usize& depth) const
     depth++;
 
     for (const auto& br: brs) {
-        oss << INDENT << std::format("Branch({})\n", br.cnd ? br.cnd->get_dump(ZERO) : "");
+        oss << INDENT
+            << std::format("Branch({})\n", br.cnd ? br.cnd->get_dump(ZERO) : "");
         depth++;
 
         for (const Stmt* stmt: br.br->stmts) {
@@ -244,7 +269,12 @@ std::string ast::StmtFor::get_dump(usize& depth) const
 std::string ast::StmtForEach::get_dump(usize& depth) const
 {
     std::ostringstream oss;
-    oss << INDENT << std::format("StmtForEach(lval={}, iter={})\n", lval->get_dump(ZERO), iter->get_dump(ZERO));
+    oss << INDENT
+        << std::format(
+               "StmtForEach(lval={}, iter={})\n",
+               lval->get_dump(ZERO),
+               iter->get_dump(ZERO)
+           );
     depth++;
 
     for (const Stmt* stmt: br->stmts) {
@@ -289,11 +319,20 @@ std::string ast::StmtReturn::get_dump(usize& depth) const
 std::string ast::StmtEnum::get_dump(usize& depth) const
 {
     std::ostringstream oss;
-    oss << INDENT << std::format("StmtEnum(symbol={}, type={})\n", symbol->get_dump(), type->get_dump(ZERO));
+    oss << INDENT
+        << std::format(
+               "StmtEnum(symbol={}, type={})\n",
+               symbol->get_dump(),
+               type->get_dump(ZERO)
+           );
     depth++;
 
     for (const auto& entry: pairs) {
-        oss << std::format("EnumEntry(symbol={}, expr={})\n", entry.symbol->get_dump(), entry.expr->get_dump(ZERO));
+        oss << std::format(
+            "EnumEntry(symbol={}, expr={})\n",
+            entry.symbol->get_dump(),
+            entry.expr->get_dump(ZERO)
+        );
     }
 
     depth--;
@@ -319,7 +358,9 @@ std::string ast::StmtModule::get_dump(usize& depth) const
 std::string ast::StmtImport::get_dump(usize& depth) const
 {
     return INDENT +
-           std::format("StmtImport({})", debug::get_dump(path, [](const auto& node) { return node->get_dump(); }));
+           std::format("StmtImport({})", debug::get_dump(path, [](const auto& node) {
+                           return node->get_dump();
+                       }));
 }
 
 std::string ast::StmtFunctionDecl::get_dump(usize& depth) const
@@ -329,7 +370,10 @@ std::string ast::StmtFunctionDecl::get_dump(usize& depth) const
                         "StmtFunctionDecl(name={}, ret={}, parms={})\n",
                         name->get_dump(),
                         ret->get_dump(ZERO),
-                        debug::get_dump(parms, [](const auto& parm) { return parm->get_dump(); })
+                        debug::get_dump(
+                            parms,
+                            [](const auto& parm) { return parm->get_dump(); }
+                        )
                     );
     depth++;
 
@@ -359,7 +403,11 @@ std::string ast::StmtStructDecl::get_dump(usize& depth) const
 
 std::string ast::StmtTypeDecl::get_dump(usize& depth) const
 {
-    return INDENT + std::format("StmtTypeDecl(symbol={}, type={})", symbol->get_dump(), type->get_dump(ZERO));
+    return INDENT + std::format(
+                        "StmtTypeDecl(symbol={}, type={})",
+                        symbol->get_dump(),
+                        type->get_dump(ZERO)
+                    );
 }
 
 std::string ast::StmtUsing::get_dump(usize& depth) const
@@ -399,20 +447,27 @@ std::string ast::TypeArray::get_dump(usize&) const
 
 std::string ast::TypeDict::get_dump(usize&) const
 {
-    return std::format("TypeDict(key={}, val={})", key->get_dump(ZERO), val->get_dump(ZERO));
+    return std::format(
+        "TypeDict(key={}, val={})",
+        key->get_dump(ZERO),
+        val->get_dump(ZERO)
+    );
 }
 
 std::string ast::TypeFunc::get_dump(usize&) const
 {
-    return std::format("TypeFunc(ret={}, parms={})", ret->get_dump(ZERO), debug::get_dump(params, [](const auto& parm) {
-                           return parm->get_dump();
-                       }));
+    return std::format(
+        "TypeFunc(ret={}, parms={})",
+        ret->get_dump(ZERO),
+        debug::get_dump(params, [](const auto& parm) { return parm->get_dump(); })
+    );
 }
 
 bool ast::isLValue(const Expr* expr) noexcept
 {
     return TRY_IS(const ExprSymbol, expr) || TRY_IS(const ExprStaticAccess, expr) ||
-           TRY_IS(const ExprDynAccess, expr) || TRY_IS(const ExprSubscript, expr) || TRY_IS(const ExprTuple, expr);
+           TRY_IS(const ExprDynAccess, expr) || TRY_IS(const ExprSubscript, expr) ||
+           TRY_IS(const ExprTuple, expr);
 }
 
 [[nodiscard]] std::string via::debug::get_dump(const via::SyntaxTree& ast)

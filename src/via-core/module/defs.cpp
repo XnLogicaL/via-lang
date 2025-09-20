@@ -9,7 +9,7 @@
 
 #include "defs.h"
 
-via::Def* via::Def::from(Allocator& alloc, const ir::Stmt* node)
+via::Def* via::Def::from(ScopedAllocator& alloc, const ir::Stmt* node)
 {
     if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
         auto* fndef = alloc.emplace<FunctionDef>();
@@ -23,7 +23,7 @@ via::Def* via::Def::from(Allocator& alloc, const ir::Stmt* node)
 }
 
 via::Def* via::Def::function(
-    Allocator& alloc,
+    ScopedAllocator& alloc,
     const NativeCallback callback,
     const sema::Type* return_type,
     std::initializer_list<DefParm> parameters
@@ -46,7 +46,9 @@ std::string via::FunctionDef::get_dump() const
         ret->get_dump(),
         debug::get_dump(
             parms,
-            [](const auto& parm) { return std::format("{}: {}", parm.symbol, parm.type->get_dump()); }
+            [](const auto& parm) {
+                return std::format("{}: {}", parm.symbol, parm.type->get_dump());
+            }
         ),
         magic_enum::enum_name(kind),
         reinterpret_cast<const void*>(code.native)

@@ -36,10 +36,10 @@ struct Footnote
     const std::string message = "";
 
     Footnote() = default;
-    Footnote(Kind kind, std::string message) :
-        kind(kind),
-        valid(true),
-        message(message)
+    Footnote(Kind kind, std::string message)
+        : kind(kind),
+          valid(true),
+          message(message)
     {}
 };
 
@@ -54,10 +54,10 @@ struct Diagnosis
 class DiagContext final
 {
   public:
-    DiagContext(std::string path, std::string name, const std::string& source) :
-        m_path(path),
-        m_name(name),
-        m_source(source)
+    DiagContext(std::string path, std::string name, const std::string& source)
+        : m_path(path),
+          m_name(name),
+          m_source(source)
     {}
 
     NO_COPY(DiagContext)
@@ -100,22 +100,47 @@ class DiagContext final
 inline std::string to_string(Level level) noexcept
 {
     switch (level) {
-        case Level::INFO:
-            return ansi::format("info:", ansi::Foreground::Cyan, ansi::Background::Black, ansi::Style::Bold);
-        case Level::WARNING:
-            return ansi::format("warning:", ansi::Foreground::Yellow, ansi::Background::Black, ansi::Style::Bold);
-        case Level::ERROR:
-            return ansi::format("error:", ansi::Foreground::Red, ansi::Background::Black, ansi::Style::Bold);
+    case Level::INFO:
+        return ansi::format(
+            "info:",
+            ansi::Foreground::Cyan,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
+    case Level::WARNING:
+        return ansi::format(
+            "warning:",
+            ansi::Foreground::Yellow,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
+    case Level::ERROR:
+        return ansi::format(
+            "error:",
+            ansi::Foreground::Red,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
     }
 }
 
 inline std::string to_string(Footnote::Kind kind) noexcept
 {
     switch (kind) {
-        case Footnote::Kind::HINT:
-            return ansi::format("hint:", ansi::Foreground::Green, ansi::Background::Black, ansi::Style::Bold);
-        case Footnote::Kind::NOTE:
-            return ansi::format("note:", ansi::Foreground::Blue, ansi::Background::Black, ansi::Style::Bold);
+    case Footnote::Kind::HINT:
+        return ansi::format(
+            "hint:",
+            ansi::Foreground::Green,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
+    case Footnote::Kind::NOTE:
+        return ansi::format(
+            "note:",
+            ansi::Foreground::Blue,
+            ansi::Background::Black,
+            ansi::Style::Bold
+        );
     }
 }
 

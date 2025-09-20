@@ -19,6 +19,7 @@ add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
 add_subdirectory(thirdparty/cpptrace)
 add_subdirectory(thirdparty/csv2)
+add_subdirectory(thirdparty/replxx)
 
 # Modules
 add_subdirectory(src/via-core)

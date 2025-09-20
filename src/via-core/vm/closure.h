@@ -16,26 +16,60 @@
 
 namespace via {
 
+struct CallInfo
+{
+    Value* callee;
+    CallFlags flags;
+    std::vector<ValueRef> args;
+};
+
+using NativeCallback = ValueRef (*)(VirtualMachine* vm, CallInfo& ci);
+
 class Closure final
 {
   public:
-    Closure(const usize argc, const Instruction* pc) :
-        m_argc(argc),
-        m_bytecode(pc)
+    Closure(const usize argc, const Instruction* pc)
+        : m_argc(argc),
+          m_native(false),
+          m_bytecode(pc)
     {}
 
-    static Closure* construct(VirtualMachine* vm, const usize argc, const Instruction* pc) noexcept
+    Closure(const usize argc, const NativeCallback callback)
+        : m_argc(argc),
+          m_native(true),
+          m_callback(callback)
+    {}
+
+    template <typename... Args>
+        requires(std::is_constructible_v<Closure, Args...>)
+    [[nodiscard]] static Closure* construct(VirtualMachine* vm, Args&&... args) noexcept
     {
-        return vm->get_allocator().emplace<Closure>(argc, pc);
+        return vm->get_allocator().emplace<Closure>(forward<Args>(args)...);
     }
 
   public:
     auto argc() const noexcept { return m_argc; }
-    auto* bytecode() const noexcept { return m_bytecode; }
+    bool is_native() const noexcept { return m_native; }
+
+    auto* bytecode() const noexcept
+    {
+        debug::require(m_native);
+        return m_bytecode;
+    }
+
+    auto callback() const noexcept
+    {
+        debug::require(!m_native);
+        return m_callback;
+    }
 
   private:
     const usize m_argc;
-    const Instruction* m_bytecode;
+    const bool m_native;
+    union {
+        const Instruction* m_bytecode;
+        const NativeCallback m_callback;
+    };
 };
 
 } // namespace via

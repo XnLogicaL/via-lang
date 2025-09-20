@@ -113,21 +113,17 @@
     "__bit_reference": "cpp",
     "__node_handle": "cpp"
   },
-
   "git.ignoreLimitWarning": true,
-
   "clangd.arguments": [
     "--function-arg-placeholders=0",
     "--header-insertion=never",
     "--clang-tidy",
     "--log=verbose"
   ],
-
   "[cpp]": {
     "editor.defaultFormatter": "xaver.clang-format"
   },
-
   // Disable C/C++ extension stuff, if necessary
-"C_Cpp.intelliSenseEngine": "disabled",
-"a-file-icon-vscode.folderTheme": "classic"
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "a-file-icon-vscode.folderTheme": "classic"
 }

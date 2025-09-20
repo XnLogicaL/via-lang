@@ -43,8 +43,8 @@ struct Term
     virtual std::string get_dump(const SymbolTable* symtab, usize& depth) const = 0;
 };
 
-#define NODE_FIELDS(BASE) \
-    using BASE::loc;      \
+#define NODE_FIELDS(BASE)                                                                \
+    using BASE::loc;                                                                     \
     std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct TrReturn: public Term
@@ -88,9 +88,9 @@ struct Parm
 };
 
 #undef NODE_FIELDS
-#define NODE_FIELDS(BASE) \
-    using BASE::type;     \
-    using BASE::loc;      \
+#define NODE_FIELDS(BASE)                                                                \
+    using BASE::type;                                                                    \
+    using BASE::loc;                                                                     \
     std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct ExprConstant: public Expr
@@ -186,7 +186,8 @@ struct ExprLambda: public Expr
 };
 
 #undef NODE_FIELDS
-#define NODE_FIELDS() std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
+#define NODE_FIELDS()                                                                    \
+    std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
 
 struct StmtVarDecl: public Stmt
 {

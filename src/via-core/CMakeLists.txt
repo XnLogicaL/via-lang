@@ -14,6 +14,7 @@ target_link_libraries(via-core
     spdlog
     magic_enum
     cpptrace::cpptrace
+    replxx
 )
 
 add_library(via::core ALIAS via-core)

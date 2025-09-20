@@ -16,6 +16,7 @@ target_link_libraries(via-cli
     spdlog
     magic_enum
     csv2::csv2
+    replxx
 )
 
 add_executable(via::cli ALIAS via-cli)

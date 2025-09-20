@@ -19,5 +19,9 @@ via::SourceLoc via::Token::location(const std::string& source) const
 
 std::string via::Token::get_dump() const
 {
-    return std::format("[{} '{}']", magic_enum::enum_name(kind), (*lexeme == '\0') ? "<eof>" : to_string());
+    return std::format(
+        "[{} '{}']",
+        magic_enum::enum_name(kind),
+        (*lexeme == '\0') ? "<eof>" : to_string()
+    );
 }

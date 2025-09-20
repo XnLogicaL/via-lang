@@ -51,10 +51,12 @@ enum class Style
     Underline = 4,
 };
 
-std::string format(std::string string,
-                   Foreground foreground,
-                   Background background = Background::Black,
-                   Style style = Style::Reset);
+std::string format(
+    std::string string,
+    Foreground foreground,
+    Background background = Background::Black,
+    Style style = Style::Reset
+);
 
 } // namespace ansi
 } // namespace via

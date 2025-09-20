@@ -20,8 +20,8 @@ class ErrorInfo
 {
   public:
     ErrorInfo(const Error& err);
-    ErrorInfo(std::string msg) :
-        msg(std::move(msg))
+    ErrorInfo(std::string msg)
+        : msg(std::move(msg))
     {}
 
   public:
@@ -32,8 +32,8 @@ class Error final
 {
   public:
     Error() = default;
-    Error(std::shared_ptr<ErrorInfo>&& err) noexcept :
-        m_payload(std::move(err))
+    Error(std::shared_ptr<ErrorInfo>&& err) noexcept
+        : m_payload(std::move(err))
     {}
 
     [[nodiscard]] static Error success() noexcept { return Error(); }
@@ -56,8 +56,8 @@ class Error final
     std::shared_ptr<ErrorInfo> m_payload{nullptr};
 };
 
-inline ErrorInfo::ErrorInfo(const Error& err) :
-    msg(err.get_error().msg)
+inline ErrorInfo::ErrorInfo(const Error& err)
+    : msg(err.get_error().msg)
 {}
 
 } // namespace via

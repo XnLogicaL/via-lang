@@ -101,8 +101,8 @@ struct AttributeGroup
     std::string get_dump() const;
 };
 
-#define NODE_FIELDS(base) \
-    using base::loc;      \
+#define NODE_FIELDS(base)                                                                \
+    using base::loc;                                                                     \
     std::string get_dump(usize& depth) const override;
 
 struct ExprLiteral: public Expr

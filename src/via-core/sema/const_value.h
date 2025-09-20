@@ -34,20 +34,20 @@ class ConstValue final
     using Union = std::variant<std::monostate, bool, i64, f64, std::string>;
 
   public:
-    constexpr explicit ConstValue() :
-        u(std::monostate{})
+    constexpr explicit ConstValue()
+        : u(std::monostate{})
     {}
-    constexpr explicit ConstValue(bool boolean) :
-        u(boolean)
+    constexpr explicit ConstValue(bool boolean)
+        : u(boolean)
     {}
-    constexpr explicit ConstValue(i64 integer) :
-        u(integer)
+    constexpr explicit ConstValue(i64 integer)
+        : u(integer)
     {}
-    constexpr explicit ConstValue(f64 float_) :
-        u(float_)
+    constexpr explicit ConstValue(f64 float_)
+        : u(float_)
     {}
-    constexpr explicit ConstValue(std::string string) :
-        u(string)
+    constexpr explicit ConstValue(std::string string)
+        : u(string)
     {}
 
     static Option<ConstValue> from_token(const Token& tok);

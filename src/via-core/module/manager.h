@@ -59,7 +59,7 @@ class ModuleManager
     }
 
   private:
-    Allocator m_alloc;
+    ScopedAllocator m_alloc;
     std::vector<std::string> m_imports;
     std::vector<fs::path> m_import_paths;
     std::unordered_map<fs::path, Module*> m_modules;

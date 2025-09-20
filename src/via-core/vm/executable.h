@@ -59,9 +59,15 @@ class Executable final
     friend void detail::ir_lower_stmt(Executable&, const Stmt*) noexcept;
 
   public:
-    static Executable* build_from_ir(Module* module, const IRTree& ir, u64 flags = 0) noexcept;
+    Executable() { m_stack.emplace(); }
+
     static Executable*
-    build_from_binary(Module* module, const std::vector<unsigned char>& bytes, u64 flags = 0) noexcept;
+    build_from_ir(Module* module, const IRTree& ir, u64 flags = 0) noexcept;
+    static Executable* build_from_binary(
+        Module* module,
+        const std::vector<unsigned char>& bytes,
+        u64 flags = 0
+    ) noexcept;
 
   public:
     auto flags() const noexcept { return m_flags; }
@@ -78,7 +84,10 @@ class Executable final
         return m_labels.size() - 1;
     }
 
-    void push_constant(sema::ConstValue cvalue) noexcept { m_constants.push_back(std::move(cvalue)); }
+    void push_constant(sema::ConstValue cvalue) noexcept
+    {
+        m_constants.push_back(std::move(cvalue));
+    }
     void push_instruction(OpCode op, std::array<u16, 3>&& ops = {}) noexcept
     {
         m_bytecode.emplace_back(op, ops[0], ops[1], ops[2]);

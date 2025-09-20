@@ -17,27 +17,40 @@
 #include "support/option.h"
 #include "vm/executable.h"
 
-#define VIA_MODULE_ENTRY(id) VIA_EXPORT const via::NativeModuleInfo* viainit_##id(via::ModuleManager* mgr)
-#define VIA_MODULE_FUNCTION(id) via::ValueRef id(via::CallInfo& ci)
+#define VIA_MODULE_ENTRY_PREFIX viainit_
+
+#define VIA_MODULE_ENTRY(ID, MANAGER)                                                    \
+    VIA_EXPORT const via::NativeModuleInfo* VIA_MODULE_ENTRY_PREFIX##ID(                 \
+        via::ModuleManager* MANAGER                                                      \
+    )
+#define VIA_MODULE_FUNCTION(ID, VM, CI)                                                  \
+    via::ValueRef ID(via::VirtualMachine* VM, via::CallInfo& CI)
 
 namespace via {
 namespace config {
 
-CONSTANT const char MODULE_ENTRY_PREFIX[] = "viainit_";
+#define _STRING(X) #X
+#define STRING(X) _STRING(X)
 
-}
+CONSTANT const char MODULE_ENTRY_PREFIX[] = STRING(VIA_MODULE_ENTRY_PREFIX);
+
+#undef _STRING
+#undef STRING
+
+} // namespace config
 
 struct NativeModuleInfo
 {
     const usize size;
     const DefTableEntry* begin;
 
-    explicit NativeModuleInfo(const usize size, const DefTableEntry* begin) :
-        size(size),
-        begin(begin)
+    explicit NativeModuleInfo(const usize size, const DefTableEntry* begin)
+        : size(size),
+          begin(begin)
     {}
 
-    static NativeModuleInfo* construct(Allocator& alloc, usize size, const DefTableEntry* begin)
+    static NativeModuleInfo*
+    construct(ScopedAllocator& alloc, usize size, const DefTableEntry* begin)
     {
         return alloc.emplace<NativeModuleInfo>(size, begin);
     }
@@ -75,6 +88,8 @@ class Module final
         DUMP_IR = 1 << 2,
         DUMP_EXE = 1 << 3,
         DUMP_DEFTABLE = 1 << 4,
+        NO_EXECUTION = 1 << 5,
+        DEBUG = 1 << 6,
     };
 
   public:
@@ -109,7 +124,7 @@ class Module final
     Expected<Module*> import(const QualName& path, const ast::StmtImport* importDecl);
 
   protected:
-    Allocator m_alloc;
+    ScopedAllocator m_alloc;
     Kind m_kind;
     u32 m_perms, m_flags;
     std::string m_name;

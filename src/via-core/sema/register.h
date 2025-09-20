@@ -39,8 +39,17 @@ class RegisterState
 
     inline void free(u16 reg) noexcept
     {
-        debug::require(reg <= config::REGISTER_COUNT, "invalid semantic register to free");
+        debug::require(
+            reg <= config::REGISTER_COUNT,
+            "invalid semantic register to free"
+        );
         m_buffer.reset(reg); // mark as free
+    }
+
+    template <typename... Regs>
+    inline void free_all(Regs... regs) noexcept
+    {
+        (free(regs), ...);
     }
 
   private:

@@ -32,7 +32,8 @@ struct std::hash<via::sema::DictKey>
 template <>
 struct std::equal_to<via::sema::DictKey>
 {
-    bool operator()(const via::sema::DictKey& a, const via::sema::DictKey& b) const noexcept;
+    bool
+    operator()(const via::sema::DictKey& a, const via::sema::DictKey& b) const noexcept;
 };
 
 template <>
@@ -44,7 +45,8 @@ struct std::hash<via::sema::FuncKey>
 template <>
 struct std::equal_to<via::sema::FuncKey>
 {
-    bool operator()(const via::sema::FuncKey& a, const via::sema::FuncKey& b) const noexcept;
+    bool
+    operator()(const via::sema::FuncKey& a, const via::sema::FuncKey& b) const noexcept;
 };
 
 template <>
@@ -56,7 +58,8 @@ struct std::hash<via::sema::UserKey>
 template <>
 struct std::equal_to<via::sema::UserKey>
 {
-    bool operator()(const via::sema::UserKey& a, const via::sema::UserKey& b) const noexcept;
+    bool
+    operator()(const via::sema::UserKey& a, const via::sema::UserKey& b) const noexcept;
 };
 
 namespace via {
@@ -102,8 +105,8 @@ class TypeEnv final
 class TypeContext final
 {
   public:
-    TypeContext() :
-        m_alloc(8 * 1024 * 1024)
+    TypeContext()
+        : m_alloc(8 * 1024 * 1024)
     {}
 
     const BuiltinType* get_builtin(BuiltinType::Kind kind);
@@ -112,8 +115,12 @@ class TypeContext final
     const FuncType* get_function(const Type* res, std::vector<const Type*> tps);
     const UserType* get_user(const ast::StmtTypeDecl* decl);
 
-    const TemplateParamType* get_template_parm(u32 depth, u32 index) { debug::unimplemented(); }
-    const TemplateSpecType* get_template_spec(const ast::StmtTypeDecl* prim, std::vector<const Type*> args)
+    const TemplateParamType* get_template_parm(u32 depth, u32 index)
+    {
+        debug::unimplemented();
+    }
+    const TemplateSpecType*
+    get_template_spec(const ast::StmtTypeDecl* prim, std::vector<const Type*> args)
     {
         debug::unimplemented();
     }

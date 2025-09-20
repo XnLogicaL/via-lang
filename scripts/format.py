@@ -21,7 +21,7 @@ def format_files_in_directory(directory):
                 file_path = os.path.join(root, file)
                 try:
                     # Run clang-format on the file
-                    run_command(f"clang-format -i {file_path}")
+                    run_command(f"clang-format-19 -i {file_path}")
                     print(f"Formatted: {file_path}")
                 except subprocess.CalledProcessError as e:
                     print(f"Error formatting file: {file_path}")

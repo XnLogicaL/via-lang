@@ -60,13 +60,19 @@ static bool checkTerminalSupport()
 }
 #endif
 
-std::string via::ansi::format(std::string string, Foreground foreground, Background background, Style style)
+std::string via::ansi::format(
+    std::string string,
+    Foreground foreground,
+    Background background,
+    Style style
+)
 {
     static bool hasTerminalSupport = checkTerminalSupport();
     if (hasTerminalSupport) {
         // Construct ANSI escape code and apply the color formatting to the text
-        return "\033[" + std::to_string(static_cast<int>(style)) + ";" + std::to_string(static_cast<int>(foreground)) +
-               ";" + std::to_string(static_cast<int>(background)) + "m" + string + "\033[0m";
+        return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
+               std::to_string(static_cast<int>(foreground)) + ";" +
+               std::to_string(static_cast<int>(background)) + "m" + string + "\033[0m";
     }
     else {
         return string;
