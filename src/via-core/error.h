@@ -41,7 +41,7 @@ class Error final
     template <typename E = ErrorInfo, typename... Args>
     [[nodiscard]] static Error fail(Args&&... args) noexcept
     {
-        return Error(std::make_shared<E>(forward<Args>(args)...));
+        return Error(std::make_shared<E>(std::forward<Args>(args)...));
     }
 
     operator bool() const noexcept { return !has_error(); }

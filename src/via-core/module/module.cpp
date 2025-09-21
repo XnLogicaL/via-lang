@@ -16,6 +16,7 @@
 #include "ir/ir.h"
 #include "manager.h"
 #include "support/ansi.h"
+#include "support/bit_enum.h"
 #include "vm/machine.h"
 #include "vm/value.h"
 
@@ -86,8 +87,8 @@ via::Expected<via::Module*> via::Module::load_native_object(
     const char* name,
     const fs::path& path,
     const ast::StmtImport* decl,
-    const u32 perms,
-    const u32 flags
+    const ModulePerms perms,
+    const ModuleFlags flags
 )
 {
     if (manager->is_current_import(name)) {
@@ -110,7 +111,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
     }
 
     auto* module = module_allocator.emplace<Module>();
-    module->m_kind = Kind::NATIVE;
+    module->m_kind = ModuleKind::NATIVE;
     module->m_manager = manager;
     module->m_importee = importee;
     module->m_perms = perms;
@@ -139,7 +140,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
         module->m_defs[entry.id] = entry.def;
     }
 
-    if (flags & DUMP_DEFTABLE) {
+    if (flags & ModuleFlags::DUMP_DEFTABLE) {
         std::println(
             std::cout,
             "{}",
@@ -166,8 +167,8 @@ via::Expected<via::Module*> via::Module::load_source_file(
     const char* name,
     const fs::path& path,
     const ast::StmtImport* ast_decl,
-    const u32 perms,
-    const u32 flags
+    const ModulePerms perms,
+    const ModuleFlags flags
 )
 {
     if (manager->is_current_import(name)) {
@@ -190,7 +191,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
     }
 
     auto* module = module_allocator.emplace<Module>();
-    module->m_kind = Kind::SOURCE;
+    module->m_kind = ModuleKind::SOURCE;
     module->m_manager = manager;
     module->m_importee = importee;
     module->m_perms = perms;
@@ -230,10 +231,10 @@ via::Expected<via::Module*> via::Module::load_source_file(
         Executable* exe = Executable::build_from_ir(module, module->m_ir);
         module->m_exe = exe;
 
-        if ((flags & NO_EXECUTION) == 0) {
+        if ((flags & ModuleFlags::NO_EXECUTION) == 0) {
             VirtualMachine vm(module, exe);
 
-            if (flags & DEBUG) {
+            if (flags & ModuleFlags::DEBUG) {
                 replxx::Replxx repl;
 
                 std::println(std::cout, "Starting interactive VM debugger...");
@@ -336,19 +337,19 @@ error:
     diags.emit();
     diags.clear();
 
-    if (flags & DUMP_TTREE)
+    if (flags & ModuleFlags::DUMP_TTREE)
         std::println(std::cout, "{}", debug::get_dump(ttree));
-    if (flags & DUMP_AST)
+    if (flags & ModuleFlags::DUMP_AST)
         std::println(std::cout, "{}", debug::get_dump(ast));
-    if (flags & DUMP_IR)
+    if (flags & ModuleFlags::DUMP_IR)
         std::println(
             std::cout,
             "{}",
             debug::get_dump(manager->get_symbol_table(), module->m_ir)
         );
-    if (flags & DUMP_EXE)
+    if (flags & ModuleFlags::DUMP_EXE)
         std::println(std::cout, "{}", module->m_exe->get_dump());
-    if (flags & DUMP_DEFTABLE) {
+    if (flags & ModuleFlags::DUMP_DEFTABLE) {
         std::println(
             std::cout,
             "{}",
@@ -369,7 +370,9 @@ error:
         for (Module* module = importee; module != nullptr; module = module->m_importee)
             spdlog::info(std::format("Imported by module '{}'", module->m_name));
 
-        if ((flags & (DUMP_TTREE | DUMP_AST | DUMP_IR)) != 0u) {
+        if ((flags & (ModuleFlags::DUMP_TTREE | ModuleFlags::DUMP_AST |
+                      ModuleFlags::DUMP_IR) |
+             ModuleFlags::DUMP_EXE) != 0u) {
             spdlog::warn("Dump may be invalid due to compilation failure");
         }
     }
@@ -479,7 +482,7 @@ via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
         return Unexpected(std::format("Module '{}' not found", to_string(path)));
     }
 
-    if ((m_perms & Perms::IMPORT) == 0u) {
+    if ((m_perms & ModulePerms::IMPORT) == 0u) {
         return Unexpected("Current module lacks import capabilties");
     }
 

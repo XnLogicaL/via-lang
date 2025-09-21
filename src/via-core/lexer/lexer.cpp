@@ -10,13 +10,13 @@
 #include "lexer.h"
 #include <cstring>
 
-using enum via::Token::Kind;
+using enum via::TokenKind;
 
 // max 3-char symbol lookahead
 struct TokenReprPair
 {
     const char* str;
-    via::Token::Kind kind;
+    via::TokenKind kind;
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
@@ -105,7 +105,7 @@ static consteval via::usize max_operator_length()
     return maxSize;
 }
 
-static bool is_numeric(via::Token::Kind* kind, char c)
+static bool is_numeric(via::TokenKind* kind, char c)
 {
     switch (*kind) {
     case LIT_INT:

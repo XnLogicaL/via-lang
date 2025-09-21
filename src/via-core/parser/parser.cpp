@@ -18,7 +18,7 @@
     auto* first = peek();                                                                \
     auto loc = first->location(m_source);
 
-using enum via::Token::Kind;
+using enum via::TokenKind;
 using namespace via::ast;
 
 struct ParserError
@@ -33,7 +33,7 @@ struct ParserError
     {}
 };
 
-static bool is_expr_start(via::Token::Kind kind)
+static bool is_expr_start(via::TokenKind kind)
 {
     switch (kind) {
     case IDENTIFIER:
@@ -55,7 +55,7 @@ static bool is_expr_start(via::Token::Kind kind)
     }
 }
 
-static int bin_prec(via::Token::Kind kind)
+static int bin_prec(via::TokenKind kind)
 {
     switch (kind) {
     case KW_OR:
@@ -102,12 +102,12 @@ const via::Token* via::Parser::advance()
     return *(m_cursor++);
 }
 
-bool via::Parser::match(Token::Kind kind, int ahead)
+bool via::Parser::match(TokenKind kind, int ahead)
 {
     return peek(ahead)->kind == kind;
 }
 
-bool via::Parser::optional(Token::Kind kind)
+bool via::Parser::optional(TokenKind kind)
 {
     if (match(kind)) {
         advance();
@@ -117,7 +117,7 @@ bool via::Parser::optional(Token::Kind kind)
     return false;
 }
 
-const via::Token* via::Parser::expect(Token::Kind kind, const char* task)
+const via::Token* via::Parser::expect(TokenKind kind, const char* task)
 {
     if (!match(kind)) {
         const Token& unexp = *peek();

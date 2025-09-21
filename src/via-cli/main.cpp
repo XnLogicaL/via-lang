@@ -18,9 +18,6 @@
 
 namespace fs = std::filesystem;
 
-using via::Module;
-using via::ModuleManager;
-
 static void assert(bool cond, std::string msg)
 {
     if (!cond) {
@@ -69,8 +66,15 @@ static fs::path get_lang_dir()
 
 int main(int argc, char* argv[])
 {
+    using via::Module;
+    using via::ModuleFlags;
+    using via::ModuleManager;
+    using via::ModulePerms;
+    using namespace via::literals;
+
     std::shared_ptr<spdlog::sinks::ansicolor_stdout_sink_mt> console =
         std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+
     std::string info_color = console->cyan.data();
     info_color += console->bold.data();
     console->set_color(spdlog::level::info, std::string_view(info_color.c_str()));
@@ -78,7 +82,7 @@ int main(int argc, char* argv[])
     spdlog::set_default_logger(std::make_shared<spdlog::logger>("main", console));
     spdlog::set_pattern("%^%l:%$ %v");
 
-    static fs::path lang_dir = get_lang_dir();
+    static auto lang_dir = get_lang_dir();
 
     try {
         auto& cli = via::cli::app_instance();
@@ -108,26 +112,26 @@ int main(int argc, char* argv[])
 
         assert(!input_path.empty(), "no input files");
 
-        uint32_t flags = 0;
+        ModuleFlags flags = ModuleFlags::NONE;
         {
             if (raw_dump_mode == "ttree")
-                flags |= Module::Flags::DUMP_TTREE;
+                flags |= ModuleFlags::DUMP_TTREE;
             else if (raw_dump_mode == "ast")
-                flags |= Module::Flags::DUMP_AST;
+                flags |= ModuleFlags::DUMP_AST;
             else if (raw_dump_mode == "ir")
-                flags |= Module::Flags::DUMP_IR;
+                flags |= ModuleFlags::DUMP_IR;
             else if (raw_dump_mode == "exe")
-                flags |= Module::Flags::DUMP_EXE;
+                flags |= ModuleFlags::DUMP_EXE;
             else if (raw_dump_mode == "deftab")
-                flags |= via::Module::DUMP_DEFTABLE;
+                flags |= ModuleFlags::DUMP_DEFTABLE;
         }
 
         if (cli.get<bool>("--no-execute")) {
-            flags |= via::Module::NO_EXECUTION;
+            flags |= ModuleFlags::NO_EXECUTION;
         }
 
         if (cli.get<bool>("--debug")) {
-            flags |= via::Module::DEBUG;
+            flags |= ModuleFlags::DEBUG;
         }
 
         if (!fs::exists(lang_dir)) {
@@ -158,7 +162,7 @@ int main(int argc, char* argv[])
             input_path.stem().c_str(),
             input_path,
             nullptr,
-            Module::Perms::ALL,
+            ModulePerms::ALL,
             flags
         );
 

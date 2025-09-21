@@ -12,7 +12,6 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "debug.h"
-#include "support/utility.h"
 
 namespace via {
 
@@ -33,7 +32,7 @@ class Option final
             : null()
         {}
         Storage(T&& val)
-            : val(move(val))
+            : val(std::move(val))
         {}
         Storage(const Storage&) {}
         Storage(Storage&&) {}
@@ -47,7 +46,7 @@ class Option final
     {}
     constexpr Option(T val) noexcept
         : m_has_value(true),
-          m_storage(forward<T>(val))
+          m_storage(std::forward<T>(val))
     {}
 
     constexpr ~Option() noexcept

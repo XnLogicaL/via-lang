@@ -8,6 +8,7 @@
 ** ===================================================== */
 
 #include "machine.h"
+#include "module/manager.h"
 #include "value.h"
 #include "value_ref.h"
 
@@ -38,11 +39,11 @@
         ValueRef(vm, val);                                                               \
     })
 
-#define L(ID) reinterpret_cast<Value*>(&stack.at(ID))
+#define L(ID) reinterpret_cast<Value*>(stack.at(ID))
 #define LSET(ID, VAL) stack.at(ID) = reinterpret_cast<uptr>(VAL);
 #define LFREE(ID)                                                                        \
     if (R(ID) != nullptr) {                                                              \
-        reinterpret_cast<Value*>(&stack.at(ID))->unref();                                \
+        reinterpret_cast<Value*>(stack.at(ID))->unref();                                 \
     }
 
 #define R(ID) regs[ID]
@@ -72,13 +73,18 @@ void via::detail::__execute(VirtualMachine* vm)
 #endif
 
 dispatch:
-    // Explicit CSE
+    /* Explicit VM stuff CSE */
     auto& stack = vm->m_stack;
     auto& regs = vm->m_registers;
     auto& consts = vm->m_exe->constants();
 
     const auto*& pc = vm->m_pc;
-    const u16 a = pc->a, b = pc->b, c = pc->c;
+    const auto a = pc->a, b = pc->b, c = pc->c;
+
+    /* Explicit module stuff CSE */
+    auto* manager = vm->m_module->get_manager();
+    auto& symtab = manager->get_symbol_table();
+
 #ifdef HAS_CGOTO
     goto* dispatch_table[static_cast<u16>(pc->op)];
     {
@@ -652,7 +658,6 @@ dispatch:
         {
             auto* val = R(a);
             val->m_rc++;
-            spdlog::warn("pushing: {}", val->to_string());
             vm->push_local(ValueRef(vm, val));
             DISPATCH()
         }
@@ -669,8 +674,6 @@ dispatch:
         }
         CASE(GETLOCAL)
         {
-            spdlog::warn("b: {} L(b): {}", b, (const void*) L(b));
-            spdlog::warn("getlocal: {}", L(b)->to_string());
             RFREE(a);
             RSET(a, L(b)->clone());
             DISPATCH()

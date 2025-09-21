@@ -12,63 +12,9 @@
 
 namespace ast = via::ast;
 
-using Tk = via::Token::Kind;
-
 inline via::usize ZERO = 0;
 
 #define INDENT std::string(depth, ' ')
-
-via::UnaryOp via::to_unary_op(Tk kind) noexcept
-{
-    switch (kind) {
-    case Tk::OP_MINUS:
-        return UnaryOp::NOT;
-    case Tk::KW_NOT:
-        return UnaryOp::NOT;
-    case Tk::OP_TILDE:
-        return UnaryOp::BNOT;
-    default:
-        break;
-    }
-
-    via::debug::bug("unmapped UnaryOp TokenKind");
-}
-
-via::BinaryOp via::to_binary_op(Tk kind) noexcept
-{
-    switch (kind) {
-    case Tk::OP_PLUS:
-        return BinaryOp::ADD;
-    case Tk::OP_MINUS:
-        return BinaryOp::SUB;
-    case Tk::OP_STAR:
-        return BinaryOp::MUL;
-    case Tk::OP_SLASH:
-        return BinaryOp::DIV;
-    case Tk::OP_STAR_STAR:
-        return BinaryOp::POW;
-    case Tk::OP_PERCENT:
-        return BinaryOp::MOD;
-    case Tk::KW_AND:
-        return BinaryOp::AND;
-    case Tk::KW_OR:
-        return BinaryOp::OR;
-    case Tk::OP_AMP:
-        return BinaryOp::BAND;
-    case Tk::OP_PIPE:
-        return BinaryOp::BOR;
-    case Tk::OP_CARET:
-        return BinaryOp::BXOR;
-    case Tk::OP_SHL:
-        return BinaryOp::BSHL;
-    case Tk::OP_SHR:
-        return BinaryOp::BSHR;
-    default:
-        break;
-    }
-
-    via::debug::bug("unmapped BinaryOp TokenKind");
-}
 
 std::string ast::Path::get_dump() const
 {

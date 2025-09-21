@@ -20,22 +20,15 @@
 #define VIA_MODULE_ENTRY_PREFIX viainit_
 
 #define VIA_MODULE_ENTRY(ID, MANAGER)                                                    \
-    VIA_EXPORT const via::NativeModuleInfo* VIA_MODULE_ENTRY_PREFIX##ID(                 \
-        via::ModuleManager* MANAGER                                                      \
-    )
+    VIA_EXPORT const via::NativeModuleInfo*                                              \
+    EXPAND_AND_PASTE(VIA_MODULE_ENTRY_PREFIX, ID)(via::ModuleManager * MANAGER)
 #define VIA_MODULE_FUNCTION(ID, VM, CI)                                                  \
     via::ValueRef ID(via::VirtualMachine* VM, via::CallInfo& CI)
 
 namespace via {
 namespace config {
 
-#define _STRING(X) #X
-#define STRING(X) _STRING(X)
-
-CONSTANT const char MODULE_ENTRY_PREFIX[] = STRING(VIA_MODULE_ENTRY_PREFIX);
-
-#undef _STRING
-#undef STRING
+CONSTANT const char MODULE_ENTRY_PREFIX[] = EXPAND_STRING(VIA_MODULE_ENTRY_PREFIX);
 
 } // namespace config
 
@@ -60,37 +53,40 @@ class ModuleManager;
 
 using NativeModuleInitCallback = NativeModuleInfo* (*) (ModuleManager* mgr);
 
+enum class ModuleKind : u8
+{
+    SOURCE,
+    NATIVE,
+};
+
+enum class ModulePerms : u32
+{
+    NONE = 0,
+    FREAD = 1 << 0,
+    FWRITE = 1 << 1,
+    NETWORK = 1 << 2,
+    FFICALL = 1 << 3,
+    IMPORT = 1 << 4,
+    ALL = 0xFFFFFFFF,
+};
+
+enum class ModuleFlags : u32
+{
+    NONE = 0,
+    DUMP_TTREE = 1 << 0,
+    DUMP_AST = 1 << 1,
+    DUMP_IR = 1 << 2,
+    DUMP_EXE = 1 << 3,
+    DUMP_DEFTABLE = 1 << 4,
+    NO_EXECUTION = 1 << 5,
+    DEBUG = 1 << 6,
+    ALL = 0xFFFFFFFF,
+};
+
 class Module final
 {
   public:
     friend class ModuleManager;
-
-    enum class Kind : u8
-    {
-        SOURCE,
-        NATIVE,
-    };
-
-    enum Perms : u32
-    {
-        FREAD = 1 << 0,
-        FWRITE = 1 << 1,
-        NETWORK = 1 << 2,
-        FFICALL = 1 << 3,
-        IMPORT = 1 << 4,
-        ALL,
-    };
-
-    enum Flags : u32
-    {
-        DUMP_TTREE = 1 << 0,
-        DUMP_AST = 1 << 1,
-        DUMP_IR = 1 << 2,
-        DUMP_EXE = 1 << 3,
-        DUMP_DEFTABLE = 1 << 4,
-        NO_EXECUTION = 1 << 5,
-        DEBUG = 1 << 6,
-    };
 
   public:
     static Expected<Module*> load_source_file(
@@ -99,8 +95,8 @@ class Module final
         const char* name,
         const fs::path& path,
         const ast::StmtImport* decl,
-        const u32 perms = 0,
-        const u32 flags = 0
+        const ModulePerms perms = ModulePerms::NONE,
+        const ModuleFlags flags = ModuleFlags::NONE
     );
 
     static Expected<Module*> load_native_object(
@@ -109,8 +105,8 @@ class Module final
         const char* name,
         const fs::path& path,
         const ast::StmtImport* decl,
-        const u32 perms = 0,
-        const u32 flags = 0
+        const ModulePerms perms = ModulePerms::NONE,
+        const ModuleFlags flags = ModuleFlags::NONE
     );
 
   public:
@@ -125,8 +121,9 @@ class Module final
 
   protected:
     ScopedAllocator m_alloc;
-    Kind m_kind;
-    u32 m_perms, m_flags;
+    ModuleKind m_kind;
+    ModulePerms m_perms;
+    ModuleFlags m_flags;
     std::string m_name;
     fs::path m_path;
     IRTree m_ir;

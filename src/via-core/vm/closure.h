@@ -44,7 +44,7 @@ class Closure final
         requires(std::is_constructible_v<Closure, Args...>)
     [[nodiscard]] static Closure* construct(VirtualMachine* vm, Args&&... args) noexcept
     {
-        return vm->get_allocator().emplace<Closure>(forward<Args>(args)...);
+        return vm->get_allocator().emplace<Closure>(std::forward<Args>(args)...);
     }
 
   public:

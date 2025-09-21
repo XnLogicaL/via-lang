@@ -28,19 +28,19 @@ namespace detail {
 template <derived_from<ast::Expr, ast::Type> Type>
 const sema::Type* ast_type_of(IRBuilder&, const Type*) noexcept
 {
-    debug::todo(std::format("type_of<{}>()", TYPENAME(Type)));
+    debug::todo(std::format("ast_type_of<{}>()", TYPENAME(Type)));
 }
 
 template <derived_from<ast::Expr> Expr>
 const ir::Expr* ast_lower_expr(IRBuilder&, const Expr*) noexcept
 {
-    debug::todo(std::format("lower_expr<{}>()", TYPENAME(Expr)));
+    debug::todo(std::format("ast_lower_expr<{}>()", TYPENAME(Expr)));
 }
 
 template <derived_from<ast::Stmt> Stmt>
 const ir::Stmt* ast_lower_stmt(IRBuilder&, const Stmt*) noexcept
 {
-    debug::todo(std::format("lower_stmt<{}>()", TYPENAME(Stmt)));
+    debug::todo(std::format("ast_lower_stmt<{}>()", TYPENAME(Stmt)));
 }
 
 } // namespace detail

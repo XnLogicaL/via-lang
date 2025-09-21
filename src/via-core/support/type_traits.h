@@ -31,6 +31,9 @@ concept default_constructible = std::is_default_constructible_v<T>;
 template <typename T>
 concept trivially_default_constructible = std::is_trivially_default_constructible_v<T>;
 
+template <typename T>
+concept scoped_enum = std::is_scoped_enum_v<T>;
+
 template <typename T, template <typename> typename... Concepts>
 concept all = (Concepts<T>::value && ...);
 

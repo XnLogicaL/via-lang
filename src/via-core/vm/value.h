@@ -21,16 +21,6 @@ namespace via {
 class Value final
 {
   public:
-    enum class Kind
-    {
-        NIL,
-        INT,
-        FLOAT,
-        BOOL,
-        STRING,
-        FUNCTION,
-    };
-
     union Union {
         i64 integer;
         f64 float_;
@@ -46,20 +36,23 @@ class Value final
     friend void detail::__execute(VirtualMachine*);
 
   public:
-    static Value* construct(VirtualMachine* vm) { return construct_impl(vm, Kind::NIL); }
+    static Value* construct(VirtualMachine* vm)
+    {
+        return construct_impl(vm, ValueKind::NIL);
+    }
     static Value* construct(VirtualMachine* vm, i64 integer)
     {
-        return construct_impl(vm, Kind::INT, {.integer = integer});
+        return construct_impl(vm, ValueKind::INT, {.integer = integer});
     }
 
     static Value* construct(VirtualMachine* vm, f64 float_)
     {
-        return construct_impl(vm, Kind::FLOAT, {.float_ = float_});
+        return construct_impl(vm, ValueKind::FLOAT, {.float_ = float_});
     }
 
     static Value* construct(VirtualMachine* vm, bool boolean)
     {
-        return construct_impl(vm, Kind::BOOL, {.boolean = boolean});
+        return construct_impl(vm, ValueKind::BOOL, {.boolean = boolean});
     }
 
     static Value* construct(VirtualMachine* vm, char* string)
@@ -69,7 +62,7 @@ class Value final
             "Value construction via string requires it to be allocated by "
             "the corresponding Value::vm"
         );
-        return construct_impl(vm, Kind::STRING, {.string = string});
+        return construct_impl(vm, ValueKind::STRING, {.string = string});
     }
 
     static Value* construct(VirtualMachine* vm, Closure* closure)
@@ -79,26 +72,24 @@ class Value final
             "Value construction via closure object requires it to be allocated by "
             "the corresponding Value::vm"
         );
-        return construct_impl(vm, Kind::FUNCTION, {.function = closure});
+        return construct_impl(vm, ValueKind::FUNCTION, {.function = closure});
     }
 
     static Value* construct(VirtualMachine* vm, const sema::ConstValue& cv)
     {
-        using enum sema::ConstValue::Kind;
-
         auto& alloc = vm->get_allocator();
 
         switch (cv.kind()) {
-        case NIL:
+        case ValueKind::NIL:
             return construct(vm);
-        case BOOL:
-            return construct(vm, cv.value<BOOL>());
-        case INT:
-            return construct(vm, cv.value<INT>());
-        case FLOAT:
-            return construct(vm, cv.value<FLOAT>());
-        case STRING: {
-            auto buf = alloc.strdup(cv.value<STRING>().c_str());
+        case ValueKind::BOOL:
+            return construct(vm, cv.value<ValueKind::BOOL>());
+        case ValueKind::INT:
+            return construct(vm, cv.value<ValueKind::INT>());
+        case ValueKind::FLOAT:
+            return construct(vm, cv.value<ValueKind::FLOAT>());
+        case ValueKind::STRING: {
+            auto buf = alloc.strdup(cv.value<ValueKind::STRING>().c_str());
             return construct(vm, buf);
         }
         default:
@@ -127,10 +118,10 @@ class Value final
     inline void free()
     {
         switch (m_kind) {
-        case Kind::STRING: // Trivial destruction:
+        case ValueKind::STRING: // Trivial destruction:
             m_vm->get_allocator().free(std::bit_cast<void*>(m_data));
             break;
-        case Kind::FUNCTION:
+        case ValueKind::FUNCTION:
             m_vm->get_allocator().free<Closure>(m_data.function);
             break;
         default:
@@ -138,7 +129,7 @@ class Value final
             break;
         }
 
-        m_kind = Kind::NIL;
+        m_kind = ValueKind::NIL;
     }
 
     inline Value* clone() noexcept { return construct_impl(m_vm, m_kind, m_data); }
@@ -155,17 +146,17 @@ class Value final
     inline std::string as_cstring() const
     {
         switch (m_kind) {
-        case Kind::NIL:
+        case ValueKind::NIL:
             return "nil";
-        case Kind::BOOL:
+        case ValueKind::BOOL:
             return std::to_string(m_data.boolean);
-        case Kind::INT:
+        case ValueKind::INT:
             return std::to_string(m_data.integer);
-        case Kind::FLOAT:
+        case ValueKind::FLOAT:
             return std::to_string(m_data.float_);
-        case Kind::STRING:
+        case ValueKind::STRING:
             return m_data.string;
-        case Kind::FUNCTION:
+        case ValueKind::FUNCTION:
             return std::format(
                 "{}@{}",
                 m_data.function->is_native() ? "native" : "function",
@@ -192,7 +183,7 @@ class Value final
 
   private:
     static inline Value*
-    construct_impl(VirtualMachine* vm, Value::Kind kind, Value::Union data = {})
+    construct_impl(VirtualMachine* vm, ValueKind kind, Value::Union data = {})
     {
         Value* ptr = vm->get_allocator().emplace<Value>();
         ptr->m_kind = kind;
@@ -202,7 +193,7 @@ class Value final
     }
 
   private:
-    Kind m_kind = Kind::NIL;
+    ValueKind m_kind = ValueKind::NIL;
     Union m_data = {};
     usize m_rc = 1; // obviously
     VirtualMachine* m_vm;

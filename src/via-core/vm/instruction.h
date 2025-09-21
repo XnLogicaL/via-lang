@@ -11,6 +11,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "support/utility.h"
 
 namespace via {
 
@@ -148,9 +149,7 @@ namespace via {
 
 enum class OpCode : u16
 {
-#define DEFINE_ENUM(OP) OP,
     FOR_EACH_OPCODE(DEFINE_ENUM)
-#undef DEFINE_ENUM
 };
 
 struct Instruction

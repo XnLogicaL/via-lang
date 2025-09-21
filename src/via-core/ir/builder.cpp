@@ -110,7 +110,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprLiteral>(
     const ast::ExprLiteral* ast_expr_literal
 ) noexcept
 {
-    using enum Token::Kind;
+    using enum TokenKind;
     using enum sema::BuiltinType::Kind;
 
     sema::BuiltinType::Kind kind;
@@ -175,6 +175,15 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
         )
     );
     return nullptr;
+}
+
+template <>
+const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
+    IRBuilder& builder,
+    const ast::ExprStaticAccess* ast_expr_st_access
+) noexcept
+{
+    return builder.m_type_ctx.get_builtin(Btk::NIL);
 }
 
 template <>
@@ -264,7 +273,7 @@ const sema::Type* via::detail::ast_type_of<ast::TypeBuiltin>(
     const ast::TypeBuiltin* ast_type_builtin
 ) noexcept
 {
-    using enum Token::Kind;
+    using enum TokenKind;
     using enum sema::BuiltinType::Kind;
     sema::BuiltinType::Kind kind;
 

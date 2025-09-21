@@ -34,12 +34,12 @@ class Parser final
     SyntaxTree parse();
 
   private:
-    bool match(Token::Kind kind, int ahead = 0);
-    bool optional(Token::Kind kind);
+    bool match(TokenKind kind, int ahead = 0);
+    bool optional(TokenKind kind);
 
     const Token* peek(int ahead = 0);
     const Token* advance();
-    const Token* expect(Token::Kind kind, const char* task);
+    const Token* expect(TokenKind kind, const char* task);
 
     // Special
     const ast::Path* parse_static_path();

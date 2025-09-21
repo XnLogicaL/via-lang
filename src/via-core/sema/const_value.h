@@ -17,47 +17,40 @@
 
 namespace via {
 
+enum class ValueKind : u8
+{
+    NIL,
+    INT,
+    FLOAT,
+    BOOL,
+    STRING,
+    FUNCTION,
+};
+
 namespace sema {
 
 class ConstValue final
 {
   public:
-    enum class Kind
-    {
-        NIL,
-        BOOL,
-        INT,
-        FLOAT,
-        STRING,
-    };
-
     using Union = std::variant<std::monostate, bool, i64, f64, std::string>;
 
   public:
-    constexpr explicit ConstValue()
-        : u(std::monostate{})
-    {}
-    constexpr explicit ConstValue(bool boolean)
-        : u(boolean)
-    {}
-    constexpr explicit ConstValue(i64 integer)
-        : u(integer)
-    {}
-    constexpr explicit ConstValue(f64 float_)
-        : u(float_)
-    {}
-    constexpr explicit ConstValue(std::string string)
-        : u(string)
-    {}
+    // clang-format off
+    constexpr explicit ConstValue() : u(std::monostate{}) {}
+    constexpr explicit ConstValue(bool boolean) : u(boolean) {}
+    constexpr explicit ConstValue(i64 integer) : u(integer) {}
+    constexpr explicit ConstValue(f64 float_) : u(float_) {}
+    constexpr explicit ConstValue(std::string string) : u(string) {}
+    // clang-format on
 
     static Option<ConstValue> from_token(const Token& tok);
 
   public:
-    constexpr Kind kind() const { return static_cast<Kind>(u.index()); }
-    constexpr Union& data() { return u; }
-    constexpr const Union& data() const { return u; }
+    constexpr auto kind() const { return static_cast<ValueKind>(u.index()); }
+    constexpr auto& data() { return u; }
+    constexpr const auto& data() const { return u; }
 
-    template <const Kind kind>
+    template <const ValueKind kind>
     constexpr auto value() const
     {
         return std::get<static_cast<usize>(kind)>(u);
@@ -85,5 +78,4 @@ class ConstValue final
 };
 
 } // namespace sema
-
 } // namespace via

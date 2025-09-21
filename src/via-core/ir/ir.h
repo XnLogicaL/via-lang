@@ -21,6 +21,33 @@ namespace via {
 class Module;
 struct Def;
 
+enum class UnaryOp
+{
+    NEG = 0, // -
+    NOT,     // not
+    BNOT,    // ~
+};
+
+enum class BinaryOp
+{
+    ADD = 0, // +
+    SUB,     // -
+    MUL,     // *
+    DIV,     // /
+    POW,     // **
+    MOD,     // %
+    AND,     // and
+    OR,      // or
+    BAND,    // &
+    BOR,     // |
+    BXOR,    // ^
+    BSHL,    // <<
+    BSHR,    // >>
+};
+
+UnaryOp to_unary_op(TokenKind kind) noexcept;
+BinaryOp to_binary_op(TokenKind kind) noexcept;
+
 namespace ir {
 
 struct Expr

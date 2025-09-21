@@ -11,7 +11,7 @@
 #include "value.h"
 #include "value_ref.h"
 
-using Vk = via::Value::Kind;
+using Vk = via::ValueKind;
 
 via::Snapshot::Snapshot(VirtualMachine* vm) noexcept
     : stack_ptr(vm->m_sp - vm->m_stack.base()),
@@ -31,10 +31,6 @@ void via::VirtualMachine::push_local(ValueRef val)
 {
     val->m_rc++;
     m_stack.push((uptr) val.get());
-
-    for (const auto& x: m_stack) {
-        spdlog::warn("stack {}", ((Value*) x)->to_string());
-    }
 }
 
 via::ValueRef via::VirtualMachine::get_local(usize sp)

@@ -28,6 +28,7 @@
 #include <sema/const_value.h>
 #include <sema/register.h>
 #include <support/ansi.h>
+#include <support/bit_enum.h>
 #include <support/conversions.h>
 #include <support/expected.h>
 #include <support/math.h>
@@ -40,3 +41,4 @@
 #include <vm/stack.h>
 #include <vm/value.h>
 #include <vm/value_ref.h>
+

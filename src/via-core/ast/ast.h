@@ -19,34 +19,6 @@
 #define TRY_IS(T, a) (dynamic_cast<T*>(a) != nullptr)
 
 namespace via {
-
-enum class UnaryOp
-{
-    NEG = 0, // -
-    NOT,     // not
-    BNOT,    // ~
-};
-
-enum class BinaryOp
-{
-    ADD = 0, // +
-    SUB,     // -
-    MUL,     // *
-    DIV,     // /
-    POW,     // **
-    MOD,     // %
-    AND,     // and
-    OR,      // or
-    BAND,    // &
-    BOR,     // |
-    BXOR,    // ^
-    BSHL,    // <<
-    BSHR,    // >>
-};
-
-UnaryOp to_unary_op(Token::Kind kind) noexcept;
-BinaryOp to_binary_op(Token::Kind kind) noexcept;
-
 namespace ast {
 
 struct Expr

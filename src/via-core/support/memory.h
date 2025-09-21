@@ -32,7 +32,7 @@ using ObjectRegistry = std::vector<ObjectEntry>;
 template <typename T, typename... Args>
 [[gnu::hot]] inline void __construct_at(ObjectRegistry* registry, T* dst, Args&&... args)
 {
-    new (dst) T(forward<Args>(args)...);
+    new (dst) T(std::forward<Args>(args)...);
     registry->push_back({.ptr = dst, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
 }
 
@@ -41,7 +41,7 @@ template <typename T, typename... Args>
 __construct_range_at(ObjectRegistry* registry, T* dst, usize size, Args&&... args)
 {
     for (T* ptr = dst; ptr < dst + size; ptr++) {
-        __construct_at(registry, ptr, forward<Args>(args)...);
+        __construct_at(registry, ptr, std::forward<Args>(args)...);
         registry->push_back({.ptr = ptr, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
     }
 }
