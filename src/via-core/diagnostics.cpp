@@ -57,7 +57,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     u64 line = 1 + std::count(begin, line_begin, '\n');
     u64 col = static_cast<u64>(ptr - line_begin) + 1;
 
-    std::string_view line_view(line_begin, static_cast<usize>(line_end - line_begin));
+    std::string_view line_view(line_begin, static_cast<size_t>(line_end - line_begin));
 
     logger->log(
         level,
@@ -72,12 +72,12 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         ansi::format(std::format("[{}:{}:{}]", m_path, line, col), ansi::Foreground::Cyan)
     );
 
-    usize span_begin = std::min(
-        static_cast<usize>(diag.location.begin - (line_begin - begin)),
+    size_t span_begin = std::min(
+        static_cast<size_t>(diag.location.begin - (line_begin - begin)),
         line_view.size()
     );
-    usize span_end = std::min(
-        static_cast<usize>(diag.location.end - (line_begin - begin)),
+    size_t span_end = std::min(
+        static_cast<size_t>(diag.location.end - (line_begin - begin)),
         line_view.size()
     );
 
@@ -98,7 +98,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     }
 
     spdlog::set_pattern("%v");
-    usize line_width = static_cast<usize>(std::log10(line)) + 1;
+    size_t line_width = static_cast<size_t>(std::log10(line)) + 1;
     logger->log(spdlog::level::off, " {} | {}", line, hl_line);
 
     std::string caret(line_view.size(), ' ');

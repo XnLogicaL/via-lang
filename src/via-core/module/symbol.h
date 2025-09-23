@@ -24,7 +24,7 @@ inline std::string to_string(const QualName& path)
 {
     std::ostringstream oss;
 
-    for (usize i = 0; i < path.size(); i++) {
+    for (size_t i = 0; i < path.size(); i++) {
         if (i > 0) {
             oss << "::";
         }

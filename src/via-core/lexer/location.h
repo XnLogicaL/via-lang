@@ -16,14 +16,14 @@ namespace via {
 
 struct SourceLoc
 {
-    usize begin;
-    usize end;
+    size_t begin;
+    size_t end;
 };
 
 struct RelSourceLoc
 {
-    usize line;
-    usize offset;
+    size_t line;
+    size_t offset;
 
     RelSourceLoc(const std::string& source, SourceLoc loc);
 };

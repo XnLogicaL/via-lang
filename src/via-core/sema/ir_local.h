@@ -36,7 +36,7 @@ class IRLocal final
     IRLocal() = default;
     IRLocal(
         SymbolId symbol,
-        usize version,
+        size_t version,
         const ast::Stmt* ast_decl,
         const ir::Stmt* ir_decl,
         u8 quals = 0ULL
@@ -56,7 +56,7 @@ class IRLocal final
     const auto* get_ir_decl() const { return m_ir_decl; }
 
   protected:
-    const usize m_version = 0;
+    const size_t m_version = 0;
     const u8 m_quals = 0ULL;
     const SymbolId m_symbol = -1;
     const ast::Stmt* m_ast_decl = nullptr;

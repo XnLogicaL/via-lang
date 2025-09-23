@@ -30,10 +30,10 @@ std::string via::Snapshot::to_string() const noexcept
 void via::VirtualMachine::push_local(ValueRef val)
 {
     val->m_rc++;
-    m_stack.push((uptr) val.get());
+    m_stack.push((uintptr_t) val.get());
 }
 
-via::ValueRef via::VirtualMachine::get_local(usize sp)
+via::ValueRef via::VirtualMachine::get_local(size_t sp)
 {
     return ValueRef(this, (Value*) m_stack.at(sp));
 }
@@ -49,10 +49,10 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
 {
     callee->m_rc++;
 
-    m_stack.push((uptr) callee.m_ptr); // Save callee
-    m_stack.push((uptr) flags);        // Save flags
-    m_stack.push((uptr) m_pc);         // Save PC
-    m_stack.push((uptr) m_fp);         // Save old FP
+    m_stack.push((uintptr_t) callee.m_ptr); // Save callee
+    m_stack.push((uintptr_t) flags);        // Save flags
+    m_stack.push((uintptr_t) m_pc);         // Save PC
+    m_stack.push((uintptr_t) m_fp);         // Save old FP
 
     m_fp = &m_stack.top(); // Set new FP
 
@@ -63,7 +63,7 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
         ci.callee = callee.get();
         ci.flags = flags;
 
-        for (uptr* ptr = &m_stack.top(); ptr > &m_stack.top() - cl->argc(); ptr--) {
+        for (uintptr_t* ptr = &m_stack.top(); ptr > &m_stack.top() - cl->argc(); ptr--) {
             auto* arg = reinterpret_cast<Value*>(*ptr);
             ci.args.push_back(ValueRef(this, arg));
         }
@@ -80,14 +80,14 @@ void via::VirtualMachine::return_(ValueRef value)
 {
     debug::require(m_fp != nullptr);
 
-    for (uptr* sp = &m_stack.top(); sp > m_fp; sp--) {
+    for (uintptr_t* sp = &m_stack.top(); sp > m_fp; sp--) {
         auto* val = (Value*) sp;
         val->unref();
     }
 
     m_stack.jump(m_fp);
 
-    m_fp = (uptr*) m_stack.pop();
+    m_fp = (uintptr_t*) m_stack.pop();
     m_pc = (const Instruction*) m_stack.pop();
 
     u64 flags = m_stack.pop();

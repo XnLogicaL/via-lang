@@ -53,7 +53,7 @@ class ConstValue final
     template <const ValueKind kind>
     constexpr auto value() const
     {
-        return std::get<static_cast<usize>(kind)>(u);
+        return std::get<static_cast<size_t>(kind)>(u);
     }
 
     constexpr bool compare(const ConstValue& other) const

@@ -53,7 +53,7 @@ inline std::string get_dump(
     std::ostringstream oss;
     oss << LDel;
 
-    for (usize i = 0; i < vec.size(); i++) {
+    for (size_t i = 0; i < vec.size(); i++) {
         oss << fn(vec[i]);
         if (i != vec.size() - 1) {
             oss << ", ";

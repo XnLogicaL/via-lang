@@ -12,8 +12,8 @@
 
 via::SourceLoc via::Token::location(const std::string& source) const
 {
-    const usize begin = lexeme - source.cbegin().base();
-    const usize end = begin + size;
+    const size_t begin = lexeme - source.cbegin().base();
+    const size_t end = begin + size;
     return {begin, end};
 }
 

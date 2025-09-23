@@ -17,7 +17,7 @@
 namespace via {
 namespace config {
 
-CONSTANT usize REGISTER_COUNT = UINT16_MAX;
+CONSTANT size_t REGISTER_COUNT = UINT16_MAX;
 
 }
 
@@ -28,7 +28,7 @@ class RegisterState
   public:
     inline u16 alloc() noexcept
     {
-        for (usize i = 0; i < config::REGISTER_COUNT; ++i) {
+        for (size_t i = 0; i < config::REGISTER_COUNT; ++i) {
             if (!m_buffer.test(i)) { // free register
                 m_buffer.set(i);     // mark as occupied
                 return static_cast<u16>(i);

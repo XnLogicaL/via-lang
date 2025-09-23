@@ -104,7 +104,7 @@ class ValueRef final
         m_ptr = nullptr;
     }
 
-    inline usize ref_count() const
+    inline size_t ref_count() const
     {
         debug::require(!is_null(), "ref_count() called on NULL reference");
         return m_ptr->m_rc;

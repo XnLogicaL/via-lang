@@ -634,7 +634,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
     }
 
     auto* block = builder.m_alloc.emplace<ir::StmtBlock>();
-    block->id = iota<usize>();
+    block->id = iota<size_t>();
 
     builder.m_stack.push({});
 
@@ -797,8 +797,8 @@ const ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
 
 via::IRTree via::IRBuilder::build()
 {
-    m_stack.push({});         // Push root stack frame
-    new_block(iota<usize>()); // Push block
+    m_stack.push({});          // Push root stack frame
+    new_block(iota<size_t>()); // Push block
 
     IRTree tree;
 
@@ -808,7 +808,7 @@ via::IRTree via::IRBuilder::build()
         }
 
         if (m_should_push_block) {
-            ir::StmtBlock* block = new_block(iota<usize>());
+            ir::StmtBlock* block = new_block(iota<size_t>());
             tree.push_back(block);
         }
     }

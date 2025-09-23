@@ -76,9 +76,9 @@ class Executable final
     std::string get_dump() const;
 
   private:
-    usize program_counter() const noexcept { return m_bytecode.size() - 1; }
-    usize constant_id() const noexcept { return m_constants.size() - 1; }
-    usize set_label(usize id) noexcept
+    size_t program_counter() const noexcept { return m_bytecode.size() - 1; }
+    size_t constant_id() const noexcept { return m_constants.size() - 1; }
+    size_t set_label(size_t id) noexcept
     {
         m_labels[id] = program_counter();
         return m_labels.size() - 1;
@@ -104,7 +104,7 @@ class Executable final
     sema::StackState<sema::BytecodeLocal> m_stack;
     std::vector<Instruction> m_bytecode;
     std::vector<sema::ConstValue> m_constants;
-    std::unordered_map<usize, usize> m_labels;
+    std::unordered_map<size_t, size_t> m_labels;
 };
 
 } // namespace via

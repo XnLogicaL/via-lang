@@ -41,10 +41,10 @@ class Frame final
     }
 
     template <typename... Args>
-        requires(std::is_constructible_v<Local, SymbolId, usize, Args...>)
+        requires(std::is_constructible_v<Local, SymbolId, size_t, Args...>)
     void set_local(SymbolId symbol, Args&&... args)
     {
-        usize version = 0;
+        size_t version = 0;
         if (auto lref = get_local(symbol))
             version = lref->local.get_version() + 1;
         m_locals.emplace_back(symbol, version, args...);
@@ -55,7 +55,7 @@ class Frame final
 
   private:
     Module* m_module;
-    usize m_stack_ptr;
+    size_t m_stack_ptr;
     std::vector<Local> m_locals;
 };
 

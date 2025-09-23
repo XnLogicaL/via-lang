@@ -47,7 +47,7 @@
     })
 
 #define GET_LOCAL(ID) reinterpret_cast<Value*>(stack.at(ID))
-#define SET_LOCAL(ID, VAL) stack.at(ID) = reinterpret_cast<uptr>(VAL);
+#define SET_LOCAL(ID, VAL) stack.at(ID) = reinterpret_cast<uintptr_t>(VAL);
 #define FREE_LOCAL(ID)                                                                   \
     if (GET_REGISTER(ID) != nullptr) {                                                   \
         reinterpret_cast<Value*>(stack.at(ID))->unref();                                 \
@@ -61,13 +61,7 @@
         SET_REGISTER(ID, nullptr);                                                       \
     }
 
-// TODO: This macro does not account for value tags, it might mess up debug info
-#define ASSIGN_REGISTER(ID, FIELD, EXPR)                                                 \
-    {                                                                                    \
-        FREE_REGISTER(ID);                                                               \
-        SET_REGISTER(ID, Value::construct(vm, EXPR));                                    \
-    }
-
+// Common Subexpression Elimination utility
 #define CSE_OPERANDS_A() const u16 a = pc->a;
 #define CSE_OPERANDS_AB() const u16 a = pc->a, b = pc->b;
 #define CSE_OPERANDS_ABC() const u16 a = pc->a, b = pc->b, c = pc->b;
@@ -200,771 +194,1029 @@ dispatch:
         }
         CASE(IADD)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer +
-                    GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer +
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(IADDK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer +
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer +
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(FADD)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ +
-                    GET_REGISTER(pc->c)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ +
+                        GET_REGISTER(pc->c)->m_data.float_)
+                )
             );
             DISPATCH();
         }
         CASE(FADDK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ + CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ +
+                        CONST_VALUE(pc->c)->m_data.float_)
                 )
             );
             DISPATCH();
         }
         CASE(ISUB)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer -
-                    GET_REGISTER(pc->c)->m_data.integer)
-            )
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer -
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
+            );
             DISPATCH();
         }
         CASE(ISUBK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer -
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer -
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(FSUB)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ -
-                    GET_REGISTER(pc->c)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ -
+                        GET_REGISTER(pc->c)->m_data.float_)
+                )
             );
             DISPATCH();
         }
         CASE(FSUBK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ - CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ -
+                        CONST_VALUE(pc->c)->m_data.float_)
                 )
             );
             DISPATCH();
         }
         CASE(IMUL)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer *
-                    GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer *
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(IMULK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer *
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer *
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(FMUL)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ *
-                    GET_REGISTER(pc->c)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ *
+                        GET_REGISTER(pc->c)->m_data.float_)
+                )
             );
             DISPATCH();
         }
         CASE(FMULK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ * CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ *
+                        CONST_VALUE(pc->c)->m_data.float_)
                 )
             );
             DISPATCH();
         }
         CASE(IDIV)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer /
-                    GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer /
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(IDIVK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer /
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer /
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(FDIV)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ /
-                    GET_REGISTER(pc->c)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ /
+                        GET_REGISTER(pc->c)->m_data.float_)
+                )
             );
             DISPATCH();
         }
         CASE(FDIVK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(GET_REGISTER(pc->b)->m_data.float_ / CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    f64(GET_REGISTER(pc->b)->m_data.float_ /
+                        CONST_VALUE(pc->c)->m_data.float_)
                 )
             );
             DISPATCH();
         }
         CASE(INEG)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(-GET_REGISTER(pc->b)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, i64(-GET_REGISTER(pc->b)->m_data.integer))
             );
             DISPATCH();
         }
         CASE(INEGK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(-CONST_VALUE(pc->b)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, i64(-CONST_VALUE(pc->b)->m_data.integer))
             );
             DISPATCH();
         }
         CASE(FNEG)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(-GET_REGISTER(pc->b)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, f64(-GET_REGISTER(pc->b)->m_data.float_))
             );
             DISPATCH();
         }
         CASE(FNEGK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.float_,
-                f64(-CONST_VALUE(pc->b)->m_data.float_)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, f64(-CONST_VALUE(pc->b)->m_data.float_))
             );
             DISPATCH();
         }
         CASE(BAND)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer &
-                    GET_REGISTER(pc->c)->m_data.integer)
-            )
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer &
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
+            );
             DISPATCH();
         }
         CASE(BANDK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer &
-                    CONST_VALUE(pc->c)->m_data.integer)
-            )
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer &
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
+            );
             DISPATCH();
         }
         CASE(BOR)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer |
-                    GET_REGISTER(pc->c)->m_data.integer)
-            )
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer |
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
+            );
             DISPATCH();
         }
         CASE(BORK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer |
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer |
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BXOR)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer ^
-                    GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer ^
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BXORK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer ^
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer ^
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BSHL)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer
-                    << GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer
+                        << GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BSHLK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer
-                    << CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer
+                        << CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BSHR)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer >>
-                    GET_REGISTER(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer >>
+                        GET_REGISTER(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BSHRK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(GET_REGISTER(pc->b)->m_data.integer >>
-                    CONST_VALUE(pc->c)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    i64(GET_REGISTER(pc->b)->m_data.integer >>
+                        CONST_VALUE(pc->c)->m_data.integer)
+                )
             );
             DISPATCH();
         }
         CASE(BNOT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(~GET_REGISTER(pc->b)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, i64(~GET_REGISTER(pc->b)->m_data.integer))
             );
             DISPATCH();
         }
         CASE(BNOTK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.integer,
-                i64(CONST_VALUE(pc->b)->m_data.integer)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, i64(CONST_VALUE(pc->b)->m_data.integer))
             );
             DISPATCH();
         }
         CASE(AND)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean &&
-                    GET_REGISTER(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean &&
+                        GET_REGISTER(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(ANDK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean &&
-                    CONST_VALUE(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean &&
+                        CONST_VALUE(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(OR)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean ||
-                    GET_REGISTER(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean ||
+                        GET_REGISTER(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(ORK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean ||
-                    CONST_VALUE(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean ||
+                        CONST_VALUE(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer ==
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer ==
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer ==
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer ==
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ ==
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ ==
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ ==
-                    CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ ==
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(BEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean ==
-                    GET_REGISTER(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean ==
+                        GET_REGISTER(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(BEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean ==
-                    CONST_VALUE(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean ==
+                        CONST_VALUE(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(SEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    std::strcmp(
-                        GET_REGISTER(pc->b)->m_data.string,
-                        GET_REGISTER(pc->c)->m_data.string
-                    ) == 0
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a)
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        std::strcmp(
+                            GET_REGISTER(pc->b)->m_data.string,
+                            GET_REGISTER(pc->c)->m_data.string
+                        ) == 0
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(SEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    std::strcmp(
-                        GET_REGISTER(pc->b)->m_data.string,
-                        CONST_VALUE(pc->c)->m_data.string
-                    ) == 0
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a)
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        std::strcmp(
+                            GET_REGISTER(pc->b)->m_data.string,
+                            CONST_VALUE(pc->c)->m_data.string
+                        ) == 0
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(INEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer !=
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer !=
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(INEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer !=
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer !=
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FNEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ !=
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ !=
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FNEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ !=
-                    CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ !=
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(BNEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean !=
-                    GET_REGISTER(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean !=
+                        GET_REGISTER(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(BNEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.boolean !=
-                    CONST_VALUE(pc->c)->m_data.boolean
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.boolean !=
+                        CONST_VALUE(pc->c)->m_data.boolean
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(SNEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    std::strcmp(
-                        GET_REGISTER(pc->b)->m_data.string,
-                        GET_REGISTER(pc->c)->m_data.string
-                    ) == 1
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a)
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        std::strcmp(
+                            GET_REGISTER(pc->b)->m_data.string,
+                            GET_REGISTER(pc->c)->m_data.string
+                        ) != 0
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(SNEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    std::strcmp(
-                        GET_REGISTER(pc->b)->m_data.string,
-                        CONST_VALUE(pc->c)->m_data.string
-                    ) == 1
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a)
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        std::strcmp(
+                            GET_REGISTER(pc->b)->m_data.string,
+                            CONST_VALUE(pc->c)->m_data.string
+                        ) != 0
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IS)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(GET_REGISTER(pc->b) == GET_REGISTER(pc->c))
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, bool(GET_REGISTER(pc->b) == GET_REGISTER(pc->c)))
             );
             DISPATCH();
         }
         CASE(ILT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer <
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer <
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(ILTK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer <
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer <
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FLT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ <
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ <
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FLTK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ < CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ <
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IGT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer >
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer >
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IGTK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer >
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer >
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FGT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ >
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ >
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FGTK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ > CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ >
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(ILTEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer <=
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer <=
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(ILTEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer <=
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer <=
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FLTEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ <=
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ <=
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FLTEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ <=
-                    CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ <=
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IGTEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer >=
-                    GET_REGISTER(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer >=
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(IGTEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.integer >=
-                    CONST_VALUE(pc->c)->m_data.integer
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.integer >=
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FGTEQ)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ >=
-                    GET_REGISTER(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ >=
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(FGTEQK)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(
-                    GET_REGISTER(pc->b)->m_data.float_ >=
-                    CONST_VALUE(pc->c)->m_data.float_
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(
+                    vm,
+                    bool(
+                        GET_REGISTER(pc->b)->m_data.float_ >=
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
         }
         CASE(NOT)
         {
-            ASSIGN_REGISTER(
-                pc->a,
-                m_data.boolean,
-                bool(!GET_REGISTER(pc->b)->m_data.boolean)
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::construct(vm, bool(!GET_REGISTER(pc->b)->m_data.boolean))
             );
             DISPATCH();
         }

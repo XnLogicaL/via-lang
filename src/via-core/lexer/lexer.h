@@ -32,8 +32,8 @@ class Lexer final
     TokenTree tokenize();
 
   private:
-    char advance(isize ahead = 1);
-    char peek(isize ahead = 0);
+    char advance(size_t ahead = 1);
+    char peek(ssize_t ahead = 0);
     Token* read_number();
     Token* read_string();
     Token* read_operator();

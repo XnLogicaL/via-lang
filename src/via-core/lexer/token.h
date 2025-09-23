@@ -115,7 +115,7 @@ struct Token
 {
     TokenKind kind;
     const char* lexeme;
-    usize size;
+    size_t size;
 
     std::string get_dump() const;
     std::string to_string() const { return std::string(lexeme, size); }

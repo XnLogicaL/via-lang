@@ -38,7 +38,7 @@ template <typename T, typename... Args>
 
 template <typename T, typename... Args>
 [[gnu::hot]] inline void
-__construct_range_at(ObjectRegistry* registry, T* dst, usize size, Args&&... args)
+__construct_range_at(ObjectRegistry* registry, T* dst, size_t size, Args&&... args)
 {
     for (T* ptr = dst; ptr < dst + size; ptr++) {
         __construct_at(registry, ptr, std::forward<Args>(args)...);
@@ -51,7 +51,7 @@ __construct_range_at(ObjectRegistry* registry, T* dst, usize size, Args&&... arg
 struct DefaultAllocator
 {
     template <typename T>
-    static T* alloc(usize size)
+    static T* alloc(size_t size)
     {
         return (T*) std::malloc(size * sizeof(T));
     }
@@ -72,7 +72,7 @@ struct MiAllocator
     }
 
     template <typename T>
-    static T* alloc(usize size)
+    static T* alloc(size_t size)
     {
         return (T*) mi_heap_calloc(get_allocator(), size, sizeof(T));
     }
@@ -88,14 +88,14 @@ template <typename Alloc = DefaultAllocator>
 class BumpAllocator final
 {
   public:
-    BumpAllocator(usize size)
+    BumpAllocator(size_t size)
         : m_base(Alloc::template alloc<std::byte>(size)),
           m_cursor(m_base)
     {}
     ~BumpAllocator() { Alloc::template free<std::byte>(m_base); }
 
   public:
-    [[nodiscard]] inline void* alloc(usize size)
+    [[nodiscard]] inline void* alloc(size_t size)
     {
         void* ptr = m_cursor;
         m_cursor += size;
@@ -112,7 +112,7 @@ class BumpAllocator final
     }
 
     template <typename T, typename... Args>
-    [[nodiscard]] inline T* emplace_array(usize size, Args&&... args)
+    [[nodiscard]] inline T* emplace_array(size_t size, Args&&... args)
     {
         T* ptr = (T*) m_cursor;
         m_cursor += sizeof(T) * size;
@@ -149,7 +149,7 @@ class ScopedAllocator final
         return mi_heap_check_owned(m_heap, ptr);
     }
 
-    [[nodiscard]] inline void* alloc(usize size) noexcept
+    [[nodiscard]] inline void* alloc(size_t size) noexcept
     {
         return mi_heap_malloc(m_heap, size);
     }
@@ -176,7 +176,7 @@ class ScopedAllocator final
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] inline T* emplace_array(usize count, Args&&... args)
+    [[nodiscard]] inline T* emplace_array(size_t count, Args&&... args)
         noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
         T* buffer = (T*) alloc(count * sizeof(T));
@@ -193,7 +193,7 @@ class ScopedAllocator final
     {
         return mi_heap_strdup(m_heap, str);
     }
-    [[nodiscard]] inline char* strndup(const char* str, usize n) noexcept
+    [[nodiscard]] inline char* strndup(const char* str, size_t n) noexcept
     {
         return mi_heap_strndup(m_heap, str, n);
     }

@@ -34,16 +34,16 @@ CONSTANT const char MODULE_ENTRY_PREFIX[] = EXPAND_STRING(VIA_MODULE_ENTRY_PREFI
 
 struct NativeModuleInfo
 {
-    const usize size;
+    const size_t size;
     const DefTableEntry* begin;
 
-    explicit NativeModuleInfo(const usize size, const DefTableEntry* begin)
+    explicit NativeModuleInfo(const size_t size, const DefTableEntry* begin)
         : size(size),
           begin(begin)
     {}
 
     static NativeModuleInfo*
-    construct(ScopedAllocator& alloc, usize size, const DefTableEntry* begin)
+    construct(ScopedAllocator& alloc, size_t size, const DefTableEntry* begin)
     {
         return alloc.emplace<NativeModuleInfo>(size, begin);
     }

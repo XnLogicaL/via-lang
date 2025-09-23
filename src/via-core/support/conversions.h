@@ -18,10 +18,10 @@ namespace via {
 // Taken from (slightly modified):
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::integral T>
-constexpr Option<T> stoi(std::string_view str, usize* pos = nullptr)
+constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
 {
     const auto digits = "0123456789abcdefABCDEF"sv;
-    const usize begin = str.find_first_of(digits);
+    const size_t begin = str.find_first_of(digits);
     if (begin == std::string_view::npos)
         return nullopt;
 
@@ -42,7 +42,7 @@ constexpr Option<T> stoi(std::string_view str, usize* pos = nullptr)
         str.remove_prefix(2);
     }
 
-    usize end = 0;
+    size_t end = 0;
     while (end < str.size()) {
         char c = str[end];
         if ((base == 2 && (c != '0' && c != '1')) || (base == 10 && !std::isdigit(c)) ||
@@ -58,7 +58,7 @@ constexpr Option<T> stoi(std::string_view str, usize* pos = nullptr)
     const std::string_view digits_to_parse = str.substr(0, end);
 
     T result = 0;
-    for (usize i = 0; i < digits_to_parse.size(); ++i) {
+    for (size_t i = 0; i < digits_to_parse.size(); ++i) {
         char c = digits_to_parse[i];
         T digit = 0;
 
@@ -94,7 +94,7 @@ CONSTANT bool is_digit(char c)
 // Based on:
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::floating_point T>
-constexpr Option<T> stof(std::string_view str, usize* pos = nullptr)
+constexpr Option<T> stof(std::string_view str, size_t* pos = nullptr)
 {
     size_t i = 0;
     const size_t n = str.size();

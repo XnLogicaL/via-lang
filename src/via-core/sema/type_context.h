@@ -96,7 +96,7 @@ class TypeEnv final
     }
 
   private:
-    static usize key(u32 d, u32 i) { return (u64(d) << 32) | i; }
+    static size_t key(u32 d, u32 i) { return (u64(d) << 32) | i; }
 
   private:
     std::unordered_map<u64, const Type*> m_map;

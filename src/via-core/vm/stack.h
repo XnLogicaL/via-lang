@@ -17,7 +17,7 @@ namespace via {
 namespace config {
 namespace vm {
 
-CONSTANT usize STACK_SIZE = 8192;
+CONSTANT size_t STACK_SIZE = 8192;
 
 }
 } // namespace config
@@ -31,8 +31,8 @@ class Stack final
           m_sp(m_bp)
     {}
 
-    inline usize size() const { return static_cast<usize>(m_sp - m_bp); }
-    inline usize capacity() const { return config::vm::STACK_SIZE; }
+    inline size_t size() const { return static_cast<size_t>(m_sp - m_bp); }
+    inline size_t capacity() const { return config::vm::STACK_SIZE; }
     inline bool empty() const { return m_sp == m_bp; }
 
     inline void push(T val)
@@ -59,8 +59,8 @@ class Stack final
         return *(m_sp - 1);
     }
 
-    inline T& at(usize idx) { return m_bp[idx]; }
-    inline const T& at(usize idx) const { return m_bp[idx]; }
+    inline T& at(size_t idx) { return m_bp[idx]; }
+    inline const T& at(size_t idx) const { return m_bp[idx]; }
 
     inline T* begin() { return m_bp; }
     inline const T* begin() const { return m_bp; }
@@ -72,7 +72,7 @@ class Stack final
     inline const T* base() const { return m_bp; }
 
     inline void jump(T* dst) { m_sp = dst; }
-    inline void jump(usize dst) { m_sp = m_bp + dst; }
+    inline void jump(size_t dst) { m_sp = m_bp + dst; }
 
   private:
     T* const m_bp;

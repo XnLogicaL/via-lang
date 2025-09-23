@@ -11,8 +11,8 @@
 
 via::RelSourceLoc::RelSourceLoc(const std::string& source, SourceLoc loc)
 {
-    usize init = 0;
-    for (usize i = 0; i < loc.begin; ++i) {
+    size_t init = 0;
+    for (size_t i = 0; i < loc.begin; ++i) {
         if (source[i] == '\n') {
             ++line;
             init = i + 1;

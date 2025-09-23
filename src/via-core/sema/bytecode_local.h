@@ -27,18 +27,18 @@ class BytecodeLocal final
 
   public:
     BytecodeLocal() = default;
-    BytecodeLocal(SymbolId symbol, usize version)
+    BytecodeLocal(SymbolId symbol, size_t version)
         : m_symbol(symbol),
           m_version(version)
     {}
 
   public:
     SymbolId get_symbol() const noexcept { return m_symbol; }
-    usize get_version() const noexcept { return m_version; }
+    size_t get_version() const noexcept { return m_version; }
 
   protected:
     SymbolId m_symbol;
-    usize m_version;
+    size_t m_version;
 };
 
 } // namespace sema

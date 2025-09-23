@@ -81,7 +81,7 @@ class IRBuilder final
         return m_current_block;
     }
 
-    inline ir::StmtBlock* new_block(usize id) noexcept
+    inline ir::StmtBlock* new_block(size_t id) noexcept
     {
         ir::StmtBlock* block = m_current_block;
         m_should_push_block = false;

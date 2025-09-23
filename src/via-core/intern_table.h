@@ -53,7 +53,7 @@ class InternTable
     }
 
   protected:
-    usize m_next_id = 0;
+    size_t m_next_id = 0;
     std::unordered_map<T, Id> m_map;
     std::unordered_map<Id, T> m_reverse;
 };

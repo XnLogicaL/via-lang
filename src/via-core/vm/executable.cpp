@@ -236,12 +236,12 @@ via::Executable::build_from_ir(Module* module, const IRTree& ir, u64 flags) noex
 
 void via::Executable::lower_jumps() noexcept
 {
-    for (usize pc = 0; Instruction & instr: m_bytecode) {
+    for (size_t pc = 0; Instruction & instr: m_bytecode) {
         auto opid = static_cast<u16>(instr.op);
         if (opid >= static_cast<u16>(OpCode::JMP) &&
             opid <= static_cast<u16>(OpCode::JMPIFX)) {
             auto address = m_labels[instr.a];
-            auto offset = static_cast<isize>(address) - static_cast<isize>(pc);
+            auto offset = static_cast<ssize_t>(address) - static_cast<ssize_t>(pc);
 
             if (offset < 0) {
                 // backward jump → bump opcode to BACK variant
@@ -267,7 +267,7 @@ std::string via::Executable::get_dump() const
         ansi::Style::Underline
     );
 
-    for (usize pc = 0; const Instruction& insn: m_bytecode) {
+    for (size_t pc = 0; const Instruction& insn: m_bytecode) {
         if (auto it = std::find_if(
                 m_labels.begin(),
                 m_labels.end(),

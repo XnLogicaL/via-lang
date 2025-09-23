@@ -54,25 +54,25 @@ struct Expr
 {
     SourceLoc loc;
     const sema::Type* type;
-    virtual std::string get_dump(const SymbolTable* symtab, usize& depth) const = 0;
+    virtual std::string get_dump(const SymbolTable* symtab, size_t& depth) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
-    virtual std::string get_dump(const SymbolTable* symtab, usize& depth) const = 0;
+    virtual std::string get_dump(const SymbolTable* symtab, size_t& depth) const = 0;
     virtual Option<SymbolId> get_symbol() const { return nullopt; }
 };
 
 struct Term
 {
     SourceLoc loc;
-    virtual std::string get_dump(const SymbolTable* symtab, usize& depth) const = 0;
+    virtual std::string get_dump(const SymbolTable* symtab, size_t& depth) const = 0;
 };
 
 #define NODE_FIELDS(BASE)                                                                \
     using BASE::loc;                                                                     \
-    std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
+    std::string get_dump(const SymbolTable* symtab, size_t& depth) const override;
 
 struct TrReturn: public Term
 {
@@ -111,14 +111,14 @@ struct Parm
 {
     SymbolId symbol;
     const sema::Type* type;
-    std::string get_dump(const SymbolTable* symtab, usize& depth) const;
+    std::string get_dump(const SymbolTable* symtab, size_t& depth) const;
 };
 
 #undef NODE_FIELDS
 #define NODE_FIELDS(BASE)                                                                \
     using BASE::type;                                                                    \
     using BASE::loc;                                                                     \
-    std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
+    std::string get_dump(const SymbolTable* symtab, size_t& depth) const override;
 
 struct ExprConstant: public Expr
 {
@@ -214,7 +214,7 @@ struct ExprLambda: public Expr
 
 #undef NODE_FIELDS
 #define NODE_FIELDS()                                                                    \
-    std::string get_dump(const SymbolTable* symtab, usize& depth) const override;
+    std::string get_dump(const SymbolTable* symtab, size_t& depth) const override;
 
 struct StmtVarDecl: public Stmt
 {
@@ -246,7 +246,7 @@ struct StmtFuncDecl: public Stmt
 struct StmtBlock: public Stmt
 {
     NODE_FIELDS()
-    usize id;
+    size_t id;
     std::vector<const Stmt*> stmts;
     const Term* term;
 };

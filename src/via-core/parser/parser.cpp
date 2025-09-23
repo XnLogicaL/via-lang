@@ -861,7 +861,7 @@ const StmtImport* via::Parser::parse_stmt_import()
 
     SAVE_FIRST()
 
-    usize end;
+    size_t end;
     auto imp = m_alloc.emplace<StmtImport>();
     imp->kind = TailKind::IMPORT;
 

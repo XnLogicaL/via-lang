@@ -135,7 +135,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
 
     debug::require(module_info->begin != nullptr);
 
-    for (usize i = 0; i < module_info->size; i++) {
+    for (size_t i = 0; i < module_info->size; i++) {
         const auto& entry = module_info->begin[i];
         module->m_defs[entry.id] = entry.def;
     }
@@ -266,7 +266,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
                         );
                     }
                     else if (input == "regs") {
-                        for (usize index = 0; const auto& ptr: snapshot.registers) {
+                        for (size_t index = 0; const auto& ptr: snapshot.registers) {
                             if (ptr != nullptr) {
                                 std::println(
                                     std::cout,
@@ -282,13 +282,13 @@ via::Expected<via::Module*> via::Module::load_source_file(
                         std::println(std::cout, "size: {}", snapshot.stack.size());
 
                         if (!snapshot.stack.empty()) {
-                            const uptr fp = snapshot.frame_ptr;
-                            const uptr* stk_base;
+                            const uintptr_t fp = snapshot.frame_ptr;
+                            const uintptr_t* stk_base;
 
                             if (fp != 0) {
                                 stk_base = snapshot.stack.begin().base() + fp;
 
-                                auto old_fp = (uptr*) *(stk_base - 0);
+                                auto old_fp = (uintptr_t*) *(stk_base - 0);
                                 auto ret_pc = (Instruction*) *(stk_base - 1);
                                 auto flags = (u64) * (stk_base - 2);
                                 auto callee = (Value*) *(stk_base - 3);

@@ -25,21 +25,21 @@ struct Expr
 {
     SourceLoc loc;
 
-    virtual std::string get_dump(usize& depth) const = 0;
+    virtual std::string get_dump(size_t& depth) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
 
-    virtual std::string get_dump(usize& depth) const = 0;
+    virtual std::string get_dump(size_t& depth) const = 0;
 };
 
 struct Type
 {
     SourceLoc loc;
 
-    virtual std::string get_dump(usize& depth) const = 0;
+    virtual std::string get_dump(size_t& depth) const = 0;
 };
 
 struct Path
@@ -75,7 +75,7 @@ struct AttributeGroup
 
 #define NODE_FIELDS(base)                                                                \
     using base::loc;                                                                     \
-    std::string get_dump(usize& depth) const override;
+    std::string get_dump(size_t& depth) const override;
 
 struct ExprLiteral: public Expr
 {

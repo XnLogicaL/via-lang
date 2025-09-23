@@ -28,13 +28,13 @@ using NativeCallback = ValueRef (*)(VirtualMachine* vm, CallInfo& ci);
 class Closure final
 {
   public:
-    Closure(const usize argc, const Instruction* pc)
+    Closure(const size_t argc, const Instruction* pc)
         : m_argc(argc),
           m_native(false),
           m_bytecode(pc)
     {}
 
-    Closure(const usize argc, const NativeCallback callback)
+    Closure(const size_t argc, const NativeCallback callback)
         : m_argc(argc),
           m_native(true),
           m_callback(callback)
@@ -64,7 +64,7 @@ class Closure final
     }
 
   private:
-    const usize m_argc;
+    const size_t m_argc;
     const bool m_native;
     union {
         const Instruction* m_bytecode;

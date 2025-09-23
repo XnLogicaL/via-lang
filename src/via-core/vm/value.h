@@ -195,7 +195,7 @@ class Value final
   private:
     ValueKind m_kind = ValueKind::NIL;
     Union m_data = {};
-    usize m_rc = 1; // obviously
+    size_t m_rc = 1; // obviously
     VirtualMachine* m_vm;
 };
 

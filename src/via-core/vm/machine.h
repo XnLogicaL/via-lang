@@ -20,7 +20,7 @@ namespace via {
 namespace config {
 namespace vm {
 
-CONSTANT usize REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
+CONSTANT size_t REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
 
 }
 } // namespace config
@@ -51,10 +51,10 @@ class Snapshot
     std::string to_string() const noexcept;
 
   public:
-    const uptr stack_ptr;
-    const uptr frame_ptr;
+    const uintptr_t stack_ptr;
+    const uintptr_t frame_ptr;
     const Instruction program_counter;
-    const std::vector<uptr> stack;
+    const std::vector<uintptr_t> stack;
     const std::vector<Value*> registers;
 };
 
@@ -80,11 +80,11 @@ class VirtualMachine final
     }
 
   public:
-    Stack<uptr>& get_stack() { return m_stack; }
+    Stack<uintptr_t>& get_stack() { return m_stack; }
     ScopedAllocator& get_allocator() { return m_alloc; }
     ValueRef get_constant(u16 id);
     void push_local(ValueRef val);
-    ValueRef get_local(usize sp);
+    ValueRef get_local(size_t sp);
     void call(ValueRef callee, CallFlags flags = CF_NONE);
     void return_(ValueRef value);
     void execute();
@@ -94,10 +94,10 @@ class VirtualMachine final
     const Executable* m_exe;
     Module* m_module;
     ScopedAllocator m_alloc;
-    uptr* m_sp;           // saved stack pointer
-    uptr* m_fp = nullptr; // frame pointer
+    uintptr_t* m_sp;           // saved stack pointer
+    uintptr_t* m_fp = nullptr; // frame pointer
     const Instruction* m_pc;
-    Stack<uptr> m_stack;
+    Stack<uintptr_t> m_stack;
     std::unique_ptr<Value*[]> m_registers;
 };
 

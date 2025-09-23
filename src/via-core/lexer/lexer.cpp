@@ -81,9 +81,9 @@ static constexpr TokenReprPair OPERATORS[] = {
     {"..=", OP_DOT_DOT_EQ},
 };
 
-static consteval via::usize string_length(const char* str)
+static consteval size_t string_length(const char* str)
 {
-    via::usize len = 0;
+    size_t len = 0;
     while (str[len] != '\0') {
         ++len;
     }
@@ -91,12 +91,12 @@ static consteval via::usize string_length(const char* str)
     return len;
 }
 
-static consteval via::usize max_operator_length()
+static consteval size_t max_operator_length()
 {
-    via::usize maxSize = 0;
+    size_t maxSize = 0;
 
     for (const auto& symbol: OPERATORS) {
-        via::usize size = string_length(symbol.str);
+        size_t size = string_length(symbol.str);
         if (size > maxSize) {
             maxSize = size;
         }
@@ -136,14 +136,14 @@ static bool is_string_delim(char c)
     return c == '"' || c == '\'' || c == '`';
 }
 
-char via::Lexer::advance(isize ahead)
+char via::Lexer::advance(size_t ahead)
 {
     char c = *m_cursor;
     m_cursor += ahead;
     return m_cursor < m_end ? c : '\0';
 }
 
-char via::Lexer::peek(isize ahead)
+char via::Lexer::peek(ssize_t ahead)
 {
     return m_cursor + ahead < m_end ? *(m_cursor + ahead) : '\0';
 }
@@ -268,13 +268,13 @@ via::Token* via::Lexer::read_operator()
     token->kind = ILLEGAL;
     token->size = 1;
 
-    isize match_size = 0;
+    ssize_t match_size = 0;
     auto match_kind = ILLEGAL;
 
     char buf[4] = {};
 
-    for (isize len = max_operator_length(); len >= 1; --len) {
-        for (isize i = 0; i < len; ++i) {
+    for (ssize_t len = max_operator_length(); len >= 1; --len) {
+        for (ssize_t i = 0; i < len; ++i) {
             buf[i] = m_cursor[i];
         }
 
@@ -294,7 +294,7 @@ found:
         token->kind = match_kind;
         token->size = match_size;
 
-        for (isize i = 0; i < match_size; ++i) {
+        for (ssize_t i = 0; i < match_size; ++i) {
             advance();
         }
     }
