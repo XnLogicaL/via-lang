@@ -32,34 +32,45 @@
             goto dispatch;                                                               \
     }
 
-#define K(ID)                                                                            \
+#define CONST_VALUE(ID)                                                                  \
+    ({                                                                                   \
+        auto cv = consts.at(ID);                                                         \
+        auto* val = Value::construct(vm, cv);                                            \
+        val;                                                                             \
+    })
+
+#define CONST_VALUE_REF(ID)                                                              \
     ({                                                                                   \
         auto cv = consts.at(ID);                                                         \
         auto* val = Value::construct(vm, cv);                                            \
         ValueRef(vm, val);                                                               \
     })
 
-#define L(ID) reinterpret_cast<Value*>(stack.at(ID))
-#define LSET(ID, VAL) stack.at(ID) = reinterpret_cast<uptr>(VAL);
-#define LFREE(ID)                                                                        \
-    if (R(ID) != nullptr) {                                                              \
+#define GET_LOCAL(ID) reinterpret_cast<Value*>(stack.at(ID))
+#define SET_LOCAL(ID, VAL) stack.at(ID) = reinterpret_cast<uptr>(VAL);
+#define FREE_LOCAL(ID)                                                                   \
+    if (GET_REGISTER(ID) != nullptr) {                                                   \
         reinterpret_cast<Value*>(stack.at(ID))->unref();                                 \
     }
 
-#define R(ID) regs[ID]
-#define RSET(ID, VAL) regs[ID] = VAL
-#define RFREE(ID)                                                                        \
-    [[likely]] if (R(ID) != nullptr) {                                                   \
-        R(ID)->unref();                                                                  \
-        RSET(ID, nullptr);                                                               \
+#define GET_REGISTER(ID) regs[ID]
+#define SET_REGISTER(ID, VAL) regs[ID] = VAL
+#define FREE_REGISTER(ID)                                                                \
+    [[likely]] if (GET_REGISTER(ID) != nullptr) {                                        \
+        GET_REGISTER(ID)->unref();                                                       \
+        SET_REGISTER(ID, nullptr);                                                       \
     }
 
 // TODO: This macro does not account for value tags, it might mess up debug info
-#define RASSIGN(ID, FIELD, EXPR)                                                         \
+#define ASSIGN_REGISTER(ID, FIELD, EXPR)                                                 \
     {                                                                                    \
-        RFREE(ID);                                                                       \
-        RSET(ID, Value::construct(vm, EXPR));                                            \
+        FREE_REGISTER(ID);                                                               \
+        SET_REGISTER(ID, Value::construct(vm, EXPR));                                    \
     }
+
+#define CSE_OPERANDS_A() const u16 a = pc->a;
+#define CSE_OPERANDS_AB() const u16 a = pc->a, b = pc->b;
+#define CSE_OPERANDS_ABC() const u16 a = pc->a, b = pc->b, c = pc->b;
 
 template <bool SingleStep, bool OverridePC>
 void via::detail::__execute(VirtualMachine* vm)
@@ -72,19 +83,18 @@ void via::detail::__execute(VirtualMachine* vm)
     };
 #endif
 
-dispatch:
     /* Explicit VM stuff CSE */
     auto& stack = vm->m_stack;
     auto& regs = vm->m_registers;
     auto& consts = vm->m_exe->constants();
 
-    const auto*& pc = vm->m_pc;
-    const auto a = pc->a, b = pc->b, c = pc->c;
-
     /* Explicit module stuff CSE */
     auto* manager = vm->m_module->get_manager();
     auto& symtab = manager->get_symbol_table();
 
+    const auto*& pc = vm->m_pc;
+
+dispatch:
 #ifdef HAS_CGOTO
     goto* dispatch_table[static_cast<u16>(pc->op)];
     {
@@ -107,66 +117,71 @@ dispatch:
         }
         CASE(MOVE)
         {
-            RFREE(a);
-            RSET(a, R(b));
-            RSET(b, nullptr);
+            CSE_OPERANDS_AB();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, GET_REGISTER(b));
+            SET_REGISTER(b, nullptr);
             DISPATCH();
         }
         CASE(FREE1)
         {
-            RFREE(a);
+            FREE_REGISTER(pc->a);
             DISPATCH();
         }
         CASE(FREE2)
         {
-            RFREE(a);
-            RFREE(b);
+            FREE_REGISTER(pc->a);
+            FREE_REGISTER(pc->b);
             DISPATCH();
         }
         CASE(FREE3)
         {
-            RFREE(a);
-            RFREE(b);
-            RFREE(c);
+            FREE_REGISTER(pc->a);
+            FREE_REGISTER(pc->b);
+            FREE_REGISTER(pc->c);
             DISPATCH();
         }
         CASE(XCHG)
         {
-            Value* ra = R(a);
-            RSET(a, R(b));
-            RSET(b, ra);
+            CSE_OPERANDS_AB();
+            Value* ra = GET_REGISTER(a);
+            SET_REGISTER(a, GET_REGISTER(b));
+            SET_REGISTER(b, ra);
             DISPATCH();
         }
         CASE(COPY)
         {
-            RFREE(a);
-            RSET(a, R(b)->clone());
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, GET_REGISTER(pc->b)->clone());
             DISPATCH();
         }
         CASE(COPYREF)
         {
-            RFREE(a);
-            RSET(a, R(b));
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, GET_REGISTER(pc->b));
             DISPATCH();
         }
         CASE(LOADK)
         {
-            auto cv = consts.at(b);
-            auto* val = Value::construct(vm, cv);
-            RFREE(a);
-            RSET(a, val);
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, CONST_VALUE(pc->b));
             DISPATCH();
         }
         CASE(LOADTRUE)
         {
-            RFREE(a);
-            RSET(a, Value::construct(vm, true));
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, Value::construct(vm, true));
             DISPATCH();
         }
         CASE(LOADFALSE)
         {
-            RFREE(a);
-            RSET(a, Value::construct(vm, false));
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, Value::construct(vm, false));
             DISPATCH();
         }
         CASE(NEWSTR)
@@ -185,486 +200,829 @@ dispatch:
         }
         CASE(IADD)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer + R(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer +
+                    GET_REGISTER(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(IADDK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer + K(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer +
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(FADD)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ + R(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ +
+                    GET_REGISTER(pc->c)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(FADDK)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ + K(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ + CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
             DISPATCH();
         }
         CASE(ISUB)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer - R(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer -
+                    GET_REGISTER(pc->c)->m_data.integer)
+            )
             DISPATCH();
         }
         CASE(ISUBK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer - K(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer -
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(FSUB)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ - R(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ -
+                    GET_REGISTER(pc->c)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(FSUBK)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ - K(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ - CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
             DISPATCH();
         }
         CASE(IMUL)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer * R(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer *
+                    GET_REGISTER(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(IMULK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer * K(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer *
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(FMUL)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ * R(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ *
+                    GET_REGISTER(pc->c)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(FMULK)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ * K(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ * CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
             DISPATCH();
         }
         CASE(IDIV)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer / R(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer /
+                    GET_REGISTER(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(IDIVK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer / K(c)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer /
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(FDIV)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ / R(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ /
+                    GET_REGISTER(pc->c)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(FDIVK)
         {
-            RASSIGN(a, m_data.float_, f64(R(b)->m_data.float_ / K(c)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(GET_REGISTER(pc->b)->m_data.float_ / CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
             DISPATCH();
         }
         CASE(INEG)
         {
-            RASSIGN(a, m_data.integer, i64(-R(b)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(-GET_REGISTER(pc->b)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(INEGK)
         {
-            RASSIGN(a, m_data.integer, i64(-K(b)->m_data.integer));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(-CONST_VALUE(pc->b)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(FNEG)
         {
-            RASSIGN(a, m_data.float_, f64(-R(b)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(-GET_REGISTER(pc->b)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(FNEGK)
         {
-            RASSIGN(a, m_data.float_, f64(-K(b)->m_data.float_));
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.float_,
+                f64(-CONST_VALUE(pc->b)->m_data.float_)
+            );
             DISPATCH();
         }
         CASE(BAND)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer & R(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer &
+                    GET_REGISTER(pc->c)->m_data.integer)
+            )
             DISPATCH();
         }
         CASE(BANDK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer & K(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer &
+                    CONST_VALUE(pc->c)->m_data.integer)
+            )
             DISPATCH();
         }
         CASE(BOR)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer | R(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer |
+                    GET_REGISTER(pc->c)->m_data.integer)
+            )
             DISPATCH();
         }
         CASE(BORK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer | K(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer |
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
         CASE(BXOR)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer ^ R(c)->m_data.integer))
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer ^
+                    GET_REGISTER(pc->c)->m_data.integer)
+            );
             DISPATCH();
         }
-        CASE(BXORK
-        ){RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer ^ K(c)->m_data.integer))
-              DISPATCH()} CASE(BSHL)
+        CASE(BXORK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer << R(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer ^
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
+            DISPATCH();
+        }
+        CASE(BSHL)
+        {
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer
+                    << GET_REGISTER(pc->c)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(BSHLK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer << K(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer
+                    << CONST_VALUE(pc->c)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(BSHR)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer >> R(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer >>
+                    GET_REGISTER(pc->c)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(BSHRK)
         {
-            RASSIGN(a, m_data.integer, i64(R(b)->m_data.integer >> K(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(GET_REGISTER(pc->b)->m_data.integer >>
+                    CONST_VALUE(pc->c)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(BNOT)
         {
-            RASSIGN(a, m_data.integer, i64(~R(b)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(~GET_REGISTER(pc->b)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(BNOTK)
         {
-            RASSIGN(a, m_data.integer, i64(K(b)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.integer,
+                i64(CONST_VALUE(pc->b)->m_data.integer)
+            );
+            DISPATCH();
         }
         CASE(AND)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean && R(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean &&
+                    GET_REGISTER(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(ANDK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean && K(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean &&
+                    CONST_VALUE(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(OR)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean || R(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean ||
+                    GET_REGISTER(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(ORK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean || K(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean ||
+                    CONST_VALUE(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(IEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer == R(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer ==
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(IEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer == K(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer ==
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(FEQ)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ == R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ ==
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FEQK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ == K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ ==
+                    CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(BEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean == R(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean ==
+                    GET_REGISTER(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(BEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean == K(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean ==
+                    CONST_VALUE(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(SEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(std::strcmp(R(b)->m_data.string, R(c)->m_data.string) == 0)
+                bool(
+                    std::strcmp(
+                        GET_REGISTER(pc->b)->m_data.string,
+                        GET_REGISTER(pc->c)->m_data.string
+                    ) == 0
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(SEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(std::strcmp(R(b)->m_data.string, K(c)->m_data.string) == 0)
+                bool(
+                    std::strcmp(
+                        GET_REGISTER(pc->b)->m_data.string,
+                        CONST_VALUE(pc->c)->m_data.string
+                    ) == 0
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(INEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer != R(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer !=
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(INEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer != K(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer !=
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(FNEQ)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ != R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ !=
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FNEQK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ != K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ !=
+                    CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(BNEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean != R(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean !=
+                    GET_REGISTER(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(BNEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.boolean != K(c)->m_data.boolean)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.boolean !=
+                    CONST_VALUE(pc->c)->m_data.boolean
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(SNEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(std::strcmp(R(b)->m_data.string, R(c)->m_data.string) == 1)
+                bool(
+                    std::strcmp(
+                        GET_REGISTER(pc->b)->m_data.string,
+                        GET_REGISTER(pc->c)->m_data.string
+                    ) == 1
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(SNEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(std::strcmp(R(b)->m_data.string, K(c)->m_data.string) == 1)
+                bool(
+                    std::strcmp(
+                        GET_REGISTER(pc->b)->m_data.string,
+                        CONST_VALUE(pc->c)->m_data.string
+                    ) == 1
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(IS)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b) == R(c)));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(GET_REGISTER(pc->b) == GET_REGISTER(pc->c))
+            );
+            DISPATCH();
         }
         CASE(ILT)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.integer < R(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer <
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
+            );
+            DISPATCH();
         }
         CASE(ILTK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.integer < K(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer <
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
+            );
+            DISPATCH();
         }
         CASE(FLT)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ < R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ <
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FLTK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ < K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ < CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(IGT)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.integer > R(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer >
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
+            );
+            DISPATCH();
         }
         CASE(IGTK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.integer > K(c)->m_data.integer));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer >
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
+            );
+            DISPATCH();
         }
         CASE(FGT)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ > R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ >
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FGTK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ > K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ > CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(ILTEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer <= R(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer <=
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(ILTEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer <= K(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer <=
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(FLTEQ)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ <= R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ <=
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FLTEQK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ <= K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ <=
+                    CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(IGTEQ)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer >= R(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer >=
+                    GET_REGISTER(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(IGTEQK)
         {
-            RASSIGN(
-                a,
+            ASSIGN_REGISTER(
+                pc->a,
                 m_data.boolean,
-                bool(R(b)->m_data.integer >= K(c)->m_data.integer)
+                bool(
+                    GET_REGISTER(pc->b)->m_data.integer >=
+                    CONST_VALUE(pc->c)->m_data.integer
+                )
             );
-            DISPATCH()
+            DISPATCH();
         }
         CASE(FGTEQ)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ >= R(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ >=
+                    GET_REGISTER(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(FGTEQK)
         {
-            RASSIGN(a, m_data.boolean, bool(R(b)->m_data.float_ >= K(c)->m_data.float_));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(
+                    GET_REGISTER(pc->b)->m_data.float_ >=
+                    CONST_VALUE(pc->c)->m_data.float_
+                )
+            );
+            DISPATCH();
         }
         CASE(NOT)
         {
-            RASSIGN(a, m_data.boolean, bool(!R(b)->m_data.boolean));
-            DISPATCH()
+            ASSIGN_REGISTER(
+                pc->a,
+                m_data.boolean,
+                bool(!GET_REGISTER(pc->b)->m_data.boolean)
+            );
+            DISPATCH();
         }
         CASE(JMP)
         {
-            pc += a;
-            DISPATCH()
+            pc += pc->a;
+            DISPATCH();
         }
         CASE(JMPIF)
         {
-            [[likely]] if (R(b)->as_cbool())
-                pc += a;
-            DISPATCH()
+            [[likely]] if (GET_REGISTER(pc->b)->as_cbool())
+                pc += pc->a;
+            DISPATCH();
         }
         CASE(JMPIFX)
         {
-            [[unlikely]] if (!R(b)->as_cbool())
-                pc += a;
-            DISPATCH()
+            [[unlikely]] if (!GET_REGISTER(pc->b)->as_cbool())
+                pc += pc->a;
+            DISPATCH();
         }
         CASE(JMPBACK)
         {
-            pc -= a;
-            DISPATCH()
+            pc -= pc->a;
+            DISPATCH();
         }
         CASE(JMPBACKIF)
         {
-            [[likely]] if (R(b)->as_cbool())
-                pc -= a;
-            DISPATCH()
+            [[likely]] if (GET_REGISTER(pc->b)->as_cbool())
+                pc -= pc->a;
+            DISPATCH();
         }
         CASE(JMPBACKIFX)
         {
-            [[unlikely]] if (!R(b)->as_cbool())
-                pc -= a;
-            DISPATCH()
+            [[unlikely]] if (!GET_REGISTER(pc->b)->as_cbool())
+                pc -= pc->a;
+            DISPATCH();
         }
         CASE(SAVESP)
         {
             vm->m_sp = &stack.top();
-            DISPATCH()
+            DISPATCH();
         }
         CASE(RESTSP)
         {
             stack.jump(vm->m_sp);
-            DISPATCH()
+            DISPATCH();
         }
         CASE(PUSH)
         {
-            auto* val = R(a);
+            auto* val = GET_REGISTER(pc->a);
             val->m_rc++;
             vm->push_local(ValueRef(vm, val));
-            DISPATCH()
+            DISPATCH();
         }
         CASE(PUSHK)
         {
-            vm->push_local(K(a));
-            DISPATCH()
+            vm->push_local(CONST_VALUE_REF(pc->a));
+            DISPATCH();
         }
         CASE(GETARG)
         CASE(GETARGREF)
@@ -674,37 +1032,40 @@ dispatch:
         }
         CASE(GETLOCAL)
         {
-            RFREE(a);
-            RSET(a, L(b)->clone());
-            DISPATCH()
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, GET_LOCAL(pc->b)->clone());
+            DISPATCH();
         }
         CASE(GETLOCALREF)
         {
-            auto* local = L(b);
+            CSE_OPERANDS_A();
+            auto* local = GET_LOCAL(pc->b);
             local->m_rc++;
-            RFREE(a);
-            RSET(a, local);
-            DISPATCH()
+            FREE_REGISTER(a);
+            SET_REGISTER(a, local);
+            DISPATCH();
         }
         CASE(SETLOCAL)
         {
-            LFREE(b);
-            LSET(b, R(a));
-            DISPATCH()
+            CSE_OPERANDS_AB()
+            FREE_LOCAL(b);
+            SET_LOCAL(b, GET_REGISTER(a));
+            DISPATCH();
         }
         CASE(CALL)
         {
-            vm->call(ValueRef(vm, L(a)));
+            vm->call(ValueRef(vm, GET_LOCAL(pc->a)));
             DISPATCH();
         }
         CASE(PCALL)
         {
-            vm->call(ValueRef(vm, L(a)), CF_PROTECT);
+            vm->call(ValueRef(vm, GET_LOCAL(pc->a)), CF_PROTECT);
             DISPATCH();
         }
         CASE(RET)
         {
-            vm->return_(ValueRef(vm, R(a)));
+            vm->return_(ValueRef(vm, GET_REGISTER(pc->a)));
             DISPATCH();
         }
         CASE(RETNIL)
@@ -724,7 +1085,7 @@ dispatch:
         }
         CASE(RETK)
         {
-            vm->return_(K(a));
+            vm->return_(CONST_VALUE_REF(pc->a));
             DISPATCH();
         }
         CASE(BTOI)
