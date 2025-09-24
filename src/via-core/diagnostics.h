@@ -25,18 +25,21 @@ enum class Level : u8
     ERROR,
 };
 
+enum class FootnoteKind : u8
+{
+    NOTE,
+    HINT,
+};
+
 struct Footnote
 {
-    const enum class Kind: u8 {
-        NOTE,
-        HINT,
-    } kind = Kind::NOTE;
+    const FootnoteKind kind = FootnoteKind::NOTE;
 
     const bool valid = false;
     const std::string message = "";
 
     Footnote() = default;
-    Footnote(Kind kind, std::string message)
+    Footnote(FootnoteKind kind, std::string message)
         : kind(kind),
           valid(true),
           message(message)
@@ -103,43 +106,43 @@ inline std::string to_string(Level level) noexcept
     case Level::INFO:
         return ansi::format(
             "info:",
-            ansi::Foreground::Cyan,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Foreground::CYAN,
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         );
     case Level::WARNING:
         return ansi::format(
             "warning:",
-            ansi::Foreground::Yellow,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Foreground::YELLOW,
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         );
     case Level::ERROR:
         return ansi::format(
             "error:",
-            ansi::Foreground::Red,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Foreground::RED,
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         );
     }
 }
 
-inline std::string to_string(Footnote::Kind kind) noexcept
+inline std::string to_string(FootnoteKind kind) noexcept
 {
     switch (kind) {
-    case Footnote::Kind::HINT:
+    case FootnoteKind::HINT:
         return ansi::format(
             "hint:",
-            ansi::Foreground::Green,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Foreground::GREEN,
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         );
-    case Footnote::Kind::NOTE:
+    case FootnoteKind::NOTE:
         return ansi::format(
             "note:",
-            ansi::Foreground::Blue,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Foreground::BLUE,
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         );
     }
 }

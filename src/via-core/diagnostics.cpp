@@ -25,15 +25,15 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     switch (diag.level) {
     case Level::INFO:
         level = spdlog::level::info;
-        foreground = ansi::Foreground::Cyan;
+        foreground = ansi::Foreground::CYAN;
         break;
     case Level::WARNING:
         level = spdlog::level::warn;
-        foreground = ansi::Foreground::Yellow;
+        foreground = ansi::Foreground::YELLOW;
         break;
     case Level::ERROR:
         level = spdlog::level::err;
-        foreground = ansi::Foreground::Red;
+        foreground = ansi::Foreground::RED;
         break;
     }
 
@@ -65,11 +65,11 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         diag.message,
         ansi::format(
             "at",
-            ansi::Foreground::White,
-            ansi::Background::Black,
-            ansi::Style::Faint
+            ansi::Foreground::WHITE,
+            ansi::Background::BLACK,
+            ansi::Style::FAINT
         ),
-        ansi::format(std::format("[{}:{}:{}]", m_path, line, col), ansi::Foreground::Cyan)
+        ansi::format(std::format("[{}:{}:{}]", m_path, line, col), ansi::Foreground::CYAN)
     );
 
     size_t span_begin = std::min(
@@ -88,8 +88,8 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         hl_line.append(ansi::format(
             std::string(line_view.substr(span_begin, span_end - span_begin)),
             foreground,
-            ansi::Background::Black,
-            ansi::Style::Bold
+            ansi::Background::BLACK,
+            ansi::Style::BOLD
         ));
         hl_line.append(line_view.substr(span_end));
     }
@@ -124,7 +124,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         std::format(
             " {0} | {1}{2}\n {0} |",
             std::string(line_width, ' '),
-            ansi::format(caret, foreground, ansi::Background::Black, ansi::Style::Bold),
+            ansi::format(caret, foreground, ansi::Background::BLACK, ansi::Style::BOLD),
             diag.footnote.valid ? std::format(
                                       "-- {} {}",
                                       to_string(diag.footnote.kind),

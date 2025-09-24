@@ -17,7 +17,7 @@ namespace via {
 namespace config {
 namespace vm {
 
-CONSTANT size_t STACK_SIZE = 8192;
+VIA_CONSTANT size_t STACK_SIZE = 8192;
 
 }
 } // namespace config

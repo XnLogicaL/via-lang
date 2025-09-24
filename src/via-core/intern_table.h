@@ -31,9 +31,6 @@ template <typename T, typename Id = u64>
 class InternTable
 {
   public:
-    using view_type = typename view<T>::type;
-
-  public:
     Id intern(const T& val)
     {
         auto [it, inserted] = m_map.try_emplace(val, m_next_id);
@@ -44,7 +41,7 @@ class InternTable
         return it->second;
     }
 
-    Option<view_type> lookup(Id id) const
+    Option<typename view<T>::type> lookup(Id id) const
     {
         if (auto it = m_reverse.find(id); it != m_reverse.end()) {
             return view_type(it->second);

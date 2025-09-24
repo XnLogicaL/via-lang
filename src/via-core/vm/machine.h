@@ -20,7 +20,7 @@ namespace via {
 namespace config {
 namespace vm {
 
-CONSTANT size_t REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
+VIA_CONSTANT size_t REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
 
 }
 } // namespace config

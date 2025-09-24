@@ -33,7 +33,7 @@ static fs::path get_home_dir()
     if (const char* profile = std::getenv("USERPROFILE")) {
         return fs::path(profile);
     }
-    // Fallback: construct from HOMEDRIVE + HOMEPATH
+    // Fallback: create from HOMEDRIVE + HOMEPATH
     const char* drive = std::getenv("HOMEDRIVE");
     const char* path = std::getenv("HOMEPATH");
     if (drive && path) {
@@ -177,9 +177,9 @@ int main(int argc, char* argv[])
                 "{}",
                 via::ansi::format(
                     "[global symbol table]",
-                    via::ansi::Foreground::Yellow,
-                    via::ansi::Background::Black,
-                    via::ansi::Style::Bold
+                    via::ansi::Foreground::YELLOW,
+                    via::ansi::Background::BLACK,
+                    via::ansi::Style::BOLD
                 )
             );
 

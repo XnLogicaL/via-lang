@@ -19,7 +19,7 @@ namespace via {
 class ModuleManager
 {
   public:
-    friend class via::Module;
+    friend class Module;
 
   public:
     auto& get_allocator() { return m_alloc; }
@@ -28,7 +28,7 @@ class ModuleManager
     const auto& get_import_paths() const { return m_import_paths; }
 
     Module* get_module(fs::path name) { return m_modules[name]; }
-    void push_module(Module* m) { m_modules[m->m_path] = m; }
+    void push_module(Module* module) { m_modules[module->m_path] = module; }
     bool has_module(fs::path name) { return m_modules.find(name) != m_modules.end(); }
 
     void push_import_path(fs::path path) { m_import_paths.push_back(path); }

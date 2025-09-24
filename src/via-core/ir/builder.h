@@ -28,19 +28,19 @@ namespace detail {
 template <derived_from<ast::Expr, ast::Type> Type>
 const sema::Type* ast_type_of(IRBuilder&, const Type*) noexcept
 {
-    debug::todo(std::format("ast_type_of<{}>()", TYPENAME(Type)));
+    debug::todo(std::format("ast_type_of<{}>()", VIA_TYPENAME(Type)));
 }
 
 template <derived_from<ast::Expr> Expr>
 const ir::Expr* ast_lower_expr(IRBuilder&, const Expr*) noexcept
 {
-    debug::todo(std::format("ast_lower_expr<{}>()", TYPENAME(Expr)));
+    debug::todo(std::format("ast_lower_expr<{}>()", VIA_TYPENAME(Expr)));
 }
 
 template <derived_from<ast::Stmt> Stmt>
 const ir::Stmt* ast_lower_stmt(IRBuilder&, const Stmt*) noexcept
 {
-    debug::todo(std::format("ast_lower_stmt<{}>()", TYPENAME(Stmt)));
+    debug::todo(std::format("ast_lower_stmt<{}>()", VIA_TYPENAME(Stmt)));
 }
 
 } // namespace detail
@@ -74,6 +74,13 @@ class IRBuilder final
   private:
     const sema::Type* type_of(const ast::Expr* expr) noexcept;
     const sema::Type* type_of(const ast::Type* type) noexcept;
+    const ir::Expr* lower_expr(const ast::Expr* expr);
+    const ir::Stmt* lower_stmt(const ast::Stmt* stmt);
+
+    // clang-format off
+    auto intern_symbol(std::string symbol) noexcept { return m_symbol_table.intern(symbol); }
+    auto intern_symbol(const via::Token& token) noexcept { return m_symbol_table.intern(token.to_string()); }
+    // clang-format on
 
     inline ir::StmtBlock* end_block() noexcept
     {
@@ -89,18 +96,6 @@ class IRBuilder final
         m_current_block->id = id;
         return block;
     }
-
-    auto intern_symbol(std::string symbol) noexcept
-    {
-        return m_symbol_table.intern(symbol);
-    }
-    auto intern_symbol(const via::Token& symbol) noexcept
-    {
-        return m_symbol_table.intern(symbol.to_string());
-    }
-
-    const ir::Expr* lower_expr(const ast::Expr* expr);
-    const ir::Stmt* lower_stmt(const ast::Stmt* stmt);
 
   private:
     via::Module* m_module;

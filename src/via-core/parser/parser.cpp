@@ -437,7 +437,7 @@ const Expr* via::Parser::parse_expr_primary()
                 magic_enum::enum_name(first->kind)
             ),
             Footnote(
-                Footnote::Kind::HINT,
+                FootnoteKind::HINT,
                 "Expected INT | BINARY_INT | HEX_INT | 'nil' | FLOAT | 'true' "
                 "| 'false' | "
                 "STRING | IDENTIFIER | '(' | ')' | 'fn'"
@@ -488,12 +488,12 @@ const Expr* via::Parser::parse_expr_affix()
     }
 }
 
-const Expr* via::Parser::parse_expr(int minPrec)
+const Expr* via::Parser::parse_expr(int min_prec)
 {
     const Expr* lhs = parse_expr_affix();
 
     int prec;
-    while ((prec = bin_prec(peek()->kind), prec >= minPrec)) {
+    while ((prec = bin_prec(peek()->kind), prec >= min_prec)) {
         auto bin = m_alloc.emplace<ExprBinary>();
         bin->op = advance();
         bin->lhs = lhs;
@@ -589,7 +589,7 @@ const Type* via::Parser::parse_type()
                 magic_enum::enum_name(tok->kind)
             ),
             Footnote(
-                Footnote::Kind::HINT,
+                FootnoteKind::HINT,
                 "Expected 'nil' | 'bool' | 'int' | 'float' | "
                 "'string' | '[' | '{' | 'fn'"
             )
@@ -622,7 +622,7 @@ const StmtScope* via::Parser::parse_stmt_scope()
         throw ParserError(
             loc,
             std::format("Unexpected token '{}' while parsing scope", first->to_string()),
-            Footnote(Footnote::Kind::HINT, "Expected ':' | '{'")
+            Footnote(FootnoteKind::HINT, "Expected ':' | '{'")
         );
 
     return scope;

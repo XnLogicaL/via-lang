@@ -18,7 +18,7 @@ namespace via {
 struct Nullopt
 {};
 
-CONSTANT Nullopt nullopt;
+VIA_CONSTANT Nullopt nullopt;
 
 template <typename T>
 class Option final

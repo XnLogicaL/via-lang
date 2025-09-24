@@ -60,7 +60,7 @@ class Expected final
         new (&m_storage.err) Error(Error::fail<E>(std::move(err).take_error()));
         debug::require(
             m_storage.err.has_error(),
-            "Cannot construct Expected<T> with successful Error"
+            "Cannot create Expected<T> with successful Error"
         );
         m_has_value = false;
         m_is_valid = true;

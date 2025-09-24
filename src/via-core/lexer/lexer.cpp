@@ -384,11 +384,11 @@ via::TokenTree via::Lexer::tokenize()
     return toks;
 }
 
-[[nodiscard]] std::string via::debug::get_dump(const via::TokenTree& tt)
+[[nodiscard]] std::string via::debug::to_string(const via::TokenTree& tt)
 {
     std::ostringstream oss;
     for (const auto* tk: tt) {
-        oss << tk->get_dump() << "\n";
+        oss << tk->to_string() << "\n";
     }
 
     return oss.str();

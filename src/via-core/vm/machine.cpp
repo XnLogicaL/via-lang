@@ -41,7 +41,7 @@ via::ValueRef via::VirtualMachine::get_local(size_t sp)
 via::ValueRef via::VirtualMachine::get_constant(u16 id)
 {
     auto cv = m_exe->constants().at(id);
-    auto* val = Value::construct(this, cv);
+    auto* val = Value::create(this, cv);
     return ValueRef(this, val);
 }
 
@@ -63,16 +63,17 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
         ci.callee = callee.get();
         ci.flags = flags;
 
-        for (uintptr_t* ptr = &m_stack.top(); ptr > &m_stack.top() - cl->argc(); ptr--) {
+        for (uintptr_t* ptr = &m_stack.top(); ptr > &m_stack.top() - cl->get_argc();
+             ptr--) {
             auto* arg = reinterpret_cast<Value*>(*ptr);
             ci.args.push_back(ValueRef(this, arg));
         }
 
-        auto result = cl->callback()(this, ci);
+        auto result = cl->get_callback()(this, ci);
         return_(result);
     }
     else {
-        m_pc = cl->bytecode();
+        m_pc = cl->get_bytecode();
     }
 }
 

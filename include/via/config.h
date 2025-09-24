@@ -24,7 +24,8 @@
     #else
         #define VIA_PLATFORM_OSX
     #endif
-#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__DragonFly__)
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||             \
+    defined(__bsdi__) || defined(__DragonFly__)
     #define VIA_PLATFORM_BSD
 #elifdef __EMSCRIPTEN__
     #define VIA_PLATFORM_EMSCRIPTEN
@@ -51,9 +52,9 @@
 #endif
 
 #ifdef VIA_PLATFORM_WINDOWS
-    #define VIA_EXPORT extern "C" __declspec(dllexport)
+    #define VIA_EXPORT __declspec(dllexport)
 #else
-    #define VIA_EXPORT extern "C"
+    #define VIA_EXPORT
 #endif
 
-#define CONSTANT inline constexpr
+#define VIA_CONSTANT inline constexpr

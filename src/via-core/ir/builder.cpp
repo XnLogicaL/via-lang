@@ -18,7 +18,7 @@ namespace sema = via::sema;
 namespace ast = via::ast;
 
 using Ak = ir::ExprAccess::Kind;
-using Btk = sema::BuiltinType::Kind;
+using Btk = sema::BuiltinKind;
 using LocalQual = sema::IRLocal::Qual;
 
 #define UNARY_OP_CASE(VALID, RESULT)                                                     \
@@ -111,9 +111,9 @@ const sema::Type* via::detail::ast_type_of<ast::ExprLiteral>(
 ) noexcept
 {
     using enum TokenKind;
-    using enum sema::BuiltinType::Kind;
+    using enum sema::BuiltinKind;
 
-    sema::BuiltinType::Kind kind;
+    sema::BuiltinKind kind;
 
     switch (ast_expr_literal->tok->kind) {
     case LIT_NIL:
@@ -156,7 +156,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
             )) {
         auto* irDecl = local->local.get_ir_decl();
         if TRY_COERCE (const ir::StmtVarDecl, varDecl, irDecl) {
-            return varDecl->declType;
+            return varDecl->decl_type;
         }
         else if TRY_COERCE (const ir::StmtFuncDecl, funcDecl, irDecl) {
             std::vector<const sema::Type*> parms;
@@ -170,7 +170,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
         ast_expr_symbol->loc,
         std::format("Use of undefined symbol '{}'", symbol),
         Footnote(
-            Footnote::Kind::HINT,
+            FootnoteKind::HINT,
             std::format("did you mistype '{}' or forget to declare it?", symbol)
         )
     );
@@ -274,8 +274,8 @@ const sema::Type* via::detail::ast_type_of<ast::TypeBuiltin>(
 ) noexcept
 {
     using enum TokenKind;
-    using enum sema::BuiltinType::Kind;
-    sema::BuiltinType::Kind kind;
+    using enum sema::BuiltinKind;
+    sema::BuiltinKind kind;
 
     switch (ast_type_builtin->tok->kind) {
     case LIT_NIL:
@@ -321,7 +321,7 @@ const sema::Type* via::IRBuilder::type_of(const ast::Expr* expr) noexcept
     VISIT_EXPR(ast::ExprTuple)
     VISIT_EXPR(ast::ExprLambda)
 
-    debug::unimplemented(std::format("ast_type_of({})", TYPENAME(*expr)));
+    debug::unimplemented(std::format("ast_type_of({})", VIA_TYPENAME(*expr)));
 #undef VISIT_EXPR
 }
 
@@ -336,7 +336,7 @@ const sema::Type* via::IRBuilder::type_of(const ast::Type* type) noexcept
     VISIT_TYPE(ast::TypeDict)
     VISIT_TYPE(ast::TypeFunc)
 
-    debug::todo(std::format("ast_type_of({})", TYPENAME(*type)));
+    debug::todo(std::format("ast_type_of({})", VIA_TYPENAME(*type)));
 #undef VISIT_TYPE
 }
 
@@ -495,7 +495,9 @@ const ir::Expr* via::IRBuilder::lower_expr(const ast::Expr* expr)
     VISIT_EXPR(ast::ExprTuple)
     VISIT_EXPR(ast::ExprLambda)
 
-    debug::unimplemented(std::format("case IRBuilder::lower_expr({})", TYPENAME(*expr)));
+    debug::unimplemented(
+        std::format("case IRBuilder::lower_expr({})", VIA_TYPENAME(*expr))
+    );
 #undef VISIT_EXPR
 }
 
@@ -513,20 +515,20 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
         auto* rvalType = builder.type_of(ast_stmt_var_decl->rval);
 
         if (ast_stmt_var_decl->type != nullptr) {
-            decl_stmt->declType = builder.type_of(ast_stmt_var_decl->type);
-            if (decl_stmt->declType != rvalType) {
+            decl_stmt->decl_type = builder.type_of(ast_stmt_var_decl->type);
+            if (decl_stmt->decl_type != rvalType) {
                 builder.m_diags.report<Level::ERROR>(
                     ast_stmt_var_decl->rval->loc,
                     std::format(
                         "Expression type '{}' does not match declaration type '{}'",
                         rvalType->to_string(),
-                        decl_stmt->declType->to_string()
+                        decl_stmt->decl_type->to_string()
                     )
                 );
             }
         }
         else {
-            decl_stmt->declType = rvalType;
+            decl_stmt->decl_type = rvalType;
         }
 
         decl_stmt->symbol = builder.intern_symbol(lval->symbol->to_string());
@@ -552,7 +554,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtReturn>(
         ast_stmt_return->expr ? builder.lower_expr(ast_stmt_return->expr) : nullptr;
     term->type = ast_stmt_return->expr
                      ? builder.type_of(ast_stmt_return->expr)
-                     : builder.m_type_ctx.get_builtin(sema::BuiltinType::Kind::NIL);
+                     : builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
 
     auto* block = builder.end_block();
     block->term = term;
@@ -644,9 +646,9 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
             term->implicit = false;
             term->loc = ret->loc;
             term->val = ret->expr ? builder.lower_expr(ret->expr) : nullptr;
-            term->type =
-                ret->expr ? builder.type_of(ret->expr)
-                          : builder.m_type_ctx.get_builtin(sema::BuiltinType::Kind::NIL);
+            term->type = ret->expr
+                             ? builder.type_of(ret->expr)
+                             : builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
             block->term = term;
             break;
         }
@@ -664,14 +666,14 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
 
         auto* nil = builder.m_alloc.emplace<ir::ExprConstant>();
         nil->loc = loc;
-        nil->type = builder.m_type_ctx.get_builtin(sema::BuiltinType::Kind::NIL);
+        nil->type = builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
         nil->value = sema::ConstValue();
 
         auto* term = builder.m_alloc.emplace<ir::TrReturn>();
         term->implicit = true;
         term->loc = loc;
         term->val = nil;
-        term->type = builder.m_type_ctx.get_builtin(sema::BuiltinType::Kind::NIL);
+        term->type = builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
         block->term = term;
     }
 
@@ -688,10 +690,10 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                 expected_ret_type = ret->type;
             }
             else if (expected_ret_type != ret->type) {
-                Footnote implicitReturnNote =
+                Footnote implicit_return_node =
                     ret->implicit
                         ? Footnote(
-                              Footnote::Kind::NOTE,
+                              FootnoteKind::NOTE,
                               std::format("Implicit return here", ret->type->to_string())
                           )
                         : Footnote();
@@ -705,7 +707,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                             decl_stmt->ret->to_string(),
                             ret->type->to_string()
                         ),
-                        implicitReturnNote
+                        implicit_return_node
                     );
                 }
                 else {
@@ -713,7 +715,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                         ret->loc,
                         "All code paths must return the same type "
                         "in function with inferred return type",
-                        implicitReturnNote
+                        implicit_return_node
                     );
                 }
                 break;
@@ -791,7 +793,9 @@ const ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
     if TRY_COERCE (const ast::StmtEmpty, _, stmt)
         return nullptr;
 
-    debug::unimplemented(std::format("case IRBuilder::lower_stmt({})", TYPENAME(*stmt)));
+    debug::unimplemented(
+        std::format("case IRBuilder::lower_stmt({})", VIA_TYPENAME(*stmt))
+    );
 #undef VISIT_STMT
 }
 

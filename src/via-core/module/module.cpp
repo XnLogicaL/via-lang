@@ -86,7 +86,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
     Module* importee,
     const char* name,
     const fs::path& path,
-    const ast::StmtImport* decl,
+    const ast::StmtImport* ast_decl,
     const ModulePerms perms,
     const ModuleFlags flags
 )
@@ -118,7 +118,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
     module->m_flags = flags;
     module->m_name = name;
     module->m_path = path;
-    module->m_ast_decl = decl;
+    module->m_ast_decl = ast_decl;
 
     manager->push_module(module);
 
@@ -146,14 +146,14 @@ via::Expected<via::Module*> via::Module::load_native_object(
             "{}",
             ansi::format(
                 std::format("[deftable .{}]", name),
-                ansi::Foreground::Yellow,
-                ansi::Background::Black,
-                ansi::Style::Bold
+                ansi::Foreground::YELLOW,
+                ansi::Background::BLACK,
+                ansi::Style::BOLD
             )
         );
 
         for (const auto& def: module->m_defs) {
-            std::println(std::cout, "  {}", def.second->get_dump());
+            std::println(std::cout, "  {}", def.second->to_string());
         }
     }
 
@@ -262,7 +262,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
                         std::println(
                             std::cout,
                             "{}",
-                            snapshot.program_counter.get_dump()
+                            snapshot.program_counter.to_string()
                         );
                     }
                     else if (input == "regs") {
@@ -338,31 +338,31 @@ error:
     diags.clear();
 
     if (flags & ModuleFlags::DUMP_TTREE)
-        std::println(std::cout, "{}", debug::get_dump(ttree));
+        std::println(std::cout, "{}", debug::to_string(ttree));
     if (flags & ModuleFlags::DUMP_AST)
-        std::println(std::cout, "{}", debug::get_dump(ast));
+        std::println(std::cout, "{}", debug::to_string(ast));
     if (flags & ModuleFlags::DUMP_IR)
         std::println(
             std::cout,
             "{}",
-            debug::get_dump(manager->get_symbol_table(), module->m_ir)
+            debug::to_string(manager->get_symbol_table(), module->m_ir)
         );
     if (flags & ModuleFlags::DUMP_EXE)
-        std::println(std::cout, "{}", module->m_exe->get_dump());
+        std::println(std::cout, "{}", module->m_exe->to_string());
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
         std::println(
             std::cout,
             "{}",
             ansi::format(
                 std::format("[deftable .{}]", name),
-                ansi::Foreground::Yellow,
-                ansi::Background::Black,
-                ansi::Style::Bold
+                ansi::Foreground::YELLOW,
+                ansi::Background::BLACK,
+                ansi::Style::BOLD
             )
         );
 
         for (const auto& def: module->m_defs) {
-            std::println(std::cout, "  {}", def.second->get_dump());
+            std::println(std::cout, "  {}", def.second->to_string());
         }
     }
 

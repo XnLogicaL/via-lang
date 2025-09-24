@@ -132,8 +132,9 @@ class ScopedAllocator final
     ScopedAllocator() = default;
     ~ScopedAllocator()
     {
-        for (const auto& entry: m_registry)
+        for (const auto& entry: m_registry) {
             entry();
+        }
         mi_heap_destroy(m_heap);
     }
 
@@ -158,9 +159,9 @@ class ScopedAllocator final
     inline void free(T* ptr) noexcept(std::is_nothrow_destructible_v<T>)
     {
         debug::require(owns(ptr), "free() called on ptr not owned by allocator");
-
-        if constexpr (std::is_destructible_v<T>)
+        if constexpr (std::is_destructible_v<T>) {
             ptr->~T();
+        }
         mi_free(ptr);
     }
 

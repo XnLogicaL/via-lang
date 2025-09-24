@@ -22,7 +22,7 @@
 namespace via {
 namespace config {
 
-CONSTANT u32 MAGIC = 0x2E766961; // .via
+VIA_CONSTANT u32 MAGIC = 0x2E766961; // .via
 
 }
 
@@ -33,25 +33,26 @@ namespace detail {
 template <derived_from<ir::Expr> Expr>
 void ir_lower_expr(Executable& exe, const Expr* expr, u16 dst) noexcept
 {
-    debug::todo(std::format("lower_expr<{}>()", TYPENAME(Expr)));
+    debug::todo(std::format("lower_expr<{}>()", VIA_TYPENAME(Expr)));
 }
 
 template <derived_from<ir::Stmt> Stmt>
 void ir_lower_stmt(Executable& exe, const Stmt* stmt) noexcept
 {
-    debug::todo(std::format("lower_stmt<{}>()", TYPENAME(Stmt)));
+    debug::todo(std::format("lower_stmt<{}>()", VIA_TYPENAME(Stmt)));
 }
 
 } // namespace detail
+
+enum ExeFlags : u64
+{
+    NONE = 0,
+};
 
 class Module;
 class Executable final
 {
   public:
-    enum Flags : u64
-    {
-    };
-
     template <derived_from<ir::Expr> Expr>
     friend void detail::ir_lower_expr(Executable&, const Expr*, u16) noexcept;
 
@@ -62,18 +63,20 @@ class Executable final
     Executable() { m_stack.emplace(); }
 
     static Executable*
-    build_from_ir(Module* module, const IRTree& ir, u64 flags = 0) noexcept;
+    build_from_ir(Module* module, const IRTree& ir_tree, ExeFlags flags = ExeFlags::NONE)
+        noexcept;
+
     static Executable* build_from_binary(
         Module* module,
-        const std::vector<unsigned char>& bytes,
-        u64 flags = 0
+        std::ostream& bytes,
+        ExeFlags flags = ExeFlags::NONE
     ) noexcept;
 
   public:
     auto flags() const noexcept { return m_flags; }
     auto& constants() const noexcept { return m_constants; }
     auto& bytecode() const noexcept { return m_bytecode; }
-    std::string get_dump() const;
+    std::string to_string() const;
 
   private:
     size_t program_counter() const noexcept { return m_bytecode.size() - 1; }
@@ -84,9 +87,9 @@ class Executable final
         return m_labels.size() - 1;
     }
 
-    void push_constant(sema::ConstValue cvalue) noexcept
+    void push_constant(sema::ConstValue cv) noexcept
     {
-        m_constants.push_back(std::move(cvalue));
+        m_constants.push_back(std::move(cv));
     }
     void push_instruction(OpCode op, std::array<u16, 3>&& ops = {}) noexcept
     {
@@ -98,7 +101,7 @@ class Executable final
     void lower_jumps() noexcept;
 
   private:
-    u64 m_flags;
+    ExeFlags m_flags;
     u16 m_junk_reg;
     sema::RegisterState m_reg_state;
     sema::StackState<sema::BytecodeLocal> m_stack;

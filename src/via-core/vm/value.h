@@ -36,26 +36,26 @@ class Value final
     friend void detail::__execute(VirtualMachine*);
 
   public:
-    static Value* construct(VirtualMachine* vm)
+    static Value* create(VirtualMachine* vm)
     {
         return construct_impl(vm, ValueKind::NIL);
     }
-    static Value* construct(VirtualMachine* vm, i64 integer)
+    static Value* create(VirtualMachine* vm, i64 integer)
     {
         return construct_impl(vm, ValueKind::INT, {.integer = integer});
     }
 
-    static Value* construct(VirtualMachine* vm, f64 float_)
+    static Value* create(VirtualMachine* vm, f64 float_)
     {
         return construct_impl(vm, ValueKind::FLOAT, {.float_ = float_});
     }
 
-    static Value* construct(VirtualMachine* vm, bool boolean)
+    static Value* create(VirtualMachine* vm, bool boolean)
     {
         return construct_impl(vm, ValueKind::BOOL, {.boolean = boolean});
     }
 
-    static Value* construct(VirtualMachine* vm, char* string)
+    static Value* create(VirtualMachine* vm, char* string)
     {
         debug::require(
             vm->get_allocator().owns(string),
@@ -65,7 +65,7 @@ class Value final
         return construct_impl(vm, ValueKind::STRING, {.string = string});
     }
 
-    static Value* construct(VirtualMachine* vm, Closure* closure)
+    static Value* create(VirtualMachine* vm, Closure* closure)
     {
         debug::require(
             vm->get_allocator().owns(closure),
@@ -75,22 +75,22 @@ class Value final
         return construct_impl(vm, ValueKind::FUNCTION, {.function = closure});
     }
 
-    static Value* construct(VirtualMachine* vm, const sema::ConstValue& cv)
+    static Value* create(VirtualMachine* vm, const sema::ConstValue& cv)
     {
         auto& alloc = vm->get_allocator();
 
         switch (cv.kind()) {
         case ValueKind::NIL:
-            return construct(vm);
+            return create(vm);
         case ValueKind::BOOL:
-            return construct(vm, cv.value<ValueKind::BOOL>());
+            return create(vm, cv.value<ValueKind::BOOL>());
         case ValueKind::INT:
-            return construct(vm, cv.value<ValueKind::INT>());
+            return create(vm, cv.value<ValueKind::INT>());
         case ValueKind::FLOAT:
-            return construct(vm, cv.value<ValueKind::FLOAT>());
+            return create(vm, cv.value<ValueKind::FLOAT>());
         case ValueKind::STRING: {
             auto buf = alloc.strdup(cv.value<ValueKind::STRING>().c_str());
-            return construct(vm, buf);
+            return create(vm, buf);
         }
         default:
             break;

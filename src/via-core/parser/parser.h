@@ -62,7 +62,7 @@ class Parser final
     const ast::ExprLambda* parse_expr_lambda();
     const ast::Expr* parse_expr_primary();
     const ast::Expr* parse_expr_affix();
-    const ast::Expr* parse_expr(int minPrec = 0);
+    const ast::Expr* parse_expr(int min_prec = 0);
 
     // Types
     const ast::TypeBuiltin* parse_type_builtin();
@@ -73,7 +73,7 @@ class Parser final
 
     // Statement
     const ast::StmtScope* parse_stmt_scope();
-    const ast::StmtVarDecl* parse_stmt_var_decl(bool allowSemicolon);
+    const ast::StmtVarDecl* parse_stmt_var_decl(bool semicolon);
     const ast::StmtFor* parse_stmt_for();
     const ast::StmtForEach* parse_stmt_for_each();
     const ast::StmtIf* parse_stmt_if();

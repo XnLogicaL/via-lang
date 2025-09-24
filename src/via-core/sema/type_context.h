@@ -109,7 +109,8 @@ class TypeContext final
         : m_alloc(8 * 1024 * 1024)
     {}
 
-    const BuiltinType* get_builtin(BuiltinType::Kind kind);
+    const BuiltinType* get_builtin(BuiltinKind kind);
+    const OptionalType* get_optional(const Type* type);
     const ArrayType* get_array(const Type* type);
     const DictType* get_dict(const Type* key, const Type* val);
     const FuncType* get_function(const Type* res, std::vector<const Type*> tps);
@@ -129,7 +130,8 @@ class TypeContext final
 
   private:
     BumpAllocator<> m_alloc;
-    std::unordered_map<BuiltinType::Kind, const BuiltinType*> m_builtins;
+    std::unordered_map<BuiltinKind, const BuiltinType*> m_builtins;
+    std::unordered_map<const Type*, const OptionalType*> m_optionals;
     std::unordered_map<const Type*, const ArrayType*> m_arrays;
     std::unordered_map<DictKey, const DictType*> m_dicts;
     std::unordered_map<FuncKey, const FuncType*> m_funcs;

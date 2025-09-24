@@ -35,14 +35,14 @@
 #define CONST_VALUE(ID)                                                                  \
     ({                                                                                   \
         auto cv = consts.at(ID);                                                         \
-        auto* val = Value::construct(vm, cv);                                            \
+        auto* val = Value::create(vm, cv);                                               \
         val;                                                                             \
     })
 
 #define CONST_VALUE_REF(ID)                                                              \
     ({                                                                                   \
         auto cv = consts.at(ID);                                                         \
-        auto* val = Value::construct(vm, cv);                                            \
+        auto* val = Value::create(vm, cv);                                               \
         ValueRef(vm, val);                                                               \
     })
 
@@ -168,14 +168,14 @@ dispatch:
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::construct(vm, true));
+            SET_REGISTER(a, Value::create(vm, true));
             DISPATCH();
         }
         CASE(LOADFALSE)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::construct(vm, false));
+            SET_REGISTER(a, Value::create(vm, false));
             DISPATCH();
         }
         CASE(NEWSTR)
@@ -198,7 +198,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer +
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -212,7 +212,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer +
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -226,7 +226,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ +
                         GET_REGISTER(pc->c)->m_data.float_)
@@ -240,7 +240,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ +
                         CONST_VALUE(pc->c)->m_data.float_)
@@ -254,7 +254,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer -
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -268,7 +268,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer -
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -282,7 +282,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ -
                         GET_REGISTER(pc->c)->m_data.float_)
@@ -296,7 +296,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ -
                         CONST_VALUE(pc->c)->m_data.float_)
@@ -310,7 +310,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer *
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -324,7 +324,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer *
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -338,7 +338,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ *
                         GET_REGISTER(pc->c)->m_data.float_)
@@ -352,7 +352,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ *
                         CONST_VALUE(pc->c)->m_data.float_)
@@ -366,7 +366,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer /
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -380,7 +380,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer /
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -394,7 +394,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ /
                         GET_REGISTER(pc->c)->m_data.float_)
@@ -408,7 +408,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     f64(GET_REGISTER(pc->b)->m_data.float_ /
                         CONST_VALUE(pc->c)->m_data.float_)
@@ -420,40 +420,28 @@ dispatch:
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, i64(-GET_REGISTER(pc->b)->m_data.integer))
-            );
+            SET_REGISTER(a, Value::create(vm, i64(-GET_REGISTER(pc->b)->m_data.integer)));
             DISPATCH();
         }
         CASE(INEGK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, i64(-CONST_VALUE(pc->b)->m_data.integer))
-            );
+            SET_REGISTER(a, Value::create(vm, i64(-CONST_VALUE(pc->b)->m_data.integer)));
             DISPATCH();
         }
         CASE(FNEG)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, f64(-GET_REGISTER(pc->b)->m_data.float_))
-            );
+            SET_REGISTER(a, Value::create(vm, f64(-GET_REGISTER(pc->b)->m_data.float_)));
             DISPATCH();
         }
         CASE(FNEGK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, f64(-CONST_VALUE(pc->b)->m_data.float_))
-            );
+            SET_REGISTER(a, Value::create(vm, f64(-CONST_VALUE(pc->b)->m_data.float_)));
             DISPATCH();
         }
         CASE(BAND)
@@ -462,7 +450,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer &
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -476,7 +464,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer &
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -490,7 +478,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer |
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -504,7 +492,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer |
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -518,7 +506,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer ^
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -532,7 +520,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer ^
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -546,7 +534,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer
                         << GET_REGISTER(pc->c)->m_data.integer)
@@ -560,7 +548,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer
                         << CONST_VALUE(pc->c)->m_data.integer)
@@ -574,7 +562,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer >>
                         GET_REGISTER(pc->c)->m_data.integer)
@@ -588,7 +576,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     i64(GET_REGISTER(pc->b)->m_data.integer >>
                         CONST_VALUE(pc->c)->m_data.integer)
@@ -600,20 +588,14 @@ dispatch:
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, i64(~GET_REGISTER(pc->b)->m_data.integer))
-            );
+            SET_REGISTER(a, Value::create(vm, i64(~GET_REGISTER(pc->b)->m_data.integer)));
             DISPATCH();
         }
         CASE(BNOTK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(
-                a,
-                Value::construct(vm, i64(CONST_VALUE(pc->b)->m_data.integer))
-            );
+            SET_REGISTER(a, Value::create(vm, i64(CONST_VALUE(pc->b)->m_data.integer)));
             DISPATCH();
         }
         CASE(AND)
@@ -622,7 +604,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean &&
@@ -638,7 +620,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean &&
@@ -654,7 +636,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean ||
@@ -670,7 +652,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean ||
@@ -686,7 +668,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer ==
@@ -702,7 +684,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer ==
@@ -718,7 +700,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ ==
@@ -734,7 +716,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ ==
@@ -750,7 +732,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean ==
@@ -766,7 +748,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean ==
@@ -782,7 +764,7 @@ dispatch:
             FREE_REGISTER(a)
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         std::strcmp(
@@ -800,7 +782,7 @@ dispatch:
             FREE_REGISTER(a)
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         std::strcmp(
@@ -818,7 +800,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer !=
@@ -834,7 +816,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer !=
@@ -850,7 +832,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ !=
@@ -866,7 +848,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ !=
@@ -882,7 +864,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean !=
@@ -898,7 +880,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.boolean !=
@@ -914,7 +896,7 @@ dispatch:
             FREE_REGISTER(a)
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         std::strcmp(
@@ -932,7 +914,7 @@ dispatch:
             FREE_REGISTER(a)
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         std::strcmp(
@@ -950,7 +932,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(vm, bool(GET_REGISTER(pc->b) == GET_REGISTER(pc->c)))
+                Value::create(vm, bool(GET_REGISTER(pc->b) == GET_REGISTER(pc->c)))
             );
             DISPATCH();
         }
@@ -960,7 +942,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer <
@@ -976,7 +958,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer <
@@ -992,7 +974,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ <
@@ -1008,7 +990,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ <
@@ -1024,7 +1006,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer >
@@ -1040,7 +1022,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer >
@@ -1056,7 +1038,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ >
@@ -1072,7 +1054,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ >
@@ -1088,7 +1070,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer <=
@@ -1104,7 +1086,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer <=
@@ -1120,7 +1102,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ <=
@@ -1136,7 +1118,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ <=
@@ -1152,7 +1134,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer >=
@@ -1168,7 +1150,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.integer >=
@@ -1184,7 +1166,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ >=
@@ -1200,7 +1182,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(
+                Value::create(
                     vm,
                     bool(
                         GET_REGISTER(pc->b)->m_data.float_ >=
@@ -1216,7 +1198,7 @@ dispatch:
             FREE_REGISTER(a);
             SET_REGISTER(
                 a,
-                Value::construct(vm, bool(!GET_REGISTER(pc->b)->m_data.boolean))
+                Value::create(vm, bool(!GET_REGISTER(pc->b)->m_data.boolean))
             );
             DISPATCH();
         }
@@ -1322,17 +1304,17 @@ dispatch:
         }
         CASE(RETNIL)
         {
-            vm->return_(ValueRef(vm, Value::construct(vm)));
+            vm->return_(ValueRef(vm, Value::create(vm)));
             DISPATCH();
         }
         CASE(RETTRUE)
         {
-            vm->return_(ValueRef(vm, Value::construct(vm, true)));
+            vm->return_(ValueRef(vm, Value::create(vm, true)));
             DISPATCH();
         }
         CASE(RETFALSE)
         {
-            vm->return_(ValueRef(vm, Value::construct(vm, false)));
+            vm->return_(ValueRef(vm, Value::create(vm, false)));
             DISPATCH();
         }
         CASE(RETK)

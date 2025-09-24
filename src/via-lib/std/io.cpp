@@ -29,18 +29,20 @@ VIA_MODULE_ENTRY(io, mgr)
     auto& types = mgr->get_type_context();
     auto& alloc = mgr->get_allocator();
 
-    static via::DefTable dt = {{
-        symtab.intern("print"),
-        via::Def::function(
-            alloc,
-            io::print,
-            types.get_builtin(via::sema::BuiltinType::Kind::NIL),
-            {{
-                .symbol = symtab.intern("__s"),
-                .type = types.get_builtin(via::sema::BuiltinType::Kind::STRING),
-            }}
-        ),
-    }};
+    static via::DefTable dt = {
+        {
+            .id = symtab.intern("print"),
+            .def = via::Def::function(
+                alloc,
+                io::print,
+                types.get_builtin(via::sema::BuiltinKind::NIL),
+                {{
+                    .symbol = symtab.intern("__s"),
+                    .type = types.get_builtin(via::sema::BuiltinKind::STRING),
+                }}
+            ),
+        },
+    };
 
-    return via::NativeModuleInfo::construct(alloc, 1, dt);
+    return via::NativeModuleInfo::create(alloc, 1, dt);
 }

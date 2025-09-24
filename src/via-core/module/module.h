@@ -20,15 +20,16 @@
 #define VIA_MODULE_ENTRY_PREFIX viainit_
 
 #define VIA_MODULE_ENTRY(ID, MANAGER)                                                    \
-    VIA_EXPORT const via::NativeModuleInfo*                                              \
+    VIA_EXPORT extern "C" const via::NativeModuleInfo*                                   \
     EXPAND_AND_PASTE(VIA_MODULE_ENTRY_PREFIX, ID)(via::ModuleManager * MANAGER)
-#define VIA_MODULE_FUNCTION(ID, VM, CI)                                                  \
-    via::ValueRef ID(via::VirtualMachine* VM, via::CallInfo& CI)
+
+#define VIA_MODULE_FUNCTION(ID, VM, CALL_INFO)                                           \
+    via::ValueRef ID(via::VirtualMachine* VM, via::CallInfo& CALL_INFO)
 
 namespace via {
 namespace config {
 
-CONSTANT const char MODULE_ENTRY_PREFIX[] = EXPAND_STRING(VIA_MODULE_ENTRY_PREFIX);
+VIA_CONSTANT const char MODULE_ENTRY_PREFIX[] = EXPAND_STRING(VIA_MODULE_ENTRY_PREFIX);
 
 } // namespace config
 
@@ -43,7 +44,7 @@ struct NativeModuleInfo
     {}
 
     static NativeModuleInfo*
-    construct(ScopedAllocator& alloc, size_t size, const DefTableEntry* begin)
+    create(ScopedAllocator& alloc, size_t size, const DefTableEntry* begin)
     {
         return alloc.emplace<NativeModuleInfo>(size, begin);
     }
@@ -51,7 +52,7 @@ struct NativeModuleInfo
 
 class ModuleManager;
 
-using NativeModuleInitCallback = NativeModuleInfo* (*) (ModuleManager* mgr);
+using NativeModuleInitCallback = NativeModuleInfo* (*) (ModuleManager*);
 
 enum class ModuleKind : u8
 {
@@ -117,7 +118,7 @@ class Module final
     auto* get_ast_decl() const { return m_ast_decl; }
 
     Option<const Def*> lookup(SymbolId symbol);
-    Expected<Module*> import(const QualName& path, const ast::StmtImport* importDecl);
+    Expected<Module*> import(const QualName& path, const ast::StmtImport* ast_decl);
 
   protected:
     ScopedAllocator m_alloc;

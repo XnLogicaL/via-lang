@@ -17,7 +17,7 @@
 namespace via {
 namespace config {
 
-CONSTANT size_t REGISTER_COUNT = UINT16_MAX;
+VIA_CONSTANT size_t REGISTER_COUNT = UINT16_MAX;
 
 }
 

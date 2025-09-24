@@ -24,22 +24,19 @@ namespace ast {
 struct Expr
 {
     SourceLoc loc;
-
-    virtual std::string get_dump(size_t& depth) const = 0;
+    virtual std::string to_string(size_t& depth) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
-
-    virtual std::string get_dump(size_t& depth) const = 0;
+    virtual std::string to_string(size_t& depth) const = 0;
 };
 
 struct Type
 {
     SourceLoc loc;
-
-    virtual std::string get_dump(size_t& depth) const = 0;
+    virtual std::string to_string(size_t& depth) const = 0;
 };
 
 struct Path
@@ -47,7 +44,7 @@ struct Path
     std::vector<const Token*> path;
     SourceLoc loc;
 
-    std::string get_dump() const;
+    std::string to_string() const;
 };
 
 struct Parameter
@@ -56,7 +53,7 @@ struct Parameter
     const Type* type;
     SourceLoc loc;
 
-    std::string get_dump() const;
+    std::string to_string() const;
 };
 
 struct AttributeGroup
@@ -70,12 +67,12 @@ struct AttributeGroup
     std::vector<Attribute> ats;
     SourceLoc loc;
 
-    std::string get_dump() const;
+    std::string to_string() const;
 };
 
 #define NODE_FIELDS(base)                                                                \
     using base::loc;                                                                     \
-    std::string get_dump(size_t& depth) const override;
+    std::string to_string(size_t& depth) const override;
 
 struct ExprLiteral: public Expr
 {
@@ -347,7 +344,7 @@ using SyntaxTree = std::vector<const ast::Stmt*>;
 
 namespace debug {
 
-[[nodiscard]] std::string get_dump(const SyntaxTree& ast);
+[[nodiscard]] std::string to_string(const SyntaxTree& ast);
 
 }
 } // namespace via

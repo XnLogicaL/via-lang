@@ -42,30 +42,23 @@ class Closure final
 
     template <typename... Args>
         requires(std::is_constructible_v<Closure, Args...>)
-    [[nodiscard]] static Closure* construct(VirtualMachine* vm, Args&&... args) noexcept
+    [[nodiscard]] static Closure* create(VirtualMachine* vm, Args&&... args) noexcept
     {
         return vm->get_allocator().emplace<Closure>(std::forward<Args>(args)...);
     }
 
   public:
-    auto argc() const noexcept { return m_argc; }
+    auto get_argc() const noexcept { return m_argc; }
     bool is_native() const noexcept { return m_native; }
-
-    auto* bytecode() const noexcept
-    {
-        debug::require(m_native);
-        return m_bytecode;
-    }
-
-    auto callback() const noexcept
-    {
-        debug::require(!m_native);
-        return m_callback;
-    }
+    auto& get_upvalues() const noexcept { return m_upvs; }
+    auto* get_bytecode() const noexcept { return m_bytecode; }
+    auto get_callback() const noexcept { return m_callback; }
 
   private:
-    const size_t m_argc;
     const bool m_native;
+    const size_t m_argc;
+    std::vector<Value*> m_upvs;
+
     union {
         const Instruction* m_bytecode;
         const NativeCallback m_callback;

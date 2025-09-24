@@ -56,14 +56,14 @@ using DefTable = DefTableEntry[];
 struct Def
 {
     virtual SymbolId get_identity() const = 0;
-    virtual std::string get_dump() const = 0;
+    virtual std::string to_string() const = 0;
 
     static Def* from(ScopedAllocator& alloc, const ir::Stmt* node);
     static Def* function(
         ScopedAllocator& alloc,
         const NativeCallback callback,
-        const sema::Type* return_type,
-        std::initializer_list<DefParm> parameters
+        const sema::Type* ret_type,
+        std::initializer_list<DefParm> parms
     );
 };
 
@@ -76,7 +76,7 @@ struct FunctionDef: public Def
     const sema::Type* ret;
 
     SymbolId get_identity() const override { return symbol; }
-    std::string get_dump() const override;
+    std::string to_string() const override;
 };
 
 } // namespace via

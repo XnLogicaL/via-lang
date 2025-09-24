@@ -145,7 +145,7 @@ void via::Executable::lower_expr(const ir::Expr* expr, u16 dst) noexcept
     VISIT_EXPR(ir::ExprTuple);
     VISIT_EXPR(ir::ExprLambda);
 
-    debug::unimplemented(std::format("lower_expr({}, u16)", TYPENAME(*expr)));
+    debug::unimplemented(std::format("lower_expr({}, u16)", VIA_TYPENAME(*expr)));
 #undef VISIT_EXPR
 }
 
@@ -188,7 +188,6 @@ void via::detail::ir_lower_stmt<ir::StmtFuncDecl>(
     u16 dst = exe.m_reg_state.alloc();
     exe.push_instruction(OpCode::NEWCLOSURE, {dst});
     exe.lower_stmt(ir_stmt_func_decl->body);
-    exe.push_instruction(OpCode::ENDCLOSURE);
     exe.push_instruction(OpCode::PUSH, {dst});
     exe.push_instruction(OpCode::FREE1, {dst});
     exe.m_reg_state.free(dst);
@@ -214,18 +213,20 @@ void via::Executable::lower_stmt(const ir::Stmt* stmt) noexcept
     VISIT_STMT(ir::StmtBlock)
     VISIT_STMT(ir::StmtExpr)
 
-    debug::unimplemented(std::format("lower_stmt({})", TYPENAME(*stmt)));
+    debug::unimplemented(std::format("lower_stmt({})", VIA_TYPENAME(*stmt)));
 #undef VISIT_STMT
 }
 
 via::Executable*
-via::Executable::build_from_ir(Module* module, const IRTree& ir, u64 flags) noexcept
+via::Executable::build_from_ir(Module* module, const IRTree& ir_tree, ExeFlags flags)
+    noexcept
 {
     auto& alloc = module->get_allocator();
     auto* exe = alloc.emplace<Executable>();
+    exe->m_flags = flags;
     exe->m_junk_reg = exe->m_reg_state.alloc();
 
-    for (const auto& stmt: ir) {
+    for (const auto& stmt: ir_tree) {
         exe->lower_stmt(stmt);
     }
 
@@ -257,14 +258,14 @@ void via::Executable::lower_jumps() noexcept
     }
 }
 
-std::string via::Executable::get_dump() const
+std::string via::Executable::to_string() const
 {
     std::ostringstream oss;
     oss << ansi::format(
         "[section .text]\n",
-        ansi::Foreground::Yellow,
-        ansi::Background::Black,
-        ansi::Style::Underline
+        ansi::Foreground::YELLOW,
+        ansi::Background::BLACK,
+        ansi::Style::UNDERLINE
     );
 
     for (size_t pc = 0; const Instruction& insn: m_bytecode) {
@@ -275,19 +276,19 @@ std::string via::Executable::get_dump() const
             );
             it != m_labels.end())
             oss << " .LB" << it->first << ":\n";
-        oss << "  " << insn.get_dump() << "\n";
+        oss << "  " << insn.to_string() << "\n";
         pc++;
     }
 
     oss << ansi::format(
         "[section .data]\n",
-        ansi::Foreground::Yellow,
-        ansi::Background::Black,
-        ansi::Style::Underline
+        ansi::Foreground::YELLOW,
+        ansi::Background::BLACK,
+        ansi::Style::UNDERLINE
     );
 
     for (const sema::ConstValue& cv: m_constants) {
-        oss << "  " << cv.get_dump() << "\n";
+        oss << "  " << cv.to_string() << "\n";
     }
 
     return oss.str();

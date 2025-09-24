@@ -93,117 +93,95 @@ static const Tp* instantiate_base(
         return it->second;
     }
     else {
-        auto* bt = alloc.emplace<Tp>(args...);
-        map[key] = bt;
-        return bt;
+        auto* type = alloc.emplace<Tp>(args...);
+        map[key] = type;
+        return type;
     }
 }
 
-const sema::BuiltinType* sema::TypeContext::get_builtin(BuiltinType::Kind kind)
+const sema::BuiltinType* sema::TypeContext::get_builtin(BuiltinKind kind)
 {
-    return instantiate_base<BuiltinType, BuiltinType::Kind>(m_alloc, m_builtins, kind);
+    return instantiate_base<BuiltinType>(m_alloc, m_builtins, kind);
+}
+
+const sema::OptionalType* sema::TypeContext::get_optional(const Type* type)
+{
+    return instantiate_base<OptionalType>(m_alloc, m_optionals, type);
 }
 
 const sema::ArrayType* sema::TypeContext::get_array(const Type* type)
 {
-    return m_arrays[type];
+    return instantiate_base<ArrayType>(m_alloc, m_arrays, type);
 }
 
 const sema::DictType* sema::TypeContext::get_dict(const Type* key, const Type* val)
 {
-    return m_dicts[DictKey{
-        .key = key,
-        .val = val,
-    }];
+    return instantiate_base<DictType>(m_alloc, m_dicts, DictKey{key, val});
 }
 
 const sema::FuncType*
-sema::TypeContext::get_function(const Type* res, std::vector<const Type*> tps)
+sema::TypeContext::get_function(const Type* ret, std::vector<const Type*> parms)
 {
-    return m_funcs[FuncKey{
-        .result = res,
-        .tps = tps,
-    }];
+    return instantiate_base<FuncType>(m_alloc, m_funcs, FuncKey{ret, parms});
 }
 
 const sema::UserType* sema::TypeContext::get_user(const ast::StmtTypeDecl* decl)
 {
-    return m_users[UserKey{.decl = decl}];
+    return instantiate_base<UserType>(m_alloc, m_users, UserKey{decl});
 }
 
-const sema::Type* sema::TypeContext::instantiate(const Type* tp, const TypeEnv& env)
+const sema::Type* sema::TypeContext::instantiate(const Type* type, const TypeEnv& env)
 {
-    switch (tp->kind) {
-    case Type::Kind::Builtin:
-    case Type::Kind::User:
-        return tp; // already canonical, no params
-
-    case Type::Kind::TemplateParam: {
-        auto* parm = static_cast<const TemplateParamType*>(tp);
-
-        if (auto* rs = env.lookup(parm->depth, parm->index)) {
-            return rs; // fully substituted here
-        }
-
-        return tp; // still dependent
+    if (TRY_IS(const BuiltinType, type) || TRY_IS(const UserType, type))
+        return type; // already canonical, no params
+    else if TRY_COERCE (const TemplateParamType, parm, type) {
+        if (auto* result = env.lookup(parm->depth, parm->index))
+            return result; // fully substituted here
+        return type;       // still dependent
     }
-
-    case Type::Kind::SubstParam: {
-        auto* sbs = static_cast<const SubstParamType*>(tp);
-        auto* rs = instantiate(sbs->replacement, env);
-
-        if (rs == sbs->replacement) {
-            return tp;
-        }
-
-        return m_alloc.emplace<SubstParamType>(sbs->parm, rs);
+    else if TRY_COERCE (const SubstParamType, subst, type) {
+        auto* result = instantiate(subst->replacement, env);
+        if (result == subst->replacement)
+            return type;
+        return m_alloc.emplace<SubstParamType>(subst->parm, result);
     }
-
-    case Type::Kind::Array: {
-        auto* at = static_cast<const ArrayType*>(tp);
-        auto* tmp = instantiate(at->elem, env);
-        return (tmp == at->elem) ? tp : get_array(tmp);
+    else if TRY_COERCE (const ArrayType, array, type) {
+        auto* tmp = instantiate(array->type, env);
+        return (tmp == array->type) ? type : get_array(tmp);
     }
-
-    case Type::Kind::Dict: {
-        auto* dt = static_cast<const DictType*>(tp);
-        auto* key = instantiate(dt->key, env);
-        auto* val = instantiate(dt->val, env);
-        return (key == dt->key && val == dt->val) ? tp : get_dict(key, val);
+    else if TRY_COERCE (const DictType, dict, type) {
+        auto* key = instantiate(dict->key, env);
+        auto* val = instantiate(dict->val, env);
+        return (key == dict->key && val == dict->val) ? type : get_dict(key, val);
     }
-
-    case Type::Kind::Function: {
-        auto* ft = static_cast<const FuncType*>(tp);
-        std::vector<const Type*> tps;
-        tps.reserve(ft->params.size());
+    else if TRY_COERCE (const FuncType, function, type) {
+        std::vector<const Type*> parm_types;
+        parm_types.reserve(function->params.size());
 
         bool same = true;
-        for (auto* par: ft->params) {
-            auto* np = instantiate(par, env);
-            same &= (np == par);
-            tps.push_back(np);
+        for (auto* parm: function->params) {
+            auto* parm_inst = instantiate(parm, env);
+            same &= (parm_inst == parm);
+            parm_types.push_back(parm_inst);
         }
 
-        auto* rs = instantiate(ft->result, env);
-        same &= (rs == ft->result);
-        return same ? tp : get_function(rs, tps);
+        auto* result = instantiate(function->result, env);
+        same &= (result == function->result);
+        return same ? type : get_function(result, parm_types);
     }
-
-    case Type::Kind::TemplateSpec: {
-        auto* S = static_cast<const TemplateSpecType*>(tp);
-        std::vector<const Type*> args;
-        args.reserve(S->args.size());
+    else if TRY_COERCE (const TemplateSpecType, spec, type) {
+        std::vector<const Type*> args_types;
+        args_types.reserve(spec->args.size());
 
         bool same = true;
-        for (auto* arg: S->args) {
-            auto* na = instantiate(arg, env);
-            same &= (na == arg);
-            args.push_back(na);
+        for (auto* arg: spec->args) {
+            auto* arg_inst = instantiate(arg, env);
+            same &= (arg_inst == arg);
+            args_types.push_back(arg_inst);
         }
 
-        return same ? tp : get_template_spec(S->primary, args);
-    }
+        return same ? type : get_template_spec(spec->primary, args_types);
     }
 
-    return tp; // defensive
+    return type; // defensive
 }

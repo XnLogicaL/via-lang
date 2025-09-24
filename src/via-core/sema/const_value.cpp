@@ -61,5 +61,5 @@ std::string sema::ConstValue::to_string() const
 
 std::string sema::ConstValue::get_dump() const
 {
-    return std::format("[{} {}]", magic_enum::enum_name(kind()), to_string());
+    return std::format("{}({})", magic_enum::enum_name(kind()), to_string());
 }

@@ -47,9 +47,9 @@ inline std::string __demangle(const char* name)
     return (status == 0 && demangled) ? holder.get() : name;
 }
 
-    #define TYPENAME(EXPR) (::via::detail::__demangle(typeid(EXPR).name()))
+    #define VIA_TYPENAME(EXPR) (::via::detail::__demangle(typeid(EXPR).name()))
 #else
-    #define TYPENAME(EXPR) (typeid(EXPR).name())
+    #define VIA_TYPENAME(EXPR) (typeid(EXPR).name())
 #endif
 
 } // namespace detail

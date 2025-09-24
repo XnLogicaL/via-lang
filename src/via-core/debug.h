@@ -18,15 +18,15 @@ namespace via {
 namespace config {
 
 // What to print when debug functions aren't provided a message
-CONSTANT const char* CRASH_LOGGER_NO_MESSAGE = "<no-message>";
+VIA_CONSTANT const char* CRASH_LOGGER_NO_MESSAGE = "<no-message>";
 
 // Logging level for crashes
-CONSTANT spdlog::level::level_enum CRASH_LOGGER_LEVEL = spdlog::level::err;
+VIA_CONSTANT spdlog::level::level_enum CRASH_LOGGER_LEVEL = spdlog::level::err;
 
 #ifdef NDEBUG
-CONSTANT bool DEBUG_ENABLED = false;
+VIA_CONSTANT bool DEBUG_ENABLED = false;
 #else
-CONSTANT bool DEBUG_ENABLED = true;
+VIA_CONSTANT bool DEBUG_ENABLED = true;
 #endif
 
 } // namespace config
@@ -45,7 +45,7 @@ void require(bool cond, MSG_PARM) noexcept;
 #undef MSG_PARM
 
 template <typename T, char LDel = '{', char RDel = '}'>
-inline std::string get_dump(
+inline std::string to_string(
     const std::vector<T>& vec,
     std::function<std::string(const std::remove_cv_t<T>&)> fn
 )

@@ -13,7 +13,7 @@
 
 using OpCode = via::OpCode;
 
-std::string via::Instruction::get_dump() const
+std::string via::Instruction::to_string() const
 {
     std::ostringstream oss;
     oss << std::left << std::setw(16) << std::setfill(' ') << magic_enum::enum_name(op);

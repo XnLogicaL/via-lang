@@ -49,7 +49,7 @@ class Lexer final
 
 namespace debug {
 
-[[nodiscard]] std::string get_dump(const TokenTree& tt);
+[[nodiscard]] std::string to_string(const TokenTree& tt);
 
 }
 } // namespace via

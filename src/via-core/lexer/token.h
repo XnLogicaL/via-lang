@@ -120,13 +120,7 @@ struct Token
     std::string get_dump() const;
     std::string to_string() const { return std::string(lexeme, size); }
     std::string_view to_sv() const { return std::string_view(lexeme, size); }
-
     SourceLoc location(const std::string& source) const;
 };
-
-inline std::string to_string(const Token& tok)
-{
-    return tok.get_dump();
-}
 
 } // namespace via

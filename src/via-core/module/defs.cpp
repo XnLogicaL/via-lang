@@ -25,29 +25,28 @@ via::Def* via::Def::from(ScopedAllocator& alloc, const ir::Stmt* node)
 via::Def* via::Def::function(
     ScopedAllocator& alloc,
     const NativeCallback callback,
-    const sema::Type* return_type,
-    std::initializer_list<DefParm> parameters
+    const sema::Type* ret_type,
+    std::initializer_list<DefParm> parms
 )
 {
     auto* fndef = alloc.emplace<FunctionDef>();
     fndef->kind = ImplKind::NATIVE;
     fndef->code.native = callback;
-    fndef->parms = parameters;
-    fndef->ret = return_type;
-
+    fndef->parms = parms;
+    fndef->ret = ret_type;
     return fndef;
 }
 
-std::string via::FunctionDef::get_dump() const
+std::string via::FunctionDef::to_string() const
 {
     return std::format(
         "FunctionDef(symbol={}, ret={}, parms={}, kind={}, code={})",
         symbol,
-        ret->get_dump(),
-        debug::get_dump(
+        ret->to_string(),
+        debug::to_string(
             parms,
             [](const auto& parm) {
-                return std::format("{}: {}", parm.symbol, parm.type->get_dump());
+                return std::format("{}: {}", parm.symbol, parm.type->to_string());
             }
         ),
         magic_enum::enum_name(kind),

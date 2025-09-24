@@ -86,7 +86,7 @@ constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
     return result * sign;
 }
 
-CONSTANT bool is_digit(char c)
+VIA_CONSTANT bool is_digit(char c)
 {
     return c >= '0' && c <= '9';
 }

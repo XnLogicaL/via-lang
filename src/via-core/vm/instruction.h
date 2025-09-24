@@ -37,7 +37,6 @@ namespace via {
     X(NEWDICT)                                                                           \
     X(NEWTUPLE)                                                                          \
     X(NEWCLOSURE)                                                                        \
-    X(ENDCLOSURE)                                                                        \
     X(IADD)                                                                              \
     X(IADDK)                                                                             \
     X(FADD)                                                                              \
@@ -157,7 +156,7 @@ struct Instruction
     OpCode op = OpCode::NOP;
     u16 a, b, c;
 
-    std::string get_dump() const;
+    std::string to_string() const;
 };
 
 } // namespace via

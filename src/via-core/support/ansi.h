@@ -18,44 +18,44 @@ namespace ansi {
 // ANSI text foreground color codes.
 enum class Foreground
 {
-    Red = 31,
-    Green = 32,
-    Blue = 34,
-    Yellow = 33,
-    Magenta = 35,
-    Cyan = 36,
-    White = 37,
-    Black = 30
+    RED = 31,
+    GREEN = 32,
+    BLUE = 34,
+    YELLOW = 33,
+    MAGENTA = 35,
+    CYAN = 36,
+    WHITE = 37,
+    BLACK = 30
 };
 
 // ANSI text background color codes.
 enum class Background
 {
-    Red = 41,
-    Green = 42,
-    Blue = 44,
-    Yellow = 43,
-    Magenta = 45,
-    Cyan = 46,
-    White = 47,
-    Black = 40
+    RED = 41,
+    GREEN = 42,
+    BLUE = 44,
+    YELLOW = 43,
+    MAGENTA = 45,
+    CYAN = 46,
+    WHITE = 47,
+    BLACK = 40
 };
 
 // ANSI text style color codes.
 enum class Style
 {
-    Reset = 0,
-    Bold = 1,
-    Faint = 2,
-    Italic = 3,
-    Underline = 4,
+    RESET = 0,
+    BOLD = 1,
+    FAINT = 2,
+    ITALIC = 3,
+    UNDERLINE = 4,
 };
 
 std::string format(
     std::string string,
-    Foreground foreground,
-    Background background = Background::Black,
-    Style style = Style::Reset
+    Foreground fg,
+    Background bg = Background::BLACK,
+    Style style = Style::RESET
 );
 
 } // namespace ansi
