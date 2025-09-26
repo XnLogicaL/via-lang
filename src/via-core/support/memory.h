@@ -103,6 +103,7 @@ class BumpAllocator final
     }
 
     template <typename T, typename... Args>
+        requires std::is_constructible_v<T, Args...>
     [[nodiscard]] inline T* emplace(Args&&... args)
     {
         T* ptr = (T*) m_cursor;
@@ -112,6 +113,7 @@ class BumpAllocator final
     }
 
     template <typename T, typename... Args>
+        requires std::is_constructible_v<T, Args...>
     [[nodiscard]] inline T* emplace_array(size_t size, Args&&... args)
     {
         T* ptr = (T*) m_cursor;
@@ -166,7 +168,7 @@ class ScopedAllocator final
     }
 
     template <typename T, typename... Args>
-        requires(std::is_constructible_v<T, Args...>)
+        requires std::is_constructible_v<T, Args...>
     [[nodiscard]] inline T* emplace(Args&&... args)
         noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {

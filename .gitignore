@@ -2,6 +2,7 @@ local
 build
 cmake-build-debug
 .idea
+.vscode
 .cache
 scripts/__pycache__
 CMakeFiles

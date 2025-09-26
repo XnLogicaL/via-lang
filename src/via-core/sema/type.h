@@ -118,18 +118,18 @@ struct DictType: public Type
 
 struct FuncType: public Type
 {
-    std::vector<const Type*> params;
     const Type* result;
+    std::vector<const Type*> params;
 
-    explicit FuncType(std::vector<const Type*> parms, const Type* ret)
+    explicit FuncType(const Type* ret, std::vector<const Type*> parms)
         : Type(({
               bool dep = ret->is_dependent();
               for (auto* p: parms)
                   dep |= p->is_dependent();
               dep ? TypeFlags::DEPENDENT : TypeFlags::NONE;
           })),
-          params(std::move(parms)),
-          result(ret)
+          result(ret),
+          params(std::move(parms))
     {}
 };
 

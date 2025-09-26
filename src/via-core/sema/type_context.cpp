@@ -82,6 +82,7 @@ bool std::equal_to<sema::UserKey>::operator()(
 }
 
 template <typename Tp, typename Key, typename... Args>
+    requires std::is_constructible_v<Tp, Args...> && std::is_constructible_v<Key, Args...>
 static const Tp* instantiate_base(
     via::BumpAllocator<>& alloc,
     std::unordered_map<Key, const Tp*>& map,
@@ -116,18 +117,18 @@ const sema::ArrayType* sema::TypeContext::get_array(const Type* type)
 
 const sema::DictType* sema::TypeContext::get_dict(const Type* key, const Type* val)
 {
-    return instantiate_base<DictType>(m_alloc, m_dicts, DictKey{key, val});
+    return instantiate_base<DictType>(m_alloc, m_dicts, key, val);
 }
 
 const sema::FuncType*
 sema::TypeContext::get_function(const Type* ret, std::vector<const Type*> parms)
 {
-    return instantiate_base<FuncType>(m_alloc, m_funcs, FuncKey{ret, parms});
+    return instantiate_base<FuncType>(m_alloc, m_funcs, ret, parms);
 }
 
 const sema::UserType* sema::TypeContext::get_user(const ast::StmtTypeDecl* decl)
 {
-    return instantiate_base<UserType>(m_alloc, m_users, UserKey{decl});
+    return instantiate_base<UserType>(m_alloc, m_users, decl);
 }
 
 const sema::Type* sema::TypeContext::instantiate(const Type* type, const TypeEnv& env)
