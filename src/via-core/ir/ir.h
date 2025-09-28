@@ -153,7 +153,7 @@ struct ExprModuleAccess: public Expr
 {
     NODE_FIELDS(Expr)
     Module* module;
-    SymbolId index;
+    SymbolId mod_id, key_id;
     const Def* def;
 };
 

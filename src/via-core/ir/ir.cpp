@@ -138,8 +138,8 @@ std::string ir::ExprModuleAccess::to_string(const SymbolTable* sym_tab, size_t&)
 {
     return std::format(
         "module<{}>::{} def@{}",
-        module->name(),
-        SYMBOL(index),
+        SYMBOL(mod_id),
+        SYMBOL(key_id),
         reinterpret_cast<const void*>(def)
     );
 }

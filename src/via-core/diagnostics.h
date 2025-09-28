@@ -107,21 +107,21 @@ inline std::string to_string(Level level) noexcept
         return ansi::format(
             "info:",
             ansi::Foreground::CYAN,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     case Level::WARNING:
         return ansi::format(
             "warning:",
             ansi::Foreground::YELLOW,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     case Level::ERROR:
         return ansi::format(
             "error:",
             ansi::Foreground::RED,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     }
@@ -134,14 +134,14 @@ inline std::string to_string(FootnoteKind kind) noexcept
         return ansi::format(
             "hint:",
             ansi::Foreground::GREEN,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     case FootnoteKind::NOTE:
         return ansi::format(
             "note:",
             ansi::Foreground::BLUE,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     }

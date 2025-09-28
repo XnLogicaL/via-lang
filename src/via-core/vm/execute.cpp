@@ -179,18 +179,12 @@ dispatch:
             DISPATCH();
         }
         CASE(NEWSTR)
-        CASE(NEWSTR2)
         CASE(NEWARR)
-        CASE(NEWARR2)
         CASE(NEWDICT)
         CASE(NEWTUPLE)
         CASE(NEWCLOSURE)
         {
             debug::todo("implement opcodes");
-        }
-        CASE(ENDCLOSURE)
-        {
-            debug::bug("direct use of reserved opcode");
         }
         CASE(IADD)
         {
@@ -1289,12 +1283,12 @@ dispatch:
         }
         CASE(CALL)
         {
-            vm->call(ValueRef(vm, GET_LOCAL(pc->a)));
+            vm->call(ValueRef(vm, GET_REGISTER(pc->a)));
             DISPATCH();
         }
         CASE(PCALL)
         {
-            vm->call(ValueRef(vm, GET_LOCAL(pc->a)), CF_PROTECT);
+            vm->call(ValueRef(vm, GET_REGISTER(pc->a)), CallFlags::PROTECT);
             DISPATCH();
         }
         CASE(RET)
@@ -1341,6 +1335,11 @@ dispatch:
         }
         CASE(GETIMPORT)
         {
+            CSE_OPERANDS_A();
+            auto import = vm->get_import(pc->b, pc->c);
+            import->m_rc++;
+            FREE_REGISTER(a);
+            SET_REGISTER(a, import.get());
             DISPATCH();
         }
 #ifdef HAS_CGOTO

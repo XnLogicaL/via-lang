@@ -63,9 +63,9 @@ class IRBuilder final
         : m_module(module),
           m_ast(ast),
           m_alloc(module->get_allocator()),
+          m_diags(diags),
           m_type_ctx(module->get_manager()->get_type_context()),
-          m_symbol_table(module->get_manager()->get_symbol_table()),
-          m_diags(diags)
+          m_symbol_table(module->get_manager()->get_symbol_table())
     {}
 
   public:

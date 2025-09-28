@@ -18,6 +18,7 @@ namespace ansi {
 // ANSI text foreground color codes.
 enum class Foreground
 {
+    NONE,
     RED = 31,
     GREEN = 32,
     BLUE = 34,
@@ -31,6 +32,7 @@ enum class Foreground
 // ANSI text background color codes.
 enum class Background
 {
+    NONE,
     RED = 41,
     GREEN = 42,
     BLUE = 44,
@@ -44,6 +46,7 @@ enum class Background
 // ANSI text style color codes.
 enum class Style
 {
+    NONE,
     RESET = 0,
     BOLD = 1,
     FAINT = 2,
@@ -54,8 +57,8 @@ enum class Style
 std::string format(
     std::string string,
     Foreground fg,
-    Background bg = Background::BLACK,
-    Style style = Style::RESET
+    Background bg = Background::NONE,
+    Style style = Style::NONE
 );
 
 } // namespace ansi

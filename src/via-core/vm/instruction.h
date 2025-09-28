@@ -156,7 +156,7 @@ struct Instruction
     OpCode op = OpCode::NOP;
     u16 a, b, c;
 
-    std::string to_string() const;
+    std::string to_string(bool use_color = false) const;
 };
 
 } // namespace via

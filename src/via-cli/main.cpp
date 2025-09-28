@@ -9,10 +9,9 @@
 
 #include <csv2/reader.hpp>
 #include <replxx.hxx>
-#include <spdlog/sinks/ansicolor_sink.h>
-#include <spdlog/spdlog.h>
 #include <via/via.h>
 #include "app.h"
+#include "init.h"
 
 #undef assert
 
@@ -72,15 +71,7 @@ int main(int argc, char* argv[])
     using via::ModulePerms;
     using namespace via::literals;
 
-    std::shared_ptr<spdlog::sinks::ansicolor_stdout_sink_mt> console =
-        std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
-
-    std::string info_color = console->cyan.data();
-    info_color += console->bold.data();
-    console->set_color(spdlog::level::info, std::string_view(info_color.c_str()));
-
-    spdlog::set_default_logger(std::make_shared<spdlog::logger>("main", console));
-    spdlog::set_pattern("%^%l:%$ %v");
+    via::init();
 
     static auto lang_dir = get_lang_dir();
 
@@ -172,19 +163,16 @@ int main(int argc, char* argv[])
         );
 
         if (raw_dump_mode == "symtab") {
-            std::println(
-                std::cout,
-                "{}",
-                via::ansi::format(
-                    "[global symbol table]",
-                    via::ansi::Foreground::YELLOW,
-                    via::ansi::Background::BLACK,
-                    via::ansi::Style::BOLD
-                )
-            );
+            std::cout << via::ansi::format(
+                             "[global symbol table]",
+                             via::ansi::Foreground::YELLOW,
+                             via::ansi::Background::NONE,
+                             via::ansi::Style::BOLD
+                         )
+                      << "\n";
 
             for (const auto& symbol: manager.get_symbol_table().get_symbols()) {
-                std::println(std::cout, "  {}: {}", symbol.second, symbol.first);
+                std::cout << std::format("  {}: {}\n", symbol.second, symbol.first);
             }
         }
     }

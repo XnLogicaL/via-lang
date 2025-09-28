@@ -14,7 +14,9 @@
 #include "debug.h"
 #include "executable.h"
 #include "instruction.h"
+#include "module/symbol.h"
 #include "stack.h"
+#include "support/bit_enum.h"
 
 namespace via {
 namespace config {
@@ -34,11 +36,11 @@ void __execute(VirtualMachine* vm);
 
 }
 
-enum CallFlags : u64
+enum class CallFlags : u8
 {
-    CF_NONE = 0,
-    CF_PROTECT = 1 << 0,
-    CF_ALL = std::numeric_limits<u64>::max(),
+    NONE = 0,
+    PROTECT = 1 << 0,
+    ALL = 0xFF,
 };
 
 class Value;
@@ -71,8 +73,8 @@ class VirtualMachine final
     VirtualMachine(Module* module, const Executable* exe)
         : m_exe(exe),
           m_module(module),
-          m_pc(exe->bytecode().data()),
           m_alloc(),
+          m_pc(exe->bytecode().data()),
           m_stack(m_alloc),
           m_registers(std::make_unique<Value*[]>(config::vm::REGISTER_COUNT))
     {
@@ -82,10 +84,11 @@ class VirtualMachine final
   public:
     Stack<uintptr_t>& get_stack() { return m_stack; }
     ScopedAllocator& get_allocator() { return m_alloc; }
+    ValueRef get_import(SymbolId module_id, SymbolId key_id);
     ValueRef get_constant(u16 id);
     void push_local(ValueRef val);
     ValueRef get_local(size_t sp);
-    void call(ValueRef callee, CallFlags flags = CF_NONE);
+    void call(ValueRef callee, CallFlags flags = CallFlags::NONE);
     void return_(ValueRef value);
     void execute();
     void execute_one();

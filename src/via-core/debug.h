@@ -21,7 +21,7 @@ namespace config {
 VIA_CONSTANT const char* CRASH_LOGGER_NO_MESSAGE = "<no-message>";
 
 // Logging level for crashes
-VIA_CONSTANT spdlog::level::level_enum CRASH_LOGGER_LEVEL = spdlog::level::err;
+VIA_CONSTANT const auto CRASH_LOGGER_LEVEL = spdlog::level::err;
 
 #ifdef NDEBUG
 VIA_CONSTANT bool DEBUG_ENABLED = false;

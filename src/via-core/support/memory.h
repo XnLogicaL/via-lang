@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <mimalloc.h>
 #include <mimalloc/internal.h>
 #include <vector>
@@ -23,27 +26,56 @@ namespace detail {
 struct ObjectEntry
 {
     void* ptr;
-    void (*dtor)(void*);
-    inline void operator()() const noexcept { dtor(ptr); }
+    size_t count;
+    bool destroyed = false;
+    void (*dtor)(void*, size_t);
 };
 
-using ObjectRegistry = std::vector<ObjectEntry>;
+using ObRegistry = std::vector<ObjectEntry>;
 
 template <typename T, typename... Args>
-[[gnu::hot]] inline void __construct_at(ObjectRegistry* registry, T* dst, Args&&... args)
+[[gnu::hot]] inline void __construct_at(ObRegistry* registry, T* dst, Args&&... args)
 {
-    new (dst) T(std::forward<Args>(args)...);
-    registry->push_back({.ptr = dst, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
+    ::new (static_cast<void*>(dst)) T(std::forward<Args>(args)...);
+    registry->push_back({
+        .ptr = dst,
+        .count = 1,
+        .dtor = [](void* ptr, size_t) { ((T*) ptr)->~T(); },
+    });
 }
 
 template <typename T, typename... Args>
 [[gnu::hot]] inline void
-__construct_range_at(ObjectRegistry* registry, T* dst, size_t size, Args&&... args)
+__construct_range_at(ObRegistry* registry, T* dst, size_t count, Args&&... args)
 {
-    for (T* ptr = dst; ptr < dst + size; ptr++) {
-        __construct_at(registry, ptr, std::forward<Args>(args)...);
-        registry->push_back({.ptr = ptr, .dtor = [](void* ptr) { ((T*) ptr)->~T(); }});
+    for (size_t i = 0; i < count; ++i) {
+        T* ptr = dst + i;
+        ::new (static_cast<void*>(ptr)) T(std::forward<Args>(args)...);
     }
+
+    registry->push_back({
+        .ptr = static_cast<void*>(dst),
+        .count = count,
+        .dtor =
+            [](void* base, size_t count) noexcept {
+                T* start = static_cast<T*>(base);
+                for (size_t i = count; i-- > 0;) {
+                    (&start[i])->~T();
+                }
+            },
+    });
+}
+
+inline void __destroy_registry(ObRegistry* registry) noexcept
+{
+    for (auto it = registry->rbegin(); it != registry->rend(); ++it) {
+        if (!it->destroyed) {
+            it->dtor(it->ptr, it->count);
+            it->destroyed = true;
+        }
+    }
+
+    registry->clear();
 }
 
 } // namespace detail
@@ -90,66 +122,98 @@ class BumpAllocator final
   public:
     BumpAllocator(size_t size)
         : m_base(Alloc::template alloc<std::byte>(size)),
-          m_cursor(m_base)
+          m_cursor(m_base),
+          m_end(m_base + size)
     {}
-    ~BumpAllocator() { Alloc::template free<std::byte>(m_base); }
+
+    ~BumpAllocator()
+    {
+        detail::__destroy_registry(&m_registry);
+
+        if (m_base) {
+            Alloc::template free<std::byte>(m_base);
+            m_base = nullptr;
+            m_cursor = nullptr;
+            m_end = nullptr;
+        }
+    }
+
+    NO_COPY(BumpAllocator);
+    NO_MOVE(BumpAllocator);
 
   public:
-    [[nodiscard]] inline void* alloc(size_t size)
+    [[nodiscard]] inline void*
+    alloc(size_t size, size_t align = alignof(std::max_align_t))
     {
-        void* ptr = m_cursor;
-        m_cursor += size;
-        return ptr;
+        std::uintptr_t cur = reinterpret_cast<std::uintptr_t>(m_cursor);
+        std::uintptr_t aligned =
+            (cur + (align - 1)) & ~(static_cast<std::uintptr_t>(align) - 1);
+        std::byte* out = reinterpret_cast<std::byte*>(aligned);
+
+        debug::require(out + size <= m_end, "BumpAllocator overflow");
+        m_cursor = out + size;
+        return out;
     }
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
     [[nodiscard]] inline T* emplace(Args&&... args)
     {
-        T* ptr = (T*) m_cursor;
-        m_cursor += sizeof(T);
+        T* ptr = (T*) alloc(sizeof(T), alignof(T));
         detail::__construct_at(&m_registry, ptr, std::forward<Args>(args)...);
         return ptr;
     }
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] inline T* emplace_array(size_t size, Args&&... args)
+    [[nodiscard]] inline T* emplace_array(size_t count, Args&&... args)
     {
-        T* ptr = (T*) m_cursor;
-        m_cursor += sizeof(T) * size;
-        detail::__construct_range_at(&m_registry, ptr, size, std::forward<Args>(args)...);
+        std::byte* block = (std::byte*) alloc(sizeof(T) * count, alignof(T));
+        T* ptr = reinterpret_cast<T*>(block);
+        detail::__construct_range_at(
+            &m_registry,
+            ptr,
+            count,
+            std::forward<Args>(args)...
+        );
         return ptr;
     }
 
   private:
-    std::byte* m_base;
-    std::byte* m_cursor;
-    detail::ObjectRegistry m_registry;
+    std::byte* m_base = nullptr;
+    std::byte* m_cursor = nullptr;
+    std::byte* m_end = nullptr;
+    detail::ObRegistry m_registry;
 };
 
 class ScopedAllocator final
 {
   public:
-    ScopedAllocator() = default;
+    ScopedAllocator()
+        : m_heap(mi_heap_new())
+    {}
+
     ~ScopedAllocator()
     {
-        for (const auto& entry: m_registry) {
-            entry();
+        detail::__destroy_registry(&m_registry);
+
+        if (m_heap) {
+            // TODO: Uncomment when fixed
+            // Causes ASan crash due to an internal bug in mimalloc
+            // See: https://github.com/microsoft/mimalloc/issues/1146
+            //
+            // mi_heap_destroy(m_heap);
+            m_heap = nullptr;
         }
-        mi_heap_destroy(m_heap);
     }
 
     NO_COPY(ScopedAllocator);
     NO_MOVE(ScopedAllocator);
 
-    bool operator==(const ScopedAllocator& other) { return m_heap == other.m_heap; }
-    bool operator!=(const ScopedAllocator& other) { return m_heap != other.m_heap; }
-
   public:
     [[nodiscard]] inline bool owns(void* ptr) noexcept
     {
-        return mi_heap_check_owned(m_heap, ptr);
+        return m_heap && mi_heap_check_owned(m_heap, ptr);
     }
 
     [[nodiscard]] inline void* alloc(size_t size) noexcept
@@ -161,9 +225,29 @@ class ScopedAllocator final
     inline void free(T* ptr) noexcept(std::is_nothrow_destructible_v<T>)
     {
         debug::require(owns(ptr), "free() called on ptr not owned by allocator");
-        if constexpr (std::is_destructible_v<T>) {
-            ptr->~T();
+
+        auto it = std::find_if(
+            m_registry.begin(),
+            m_registry.end(),
+            [&](const detail::ObjectEntry& e) { return e.ptr == static_cast<void*>(ptr); }
+        );
+
+        if (it != m_registry.end()) {
+            if (!it->destroyed) {
+                it->dtor(it->ptr, it->count);
+                it->destroyed = true;
+            }
+
+            m_registry.erase(it);
         }
+        else {
+            debug::require(
+                false,
+                "free() called for pointer that wasn't registered by "
+                "emplace()/emplace_array()"
+            );
+        }
+
         mi_free(ptr);
     }
 
@@ -196,14 +280,15 @@ class ScopedAllocator final
     {
         return mi_heap_strdup(m_heap, str);
     }
+
     [[nodiscard]] inline char* strndup(const char* str, size_t n) noexcept
     {
         return mi_heap_strndup(m_heap, str, n);
     }
 
   private:
-    mi_heap_t* m_heap = mi_heap_new();
-    detail::ObjectRegistry m_registry;
+    mi_heap_t* m_heap;
+    detail::ObRegistry m_registry;
 };
 
 } // namespace via

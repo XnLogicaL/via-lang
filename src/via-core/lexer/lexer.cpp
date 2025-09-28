@@ -268,13 +268,13 @@ via::Token* via::Lexer::read_operator()
     token->kind = ILLEGAL;
     token->size = 1;
 
-    ssize_t match_size = 0;
+    size_t match_size = 0;
     auto match_kind = ILLEGAL;
 
     char buf[4] = {};
 
-    for (ssize_t len = max_operator_length(); len >= 1; --len) {
-        for (ssize_t i = 0; i < len; ++i) {
+    for (size_t len = max_operator_length(); len >= 1; --len) {
+        for (size_t i = 0; i < len; ++i) {
             buf[i] = m_cursor[i];
         }
 
@@ -294,7 +294,7 @@ found:
         token->kind = match_kind;
         token->size = match_size;
 
-        for (ssize_t i = 0; i < match_size; ++i) {
+        for (size_t i = 0; i < match_size; ++i) {
             advance();
         }
     }

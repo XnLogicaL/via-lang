@@ -101,6 +101,7 @@ class Executable final
     void lower_jumps() noexcept;
 
   private:
+    Module* m_module;
     ExeFlags m_flags;
     u16 m_junk_reg;
     sema::RegisterState m_reg_state;

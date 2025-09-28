@@ -7,22 +7,13 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "token.h"
-#include <format>
-#include <magic_enum/magic_enum.hpp>
+#pragma once
 
-via::SourceLoc via::Token::location(const std::string& source) const
-{
-    const size_t begin = lexeme - source.cbegin().base();
-    const size_t end = begin + size;
-    return {begin, end};
-}
+#include <via/config.h>
+#include <via/types.h>
 
-std::string via::Token::get_dump() const
-{
-    return std::format(
-        "[{} '{}']",
-        magic_enum::enum_name(kind),
-        (*lexeme == '\0') ? "<eof>" : to_string()
-    );
+namespace via {
+
+void init() noexcept;
+
 }

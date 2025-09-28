@@ -22,8 +22,7 @@ VIA_CONSTANT size_t STACK_SIZE = 8192;
 }
 } // namespace config
 
-template <typename T>
-class Stack final
+template <typename T> class Stack final
 {
   public:
     explicit Stack(ScopedAllocator& alloc)

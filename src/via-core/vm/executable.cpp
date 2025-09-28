@@ -9,8 +9,10 @@
 
 #include "executable.h"
 #include <iostream>
+#include "module/manager.h"
 #include "module/module.h"
 #include "support/ansi.h"
+#include "vm/instruction.h"
 
 namespace ir = via::ir;
 
@@ -45,8 +47,14 @@ void via::detail::ir_lower_expr<ir::ExprModuleAccess>(
     u16 dst
 ) noexcept
 {
-    // TEMPORARY
-    exe.push_instruction(OpCode::GETIMPORT, {dst});
+    exe.push_instruction(
+        OpCode::GETIMPORT,
+        {
+            dst,
+            static_cast<u16>(ir_expr_module_access->mod_id),
+            static_cast<u16>(ir_expr_module_access->key_id),
+        }
+    );
 }
 
 template <>
@@ -119,9 +127,10 @@ void via::detail::ir_lower_expr<ir::ExprCall>(
         exe.push_instruction(OpCode::PUSH, {reg});
     }
 
-    exe.lower_expr(ir_expr_call->callee, dst);
+    exe.lower_expr(ir_expr_call->callee, reg);
     exe.push_instruction(OpCode::CALL, {reg});
     exe.push_instruction(OpCode::FREE1, {reg});
+    // TODO: Fetch return value from stack into dst
     exe.m_reg_state.free(reg);
 }
 
@@ -223,6 +232,7 @@ via::Executable::build_from_ir(Module* module, const IRTree& ir_tree, ExeFlags f
 {
     auto& alloc = module->get_allocator();
     auto* exe = alloc.emplace<Executable>();
+    exe->m_module = module;
     exe->m_flags = flags;
     exe->m_junk_reg = exe->m_reg_state.alloc();
 
@@ -264,7 +274,7 @@ std::string via::Executable::to_string() const
     oss << ansi::format(
         "[section .text]\n",
         ansi::Foreground::YELLOW,
-        ansi::Background::BLACK,
+        ansi::Background::NONE,
         ansi::Style::UNDERLINE
     );
 
@@ -276,19 +286,26 @@ std::string via::Executable::to_string() const
             );
             it != m_labels.end())
             oss << " .LB" << it->first << ":\n";
-        oss << "  " << insn.to_string() << "\n";
+        oss << "  " << insn.to_string(true) << "\n";
         pc++;
     }
 
     oss << ansi::format(
         "[section .data]\n",
         ansi::Foreground::YELLOW,
-        ansi::Background::BLACK,
+        ansi::Background::NONE,
         ansi::Style::UNDERLINE
     );
 
-    for (const sema::ConstValue& cv: m_constants) {
-        oss << "  " << cv.to_string() << "\n";
+    for (size_t i = 0; const auto& cv: m_constants) {
+        oss << "  "
+            << ansi::format(
+                   "CONSTANT",
+                   ansi::Foreground::MAGENTA,
+                   ansi::Background::NONE,
+                   ansi::Style::BOLD
+               );
+        oss << " " << i++ << " = " << cv.get_dump() << "\n";
     }
 
     return oss.str();

@@ -24,9 +24,9 @@ class Parser final
 {
   public:
     Parser(const std::string& source, const TokenTree& ttree, DiagContext& diag)
-        : m_source(source),
-          m_cursor(ttree.cbegin().base()),
-          m_diags(diag)
+        : m_diags(diag),
+          m_source(source),
+          m_cursor(ttree.cbegin().base())
     {}
 
   public:

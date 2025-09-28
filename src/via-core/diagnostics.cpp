@@ -65,8 +65,8 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         diag.message,
         ansi::format(
             "at",
-            ansi::Foreground::WHITE,
-            ansi::Background::BLACK,
+            ansi::Foreground::NONE,
+            ansi::Background::NONE,
             ansi::Style::FAINT
         ),
         ansi::format(std::format("[{}:{}:{}]", m_path, line, col), ansi::Foreground::CYAN)
@@ -88,7 +88,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         hl_line.append(ansi::format(
             std::string(line_view.substr(span_begin, span_end - span_begin)),
             foreground,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         ));
         hl_line.append(line_view.substr(span_end));
@@ -124,7 +124,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
         std::format(
             " {0} | {1}{2}\n {0} |",
             std::string(line_width, ' '),
-            ansi::format(caret, foreground, ansi::Background::BLACK, ansi::Style::BOLD),
+            ansi::format(caret, foreground, ansi::Background::NONE, ansi::Style::BOLD),
             diag.footnote.valid ? std::format(
                                       "-- {} {}",
                                       to_string(diag.footnote.kind),

@@ -14,8 +14,10 @@ namespace io {
 
 VIA_MODULE_FUNCTION(print, vm, ci)
 {
+    std::cout << "Hello from C++!\n";
+
     for (const auto& arg: ci.args) {
-        std::println(std::cout, "{}", (const void*) arg.get());
+        std::cout << (const void*) arg.get() << "\n";
     }
 
     return via::ValueRef(vm);

@@ -9,6 +9,7 @@
 
 #include "builder.h"
 #include "ir/ir.h"
+#include "module/symbol.h"
 #include "sema/control_path.h"
 #include "sema/stack.h"
 #include "support/math.h"
@@ -377,14 +378,16 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprStaticAccess>(
     // Check for module thing
     if TRY_COERCE (const ast::ExprSymbol, root_symbol, ast_stc_access_expr->root) {
         ModuleManager* manager = builder.m_module->get_manager();
+        SymbolId high = builder.intern_symbol(root_symbol->symbol->to_string());
 
-        if (auto* module =
-                manager->get_module_by_name(root_symbol->symbol->to_string())) {
+        if (auto* module = manager->get_module_by_name(high)) {
             SymbolId low = builder.intern_symbol(ast_stc_access_expr->index->to_string());
+
             if (auto def = module->lookup(low)) {
                 auto* maccess = builder.m_alloc.emplace<ir::ExprModuleAccess>();
                 maccess->module = module;
-                maccess->index = low;
+                maccess->mod_id = high;
+                maccess->key_id = low;
                 maccess->def = *def;
                 return maccess;
             }
@@ -790,7 +793,7 @@ const ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
     VISIT_STMT(ast::StmtUsing);
     VISIT_STMT(ast::StmtExpr);
 
-    if TRY_COERCE (const ast::StmtEmpty, _, stmt)
+    if TRY_IS (const ast::StmtEmpty, stmt)
         return nullptr;
 
     debug::unimplemented(

@@ -448,7 +448,7 @@ const Expr* via::Parser::parse_expr_primary()
 
 const Expr* via::Parser::parse_expr_affix()
 {
-    const Expr* expr;
+    const Expr* expr = nullptr;
 
     switch (peek()->kind) {
     case KW_NOT:

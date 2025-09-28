@@ -28,23 +28,28 @@ using NativeCallback = ValueRef (*)(VirtualMachine* vm, CallInfo& ci);
 class Closure final
 {
   public:
-    Closure(const size_t argc, const Instruction* pc)
-        : m_argc(argc),
-          m_native(false),
+    Closure(size_t argc, const Instruction* pc)
+        : m_native(false),
+          m_argc(argc),
           m_bytecode(pc)
     {}
 
-    Closure(const size_t argc, const NativeCallback callback)
-        : m_argc(argc),
-          m_native(true),
+    Closure(size_t argc, const NativeCallback callback)
+        : m_native(true),
+          m_argc(argc),
           m_callback(callback)
     {}
 
-    template <typename... Args>
-        requires(std::is_constructible_v<Closure, Args...>)
-    [[nodiscard]] static Closure* create(VirtualMachine* vm, Args&&... args) noexcept
+    [[nodiscard]] static Closure*
+    create(VirtualMachine* vm, size_t argc, const Instruction* pc) noexcept
     {
-        return vm->get_allocator().emplace<Closure>(std::forward<Args>(args)...);
+        return vm->get_allocator().emplace<Closure>(argc, pc);
+    }
+
+    [[nodiscard]] static Closure*
+    create(VirtualMachine* vm, size_t argc, const NativeCallback callback) noexcept
+    {
+        return vm->get_allocator().emplace<Closure>(argc, callback);
     }
 
   public:

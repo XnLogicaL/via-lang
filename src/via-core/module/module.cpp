@@ -17,6 +17,7 @@
 #include "manager.h"
 #include "support/ansi.h"
 #include "support/bit_enum.h"
+#include "vm/instruction.h"
 #include "vm/machine.h"
 #include "vm/value.h"
 
@@ -141,19 +142,16 @@ via::Expected<via::Module*> via::Module::load_native_object(
     }
 
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::println(
-            std::cout,
-            "{}",
-            ansi::format(
-                std::format("[deftable .{}]", name),
-                ansi::Foreground::YELLOW,
-                ansi::Background::BLACK,
-                ansi::Style::BOLD
-            )
-        );
+        std::cout << ansi::format(
+                         std::format("[deftable .{}]", name),
+                         ansi::Foreground::YELLOW,
+                         ansi::Background::NONE,
+                         ansi::Style::BOLD
+                     )
+                  << "\n";
 
         for (const auto& def: module->m_defs) {
-            std::println(std::cout, "  {}", def.second->to_string());
+            std::cout << "  " << def.second->to_string() << "\n";
         }
     }
 
@@ -237,14 +235,11 @@ via::Expected<via::Module*> via::Module::load_source_file(
             if (flags & ModuleFlags::DEBUG) {
                 replxx::Replxx repl;
 
-                std::println(std::cout, "Starting interactive VM debugger...");
-                std::println(
-                    std::cout,
-                    "  > step      steps the interpreter\n"
-                    "  > pc        dumps the interpreter program counter\n"
-                    "  > regs      dumps the interpreter register buffer\n"
-                    "  > stack     dumps the interpreter stack\n"
-                );
+                std::cout << "Starting interactive VM debugger...\n";
+                std::cout << "  > step      steps the interpreter\n"
+                             "  > pc        dumps the interpreter program counter\n"
+                             "  > regs      dumps the interpreter register buffer\n"
+                             "  > stack     dumps the interpreter stack\n";
 
                 while (true) {
                     const char* cinput = repl.input("> ");
@@ -257,29 +252,25 @@ via::Expected<via::Module*> via::Module::load_source_file(
 
                     if (input == "step") {
                         vm.execute_one();
+
+                        if (snapshot.program_counter.op == OpCode::HALT) {
+                            break;
+                        }
                     }
                     else if (input == "pc") {
-                        std::println(
-                            std::cout,
-                            "{}",
-                            snapshot.program_counter.to_string()
-                        );
+                        std::cout << snapshot.program_counter.to_string() << "\n";
                     }
                     else if (input == "regs") {
                         for (size_t index = 0; const auto& ptr: snapshot.registers) {
                             if (ptr != nullptr) {
-                                std::println(
-                                    std::cout,
-                                    "R{} = {}",
-                                    index,
-                                    ptr->to_string()
-                                );
+                                std::cout
+                                    << std::format("R{} = {}\n", index, ptr->to_string());
                             }
                             index++;
                         }
                     }
                     else if (input == "stack") {
-                        std::println(std::cout, "size: {}", snapshot.stack.size());
+                        std::cout << std::format("size: {}\n", snapshot.stack.size());
 
                         if (!snapshot.stack.empty()) {
                             const uintptr_t fp = snapshot.frame_ptr;
@@ -309,13 +300,13 @@ via::Expected<via::Module*> via::Module::load_source_file(
                             for (auto* ptr = stk_base + 1;
                                  ptr < snapshot.stack.end().base() - 1;
                                  ++ptr) {
-                                if (fp != 0)
-                                    std::print(std::cout, "  ");
+                                if (fp != 0) {
+                                    std::cout << "  ";
+                                }
 
                                 auto* val = (Value*) *ptr;
-                                std::println(
-                                    std::cout,
-                                    "local {} = {}",
+                                std::cout << std::format(
+                                    "local {} = {}\n",
                                     ptr - stk_base - 1,
                                     val->to_string()
                                 );
@@ -323,7 +314,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
                         }
                     }
                     else {
-                        std::println(std::cout, "{}", input);
+                        std::cout << input << "\n";
                     }
                 }
             }
@@ -338,31 +329,24 @@ error:
     diags.clear();
 
     if (flags & ModuleFlags::DUMP_TTREE)
-        std::println(std::cout, "{}", debug::to_string(ttree));
+        std::cout << debug::to_string(ttree) << "\n";
     if (flags & ModuleFlags::DUMP_AST)
-        std::println(std::cout, "{}", debug::to_string(ast));
+        std::cout << debug::to_string(ast) << "\n";
     if (flags & ModuleFlags::DUMP_IR)
-        std::println(
-            std::cout,
-            "{}",
-            debug::to_string(manager->get_symbol_table(), module->m_ir)
-        );
+        std::cout << debug::to_string(manager->get_symbol_table(), module->m_ir) << "\n";
     if (flags & ModuleFlags::DUMP_EXE)
-        std::println(std::cout, "{}", module->m_exe->to_string());
+        std::cout << module->m_exe->to_string() << "\n";
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::println(
-            std::cout,
-            "{}",
-            ansi::format(
-                std::format("[deftable .{}]", name),
-                ansi::Foreground::YELLOW,
-                ansi::Background::BLACK,
-                ansi::Style::BOLD
-            )
-        );
+        std::cout << ansi::format(
+                         std::format("[deftable .{}]", name),
+                         ansi::Foreground::YELLOW,
+                         ansi::Background::NONE,
+                         ansi::Style::BOLD
+                     )
+                  << "\n";
 
         for (const auto& def: module->m_defs) {
-            std::println(std::cout, "  {}", def.second->to_string());
+            std::cout << "  " << def.second->to_string() << "\n";
         }
     }
 
@@ -371,8 +355,7 @@ error:
             spdlog::info(std::format("Imported by module '{}'", module->m_name));
 
         if ((flags & (ModuleFlags::DUMP_TTREE | ModuleFlags::DUMP_AST |
-                      ModuleFlags::DUMP_IR) |
-             ModuleFlags::DUMP_EXE) != 0u) {
+                      ModuleFlags::DUMP_IR | ModuleFlags::DUMP_EXE)) != 0u) {
             spdlog::warn("Dump may be invalid due to compilation failure");
         }
     }
@@ -403,7 +386,7 @@ struct ModuleCandidate
     std::string name;
 };
 
-static via::Option<ModuleInfo> resolveImportPath(
+static via::Option<ModuleInfo> resolve_import_path(
     const via::fs::path& root,
     const via::QualName& path,
     const via::ModuleManager& manager
@@ -477,7 +460,7 @@ via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
 {
     debug::require(m_manager, "unmanaged module detected");
 
-    auto module = resolveImportPath(m_path, path, *m_manager);
+    auto module = resolve_import_path(m_path, path, *m_manager);
     if (!module.has_value()) {
         return Unexpected(std::format("Module '{}' not found", to_string(path)));
     }

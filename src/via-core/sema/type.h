@@ -82,7 +82,7 @@ struct BuiltinType: public Type
         return ansi::format(
             name,
             ansi::Foreground::MAGENTA,
-            ansi::Background::BLACK,
+            ansi::Background::NONE,
             ansi::Style::BOLD
         );
     }

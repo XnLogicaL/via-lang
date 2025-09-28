@@ -65,10 +65,30 @@ via::ansi::format(std::string string, Foreground fg, Background bg, Style style)
 {
     static bool hasTerminalSupport = checkTerminalSupport();
     if (hasTerminalSupport) {
-        // Construct ANSI escape code and apply the color formatting to the text
-        return "\033[" + std::to_string(static_cast<int>(style)) + ";" +
-               std::to_string(static_cast<int>(fg)) + ";" +
-               std::to_string(static_cast<int>(bg)) + "m" + string + "\033[0m";
+        std::string codes;
+
+        if (style != Style::NONE)
+            codes += std::to_string(static_cast<int>(style));
+
+        if (fg != Foreground::NONE) {
+            if (!codes.empty())
+                codes += ";";
+            codes += std::to_string(static_cast<int>(fg));
+        }
+
+        if (bg != Background::NONE) {
+            if (!codes.empty())
+                codes += ";";
+            codes += std::to_string(static_cast<int>(bg));
+        }
+
+        if (!codes.empty()) {
+            return "\033[" + codes + "m" + string + "\033[0m";
+        }
+        else {
+            // no formatting at all
+            return string;
+        }
     }
     else {
         return string;

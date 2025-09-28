@@ -118,11 +118,9 @@ class Value final
     inline void free()
     {
         switch (m_kind) {
-        case ValueKind::STRING: // Trivial destruction:
-            m_vm->get_allocator().free(std::bit_cast<void*>(m_data));
-            break;
+        case ValueKind::STRING:
         case ValueKind::FUNCTION:
-            m_vm->get_allocator().free<Closure>(m_data.function);
+            m_vm->get_allocator().free(std::bit_cast<void*>(m_data));
             break;
         default:
             // Trivial types don't require explicit destruction

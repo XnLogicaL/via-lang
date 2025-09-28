@@ -7,7 +7,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    add_compile_options(-fdiagnostics-color=always)
+    add_compile_options(
+        -fdiagnostics-color=always
+        -Wextra
+        -Wall
+        # Disable useless warnings
+        -Wno-unused-parameter
+        -Wno-unused-variable
+        -Wno-unused-but-set-variable
+        $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
+    )
+
+    add_link_options(
+        $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
+    )
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/diagnostics:color)
 endif()
