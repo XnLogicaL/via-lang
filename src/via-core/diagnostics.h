@@ -29,6 +29,7 @@ enum class FootnoteKind : u8
 {
     NOTE,
     HINT,
+    SUGGESTION,
 };
 
 struct Footnote
@@ -141,6 +142,13 @@ inline std::string to_string(FootnoteKind kind) noexcept
         return ansi::format(
             "note:",
             ansi::Foreground::BLUE,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    case FootnoteKind::SUGGESTION:
+        return ansi::format(
+            "suggestion:",
+            ansi::Foreground::MAGENTA,
             ansi::Background::NONE,
             ansi::Style::BOLD
         );

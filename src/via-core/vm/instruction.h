@@ -117,6 +117,7 @@ namespace via {
     X(RESTSP)                                                                            \
     X(PUSH)                                                                              \
     X(PUSHK)                                                                             \
+    X(GETTOP)                                                                            \
     X(GETARG)                                                                            \
     X(GETARGREF)                                                                         \
     X(SETARG)                                                                            \

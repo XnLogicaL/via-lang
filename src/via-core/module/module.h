@@ -43,10 +43,12 @@ struct NativeModuleInfo
           begin(begin)
     {}
 
+    template <size_t Count>
+        requires(Count > 0)
     static NativeModuleInfo*
-    create(ScopedAllocator& alloc, size_t size, const DefTableEntry* begin)
+    create(ScopedAllocator& alloc, const DefTableEntry (&table)[Count])
     {
-        return alloc.emplace<NativeModuleInfo>(size, begin);
+        return alloc.emplace<NativeModuleInfo>(Count, table);
     }
 };
 

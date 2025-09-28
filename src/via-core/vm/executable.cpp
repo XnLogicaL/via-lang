@@ -81,8 +81,7 @@ void via::detail::ir_lower_expr<ir::ExprBinary>(
                 base += 2; // FP mode
                 exe.push_instruction(OpCode::ITOF, {rlhs, rlhs});
             }
-        }
-        else {
+        } else {
             base += 2; // FP mode
 
             if (ir_expr_binary->rhs->type->is_integral()) {
@@ -91,16 +90,14 @@ void via::detail::ir_lower_expr<ir::ExprBinary>(
         }
 
         exe.push_instruction(static_cast<OpCode>(base), {dst, rlhs, rrhs});
-    }
-    else if (opid >= static_cast<u16>(BinaryOp::AND) &&
-             opid <= static_cast<u16>(BinaryOp::OR)) {
+    } else if (opid >= static_cast<u16>(BinaryOp::AND) &&
+               opid <= static_cast<u16>(BinaryOp::OR)) {
         /* TODO: Check if rhs is constexpr, in which case increment base by one
          * for K instructions*/
         u16 base = static_cast<u16>(OpCode::AND) + static_cast<u16>(ir_expr_binary->op);
         exe.push_instruction(static_cast<OpCode>(base), {dst, rlhs, rrhs});
-    }
-    else if (opid >= static_cast<u16>(BinaryOp::BAND) &&
-             opid <= static_cast<u16>(BinaryOp::BSHR)) {
+    } else if (opid >= static_cast<u16>(BinaryOp::BAND) &&
+               opid <= static_cast<u16>(BinaryOp::BSHR)) {
         /* TODO: Check if rhs is constexpr, in which case increment base by one
          * for K instructions*/
         u16 base = static_cast<u16>(OpCode::BAND) + static_cast<u16>(ir_expr_binary->op);
@@ -130,7 +127,7 @@ void via::detail::ir_lower_expr<ir::ExprCall>(
     exe.lower_expr(ir_expr_call->callee, reg);
     exe.push_instruction(OpCode::CALL, {reg});
     exe.push_instruction(OpCode::FREE1, {reg});
-    // TODO: Fetch return value from stack into dst
+    exe.push_instruction(OpCode::GETTOP, {dst});
     exe.m_reg_state.free(reg);
 }
 
@@ -258,8 +255,7 @@ void via::Executable::lower_jumps() noexcept
                 // backward jump → bump opcode to BACK variant
                 instr.op = static_cast<OpCode>(opid + 3);
                 instr.a = static_cast<u32>(-offset);
-            }
-            else {
+            } else {
                 // forward jump → keep opcode
                 instr.a = static_cast<u32>(offset);
             }

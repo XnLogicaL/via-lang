@@ -7,27 +7,24 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include <iostream>
+#include <cmath>
 #include <via/via.h>
 
 using via::ValueRef;
+using namespace via::types;
 
-namespace io {
+namespace math {
 
-VIA_MODULE_FUNCTION(hello_world, vm, call_info)
+VIA_MODULE_FUNCTION(sin, vm, call_info)
 {
-    std::cout << "Hello from C++!\n";
-    return ValueRef(vm);
+    auto x = call_info.args.at(0);
+    auto result = std::sin(x->float_value());
+    return ValueRef(vm, result);
 }
 
-VIA_MODULE_FUNCTION(print, vm, call_info)
-{
-    return ValueRef(vm);
-}
+} // namespace math
 
-} // namespace io
-
-VIA_MODULE_ENTRY(io, manager)
+VIA_MODULE_ENTRY(math, manager)
 {
     using via::Def;
     using via::DefTable;
@@ -40,17 +37,13 @@ VIA_MODULE_ENTRY(io, manager)
 
     static DefTable table = {
         {
-            symbols.intern("hello_world"),
-            Def::function(alloc, io::hello_world, types.get_builtin(NIL), {}),
-        },
-        {
-            symbols.intern("print"),
+            symbols.intern("sin"),
             Def::function(
                 alloc,
-                io::print,
-                types.get_builtin(NIL),
+                math::sin,
+                types.get_builtin(FLOAT),
                 {
-                    {symbols.intern("__s"), types.get_builtin(STRING)},
+                    {symbols.intern("__x"), types.get_builtin(FLOAT)},
                 }
             ),
         },

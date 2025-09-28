@@ -135,6 +135,7 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::RESTSP},
     {OpCode::PUSH, REGISTER},
     {OpCode::PUSHK, CONSTANT},
+    {OpCode::GETTOP, REGISTER},
     {OpCode::GETARG, REGISTER, LITERAL},
     {OpCode::GETARGREF, REGISTER, LITERAL},
     {OpCode::SETARG, REGISTER, LITERAL},

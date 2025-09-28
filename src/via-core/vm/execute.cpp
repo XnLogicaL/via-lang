@@ -1252,6 +1252,13 @@ dispatch:
             vm->push_local(CONST_VALUE_REF(pc->a));
             DISPATCH();
         }
+        CASE(GETTOP)
+        {
+            auto* val = reinterpret_cast<Value*>(stack.top());
+            val->m_rc++;
+            SET_REGISTER(pc->a, val);
+            DISPATCH();
+        }
         CASE(GETARG)
         CASE(GETARGREF)
         CASE(SETARG)

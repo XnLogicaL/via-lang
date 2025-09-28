@@ -25,8 +25,14 @@ class ValueRef final
     ValueRef(VirtualMachine* vm)
         : m_ptr(nullptr)
     {}
+
     ValueRef(VirtualMachine* vm, Value* ptr)
         : m_ptr(ptr)
+    {}
+
+    template <typename... Args>
+    explicit ValueRef(VirtualMachine* vm, Args&&... args)
+        : m_ptr(Value::create(vm, std::forward<Args>(args)...))
     {}
 
     ValueRef(const ValueRef& other)

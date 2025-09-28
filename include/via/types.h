@@ -18,6 +18,8 @@ namespace fs = std::filesystem;
 using std::literals::operator""s;
 using std::literals::operator""sv;
 
+inline namespace types {
+
 using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
@@ -31,4 +33,5 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
+} // namespace types
 } // namespace via

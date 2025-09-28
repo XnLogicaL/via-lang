@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
                              "[global symbol table]",
                              via::ansi::Foreground::YELLOW,
                              via::ansi::Background::NONE,
-                             via::ansi::Style::BOLD
+                             via::ansi::Style::UNDERLINE
                          )
                       << "\n";
 

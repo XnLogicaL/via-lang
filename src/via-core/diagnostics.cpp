@@ -92,8 +92,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
             ansi::Style::BOLD
         ));
         hl_line.append(line_view.substr(span_end));
-    }
-    else {
+    } else {
         hl_line = std::string(line_view);
     }
 
@@ -104,8 +103,7 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     std::string caret(line_view.size(), ' ');
     if (span_begin < span_end) {
         std::fill(caret.begin() + span_begin, caret.begin() + span_end, '^');
-    }
-    else if (col > 0 && col - 1 < caret.size()) {
+    } else if (col > 0 && col - 1 < caret.size()) {
         caret[col - 1] = '^';
     }
 

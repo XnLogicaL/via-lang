@@ -8,10 +8,16 @@
 ** ===================================================== */
 
 #include "builder.h"
+#include <format>
+#include <vector>
+#include "ast/ast.h"
+#include "diagnostics.h"
 #include "ir/ir.h"
+#include "module/defs.h"
 #include "module/symbol.h"
 #include "sema/control_path.h"
 #include "sema/stack.h"
+#include "sema/type.h"
 #include "support/math.h"
 
 namespace ir = via::ir;
@@ -158,8 +164,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
         auto* irDecl = local->local.get_ir_decl();
         if TRY_COERCE (const ir::StmtVarDecl, varDecl, irDecl) {
             return varDecl->decl_type;
-        }
-        else if TRY_COERCE (const ir::StmtFuncDecl, funcDecl, irDecl) {
+        } else if TRY_COERCE (const ir::StmtFuncDecl, funcDecl, irDecl) {
             std::vector<const sema::Type*> parms;
             for (const auto& parm: funcDecl->parms)
                 parms.push_back(parm.type);
@@ -184,7 +189,31 @@ const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
     const ast::ExprStaticAccess* ast_expr_st_access
 ) noexcept
 {
-    return builder.m_type_ctx.get_builtin(Btk::NIL);
+    if TRY_COERCE (const ast::ExprSymbol, symbol, ast_expr_st_access->root) {
+        auto manager = builder.m_module->get_manager();
+        auto low = builder.intern_symbol(symbol->symbol->to_string());
+
+        if (auto module = manager->get_module_by_name(low)) {
+            auto high = builder.intern_symbol(ast_expr_st_access->index->to_string());
+
+            if (auto def = module->lookup(high)) {
+                if TRY_COERCE (const FunctionDef, func_def, *def) {
+                    std::vector<const sema::Type*> parm_types;
+
+                    for (const auto& parm: func_def->parms) {
+                        parm_types.push_back(parm.type);
+                    }
+
+                    return builder.m_type_ctx.get_function(
+                        func_def->ret,
+                        std::move(parm_types)
+                    );
+                }
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 template <>
@@ -243,6 +272,65 @@ const sema::Type* via::detail::ast_type_of<ast::ExprBinary>(
     }
 
     return info.get_result(&builder.m_type_ctx, lhs, rhs);
+}
+
+template <>
+const sema::Type* via::detail::ast_type_of<ast::ExprCall>(
+    IRBuilder& builder,
+    const ast::ExprCall* ast_expr_call
+) noexcept
+{
+    const sema::Type* callee = builder.type_of(ast_expr_call->lval);
+
+    if TRY_COERCE (const sema::FuncType, func, callee) {
+        for (size_t arg_id = 0; const sema::Type* parm_type: func->params) {
+            if (arg_id >= ast_expr_call->args.size()) {
+                builder.m_diags.report<Level::ERROR>(
+                    {ast_expr_call->loc.end - 1, ast_expr_call->loc.end},
+                    std::format(
+                        "Missing required argument for parameter #{} in function call",
+                        arg_id
+                    )
+                );
+                continue;
+            }
+
+            auto* arg = ast_expr_call->args.at(arg_id);
+            auto* arg_type = builder.type_of(arg);
+            if (arg_type != parm_type) {
+                builder.m_diags.report<Level::ERROR>(
+                    arg->loc,
+                    std::format(
+                        "Argument type '{}' is incompatible with parameter #{} of type "
+                        "'{}'",
+                        arg_type->to_string(),
+                        parm_type->to_string(),
+                        arg_id
+                    )
+                );
+            }
+        }
+
+        if (ast_expr_call->args.size() > func->params.size()) {
+            for (size_t arg_id = func->params.size(); arg_id < ast_expr_call->args.size();
+                 ++arg_id) {
+                auto* arg = ast_expr_call->args.at(arg_id);
+                builder.m_diags.report<Level::ERROR>(
+                    arg->loc,
+                    std::format("Extra argument provided at position #{}", arg_id),
+                    {FootnoteKind::SUGGESTION, "Remove argument"}
+                );
+            }
+        }
+
+        return func->result;
+    }
+
+    builder.m_diags.report<Level::ERROR>(
+        ast_expr_call->loc,
+        std::format("Attempt to call non-function type '{}'", callee->to_string())
+    );
+    return nullptr;
 }
 
 template <>
@@ -529,14 +617,12 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
                     )
                 );
             }
-        }
-        else {
+        } else {
             decl_stmt->decl_type = rvalType;
         }
 
         decl_stmt->symbol = builder.intern_symbol(lval->symbol->to_string());
-    }
-    else {
+    } else {
         debug::bug("bad lvalue");
     }
 
@@ -691,8 +777,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
 
             if (!expected_ret_type) {
                 expected_ret_type = ret->type;
-            }
-            else if (expected_ret_type != ret->type) {
+            } else if (expected_ret_type != ret->type) {
                 Footnote implicit_return_node =
                     ret->implicit
                         ? Footnote(
@@ -712,8 +797,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                         ),
                         implicit_return_node
                     );
-                }
-                else {
+                } else {
                     builder.m_diags.report<Level::ERROR>(
                         ret->loc,
                         "All code paths must return the same type "
@@ -723,8 +807,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                 }
                 break;
             }
-        }
-        else {
+        } else {
             builder.m_diags.report<Level::ERROR>(
                 term->loc,
                 "All control paths must return from function"
