@@ -27,10 +27,10 @@
     #include <windows.h>
 #endif
 
-// Modules are supposed to be allocated in a linear fashion, so we can get
-// away with this
+// TODO: Implement module allocation logic in a more modular way
 static via::ScopedAllocator module_allocator;
 
+// Read a file into a string
 static via::Expected<std::string> read_file(const via::fs::path& path)
 {
     std::ifstream ifs(path);
@@ -66,6 +66,8 @@ static struct WinLibraryManager
 } windowsLibs;
 #endif
 
+// Load a function symbol from a dynamic library
+// Platform independent implementation
 static via::Expected<via::NativeModuleInitCallback>
 load_dylib_symbol(const via::fs::path& path, const char* symbol)
 {
@@ -82,6 +84,7 @@ load_dylib_symbol(const via::fs::path& path, const char* symbol)
 #endif
 }
 
+// Load a shared library as a native module object
 via::Expected<via::Module*> via::Module::load_native_object(
     ModuleManager* manager,
     Module* importee,
@@ -92,25 +95,31 @@ via::Expected<via::Module*> via::Module::load_native_object(
     const ModuleFlags flags
 )
 {
+    // Check if the module is being recursively imported
     if (manager->is_current_import(name)) {
         return Unexpected("Recursive import detected");
     }
 
+    // Push the module as an import
     manager->push_import(name);
 
+    // Check if the module is already loaded
     if (manager->has_module(name)) {
+        // Check if the cached module is the same as the one being imported
         if (Module* module = manager->get_module(name); module->m_path == path) {
-            manager->pop_import();
-            return module;
+            manager->pop_import(); // Pop the import stack
+            return module;         // Return the cached module
         }
     }
 
+    // Read the file content
     auto file = read_file(path);
     if (!file.has_value()) {
-        manager->pop_import();
-        return Unexpected(file.get_error());
+        manager->pop_import();               // Pop the import stack
+        return Unexpected(file.get_error()); // Return error
     }
 
+    // Instantiate the module
     auto* module = module_allocator.emplace<Module>();
     module->m_kind = ModuleKind::NATIVE;
     module->m_manager = manager;
@@ -121,8 +130,10 @@ via::Expected<via::Module*> via::Module::load_native_object(
     module->m_path = path;
     module->m_ast_decl = ast_decl;
 
+    // Register the module with the manager
     manager->push_module(module);
 
+    // Find the module's entry point
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
     auto callback = load_dylib_symbol(path, symbol.c_str());
     if (callback.has_error()) {
@@ -132,16 +143,21 @@ via::Expected<via::Module*> via::Module::load_native_object(
         ));
     }
 
+    // Retrieve module information
     auto* module_info = (*callback)(manager);
 
+    // Validate module information
     debug::require(module_info->begin != nullptr);
 
+    // Map module definitions
     for (size_t i = 0; i < module_info->size; i++) {
         const auto& entry = module_info->begin[i];
         module->m_defs[entry.id] = entry.def;
     }
 
+    // Check for definition table dump flag
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
+        // Dump definition table header
         std::cout << ansi::format(
                          std::format("[deftable .{}]", name),
                          ansi::Foreground::YELLOW,
@@ -150,15 +166,18 @@ via::Expected<via::Module*> via::Module::load_native_object(
                      )
                   << "\n";
 
+        // Dump definition table entries
         for (const auto& def: module->m_defs) {
             std::cout << "  " << def.second->to_string() << "\n";
         }
     }
 
+    // Pop import stack
     manager->pop_import();
     return module;
 }
 
+// Load source file as a module
 via::Expected<via::Module*> via::Module::load_source_file(
     ModuleManager* manager,
     Module* importee,
@@ -169,25 +188,31 @@ via::Expected<via::Module*> via::Module::load_source_file(
     const ModuleFlags flags
 )
 {
+    // Check if the module is being recursively imported
     if (manager->is_current_import(name)) {
         return Unexpected("Recursive import detected");
     }
 
+    // Push import stack
     manager->push_import(name);
 
+    // Check if the module is already loaded
     if (manager->has_module(name)) {
+        // Check if the loaded module is the same as the one being imported
         if (Module* module = manager->get_module(name); module->m_path == path) {
-            manager->pop_import();
-            return module;
+            manager->pop_import(); // Pop the import stack
+            return module;         // Return the cached module
         }
     }
 
+    // Read the source file
     auto file = read_file(path);
     if (!file.has_value()) {
         manager->pop_import();
         return Unexpected(file.get_error());
     }
 
+    // Instantiate the module
     auto* module = module_allocator.emplace<Module>();
     module->m_kind = ModuleKind::SOURCE;
     module->m_manager = manager;
@@ -198,92 +223,120 @@ via::Expected<via::Module*> via::Module::load_source_file(
     module->m_path = path;
     module->m_ast_decl = ast_decl;
 
+    // Register the module with the manager
     manager->push_module(module);
 
+    // Instantiate diagnostics context
     DiagContext diags(path.string(), name, *file);
 
+    // Instantiate lexer
     Lexer lexer(*file);
     auto ttree = lexer.tokenize();
 
+    // Instantiate parser
     Parser parser(*file, ttree, diags);
     auto ast = parser.parse();
 
+    // Check for fatal compilation errors
     bool failed = diags.has_errors();
     if (failed)
         goto error;
 
     {
+        // Instantiate IR builder
         IRBuilder ir_builder(module, ast, diags);
         module->m_ir = ir_builder.build();
 
+        // Check for errors during IR building
         failed = diags.has_errors();
         if (failed)
             goto error;
 
+        // Map intermediate representation nodes to definitions
         for (const auto& node: module->m_ir) {
+            // Check if the node has an identity
             if (auto symbol = node->get_symbol()) {
                 module->m_defs[*symbol] = Def::from(module->get_allocator(), node);
             }
         }
 
+        // Build executable
         Executable* exe = Executable::build_from_ir(module, module->m_ir);
         module->m_exe = exe;
 
+        // Check for the abscence of the no execution flag
         if ((flags & ModuleFlags::NO_EXECUTION) == 0) {
+            // Initialize the virtual machine
             VirtualMachine vm(module, exe);
 
+            // Check for debug flag
             if (flags & ModuleFlags::DEBUG) {
+                // Initialize the REPL
                 replxx::Replxx repl;
 
-                std::cout << "Starting interactive VM debugger...\n";
-                std::cout << "  > step      steps the interpreter\n"
+                // Print the welcome message
+                spdlog::info("Starting interactive VM debugger...\n"
+                             "  > step      steps the interpreter\n"
                              "  > pc        dumps the interpreter program counter\n"
                              "  > regs      dumps the interpreter register buffer\n"
-                             "  > stack     dumps the interpreter stack\n";
+                             "  > stack     dumps the interpreter stack\n");
 
+                // Start the REPL loop
                 while (true) {
+                    // Retrieve input from the REPL
                     const char* cinput = repl.input("> ");
+                    // Check for empty input
                     if (cinput == nullptr) {
                         break;
                     }
 
-                    std::string input(cinput);
-                    Snapshot snapshot(&vm);
+                    std::string input(cinput); // Input from the REPL
+                    Snapshot snapshot(&vm);    // Snapshot the VM state
 
-                    if (input == "step") {
+                    if (input == "step") { // Step option
+                        // Step the VM
                         vm.execute_one();
 
+                        // Check for trailing halt instruction
                         if (snapshot.program_counter.op == OpCode::HALT) {
                             break;
                         }
-                    }
-                    else if (input == "pc") {
+                    } else if (input == "pc") { // Program counter dump option
+                        // Print the program counter
                         std::cout << snapshot.program_counter.to_string() << "\n";
-                    }
-                    else if (input == "regs") {
+                    } else if (input == "regs") { // Register dump option
+                        // Iterate over the registers and print their values
                         for (size_t index = 0; const auto& ptr: snapshot.registers) {
+                            // Check if the register is filled
                             if (ptr != nullptr) {
+                                // Dump the register value
                                 std::cout
                                     << std::format("R{} = {}\n", index, ptr->to_string());
                             }
                             index++;
                         }
-                    }
-                    else if (input == "stack") {
+                    } else if (input == "stack") { // Stack dump option
+                        // Dump the stack size
                         std::cout << std::format("size: {}\n", snapshot.stack.size());
 
+                        // Check if the stack is not empty
                         if (!snapshot.stack.empty()) {
+                            // Save the frame pointer and stack base
                             const uintptr_t fp = snapshot.frame_ptr;
                             const uintptr_t* stk_base;
 
+                            // Check if the frame pointer is valid
                             if (fp != 0) {
+                                // Update the stack base
                                 stk_base = snapshot.stack.begin().base() + fp;
 
+                                // Save stack local state
                                 auto old_fp = (uintptr_t*) *(stk_base - 0);
                                 auto ret_pc = (Instruction*) *(stk_base - 1);
                                 auto flags = (u64) * (stk_base - 2);
                                 auto callee = (Value*) *(stk_base - 3);
 
+                                // Dump stack local state
                                 std::cout << "Frame @ " << fp << "\n";
                                 std::cout << "  callee   = " << callee->to_string()
                                           << "\n";
@@ -292,11 +345,12 @@ via::Expected<via::Module*> via::Module::load_source_file(
                                           << "\n";
                                 std::cout << "  old_fp   = " << (const void*) old_fp
                                           << "\n";
-                            }
-                            else {
+                            } else {
+                                // Update the stack base
                                 stk_base = snapshot.stack.begin().base() - 1;
                             }
 
+                            // Dump the stack
                             for (auto* ptr = stk_base + 1;
                                  ptr < snapshot.stack.end().base() - 1;
                                  ++ptr) {
@@ -312,22 +366,24 @@ via::Expected<via::Module*> via::Module::load_source_file(
                                 );
                             }
                         }
-                    }
-                    else {
+                    } else { // Invalid option
+                        // Echo the input
                         std::cout << input << "\n";
                     }
                 }
-            }
-            else {
+            } else {
+                // Run VM in contiguous execution mode
                 vm.execute();
             }
         }
     }
 
 error:
+    // Handle diagnostics
     diags.emit();
     diags.clear();
 
+    // Handle flags
     if (flags & ModuleFlags::DUMP_TTREE)
         std::cout << debug::to_string(ttree) << "\n";
     if (flags & ModuleFlags::DUMP_AST)
@@ -350,20 +406,25 @@ error:
         }
     }
 
+    // Handle failed compilation
     if (failed) {
+        // Dump importee
+        // TODO: Replace this with an import chain rather than a single module
         for (Module* module = importee; module != nullptr; module = module->m_importee)
             spdlog::info(std::format("Imported by module '{}'", module->m_name));
 
+        // Print warning message about compilation failure
         if ((flags & (ModuleFlags::DUMP_TTREE | ModuleFlags::DUMP_AST |
                       ModuleFlags::DUMP_IR | ModuleFlags::DUMP_EXE)) != 0u) {
             spdlog::warn("Dump may be invalid due to compilation failure");
         }
-    }
-    else {
+    } else {
+        // Pop import stack
         manager->pop_import();
         return module;
     }
 
+    // Pop import stack
     manager->pop_import();
     return nullptr;
 }

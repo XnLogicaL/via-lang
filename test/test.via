@@ -1,4 +1,4 @@
 import std::io;
 
 var x = 2 + 3;
-io::print(x);
+io::hello_world();

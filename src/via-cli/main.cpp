@@ -17,6 +17,7 @@
 
 namespace fs = std::filesystem;
 
+// Local assert function
 static void assert(bool cond, std::string msg)
 {
     if (!cond) {
@@ -69,17 +70,21 @@ int main(int argc, char* argv[])
     using via::ModuleFlags;
     using via::ModuleManager;
     using via::ModulePerms;
-    using namespace via::literals;
+    using namespace via::literals; // For bitwise enum operators
 
+    // Initialize via
     via::init();
 
+    // Get language core directory
     static auto lang_dir = get_lang_dir();
 
     try {
+        // Instantiate CLI application
         auto& cli = via::cli::app_instance();
 
+        // Instantiate Comma Separated Value reader
         csv2::Reader<
-            csv2::delimiter<','>,
+            csv2::delimiter<','>, // Obviously
             csv2::quote_character<'\''>,
             csv2::first_row_is_header<false>,
             csv2::trim_policy::trim_whitespace>
@@ -93,16 +98,15 @@ int main(int argc, char* argv[])
             input_path = cli.get("input");
             raw_dump_mode = cli.get("--dump");
             raw_include_dirs = cli.get("--include-dirs");
-        }
-        catch (const std::bad_any_cast&) {
+        } catch (const std::bad_any_cast&) {
             assert(false, "bad argument");
-        }
-        catch (const std::exception& err) {
+        } catch (const std::exception& err) {
             assert(false, err.what());
         }
 
         assert(!input_path.empty(), "no input files");
 
+        // Translate CLI flags to ModuleFlags
         ModuleFlags flags = ModuleFlags::NONE;
         {
             if (raw_dump_mode == "ttree")
@@ -117,14 +121,17 @@ int main(int argc, char* argv[])
                 flags |= ModuleFlags::DUMP_DEFTABLE;
         }
 
+        // Translate --no-execute flag
         if (cli.get<bool>("--no-execute")) {
             flags |= ModuleFlags::NO_EXECUTION;
         }
 
+        // Look for --debug flag
         if (cli.get<bool>("--debug")) {
             flags |= ModuleFlags::DEBUG;
         }
 
+        // Validate language core directory
         if (!fs::exists(lang_dir)) {
             spdlog::warn(
                 "Could not find language core directory (search location {})",
@@ -132,12 +139,17 @@ int main(int argc, char* argv[])
             );
         }
 
+        // Instantiate ModuleManager
         ModuleManager manager;
+        // Push adjacent import path
         manager.push_import_path(input_path.parent_path());
 
+        // Process import paths
         if (!raw_include_dirs.empty()) {
+            // Validate import paths
             assert(csv.parse(raw_include_dirs), "bad import path list");
 
+            // Load import paths
             for (const auto row: csv) {
                 for (const auto cell: row) {
                     std::string path;
@@ -147,6 +159,7 @@ int main(int argc, char* argv[])
             }
         }
 
+        // Instantiate root module
         auto module = Module::load_source_file(
             &manager,
             nullptr,
@@ -157,11 +170,13 @@ int main(int argc, char* argv[])
             flags
         );
 
+        // Validate root module
         assert(
             module.has_value(),
             module.error_or(via::Error::fail("<no-error>")).to_string()
         );
 
+        // Dump global symbol table
         if (raw_dump_mode == "symtab") {
             std::cout << via::ansi::format(
                              "[global symbol table]",
@@ -175,8 +190,7 @@ int main(int argc, char* argv[])
                 std::cout << std::format("  {}: {}\n", symbol.second, symbol.first);
             }
         }
-    }
-    catch (int code) {
+    } catch (int code) {
         return code;
     }
 
