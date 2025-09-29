@@ -15,35 +15,45 @@
 #include "sema/const_value.h"
 #include "sema/type.h"
 #include "support/option.h"
+#include "support/utility.h"
 
 namespace via {
 
 class Module;
 struct Def;
 
+#define FOR_EACH_UNARY_OP(X)                                                             \
+    X(NEG)                                                                               \
+    X(NOT)                                                                               \
+    X(BNOT)
+
+#define FOR_EACH_BINARY_OP(X)                                                            \
+    X(ADD)                                                                               \
+    X(SUB)                                                                               \
+    X(MUL)                                                                               \
+    X(DIV)                                                                               \
+    X(POW)                                                                               \
+    X(MOD)                                                                               \
+    X(AND)                                                                               \
+    X(OR)                                                                                \
+    X(BAND)                                                                              \
+    X(BOR)                                                                               \
+    X(BXOR)                                                                              \
+    X(BSHL)                                                                              \
+    X(BSHR)
+
 enum class UnaryOp
 {
-    NEG = 0, // -
-    NOT,     // not
-    BNOT,    // ~
+    FOR_EACH_UNARY_OP(DEFINE_ENUM)
 };
 
 enum class BinaryOp
 {
-    ADD = 0, // +
-    SUB,     // -
-    MUL,     // *
-    DIV,     // /
-    POW,     // **
-    MOD,     // %
-    AND,     // and
-    OR,      // or
-    BAND,    // &
-    BOR,     // |
-    BXOR,    // ^
-    BSHL,    // <<
-    BSHR,    // >>
+    FOR_EACH_BINARY_OP(DEFINE_ENUM)
 };
+
+DEFINE_TO_STRING(UnaryOp, FOR_EACH_UNARY_OP(DEFINE_CASE_TO_STRING));
+DEFINE_TO_STRING(BinaryOp, FOR_EACH_BINARY_OP(DEFINE_CASE_TO_STRING));
 
 UnaryOp to_unary_op(TokenKind kind) noexcept;
 BinaryOp to_binary_op(TokenKind kind) noexcept;
@@ -224,7 +234,7 @@ struct StmtVarDecl: public Stmt
     NODE_FIELDS()
     SymbolId symbol;
     const Expr* expr;
-    const sema::Type* decl_type;
+    const sema::Type* type;
 };
 
 struct StmtBlock;

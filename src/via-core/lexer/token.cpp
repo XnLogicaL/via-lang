@@ -9,7 +9,6 @@
 
 #include "token.h"
 #include <format>
-#include <magic_enum/magic_enum.hpp>
 
 via::SourceLoc via::Token::location(const std::string& source) const
 {
@@ -22,7 +21,7 @@ std::string via::Token::get_dump() const
 {
     return std::format(
         "[{} '{}']",
-        magic_enum::enum_name(kind),
+        via::to_string(kind),
         (*lexeme == '\0') ? "<eof>" : to_string()
     );
 }

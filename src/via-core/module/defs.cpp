@@ -49,7 +49,7 @@ std::string via::FunctionDef::to_string() const
                 return std::format("{}: {}", parm.symbol, parm.type->to_string());
             }
         ),
-        magic_enum::enum_name(kind),
+        via::to_string(kind),
         reinterpret_cast<const void*>(code.native)
     );
 }

@@ -14,18 +14,24 @@
 #include <via/types.h>
 #include "lexer/token.h"
 #include "support/option.h"
+#include "support/utility.h"
 
 namespace via {
 
+#define FOR_EACH_VALUE_KIND(X)                                                           \
+    X(NIL)                                                                               \
+    X(INT)                                                                               \
+    X(FLOAT)                                                                             \
+    X(BOOL)                                                                              \
+    X(STRING)                                                                            \
+    X(FUNCTION)
+
 enum class ValueKind : u8
 {
-    NIL,
-    INT,
-    FLOAT,
-    BOOL,
-    STRING,
-    FUNCTION,
+    FOR_EACH_VALUE_KIND(DEFINE_ENUM)
 };
+
+DEFINE_TO_STRING(ValueKind, FOR_EACH_VALUE_KIND(DEFINE_CASE_TO_STRING))
 
 namespace sema {
 

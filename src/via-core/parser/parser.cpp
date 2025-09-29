@@ -8,7 +8,6 @@
 ** ===================================================== */
 
 #include "parser.h"
-#include <magic_enum/magic_enum.hpp>
 
 #define SAVE_FIRST()                                                                     \
     auto* first = advance();                                                             \
@@ -126,7 +125,7 @@ const via::Token* via::Parser::expect(TokenKind kind, const char* task)
             std::format(
                 "Unexpected token '{}' ({}) while {}",
                 unexp.to_string(),
-                magic_enum::enum_name(unexp.kind),
+                to_string(unexp.kind),
                 task
             )
         );
@@ -144,8 +143,7 @@ const Path* via::Parser::parse_static_path()
 
         if (match(COLON_COLON)) {
             advance();
-        }
-        else {
+        } else {
             break;
         }
     }
@@ -162,8 +160,7 @@ const Expr* via::Parser::parse_lvalue()
     const Expr* expr = parse_expr();
     if (isLValue(expr)) {
         return expr;
-    }
-    else {
+    } else {
         throw ParserError(expr->loc, "Unexpected expression while parsing lvalue");
     }
 }
@@ -178,8 +175,7 @@ const Parameter* via::Parser::parse_parameter()
     if (optional(COLON)) {
         par->type = parse_type();
         par->loc = {loc.begin, par->type->loc.end};
-    }
-    else {
+    } else {
         par->loc = loc;
     }
 
@@ -201,8 +197,7 @@ const AttributeGroup* via::Parser::parse_attributes()
 
         if (match(BRACKET_CLOSE)) {
             break;
-        }
-        else {
+        } else {
             expect(COMMA, "parsing attribute group");
         }
     }
@@ -302,8 +297,7 @@ const ExprCall* via::Parser::parse_expr_call(const ast::Expr* expr)
         while (match(COMMA) && advance());
 
         expect(PAREN_CLOSE, "parsing function call");
-    }
-    else
+    } else
         advance(); // consume ')'
 
     auto* call = m_alloc.emplace<ExprCall>();
@@ -366,8 +360,7 @@ const ExprArray* via::Parser::parse_expr_array()
             if (match(BRACKET_CLOSE)) {
                 optional(COMMA); // trailing comma
                 break;
-            }
-            else {
+            } else {
                 expect(COMMA, "parsing array initializer");
             }
         }
@@ -391,8 +384,7 @@ const ExprLambda* via::Parser::parse_expr_lambda()
 
             if (match(PAREN_CLOSE)) {
                 break;
-            }
-            else {
+            } else {
                 expect(COMMA, "parsing lambda parameter list");
             }
         }
@@ -434,7 +426,7 @@ const Expr* via::Parser::parse_expr_primary()
             std::format(
                 "Unexpected token '{}' ({}) while parsing primary expression",
                 first->to_string(),
-                magic_enum::enum_name(first->kind)
+                to_string(first->kind)
             ),
             Footnote(
                 FootnoteKind::HINT,
@@ -586,7 +578,7 @@ const Type* via::Parser::parse_type()
             std::format(
                 "Unexpected token '{}' ({}) while parsing type",
                 tok->to_string(),
-                magic_enum::enum_name(tok->kind)
+                to_string(tok->kind)
             ),
             Footnote(
                 FootnoteKind::HINT,
@@ -606,8 +598,7 @@ const StmtScope* via::Parser::parse_stmt_scope()
     if (first->kind == COLON) {
         scope->stmts.push_back(parse_stmt());
         scope->loc = {loc.begin, scope->stmts.back()->loc.end};
-    }
-    else if (first->kind == BRACE_OPEN) {
+    } else if (first->kind == BRACE_OPEN) {
         while (!match(BRACE_CLOSE)) {
             scope->stmts.push_back(parse_stmt());
         }
@@ -617,8 +608,7 @@ const StmtScope* via::Parser::parse_stmt_scope()
             first->location(m_source).begin,
             last->location(m_source).end,
         };
-    }
-    else
+    } else
         throw ParserError(
             loc,
             std::format("Unexpected token '{}' while parsing scope", first->to_string()),
@@ -638,8 +628,7 @@ const StmtVarDecl* via::Parser::parse_stmt_var_decl(bool semicolon)
 
     if (optional(COLON)) {
         vars->type = parse_type();
-    }
-    else {
+    } else {
         vars->type = nullptr;
     }
 
@@ -719,8 +708,7 @@ const StmtIf* via::Parser::parse_stmt_if()
         if (match(KW_IF)) {
             advance();
             br.cnd = parse_expr();
-        }
-        else {
+        } else {
             br.cnd = nullptr;
         }
 
@@ -763,8 +751,7 @@ const StmtReturn* via::Parser::parse_stmt_return()
     if (is_expr_start(peek()->kind)) {
         ret->expr = parse_expr();
         ret->loc = {loc.begin, ret->expr->loc.end};
-    }
-    else {
+    } else {
         ret->expr = nullptr;
         ret->loc = loc;
     }
@@ -843,7 +830,7 @@ const StmtModule* via::Parser::parse_stmt_module()
                     std::format(
                         "Unexpected token '{}' ({}) while parsing module",
                         tok->to_string(),
-                        magic_enum::enum_name(tok->kind)
+                        to_string(tok->kind)
                     )
                 );
             }
@@ -873,13 +860,11 @@ const StmtImport* via::Parser::parse_stmt_import()
 
             if (match(COLON_COLON)) {
                 advance();
-            }
-            else {
+            } else {
                 end = tok->location(m_source).end;
                 break;
             }
-        }
-        else if (tok->kind == BRACE_OPEN) {
+        } else if (tok->kind == BRACE_OPEN) {
             imp->kind = TailKind::IMPORT_COMPOUND;
 
             while (!match(BRACE_CLOSE)) {
@@ -891,19 +876,17 @@ const StmtImport* via::Parser::parse_stmt_import()
             auto* last = expect(BRACE_CLOSE, "terminating compound import");
             end = last->location(m_source).end;
             break;
-        }
-        else if (tok->kind == OP_STAR) {
+        } else if (tok->kind == OP_STAR) {
             imp->kind = TailKind::IMPORT_ALL;
             end = tok->location(m_source).end;
             break;
-        }
-        else {
+        } else {
             throw ParserError(
                 tok->location(m_source),
                 std::format(
                     "Unexpected token '{}' ({}) while parsing import path",
                     tok->to_string(),
-                    magic_enum::enum_name(tok->kind)
+                    to_string(tok->kind)
                 )
             );
         }
@@ -929,8 +912,7 @@ const StmtFunctionDecl* via::Parser::parse_stmt_func_decl()
         if (match(PAREN_CLOSE)) {
             optional(COMMA);
             break;
-        }
-        else {
+        } else {
             expect(COMMA, "terminating function parameter");
         }
     }
@@ -939,8 +921,7 @@ const StmtFunctionDecl* via::Parser::parse_stmt_func_decl()
 
     if (optional(ARROW)) {
         fn->ret = parse_type();
-    }
-    else {
+    } else {
         fn->ret = nullptr;
     }
 
@@ -985,7 +966,7 @@ const StmtStructDecl* via::Parser::parse_stmt_struct_decl()
                 std::format(
                     "Unexpected token '{}' ({}) while parsing struct body",
                     tok->to_string(),
-                    magic_enum::enum_name(tok->kind)
+                    to_string(tok->kind)
                 )
             );
         }
@@ -1076,7 +1057,7 @@ unexpected_token:
             std::format(
                 "Unexpected token '{}' ({}) while parsing statement",
                 first->to_string(),
-                magic_enum::enum_name(first->kind)
+                to_string(first->kind)
             )
         );
     }
@@ -1101,8 +1082,7 @@ unexpected_token:
 
         if TRY_COERCE (const ExprCall, _, expr) {
             goto valid_expr_stmt;
-        }
-        else {
+        } else {
             goto unexpected_token;
         }
 
@@ -1120,8 +1100,7 @@ via::SyntaxTree via::Parser::parse()
     while (!match(EOF_)) {
         try {
             nodes.push_back(parse_stmt());
-        }
-        catch (const ParserError& e) {
+        } catch (const ParserError& e) {
             m_diags.report(e.diag);
             break;
         }

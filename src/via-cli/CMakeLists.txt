@@ -14,7 +14,6 @@ target_link_libraries(via-cli
     via::core
     argparse
     spdlog
-    magic_enum
     csv2::csv2
     replxx
 )

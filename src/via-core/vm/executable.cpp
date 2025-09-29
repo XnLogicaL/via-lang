@@ -9,8 +9,10 @@
 
 #include "executable.h"
 #include <iostream>
+#include "ir/ir.h"
 #include "module/manager.h"
 #include "module/module.h"
+#include "sema/type.h"
 #include "support/ansi.h"
 #include "vm/instruction.h"
 
@@ -129,6 +131,20 @@ void via::detail::ir_lower_expr<ir::ExprCall>(
     exe.push_instruction(OpCode::FREE1, {reg});
     exe.push_instruction(OpCode::GETTOP, {dst});
     exe.m_reg_state.free(reg);
+}
+
+template <>
+void via::detail::ir_lower_expr<ir::ExprCast>(
+    Executable& exe,
+    const ir::ExprCast* ir_expr_cast,
+    u16 dst
+) noexcept
+{
+    exe.lower_expr(ir_expr_cast->expr, dst);
+
+    // TODO
+    if TRY_COERCE (const sema::BuiltinType, builtin_type, ir_expr_cast->expr->type) {
+    }
 }
 
 void via::Executable::lower_expr(const ir::Expr* expr, u16 dst) noexcept

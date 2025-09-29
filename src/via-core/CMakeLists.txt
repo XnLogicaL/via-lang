@@ -9,10 +9,9 @@ target_include_directories(via-core
 )
 
 target_link_libraries(via-core
-  PUBLIC 
+  PUBLIC
     mimalloc
     spdlog
-    magic_enum
     cpptrace::cpptrace
     replxx
 )

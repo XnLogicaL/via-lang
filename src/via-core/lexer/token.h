@@ -12,104 +12,102 @@
 #include <via/config.h>
 #include <via/types.h>
 #include "location.h"
+#include "support/utility.h"
 
 namespace via {
 
+#define FOR_EACH_TOKEN_KIND(X)                                                           \
+    X(EOF_)                                                                              \
+    X(ILLEGAL)                                                                           \
+    X(IDENTIFIER)                                                                        \
+    X(LIT_NIL)                                                                           \
+    X(LIT_INT)                                                                           \
+    X(LIT_BINT)                                                                          \
+    X(LIT_XINT)                                                                          \
+    X(LIT_FLOAT)                                                                         \
+    X(LIT_TRUE)                                                                          \
+    X(LIT_FALSE)                                                                         \
+    X(LIT_STRING)                                                                        \
+    X(KW_VAR)                                                                            \
+    X(KW_CONST)                                                                          \
+    X(KW_FN)                                                                             \
+    X(KW_TYPE)                                                                           \
+    X(KW_WHILE)                                                                          \
+    X(KW_FOR)                                                                            \
+    X(KW_IF)                                                                             \
+    X(KW_IN)                                                                             \
+    X(KW_OF)                                                                             \
+    X(KW_ELSE)                                                                           \
+    X(KW_DO)                                                                             \
+    X(KW_AND)                                                                            \
+    X(KW_OR)                                                                             \
+    X(KW_NOT)                                                                            \
+    X(KW_RETURN)                                                                         \
+    X(KW_AS)                                                                             \
+    X(KW_IMPORT)                                                                         \
+    X(KW_MODULE)                                                                         \
+    X(KW_STRUCT)                                                                         \
+    X(KW_ENUM)                                                                           \
+    X(KW_USING)                                                                          \
+    X(KW_BOOL)                                                                           \
+    X(KW_INT)                                                                            \
+    X(KW_FLOAT)                                                                          \
+    X(KW_STRING)                                                                         \
+    X(PERIOD)                                                                            \
+    X(COMMA)                                                                             \
+    X(SEMICOLON)                                                                         \
+    X(COLON)                                                                             \
+    X(COLON_COLON)                                                                       \
+    X(ARROW)                                                                             \
+    X(QUESTION)                                                                          \
+    X(PAREN_OPEN)                                                                        \
+    X(PAREN_CLOSE)                                                                       \
+    X(BRACKET_OPEN)                                                                      \
+    X(BRACKET_CLOSE)                                                                     \
+    X(BRACE_OPEN)                                                                        \
+    X(BRACE_CLOSE)                                                                       \
+    X(OP_PLUS)                                                                           \
+    X(OP_MINUS)                                                                          \
+    X(OP_STAR)                                                                           \
+    X(OP_SLASH)                                                                          \
+    X(OP_STAR_STAR)                                                                      \
+    X(OP_PERCENT)                                                                        \
+    X(OP_AMP)                                                                            \
+    X(OP_TILDE)                                                                          \
+    X(OP_CARET)                                                                          \
+    X(OP_PIPE)                                                                           \
+    X(OP_SHL)                                                                            \
+    X(OP_SHR)                                                                            \
+    X(OP_BANG)                                                                           \
+    X(OP_LT)                                                                             \
+    X(OP_GT)                                                                             \
+    X(OP_DOT_DOT)                                                                        \
+    X(OP_PLUS_PLUS)                                                                      \
+    X(OP_MINUS_MINUS)                                                                    \
+    X(OP_EQ)                                                                             \
+    X(OP_EQ_EQ)                                                                          \
+    X(OP_PLUS_EQ)                                                                        \
+    X(OP_MINUS_EQ)                                                                       \
+    X(OP_STAR_EQ)                                                                        \
+    X(OP_SLASH_EQ)                                                                       \
+    X(OP_STAR_STAR_EQ)                                                                   \
+    X(OP_PERCENT_EQ)                                                                     \
+    X(OP_AMP_EQ)                                                                         \
+    X(OP_CARET_EQ)                                                                       \
+    X(OP_PIPE_EQ)                                                                        \
+    X(OP_SHL_EQ)                                                                         \
+    X(OP_SHR_EQ)                                                                         \
+    X(OP_BANG_EQ)                                                                        \
+    X(OP_LT_EQ)                                                                          \
+    X(OP_GT_EQ)                                                                          \
+    X(OP_DOT_DOT_EQ)
+
 enum class TokenKind
 {
-    EOF_ = 0, // end of file
-    ILLEGAL,  // unrecognized lexeme
-
-    IDENTIFIER,       // identifier
-    IDENTIFIER_MACRO, // macro identifier
-    LIT_NIL,          // nil
-    LIT_INT,          // integer literal
-    LIT_BINT,         // binary integer literal
-    LIT_XINT,         // hexadecimal integer literal
-    LIT_FLOAT,        // floating point literal
-    LIT_TRUE,         // true literal
-    LIT_FALSE,        // false literal
-    LIT_STRING,
-
-    KW_VAR,    // var
-    KW_CONST,  // const
-    KW_FN,     // fn
-    KW_TYPE,   // type
-    KW_WHILE,  // while
-    KW_FOR,    // for
-    KW_IF,     // if
-    KW_IN,     // in
-    KW_OF,     // of
-    KW_ELSE,   // else
-    KW_DO,     // do
-    KW_AND,    // and
-    KW_OR,     // or
-    KW_NOT,    // not
-    KW_RETURN, // return
-    KW_AS,     // as
-    KW_IMPORT, // import
-    KW_MODULE, // mod
-    KW_STRUCT, // struct
-    KW_ENUM,   // enum
-    KW_USING,  // using
-    KW_BOOL,   // bool
-    KW_INT,    // int
-    KW_FLOAT,  // float
-    KW_STRING, // string
-
-    PERIOD,      // .
-    COMMA,       // ,
-    SEMICOLON,   // ;
-    COLON,       // :
-    COLON_COLON, // ::
-    ARROW,       // ->
-    QUESTION,    // ?
-
-    PAREN_OPEN,    // (
-    PAREN_CLOSE,   // )
-    BRACKET_OPEN,  // [
-    BRACKET_CLOSE, // ]
-    BRACE_OPEN,    // {
-    BRACE_CLOSE,   // }
-
-    OP_PLUS,      // +
-    OP_MINUS,     // -
-    OP_STAR,      // *
-    OP_SLASH,     // /
-    OP_STAR_STAR, // **
-    OP_PERCENT,   // %
-    OP_AMP,       // &
-    OP_TILDE,     // ~
-    OP_CARET,     // ^
-    OP_PIPE,      // |
-    OP_SHL,       // <<
-    OP_SHR,       // >>
-    OP_BANG,      // !
-    OP_LT,        // <
-    OP_GT,        // >
-    OP_DOT_DOT,   // ..
-
-    OP_PLUS_PLUS,   // ++
-    OP_MINUS_MINUS, // --
-
-    OP_EQ,           // =
-    OP_EQ_EQ,        // ==
-    OP_PLUS_EQ,      // +=
-    OP_MINUS_EQ,     // -=
-    OP_STAR_EQ,      // *=
-    OP_SLASH_EQ,     // /=
-    OP_STAR_STAR_EQ, // **=
-    OP_PERCENT_EQ,   // %=
-    OP_AMP_EQ,       // &=
-    OP_CARET_EQ,     // ^=
-    OP_PIPE_EQ,      // |=
-    OP_SHL_EQ,       // <<=
-    OP_SHR_EQ,       // >>=
-    OP_BANG_EQ,      // !=
-    OP_LT_EQ,        // <=
-    OP_GT_EQ,        // >=
-    OP_DOT_DOT_EQ,   // ..=
+    FOR_EACH_TOKEN_KIND(DEFINE_ENUM)
 };
+
+DEFINE_TO_STRING(TokenKind, FOR_EACH_TOKEN_KIND(DEFINE_CASE_TO_STRING))
 
 struct Token
 {

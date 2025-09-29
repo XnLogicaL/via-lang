@@ -146,11 +146,7 @@ std::string ir::ExprModuleAccess::to_string(const SymbolTable* sym_tab, size_t&)
 
 std::string ir::ExprUnary::to_string(const SymbolTable* sym_tab, size_t&) const
 {
-    return std::format(
-        "({} {})",
-        magic_enum::enum_name(op),
-        DUMP_IF(expr, sym_tab, ZERO)
-    );
+    return std::format("({} {})", via::to_string(op), DUMP_IF(expr, sym_tab, ZERO));
 }
 
 std::string ir::ExprBinary::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -158,7 +154,7 @@ std::string ir::ExprBinary::to_string(const SymbolTable* sym_tab, size_t&) const
     return std::format(
         "({} {} {})",
         DUMP_IF(lhs, sym_tab, ZERO),
-        magic_enum::enum_name(op),
+        via::to_string(op),
         DUMP_IF(rhs, sym_tab, ZERO)
     );
 }
@@ -186,7 +182,7 @@ std::string ir::ExprSubscript::to_string(const SymbolTable* sym_tab, size_t&) co
 
 std::string ir::ExprCast::to_string(const SymbolTable* sym_tab, size_t&) const
 {
-    return std::format("({} as {})", DUMP_IF(expr, sym_tab, ZERO), "");
+    return std::format("({} as {})", DUMP_IF(expr, sym_tab, ZERO), DUMP_IF(cast));
 }
 
 std::string ir::ExprTernary::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -221,7 +217,7 @@ std::string ir::StmtVarDecl::to_string(const SymbolTable* sym_tab, size_t& depth
     return INDENT + std::format(
                         "local {}: {} = {}",
                         SYMBOL(symbol),
-                        DUMP_IF(decl_type),
+                        DUMP_IF(type),
                         DUMP_IF(expr, sym_tab, ZERO)
                     );
 }

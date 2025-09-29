@@ -10,9 +10,13 @@
 #pragma once
 
 #include <parser/parser.h>
+#include <sstream>
+#include <string>
 #include <via/config.h>
 #include <via/types.h>
+#include "debug.h"
 #include "defs.h"
+#include "lexer/location.h"
 #include "support/expected.h"
 #include "support/option.h"
 #include "vm/executable.h"
@@ -115,6 +119,7 @@ class Module final
   public:
     auto name() const { return m_name; }
     auto kind() const { return m_kind; }
+    auto& get_source() const { return m_source; }
     auto& get_allocator() { return m_alloc; }
     auto* get_manager() const { return m_manager; }
     auto* get_ast_decl() const { return m_ast_decl; }
@@ -122,12 +127,17 @@ class Module final
     Option<const Def*> lookup(SymbolId symbol);
     Expected<Module*> import(const QualName& path, const ast::StmtImport* ast_decl);
 
+    // TODO: Move these functions to the SourceBuffer abstraction
+    std::string get_source_range(size_t begin, size_t end) const;
+    std::string get_source_range(SourceLoc loc) const;
+
   protected:
     ScopedAllocator m_alloc;
     ModuleKind m_kind;
     ModulePerms m_perms;
     ModuleFlags m_flags;
     std::string m_name;
+    std::string m_source;
     fs::path m_path;
     IRTree m_ir;
     Executable* m_exe;
@@ -137,4 +147,5 @@ class Module final
     ModuleManager* m_manager = nullptr;
     const ast::StmtImport* m_ast_decl = nullptr;
 };
+
 } // namespace via

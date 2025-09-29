@@ -11,6 +11,7 @@
 
 #include <via/config.h>
 #include <via/types.h>
+#include "support/memory.h"
 #include "type.h"
 
 namespace via {

@@ -10,7 +10,6 @@
 #include "instruction.h"
 #include <array>
 #include <iomanip>
-#include <magic_enum/magic_enum.hpp>
 #include "support/ansi.h"
 
 using OpCode = via::OpCode;
@@ -168,7 +167,7 @@ static OpInfo OPERAND_INFO_MAP[] = {
 
 std::string via::Instruction::to_string(bool use_color) const
 {
-    std::string opcode(magic_enum::enum_name(op));
+    std::string opcode(via::to_string(op));
     std::array<int, 3> operands{a, b, c};
 
     std::ostringstream oss;

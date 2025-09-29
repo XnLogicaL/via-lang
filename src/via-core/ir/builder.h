@@ -9,14 +9,18 @@
 
 #pragma once
 
+#include <sstream>
+#include <string>
 #include <via/config.h>
 #include <via/types.h>
+#include "ast/ast.h"
 #include "ir.h"
 #include "module/manager.h"
 #include "module/module.h"
 #include "sema/ir_local.h"
 #include "sema/stack.h"
 #include "sema/type_context.h"
+#include "support/ansi.h"
 #include "support/type_traits.h" // derived_from
 
 namespace via {
@@ -95,6 +99,38 @@ class IRBuilder final
         m_current_block = m_alloc.emplace<ir::StmtBlock>();
         m_current_block->id = id;
         return block;
+    }
+
+    inline std::string dump_type(const sema::Type* type) noexcept
+    {
+        return ansi::format(
+            type ? type->to_string() : "<invalid-type>",
+            ansi::Foreground::MAGENTA,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    }
+
+    inline std::string dump_expr(const ast::Expr* expr) noexcept
+    {
+        std::ostringstream oss;
+
+        if (expr != nullptr) {
+            for (const char chr: m_module->get_source_range(expr->loc)) {
+                if (chr == '\n') {
+                    oss << " ...";
+                    break;
+                }
+                oss << chr;
+            }
+        }
+
+        return ansi::format(
+            expr ? oss.str() : "<invalid-expr>",
+            ansi::Foreground::YELLOW,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
     }
 
   private:

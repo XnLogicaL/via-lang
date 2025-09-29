@@ -9,15 +9,13 @@
 
 #pragma once
 
-#include <magic_enum/magic_enum.hpp>
 #include <via/config.h>
 #include <via/types.h>
 #include "ast/ast.h"
 #include "debug.h"
 #include "support/ansi.h"
 #include "support/bit_enum.h"
-#include "support/expected.h"
-#include "support/memory.h"
+#include "support/utility.h"
 
 namespace via {
 namespace sema {
@@ -32,10 +30,14 @@ class Type
 {
   public:
     bool is_dependent() const noexcept { return flags & 0x1; }
+
     bool is_arithmetic() const noexcept { return is_integral() || is_float(); }
 
     virtual bool is_integral() const noexcept { return false; }
     virtual bool is_float() const noexcept { return false; }
+
+    virtual bool is_castable(const Type* other) const noexcept { return false; }
+
     virtual std::string get_dump() const { debug::unimplemented(); }
     virtual std::string to_string() const { debug::unimplemented(); }
 
@@ -48,14 +50,23 @@ class Type
     {}
 };
 
+#define FOR_EACH_BUILTIN_KIND(X)                                                         \
+    X(NIL)                                                                               \
+    X(BOOL)                                                                              \
+    X(INT)                                                                               \
+    X(FLOAT)                                                                             \
+    X(STRING)
+
 enum class BuiltinKind : u8
 {
-    NIL,
-    BOOL,
-    INT,
-    FLOAT,
-    STRING
+    FOR_EACH_BUILTIN_KIND(DEFINE_ENUM)
 };
+
+} // namespace sema
+
+DEFINE_TO_STRING(sema::BuiltinKind, FOR_EACH_BUILTIN_KIND(DEFINE_CASE_TO_STRING))
+
+namespace sema {
 
 struct BuiltinType: public Type
 {
@@ -67,24 +78,33 @@ struct BuiltinType: public Type
 
     bool is_integral() const noexcept override { return kind == BuiltinKind::INT; }
     bool is_float() const noexcept override { return kind == BuiltinKind::FLOAT; }
+    bool is_castable(const Type* other) const noexcept override
+    {
+        if TRY_COERCE (const sema::BuiltinType, builtin_type, other) {
+            switch (kind) {
+            case BuiltinKind::INT:
+                return builtin_type->kind == BuiltinKind::FLOAT;
+            case BuiltinKind::FLOAT:
+                return builtin_type->kind == BuiltinKind::FLOAT;
+            default:
+                break;
+            }
+        }
+        return false;
+    }
 
     std::string get_dump() const noexcept override
     {
-        return std::format("BuiltinType( {} )", magic_enum::enum_name(kind));
+        return std::format("BuiltinType({})", via::to_string(kind));
     }
 
     std::string to_string() const noexcept override
     {
-        auto raw_name = magic_enum::enum_name(kind);
+        auto raw_name = via::to_string(kind);
         std::string name;
         name.resize(raw_name.length());
         std::transform(raw_name.begin(), raw_name.end(), name.begin(), ::tolower);
-        return ansi::format(
-            name,
-            ansi::Foreground::MAGENTA,
-            ansi::Background::NONE,
-            ansi::Style::BOLD
-        );
+        return name;
     }
 };
 

@@ -174,7 +174,7 @@ class Value final
             "[rc: {}, has_vm_ref: {}, {}({})]",
             m_rc,
             m_vm != nullptr,
-            magic_enum::enum_name(m_kind),
+            via::to_string(m_kind),
             as_cstring()
         );
     }

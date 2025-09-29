@@ -84,6 +84,25 @@ load_dylib_symbol(const via::fs::path& path, const char* symbol)
 #endif
 }
 
+std::string via::Module::get_source_range(size_t begin, size_t end) const
+{
+    debug::require(begin <= end, "Invalid range");
+    debug::require(begin <= m_source.size() - 1, "Invalid range: begin");
+    debug::require(end <= m_source.size() - 1, "Invalid range: end");
+
+    std::ostringstream oss;
+    for (size_t i = begin; i < end; i++) {
+        oss << m_source[i];
+    }
+
+    return oss.str();
+}
+
+std::string via::Module::get_source_range(SourceLoc loc) const
+{
+    return get_source_range(loc.begin, loc.end);
+}
+
 // Load a shared library as a native module object
 via::Expected<via::Module*> via::Module::load_native_object(
     ModuleManager* manager,
@@ -221,6 +240,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
     module->m_flags = flags;
     module->m_name = name;
     module->m_path = path;
+    module->m_source = *file;
     module->m_ast_decl = ast_decl;
 
     // Register the module with the manager

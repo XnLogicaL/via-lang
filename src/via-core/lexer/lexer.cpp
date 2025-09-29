@@ -205,8 +205,7 @@ via::Token* via::Lexer::read_string()
                 advance();
                 token->size++;
             }
-        }
-        else if (c == del) {
+        } else if (c == del) {
             closed = true;
             break;
         }
@@ -252,12 +251,6 @@ via::Token* via::Lexer::read_identifier()
              strncmp(token->lexeme, "false", token->size) == 0)
         token->kind = LIT_FALSE;
 
-    if (token->kind == IDENTIFIER && c == '!') {
-        token->size++;
-        token->kind = IDENTIFIER_MACRO;
-        advance();
-    }
-
     return token;
 }
 
@@ -297,8 +290,7 @@ found:
         for (size_t i = 0; i < match_size; ++i) {
             advance();
         }
-    }
-    else {
+    } else {
         advance(); // advance one char if no match
     }
 

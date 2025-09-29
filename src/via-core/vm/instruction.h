@@ -152,6 +152,8 @@ enum class OpCode : u16
     FOR_EACH_OPCODE(DEFINE_ENUM)
 };
 
+DEFINE_TO_STRING(OpCode, FOR_EACH_OPCODE(DEFINE_CASE_TO_STRING));
+
 struct Instruction
 {
     OpCode op = OpCode::NOP;

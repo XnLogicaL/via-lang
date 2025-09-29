@@ -7,6 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
+#include "debug.h"
 #include "machine.h"
 #include "module/manager.h"
 #include "value.h"
@@ -66,6 +67,8 @@
 #define CSE_OPERANDS_AB() const u16 a = pc->a, b = pc->b;
 #define CSE_OPERANDS_ABC() const u16 a = pc->a, b = pc->b, c = pc->b;
 
+#define DEBUG_TRAP(FORMAT, ...) debug::bug(std::format(FORMAT, __VA_ARGS__));
+
 template <bool SingleStep, bool OverridePC>
 void via::detail::__execute(VirtualMachine* vm)
 {
@@ -107,7 +110,7 @@ dispatch:
         CASE(EXTRAARG2)
         CASE(EXTRAARG3)
         {
-            debug::bug("use of reserved opcode");
+            goto trap__reserved_opcode;
         }
         CASE(MOVE)
         {
@@ -184,7 +187,7 @@ dispatch:
         CASE(NEWTUPLE)
         CASE(NEWCLOSURE)
         {
-            debug::todo("implement opcodes");
+            goto trap__unimplemented_opcode;
         }
         CASE(IADD)
         {
@@ -1263,7 +1266,7 @@ dispatch:
         CASE(GETARGREF)
         CASE(SETARG)
         {
-            debug::todo("implement opcodes");
+            goto trap__unimplemented_opcode;
         }
         CASE(GETLOCAL)
         {
@@ -1338,7 +1341,7 @@ dispatch:
         CASE(DTTOS)
         CASE(FNTOS)
         {
-            debug::todo("implement opcodes");
+            goto trap__unimplemented_opcode;
         }
         CASE(GETIMPORT)
         {
@@ -1353,11 +1356,21 @@ dispatch:
     }
 #else
     default:
-        debug::bug("unknown opcode");
-        break;
+        goto trap__unknown_opcode;
     }
 #endif
-exit:
+
+    // clang-format off
+[[maybe_unused]] trap__unknown_opcode:
+    DEBUG_TRAP("trap: unknown opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+[[maybe_unused]] trap__reserved_opcode:
+    DEBUG_TRAP("trap: reserved opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+[[maybe_unused]] trap__unimplemented_opcode:
+    DEBUG_TRAP("trap: unimplemented opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+    DISPATCH();
+    // clang-format on
+
+exit:;
 }
 
 void via::VirtualMachine::execute()

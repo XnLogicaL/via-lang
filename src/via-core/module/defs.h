@@ -13,20 +13,26 @@
 #include <via/types.h>
 #include "ir/ir.h"
 #include "sema/type.h"
+#include "support/utility.h"
 #include "vm/closure.h"
 
 namespace via {
 
 class Module;
 class ValueRef;
-class CallInfo;
+struct CallInfo;
 struct Def;
+
+#define FOR_EACH_IMPL_KIND(X)                                                            \
+    X(SOURCE)                                                                            \
+    X(NATIVE)
 
 enum class ImplKind
 {
-    SOURCE,
-    NATIVE,
+    FOR_EACH_IMPL_KIND(DEFINE_ENUM)
 };
+
+DEFINE_TO_STRING(ImplKind, FOR_EACH_IMPL_KIND(DEFINE_CASE_TO_STRING));
 
 union ImplStorage {
     const ir::StmtFuncDecl* source;

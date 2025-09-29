@@ -27,7 +27,6 @@ endif()
 
 # Dependencies
 add_subdirectory(thirdparty/spdlog)
-add_subdirectory(thirdparty/magic_enum)
 add_subdirectory(thirdparty/argparse)
 add_subdirectory(thirdparty/mimalloc)
 add_subdirectory(thirdparty/cpptrace)

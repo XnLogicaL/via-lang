@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <utility>
 #include <via/config.h>
 #include <via/types.h>
 
@@ -21,6 +22,24 @@
 
 // xmacro utils
 #define DEFINE_ENUM(OP) OP,
+#define DEFINE_CASE(OP, ...)                                                             \
+    case OP:                                                                             \
+        __VA_ARGS__
+#define DEFINE_CASE_TO_STRING(OP)                                                        \
+    case OP:                                                                             \
+        return EXPAND_STRING(OP);
+
+// Enum utils
+#define DEFINE_TO_STRING(ENUM, ...)                                                      \
+    inline std::string to_string(ENUM val) noexcept                                      \
+    {                                                                                    \
+        using enum ENUM;                                                                 \
+        switch (val) {                                                                   \
+            __VA_ARGS__                                                                  \
+        default:                                                                         \
+            std::unreachable();                                                          \
+        }                                                                                \
+    }
 
 #define NO_COPY(TARGET)                                                                  \
     TARGET& operator=(const TARGET&) = delete;                                           \

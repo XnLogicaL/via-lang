@@ -1,10 +1,10 @@
 import std::io;
 import std::math;
 
-var x = 2 + 3;
+var x: float = (2 + 3) as float;
 io::hello_world();
 
-var y = math::sin();
-var z = math::sin(y, a);
+var y = math::sin(x);
+var z = math::sin(y);
 var t = math::sin(z);
 io::hello_world();
