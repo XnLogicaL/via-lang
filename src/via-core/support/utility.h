@@ -31,7 +31,7 @@
 
 // Enum utils
 #define DEFINE_TO_STRING(ENUM, ...)                                                      \
-    inline std::string to_string(ENUM val) noexcept                                      \
+    constexpr const char* to_string(ENUM val) noexcept                                   \
     {                                                                                    \
         using enum ENUM;                                                                 \
         switch (val) {                                                                   \

@@ -113,8 +113,8 @@ namespace via {
     X(JMPBACK)                                                                           \
     X(JMPBACKIF)                                                                         \
     X(JMPBACKIFX)                                                                        \
-    X(SAVESP)                                                                            \
-    X(RESTSP)                                                                            \
+    X(SAVE)                                                                              \
+    X(RESTORE)                                                                           \
     X(PUSH)                                                                              \
     X(PUSHK)                                                                             \
     X(GETTOP)                                                                            \

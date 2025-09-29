@@ -162,7 +162,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
     if (auto local =
             frame.get_local(builder.intern_symbol(ast_expr_symbol->symbol->to_string())
             )) {
-        auto* ir_decl = local->local.get_ir_decl();
+        auto* ir_decl = local->local->get_ir_decl();
 
         if TRY_COERCE (const ir::StmtVarDecl, var_decl, ir_decl) {
             return var_decl->type;
@@ -759,11 +759,8 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtImport>(
     }
 
     auto result = builder.m_module->import(qual_name, ast_stmt_import);
-    if (result.has_error()) {
-        builder.m_diags.report<Level::ERROR>(
-            ast_stmt_import->loc,
-            result.get_error().to_string()
-        );
+    if (!result.has_value()) {
+        builder.m_diags.report<Level::ERROR>(ast_stmt_import->loc, result.error());
     }
 
     return nullptr;

@@ -22,7 +22,13 @@ class BytecodeLocal final
     struct Ref
     {
         u16 id;
-        BytecodeLocal& local;
+        BytecodeLocal* local;
+
+        Ref() = default;
+        Ref(u16 id, BytecodeLocal* local) noexcept
+            : id(id),
+              local(local)
+        {}
     };
 
   public:

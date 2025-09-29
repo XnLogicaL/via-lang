@@ -38,6 +38,7 @@ static void init_mimalloc() noexcept
 {
     mi_register_error(mimalloc_error_handler, nullptr);
     mi_option_set(mi_option_show_errors, via::config::DEBUG_ENABLED);
+    mi_option_set(mi_option_reserve_os_memory, via::config::PREALLOC_SIZE);
 }
 
 static void call_once_trap() noexcept

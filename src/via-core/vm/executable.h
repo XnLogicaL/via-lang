@@ -9,8 +9,11 @@
 
 #pragma once
 
+#include <limits>
+#include <optional>
 #include <via/config.h>
 #include <via/types.h>
+#include "diagnostics.h"
 #include "instruction.h"
 #include "ir/ir.h"
 #include "sema/bytecode_local.h"
@@ -30,8 +33,10 @@ class Executable;
 
 namespace detail {
 
+void set_null_dst_trap(Executable& exe, const std::optional<u16>& dst) noexcept;
+
 template <derived_from<ir::Expr> Expr>
-void ir_lower_expr(Executable& exe, const Expr* expr, u16 dst) noexcept
+void ir_lower_expr(Executable& exe, const Expr* expr, std::optional<u16> dst) noexcept
 {
     debug::todo(std::format("lower_expr<{}>()", VIA_TYPENAME(Expr)));
 }
@@ -53,21 +58,33 @@ class Module;
 class Executable final
 {
   public:
+    friend void
+    detail::set_null_dst_trap(Executable&, const std::optional<u16>& dst) noexcept;
+
     template <derived_from<ir::Expr> Expr>
-    friend void detail::ir_lower_expr(Executable&, const Expr*, u16) noexcept;
+    friend void
+    detail::ir_lower_expr(Executable&, const Expr*, std::optional<u16>) noexcept;
 
     template <derived_from<ir::Stmt> Stmt>
     friend void detail::ir_lower_stmt(Executable&, const Stmt*) noexcept;
 
   public:
-    Executable() { m_stack.emplace(); }
+    Executable(DiagContext& diags)
+        : m_reg_state(diags)
+    {
+        m_stack.emplace();
+    }
 
-    static Executable*
-    build_from_ir(Module* module, const IRTree& ir_tree, ExeFlags flags = ExeFlags::NONE)
-        noexcept;
+    static Executable* build_from_ir(
+        Module* module,
+        DiagContext& diags,
+        const IRTree& ir_tree,
+        ExeFlags flags = ExeFlags::NONE
+    ) noexcept;
 
     static Executable* build_from_binary(
         Module* module,
+        DiagContext& diags,
         std::ostream& bytes,
         ExeFlags flags = ExeFlags::NONE
     ) noexcept;
@@ -89,21 +106,23 @@ class Executable final
 
     void push_constant(sema::ConstValue cv) noexcept
     {
+        if (m_constants.size() >= std::numeric_limits<u16>::max()) {
+        }
         m_constants.push_back(std::move(cv));
     }
+
     void push_instruction(OpCode op, std::array<u16, 3>&& ops = {}) noexcept
     {
         m_bytecode.emplace_back(op, ops[0], ops[1], ops[2]);
     }
 
-    void lower_expr(const ir::Expr* expr, u16 dst) noexcept;
+    void lower_expr(const ir::Expr* expr, std::optional<u16> dst) noexcept;
     void lower_stmt(const ir::Stmt* stmt) noexcept;
     void lower_jumps() noexcept;
 
   private:
     Module* m_module;
     ExeFlags m_flags;
-    u16 m_junk_reg;
     sema::RegisterState m_reg_state;
     sema::StackState<sema::BytecodeLocal> m_stack;
     std::vector<Instruction> m_bytecode;

@@ -29,7 +29,13 @@ class IRLocal final
     struct Ref
     {
         u16 id;
-        IRLocal& local;
+        IRLocal* local;
+
+        Ref() = default;
+        Ref(u16 id, IRLocal* local) noexcept
+            : id(id),
+              local(local)
+        {}
     };
 
   public:

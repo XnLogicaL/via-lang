@@ -9,21 +9,21 @@
 
 #pragma once
 
+#include <optional>
 #include <via/config.h>
 #include <via/types.h>
-#include "option.h"
 
 namespace via {
 
 // Taken from (slightly modified):
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::integral T>
-constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
+constexpr std::optional<T> stoi(std::string_view str, size_t* pos = nullptr)
 {
     const auto digits = "0123456789abcdefABCDEF"sv;
     const size_t begin = str.find_first_of(digits);
     if (begin == std::string_view::npos)
-        return nullopt;
+        return std::nullopt;
 
     int sign = 1;
     if (begin >= 1 && str[begin - 1U] == '-') {
@@ -36,8 +36,7 @@ constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
     if (str.starts_with("0x") || str.starts_with("0X")) {
         base = 16;
         str.remove_prefix(2);
-    }
-    else if (str.starts_with("0b") || str.starts_with("0B")) {
+    } else if (str.starts_with("0b") || str.starts_with("0B")) {
         base = 2;
         str.remove_prefix(2);
     }
@@ -52,7 +51,7 @@ constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
     }
 
     if (end == 0) {
-        return nullopt;
+        return std::nullopt;
     }
 
     const std::string_view digits_to_parse = str.substr(0, end);
@@ -70,7 +69,7 @@ constexpr Option<T> stoi(std::string_view str, size_t* pos = nullptr)
             digit = 10 + (c - 'A');
 
         if (digit >= base)
-            return nullopt; // invalid digit for base
+            return std::nullopt; // invalid digit for base
 
         result = result * base + digit;
     }
@@ -94,7 +93,7 @@ VIA_CONSTANT bool is_digit(char c)
 // Based on:
 // https://stackoverflow.com/questions/25195176/how-do-i-convert-a-c-string-to-a-int-at-compile-time
 template <std::floating_point T>
-constexpr Option<T> stof(std::string_view str, size_t* pos = nullptr)
+constexpr std::optional<T> stof(std::string_view str, size_t* pos = nullptr)
 {
     size_t i = 0;
     const size_t n = str.size();
@@ -103,13 +102,12 @@ constexpr Option<T> stof(std::string_view str, size_t* pos = nullptr)
         ++i;
 
     if (i == n)
-        return nullopt;
+        return std::nullopt;
 
     int sign = 1;
     if (str[i] == '+') {
         ++i;
-    }
-    else if (str[i] == '-') {
+    } else if (str[i] == '-') {
         sign = -1;
         ++i;
     }
@@ -135,11 +133,10 @@ constexpr Option<T> stof(std::string_view str, size_t* pos = nullptr)
             ++i;
         }
         if (!frac_found && !int_found)
-            return nullopt; // "." or "-." is invalid
-    }
-    else if (!int_found) {
+            return std::nullopt; // "." or "-." is invalid
+    } else if (!int_found) {
         // No digits at all
-        return nullopt;
+        return std::nullopt;
     }
 
     T value = int_part + frac_part / frac_div;
@@ -148,19 +145,18 @@ constexpr Option<T> stof(std::string_view str, size_t* pos = nullptr)
     if (i < n && (str[i] == 'e' || str[i] == 'E')) {
         ++i;
         if (i == n)
-            return nullopt;
+            return std::nullopt;
 
         int exp_sign = 1;
         if (str[i] == '+') {
             ++i;
-        }
-        else if (str[i] == '-') {
+        } else if (str[i] == '-') {
             exp_sign = -1;
             ++i;
         }
 
         if (i == n || !is_digit(str[i]))
-            return nullopt;
+            return std::nullopt;
 
         int exponent = 0;
         while (i < n && is_digit(str[i])) {

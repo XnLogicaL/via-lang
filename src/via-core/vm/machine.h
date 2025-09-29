@@ -16,7 +16,6 @@
 #include "instruction.h"
 #include "module/symbol.h"
 #include "stack.h"
-#include "support/bit_enum.h"
 
 namespace via {
 namespace config {
@@ -32,7 +31,7 @@ class VirtualMachine;
 namespace detail {
 
 template <bool SingleStep, bool OverridePC>
-void __execute(VirtualMachine* vm);
+void execute_impl(VirtualMachine* vm);
 
 }
 
@@ -55,7 +54,8 @@ class Snapshot
   public:
     const uintptr_t stack_ptr;
     const uintptr_t frame_ptr;
-    const Instruction program_counter;
+    const Instruction* program_counter;
+    const size_t rel_program_counter;
     const std::vector<uintptr_t> stack;
     const std::vector<Value*> registers;
 };
@@ -66,7 +66,7 @@ class VirtualMachine final
 {
   public:
     template <bool, bool>
-    friend void detail::__execute(VirtualMachine*);
+    friend void detail::execute_impl(VirtualMachine*);
     friend class Snapshot;
 
   public:
@@ -74,7 +74,8 @@ class VirtualMachine final
         : m_exe(exe),
           m_module(module),
           m_alloc(),
-          m_pc(exe->bytecode().data()),
+          m_bp(exe->bytecode().data()),
+          m_pc(m_bp),
           m_stack(m_alloc),
           m_registers(std::make_unique<Value*[]>(config::vm::REGISTER_COUNT))
     {
@@ -91,15 +92,16 @@ class VirtualMachine final
     void call(ValueRef callee, CallFlags flags = CallFlags::NONE);
     void return_(ValueRef value);
     void execute();
-    void execute_one();
+    void execute_once();
 
   protected:
     const Executable* m_exe;
     Module* m_module;
     ScopedAllocator m_alloc;
-    uintptr_t* m_sp;           // saved stack pointer
-    uintptr_t* m_fp = nullptr; // frame pointer
-    const Instruction* m_pc;
+    uintptr_t* m_sp;           // Saved stack pointer
+    uintptr_t* m_fp = nullptr; // Frame pointer
+    const Instruction* m_bp;   // Program base pointer
+    const Instruction* m_pc;   // Program counter
     Stack<uintptr_t> m_stack;
     std::unique_ptr<Value*[]> m_registers;
 };

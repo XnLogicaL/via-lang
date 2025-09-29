@@ -9,6 +9,7 @@
 
 #include "module.h"
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <replxx.hxx>
 #include "debug.h"
@@ -31,11 +32,11 @@
 static via::ScopedAllocator module_allocator;
 
 // Read a file into a string
-static via::Expected<std::string> read_file(const via::fs::path& path)
+static std::expected<std::string, std::string> read_file(const via::fs::path& path)
 {
     std::ifstream ifs(path);
     if (!ifs.is_open()) {
-        return via::Unexpected(
+        return std::unexpected(
             std::format("No such file or directory: '{}'", path.string())
         );
     }
@@ -68,7 +69,7 @@ static struct WinLibraryManager
 
 // Load a function symbol from a dynamic library
 // Platform independent implementation
-static via::Expected<via::NativeModuleInitCallback>
+static std::expected<via::NativeModuleInitCallback, std::string>
 load_dylib_symbol(const via::fs::path& path, const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
@@ -78,9 +79,9 @@ load_dylib_symbol(const via::fs::path& path, const char* symbol)
         }
     }
 
-    return via::Unexpected(dlerror());
+    return std::unexpected(dlerror());
 #else
-    return via::Unexpected("Native modules not supported on host operating system");
+    return std::unexpected("Native modules not supported on host operating system");
 #endif
 }
 
@@ -104,7 +105,7 @@ std::string via::Module::get_source_range(SourceLoc loc) const
 }
 
 // Load a shared library as a native module object
-via::Expected<via::Module*> via::Module::load_native_object(
+std::expected<via::Module*, std::string> via::Module::load_native_object(
     ModuleManager* manager,
     Module* importee,
     const char* name,
@@ -116,7 +117,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
 {
     // Check if the module is being recursively imported
     if (manager->is_current_import(name)) {
-        return Unexpected("Recursive import detected");
+        return std::unexpected("Recursive import detected");
     }
 
     // Push the module as an import
@@ -134,8 +135,8 @@ via::Expected<via::Module*> via::Module::load_native_object(
     // Read the file content
     auto file = read_file(path);
     if (!file.has_value()) {
-        manager->pop_import();               // Pop the import stack
-        return Unexpected(file.get_error()); // Return error
+        manager->pop_import();                // Pop the import stack
+        return std::unexpected(file.error()); // Return error
     }
 
     // Instantiate the module
@@ -155,11 +156,10 @@ via::Expected<via::Module*> via::Module::load_native_object(
     // Find the module's entry point
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
     auto callback = load_dylib_symbol(path, symbol.c_str());
-    if (callback.has_error()) {
-        return Unexpected(std::format(
-            "Failed to load native module: {}",
-            callback.get_error().to_string()
-        ));
+    if (!callback.has_value()) {
+        return std::unexpected(
+            std::format("Failed to load native module: {}", callback.error())
+        );
     }
 
     // Retrieve module information
@@ -197,7 +197,7 @@ via::Expected<via::Module*> via::Module::load_native_object(
 }
 
 // Load source file as a module
-via::Expected<via::Module*> via::Module::load_source_file(
+std::expected<via::Module*, std::string> via::Module::load_source_file(
     ModuleManager* manager,
     Module* importee,
     const char* name,
@@ -209,7 +209,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
 {
     // Check if the module is being recursively imported
     if (manager->is_current_import(name)) {
-        return Unexpected("Recursive import detected");
+        return std::unexpected("Recursive import detected");
     }
 
     // Push import stack
@@ -228,7 +228,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
     auto file = read_file(path);
     if (!file.has_value()) {
         manager->pop_import();
-        return Unexpected(file.get_error());
+        return std::unexpected(file.error());
     }
 
     // Instantiate the module
@@ -281,7 +281,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
         }
 
         // Build executable
-        Executable* exe = Executable::build_from_ir(module, module->m_ir);
+        Executable* exe = Executable::build_from_ir(module, diags, module->m_ir);
         module->m_exe = exe;
 
         // Check for the abscence of the no execution flag
@@ -291,106 +291,7 @@ via::Expected<via::Module*> via::Module::load_source_file(
 
             // Check for debug flag
             if (flags & ModuleFlags::DEBUG) {
-                // Initialize the REPL
-                replxx::Replxx repl;
-
-                // Print the welcome message
-                spdlog::info("Starting interactive VM debugger...\n"
-                             "  > step      steps the interpreter\n"
-                             "  > pc        dumps the interpreter program counter\n"
-                             "  > regs      dumps the interpreter register buffer\n"
-                             "  > stack     dumps the interpreter stack\n");
-
-                // Start the REPL loop
-                while (true) {
-                    // Retrieve input from the REPL
-                    const char* cinput = repl.input("> ");
-                    // Check for empty input
-                    if (cinput == nullptr) {
-                        break;
-                    }
-
-                    std::string input(cinput); // Input from the REPL
-                    Snapshot snapshot(&vm);    // Snapshot the VM state
-
-                    if (input == "step") { // Step option
-                        // Step the VM
-                        vm.execute_one();
-
-                        // Check for trailing halt instruction
-                        if (snapshot.program_counter.op == OpCode::HALT) {
-                            break;
-                        }
-                    } else if (input == "pc") { // Program counter dump option
-                        // Print the program counter
-                        std::cout << snapshot.program_counter.to_string() << "\n";
-                    } else if (input == "regs") { // Register dump option
-                        // Iterate over the registers and print their values
-                        for (size_t index = 0; const auto& ptr: snapshot.registers) {
-                            // Check if the register is filled
-                            if (ptr != nullptr) {
-                                // Dump the register value
-                                std::cout
-                                    << std::format("R{} = {}\n", index, ptr->to_string());
-                            }
-                            index++;
-                        }
-                    } else if (input == "stack") { // Stack dump option
-                        // Dump the stack size
-                        std::cout << std::format("size: {}\n", snapshot.stack.size());
-
-                        // Check if the stack is not empty
-                        if (!snapshot.stack.empty()) {
-                            // Save the frame pointer and stack base
-                            const uintptr_t fp = snapshot.frame_ptr;
-                            const uintptr_t* stk_base;
-
-                            // Check if the frame pointer is valid
-                            if (fp != 0) {
-                                // Update the stack base
-                                stk_base = snapshot.stack.begin().base() + fp;
-
-                                // Save stack local state
-                                auto old_fp = (uintptr_t*) *(stk_base - 0);
-                                auto ret_pc = (Instruction*) *(stk_base - 1);
-                                auto flags = (u64) * (stk_base - 2);
-                                auto callee = (Value*) *(stk_base - 3);
-
-                                // Dump stack local state
-                                std::cout << "Frame @ " << fp << "\n";
-                                std::cout << "  callee   = " << callee->to_string()
-                                          << "\n";
-                                std::cout << "  flags    = " << flags << "\n";
-                                std::cout << "  ret_pc   = " << (const void*) ret_pc
-                                          << "\n";
-                                std::cout << "  old_fp   = " << (const void*) old_fp
-                                          << "\n";
-                            } else {
-                                // Update the stack base
-                                stk_base = snapshot.stack.begin().base() - 1;
-                            }
-
-                            // Dump the stack
-                            for (auto* ptr = stk_base + 1;
-                                 ptr < snapshot.stack.end().base() - 1;
-                                 ++ptr) {
-                                if (fp != 0) {
-                                    std::cout << "  ";
-                                }
-
-                                auto* val = (Value*) *ptr;
-                                std::cout << std::format(
-                                    "local {} = {}\n",
-                                    ptr - stk_base - 1,
-                                    val->to_string()
-                                );
-                            }
-                        }
-                    } else { // Invalid option
-                        // Echo the input
-                        std::cout << input << "\n";
-                    }
-                }
+                start_debugger(vm);
             } else {
                 // Run VM in contiguous execution mode
                 vm.execute();
@@ -467,7 +368,7 @@ struct ModuleCandidate
     std::string name;
 };
 
-static via::Option<ModuleInfo> resolve_import_path(
+static std::optional<ModuleInfo> resolve_import_path(
     const via::fs::path& root,
     const via::QualName& path,
     const via::ModuleManager& manager
@@ -480,7 +381,7 @@ static via::Option<ModuleInfo> resolve_import_path(
     path_slice.pop_back();
 
     // Lambda to try candidates in a given base path
-    auto try_dir_candidates = [&](const via::fs::path& dir) -> via::Option<ModuleInfo> {
+    auto try_dir_candidates = [&](const via::fs::path& dir) -> std::optional<ModuleInfo> {
         via::fs::path path = dir;
         for (const auto& node: path_slice) {
             path /= node;
@@ -497,11 +398,11 @@ static via::Option<ModuleInfo> resolve_import_path(
         };
 
         auto try_path = [&](const via::fs::path& candidate,
-                            ModuleInfo::Kind kind) -> via::Option<ModuleInfo> {
+                            ModuleInfo::Kind kind) -> std::optional<ModuleInfo> {
             if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate))
                 return ModuleInfo{.kind = kind, .path = candidate};
             else
-                return via::nullopt;
+                return std::nullopt;
         };
 
         for (const auto& c: candidates) {
@@ -516,7 +417,7 @@ static via::Option<ModuleInfo> resolve_import_path(
             return result;
         }
 
-        return via::nullopt;
+        return std::nullopt;
     };
 
     for (const auto& import_path: manager.get_import_paths()) {
@@ -525,29 +426,29 @@ static via::Option<ModuleInfo> resolve_import_path(
         }
     }
 
-    return via::nullopt;
+    return std::nullopt;
 }
 
-via::Option<const via::Def*> via::Module::lookup(via::SymbolId symbol)
+std::optional<const via::Def*> via::Module::lookup(via::SymbolId symbol)
 {
     if (auto it = m_defs.find(symbol); it != m_defs.end()) {
         return it->second;
     }
-    return nullopt;
+    return std::nullopt;
 }
 
-via::Expected<via::Module*>
+std::expected<via::Module*, std::string>
 via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
 {
     debug::require(m_manager, "unmanaged module detected");
 
     auto module = resolve_import_path(m_path, path, *m_manager);
     if (!module.has_value()) {
-        return Unexpected(std::format("Module '{}' not found", to_string(path)));
+        return std::unexpected(std::format("Module '{}' not found", to_string(path)));
     }
 
     if ((m_perms & ModulePerms::IMPORT) == 0u) {
-        return Unexpected("Current module lacks import capabilties");
+        return std::unexpected("Current module lacks import capabilties");
     }
 
     switch (module->kind) {
@@ -573,5 +474,107 @@ via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
         );
     default:
         debug::todo("module types");
+    }
+}
+
+void via::Module::start_debugger(VirtualMachine& vm) noexcept
+{
+    // Initialize the REPL
+    replxx::Replxx repl;
+
+    // Print the welcome message
+    spdlog::info("Starting interactive VM debugger...\n"
+                 "  > step      steps the interpreter\n"
+                 "  > pc        dumps the interpreter program counter\n"
+                 "  > regs      dumps the interpreter register buffer\n"
+                 "  > stack     dumps the interpreter stack\n");
+
+    // Start the REPL loop
+    while (true) {
+        // Retrieve input from the REPL
+        const char* cinput = repl.input("> ");
+        // Check for empty input
+        if (cinput == nullptr) {
+            break;
+        }
+
+        std::string input(cinput); // Input from the REPL
+        Snapshot snapshot(&vm);    // Snapshot the VM state
+
+        if (input == "step") { // Step option
+            // Step the VM
+            vm.execute_once();
+
+            // Check for trailing halt instruction
+            if (snapshot.program_counter->op == OpCode::HALT) {
+                break;
+            }
+        } else if (input == "pc") { // Program counter dump option
+            // Print the program counter
+            std::cout << "pc:   " << (void*) snapshot.program_counter << "\n";
+            std::cout << "rel:  0x" << std::hex << std::right << std::setw(4)
+                      << std::setfill('0') << snapshot.rel_program_counter << "\n";
+            std::cout << snapshot.program_counter->to_string() << "\n";
+        } else if (input == "regs") { // Register dump option
+            // Iterate over the registers and print their values
+            for (size_t index = 0; const auto& ptr: snapshot.registers) {
+                // Check if the register is filled
+                if (ptr != nullptr) {
+                    // Dump the register value
+                    std::cout << std::format("R{} = {}\n", index, ptr->to_string());
+                }
+                index++;
+            }
+        } else if (input == "stack") { // Stack dump option
+            // Dump the stack size
+            std::cout << std::format("size: {}\n", snapshot.stack.size());
+
+            // Check if the stack is not empty
+            if (!snapshot.stack.empty()) {
+                // Save the frame pointer and stack base
+                const uintptr_t fp = snapshot.frame_ptr;
+                const uintptr_t* stk_base;
+
+                // Check if the frame pointer is valid
+                if (fp != 0) {
+                    // Update the stack base
+                    stk_base = snapshot.stack.begin().base() + fp;
+
+                    // Save stack local state
+                    auto old_fp = (uintptr_t*) *(stk_base - 0);
+                    auto ret_pc = (Instruction*) *(stk_base - 1);
+                    auto flags = (u64) * (stk_base - 2);
+                    auto callee = (Value*) *(stk_base - 3);
+
+                    // Dump stack local state
+                    std::cout << "Frame @ " << fp << "\n";
+                    std::cout << "  callee   = " << callee->to_string() << "\n";
+                    std::cout << "  flags    = " << flags << "\n";
+                    std::cout << "  ret_pc   = " << (const void*) ret_pc << "\n";
+                    std::cout << "  old_fp   = " << (const void*) old_fp << "\n";
+                } else {
+                    // Update the stack base
+                    stk_base = snapshot.stack.begin().base() - 1;
+                }
+
+                // Dump the stack
+                for (auto* ptr = stk_base + 1; ptr < snapshot.stack.end().base() - 1;
+                     ++ptr) {
+                    if (fp != 0) {
+                        std::cout << "  ";
+                    }
+
+                    auto* val = (Value*) *ptr;
+                    std::cout << std::format(
+                        "local {} = {}\n",
+                        ptr - stk_base - 1,
+                        val->to_string()
+                    );
+                }
+            }
+        } else { // Invalid option
+            // Echo the input
+            std::cout << input << "\n";
+        }
     }
 }

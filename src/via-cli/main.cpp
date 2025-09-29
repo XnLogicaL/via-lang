@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
         // Validate root module
         assert(
             module.has_value(),
-            module.error_or(via::Error::fail("<no-error>")).to_string()
+            module.error_or({} /* CRASHES if we dont provide default value */)
         );
 
         // Dump global symbol table

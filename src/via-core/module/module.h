@@ -9,17 +9,16 @@
 
 #pragma once
 
+#include <expected>
+#include <optional>
 #include <parser/parser.h>
-#include <sstream>
 #include <string>
 #include <via/config.h>
 #include <via/types.h>
-#include "debug.h"
 #include "defs.h"
 #include "lexer/location.h"
-#include "support/expected.h"
-#include "support/option.h"
 #include "vm/executable.h"
+#include "vm/machine.h"
 
 #define VIA_MODULE_ENTRY_PREFIX viainit_
 
@@ -96,7 +95,7 @@ class Module final
     friend class ModuleManager;
 
   public:
-    static Expected<Module*> load_source_file(
+    static std::expected<Module*, std::string> load_source_file(
         ModuleManager* manager,
         Module* importee,
         const char* name,
@@ -106,7 +105,7 @@ class Module final
         const ModuleFlags flags = ModuleFlags::NONE
     );
 
-    static Expected<Module*> load_native_object(
+    static std::expected<Module*, std::string> load_native_object(
         ModuleManager* manager,
         Module* importee,
         const char* name,
@@ -124,12 +123,16 @@ class Module final
     auto* get_manager() const { return m_manager; }
     auto* get_ast_decl() const { return m_ast_decl; }
 
-    Option<const Def*> lookup(SymbolId symbol);
-    Expected<Module*> import(const QualName& path, const ast::StmtImport* ast_decl);
+    std::optional<const Def*> lookup(SymbolId symbol);
+    std::expected<Module*, std::string>
+    import(const QualName& path, const ast::StmtImport* ast_decl);
 
     // TODO: Move these functions to the SourceBuffer abstraction
     std::string get_source_range(size_t begin, size_t end) const;
     std::string get_source_range(SourceLoc loc) const;
+
+  protected:
+    static void start_debugger(VirtualMachine& vm) noexcept;
 
   protected:
     ScopedAllocator m_alloc;

@@ -10,9 +10,11 @@
 #pragma once
 
 #include <bitset>
+#include <limits>
 #include <via/config.h>
 #include <via/types.h>
 #include "debug.h"
+#include "diagnostics.h"
 
 namespace via {
 namespace config {
@@ -26,6 +28,11 @@ namespace sema {
 class RegisterState
 {
   public:
+    RegisterState(DiagContext& diags)
+        : m_diags(diags)
+    {}
+
+  public:
     inline u16 alloc() noexcept
     {
         for (size_t i = 0; i < config::REGISTER_COUNT; ++i) {
@@ -34,7 +41,12 @@ class RegisterState
                 return static_cast<u16>(i);
             }
         }
-        debug::bug("semantic register allocation failure");
+
+        m_diags.report<Level::ERROR>(
+            {0, std::numeric_limits<size_t>::max()},
+            "Program complexity exceeds language limits (out of register space)"
+        );
+        return 0;
     }
 
     inline void free(u16 reg) noexcept
@@ -53,6 +65,7 @@ class RegisterState
     }
 
   private:
+    DiagContext& m_diags;
     std::bitset<config::REGISTER_COUNT> m_buffer;
 };
 

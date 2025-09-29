@@ -9,11 +9,11 @@
 
 #pragma once
 
+#include <optional>
 #include <variant>
 #include <via/config.h>
 #include <via/types.h>
 #include "lexer/token.h"
-#include "support/option.h"
 #include "support/utility.h"
 
 namespace via {
@@ -49,7 +49,7 @@ class ConstValue final
     constexpr explicit ConstValue(std::string string) : u(string) {}
     // clang-format on
 
-    static Option<ConstValue> from_token(const Token& tok);
+    static std::optional<ConstValue> from_token(const Token& tok);
 
   public:
     constexpr auto kind() const { return static_cast<ValueKind>(u.index()); }

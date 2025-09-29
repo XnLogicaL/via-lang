@@ -8,11 +8,14 @@
 ** ===================================================== */
 
 #include "const_value.h"
+#include <format>
+#include <optional>
+#include "debug.h"
 #include "support/conversions.h"
 
 namespace sema = via::sema;
 
-via::Option<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
+std::optional<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
 {
     switch (tok.kind) {
     case TokenKind::LIT_NIL:
@@ -35,7 +38,7 @@ via::Option<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
         break;
     }
 
-    return nullopt;
+    return std::nullopt;
 }
 
 std::string sema::ConstValue::to_string() const

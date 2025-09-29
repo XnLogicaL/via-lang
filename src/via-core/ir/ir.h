@@ -9,12 +9,12 @@
 
 #pragma once
 
+#include <optional>
 #include <via/config.h>
 #include <via/types.h>
 #include "module/symbol.h"
 #include "sema/const_value.h"
 #include "sema/type.h"
-#include "support/option.h"
 #include "support/utility.h"
 
 namespace via {
@@ -72,7 +72,7 @@ struct Stmt
 {
     SourceLoc loc;
 
-    virtual Option<SymbolId> get_symbol() const { return nullopt; }
+    virtual std::optional<SymbolId> get_symbol() const { return std::nullopt; }
     virtual std::string to_string(const SymbolTable* sym_tab, size_t& depth) const = 0;
 };
 
@@ -253,7 +253,7 @@ struct StmtFuncDecl: public Stmt
     std::vector<Parm> parms;
     const StmtBlock* body;
 
-    Option<SymbolId> get_symbol() const override { return symbol; }
+    std::optional<SymbolId> get_symbol() const override { return symbol; }
 };
 
 struct StmtBlock: public Stmt

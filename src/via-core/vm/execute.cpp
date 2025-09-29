@@ -70,7 +70,7 @@
 #define DEBUG_TRAP(FORMAT, ...) debug::bug(std::format(FORMAT, __VA_ARGS__));
 
 template <bool SingleStep, bool OverridePC>
-void via::detail::__execute(VirtualMachine* vm)
+void via::detail::execute_impl(VirtualMachine* vm)
 {
 #ifdef HAS_CGOTO
     [[gnu::aligned(64)]] static void* dispatch_table[] = {
@@ -91,7 +91,7 @@ void via::detail::__execute(VirtualMachine* vm)
 
     const auto*& pc = vm->m_pc;
 
-dispatch:
+[[maybe_unused]] dispatch:
 #ifdef HAS_CGOTO
     goto* dispatch_table[static_cast<u16>(pc->op)];
     {
@@ -1233,12 +1233,12 @@ dispatch:
                 pc -= pc->a;
             DISPATCH();
         }
-        CASE(SAVESP)
+        CASE(SAVE)
         {
             vm->m_sp = &stack.top();
             DISPATCH();
         }
-        CASE(RESTSP)
+        CASE(RESTORE)
         {
             stack.jump(vm->m_sp);
             DISPATCH();
@@ -1375,10 +1375,10 @@ exit:;
 
 void via::VirtualMachine::execute()
 {
-    detail::__execute<false, false>(this);
+    detail::execute_impl<false, false>(this);
 }
 
-void via::VirtualMachine::execute_one()
+void via::VirtualMachine::execute_once()
 {
-    detail::__execute<true, false>(this);
+    detail::execute_impl<true, false>(this);
 }

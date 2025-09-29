@@ -9,9 +9,10 @@
 
 #pragma once
 
+#include <optional>
+#include <unordered_map>
 #include <via/config.h>
 #include <via/types.h>
-#include "support/option.h"
 
 namespace via {
 
@@ -45,12 +46,12 @@ class InternTable
         return it->second;
     }
 
-    Option<view_type> lookup(Id id) const
+    std::optional<view_type> lookup(Id id) const
     {
         if (auto it = m_reverse.find(id); it != m_reverse.end()) {
             return view_type(it->second);
         }
-        return nullopt;
+        return std::nullopt;
     }
 
   protected:

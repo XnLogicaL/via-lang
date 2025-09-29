@@ -9,11 +9,11 @@
 
 #pragma once
 
+#include <optional>
 #include <stack>
 #include <via/config.h>
 #include <via/types.h>
 #include "module/symbol.h"
-#include "support/option.h"
 
 namespace via {
 namespace sema {
@@ -28,16 +28,16 @@ class Frame final
 
   public:
     Local& top() { return m_locals.back(); }
-    Option<Ref> get_local(SymbolId symbol)
+    std::optional<Ref> get_local(SymbolId symbol)
     {
         for (i64 i = m_locals.size() - 1; i >= 0; --i) {
             Local& local = m_locals[i];
             if (local.get_symbol() == symbol) {
-                return Ref{.id = static_cast<u16>(i), .local = local};
+                return Ref(static_cast<u16>(i), &local);
             }
         }
 
-        return nullopt;
+        return std::nullopt;
     }
 
     template <typename... Args>
@@ -45,8 +45,9 @@ class Frame final
     void set_local(SymbolId symbol, Args&&... args)
     {
         size_t version = 0;
-        if (auto lref = get_local(symbol))
-            version = lref->local.get_version() + 1;
+        if (auto lref = get_local(symbol)) {
+            version = lref->local->get_version() + 1;
+        }
         m_locals.emplace_back(symbol, version, args...);
     }
 

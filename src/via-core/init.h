@@ -13,7 +13,12 @@
 #include <via/types.h>
 
 namespace via {
+namespace config {
+
+VIA_CONSTANT size_t PREALLOC_SIZE = 0x8000000ULL; // 128 MiB
+
+}
 
 void init() noexcept;
 
-}
+} // namespace via

@@ -8,34 +8,13 @@
 ** ===================================================== */
 
 #include "type_context.h"
+#include "support/math.h"
 
 namespace sema = via::sema;
 
-static inline size_t hash_combine(size_t seed, size_t v) noexcept
-{
-    return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
-}
-
-static inline size_t hash_ptr(const void* ptr) noexcept
-{
-    return reinterpret_cast<size_t>(reinterpret_cast<uintptr_t>(ptr));
-}
-
-template <class It, class ElemHash>
-static inline size_t hash_range(It first, It last, size_t seed, ElemHash hash)
-{
-    seed = hash_combine(seed, static_cast<size_t>(std::distance(first, last)));
-    for (auto it = first; it != last; ++it) {
-        seed = hash_combine(seed, hash(*it));
-    }
-    return seed;
-}
-
 size_t std::hash<sema::DictKey>::operator()(const sema::DictKey& key) const noexcept
 {
-    size_t seed = hash_ptr(key.key);
-    seed = hash_combine(seed, hash_ptr(key.val));
-    return seed;
+    return via::hash_all(via::hash_ptr(key.key), via::hash_ptr(key.val));
 }
 
 bool std::equal_to<sema::DictKey>::operator()(
@@ -48,8 +27,8 @@ bool std::equal_to<sema::DictKey>::operator()(
 
 size_t std::hash<sema::FuncKey>::operator()(const sema::FuncKey& key) const noexcept
 {
-    size_t seed = hash_ptr(key.result);
-    seed = hash_range(key.tps.begin(), key.tps.end(), seed, hash_ptr);
+    size_t seed = via::hash_ptr(key.result);
+    seed = via::hash_range(key.tps.begin(), key.tps.end(), seed, via::hash_ptr);
     return seed;
 }
 
@@ -70,7 +49,7 @@ bool std::equal_to<sema::FuncKey>::operator()(
 
 size_t std::hash<sema::UserKey>::operator()(const sema::UserKey& key) const noexcept
 {
-    return hash_ptr(key.decl);
+    return via::hash_ptr(key.decl);
 }
 
 bool std::equal_to<sema::UserKey>::operator()(
@@ -92,8 +71,7 @@ static const Tp* instantiate_base(
     Key key(args...);
     if (auto it = map.find(key); it != map.end()) {
         return it->second;
-    }
-    else {
+    } else {
         auto* type = alloc.emplace<Tp>(args...);
         map[key] = type;
         return type;
@@ -139,23 +117,19 @@ const sema::Type* sema::TypeContext::instantiate(const Type* type, const TypeEnv
         if (auto* result = env.lookup(parm->depth, parm->index))
             return result; // fully substituted here
         return type;       // still dependent
-    }
-    else if TRY_COERCE (const SubstParamType, subst, type) {
+    } else if TRY_COERCE (const SubstParamType, subst, type) {
         auto* result = instantiate(subst->replacement, env);
         if (result == subst->replacement)
             return type;
         return m_alloc.emplace<SubstParamType>(subst->parm, result);
-    }
-    else if TRY_COERCE (const ArrayType, array, type) {
+    } else if TRY_COERCE (const ArrayType, array, type) {
         auto* tmp = instantiate(array->type, env);
         return (tmp == array->type) ? type : get_array(tmp);
-    }
-    else if TRY_COERCE (const DictType, dict, type) {
+    } else if TRY_COERCE (const DictType, dict, type) {
         auto* key = instantiate(dict->key, env);
         auto* val = instantiate(dict->val, env);
         return (key == dict->key && val == dict->val) ? type : get_dict(key, val);
-    }
-    else if TRY_COERCE (const FuncType, function, type) {
+    } else if TRY_COERCE (const FuncType, function, type) {
         std::vector<const Type*> parm_types;
         parm_types.reserve(function->params.size());
 
@@ -169,8 +143,7 @@ const sema::Type* sema::TypeContext::instantiate(const Type* type, const TypeEnv
         auto* result = instantiate(function->result, env);
         same &= (result == function->result);
         return same ? type : get_function(result, parm_types);
-    }
-    else if TRY_COERCE (const TemplateSpecType, spec, type) {
+    } else if TRY_COERCE (const TemplateSpecType, spec, type) {
         std::vector<const Type*> args_types;
         args_types.reserve(spec->args.size());
 

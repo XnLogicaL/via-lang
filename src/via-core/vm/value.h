@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include <optional>
 #include <via/config.h>
 #include <via/types.h>
 #include "closure.h"
+#include "debug.h"
+#include "ir/ir.h"
 #include "machine.h"
 #include "sema/const_value.h"
-#include "support/option.h"
 
 namespace via {
 
@@ -33,7 +35,7 @@ class Value final
     friend class VirtualMachine;
 
     template <bool, bool>
-    friend void detail::__execute(VirtualMachine*);
+    friend void detail::execute_impl(VirtualMachine*);
 
   public:
     static Value* create(VirtualMachine* vm)
@@ -138,8 +140,8 @@ class Value final
     inline char* string_value() const noexcept { return m_data.string; }
     inline Closure* function_value() const noexcept { return m_data.function; }
 
-    inline Option<i64> as_cint() const { return nullopt; }
-    inline Option<f64> as_cfloat() const { return nullopt; }
+    inline std::optional<i64> as_cint() const { return std::nullopt; }
+    inline std::optional<f64> as_cfloat() const { return std::nullopt; }
     inline bool as_cbool() const { return false; }
     inline std::string as_cstring() const
     {
@@ -161,6 +163,10 @@ class Value final
                 (const void*) m_data.function
             );
         }
+
+        debug::unimplemented(
+            std::format("Value::as_cstring(kind={})", via::to_string(m_kind))
+        );
     }
 
     inline Value* as_int() const { return nullptr; /* PLACEHOLDER */ }

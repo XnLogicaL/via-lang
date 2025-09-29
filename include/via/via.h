@@ -30,9 +30,7 @@
 #include <support/ansi.h>
 #include <support/bit_enum.h>
 #include <support/conversions.h>
-#include <support/expected.h>
 #include <support/math.h>
-#include <support/option.h>
 #include <support/type_traits.h>
 #include <support/utility.h>
 #include <vm/executable.h>
@@ -41,4 +39,3 @@
 #include <vm/stack.h>
 #include <vm/value.h>
 #include <vm/value_ref.h>
-

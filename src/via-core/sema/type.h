@@ -100,7 +100,7 @@ struct BuiltinType: public Type
 
     std::string to_string() const noexcept override
     {
-        auto raw_name = via::to_string(kind);
+        std::string_view raw_name = via::to_string(kind);
         std::string name;
         name.resize(raw_name.length());
         std::transform(raw_name.begin(), raw_name.end(), name.begin(), ::tolower);

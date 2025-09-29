@@ -12,6 +12,7 @@
 #include "module/defs.h"
 #include "module/manager.h"
 #include "module/module.h"
+#include "spdlog/spdlog.h"
 #include "value.h"
 #include "value_ref.h"
 #include "vm/closure.h"
@@ -21,8 +22,9 @@ using Vk = via::ValueKind;
 via::Snapshot::Snapshot(VirtualMachine* vm) noexcept
     : stack_ptr(vm->m_sp - vm->m_stack.base()),
       frame_ptr(vm->m_fp ? vm->m_fp - vm->m_stack.base() : 0),
-      program_counter(*vm->m_pc),
-      stack(vm->m_stack.begin(), vm->m_stack.end() + 1),
+      program_counter(vm->m_pc),
+      rel_program_counter(vm->m_pc - vm->m_bp),
+      stack(vm->m_stack.begin(), vm->m_stack.end()),
       registers(vm->m_registers.get(), vm->m_registers.get() + config::vm::REGISTER_COUNT)
 {}
 
@@ -84,6 +86,7 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
 
     // Get the closure from the callee value
     Closure* cl = callee->function_value();
+    uintptr_t* base = &m_stack.top();
 
     m_stack.push((uintptr_t) callee.get());            // Save callee pointer
     m_stack.push((uintptr_t) flags);                   // Save flags
@@ -98,10 +101,8 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
         ci.callee = callee.get();
         ci.flags = flags; // Propagate flags
 
-        uintptr_t* top = &m_stack.top(); // Get the top of the stack
-
         // Iterate over the arguments in reverse order
-        for (uintptr_t* ptr = top; ptr > top - (ptrdiff_t) cl->get_argc(); --ptr) {
+        for (uintptr_t* ptr = base; ptr > base - (ptrdiff_t) cl->get_argc(); --ptr) {
             // Get the argument value
             Value* arg = reinterpret_cast<Value*>(*ptr);
             // Push it onto the CallInfo object
