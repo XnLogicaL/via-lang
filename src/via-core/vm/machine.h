@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include <functional>
+#include <iostream>
+#include <ostream>
+#include <string>
 #include <via/config.h>
 #include <via/types.h>
 #include "debug.h"
@@ -16,6 +20,7 @@
 #include "instruction.h"
 #include "module/symbol.h"
 #include "stack.h"
+#include "support/utility.h"
 
 namespace via {
 namespace config {
@@ -26,14 +31,29 @@ VIA_CONSTANT size_t REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
 }
 } // namespace config
 
+class Closure;
+class ValueRef;
 class VirtualMachine;
 
-namespace detail {
+#define FOR_EACH_INTERRUPT(X)                                                            \
+    X(NONE)                                                                              \
+    X(ERROR)
 
-template <bool SingleStep, bool OverridePC>
-void execute_impl(VirtualMachine* vm);
+enum class Interrupt : u8
+{
+    FOR_EACH_INTERRUPT(DEFINE_ENUM)
+};
 
-}
+DEFINE_TO_STRING(Interrupt, FOR_EACH_INTERRUPT(DEFINE_CASE_TO_STRING));
+
+enum class InterruptAction
+{
+    RESUME,
+    REINTERP,
+    EXIT,
+};
+
+using InterruptHook = void (*)(VirtualMachine*, Interrupt, void*);
 
 enum class CallFlags : u8
 {
@@ -41,6 +61,26 @@ enum class CallFlags : u8
     PROTECT = 1 << 0,
     ALL = 0xFF,
 };
+
+namespace detail {
+
+template <bool SingleStep, bool OverridePC>
+void execute_impl(VirtualMachine* vm);
+
+template <Interrupt Int>
+InterruptAction handle_interrupt_impl(VirtualMachine* vm);
+
+Closure* unwind_stack(
+    VirtualMachine* vm,
+    std::function<bool(
+        const uintptr_t* fp,
+        const Instruction* pc,
+        const CallFlags flags,
+        ValueRef callee
+    )> pred
+);
+
+} // namespace detail
 
 class Value;
 class Snapshot
@@ -60,6 +100,14 @@ class Snapshot
     const std::vector<Value*> registers;
 };
 
+struct ErrorInt
+{
+    std::string msg;
+    std::ostream* out;
+    const uintptr_t* fp;
+    const Instruction* pc;
+};
+
 class ValueRef;
 class ModuleManager;
 class VirtualMachine final
@@ -67,13 +115,26 @@ class VirtualMachine final
   public:
     template <bool, bool>
     friend void detail::execute_impl(VirtualMachine*);
+
+    template <Interrupt>
+    friend InterruptAction detail::handle_interrupt_impl(VirtualMachine*);
+    friend Closure* detail::unwind_stack(
+        VirtualMachine* vm,
+        std::function<bool(
+            const uintptr_t* fp,
+            const Instruction* pc,
+            const CallFlags flags,
+            ValueRef callee
+        )> pred
+    );
+
     friend class Snapshot;
 
   public:
     VirtualMachine(Module* module, const Executable* exe)
         : m_exe(exe),
-          m_module(module),
           m_alloc(),
+          m_module(module),
           m_bp(exe->bytecode().data()),
           m_pc(m_bp),
           m_stack(m_alloc),
@@ -87,21 +148,40 @@ class VirtualMachine final
     ScopedAllocator& get_allocator() { return m_alloc; }
     ValueRef get_import(SymbolId module_id, SymbolId key_id);
     ValueRef get_constant(u16 id);
+
+    void set_int_hook(InterruptHook hook) { m_int_hook = hook; }
+    void set_interrupt(Interrupt code, void* arg = nullptr) noexcept
+    {
+        if (m_int_arg != nullptr) {
+            m_alloc.free(m_int_arg);
+        }
+        m_int = code;
+        m_int_arg = arg;
+    }
+
     void push_local(ValueRef val);
     ValueRef get_local(size_t sp);
     void call(ValueRef callee, CallFlags flags = CallFlags::NONE);
     void return_(ValueRef value);
+    void raise(std::string msg, std::ostream* out = &std::cerr);
     void execute();
     void execute_once();
 
   protected:
+    bool has_interrupt() const noexcept { return m_int != Interrupt::NONE; }
+    InterruptAction handle_interrupt();
+
+  protected:
     const Executable* m_exe;
-    Module* m_module;
     ScopedAllocator m_alloc;
+    Module* m_module;
     uintptr_t* m_sp;           // Saved stack pointer
     uintptr_t* m_fp = nullptr; // Frame pointer
     const Instruction* m_bp;   // Program base pointer
     const Instruction* m_pc;   // Program counter
+    Interrupt m_int = Interrupt::NONE;
+    InterruptHook m_int_hook = nullptr;
+    void* m_int_arg;
     Stack<uintptr_t> m_stack;
     std::unique_ptr<Value*[]> m_registers;
 };

@@ -221,8 +221,7 @@ class ScopedAllocator final
         return mi_heap_malloc(m_heap, size);
     }
 
-    template <typename T>
-    inline void free(T* ptr) noexcept(std::is_nothrow_destructible_v<T>)
+    inline void free(void* ptr)
     {
         debug::require(owns(ptr), "free() called on ptr not owned by allocator");
 
@@ -239,8 +238,7 @@ class ScopedAllocator final
             }
 
             m_registry.erase(it);
-        }
-        else {
+        } else {
             debug::require(
                 false,
                 "free() called for pointer that wasn't registered by "

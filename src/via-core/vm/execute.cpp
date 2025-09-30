@@ -92,6 +92,23 @@ void via::detail::execute_impl(VirtualMachine* vm)
     const auto*& pc = vm->m_pc;
 
 [[maybe_unused]] dispatch:
+
+    [[unlikely]] if (vm->has_interrupt()) {
+        auto action = vm->handle_interrupt();
+        vm->set_interrupt(Interrupt::NONE, nullptr);
+
+        switch (action) {
+        case InterruptAction::EXIT:
+            goto exit;
+        case InterruptAction::REINTERP:
+            goto dispatch;
+        case InterruptAction::RESUME:
+            DISPATCH();
+        default:
+            break;
+        }
+    }
+
 #ifdef HAS_CGOTO
     goto* dispatch_table[static_cast<u16>(pc->op)];
     {
@@ -1330,6 +1347,16 @@ void via::detail::execute_impl(VirtualMachine* vm)
         CASE(FTOI)
         CASE(STOI)
         CASE(ITOF)
+        {
+            CSE_OPERANDS_A();
+            auto val = GET_REGISTER(a)->as_cfloat();
+            [[unlikely]] if (!val.has_value()) {
+                vm->raise("failed to cast to float\n");
+            } else {
+                SET_REGISTER(a, Value::create(vm, *val));
+            }
+            DISPATCH();
+        }
         CASE(BTOF)
         CASE(STOF)
         CASE(ITOB)

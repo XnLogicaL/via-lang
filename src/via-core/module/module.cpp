@@ -8,6 +8,7 @@
 ** ===================================================== */
 
 #include "module.h"
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -16,6 +17,7 @@
 #include "ir/builder.h"
 #include "ir/ir.h"
 #include "manager.h"
+#include "module/symbol.h"
 #include "support/ansi.h"
 #include "support/bit_enum.h"
 #include "vm/instruction.h"
@@ -485,9 +487,25 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
     // Print the welcome message
     spdlog::info("Starting interactive VM debugger...\n"
                  "  > step      steps the interpreter\n"
+                 "  > raise     raise default error\n"
                  "  > pc        dumps the interpreter program counter\n"
                  "  > regs      dumps the interpreter register buffer\n"
                  "  > stack     dumps the interpreter stack\n");
+
+    vm.set_int_hook([](VirtualMachine* vm, Interrupt in, void* arg) {
+        std::cout << "Machine interrupted\n";
+        std::cout << " code: 0x" << std::hex << size_t(in) << std::dec;
+        std::cout << " " << std::format("({})\n", via::to_string(in));
+
+        if (in == Interrupt::ERROR) {
+            auto* error = reinterpret_cast<ErrorInt*>(arg);
+            std::cout << " error info:\n";
+            std::cout << "  msg:  " << error->msg << "\n";
+            std::cout << "  out:  " << (void*) error->out << "\n";
+            std::cout << "  fp:   " << (void*) error->fp << "\n";
+            std::cout << "  pc:   " << (void*) error->pc << "\n";
+        }
+    });
 
     // Start the REPL loop
     while (true) {
@@ -509,6 +527,8 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
             if (snapshot.program_counter->op == OpCode::HALT) {
                 break;
             }
+        } else if (input == "raise") {
+            vm.raise("<repl-raised-error>", &std::cout);
         } else if (input == "pc") { // Program counter dump option
             // Print the program counter
             std::cout << "pc:   " << (void*) snapshot.program_counter << "\n";

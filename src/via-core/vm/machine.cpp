@@ -8,16 +8,69 @@
 ** ===================================================== */
 
 #include "machine.h"
+#include <ostream>
 #include "debug.h"
 #include "module/defs.h"
 #include "module/manager.h"
 #include "module/module.h"
-#include "spdlog/spdlog.h"
 #include "value.h"
 #include "value_ref.h"
 #include "vm/closure.h"
+#include "vm/instruction.h"
 
 using Vk = via::ValueKind;
+
+template <>
+via::InterruptAction
+via::detail::handle_interrupt_impl<via::Interrupt::NONE>(VirtualMachine* vm)
+{
+    debug::bug("attempt to handle interrupt NONE");
+}
+
+template <>
+via::InterruptAction
+via::detail::handle_interrupt_impl<via::Interrupt::ERROR>(VirtualMachine* vm)
+{
+    Closure* handler = unwind_stack(vm, [&](auto, auto, auto flags, auto) {
+        return flags & CallFlags::PROTECT;
+    });
+
+    if (handler == nullptr) {
+        auto* error = reinterpret_cast<ErrorInt*>(vm->m_int_arg);
+        (*error->out) << error->msg;
+
+        return InterruptAction::EXIT;
+    }
+    return InterruptAction::RESUME;
+}
+
+via::Closure* via::detail::unwind_stack(
+    VirtualMachine* vm,
+    std::function<bool(
+        const uintptr_t* fp,
+        const Instruction* pc,
+        const CallFlags flags,
+        ValueRef callee
+    )> pred
+)
+{
+    for (uintptr_t* fp = vm->m_fp; fp != nullptr;) {
+        vm->m_stack.jump(fp + 1);
+
+        auto* this_fp = reinterpret_cast<uintptr_t*>(vm->m_stack.pop());
+        auto* this_pc = reinterpret_cast<const Instruction*>(vm->m_stack.pop());
+        auto flags = static_cast<CallFlags>(vm->m_stack.pop());
+        auto* callee = reinterpret_cast<Value*>(vm->m_stack.pop());
+
+        if (pred(this_fp, this_pc, flags, ValueRef(vm, callee))) {
+            return callee->function_value();
+        } else {
+            fp = this_fp;
+            callee->unref();
+        }
+    }
+    return nullptr;
+}
 
 via::Snapshot::Snapshot(VirtualMachine* vm) noexcept
     : stack_ptr(vm->m_sp - vm->m_stack.base()),
@@ -32,6 +85,26 @@ std::string via::Snapshot::to_string() const noexcept
 {
     std::ostringstream oss;
     return oss.str();
+}
+
+via::InterruptAction via::VirtualMachine::handle_interrupt()
+{
+#define DEFINE_INTERRUPT_HANDLER(INT)                                                    \
+    case Interrupt::INT:                                                                 \
+        return detail::handle_interrupt_impl<Interrupt::INT>(this);
+
+    if (m_int_hook != nullptr) {
+        m_int_hook(this, m_int, m_int_arg);
+    }
+
+    switch (m_int) {
+        FOR_EACH_INTERRUPT(DEFINE_INTERRUPT_HANDLER)
+    default:
+        break;
+    }
+
+    return InterruptAction::RESUME;
+#undef DEFINE_INTERRUPT_HANDLER
 }
 
 via::ValueRef via::VirtualMachine::get_import(SymbolId module_id, SymbolId key_id)
@@ -148,4 +221,14 @@ void via::VirtualMachine::return_(ValueRef value)
 
     // Push return value
     push_local(value.is_null() ? ValueRef(this, Value::create(this)) : value);
+}
+
+void via::VirtualMachine::raise(std::string msg, std::ostream* out)
+{
+    auto* error = m_alloc.emplace<ErrorInt>();
+    error->msg = msg;
+    error->out = out;
+    error->fp = m_fp;
+    error->pc = m_pc;
+    set_interrupt(Interrupt::ERROR, error);
 }
