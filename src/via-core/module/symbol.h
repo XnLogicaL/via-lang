@@ -9,15 +9,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <deque>
 #include <sstream>
 #include <via/config.h>
-#include <via/types.h>
 #include "intern_table.h"
 
 namespace via {
 
-using SymbolId = u64;
+using SymbolId = uint64_t;
 using QualName = std::deque<std::string>;
 
 inline std::string to_string(const QualName& path)

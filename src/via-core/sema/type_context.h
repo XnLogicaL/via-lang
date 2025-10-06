@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "support/memory.h"
 #include "type.h"
 
@@ -89,18 +89,21 @@ struct UserKey
 class TypeEnv final
 {
   public:
-    void bind(u32 d, u32 i, const Type* type) { m_map.emplace(key(d, i), type); }
-    const Type* lookup(u32 d, u32 i) const
+    void bind(uint32_t d, uint32_t i, const Type* type)
+    {
+        m_map.emplace(key(d, i), type);
+    }
+    const Type* lookup(uint32_t d, uint32_t i) const
     {
         auto it = m_map.find(key(d, i));
         return it == m_map.end() ? nullptr : it->second;
     }
 
   private:
-    static size_t key(u32 d, u32 i) { return (u64(d) << 32) | i; }
+    static size_t key(uint32_t d, uint32_t i) { return (uint64_t(d) << 32) | i; }
 
   private:
-    std::unordered_map<u64, const Type*> m_map;
+    std::unordered_map<uint64_t, const Type*> m_map;
 };
 
 class TypeContext final
@@ -117,7 +120,7 @@ class TypeContext final
     const FuncType* get_function(const Type* res, std::vector<const Type*> tps);
     const UserType* get_user(const ast::StmtTypeDecl* decl);
 
-    const TemplateParamType* get_template_parm(u32 depth, u32 index)
+    const TemplateParamType* get_template_parm(uint32_t depth, uint32_t index)
     {
         debug::unimplemented();
     }

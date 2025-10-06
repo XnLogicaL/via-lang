@@ -10,7 +10,6 @@
 #pragma once
 
 #include <via/config.h>
-#include <via/types.h>
 #include "type_traits.h"
 
 namespace via {

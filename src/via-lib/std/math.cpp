@@ -11,7 +11,6 @@
 #include <via/via.h>
 
 using via::ValueRef;
-using namespace via::types;
 
 namespace math {
 
@@ -26,28 +25,24 @@ VIA_MODULE_FUNCTION(sin, vm, call_info)
 
 VIA_MODULE_ENTRY(math, manager)
 {
-    using via::Def;
-    using via::DefTable;
-    using via::NativeModuleInfo;
     using enum via::sema::BuiltinKind;
 
-    auto& symbols = manager->get_symbol_table();
-    auto& types = manager->get_type_context();
-    auto& alloc = manager->get_allocator();
+    auto& types = manager->type_context();
 
-    static DefTable table = {
-        {
-            symbols.intern("sin"),
-            Def::function(
-                alloc,
+    static via::DefTable table = {
+        via::DefTableEntry(
+            *manager,
+            "sin",
+            via::Def::function(
+                *manager,
                 math::sin,
                 types.get_builtin(FLOAT),
                 {
-                    {symbols.intern("__x"), types.get_builtin(FLOAT)},
+                    via::DefParm(*manager, "__x", types.get_builtin(FLOAT)),
                 }
-            ),
-        },
+            )
+        ),
     };
 
-    return NativeModuleInfo::create(alloc, table);
+    return via::NativeModuleInfo::create(manager->allocator(), table);
 }

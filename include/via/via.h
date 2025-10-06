@@ -16,6 +16,7 @@
 
 #include <ast/ast.h>
 #include <diagnostics.h>
+#include <init.h>
 #include <lexer/lexer.h>
 #include <lexer/location.h>
 #include <lexer/token.h>

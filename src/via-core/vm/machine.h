@@ -9,24 +9,25 @@
 
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <iostream>
 #include <ostream>
 #include <string>
 #include <via/config.h>
-#include <via/types.h>
 #include "debug.h"
 #include "executable.h"
 #include "instruction.h"
 #include "module/symbol.h"
 #include "stack.h"
+#include "support/math.h"
 #include "support/utility.h"
 
 namespace via {
 namespace config {
 namespace vm {
 
-VIA_CONSTANT size_t REGISTER_COUNT = std::numeric_limits<u16>::max() + 1;
+VIA_CONSTANT size_t REGISTER_COUNT = std::numeric_limits<uint16_t>::max() + 1;
 
 }
 } // namespace config
@@ -39,14 +40,14 @@ class VirtualMachine;
     X(NONE)                                                                              \
     X(ERROR)
 
-enum class Interrupt : u8
+enum class Interrupt : uint8_t
 {
     FOR_EACH_INTERRUPT(DEFINE_ENUM)
 };
 
 DEFINE_TO_STRING(Interrupt, FOR_EACH_INTERRUPT(DEFINE_CASE_TO_STRING));
 
-enum class InterruptAction
+enum class IntAction
 {
     RESUME,
     REINTERP,
@@ -55,7 +56,7 @@ enum class InterruptAction
 
 using InterruptHook = void (*)(VirtualMachine*, Interrupt, void*);
 
-enum class CallFlags : u8
+enum class CallFlags : uint8_t
 {
     NONE = 0,
     PROTECT = 1 << 0,
@@ -68,17 +69,7 @@ template <bool SingleStep, bool OverridePC>
 void execute_impl(VirtualMachine* vm);
 
 template <Interrupt Int>
-InterruptAction handle_interrupt_impl(VirtualMachine* vm);
-
-Closure* unwind_stack(
-    VirtualMachine* vm,
-    std::function<bool(
-        const uintptr_t* fp,
-        const Instruction* pc,
-        const CallFlags flags,
-        ValueRef callee
-    )> pred
-);
+IntAction handle_interrupt_impl(VirtualMachine* vm);
 
 } // namespace detail
 
@@ -117,18 +108,9 @@ class VirtualMachine final
     friend void detail::execute_impl(VirtualMachine*);
 
     template <Interrupt>
-    friend InterruptAction detail::handle_interrupt_impl(VirtualMachine*);
-    friend Closure* detail::unwind_stack(
-        VirtualMachine* vm,
-        std::function<bool(
-            const uintptr_t* fp,
-            const Instruction* pc,
-            const CallFlags flags,
-            ValueRef callee
-        )> pred
-    );
+    friend IntAction detail::handle_interrupt_impl(VirtualMachine*);
 
-    friend class Snapshot;
+    friend Snapshot;
 
   public:
     VirtualMachine(Module* module, const Executable* exe)
@@ -145,9 +127,9 @@ class VirtualMachine final
 
   public:
     Stack<uintptr_t>& get_stack() { return m_stack; }
-    ScopedAllocator& get_allocator() { return m_alloc; }
+    ScopedAllocator& allocator() { return m_alloc; }
     ValueRef get_import(SymbolId module_id, SymbolId key_id);
-    ValueRef get_constant(u16 id);
+    ValueRef get_constant(uint16_t id);
 
     void set_int_hook(InterruptHook hook) { m_int_hook = hook; }
     void set_interrupt(Interrupt code, void* arg = nullptr) noexcept
@@ -168,8 +150,18 @@ class VirtualMachine final
     void execute_once();
 
   protected:
+    auto extraarg1() noexcept { return m_pc->a; }
+    auto extraarg2() noexcept { return pack<uint32_t>(m_pc->a, m_pc->b); }
+    auto extraarg3() noexcept { return pack<uint64_t>(m_pc->a, m_pc->b, m_pc->c); }
+
     bool has_interrupt() const noexcept { return m_int != Interrupt::NONE; }
-    InterruptAction handle_interrupt();
+    IntAction handle_interrupt();
+    Closure* unwind_stack(std::function<bool(
+                              const uintptr_t* fp,
+                              const Instruction* pc,
+                              const CallFlags flags,
+                              ValueRef callee
+                          )> pred);
 
   protected:
     const Executable* m_exe;

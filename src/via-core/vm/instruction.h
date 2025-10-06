@@ -9,8 +9,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
 #include <via/config.h>
-#include <via/types.h>
 #include "support/utility.h"
 
 namespace via {
@@ -131,23 +132,13 @@ namespace via {
     X(RETTRUE)                                                                           \
     X(RETFALSE)                                                                          \
     X(RETK)                                                                              \
-    X(BTOI)                                                                              \
-    X(FTOI)                                                                              \
-    X(STOI)                                                                              \
-    X(ITOF)                                                                              \
-    X(BTOF)                                                                              \
-    X(STOF)                                                                              \
-    X(ITOB)                                                                              \
-    X(STOB)                                                                              \
-    X(ITOS)                                                                              \
-    X(FTOS)                                                                              \
-    X(BTOS)                                                                              \
-    X(ARTOS)                                                                             \
-    X(DTTOS)                                                                             \
-    X(FNTOS)                                                                             \
+    X(TOINT)                                                                             \
+    X(TOFLOAT)                                                                           \
+    X(TOBOOL)                                                                            \
+    X(TOSTRING)                                                                          \
     X(GETIMPORT)
 
-enum class OpCode : u16
+enum class OpCode : uint16_t
 {
     FOR_EACH_OPCODE(DEFINE_ENUM)
 };
@@ -157,7 +148,7 @@ DEFINE_TO_STRING(OpCode, FOR_EACH_OPCODE(DEFINE_CASE_TO_STRING));
 struct Instruction
 {
     OpCode op = OpCode::NOP;
-    u16 a, b, c;
+    uint16_t a, b, c;
 
     std::string to_string(bool use_color = false) const;
 };

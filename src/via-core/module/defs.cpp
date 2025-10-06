@@ -8,11 +8,33 @@
 ** ===================================================== */
 
 #include "defs.h"
+#include "manager.h"
+#include "sema/const_value.h"
 
-via::Def* via::Def::from(ScopedAllocator& alloc, const ir::Stmt* node)
+via::DefTableEntry::DefTableEntry(
+    ModuleManager& manager,
+    const char* name,
+    const Def* def
+) noexcept
+    : id(manager.symbol_table().intern(name)),
+      def(def)
+{}
+
+via::DefParm::DefParm(
+    ModuleManager& manager,
+    const char* name,
+    const sema::Type* type,
+    sema::ConstValue&& init
+) noexcept
+    : symbol(manager.symbol_table().intern(name)),
+      type(type),
+      value(std::move(init))
+{}
+
+via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* node)
 {
     if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
-        auto* fndef = alloc.emplace<FunctionDef>();
+        auto* fndef = manager.allocator().emplace<FunctionDef>();
         fndef->kind = ImplKind::SOURCE;
         fndef->code.source = fn;
         fndef->symbol = fn->symbol;
@@ -23,13 +45,13 @@ via::Def* via::Def::from(ScopedAllocator& alloc, const ir::Stmt* node)
 }
 
 via::Def* via::Def::function(
-    ScopedAllocator& alloc,
+    ModuleManager& manager,
     const NativeCallback callback,
     const sema::Type* ret_type,
     std::initializer_list<DefParm> parms
 )
 {
-    auto* fndef = alloc.emplace<FunctionDef>();
+    auto* fndef = manager.allocator().emplace<FunctionDef>();
     fndef->kind = ImplKind::NATIVE;
     fndef->code.native = callback;
     fndef->parms = parms;

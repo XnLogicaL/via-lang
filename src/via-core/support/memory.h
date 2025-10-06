@@ -16,7 +16,6 @@
 #include <mimalloc/internal.h>
 #include <vector>
 #include <via/config.h>
-#include <via/types.h>
 #include "debug.h"
 #include "utility.h"
 
@@ -97,7 +96,7 @@ struct DefaultAllocator
 
 struct MiAllocator
 {
-    static mi_heap_t* get_allocator()
+    static mi_heap_t* allocator()
     {
         static mi_heap_t* alloc = mi_heap_new();
         return alloc;
@@ -106,7 +105,7 @@ struct MiAllocator
     template <typename T>
     static T* alloc(size_t size)
     {
-        return (T*) mi_heap_calloc(get_allocator(), size, sizeof(T));
+        return (T*) mi_heap_calloc(allocator(), size, sizeof(T));
     }
 
     template <typename T>
@@ -223,7 +222,14 @@ class ScopedAllocator final
 
     inline void free(void* ptr)
     {
-        debug::require(owns(ptr), "free() called on ptr not owned by allocator");
+        debug::require(
+            owns(ptr),
+            std::format(
+                "free() called on pointer {:p} not owned by allocator {:p}",
+                (const void*) ptr,
+                (const void*) this
+            )
+        );
 
         auto it = std::find_if(
             m_registry.begin(),
@@ -231,21 +237,14 @@ class ScopedAllocator final
             [&](const detail::ObjectEntry& e) { return e.ptr == static_cast<void*>(ptr); }
         );
 
-        if (it != m_registry.end()) {
+        [[likely]] if (it != m_registry.end()) {
             if (!it->destroyed) {
                 it->dtor(it->ptr, it->count);
                 it->destroyed = true;
             }
 
             m_registry.erase(it);
-        } else {
-            debug::require(
-                false,
-                "free() called for pointer that wasn't registered by "
-                "emplace()/emplace_array()"
-            );
         }
-
         mi_free(ptr);
     }
 

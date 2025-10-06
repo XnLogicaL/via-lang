@@ -9,13 +9,12 @@
 
 #pragma once
 
+#include <string>
 #include <via/config.h>
-#include <via/types.h>
 
 namespace via {
 namespace ansi {
 
-// ANSI text foreground color codes.
 enum class Foreground
 {
     NONE,
@@ -29,7 +28,6 @@ enum class Foreground
     BLACK = 30
 };
 
-// ANSI text background color codes.
 enum class Background
 {
     NONE,
@@ -43,7 +41,6 @@ enum class Background
     BLACK = 40
 };
 
-// ANSI text style color codes.
 enum class Style
 {
     NONE,

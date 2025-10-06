@@ -9,9 +9,10 @@
 
 #pragma once
 
+#include <cctype>
 #include <optional>
+#include <string_view>
 #include <via/config.h>
-#include <via/types.h>
 
 namespace via {
 
@@ -20,6 +21,8 @@ namespace via {
 template <std::integral T>
 constexpr std::optional<T> stoi(std::string_view str, size_t* pos = nullptr)
 {
+    using namespace std::string_view_literals;
+
     const auto digits = "0123456789abcdefABCDEF"sv;
     const size_t begin = str.find_first_of(digits);
     if (begin == std::string_view::npos)

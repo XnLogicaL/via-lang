@@ -11,7 +11,6 @@
 
 #include <mimalloc.h>
 #include <via/config.h>
-#include <via/types.h>
 #include "ast/ast.h"
 #include "diagnostics.h"
 #include "lexer/lexer.h"
@@ -30,7 +29,7 @@ class Parser final
     {}
 
   public:
-    ScopedAllocator& get_allocator() { return m_alloc; }
+    ScopedAllocator& allocator() { return m_alloc; }
     SyntaxTree parse();
 
   private:

@@ -9,12 +9,9 @@
 
 #pragma once
 
-#include <optional>
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "closure.h"
-#include "debug.h"
-#include "ir/ir.h"
 #include "machine.h"
 #include "sema/const_value.h"
 
@@ -24,8 +21,8 @@ class Value final
 {
   public:
     union Union {
-        i64 integer;
-        f64 float_;
+        int64_t integer;
+        double_t float_;
         bool boolean;
         char* string;
         Closure* function;
@@ -38,168 +35,50 @@ class Value final
     friend void detail::execute_impl(VirtualMachine*);
 
   public:
-    static Value* create(VirtualMachine* vm)
-    {
-        return construct_impl(vm, ValueKind::NIL);
-    }
-    static Value* create(VirtualMachine* vm, i64 integer)
-    {
-        return construct_impl(vm, ValueKind::INT, {.integer = integer});
-    }
-
-    static Value* create(VirtualMachine* vm, f64 float_)
-    {
-        return construct_impl(vm, ValueKind::FLOAT, {.float_ = float_});
-    }
-
-    static Value* create(VirtualMachine* vm, bool boolean)
-    {
-        return construct_impl(vm, ValueKind::BOOL, {.boolean = boolean});
-    }
-
-    static Value* create(VirtualMachine* vm, char* string)
-    {
-        debug::require(
-            vm->get_allocator().owns(string),
-            "Value construction via string requires it to be allocated by "
-            "the corresponding Value::vm"
-        );
-        return construct_impl(vm, ValueKind::STRING, {.string = string});
-    }
-
-    static Value* create(VirtualMachine* vm, Closure* closure)
-    {
-        debug::require(
-            vm->get_allocator().owns(closure),
-            "Value construction via closure object requires it to be allocated by "
-            "the corresponding Value::vm"
-        );
-        return construct_impl(vm, ValueKind::FUNCTION, {.function = closure});
-    }
-
-    static Value* create(VirtualMachine* vm, const sema::ConstValue& cv)
-    {
-        auto& alloc = vm->get_allocator();
-
-        switch (cv.kind()) {
-        case ValueKind::NIL:
-            return create(vm);
-        case ValueKind::BOOL:
-            return create(vm, cv.value<ValueKind::BOOL>());
-        case ValueKind::INT:
-            return create(vm, cv.value<ValueKind::INT>());
-        case ValueKind::FLOAT:
-            return create(vm, cv.value<ValueKind::FLOAT>());
-        case ValueKind::STRING: {
-            auto buf = alloc.strdup(cv.value<ValueKind::STRING>().c_str());
-            return create(vm, buf);
-        }
-        default:
-            break;
-        }
-
-        debug::unimplemented();
-    }
+    static Value* create(VirtualMachine* vm);
+    static Value* create(VirtualMachine* vm, int64_t integer);
+    static Value* create(VirtualMachine* vm, double_t float_);
+    static Value* create(VirtualMachine* vm, bool boolean);
+    static Value* create(VirtualMachine* vm, char* string);
+    static Value* create(VirtualMachine* vm, Closure* closure);
+    static Value* create(VirtualMachine* vm, const sema::ConstValue& cv);
 
   public:
-    inline auto kind() const { return m_kind; }
-    inline auto& data() { return m_data; }
-    inline const auto& data() const { return m_data; }
-    inline auto* context() const { return m_vm; }
+    auto kind() const { return m_kind; }
+    auto& data() { return m_data; }
+    const auto& data() const { return m_data; }
+    auto* context() const { return m_vm; }
 
-    inline bool unref()
-    {
-        m_rc--;
-        [[unlikely]] if (m_rc == 0) {
-            free();
-            return true;
-        }
-        return false;
-    }
+    bool unref() noexcept;
+    void free() noexcept;
+    Value* clone() noexcept;
 
-    inline void free()
-    {
-        switch (m_kind) {
-        case ValueKind::STRING:
-        case ValueKind::FUNCTION:
-            m_vm->get_allocator().free(std::bit_cast<void*>(m_data));
-            break;
-        default:
-            // Trivial types don't require explicit destruction
-            break;
-        }
+    auto bool_value() const noexcept { return m_data.boolean; }
+    auto int_value() const noexcept { return m_data.integer; }
+    auto float_value() const noexcept { return m_data.float_; }
+    auto string_value() const noexcept { return m_data.string; }
+    auto function_value() const noexcept { return m_data.function; }
 
-        m_kind = ValueKind::NIL;
-    }
+    std::optional<int64_t> as_cint() const;
+    std::optional<double_t> as_cfloat() const;
+    bool as_cbool() const;
+    std::string as_cstring() const;
 
-    inline Value* clone() noexcept { return construct_impl(m_vm, m_kind, m_data); }
+    Value* as_int() const;
+    Value* as_float() const;
+    Value* as_bool() const;
+    Value* as_string() const;
 
-    inline bool bool_value() const noexcept { return m_data.boolean; }
-    inline i64 int_value() const noexcept { return m_data.integer; }
-    inline f64 float_value() const noexcept { return m_data.float_; }
-    inline char* string_value() const noexcept { return m_data.string; }
-    inline Closure* function_value() const noexcept { return m_data.function; }
-
-    inline std::optional<i64> as_cint() const { return std::nullopt; }
-    inline std::optional<f64> as_cfloat() const { return std::nullopt; }
-    inline bool as_cbool() const { return false; }
-    inline std::string as_cstring() const
-    {
-        switch (m_kind) {
-        case ValueKind::NIL:
-            return "nil";
-        case ValueKind::BOOL:
-            return std::to_string(m_data.boolean);
-        case ValueKind::INT:
-            return std::to_string(m_data.integer);
-        case ValueKind::FLOAT:
-            return std::to_string(m_data.float_);
-        case ValueKind::STRING:
-            return m_data.string;
-        case ValueKind::FUNCTION:
-            return std::format(
-                "{}@{}",
-                m_data.function->is_native() ? "native" : "function",
-                (const void*) m_data.function
-            );
-        }
-
-        debug::unimplemented(
-            std::format("Value::as_cstring(kind={})", via::to_string(m_kind))
-        );
-    }
-
-    inline Value* as_int() const { return nullptr; /* PLACEHOLDER */ }
-    inline Value* as_float() const { return nullptr; /* PLACEHOLDER */ }
-    inline Value* as_bool() const { return nullptr; /* PLACEHOLDER */ }
-    inline Value* as_string() const { return nullptr; /* PLACEHOLDER */ }
-
-    inline std::string to_string() const noexcept
-    {
-        return std::format(
-            "[rc: {}, has_vm_ref: {}, {}({})]",
-            m_rc,
-            m_vm != nullptr,
-            via::to_string(m_kind),
-            as_cstring()
-        );
-    }
+    std::string to_string() const noexcept;
 
   private:
-    static inline Value*
-    construct_impl(VirtualMachine* vm, ValueKind kind, Value::Union data = {})
-    {
-        Value* ptr = vm->get_allocator().emplace<Value>();
-        ptr->m_kind = kind;
-        ptr->m_data = data;
-        ptr->m_vm = vm;
-        return ptr;
-    }
+    static Value*
+    construct_impl(VirtualMachine* vm, ValueKind kind, Value::Union data = {});
 
   private:
     ValueKind m_kind = ValueKind::NIL;
     Union m_data = {};
-    size_t m_rc = 1; // obviously
+    size_t m_rc = 1;
     VirtualMachine* m_vm;
 };
 

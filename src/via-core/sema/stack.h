@@ -9,10 +9,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include <stack>
+#include <vector>
 #include <via/config.h>
-#include <via/types.h>
 #include "module/symbol.h"
 
 namespace via {
@@ -30,10 +31,10 @@ class Frame final
     Local& top() { return m_locals.back(); }
     std::optional<Ref> get_local(SymbolId symbol)
     {
-        for (i64 i = m_locals.size() - 1; i >= 0; --i) {
+        for (int64_t i = m_locals.size() - 1; i >= 0; --i) {
             Local& local = m_locals[i];
             if (local.get_symbol() == symbol) {
-                return Ref(static_cast<u16>(i), &local);
+                return Ref(static_cast<uint16_t>(i), &local);
             }
         }
 

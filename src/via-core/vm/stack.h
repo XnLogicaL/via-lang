@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "support/memory.h"
 
 namespace via {
@@ -22,7 +22,8 @@ VIA_CONSTANT size_t STACK_SIZE = 8192;
 }
 } // namespace config
 
-template <typename T> class Stack final
+template <typename T>
+class Stack final
 {
   public:
     explicit Stack(ScopedAllocator& alloc)

@@ -9,8 +9,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <vector>
 #include <via/config.h>
-#include <via/types.h>
 #include "instruction.h"
 #include "machine.h"
 
@@ -43,13 +44,13 @@ class Closure final
     [[nodiscard]] static Closure*
     create(VirtualMachine* vm, size_t argc, const Instruction* pc) noexcept
     {
-        return vm->get_allocator().emplace<Closure>(argc, pc);
+        return vm->allocator().emplace<Closure>(argc, pc);
     }
 
     [[nodiscard]] static Closure*
     create(VirtualMachine* vm, size_t argc, const NativeCallback callback) noexcept
     {
-        return vm->get_allocator().emplace<Closure>(argc, callback);
+        return vm->allocator().emplace<Closure>(argc, callback);
     }
 
   public:

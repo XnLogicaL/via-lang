@@ -10,17 +10,15 @@
 #pragma once
 
 #include <via/config.h>
-#include <via/types.h>
 #include "ast/ast.h"
 #include "debug.h"
-#include "support/ansi.h"
 #include "support/bit_enum.h"
 #include "support/utility.h"
 
 namespace via {
 namespace sema {
 
-enum class TypeFlags : u8
+enum class TypeFlags : uint8_t
 {
     NONE = 0,
     DEPENDENT = 1 << 0,
@@ -57,7 +55,7 @@ class Type
     X(FLOAT)                                                                             \
     X(STRING)
 
-enum class BuiltinKind : u8
+enum class BuiltinKind : uint8_t
 {
     FOR_EACH_BUILTIN_KIND(DEFINE_ENUM)
 };
@@ -83,9 +81,14 @@ struct BuiltinType: public Type
         if TRY_COERCE (const sema::BuiltinType, builtin_type, other) {
             switch (kind) {
             case BuiltinKind::INT:
-                return builtin_type->kind == BuiltinKind::FLOAT;
+                return builtin_type->kind == BuiltinKind::FLOAT ||
+                       builtin_type->kind == BuiltinKind::STRING;
             case BuiltinKind::FLOAT:
-                return builtin_type->kind == BuiltinKind::FLOAT;
+                return builtin_type->kind == BuiltinKind::INT ||
+                       builtin_type->kind == BuiltinKind::STRING;
+            case BuiltinKind::BOOL:
+            case BuiltinKind::STRING:
+                return true;
             default:
                 break;
             }
@@ -164,8 +167,8 @@ struct UserType: public Type
 
 struct TemplateParamType: public Type
 {
-    u32 depth, index;
-    explicit TemplateParamType(u32 d, u32 i)
+    uint32_t depth, index;
+    explicit TemplateParamType(uint32_t d, uint32_t i)
         : Type(TypeFlags::DEPENDENT),
           depth(d),
           index(i)

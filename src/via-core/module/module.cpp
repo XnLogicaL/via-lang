@@ -30,11 +30,10 @@
     #include <windows.h>
 #endif
 
-// TODO: Implement module allocation logic in a more modular way
-static via::ScopedAllocator module_allocator;
-
 // Read a file into a string
-static std::expected<std::string, std::string> read_file(const via::fs::path& path)
+// clang-format off
+static std::expected<std::string, std::string>
+read_file(const std::filesystem::path& path)
 {
     std::ifstream ifs(path);
     if (!ifs.is_open()) {
@@ -52,6 +51,7 @@ static std::expected<std::string, std::string> read_file(const via::fs::path& pa
 
     return oss.str();
 }
+// clang-format on
 
 #ifdef VIA_PLATFORM_WINDOWS
 static struct WinLibraryManager
@@ -66,13 +66,13 @@ static struct WinLibraryManager
     }
 
     void push(const HMODULE handle) { libs.push_back(handle); }
-} windowsLibs;
+} win_libs;
 #endif
 
 // Load a function symbol from a dynamic library
 // Platform independent implementation
 static std::expected<via::NativeModuleInitCallback, std::string>
-load_dylib_symbol(const via::fs::path& path, const char* symbol)
+load_dylib_symbol(const std::filesystem::path& path, const char* symbol)
 {
 #ifdef VIA_PLATFORM_UNIX
     if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
@@ -108,43 +108,42 @@ std::string via::Module::get_source_range(SourceLoc loc) const
 
 // Load a shared library as a native module object
 std::expected<via::Module*, std::string> via::Module::load_native_object(
-    ModuleManager* manager,
+    ModuleManager& manager,
     Module* importee,
     const char* name,
-    const fs::path& path,
+    const std::filesystem::path& path,
     const ast::StmtImport* ast_decl,
     const ModulePerms perms,
     const ModuleFlags flags
 )
 {
     // Check if the module is being recursively imported
-    if (manager->is_current_import(name)) {
+    if (manager.is_current_import(name)) {
         return std::unexpected("Recursive import detected");
     }
 
     // Push the module as an import
-    manager->push_import(name);
+    manager.push_import(name);
 
     // Check if the module is already loaded
-    if (manager->has_module(name)) {
+    if (manager.has_module(name)) {
         // Check if the cached module is the same as the one being imported
-        if (Module* module = manager->get_module(name); module->m_path == path) {
-            manager->pop_import(); // Pop the import stack
-            return module;         // Return the cached module
+        if (Module* module = manager.get_module(name); module->m_path == path) {
+            manager.pop_import(); // Pop the import stack
+            return module;        // Return the cached module
         }
     }
 
     // Read the file content
     auto file = read_file(path);
     if (!file.has_value()) {
-        manager->pop_import();                // Pop the import stack
+        manager.pop_import();                 // Pop the import stack
         return std::unexpected(file.error()); // Return error
     }
 
     // Instantiate the module
-    auto* module = module_allocator.emplace<Module>();
+    auto* module = manager.allocator().emplace<Module>(manager);
     module->m_kind = ModuleKind::NATIVE;
-    module->m_manager = manager;
     module->m_importee = importee;
     module->m_perms = perms;
     module->m_flags = flags;
@@ -153,7 +152,7 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
     module->m_ast_decl = ast_decl;
 
     // Register the module with the manager
-    manager->push_module(module);
+    manager.push_module(module);
 
     // Find the module's entry point
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
@@ -165,7 +164,7 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
     }
 
     // Retrieve module information
-    auto* module_info = (*callback)(manager);
+    auto* module_info = (*callback)(&manager);
 
     // Validate module information
     debug::require(module_info->begin != nullptr);
@@ -194,49 +193,48 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
     }
 
     // Pop import stack
-    manager->pop_import();
+    manager.pop_import();
     return module;
 }
 
 // Load source file as a module
 std::expected<via::Module*, std::string> via::Module::load_source_file(
-    ModuleManager* manager,
+    ModuleManager& manager,
     Module* importee,
     const char* name,
-    const fs::path& path,
+    const std::filesystem::path& path,
     const ast::StmtImport* ast_decl,
     const ModulePerms perms,
     const ModuleFlags flags
 )
 {
     // Check if the module is being recursively imported
-    if (manager->is_current_import(name)) {
+    if (manager.is_current_import(name)) {
         return std::unexpected("Recursive import detected");
     }
 
     // Push import stack
-    manager->push_import(name);
+    manager.push_import(name);
 
     // Check if the module is already loaded
-    if (manager->has_module(name)) {
+    if (manager.has_module(name)) {
         // Check if the loaded module is the same as the one being imported
-        if (Module* module = manager->get_module(name); module->m_path == path) {
-            manager->pop_import(); // Pop the import stack
-            return module;         // Return the cached module
+        if (Module* module = manager.get_module(name); module->m_path == path) {
+            manager.pop_import(); // Pop the import stack
+            return module;        // Return the cached module
         }
     }
 
     // Read the source file
     auto file = read_file(path);
     if (!file.has_value()) {
-        manager->pop_import();
+        manager.pop_import();
         return std::unexpected(file.error());
     }
 
     // Instantiate the module
-    auto* module = module_allocator.emplace<Module>();
+    auto* module = manager.allocator().emplace<Module>(manager);
     module->m_kind = ModuleKind::SOURCE;
-    module->m_manager = manager;
     module->m_importee = importee;
     module->m_perms = perms;
     module->m_flags = flags;
@@ -246,7 +244,7 @@ std::expected<via::Module*, std::string> via::Module::load_source_file(
     module->m_ast_decl = ast_decl;
 
     // Register the module with the manager
-    manager->push_module(module);
+    manager.push_module(module);
 
     // Instantiate diagnostics context
     DiagContext diags(path.string(), name, *file);
@@ -278,7 +276,7 @@ std::expected<via::Module*, std::string> via::Module::load_source_file(
         for (const auto& node: module->m_ir) {
             // Check if the node has an identity
             if (auto symbol = node->get_symbol()) {
-                module->m_defs[*symbol] = Def::from(module->get_allocator(), node);
+                module->m_defs[*symbol] = Def::from(manager, node);
             }
         }
 
@@ -312,9 +310,10 @@ error:
     if (flags & ModuleFlags::DUMP_AST)
         std::cout << debug::to_string(ast) << "\n";
     if (flags & ModuleFlags::DUMP_IR)
-        std::cout << debug::to_string(manager->get_symbol_table(), module->m_ir) << "\n";
+        std::cout << debug::to_string(manager.symbol_table(), module->m_ir) << "\n";
     if (flags & ModuleFlags::DUMP_EXE)
-        std::cout << module->m_exe->to_string() << "\n";
+        std::cout << (module->m_exe ? module->m_exe->to_string() : "<null-executable>")
+                  << "\n";
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
         std::cout << ansi::format(
                          std::format("[deftable .{}]", name),
@@ -343,12 +342,12 @@ error:
         }
     } else {
         // Pop import stack
-        manager->pop_import();
+        manager.pop_import();
         return module;
     }
 
     // Pop import stack
-    manager->pop_import();
+    manager.pop_import();
     return nullptr;
 }
 
@@ -361,7 +360,7 @@ struct ModuleInfo
         NATIVE,
     } kind;
 
-    via::fs::path path;
+    std::filesystem::path path;
 };
 
 struct ModuleCandidate
@@ -371,7 +370,7 @@ struct ModuleCandidate
 };
 
 static std::optional<ModuleInfo> resolve_import_path(
-    const via::fs::path& root,
+    const std::filesystem::path& root,
     const via::QualName& path,
     const via::ModuleManager& manager
 )
@@ -383,8 +382,9 @@ static std::optional<ModuleInfo> resolve_import_path(
     path_slice.pop_back();
 
     // Lambda to try candidates in a given base path
-    auto try_dir_candidates = [&](const via::fs::path& dir) -> std::optional<ModuleInfo> {
-        via::fs::path path = dir;
+    auto try_dir_candidates = [&](const std::filesystem::path& dir
+                              ) -> std::optional<ModuleInfo> {
+        std::filesystem::path path = dir;
         for (const auto& node: path_slice) {
             path /= node;
         }
@@ -399,9 +399,10 @@ static std::optional<ModuleInfo> resolve_import_path(
 #endif
         };
 
-        auto try_path = [&](const via::fs::path& candidate,
+        auto try_path = [&](const std::filesystem::path& candidate,
                             ModuleInfo::Kind kind) -> std::optional<ModuleInfo> {
-            if (via::fs::exists(candidate) && via::fs::is_regular_file(candidate))
+            if (std::filesystem::exists(candidate) &&
+                std::filesystem::is_regular_file(candidate))
                 return ModuleInfo{.kind = kind, .path = candidate};
             else
                 return std::nullopt;
@@ -442,9 +443,7 @@ std::optional<const via::Def*> via::Module::lookup(via::SymbolId symbol)
 std::expected<via::Module*, std::string>
 via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
 {
-    debug::require(m_manager, "unmanaged module detected");
-
-    auto module = resolve_import_path(m_path, path, *m_manager);
+    auto module = resolve_import_path(m_path, path, m_manager);
     if (!module.has_value()) {
         return std::unexpected(std::format("Module '{}' not found", to_string(path)));
     }
@@ -563,7 +562,7 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
                     // Save stack local state
                     auto old_fp = (uintptr_t*) *(stk_base - 0);
                     auto ret_pc = (Instruction*) *(stk_base - 1);
-                    auto flags = (u64) * (stk_base - 2);
+                    auto flags = (uint64_t) *(stk_base - 2);
                     auto callee = (Value*) *(stk_base - 3);
 
                     // Dump stack local state
@@ -577,7 +576,7 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
                     stk_base = snapshot.stack.begin().base() - 1;
                 }
 
-                // Dump the stack
+                // Dump locals
                 for (auto* ptr = stk_base + 1; ptr < snapshot.stack.end().base() - 1;
                      ++ptr) {
                     if (fp != 0) {
@@ -590,6 +589,12 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
                         ptr - stk_base - 1,
                         val->to_string()
                     );
+                }
+
+                std::cout << "raw stack dump:\n";
+                for (size_t i = 0; uintptr_t ptr: snapshot.stack) {
+                    std::cout << "[" << i++ << "] ";
+                    std::cout << "0x" << std::hex << ptr << "\n";
                 }
             }
         } else { // Invalid option

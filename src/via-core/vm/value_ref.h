@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "value.h"
 
 namespace via {

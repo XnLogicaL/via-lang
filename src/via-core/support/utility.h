@@ -11,7 +11,6 @@
 
 #include <utility>
 #include <via/config.h>
-#include <via/types.h>
 
 #define PASTE(a, b) a##b
 #define STRING(X) #X

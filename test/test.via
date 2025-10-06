@@ -2,9 +2,9 @@ import std::io;
 import std::math;
 
 var x: float = (2 + 3) as float;
-io::hello_world();
+io::printn(x as string);
 
 var y = math::sin(x);
 var z = math::sin(y);
 var t = math::sin(z);
-io::hello_world();
+io::printn(t as string);

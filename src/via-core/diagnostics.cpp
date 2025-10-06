@@ -10,14 +10,68 @@
 #include "diagnostics.h"
 #include "support/ansi.h"
 
-void via::DiagContext::emit(spdlog::logger* logger) const
+std::string via::to_string(Level level) noexcept
 {
-    for (const auto& diag: m_diags) {
-        emitOnce(diag, logger);
+    switch (level) {
+    case Level::INFO:
+        return ansi::format(
+            "info:",
+            ansi::Foreground::CYAN,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    case Level::WARNING:
+        return ansi::format(
+            "warning:",
+            ansi::Foreground::YELLOW,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    case Level::ERROR:
+        return ansi::format(
+            "error:",
+            ansi::Foreground::RED,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
     }
 }
 
-void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) const
+std::string via::to_string(FootnoteKind kind) noexcept
+{
+    switch (kind) {
+    case FootnoteKind::HINT:
+        return ansi::format(
+            "hint:",
+            ansi::Foreground::GREEN,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    case FootnoteKind::NOTE:
+        return ansi::format(
+            "note:",
+            ansi::Foreground::BLUE,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    case FootnoteKind::SUGGESTION:
+        return ansi::format(
+            "suggestion:",
+            ansi::Foreground::MAGENTA,
+            ansi::Background::NONE,
+            ansi::Style::BOLD
+        );
+    }
+}
+
+void via::DiagContext::emit(spdlog::logger* logger) const
+{
+    for (const auto& diag: m_diags) {
+        emit_one(diag, logger);
+    }
+}
+
+void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) const
 {
     ansi::Foreground foreground;
     spdlog::level::level_enum level;
@@ -54,8 +108,8 @@ void via::DiagContext::emitOnce(const Diagnosis& diag, spdlog::logger* logger) c
     while (line_end < end && *line_end != '\n' && *line_end != '\r')
         ++line_end;
 
-    u64 line = 1 + std::count(begin, line_begin, '\n');
-    u64 col = static_cast<u64>(ptr - line_begin) + 1;
+    uint64_t line = 1 + std::count(begin, line_begin, '\n');
+    uint64_t col = static_cast<uint64_t>(ptr - line_begin) + 1;
 
     std::string_view line_view(line_begin, static_cast<size_t>(line_end - line_begin));
 

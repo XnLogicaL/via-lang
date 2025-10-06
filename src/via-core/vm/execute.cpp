@@ -63,14 +63,14 @@
     }
 
 // Common Subexpression Elimination utility
-#define CSE_OPERANDS_A() const u16 a = pc->a;
-#define CSE_OPERANDS_AB() const u16 a = pc->a, b = pc->b;
-#define CSE_OPERANDS_ABC() const u16 a = pc->a, b = pc->b, c = pc->b;
+#define CSE_OPERANDS_A() const uint16_t a = pc->a;
+#define CSE_OPERANDS_AB() const uint16_t a = pc->a, b = pc->b;
+#define CSE_OPERANDS_ABC() const uint16_t a = pc->a, b = pc->b, c = pc->b;
 
 #define DEBUG_TRAP(FORMAT, ...) debug::bug(std::format(FORMAT, __VA_ARGS__));
 
 template <bool SingleStep, bool OverridePC>
-void via::detail::execute_impl(VirtualMachine* vm)
+[[gnu::flatten]] void via::detail::execute_impl(VirtualMachine* vm)
 {
 #ifdef HAS_CGOTO
     [[gnu::aligned(64)]] static void* dispatch_table[] = {
@@ -86,8 +86,8 @@ void via::detail::execute_impl(VirtualMachine* vm)
     auto& consts = vm->m_exe->constants();
 
     /* Explicit module stuff CSE */
-    auto* manager = vm->m_module->get_manager();
-    auto& symtab = manager->get_symbol_table();
+    auto& manager = vm->m_module->manager();
+    auto& symtab = manager.symbol_table();
 
     const auto*& pc = vm->m_pc;
 
@@ -98,11 +98,11 @@ void via::detail::execute_impl(VirtualMachine* vm)
         vm->set_interrupt(Interrupt::NONE, nullptr);
 
         switch (action) {
-        case InterruptAction::EXIT:
+        case IntAction::EXIT:
             goto exit;
-        case InterruptAction::REINTERP:
+        case IntAction::REINTERP:
             goto dispatch;
-        case InterruptAction::RESUME:
+        case IntAction::RESUME:
             DISPATCH();
         default:
             break;
@@ -110,7 +110,7 @@ void via::detail::execute_impl(VirtualMachine* vm)
     }
 
 #ifdef HAS_CGOTO
-    goto* dispatch_table[static_cast<u16>(pc->op)];
+    goto* dispatch_table[static_cast<uint16_t>(pc->op)];
     {
 #else
     switch (pc->op) {
@@ -214,8 +214,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer +
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer +
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -228,8 +230,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer +
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer +
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -242,8 +246,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ +
-                        GET_REGISTER(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ +
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -256,8 +262,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ +
-                        CONST_VALUE(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ +
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -270,8 +278,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer -
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer -
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -284,8 +294,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer -
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer -
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -298,8 +310,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ -
-                        GET_REGISTER(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ -
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -312,8 +326,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ -
-                        CONST_VALUE(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ -
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -326,8 +342,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer *
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer *
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -340,8 +358,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer *
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer *
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -354,8 +374,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ *
-                        GET_REGISTER(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ *
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -368,8 +390,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ *
-                        CONST_VALUE(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ *
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -382,8 +406,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer /
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer /
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -396,8 +422,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer /
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer /
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -410,8 +438,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ /
-                        GET_REGISTER(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ /
+                        GET_REGISTER(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -424,8 +454,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    f64(GET_REGISTER(pc->b)->m_data.float_ /
-                        CONST_VALUE(pc->c)->m_data.float_)
+                    double_t(
+                        GET_REGISTER(pc->b)->m_data.float_ /
+                        CONST_VALUE(pc->c)->m_data.float_
+                    )
                 )
             );
             DISPATCH();
@@ -434,28 +466,40 @@ void via::detail::execute_impl(VirtualMachine* vm)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, i64(-GET_REGISTER(pc->b)->m_data.integer)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, int64_t(-GET_REGISTER(pc->b)->m_data.integer))
+            );
             DISPATCH();
         }
         CASE(INEGK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, i64(-CONST_VALUE(pc->b)->m_data.integer)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, int64_t(-CONST_VALUE(pc->b)->m_data.integer))
+            );
             DISPATCH();
         }
         CASE(FNEG)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, f64(-GET_REGISTER(pc->b)->m_data.float_)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, double_t(-GET_REGISTER(pc->b)->m_data.float_))
+            );
             DISPATCH();
         }
         CASE(FNEGK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, f64(-CONST_VALUE(pc->b)->m_data.float_)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, double_t(-CONST_VALUE(pc->b)->m_data.float_))
+            );
             DISPATCH();
         }
         CASE(BAND)
@@ -466,8 +510,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer &
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer &
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -480,8 +526,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer &
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer &
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -494,8 +542,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer |
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer |
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -508,8 +558,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer |
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer |
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -522,8 +574,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer ^
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer ^
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -536,8 +590,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer ^
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer ^
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -550,8 +606,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer
-                        << GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer
+                        << GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -564,8 +622,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer
-                        << CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer
+                        << CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -578,8 +638,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer >>
-                        GET_REGISTER(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer >>
+                        GET_REGISTER(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -592,8 +654,10 @@ void via::detail::execute_impl(VirtualMachine* vm)
                 a,
                 Value::create(
                     vm,
-                    i64(GET_REGISTER(pc->b)->m_data.integer >>
-                        CONST_VALUE(pc->c)->m_data.integer)
+                    int64_t(
+                        GET_REGISTER(pc->b)->m_data.integer >>
+                        CONST_VALUE(pc->c)->m_data.integer
+                    )
                 )
             );
             DISPATCH();
@@ -602,14 +666,20 @@ void via::detail::execute_impl(VirtualMachine* vm)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, i64(~GET_REGISTER(pc->b)->m_data.integer)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, int64_t(~GET_REGISTER(pc->b)->m_data.integer))
+            );
             DISPATCH();
         }
         CASE(BNOTK)
         {
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
-            SET_REGISTER(a, Value::create(vm, i64(CONST_VALUE(pc->b)->m_data.integer)));
+            SET_REGISTER(
+                a,
+                Value::create(vm, int64_t(CONST_VALUE(pc->b)->m_data.integer))
+            );
             DISPATCH();
         }
         CASE(AND)
@@ -1343,32 +1413,25 @@ void via::detail::execute_impl(VirtualMachine* vm)
             vm->return_(CONST_VALUE_REF(pc->a));
             DISPATCH();
         }
-        CASE(BTOI)
-        CASE(FTOI)
-        CASE(STOI)
-        CASE(ITOF)
+        CASE(TOINT)
         {
-            CSE_OPERANDS_A();
-            auto val = GET_REGISTER(a)->as_cfloat();
-            [[unlikely]] if (!val.has_value()) {
-                vm->raise("failed to cast to float\n");
-            } else {
-                SET_REGISTER(a, Value::create(vm, *val));
-            }
+            SET_REGISTER(pc->a, GET_REGISTER(pc->b)->as_int());
             DISPATCH();
         }
-        CASE(BTOF)
-        CASE(STOF)
-        CASE(ITOB)
-        CASE(STOB)
-        CASE(ITOS)
-        CASE(FTOS)
-        CASE(BTOS)
-        CASE(ARTOS)
-        CASE(DTTOS)
-        CASE(FNTOS)
+        CASE(TOFLOAT)
         {
-            goto trap__unimplemented_opcode;
+            SET_REGISTER(pc->a, GET_REGISTER(pc->b)->as_float());
+            DISPATCH();
+        }
+        CASE(TOBOOL)
+        {
+            SET_REGISTER(pc->a, GET_REGISTER(pc->b)->as_bool());
+            DISPATCH();
+        }
+        CASE(TOSTRING)
+        {
+            SET_REGISTER(pc->a, GET_REGISTER(pc->b)->as_string());
+            DISPATCH();
         }
         CASE(GETIMPORT)
         {
@@ -1389,11 +1452,11 @@ void via::detail::execute_impl(VirtualMachine* vm)
 
     // clang-format off
 [[maybe_unused]] trap__unknown_opcode:
-    DEBUG_TRAP("trap: unknown opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+    DEBUG_TRAP("trap: unknown opcode 0x{:x} ({})", (uint16_t) pc->op, to_string(pc->op));
 [[maybe_unused]] trap__reserved_opcode:
-    DEBUG_TRAP("trap: reserved opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+    DEBUG_TRAP("trap: reserved opcode 0x{:x} ({})", (uint16_t) pc->op, to_string(pc->op));
 [[maybe_unused]] trap__unimplemented_opcode:
-    DEBUG_TRAP("trap: unimplemented opcode 0x{:x} ({})", (u16) pc->op, to_string(pc->op));
+    DEBUG_TRAP("trap: unimplemented opcode 0x{:x} ({})", (uint16_t) pc->op, to_string(pc->op));
     DISPATCH();
     // clang-format on
 

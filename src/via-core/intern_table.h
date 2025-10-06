@@ -9,10 +9,12 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <via/config.h>
-#include <via/types.h>
 
 namespace via {
 
@@ -28,10 +30,9 @@ struct view<std::string>
     using type = std::string_view;
 };
 
-template <typename T, typename Id = u64>
+template <typename T, typename Id = uint64_t>
 class InternTable
 {
-
   public:
     using view_type = typename view<T>::type;
 

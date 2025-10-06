@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include <via/config.h>
-#include <via/types.h>
 #include "module/symbol.h"
 #include "sema/const_value.h"
 #include "sema/type.h"

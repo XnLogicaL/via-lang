@@ -10,9 +10,9 @@
 #pragma once
 
 #include <bitset>
+#include <cstddef>
 #include <limits>
 #include <via/config.h>
-#include <via/types.h>
 #include "debug.h"
 #include "diagnostics.h"
 
@@ -33,12 +33,12 @@ class RegisterState
     {}
 
   public:
-    inline u16 alloc() noexcept
+    inline uint16_t alloc() noexcept
     {
         for (size_t i = 0; i < config::REGISTER_COUNT; ++i) {
             if (!m_buffer.test(i)) { // free register
                 m_buffer.set(i);     // mark as occupied
-                return static_cast<u16>(i);
+                return static_cast<uint16_t>(i);
             }
         }
 
@@ -49,7 +49,7 @@ class RegisterState
         return 0;
     }
 
-    inline void free(u16 reg) noexcept
+    inline void free(uint16_t reg) noexcept
     {
         debug::require(
             reg <= config::REGISTER_COUNT,

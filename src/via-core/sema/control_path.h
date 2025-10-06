@@ -10,7 +10,6 @@
 #pragma once
 
 #include <via/config.h>
-#include <via/types.h>
 #include "ir/ir.h"
 
 namespace via {

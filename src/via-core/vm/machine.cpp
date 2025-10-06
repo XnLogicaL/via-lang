@@ -21,17 +21,17 @@
 using Vk = via::ValueKind;
 
 template <>
-via::InterruptAction
-via::detail::handle_interrupt_impl<via::Interrupt::NONE>(VirtualMachine* vm)
+via::IntAction via::detail::handle_interrupt_impl<via::Interrupt::NONE>(VirtualMachine* vm
+)
 {
     debug::bug("attempt to handle interrupt NONE");
 }
 
 template <>
-via::InterruptAction
+via::IntAction
 via::detail::handle_interrupt_impl<via::Interrupt::ERROR>(VirtualMachine* vm)
 {
-    Closure* handler = unwind_stack(vm, [&](auto, auto, auto flags, auto) {
+    Closure* handler = vm->unwind_stack([&](auto, auto, auto flags, auto) {
         return flags & CallFlags::PROTECT;
     });
 
@@ -39,37 +39,9 @@ via::detail::handle_interrupt_impl<via::Interrupt::ERROR>(VirtualMachine* vm)
         auto* error = reinterpret_cast<ErrorInt*>(vm->m_int_arg);
         (*error->out) << error->msg;
 
-        return InterruptAction::EXIT;
+        return IntAction::EXIT;
     }
-    return InterruptAction::RESUME;
-}
-
-via::Closure* via::detail::unwind_stack(
-    VirtualMachine* vm,
-    std::function<bool(
-        const uintptr_t* fp,
-        const Instruction* pc,
-        const CallFlags flags,
-        ValueRef callee
-    )> pred
-)
-{
-    for (uintptr_t* fp = vm->m_fp; fp != nullptr;) {
-        vm->m_stack.jump(fp + 1);
-
-        auto* this_fp = reinterpret_cast<uintptr_t*>(vm->m_stack.pop());
-        auto* this_pc = reinterpret_cast<const Instruction*>(vm->m_stack.pop());
-        auto flags = static_cast<CallFlags>(vm->m_stack.pop());
-        auto* callee = reinterpret_cast<Value*>(vm->m_stack.pop());
-
-        if (pred(this_fp, this_pc, flags, ValueRef(vm, callee))) {
-            return callee->function_value();
-        } else {
-            fp = this_fp;
-            callee->unref();
-        }
-    }
-    return nullptr;
+    return IntAction::RESUME;
 }
 
 via::Snapshot::Snapshot(VirtualMachine* vm) noexcept
@@ -87,7 +59,7 @@ std::string via::Snapshot::to_string() const noexcept
     return oss.str();
 }
 
-via::InterruptAction via::VirtualMachine::handle_interrupt()
+via::IntAction via::VirtualMachine::handle_interrupt()
 {
 #define DEFINE_INTERRUPT_HANDLER(INT)                                                    \
     case Interrupt::INT:                                                                 \
@@ -103,15 +75,40 @@ via::InterruptAction via::VirtualMachine::handle_interrupt()
         break;
     }
 
-    return InterruptAction::RESUME;
+    return IntAction::RESUME;
 #undef DEFINE_INTERRUPT_HANDLER
+}
+
+via::Closure* via::VirtualMachine::unwind_stack(std::function<bool(
+                                                    const uintptr_t* fp,
+                                                    const Instruction* pc,
+                                                    const CallFlags flags,
+                                                    ValueRef callee
+                                                )> pred)
+{
+    for (uintptr_t* fp = m_fp; fp != nullptr;) {
+        m_stack.jump(fp + 1);
+
+        auto* this_fp = reinterpret_cast<uintptr_t*>(m_stack.pop());
+        auto* this_pc = reinterpret_cast<const Instruction*>(m_stack.pop());
+        auto flags = static_cast<CallFlags>(m_stack.pop());
+        auto* callee = reinterpret_cast<Value*>(m_stack.pop());
+
+        if (pred(this_fp, this_pc, flags, ValueRef(this, callee))) {
+            return callee->function_value();
+        } else {
+            fp = this_fp;
+            callee->unref();
+        }
+    }
+    return nullptr;
 }
 
 via::ValueRef via::VirtualMachine::get_import(SymbolId module_id, SymbolId key_id)
 {
-    ModuleManager* manager = m_module->get_manager();
+    auto& manager = m_module->manager();
 
-    if (auto module = manager->get_module_by_name(module_id)) {
+    if (auto module = manager.get_module_by_name(module_id)) {
         if (auto def = module->lookup(key_id)) {
             if TRY_COERCE (const FunctionDef, fn_def, *def) {
                 size_t argc = fn_def->parms.size();
@@ -146,7 +143,7 @@ via::ValueRef via::VirtualMachine::get_local(size_t sp)
     return ValueRef(this, (Value*) m_stack.at(sp));
 }
 
-via::ValueRef via::VirtualMachine::get_constant(u16 id)
+via::ValueRef via::VirtualMachine::get_constant(uint16_t id)
 {
     auto cv = m_exe->constants().at(id); // Get the constant value
     auto* val = Value::create(this, cv); // Create a new value from the constant

@@ -16,3 +16,6 @@
 [submodule "thirdparty/replxx"]
 	path = thirdparty/replxx
 	url = "https://github.com/AmokHuginnsson/replxx.git"
+[submodule "src/via-lib/vendor/thirdparty/raylib"]
+	path = src/via-lib/vendor/thirdparty/raylib
+	url = https://github.com/raysan5/raylib.git

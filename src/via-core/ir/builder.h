@@ -9,19 +9,17 @@
 
 #pragma once
 
+#include <cstddef>
 #include <sstream>
 #include <string>
 #include <via/config.h>
-#include <via/types.h>
 #include "ast/ast.h"
 #include "ir.h"
 #include "module/manager.h"
 #include "module/module.h"
 #include "sema/ir_local.h"
-#include "sema/stack.h"
 #include "sema/type_context.h"
-#include "support/ansi.h"
-#include "support/type_traits.h" // derived_from
+#include "support/type_traits.h"
 
 namespace via {
 
@@ -66,10 +64,10 @@ class IRBuilder final
     IRBuilder(via::Module* module, const SyntaxTree& ast, DiagContext& diags)
         : m_module(module),
           m_ast(ast),
-          m_alloc(module->get_allocator()),
+          m_alloc(module->allocator()),
           m_diags(diags),
-          m_type_ctx(module->get_manager()->get_type_context()),
-          m_symbol_table(module->get_manager()->get_symbol_table())
+          m_type_ctx(module->manager().type_context()),
+          m_symbol_table(module->manager().symbol_table())
     {}
 
   public:

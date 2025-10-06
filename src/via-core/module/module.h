@@ -9,12 +9,13 @@
 
 #pragma once
 
+#include <cstddef>
 #include <expected>
+#include <filesystem>
 #include <optional>
 #include <parser/parser.h>
 #include <string>
 #include <via/config.h>
-#include <via/types.h>
 #include "defs.h"
 #include "lexer/location.h"
 #include "vm/executable.h"
@@ -23,7 +24,7 @@
 #define VIA_MODULE_ENTRY_PREFIX viainit_
 
 #define VIA_MODULE_ENTRY(ID, MANAGER)                                                    \
-    VIA_EXPORT extern "C" const via::NativeModuleInfo*                                   \
+    extern "C" VIA_EXPORT const via::NativeModuleInfo*                                   \
     EXPAND_AND_PASTE(VIA_MODULE_ENTRY_PREFIX, ID)(via::ModuleManager * MANAGER)
 
 #define VIA_MODULE_FUNCTION(ID, VM, CALL_INFO)                                           \
@@ -59,13 +60,13 @@ class ModuleManager;
 
 using NativeModuleInitCallback = NativeModuleInfo* (*) (ModuleManager*);
 
-enum class ModuleKind : u8
+enum class ModuleKind : uint8_t
 {
     SOURCE,
     NATIVE,
 };
 
-enum class ModulePerms : u32
+enum class ModulePerms : uint32_t
 {
     NONE = 0,
     FREAD = 1 << 0,
@@ -76,7 +77,7 @@ enum class ModulePerms : u32
     ALL = 0xFFFFFFFF,
 };
 
-enum class ModuleFlags : u32
+enum class ModuleFlags : uint32_t
 {
     NONE = 0,
     DUMP_TTREE = 1 << 0,
@@ -95,21 +96,25 @@ class Module final
     friend class ModuleManager;
 
   public:
+    explicit Module(ModuleManager& manager)
+        : m_manager(manager)
+    {}
+
     static std::expected<Module*, std::string> load_source_file(
-        ModuleManager* manager,
+        ModuleManager& manager,
         Module* importee,
         const char* name,
-        const fs::path& path,
+        const std::filesystem::path& path,
         const ast::StmtImport* decl,
         const ModulePerms perms = ModulePerms::NONE,
         const ModuleFlags flags = ModuleFlags::NONE
     );
 
     static std::expected<Module*, std::string> load_native_object(
-        ModuleManager* manager,
+        ModuleManager& manager,
         Module* importee,
         const char* name,
-        const fs::path& path,
+        const std::filesystem::path& path,
         const ast::StmtImport* decl,
         const ModulePerms perms = ModulePerms::NONE,
         const ModuleFlags flags = ModuleFlags::NONE
@@ -118,10 +123,10 @@ class Module final
   public:
     auto name() const { return m_name; }
     auto kind() const { return m_kind; }
-    auto& get_source() const { return m_source; }
-    auto& get_allocator() { return m_alloc; }
-    auto* get_manager() const { return m_manager; }
-    auto* get_ast_decl() const { return m_ast_decl; }
+    auto& source() const { return m_source; }
+    auto& allocator() { return m_alloc; }
+    auto& manager() const { return m_manager; }
+    auto ast_decl() const { return m_ast_decl; }
 
     std::optional<const Def*> lookup(SymbolId symbol);
     std::expected<Module*, std::string>
@@ -141,13 +146,13 @@ class Module final
     ModuleFlags m_flags;
     std::string m_name;
     std::string m_source;
-    fs::path m_path;
+    std::filesystem::path m_path;
     IRTree m_ir;
     Executable* m_exe;
     std::vector<Module*> m_imports;
     std::unordered_map<SymbolId, const Def*> m_defs;
     Module* m_importee = nullptr;
-    ModuleManager* m_manager = nullptr;
+    ModuleManager& m_manager;
     const ast::StmtImport* m_ast_decl = nullptr;
 };
 

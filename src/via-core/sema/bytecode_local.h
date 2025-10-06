@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "module/symbol.h"
 
 namespace via {
@@ -21,11 +21,11 @@ class BytecodeLocal final
   public:
     struct Ref
     {
-        u16 id;
+        uint16_t id;
         BytecodeLocal* local;
 
         Ref() = default;
-        Ref(u16 id, BytecodeLocal* local) noexcept
+        Ref(uint16_t id, BytecodeLocal* local) noexcept
             : id(id),
               local(local)
         {}

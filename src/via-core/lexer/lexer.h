@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 #include <via/config.h>
-#include <via/types.h>
 #include "support/memory.h"
 #include "token.h"
 

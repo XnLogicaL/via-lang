@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 #include <via/config.h>
-#include <via/types.h>
 #include "lexer/location.h"
 #include "lexer/token.h"
 

@@ -8,7 +8,6 @@
 ** ===================================================== */
 
 #include "executable.h"
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <unordered_map>
@@ -20,12 +19,11 @@
 #include "sema/type.h"
 #include "sema/type_context.h"
 #include "support/ansi.h"
-#include "support/math.h"
 #include "vm/instruction.h"
 
 namespace ir = via::ir;
 
-void via::detail::set_null_dst_trap(Executable& exe, const std::optional<u16>& dst)
+void via::detail::set_null_dst_trap(Executable& exe, const std::optional<uint16_t>& dst)
     noexcept
 {
     if (!dst.has_value()) {
@@ -37,19 +35,19 @@ template <>
 void via::detail::ir_lower_expr<ir::ExprConstant>(
     Executable& exe,
     const ir::ExprConstant* ir_expr_constant,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
     set_null_dst_trap(exe, dst);
     exe.push_constant(ir_expr_constant->value);
-    exe.push_instruction(OpCode::LOADK, {*dst, static_cast<u16>(exe.constant_id())});
+    exe.push_instruction(OpCode::LOADK, {*dst, static_cast<uint16_t>(exe.constant_id())});
 }
 
 template <>
 void via::detail::ir_lower_expr<ir::ExprSymbol>(
     Executable& exe,
     const ir::ExprSymbol* ir_expr_symbol,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
     set_null_dst_trap(exe, dst);
@@ -64,7 +62,7 @@ template <>
 void via::detail::ir_lower_expr<ir::ExprModuleAccess>(
     Executable& exe,
     const ir::ExprModuleAccess* ir_expr_module_access,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
     set_null_dst_trap(exe, dst);
@@ -73,8 +71,8 @@ void via::detail::ir_lower_expr<ir::ExprModuleAccess>(
         OpCode::GETIMPORT,
         {
             *dst,
-            static_cast<u16>(ir_expr_module_access->mod_id),
-            static_cast<u16>(ir_expr_module_access->key_id),
+            static_cast<uint16_t>(ir_expr_module_access->mod_id),
+            static_cast<uint16_t>(ir_expr_module_access->key_id),
         }
     );
 }
@@ -83,48 +81,51 @@ template <>
 void via::detail::ir_lower_expr<ir::ExprBinary>(
     Executable& exe,
     const ir::ExprBinary* ir_expr_binary,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
     set_null_dst_trap(exe, dst);
 
-    u16 opid = static_cast<u16>(ir_expr_binary->op);
-    u16 rlhs = exe.m_reg_state.alloc(), rrhs = exe.m_reg_state.alloc();
+    uint16_t opid = static_cast<uint16_t>(ir_expr_binary->op);
+    uint16_t rlhs = exe.m_reg_state.alloc(), rrhs = exe.m_reg_state.alloc();
 
     exe.lower_expr(ir_expr_binary->lhs, rlhs);
     exe.lower_expr(ir_expr_binary->rhs, rrhs);
 
-    if (opid >= static_cast<u16>(BinaryOp::ADD) &&
-        opid <= static_cast<u16>(BinaryOp::MOD)) {
+    if (opid >= static_cast<uint16_t>(BinaryOp::ADD) &&
+        opid <= static_cast<uint16_t>(BinaryOp::MOD)) {
         /* TODO: Check if rhs is constexpr, in which case increment base by one
          * for K instructions*/
-        u16 base = static_cast<u16>(OpCode::IADD) + static_cast<u16>(ir_expr_binary->op);
+        uint16_t base = static_cast<uint16_t>(OpCode::IADD) +
+                        static_cast<uint16_t>(ir_expr_binary->op);
 
         if (ir_expr_binary->lhs->type->is_integral()) {
             if (ir_expr_binary->rhs->type->is_float()) {
                 base += 2; // FP mode
-                exe.push_instruction(OpCode::ITOF, {rlhs, rlhs});
+                exe.push_instruction(OpCode::TOFLOAT, {rlhs, rlhs});
             }
         } else {
             base += 2; // FP mode
 
             if (ir_expr_binary->rhs->type->is_integral()) {
-                exe.push_instruction(OpCode::ITOF, {rrhs, rrhs});
+                exe.push_instruction(OpCode::TOFLOAT, {rrhs, rrhs});
             }
         }
 
         exe.push_instruction(static_cast<OpCode>(base), {*dst, rlhs, rrhs});
-    } else if (opid >= static_cast<u16>(BinaryOp::AND) &&
-               opid <= static_cast<u16>(BinaryOp::OR)) {
+    } else if (opid >= static_cast<uint16_t>(BinaryOp::AND) &&
+               opid <= static_cast<uint16_t>(BinaryOp::OR)) {
         /* TODO: Check if rhs is constexpr, in which case increment base by one
          * for K instructions*/
-        u16 base = static_cast<u16>(OpCode::AND) + static_cast<u16>(ir_expr_binary->op);
+        uint16_t base = static_cast<uint16_t>(OpCode::AND) +
+                        static_cast<uint16_t>(ir_expr_binary->op);
         exe.push_instruction(static_cast<OpCode>(base), {*dst, rlhs, rrhs});
-    } else if (opid >= static_cast<u16>(BinaryOp::BAND) &&
-               opid <= static_cast<u16>(BinaryOp::BSHR)) {
+    } else if (opid >= static_cast<uint16_t>(BinaryOp::BAND) &&
+               opid <= static_cast<uint16_t>(BinaryOp::BSHR)) {
         /* TODO: Check if rhs is constexpr, in which case increment base by one
          * for K instructions*/
-        u16 base = static_cast<u16>(OpCode::BAND) + static_cast<u16>(ir_expr_binary->op);
+        uint16_t base = static_cast<uint16_t>(OpCode::BAND) +
+                        static_cast<uint16_t>(ir_expr_binary->op);
         exe.push_instruction(static_cast<OpCode>(base), {*dst, rlhs, rrhs});
     }
 
@@ -136,10 +137,10 @@ template <>
 void via::detail::ir_lower_expr<ir::ExprCall>(
     Executable& exe,
     const ir::ExprCall* ir_expr_call,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
-    u16 callee = exe.m_reg_state.alloc();
+    uint16_t callee = exe.m_reg_state.alloc();
     auto args = ir_expr_call->args;
     std::reverse(args.begin(), args.end());
 
@@ -158,61 +159,11 @@ void via::detail::ir_lower_expr<ir::ExprCall>(
     }
 }
 
-struct BuiltinCastKey
-{
-    const via::sema::Type *from, *to;
-};
-
-template <>
-struct std::hash<BuiltinCastKey>
-{
-    size_t operator()(const BuiltinCastKey& key) const noexcept
-    {
-        return via::hash_all(via::hash_ptr(key.from), via::hash_ptr(key.to));
-    }
-};
-
-template <>
-struct std::equal_to<BuiltinCastKey>
-{
-    size_t operator()(const BuiltinCastKey& lhs, const BuiltinCastKey& rhs) const noexcept
-    {
-        return lhs.from == rhs.from && lhs.to == rhs.to;
-    }
-};
-
-static std::unordered_map<BuiltinCastKey, via::OpCode>
-get_builtin_cast_rules(via::sema::TypeContext& type_ctx) noexcept
-{
-#define DEFINE_RULE(FROM, TO, OPCODE)                                                    \
-    {                                                                                    \
-        {.from = type_ctx.get_builtin(via::sema::BuiltinKind::FROM),                     \
-         .to = type_ctx.get_builtin(via::sema::BuiltinKind::TO)},                        \
-            via::OpCode::OPCODE                                                          \
-    }
-
-    return {
-        DEFINE_RULE(BOOL, INT, BTOI),
-        DEFINE_RULE(FLOAT, INT, FTOI),
-        DEFINE_RULE(STRING, INT, STOI),
-        DEFINE_RULE(INT, FLOAT, ITOF),
-        DEFINE_RULE(BOOL, FLOAT, BTOF),
-        DEFINE_RULE(STRING, FLOAT, STOF),
-        DEFINE_RULE(INT, BOOL, ITOB),
-        DEFINE_RULE(STRING, BOOL, STOB),
-        DEFINE_RULE(INT, STRING, ITOS),
-        DEFINE_RULE(FLOAT, STRING, FTOS),
-        DEFINE_RULE(BOOL, STRING, BTOS),
-    };
-
-#undef DEFINE_RULE
-}
-
 template <>
 void via::detail::ir_lower_expr<ir::ExprCast>(
     Executable& exe,
     const ir::ExprCast* ir_expr_cast,
-    std::optional<u16> dst
+    std::optional<uint16_t> dst
 ) noexcept
 {
     using enum sema::BuiltinKind;
@@ -220,19 +171,25 @@ void via::detail::ir_lower_expr<ir::ExprCast>(
     set_null_dst_trap(exe, dst);
     exe.lower_expr(ir_expr_cast->expr, dst);
 
+    if (ir_expr_cast->cast == ir_expr_cast->expr->type) {
+        // Redundant cast
+        return;
+    }
+
+    auto& type_ctx = exe.m_module->manager().type_context();
+
     if TRY_COERCE (const sema::BuiltinType, cast_bultin_type, ir_expr_cast->cast) {
         if TRY_COERCE (const sema::BuiltinType,
                        expr_builtin_type,
                        ir_expr_cast->expr->type) {
-            static const auto builtin_cast_rules =
-                get_builtin_cast_rules(exe.m_module->get_manager()->get_type_context());
-
-            BuiltinCastKey key{
-                .from = expr_builtin_type,
-                .to = cast_bultin_type,
+            static std::unordered_map<const sema::Type*, OpCode> cast_rules = {
+                {type_ctx.get_builtin(sema::BuiltinKind::INT), OpCode::TOINT},
+                {type_ctx.get_builtin(sema::BuiltinKind::FLOAT), OpCode::TOFLOAT},
+                {type_ctx.get_builtin(sema::BuiltinKind::BOOL), OpCode::TOBOOL},
+                {type_ctx.get_builtin(sema::BuiltinKind::STRING), OpCode::TOSTRING},
             };
 
-            if (auto it = builtin_cast_rules.find(key); it != builtin_cast_rules.end()) {
+            if (auto it = cast_rules.find(cast_bultin_type); it != cast_rules.end()) {
                 exe.push_instruction(it->second, {*dst, *dst});
             } else {
                 debug::bug("unmapped builtin cast directive");
@@ -241,7 +198,8 @@ void via::detail::ir_lower_expr<ir::ExprCast>(
     }
 }
 
-void via::Executable::lower_expr(const ir::Expr* expr, std::optional<u16> dst) noexcept
+void via::Executable::lower_expr(const ir::Expr* expr, std::optional<uint16_t> dst)
+    noexcept
 {
 #define VISIT_EXPR(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, expr)                                             \
@@ -261,7 +219,7 @@ void via::Executable::lower_expr(const ir::Expr* expr, std::optional<u16> dst) n
     VISIT_EXPR(ir::ExprTuple);
     VISIT_EXPR(ir::ExprLambda);
 
-    debug::unimplemented(std::format("lower_expr({}, u16)", VIA_TYPENAME(*expr)));
+    debug::unimplemented(std::format("lower_expr({}, uint16_t)", VIA_TYPENAME(*expr)));
 #undef VISIT_EXPR
 }
 
@@ -340,7 +298,7 @@ via::Executable* via::Executable::build_from_ir(
     ExeFlags flags
 ) noexcept
 {
-    auto& alloc = module->get_allocator();
+    auto& alloc = module->allocator();
     auto* exe = alloc.emplace<Executable>(diags);
     exe->m_module = module;
     exe->m_flags = flags;
@@ -357,19 +315,19 @@ via::Executable* via::Executable::build_from_ir(
 void via::Executable::lower_jumps() noexcept
 {
     for (size_t pc = 0; Instruction & instr: m_bytecode) {
-        auto opid = static_cast<u16>(instr.op);
-        if (opid >= static_cast<u16>(OpCode::JMP) &&
-            opid <= static_cast<u16>(OpCode::JMPIFX)) {
+        auto opid = static_cast<uint16_t>(instr.op);
+        if (opid >= static_cast<uint16_t>(OpCode::JMP) &&
+            opid <= static_cast<uint16_t>(OpCode::JMPIFX)) {
             auto address = m_labels[instr.a];
             auto offset = static_cast<ssize_t>(address) - static_cast<ssize_t>(pc);
 
             if (offset < 0) {
                 // backward jump → bump opcode to BACK variant
                 instr.op = static_cast<OpCode>(opid + 3);
-                instr.a = static_cast<u32>(-offset);
+                instr.a = static_cast<uint32_t>(-offset);
             } else {
                 // forward jump → keep opcode
-                instr.a = static_cast<u32>(offset);
+                instr.a = static_cast<uint32_t>(offset);
             }
         }
         ++pc;

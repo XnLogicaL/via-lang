@@ -10,8 +10,9 @@
 #pragma once
 
 #include <via/config.h>
-#include <via/types.h>
 #include "ir/ir.h"
+#include "module/symbol.h"
+#include "sema/const_value.h"
 #include "sema/type.h"
 #include "support/utility.h"
 #include "vm/closure.h"
@@ -49,24 +50,35 @@ struct DefParm
 {
     SymbolId symbol;
     const sema::Type* type;
+    sema::ConstValue value;
+
+    explicit DefParm(
+        ModuleManager& manager,
+        const char* name,
+        const sema::Type* type,
+        sema::ConstValue&& init = sema::ConstValue{}
+    ) noexcept;
 };
 
 struct DefTableEntry
 {
     SymbolId id;
     const Def* def;
+
+    explicit DefTableEntry(ModuleManager& manager, const char* name, const Def* def)
+        noexcept;
 };
 
 using DefTable = DefTableEntry[];
 
 struct Def
 {
-    virtual SymbolId get_identity() const = 0;
+    virtual SymbolId identity() const = 0;
     virtual std::string to_string() const = 0;
 
-    static Def* from(ScopedAllocator& alloc, const ir::Stmt* node);
+    static Def* from(ModuleManager& manager, const ir::Stmt* node);
     static Def* function(
-        ScopedAllocator& alloc,
+        ModuleManager& manager,
         const NativeCallback callback,
         const sema::Type* ret_type,
         std::initializer_list<DefParm> parms
@@ -81,7 +93,7 @@ struct FunctionDef: public Def
     std::vector<DefParm> parms;
     const sema::Type* ret;
 
-    SymbolId get_identity() const override { return symbol; }
+    SymbolId identity() const override { return symbol; }
     std::string to_string() const override;
 };
 

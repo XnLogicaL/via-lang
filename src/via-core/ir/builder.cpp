@@ -8,9 +8,11 @@
 ** ===================================================== */
 
 #include "builder.h"
+#include <cpptrace/basic.hpp>
 #include <format>
 #include <vector>
 #include "ast/ast.h"
+#include "debug.h"
 #include "diagnostics.h"
 #include "ir/ir.h"
 #include "module/defs.h"
@@ -175,15 +177,6 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
             return builder.m_type_ctx.get_function(func_decl->ret, std::move(parms));
         }
     }
-
-    builder.m_diags.report<Level::ERROR>(
-        ast_expr_symbol->loc,
-        std::format("Use of undefined symbol '{}'", symbol),
-        Footnote(
-            FootnoteKind::HINT,
-            std::format("did you mistype '{}' or forget to declare it?", symbol)
-        )
-    );
     return nullptr;
 }
 
@@ -194,10 +187,10 @@ const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
 ) noexcept
 {
     if TRY_COERCE (const ast::ExprSymbol, symbol, ast_expr_st_access->root) {
-        auto manager = builder.m_module->get_manager();
+        auto& manager = builder.m_module->manager();
         auto low = builder.intern_symbol(symbol->symbol->to_string());
 
-        if (auto module = manager->get_module_by_name(low)) {
+        if (auto module = manager.get_module_by_name(low)) {
             auto high = builder.intern_symbol(ast_expr_st_access->index->to_string());
 
             if (auto def = module->lookup(high)) {
@@ -216,7 +209,6 @@ const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
             }
         }
     }
-
     return nullptr;
 }
 
@@ -226,25 +218,10 @@ const sema::Type* via::detail::ast_type_of<ast::ExprUnary>(
     const ast::ExprUnary* ast_expr_unary
 ) noexcept
 {
-    auto* inner_type = builder.type_of(ast_expr_unary->expr);
-    UnaryOp op = to_unary_op(ast_expr_unary->op->kind);
-    UnaryOpInfo info = UNARY_OP_TABLE[static_cast<u8>(op)];
-
-    if (!info.is_valid(inner_type)) {
-        builder.m_diags.report<Level::ERROR>(
-            ast_expr_unary->loc,
-            std::format(
-                "Invalid unary operation '{}' ({}) on "
-                "incompatible type '{}'",
-                ast_expr_unary->op->to_string(),
-                to_string(op),
-                builder.dump_type(inner_type)
-            )
-        );
-        return nullptr;
-    }
-
-    return info.get_result(&builder.m_type_ctx, inner_type);
+    auto op = to_unary_op(ast_expr_unary->op->kind);
+    auto info = UNARY_OP_TABLE[static_cast<uint8_t>(op)];
+    auto* type = builder.type_of(ast_expr_unary->expr);
+    return info.is_valid(type) ? info.get_result(&builder.m_type_ctx, type) : nullptr;
 }
 
 template <>
@@ -253,29 +230,12 @@ const sema::Type* via::detail::ast_type_of<ast::ExprBinary>(
     const ast::ExprBinary* ast_expr_binary
 ) noexcept
 {
-    auto* lhs = builder.type_of(ast_expr_binary->lhs);
-    auto* rhs = builder.type_of(ast_expr_binary->rhs);
-
-    BinaryOp op = to_binary_op(ast_expr_binary->op->kind);
-    BinaryOpInfo info = BINARY_OP_TABLE[static_cast<u8>(op)];
-
-    if (!info.is_valid(lhs, rhs)) {
-        builder.m_diags.report<Level::ERROR>(
-            ast_expr_binary->loc,
-            std::format(
-                "Invalid binary operation '{}' ({}) on "
-                "incompatible types '{}' (LEFT) "
-                "'{}' (RIGHT)",
-                ast_expr_binary->op->to_string(),
-                to_string(op),
-                lhs->to_string(),
-                rhs->to_string()
-            )
-        );
-        return nullptr;
-    }
-
-    return info.get_result(&builder.m_type_ctx, lhs, rhs);
+    auto op = to_binary_op(ast_expr_binary->op->kind);
+    auto info = BINARY_OP_TABLE[static_cast<uint8_t>(op)];
+    auto *lhs = builder.type_of(ast_expr_binary->lhs),
+         *rhs = builder.type_of(ast_expr_binary->rhs);
+    return info.is_valid(lhs, rhs) ? info.get_result(&builder.m_type_ctx, lhs, rhs)
+                                   : nullptr;
 }
 
 template <>
@@ -284,76 +244,10 @@ const sema::Type* via::detail::ast_type_of<ast::ExprCall>(
     const ast::ExprCall* ast_expr_call
 ) noexcept
 {
-    const sema::Type* callee = builder.type_of(ast_expr_call->lval);
-
+    auto* callee = builder.type_of(ast_expr_call->lval);
     if TRY_COERCE (const sema::FuncType, func, callee) {
-        const size_t arg_count = ast_expr_call->args.size();
-        const size_t parm_count = func->params.size();
-
-        for (size_t arg_id = 0; const sema::Type* parm_type: func->params) {
-            if (arg_id >= arg_count) {
-                builder.m_diags.report<Level::ERROR>(
-                    {ast_expr_call->loc.end - 1, ast_expr_call->loc.end},
-                    std::format(
-                        "In function call to '{}': missing required argument for "
-                        "parameter #{}",
-                        builder.dump_expr(ast_expr_call->lval),
-                        arg_id
-                    )
-                );
-                continue;
-            }
-
-            auto* arg = ast_expr_call->args.at(arg_id);
-            auto* arg_type = builder.type_of(arg);
-            if (arg_type != parm_type) {
-                builder.m_diags.report<Level::ERROR>(
-                    arg->loc,
-                    std::format(
-                        "In function call to '{}': argument #{} of type '{}' is "
-                        "incompatible with parameter that expects type '{}'",
-                        builder.dump_expr(ast_expr_call->lval),
-                        arg_id,
-                        builder.dump_type(arg_type),
-                        builder.dump_type(parm_type)
-                    ),
-                    arg_type->is_castable(parm_type)
-                        ? Footnote{
-                            FootnoteKind::NOTE,
-                            std::format(
-                                "Conversion from '{}' to '{}' possible with explicit cast",
-                                builder.dump_type(arg_type),
-                                builder.dump_type(parm_type)
-                            )
-                        }
-                        : Footnote{}
-                );
-            }
-        }
-
-        if (arg_count > parm_count) {
-            auto first = ast_expr_call->args[parm_count];
-            auto last = ast_expr_call->args.back();
-
-            builder.m_diags.report<Level::ERROR>(
-                {first->loc.begin, last->loc.end},
-                std::format(
-                    "In function call to '{}': expected {} arguments, got {}",
-                    builder.dump_expr(ast_expr_call->lval),
-                    parm_count,
-                    arg_count
-                ),
-                {FootnoteKind::SUGGESTION, "Remove argument(s)"}
-            );
-        }
-
         return func->result;
     }
-
-    builder.m_diags.report<Level::ERROR>(
-        ast_expr_call->loc,
-        std::format("Attempt to call non-function type '{}'", builder.dump_type(callee))
-    );
     return nullptr;
 }
 
@@ -363,20 +257,7 @@ const sema::Type* via::detail::ast_type_of<ast::ExprCast>(
     const ast::ExprCast* ast_expr_cast
 ) noexcept
 {
-    const sema::Type* expr_type = builder.type_of(ast_expr_cast->expr);
-    const sema::Type* cast_type = builder.type_of(ast_expr_cast->type);
-    if (!expr_type->is_castable(cast_type)) {
-        builder.m_diags.report<Level::ERROR>(
-            ast_expr_cast->expr->loc,
-            std::format(
-                "Expression of type '{}' cannot be casted into type '{}'",
-                builder.dump_type(expr_type),
-                builder.dump_type(cast_type)
-            )
-        );
-    }
-
-    return cast_type;
+    return builder.type_of(ast_expr_cast->type);
 }
 
 template <>
@@ -385,21 +266,9 @@ const sema::Type* via::detail::ast_type_of<ast::ExprTernary>(
     const ast::ExprTernary* ast_expr_ternary
 ) noexcept
 {
-    const sema::Type* lhs = builder.type_of(ast_expr_ternary->lhs);
-    const sema::Type* rhs = builder.type_of(ast_expr_ternary->rhs);
-    if (lhs == rhs) {
-        return lhs;
-    }
-
-    builder.m_diags.report<Level::ERROR>(
-        ast_expr_ternary->loc,
-        std::format(
-            "Results of ternary expression '{}' and '{}' do not match",
-            lhs->to_string(),
-            rhs->to_string()
-        )
-    );
-    return nullptr;
+    auto *lhs = builder.type_of(ast_expr_ternary->lhs),
+         *rhs = builder.type_of(ast_expr_ternary->rhs);
+    return lhs == rhs ? lhs : nullptr;
 }
 
 template <>
@@ -483,9 +352,13 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprLiteral>(
     const ast::ExprLiteral* ast_literal_expr
 ) noexcept
 {
+    auto const_value = sema::ConstValue::from_token(*ast_literal_expr->tok);
+
+    debug::require(const_value.has_value());
+
     auto* constant_expr = builder.m_alloc.emplace<ir::ExprConstant>();
     constant_expr->loc = ast_literal_expr->loc;
-    constant_expr->value = *sema::ConstValue::from_token(*ast_literal_expr->tok);
+    constant_expr->value = *const_value;
     constant_expr->type = ast_type_of(builder, ast_literal_expr);
     return constant_expr;
 }
@@ -502,6 +375,17 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprSymbol>(
     ast_expr_symbol->loc = ast_symbol_expr->loc;
     ast_expr_symbol->symbol = builder.m_symbol_table.intern(symbol);
     ast_expr_symbol->type = ast_type_of(builder, ast_symbol_expr);
+
+    if (!frame.get_local(ast_expr_symbol->symbol).has_value()) {
+        builder.m_diags.report<Level::ERROR>(
+            ast_expr_symbol->loc,
+            std::format("Use of undefined symbol '{}'", symbol),
+            Footnote(
+                FootnoteKind::HINT,
+                std::format("did you mistype '{}' or forget to declare it?", symbol)
+            )
+        );
+    }
     return ast_expr_symbol;
 }
 
@@ -513,11 +397,11 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprStaticAccess>(
 {
     // Check for module thing
     if TRY_COERCE (const ast::ExprSymbol, root_symbol, ast_stc_access_expr->root) {
-        ModuleManager* manager = builder.m_module->get_manager();
-        SymbolId high = builder.intern_symbol(root_symbol->symbol->to_string());
+        auto& manager = builder.m_module->manager();
+        auto high = builder.intern_symbol(root_symbol->symbol->to_string());
 
-        if (auto* module = manager->get_module_by_name(high)) {
-            SymbolId low = builder.intern_symbol(ast_stc_access_expr->index->to_string());
+        if (auto* module = manager.get_module_by_name(high)) {
+            auto low = builder.intern_symbol(ast_stc_access_expr->index->to_string());
 
             if (auto def = module->lookup(low)) {
                 auto* maccess = builder.m_alloc.emplace<ir::ExprModuleAccess>();
@@ -557,14 +441,32 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprDynAccess>(
 template <>
 const ir::Expr* via::detail::ast_lower_expr<ast::ExprUnary>(
     IRBuilder& builder,
-    const ast::ExprUnary* ast_unary_expr
+    const ast::ExprUnary* ast_expr_unary
 ) noexcept
 {
     auto* unary_expr = builder.m_alloc.emplace<ir::ExprUnary>();
-    unary_expr->op = to_unary_op(ast_unary_expr->op->kind);
-    unary_expr->type = ast_type_of(builder, ast_unary_expr);
-    unary_expr->expr = builder.lower_expr(ast_unary_expr->expr);
-    unary_expr->loc = ast_unary_expr->loc;
+    unary_expr->op = to_unary_op(ast_expr_unary->op->kind);
+    unary_expr->expr = builder.lower_expr(ast_expr_unary->expr);
+    unary_expr->loc = ast_expr_unary->loc;
+
+    auto op = to_unary_op(ast_expr_unary->op->kind);
+    auto info = UNARY_OP_TABLE[static_cast<uint8_t>(op)];
+    auto* type = builder.type_of(ast_expr_unary->expr);
+
+    if (!info.is_valid(type)) {
+        builder.m_diags.report<Level::ERROR>(
+            ast_expr_unary->loc,
+            std::format(
+                "Invalid unary operation '{}' ({}) on "
+                "incompatible type '{}'",
+                ast_expr_unary->op->to_string(),
+                to_string(op),
+                builder.dump_type(type)
+            )
+        );
+    }
+
+    unary_expr->type = info.get_result(&builder.m_type_ctx, type);
     return unary_expr;
 }
 
@@ -578,8 +480,29 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprBinary>(
     binary_expr->op = to_binary_op(ast_expr_binary->op->kind);
     binary_expr->lhs = builder.lower_expr(ast_expr_binary->lhs);
     binary_expr->rhs = builder.lower_expr(ast_expr_binary->rhs);
-    binary_expr->type = ast_type_of(builder, ast_expr_binary);
     binary_expr->loc = ast_expr_binary->loc;
+
+    auto op = to_binary_op(ast_expr_binary->op->kind);
+    auto info = BINARY_OP_TABLE[static_cast<uint8_t>(op)];
+    auto *lhs = builder.type_of(ast_expr_binary->lhs),
+         *rhs = builder.type_of(ast_expr_binary->rhs);
+
+    if (!info.is_valid(lhs, rhs)) {
+        builder.m_diags.report<Level::ERROR>(
+            ast_expr_binary->loc,
+            std::format(
+                "Invalid binary operation '{}' ({}) on "
+                "incompatible types '{}' (LEFT) "
+                "'{}' (RIGHT)",
+                ast_expr_binary->op->to_string(),
+                to_string(op),
+                lhs->to_string(),
+                rhs->to_string()
+            )
+        );
+    }
+
+    binary_expr->type = info.get_result(&builder.m_type_ctx, lhs, rhs);
     return binary_expr;
 }
 
@@ -601,7 +524,6 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
     auto* call_expr = builder.m_alloc.emplace<ir::ExprCall>();
     call_expr->callee = builder.lower_expr(ast_expr_call->lval);
     call_expr->loc = ast_expr_call->loc;
-    call_expr->type = ast_type_of(builder, ast_expr_call);
     call_expr->args = [&]() {
         std::vector<const ir::Expr*> args;
         for (const auto& ast_arg: ast_expr_call->args) {
@@ -609,6 +531,79 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
         }
         return args;
     }();
+
+    auto* callee = builder.type_of(ast_expr_call->lval);
+
+    if TRY_COERCE (const sema::FuncType, func, callee) {
+        const size_t arg_count = ast_expr_call->args.size(),
+                     parm_count = func->params.size();
+
+        for (size_t arg_id = 0; const sema::Type* parm_type: func->params) {
+            if (arg_id >= arg_count) {
+                builder.m_diags.report<Level::ERROR>(
+                    {ast_expr_call->loc.end - 1, ast_expr_call->loc.end},
+                    std::format(
+                        "In function call to '{}': missing required argument for "
+                        "parameter #{}",
+                        builder.dump_expr(ast_expr_call->lval),
+                        arg_id
+                    )
+                );
+            } else {
+                auto* arg = ast_expr_call->args.at(arg_id);
+                auto* arg_type = builder.type_of(arg);
+                if (arg_type != parm_type) {
+                    builder.m_diags.report<Level::ERROR>(
+                        arg->loc,
+                        std::format(
+                            "In function call to '{}': argument #{} of type '{}' is "
+                            "incompatible with parameter that expects type '{}'",
+                            builder.dump_expr(ast_expr_call->lval),
+                            arg_id,
+                            builder.dump_type(arg_type),
+                            builder.dump_type(parm_type)
+                        ),
+                        arg_type->is_castable(parm_type)
+                            ? Footnote{
+                                FootnoteKind::NOTE,
+                                std::format(
+                                    "Conversion from '{}' to '{}' possible with explicit cast",
+                                    builder.dump_type(arg_type),
+                                    builder.dump_type(parm_type)
+                                )
+                            }
+                            : Footnote{}
+                    );
+                }
+            }
+            arg_id++;
+        }
+
+        if (arg_count > parm_count) {
+            auto first = ast_expr_call->args[parm_count];
+            auto last = ast_expr_call->args.back();
+            builder.m_diags.report<Level::ERROR>(
+                {first->loc.begin, last->loc.end},
+                std::format(
+                    "In function call to '{}': expected {} arguments, got {}",
+                    builder.dump_expr(ast_expr_call->lval),
+                    parm_count,
+                    arg_count
+                ),
+                {FootnoteKind::SUGGESTION, "Remove argument(s)"}
+            );
+        }
+
+        call_expr->type = func->result;
+    } else {
+        builder.m_diags.report<Level::ERROR>(
+            ast_expr_call->loc,
+            std::format(
+                "Attempt to call non-function type '{}'",
+                builder.dump_type(callee)
+            )
+        );
+    }
     return call_expr;
 }
 
@@ -618,10 +613,35 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
     const ast::ExprCast* ast_expr_cast
 ) noexcept
 {
+    auto *expr_type = builder.type_of(ast_expr_cast->expr),
+         *cast_type = builder.type_of(ast_expr_cast->type);
+
     auto* cast_expr = builder.m_alloc.emplace<ir::ExprCast>();
     cast_expr->expr = builder.lower_expr(ast_expr_cast->expr);
-    cast_expr->cast = builder.type_of(ast_expr_cast->type);
-    cast_expr->type = ast_type_of(builder, ast_expr_cast);
+    cast_expr->cast = cast_type;
+    cast_expr->type = cast_type;
+
+    if (expr_type == cast_type) {
+        builder.m_diags.report<Level::WARNING>(
+            ast_expr_cast->expr->loc,
+            std::format(
+                "Redundant type cast: expression is already of type '{}'",
+                builder.dump_type(cast_type)
+            ),
+            {FootnoteKind::SUGGESTION, "Remove cast"}
+        );
+    }
+
+    if (!expr_type->is_castable(cast_type)) {
+        builder.m_diags.report<Level::ERROR>(
+            ast_expr_cast->expr->loc,
+            std::format(
+                "Expression of type '{}' cannot be casted into type '{}'",
+                builder.dump_type(expr_type),
+                builder.dump_type(cast_type)
+            )
+        );
+    }
     return cast_expr;
 }
 
@@ -744,13 +764,13 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtImport>(
     }
 
     auto name = qual_name.back();
-    if (auto module = builder.m_module->get_manager()->get_module_by_name(name)) {
+    if (auto module = builder.m_module->manager().get_module_by_name(name)) {
         builder.m_diags.report<Level::ERROR>(
             ast_stmt_import->loc,
             std::format("Module '{}' imported more than once", name)
         );
 
-        if (auto* import_decl = module->get_ast_decl()) {
+        if (auto* import_decl = module->ast_decl()) {
             builder.m_diags.report<Level::INFO>(
                 import_decl->loc,
                 "Previously imported here"

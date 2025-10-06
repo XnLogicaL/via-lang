@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <via/config.h>
-#include <via/types.h>
 #include "ast/ast.h"
 #include "ir/ir.h"
 #include "module/symbol.h"
@@ -21,18 +21,18 @@ namespace sema {
 class IRLocal final
 {
   public:
-    enum Qual : u8
+    enum Qual : uint8_t
     {
         CONST = 1 << 0,
     };
 
     struct Ref
     {
-        u16 id;
+        uint16_t id;
         IRLocal* local;
 
         Ref() = default;
-        Ref(u16 id, IRLocal* local) noexcept
+        Ref(uint16_t id, IRLocal* local) noexcept
             : id(id),
               local(local)
         {}
@@ -45,7 +45,7 @@ class IRLocal final
         size_t version,
         const ast::Stmt* ast_decl,
         const ir::Stmt* ir_decl,
-        u8 quals = 0ULL
+        uint8_t quals = 0ULL
     )
         : m_version(version),
           m_quals(quals),
@@ -58,12 +58,12 @@ class IRLocal final
     auto get_version() const { return m_version; }
     auto get_qualifiers() const { return m_quals; }
     auto get_symbol() const { return m_symbol; }
-    const auto* get_ast_decl() const { return m_ast_decl; }
+    const auto* ast_decl() const { return m_ast_decl; }
     const auto* get_ir_decl() const { return m_ir_decl; }
 
   protected:
     const size_t m_version = 0;
-    const u8 m_quals = 0ULL;
+    const uint8_t m_quals = 0ULL;
     const SymbolId m_symbol = -1;
     const ast::Stmt* m_ast_decl = nullptr;
     const ir::Stmt* m_ir_decl = nullptr;

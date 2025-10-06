@@ -9,10 +9,12 @@
 
 #pragma once
 
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <variant>
 #include <via/config.h>
-#include <via/types.h>
 #include "lexer/token.h"
 #include "support/utility.h"
 
@@ -26,7 +28,7 @@ namespace via {
     X(STRING)                                                                            \
     X(FUNCTION)
 
-enum class ValueKind : u8
+enum class ValueKind : uint8_t
 {
     FOR_EACH_VALUE_KIND(DEFINE_ENUM)
 };
@@ -38,28 +40,28 @@ namespace sema {
 class ConstValue final
 {
   public:
-    using Union = std::variant<std::monostate, bool, i64, f64, std::string>;
+    using Union = std::variant<std::monostate, bool, int64_t, double_t, std::string>;
 
   public:
     // clang-format off
-    constexpr explicit ConstValue() : u(std::monostate{}) {}
-    constexpr explicit ConstValue(bool boolean) : u(boolean) {}
-    constexpr explicit ConstValue(i64 integer) : u(integer) {}
-    constexpr explicit ConstValue(f64 float_) : u(float_) {}
-    constexpr explicit ConstValue(std::string string) : u(string) {}
+    constexpr explicit ConstValue() : m_data(std::monostate{}) {}
+    constexpr explicit ConstValue(bool boolean) : m_data(boolean) {}
+    constexpr explicit ConstValue(int64_t integer) : m_data(integer) {}
+    constexpr explicit ConstValue(double_t float_) : m_data(float_) {}
+    constexpr explicit ConstValue(std::string string) : m_data(string) {}
     // clang-format on
 
     static std::optional<ConstValue> from_token(const Token& tok);
 
   public:
-    constexpr auto kind() const { return static_cast<ValueKind>(u.index()); }
-    constexpr auto& data() { return u; }
-    constexpr const auto& data() const { return u; }
+    constexpr auto kind() const { return static_cast<ValueKind>(m_data.index()); }
+    constexpr auto& data() { return m_data; }
+    constexpr const auto& data() const { return m_data; }
 
     template <const ValueKind kind>
     constexpr auto value() const
     {
-        return std::get<static_cast<size_t>(kind)>(u);
+        return std::get<static_cast<size_t>(kind)>(m_data);
     }
 
     constexpr bool compare(const ConstValue& other) const
@@ -67,12 +69,12 @@ class ConstValue final
         return std::visit(
             [&other](auto&& lhs) -> bool {
                 using T = std::decay_t<decltype(lhs)>;
-                if (!std::holds_alternative<T>(other.u))
+                if (!std::holds_alternative<T>(other.m_data))
                     return false;
 
-                return lhs == std::get<T>(other.u);
+                return lhs == std::get<T>(other.m_data);
             },
-            u
+            m_data
         );
     }
 
@@ -80,7 +82,7 @@ class ConstValue final
     std::string get_dump() const;
 
   private:
-    Union u;
+    Union m_data;
 };
 
 } // namespace sema

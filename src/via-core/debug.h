@@ -9,16 +9,12 @@
 
 #pragma once
 
-#include <functional>
+#include <cstddef>
 #include <spdlog/spdlog.h>
 #include <via/config.h>
-#include <via/types.h>
 
 namespace via {
 namespace config {
-
-// What to print when debug functions aren't provided a message
-VIA_CONSTANT const char* CRASH_LOGGER_NO_MESSAGE = "<no-message>";
 
 // Logging level for crashes
 VIA_CONSTANT const auto CRASH_LOGGER_LEVEL = spdlog::level::err;
@@ -33,22 +29,18 @@ VIA_CONSTANT bool DEBUG_ENABLED = true;
 
 namespace debug {
 
-#define MSG_PARM std::string message = config::CRASH_LOGGER_NO_MESSAGE
-
 // Basically `assert`
-void require(bool cond, MSG_PARM) noexcept;
+void require(bool cond, std::string msg = "<no-message>") noexcept;
+
 [[noreturn]] void panic() noexcept;
-[[noreturn]] void bug(MSG_PARM) noexcept;
-[[noreturn]] void todo(MSG_PARM) noexcept;
-[[noreturn]] void unimplemented(MSG_PARM) noexcept;
+[[noreturn]] void bug(std::string msg = "<no-message>") noexcept;
+[[noreturn]] void todo(std::string msg = "<no-message>") noexcept;
+[[noreturn]] void unimplemented(std::string msg = "<no-message>") noexcept;
 
 #undef MSG_PARM
 
-template <typename T, char LDel = '{', char RDel = '}'>
-inline std::string to_string(
-    const std::vector<T>& vec,
-    std::function<std::string(const std::remove_cv_t<T>&)> fn
-)
+template <typename T, char LDel = '{', char RDel = '}', typename Fn>
+std::string to_string(const std::vector<T>& vec, Fn fn)
 {
     std::ostringstream oss;
     oss << LDel;

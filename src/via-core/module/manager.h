@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <filesystem>
 #include <via/config.h>
-#include <via/types.h>
 #include "module.h"
 #include "module/symbol.h"
 #include "sema/type_context.h"
@@ -23,19 +23,22 @@ class ModuleManager
     friend class Module;
 
   public:
-    inline auto& get_allocator() { return m_alloc; }
-    inline auto& get_type_context() { return m_type_ctx; }
-    inline auto& get_symbol_table() { return m_symbol_table; }
+    inline auto& allocator() { return m_alloc; }
+    inline auto& type_context() { return m_type_ctx; }
+    inline auto& symbol_table() { return m_symbol_table; }
     inline const auto& get_import_paths() const { return m_import_paths; }
 
-    inline Module* get_module(fs::path name) { return m_modules[name]; }
+    inline Module* get_module(std::filesystem::path name) { return m_modules[name]; }
     inline void push_module(Module* module) { m_modules[module->m_path] = module; }
-    inline bool has_module(fs::path name)
+    inline bool has_module(std::filesystem::path name)
     {
         return m_modules.find(name) != m_modules.end();
     }
 
-    inline void push_import_path(fs::path path) { m_import_paths.push_back(path); }
+    inline void push_import_path(std::filesystem::path path)
+    {
+        m_import_paths.push_back(path);
+    }
 
     inline Module* get_module_by_name(std::string name)
     {
@@ -75,11 +78,11 @@ class ModuleManager
 
   private:
     ScopedAllocator m_alloc;
-    std::vector<std::string> m_imports;
-    std::vector<fs::path> m_import_paths;
-    std::unordered_map<fs::path, Module*> m_modules;
-    sema::TypeContext m_type_ctx;
     SymbolTable m_symbol_table;
+    sema::TypeContext m_type_ctx;
+    std::vector<std::string> m_imports;
+    std::vector<std::filesystem::path> m_import_paths;
+    std::unordered_map<std::filesystem::path, Module*> m_modules;
 };
 
 } // namespace via

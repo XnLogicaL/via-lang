@@ -27,13 +27,18 @@ std::optional<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
     case TokenKind::LIT_INT:
     case TokenKind::LIT_XINT:
     case TokenKind::LIT_BINT:
-        if (auto val = stoi<i64>(tok.to_string()))
+        if (auto val = stoi<int64_t>(tok.to_string()))
             return ConstValue(*val);
         break;
     case TokenKind::LIT_FLOAT:
-        if (auto val = stof<f64>(tok.to_string()))
+        if (auto val = stof<double_t>(tok.to_string()))
             return ConstValue(*val);
         break;
+    case TokenKind::LIT_STRING: {
+        std::string_view view = tok.to_sv();
+        std::string literal(view.begin() + 1, view.end() - 1);
+        return ConstValue(literal);
+    }
     default:
         break;
     }

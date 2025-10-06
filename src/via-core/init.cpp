@@ -22,6 +22,7 @@ static void init_spdlog() noexcept
 
     std::string info_color = console->cyan.data();
     info_color += console->bold.data();
+
     console->set_color(spdlog::level::info, std::string_view(info_color.c_str()));
 
     spdlog::set_default_logger(std::make_shared<spdlog::logger>("main", console));
@@ -34,23 +35,24 @@ static void mimalloc_error_handler(int err, void* arg)
     cpptrace::generate_trace().print(std::cerr);
 }
 
-static void init_mimalloc() noexcept
+static void init_mimalloc(uint8_t verbosity) noexcept
 {
-    mi_register_error(mimalloc_error_handler, nullptr);
-    mi_option_set(mi_option_show_errors, via::config::DEBUG_ENABLED);
     mi_option_set(mi_option_reserve_os_memory, via::config::PREALLOC_SIZE);
+    mi_option_set(mi_option_show_errors, via::config::DEBUG_ENABLED);
+    mi_option_set(mi_option_show_stats, verbosity > 1);
+    mi_register_error(mimalloc_error_handler, nullptr);
 }
 
-static void call_once_trap() noexcept
+static void trap_call() noexcept
 {
     static bool called = false;
     via::debug::require(!called, "init() called twice");
     called = true;
 }
 
-void via::init() noexcept
+void via::init(uint8_t verbosity) noexcept
 {
-    call_once_trap();
-    init_mimalloc();
+    trap_call();
+    init_mimalloc(verbosity);
     init_spdlog();
 }

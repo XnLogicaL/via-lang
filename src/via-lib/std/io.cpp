@@ -9,19 +9,23 @@
 
 #include <iostream>
 #include <via/via.h>
+#include "module/defs.h"
 
 using via::ValueRef;
 
 namespace io {
 
-VIA_MODULE_FUNCTION(hello_world, vm, call_info)
+VIA_MODULE_FUNCTION(print, vm, call_info)
 {
-    std::cout << "Hello from C++!\n";
+    auto str = call_info.args.at(0);
+    std::cout << str->string_value();
     return ValueRef(vm);
 }
 
-VIA_MODULE_FUNCTION(print, vm, call_info)
+VIA_MODULE_FUNCTION(printn, vm, call_info)
 {
+    auto str = call_info.args.at(0);
+    std::cout << str->string_value() << "\n";
     return ValueRef(vm);
 }
 
@@ -29,32 +33,36 @@ VIA_MODULE_FUNCTION(print, vm, call_info)
 
 VIA_MODULE_ENTRY(io, manager)
 {
-    using via::Def;
-    using via::DefTable;
-    using via::NativeModuleInfo;
     using enum via::sema::BuiltinKind;
 
-    auto& symbols = manager->get_symbol_table();
-    auto& types = manager->get_type_context();
-    auto& alloc = manager->get_allocator();
+    auto& types = manager->type_context();
 
-    static DefTable table = {
-        {
-            symbols.intern("hello_world"),
-            Def::function(alloc, io::hello_world, types.get_builtin(NIL), {}),
-        },
-        {
-            symbols.intern("print"),
-            Def::function(
-                alloc,
+    static via::DefTable table = {
+        via::DefTableEntry(
+            *manager,
+            "print",
+            via::Def::function(
+                *manager,
                 io::print,
                 types.get_builtin(NIL),
                 {
-                    {symbols.intern("__s"), types.get_builtin(STRING)},
+                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
                 }
-            ),
-        },
+            )
+        ),
+        via::DefTableEntry(
+            *manager,
+            "printn",
+            via::Def::function(
+                *manager,
+                io::printn,
+                types.get_builtin(NIL),
+                {
+                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
+                }
+            )
+        ),
     };
 
-    return NativeModuleInfo::create(alloc, table);
+    return via::NativeModuleInfo::create(manager->allocator(), table);
 }
