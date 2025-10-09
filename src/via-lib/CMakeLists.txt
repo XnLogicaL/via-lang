@@ -4,13 +4,13 @@ function(load_unit NAME)
     set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src/via-lib/${NAME})
 
     file(MAKE_DIRECTORY ${LIB_OUTPUT_DIR})
-    file(GLOB STD_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/*.cpp")
+    file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/*.cpp")
 
-    foreach(src ${STD_SOURCES})
+    foreach(src ${SOURCES})
         get_filename_component(src_name ${src} NAME_WE)
         add_library(via-${src_name} SHARED ${src})
 
-        target_link_libraries(via-${src_name} PRIVATE via::core)
+        target_link_libraries(via-${src_name} PRIVATE via::core mimalloc)
         set_target_properties(via-${src_name}
             PROPERTIES
                 OUTPUT_NAME ${src_name}         # just "foo.so" instead of "libfoo.so"

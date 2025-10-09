@@ -1,6 +1,6 @@
 file(GLOB_RECURSE VIA_CORE_SOURCES CONFIGURE_DEPENDS *.cpp)
 
-add_library(via-core STATIC ${VIA_CORE_SOURCES})
+add_library(via-core SHARED ${VIA_CORE_SOURCES})
 
 target_include_directories(via-core
     PUBLIC

@@ -54,6 +54,7 @@ class Frame final
 
     void save() { m_stack_ptr = m_locals.size(); }
     void restore() { m_locals.resize(m_stack_ptr); }
+    auto& get() { return m_locals; }
 
   private:
     Module* m_module;

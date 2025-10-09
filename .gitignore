@@ -3,5 +3,5 @@ build
 .cache
 scripts/__pycache__
 CMakeFiles
-CMakeCache
-vcpkg_installed
+CMakeCache.txt
+CMakeUserPresets.json

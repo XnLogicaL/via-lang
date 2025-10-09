@@ -12,6 +12,7 @@
 #include <sstream>
 #include <via/via.h>
 #include "CLI/CLI.hpp"
+#include "ast/ast.h"
 #include "module/module.h"
 #include "support/ansi.h"
 
@@ -173,7 +174,7 @@ int main(int argc, char* argv[])
             // clang-format off
             spdlog::info("[entry point] -- input path:    {}", normalize_string(input));
             spdlog::info("[entry point] -- dump mode:     {}", normalize_string(dump));
-            spdlog::info("[entry point] -- import dirs:   {}", imports.size());
+            spdlog::info("[entry point] -- import dirs:   {}", via::debug::to_string(imports, [](const auto& v) { return v; }));
             spdlog::info("[entry point] -- module flags:  {}", normalize_string(oss.str()));
             // clang-format on
         }
@@ -182,6 +183,10 @@ int main(int argc, char* argv[])
         ModuleManager manager;
         // Push adjacent import path
         manager.push_import_path(input.parent_path());
+
+        for (const auto& path: imports) {
+            manager.push_import_path(path);
+        }
 
         // Instantiate root module
         auto module = Module::load_source_file(

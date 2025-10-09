@@ -1,11 +1,19 @@
 {
-  "version": 2,
+  "version": 3,
   "configurePresets": [
     {
       "name": "default",
       "inherits": "vcpkg",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
       "environment": {
-        "VCPKG_ROOT": "/home/$USER/vcpkg"
+        "CC": "/home/orhun/gcc-15/bin/gcc",
+        "CXX": "/home/orhun/gcc-15/bin/g++",
+        "VCPKG_ROOT": "/home/orhun/vcpkg"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "/home/orhun/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     }
   ]

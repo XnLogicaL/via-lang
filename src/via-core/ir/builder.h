@@ -102,7 +102,7 @@ class IRBuilder final
     inline std::string dump_type(const sema::Type* type) noexcept
     {
         return ansi::format(
-            type ? type->to_string() : "<invalid-type>",
+            type ? type->to_string() : "<type error>",
             ansi::Foreground::MAGENTA,
             ansi::Background::NONE,
             ansi::Style::BOLD
@@ -124,7 +124,7 @@ class IRBuilder final
         }
 
         return ansi::format(
-            expr ? oss.str() : "<invalid-expr>",
+            expr ? oss.str() : "<expression error>",
             ansi::Foreground::YELLOW,
             ansi::Background::NONE,
             ansi::Style::BOLD

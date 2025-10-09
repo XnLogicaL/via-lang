@@ -160,11 +160,9 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
 {
     auto& frame = builder.m_stack.top();
     auto symbol = ast_expr_symbol->symbol->to_string();
+    auto id = builder.intern_symbol(ast_expr_symbol->symbol->to_string());
 
-    // Local variable
-    if (auto local =
-            frame.get_local(builder.intern_symbol(ast_expr_symbol->symbol->to_string())
-            )) {
+    if (auto local = frame.get_local(id)) {
         auto* ir_decl = local->local->get_ir_decl();
 
         if TRY_COERCE (const ir::StmtVarDecl, var_decl, ir_decl) {
@@ -614,36 +612,35 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
     const ast::ExprCast* ast_expr_cast
 ) noexcept
 {
-    auto *expr_type = builder.type_of(ast_expr_cast->expr),
-         *cast_type = builder.type_of(ast_expr_cast->type);
-
-    spdlog::warn("asdasd asd as dfg dfg dfg{}", VIA_TYPENAME(*ast_expr_cast->expr));
-
+    auto* cast_type = builder.type_of(ast_expr_cast->type);
     auto* cast_expr = builder.m_alloc.emplace<ir::ExprCast>();
     cast_expr->expr = builder.lower_expr(ast_expr_cast->expr);
     cast_expr->cast = cast_type;
     cast_expr->type = cast_type;
 
-    if (expr_type == cast_type) {
-        builder.m_diags.report<Level::WARNING>(
-            ast_expr_cast->expr->loc,
-            std::format(
-                "Redundant type cast: expression is already of type '{}'",
-                builder.dump_type(cast_type)
-            ),
-            {FootnoteKind::SUGGESTION, "Remove cast"}
-        );
-    }
+    auto* expr_type = cast_expr->expr->type;
+    if (expr_type != nullptr) {
+        if (expr_type == cast_type) {
+            builder.m_diags.report<Level::WARNING>(
+                ast_expr_cast->expr->loc,
+                std::format(
+                    "Redundant type cast: expression is already of type '{}'",
+                    builder.dump_type(cast_type)
+                ),
+                {FootnoteKind::SUGGESTION, "Remove cast"}
+            );
+        }
 
-    if (!expr_type->is_castable(cast_type)) {
-        builder.m_diags.report<Level::ERROR>(
-            ast_expr_cast->expr->loc,
-            std::format(
-                "Expression of type '{}' cannot be casted into type '{}'",
-                builder.dump_type(expr_type),
-                builder.dump_type(cast_type)
-            )
-        );
+        if (!expr_type->is_castable(cast_type)) {
+            builder.m_diags.report<Level::ERROR>(
+                ast_expr_cast->expr->loc,
+                std::format(
+                    "Expression of type '{}' cannot be casted into type '{}'",
+                    builder.dump_type(expr_type),
+                    builder.dump_type(cast_type)
+                )
+            );
+        }
     }
     return cast_expr;
 }

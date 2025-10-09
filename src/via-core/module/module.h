@@ -18,6 +18,7 @@
 #include <via/config.h>
 #include "defs.h"
 #include "lexer/location.h"
+#include "support/memory.h"
 #include "vm/executable.h"
 #include "vm/machine.h"
 

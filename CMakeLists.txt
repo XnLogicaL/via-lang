@@ -7,6 +7,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    set(MI_SECURE $<$<CONFIG:Debug>:ON>)
+    set(MI_TRACK_ASAN $<$<CONFIG:Debug>:ON>)
+    set(MI_DEBUG_FULL $<$<CONFIG:Debug>:ON>)
+
     add_compile_options(
         -fdiagnostics-color=always
         -Wextra
