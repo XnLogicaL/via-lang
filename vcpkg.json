@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "cli11",
+    "mimalloc",
+    "replxx",
+    "spdlog",
+    "cpptrace"
+  ]
+}

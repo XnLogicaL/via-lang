@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <mimalloc.h>
-#include <mimalloc/internal.h>
 #include <vector>
 #include <via/config.h>
 #include "debug.h"

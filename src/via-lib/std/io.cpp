@@ -9,11 +9,22 @@
 
 #include <iostream>
 #include <via/via.h>
-#include "module/defs.h"
 
 using via::ValueRef;
 
 namespace io {
+
+VIA_MODULE_FUNCTION(input, vm, call_info)
+{
+    auto str = call_info.args.at(0);
+
+    std::string in;
+    std::cout << str->string_value();
+    std::cin >> in;
+
+    char* in_str = vm->allocator().strdup(in.c_str());
+    return ValueRef(vm, in_str);
+}
 
 VIA_MODULE_FUNCTION(print, vm, call_info)
 {
@@ -38,6 +49,18 @@ VIA_MODULE_ENTRY(io, manager)
     auto& types = manager->type_context();
 
     static via::DefTable table = {
+        via::DefTableEntry(
+            *manager,
+            "input",
+            via::Def::function(
+                *manager,
+                io::input,
+                types.get_builtin(STRING),
+                {
+                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
+                }
+            )
+        ),
         via::DefTableEntry(
             *manager,
             "print",

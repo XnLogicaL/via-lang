@@ -26,12 +26,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Dependencies
-add_subdirectory(thirdparty/spdlog)
-add_subdirectory(thirdparty/argparse)
-add_subdirectory(thirdparty/mimalloc)
-add_subdirectory(thirdparty/cpptrace)
-add_subdirectory(thirdparty/csv2)
-add_subdirectory(thirdparty/replxx)
+find_package(spdlog CONFIG REQUIRED)
+find_package(CLI11 CONFIG REQUIRED)
+find_package(mimalloc CONFIG REQUIRED)
+find_package(cpptrace CONFIG REQUIRED)
+find_package(replxx CONFIG REQUIRED)
 
 # Modules
 add_subdirectory(src/via-core)

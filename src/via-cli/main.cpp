@@ -7,12 +7,13 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
+#include <CLI/CLI.hpp>
 #include <cstdint>
-#include <csv2/reader.hpp>
-#include <replxx.hxx>
 #include <sstream>
 #include <via/via.h>
-#include "app.h"
+#include "CLI/CLI.hpp"
+#include "module/module.h"
+#include "support/ansi.h"
 
 #undef assert
 
@@ -78,59 +79,67 @@ int main(int argc, char* argv[])
     static auto lang_dir = get_lang_dir();
 
     try {
-        // Instantiate CLI application
-        auto& cli = via::cli::app_instance();
-
-        // Instantiate Comma Separated Value reader
-        csv2::Reader<
-            csv2::delimiter<','>, // Obviously
-            csv2::quote_character<'\''>,
-            csv2::first_row_is_header<false>,
-            csv2::trim_policy::trim_whitespace>
-            csv;
+        ModuleFlags flags = ModuleFlags::NONE;
 
         uint8_t verbosity;
-        std::string raw_dump_mode, raw_import_dirs;
-        std::filesystem::path input_path;
+        bool no_execute, debug;
+        std::string dump;
+        std::filesystem::path input;
+        std::vector<std::string> imports;
 
-        try {
-            cli.parse_args(argc, argv);
-            verbosity = cli.get<uint8_t>("--verbose");
-            input_path = cli.get<std::string>("input");
-            raw_dump_mode = cli.get<std::string>("--dump");
-            raw_import_dirs = cli.get<std::string>("--include-dirs");
-        } catch (const std::bad_any_cast&) {
-            assert(false, "bad argument");
-        } catch (const std::exception& err) {
-            assert(false, err.what());
-        }
+        CLI::App app;
 
-        assert(!input_path.empty(), "no input files");
+        app.failure_message([](auto, const CLI::Error& e) {
+            return via::ansi::format(
+                       "error: ",
+                       via::ansi::Foreground::RED,
+                       via::ansi::Background::NONE,
+                       via::ansi::Style::BOLD
+                   ) +
+                   e.what();
+        });
+
+        app.add_option("input,-i", input, "Input file path")
+            ->required()
+            ->check(CLI::ExistingFile)
+            ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
+
+        app.add_option("--dump,-D", dump, "Compilation dump mode");
+
+        app.add_option("--verbosity,-V", verbosity, "Controls verbosity")
+            ->default_val(0)
+            ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
+
+        app.add_option("--import-dirs,-I", imports, "Import directory list")
+            ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
+
+        app.add_flag("--no-execute", no_execute, "Disables sequential execution");
+        app.add_flag("--debug", debug, "Enables interactive VM debugger");
+
+        CLI11_PARSE(app, argc, argv);
+
+        assert(!input.empty(), "no input files");
 
         // Translate CLI flags to ModuleFlags
-        ModuleFlags flags = ModuleFlags::NONE;
-        {
-            if (raw_dump_mode == "ttree")
+        do {
+            if (no_execute)
+                flags |= ModuleFlags::NO_EXECUTION;
+            if (debug)
+                flags |= ModuleFlags::DEBUG;
+
+            if (dump == "ttree") {
                 flags |= ModuleFlags::DUMP_TTREE;
-            else if (raw_dump_mode == "ast")
+            } else if (dump == "ast") {
                 flags |= ModuleFlags::DUMP_AST;
-            else if (raw_dump_mode == "ir")
+            } else if (dump == "ir") {
                 flags |= ModuleFlags::DUMP_IR;
-            else if (raw_dump_mode == "exe")
+            } else if (dump == "exe") {
                 flags |= ModuleFlags::DUMP_EXE;
-            else if (raw_dump_mode == "deftab")
+            } else if (dump == "deftab") {
                 flags |= ModuleFlags::DUMP_DEFTABLE;
+            }
         }
-
-        // Translate --no-execute flag
-        if (cli.get<bool>("--no-execute")) {
-            flags |= ModuleFlags::NO_EXECUTION;
-        }
-
-        // Look for --debug flag
-        if (cli.get<bool>("--debug")) {
-            flags |= ModuleFlags::DEBUG;
-        }
+        while (0);
 
         // Validate language core directory
         if (!std::filesystem::exists(lang_dir)) {
@@ -146,7 +155,7 @@ int main(int argc, char* argv[])
         if (verbosity > 0) {
             std::ostringstream oss;
 
-            for (size_t i = 0; i < sizeof(flags); i++) {
+            for (size_t i = 0; i < sizeof(flags) * 8; i++) {
                 if (flags & static_cast<ModuleFlags>(1 >> i)) {
                     oss << i;
                     if (i != sizeof(flags) - 1) {
@@ -162,9 +171,9 @@ int main(int argc, char* argv[])
             };
 
             // clang-format off
-            spdlog::info("[entry point] -- input path:    {}", normalize_string(input_path.string()));
-            spdlog::info("[entry point] -- dump mode:     {}", normalize_string(raw_dump_mode));
-            spdlog::info("[entry point] -- import dirs:   {}", normalize_string(raw_import_dirs));
+            spdlog::info("[entry point] -- input path:    {}", normalize_string(input));
+            spdlog::info("[entry point] -- dump mode:     {}", normalize_string(dump));
+            spdlog::info("[entry point] -- import dirs:   {}", imports.size());
             spdlog::info("[entry point] -- module flags:  {}", normalize_string(oss.str()));
             // clang-format on
         }
@@ -172,29 +181,14 @@ int main(int argc, char* argv[])
         // Instantiate ModuleManager
         ModuleManager manager;
         // Push adjacent import path
-        manager.push_import_path(input_path.parent_path());
-
-        // Process import paths
-        if (!raw_import_dirs.empty()) {
-            // Validate import paths
-            assert(csv.parse(raw_import_dirs), "bad import path list");
-
-            // Load import paths
-            for (const auto row: csv) {
-                for (const auto cell: row) {
-                    std::string path;
-                    cell.read_value(path);
-                    manager.push_import_path(path);
-                }
-            }
-        }
+        manager.push_import_path(input.parent_path());
 
         // Instantiate root module
         auto module = Module::load_source_file(
             manager,
             nullptr,
-            input_path.stem().c_str(),
-            input_path,
+            input.stem().c_str(),
+            input,
             nullptr,
             ModulePerms::ALL,
             flags
@@ -207,7 +201,7 @@ int main(int argc, char* argv[])
         );
 
         // Dump global symbol table
-        if (raw_dump_mode == "symtab") {
+        if (dump == "symtab") {
             std::cout << via::ansi::format(
                              "[global symbol table]",
                              via::ansi::Foreground::YELLOW,

@@ -10,6 +10,7 @@
 #include "builder.h"
 #include <cpptrace/basic.hpp>
 #include <format>
+#include <spdlog/spdlog.h>
 #include <vector>
 #include "ast/ast.h"
 #include "debug.h"
@@ -615,6 +616,8 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
 {
     auto *expr_type = builder.type_of(ast_expr_cast->expr),
          *cast_type = builder.type_of(ast_expr_cast->type);
+
+    spdlog::warn("asdasd asd as dfg dfg dfg{}", VIA_TYPENAME(*ast_expr_cast->expr));
 
     auto* cast_expr = builder.m_alloc.emplace<ir::ExprCast>();
     cast_expr->expr = builder.lower_expr(ast_expr_cast->expr);

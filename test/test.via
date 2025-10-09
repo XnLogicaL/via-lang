@@ -1,10 +1,8 @@
 import std::io;
 import std::math;
 
-var x: float = (2 + 3) as float;
-io::printn(x as string);
+io::printn("sin calculator");
+var input = io::input("enter a number: ");
+var result = math::sin(input as float)
 
-var y = math::sin(x);
-var z = math::sin(y);
-var t = math::sin(z);
-io::printn(t as string);
+io::printn(result as string);

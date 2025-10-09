@@ -8,8 +8,10 @@
 ** ===================================================== */
 
 #include "value.h"
+#include <cmath>
 #include "debug.h"
 #include "sema/const_value.h"
+#include "support/conversions.h"
 #include "support/memory.h"
 
 via::Value* via::Value::create(VirtualMachine* vm)
@@ -127,6 +129,8 @@ std::optional<double_t> via::Value::as_cfloat() const
         return (double_t) int_value();
     case ValueKind::FLOAT:
         return float_value();
+    case ValueKind::STRING:
+        return stof<double_t>(string_value());
     default:
         return std::nullopt;
     }
@@ -170,13 +174,15 @@ std::string via::Value::as_cstring() const
 via::Value* via::Value::as_int() const
 {
     auto val = as_cint();
-    return val.has_value() ? create(m_vm, *val) : nullptr;
+    debug::require(val.has_value());
+    return create(m_vm, *val);
 }
 
 via::Value* via::Value::as_float() const
 {
     auto val = as_cfloat();
-    return val.has_value() ? create(m_vm, *val) : nullptr;
+    debug::require(val.has_value());
+    return create(m_vm, *val);
 }
 
 via::Value* via::Value::as_bool() const
