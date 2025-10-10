@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "lexer.h"
+#include "lexer.hpp"
 #include <cstring>
 
 using enum via::TokenKind;

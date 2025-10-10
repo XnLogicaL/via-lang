@@ -7,12 +7,12 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "value.h"
+#include "value.hpp"
 #include <cmath>
-#include "debug.h"
-#include "sema/const_value.h"
-#include "support/conversions.h"
-#include "support/memory.h"
+#include "debug.hpp"
+#include "sema/const.hpp"
+#include "support/conv.hpp"
+#include "support/memory.hpp"
 
 via::Value* via::Value::create(VirtualMachine* vm)
 {

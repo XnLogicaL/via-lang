@@ -7,28 +7,23 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "module.h"
+#include "module.hpp"
+#include <expected>
 #include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <replxx.hxx>
-#include "debug.h"
-#include "ir/builder.h"
-#include "ir/ir.h"
-#include "manager.h"
-#include "module/symbol.h"
-#include "support/ansi.h"
-#include "support/bit_enum.h"
-#include "vm/instruction.h"
-#include "vm/machine.h"
-#include "vm/value.h"
-
-#ifdef VIA_PLATFORM_UNIX
-    #include <dlfcn.h>
-#elif defined(VIA_PLATFORM_WINDOWS)
-    #include <windows.h>
-#endif
+#include "debug.hpp"
+#include "ir/builder.hpp"
+#include "manager.hpp"
+#include "support/ansi.hpp"
+#include "support/memory.hpp"
+#include "support/os/dl.hpp"
+#include "symbol.hpp"
+#include "vm/instruction.hpp"
+#include "vm/machine.hpp"
+#include "vm/value.hpp"
 
 // Read a file into a string
 // clang-format off
@@ -52,40 +47,6 @@ read_file(const std::filesystem::path& path)
     return oss.str();
 }
 // clang-format on
-
-#ifdef VIA_PLATFORM_WINDOWS
-static struct WinLibraryManager
-{
-    std::vector<HMODULE> libs;
-
-    ~WinLibraryManager()
-    {
-        for (const HMODULE handle: libs) {
-            FreeLibrary(handle);
-        }
-    }
-
-    void push(const HMODULE handle) { libs.push_back(handle); }
-} win_libs;
-#endif
-
-// Load a function symbol from a dynamic library
-// Platform independent implementation
-static std::expected<via::NativeModuleInitCallback, std::string>
-load_dylib_symbol(const std::filesystem::path& path, const char* symbol)
-{
-#ifdef VIA_PLATFORM_UNIX
-    if (void* handle = dlopen(path.c_str(), RTLD_NOW)) {
-        if (void* init = dlsym(handle, symbol)) {
-            return reinterpret_cast<via::NativeModuleInitCallback>(init);
-        }
-    }
-
-    return std::unexpected(dlerror());
-#else
-    return std::unexpected("Native modules not supported on host operating system");
-#endif
-}
 
 std::string via::Module::get_source_range(size_t begin, size_t end) const
 {
@@ -134,15 +95,14 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
         }
     }
 
-    // Read the file content
-    auto file = read_file(path);
-    if (!file.has_value()) {
-        manager.pop_import();                 // Pop the import stack
-        return std::unexpected(file.error()); // Return error
+    auto& alloc = manager.allocator();
+    auto dylib = os::DynamicLibrary::load_library(path);
+    if (!dylib.has_value()) {
+        return std::unexpected(dylib.error());
     }
 
     // Instantiate the module
-    auto* module = manager.allocator().emplace<Module>(manager);
+    auto* module = alloc.emplace<Module>(manager);
     module->m_kind = ModuleKind::NATIVE;
     module->m_importee = importee;
     module->m_perms = perms;
@@ -156,12 +116,14 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
 
     // Find the module's entry point
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
-    auto callback = load_dylib_symbol(path, symbol.c_str());
+    auto callback = dylib->load_symbol<NativeModuleInitCallback>(symbol.c_str());
     if (!callback.has_value()) {
         return std::unexpected(
             std::format("Failed to load native module: {}", callback.error())
         );
     }
+
+    module->m_dl = std::move(*dylib);
 
     // Retrieve module information
     auto* module_info = (*callback)(&manager);

@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "control_path.h"
+#include "control_path.hpp"
 #include <unordered_set>
 
 namespace ir = via::ir;
@@ -23,15 +23,12 @@ std::vector<const ir::Term*> sema::get_control_paths(const ir::StmtBlock* entry)
 
         if TRY_COERCE (const ir::TrReturn, ret, block->term) {
             terms.push_back(ret);
-        }
-        else if TRY_COERCE (const ir::TrBranch, br, block->term) {
+        } else if TRY_COERCE (const ir::TrBranch, br, block->term) {
             dfs(br->target);
-        }
-        else if TRY_COERCE (const ir::TrCondBranch, cbr, block->term) {
+        } else if TRY_COERCE (const ir::TrCondBranch, cbr, block->term) {
             dfs(cbr->iftrue);
             dfs(cbr->iffalse);
-        }
-        else {
+        } else {
             debug::bug("unmapped dfs block terminator");
         }
     };

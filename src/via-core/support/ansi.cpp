@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "support/ansi.h"
+#include "ansi.hpp"
 #include <cstring>
 
 #ifdef VIA_PLATFORM_UNIX
@@ -84,13 +84,11 @@ via::ansi::format(std::string string, Foreground fg, Background bg, Style style)
 
         if (!codes.empty()) {
             return "\033[" + codes + "m" + string + "\033[0m";
-        }
-        else {
+        } else {
             // no formatting at all
             return string;
         }
-    }
-    else {
+    } else {
         return string;
     }
 }

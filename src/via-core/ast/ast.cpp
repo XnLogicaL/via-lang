@@ -7,8 +7,8 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "ast.h"
-#include "debug.h"
+#include "ast.hpp"
+#include "debug.hpp"
 
 namespace ast = via::ast;
 

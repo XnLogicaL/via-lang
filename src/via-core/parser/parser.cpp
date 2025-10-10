@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "parser.h"
+#include "parser.hpp"
 
 #define SAVE_FIRST()                                                                     \
     auto* first = advance();                                                             \

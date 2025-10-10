@@ -7,22 +7,22 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "builder.h"
+#include "builder.hpp"
 #include <cpptrace/basic.hpp>
 #include <format>
 #include <spdlog/spdlog.h>
 #include <vector>
-#include "ast/ast.h"
-#include "debug.h"
-#include "diagnostics.h"
-#include "ir/ir.h"
-#include "module/defs.h"
-#include "module/symbol.h"
-#include "sema/control_path.h"
-#include "sema/stack.h"
-#include "sema/type.h"
-#include "support/math.h"
-#include "support/type_traits.h"
+#include "ast/ast.hpp"
+#include "debug.hpp"
+#include "diagnostics.hpp"
+#include "ir/ir.hpp"
+#include "module/defs.hpp"
+#include "module/symbol.hpp"
+#include "sema/control_path.hpp"
+#include "sema/stack.hpp"
+#include "sema/type.hpp"
+#include "support/math.hpp"
+#include "support/traits.hpp"
 
 namespace ir = via::ir;
 namespace sema = via::sema;

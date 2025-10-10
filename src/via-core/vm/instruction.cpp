@@ -7,10 +7,10 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "instruction.h"
+#include "instruction.hpp"
 #include <array>
 #include <iomanip>
-#include "support/ansi.h"
+#include "support/ansi.hpp"
 
 using OpCode = via::OpCode;
 

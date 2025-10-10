@@ -7,16 +7,16 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "machine.h"
+#include "machine.hpp"
 #include <ostream>
-#include "debug.h"
-#include "module/defs.h"
-#include "module/manager.h"
-#include "module/module.h"
-#include "value.h"
-#include "value_ref.h"
-#include "vm/closure.h"
-#include "vm/instruction.h"
+#include "closure.hpp"
+#include "debug.hpp"
+#include "instruction.hpp"
+#include "module/defs.hpp"
+#include "module/manager.hpp"
+#include "module/module.hpp"
+#include "ref.hpp"
+#include "value.hpp"
 
 using Vk = via::ValueKind;
 

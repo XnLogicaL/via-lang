@@ -10,11 +10,7 @@
 #include <CLI/CLI.hpp>
 #include <cstdint>
 #include <sstream>
-#include <via/via.h>
-#include "CLI/CLI.hpp"
-#include "ast/ast.h"
-#include "module/module.h"
-#include "support/ansi.h"
+#include <via/via.hpp>
 
 #undef assert
 

@@ -7,8 +7,8 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "ir.h"
-#include "module/module.h"
+#include "ir.hpp"
+#include "module/module.hpp"
 
 namespace ir = via::ir;
 using Tk = via::TokenKind;

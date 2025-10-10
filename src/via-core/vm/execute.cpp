@@ -7,11 +7,11 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "debug.h"
-#include "machine.h"
-#include "module/manager.h"
-#include "value.h"
-#include "value_ref.h"
+#include "debug.hpp"
+#include "machine.hpp"
+#include "module/manager.hpp"
+#include "ref.hpp"
+#include "value.hpp"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
     #define HAS_CGOTO

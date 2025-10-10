@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "location.h"
+#include "location.hpp"
 
 via::RelSourceLoc::RelSourceLoc(const std::string& source, SourceLoc loc)
 {

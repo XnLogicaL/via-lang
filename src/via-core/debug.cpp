@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "debug.h"
+#include "debug.hpp"
 #include <cpptrace/cpptrace.hpp>
 #include <iostream>
 #include <spdlog/sinks/stdout_color_sinks.h>

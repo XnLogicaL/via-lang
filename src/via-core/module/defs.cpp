@@ -7,9 +7,9 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "defs.h"
-#include "manager.h"
-#include "sema/const_value.h"
+#include "defs.hpp"
+#include "manager.hpp"
+#include "sema/const.hpp"
 
 via::DefTableEntry::DefTableEntry(
     ModuleManager& manager,

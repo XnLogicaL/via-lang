@@ -7,19 +7,18 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "executable.h"
+#include "executable.hpp"
 #include <iomanip>
 #include <iostream>
 #include <unordered_map>
-#include "debug.h"
-#include "diagnostics.h"
-#include "ir/ir.h"
-#include "module/manager.h"
-#include "module/module.h"
-#include "sema/type.h"
-#include "sema/type_context.h"
-#include "support/ansi.h"
-#include "vm/instruction.h"
+#include "debug.hpp"
+#include "diagnostics.hpp"
+#include "module/manager.hpp"
+#include "module/module.hpp"
+#include "sema/type.hpp"
+#include "sema/type_context.hpp"
+#include "support/ansi.hpp"
+#include "vm/instruction.hpp"
 
 namespace ir = via::ir;
 

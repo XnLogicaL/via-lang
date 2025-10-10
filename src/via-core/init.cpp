@@ -7,13 +7,13 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "init.h"
+#include "init.hpp"
 #include <cpptrace/cpptrace.hpp>
 #include <iostream>
+#include <mimalloc.h>
 #include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/spdlog.h>
-#include "debug.h"
-#include "mimalloc.h"
+#include "debug.hpp"
 
 static void init_spdlog() noexcept
 {

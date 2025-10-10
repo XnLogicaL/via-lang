@@ -8,7 +8,7 @@
 ** ===================================================== */
 
 #include <iostream>
-#include <via/via.h>
+#include <via/via.hpp>
 
 using via::ValueRef;
 

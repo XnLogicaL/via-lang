@@ -7,21 +7,13 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "token.hpp"
-#include <format>
+#pragma once
+#include "config.hpp"
 
-via::SourceLoc via::Token::location(const std::string& source) const
-{
-    const size_t begin = lexeme - source.cbegin().base();
-    const size_t end = begin + size;
-    return {begin, end};
-}
+#ifdef VIA_PLATFORM_UNKNOWN
+    #error unsupported platform
+#endif
 
-std::string via::Token::get_dump() const
-{
-    return std::format(
-        "[{} '{}']",
-        via::to_string(kind),
-        (*lexeme == '\0') ? "<eof>" : to_string()
-    );
-}
+#ifdef VIA_COMPILER_UNKNOWN
+    #error unsupported compiler
+#endif

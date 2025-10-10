@@ -7,8 +7,8 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "type_context.h"
-#include "support/math.h"
+#include "type_context.hpp"
+#include "support/math.hpp"
 
 namespace sema = via::sema;
 

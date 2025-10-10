@@ -7,8 +7,8 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "diagnostics.h"
-#include "support/ansi.h"
+#include "diagnostics.hpp"
+#include "support/ansi.hpp"
 
 std::string via::to_string(Level level) noexcept
 {

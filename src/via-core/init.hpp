@@ -7,21 +7,19 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "token.hpp"
-#include <format>
+#pragma once
 
-via::SourceLoc via::Token::location(const std::string& source) const
-{
-    const size_t begin = lexeme - source.cbegin().base();
-    const size_t end = begin + size;
-    return {begin, end};
-}
+#include <cstddef>
+#include <cstdint>
+#include <via/config.hpp>
 
-std::string via::Token::get_dump() const
-{
-    return std::format(
-        "[{} '{}']",
-        via::to_string(kind),
-        (*lexeme == '\0') ? "<eof>" : to_string()
-    );
-}
+namespace via {
+namespace config {
+
+VIA_CONSTANT size_t PREALLOC_SIZE = 0x8000000ULL; // 128 MiB
+
+} // namespace config
+
+void init(uint8_t verbosity) noexcept;
+
+} // namespace via
