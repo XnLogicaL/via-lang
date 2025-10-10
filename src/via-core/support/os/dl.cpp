@@ -12,14 +12,13 @@
 #include <filesystem>
 #include <string>
 
-#if defined(VIA_PLATFORM_POSIX) || defined(VIA_PLATFORM_OSX) ||                          \
-    defined(VIA_PLATFORM_ANDROID)
+#ifdef HAS_DLFCN
     #include <dlfcn.h>
     #define USE_DLFCN 1
-#elif defined(VIA_PLATFORM_WINDOWS)
-    #include <windows.h>
-    #define USE_DLFCN 0
 #else
+    #ifdef VIA_PLATFORM_WINDOWS
+        #include <windows.h>
+    #endif
     #define USE_DLFCN 0
 #endif
 
@@ -68,18 +67,16 @@ via::os::DynamicLibrary::load_library(std::filesystem::path path)
     }
 
 #if USE_DLFCN
-    void* handle = dlopen(path_str.c_str(), RTLD_NOW);
-    if (!handle) {
-        const char* err = dlerror();
-        return std::unexpected(err ? err : "Unknown dlopen error");
+    if (void* handle = dlopen(path_str.c_str(), RTLD_NOW)) {
+        return DynamicLibrary(handle);
     }
-    return DynamicLibrary(handle);
+    const char* err = dlerror();
+    return std::unexpected(err ? err : "Unknown dlopen error");
 #else
-    HMODULE handle = LoadLibraryA(path_str.c_str());
-    if (!handle) {
-        return std::unexpected(dlerror_win());
+    if (HMODULE handle = LoadLibraryA(path_str.c_str())) {
+        return DynamicLibrary(reinterpret_cast<void*>(handle));
     }
-    return DynamicLibrary(reinterpret_cast<void*>(handle));
+    return std::unexpected(dlerror_win());
 #endif
 }
 
