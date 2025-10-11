@@ -10,14 +10,15 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <via/config.hpp>
 #include "diagnostics.hpp"
 #include "instruction.hpp"
 #include "ir/ir.hpp"
-#include "sema/bytecode_local.hpp"
 #include "sema/const.hpp"
+#include "sema/local_bc.hpp"
 #include "sema/register.hpp"
 #include "sema/stack.hpp"
 #include "support/traits.hpp"
@@ -48,6 +49,12 @@ void ir_lower_stmt(Executable& exe, const Stmt* stmt) noexcept
     debug::todo(std::format("lower_stmt<{}>()", VIA_TYPENAME(Stmt)));
 }
 
+template <derived_from<ir::Term> Term>
+void ir_lower_term(Executable& exe, const Term* term) noexcept
+{
+    debug::todo(std::format("lower_term<{}>()", VIA_TYPENAME(Term)));
+}
+
 } // namespace detail
 
 enum ExeFlags : uint64_t
@@ -68,6 +75,9 @@ class Executable final
 
     template <derived_from<ir::Stmt> Stmt>
     friend void detail::ir_lower_stmt(Executable&, const Stmt*) noexcept;
+
+    template <derived_from<ir::Term> Term>
+    friend void detail::ir_lower_term(Executable&, const Term*) noexcept;
 
   public:
     Executable(DiagContext& diags)
@@ -119,6 +129,7 @@ class Executable final
 
     void lower_expr(const ir::Expr* expr, std::optional<uint16_t> dst) noexcept;
     void lower_stmt(const ir::Stmt* stmt) noexcept;
+    void lower_term(const ir::Term* term) noexcept;
     void lower_jumps() noexcept;
 
   private:

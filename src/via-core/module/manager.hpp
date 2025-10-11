@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <via/config.hpp>
 #include "module.hpp"
-#include "sema/type_context.hpp"
+#include "sema/context.hpp"
 #include "symbol.hpp"
 
 namespace via {

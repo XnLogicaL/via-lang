@@ -11,6 +11,7 @@
 #include <array>
 #include <iomanip>
 #include "support/ansi.hpp"
+#include "support/bit.hpp"
 
 using OpCode = via::OpCode;
 
@@ -20,7 +21,10 @@ enum Operand
     LITERAL,
     REGISTER,
     CONSTANT,
-
+    HIGH,
+    LOW,
+    ADDR_HIGH,
+    ADDR_LOW,
 };
 
 struct OpInfo
@@ -124,12 +128,12 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::FGTEQ, REGISTER, REGISTER, REGISTER},
     {OpCode::FGTEQK, REGISTER, REGISTER, CONSTANT},
     {OpCode::NOT, REGISTER, REGISTER},
-    {OpCode::JMP, LITERAL},
-    {OpCode::JMPIF, REGISTER, LITERAL},
-    {OpCode::JMPIFX, REGISTER, LITERAL},
-    {OpCode::JMPBACK, LITERAL},
-    {OpCode::JMPBACKIF, REGISTER, LITERAL},
-    {OpCode::JMPBACKIFX, REGISTER, LITERAL},
+    {OpCode::JMP, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMPIF, REGISTER, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMPIFX, REGISTER, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMPBACK, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMPBACKIF, REGISTER, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMPBACKIFX, REGISTER, ADDR_HIGH, ADDR_LOW},
     {OpCode::SAVE},
     {OpCode::RESTORE},
     {OpCode::PUSH, REGISTER},
@@ -155,7 +159,7 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::GETIMPORT, REGISTER, LITERAL, LITERAL},
 };
 
-std::string via::Instruction::to_string(bool use_color) const
+std::string via::Instruction::to_string(bool use_color, size_t pc) const
 {
     std::string opcode(via::to_string(op));
     std::array<int, 3> operands{a, b, c};
@@ -182,8 +186,8 @@ std::string via::Instruction::to_string(bool use_color) const
     }
 
     if (!found) {
-        oss << std::setw(6) << a << std::setw(6) << b << std::setw(6) << c;
-        oss << "(MISSING OPERAND INFO!)";
+        oss << std::right << std::setw(3) << a << std::setw(3) << b << std::setw(3) << c;
+        oss << " (MISSING OPERAND INFO!)";
         return oss.str();
     }
 
@@ -195,27 +199,41 @@ std::string via::Instruction::to_string(bool use_color) const
             break;
         }
 
-        std::string formatted;
-        switch (type) {
-        case LITERAL:
-            formatted = std::to_string(operands[i]);
-            break;
-        case REGISTER:
-            formatted = "R" + std::to_string(operands[i]);
-            break;
-        case CONSTANT:
-            formatted = "K" + std::to_string(operands[i]);
-            break;
-        default:
-            break;
+        oss << std::right;
+
+        if (type == HIGH && i + 1 < 3 && operand_types[i + 1] == LOW) {
+            uint16_t hi = operands[i];
+            uint16_t lo = operands[i + 1];
+            oss << std::setw(3) << std::hex << "0x"
+                << std::to_string(pack_halves<uint32_t>(hi, lo));
+            ++i; // Skip the LOW operand since it's consumed together
+        } else if (type == ADDR_HIGH && i + 1 < 3 && operand_types[i + 1] == ADDR_LOW) {
+            int8_t sign =
+                op == OpCode::JMP || op == OpCode::JMPIF || op == OpCode::JMPIFX ? 1 : -1;
+            uint16_t hi = operands[i];
+            uint16_t lo = operands[i + 1];
+            oss << std::setw(3) << std::hex << "#0x"
+                << (pc + sign * pack_halves<uint32_t>(hi, lo)) * 8;
+            ++i; // Skip the LOW operand since it's consumed together
+        } else {
+            switch (type) {
+            case LITERAL:
+                oss << std::setw(3) << std::dec << std::to_string(operands[i]);
+                break;
+            case REGISTER:
+                oss << std::setw(3) << std::dec << 'R' << std::to_string(operands[i]);
+                break;
+            case CONSTANT:
+                oss << std::setw(3) << std::dec << 'K' << std::to_string(operands[i]);
+                break;
+            default:
+                oss << std::setw(3) << std::hex << "0x" << std::to_string(operands[i]);
+                break;
+            }
         }
-
-        oss << std::right << std::setw(3) << formatted;
-
         if (i < 2 && operand_types[i + 1] != UNUSED) {
             oss << ", ";
         }
     }
-
     return oss.str();
 }

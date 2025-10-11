@@ -40,7 +40,7 @@ namespace sema {
 class ConstValue final
 {
   public:
-    using Union = std::variant<std::monostate, bool, int64_t, double_t, std::string>;
+    using Union = std::variant<std::monostate, int64_t, double_t, bool, std::string>;
 
   public:
     // clang-format off

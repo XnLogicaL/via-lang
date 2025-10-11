@@ -91,22 +91,25 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
         break;
     }
 
-    if (diag.location.begin >= m_source.size()) {
+    if (!m_source.is_valid_range(diag.location)) {
         logger->log(level, "{}", diag.message);
         return;
     }
 
-    const char* begin = reinterpret_cast<const char*>(m_source.data());
-    const char* end = begin + m_source.size();
+    const char* begin = m_source.begin();
+    const char* end = m_source.end();
     const char* ptr = begin + diag.location.begin;
 
     // Find line boundaries
     const char* line_begin = ptr;
-    while (line_begin > begin && line_begin[-1] != '\n' && line_begin[-1] != '\r')
+    while (line_begin > begin && line_begin[-1] != '\n' && line_begin[-1] != '\r') {
         --line_begin;
+    }
+
     const char* line_end = ptr;
-    while (line_end < end && *line_end != '\n' && *line_end != '\r')
+    while (line_end < end && *line_end != '\n' && *line_end != '\r') {
         ++line_end;
+    }
 
     uint64_t line = 1 + std::count(begin, line_begin, '\n');
     uint64_t col = static_cast<uint64_t>(ptr - line_begin) + 1;

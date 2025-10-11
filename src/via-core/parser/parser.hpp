@@ -22,8 +22,8 @@ namespace via {
 class Parser final
 {
   public:
-    Parser(const std::string& source, const TokenTree& ttree, DiagContext& diag)
-        : m_diags(diag),
+    Parser(const std::string& source, const TokenTree& ttree, DiagContext& diags)
+        : m_diags(diags),
           m_source(source),
           m_cursor(ttree.cbegin().base())
     {}

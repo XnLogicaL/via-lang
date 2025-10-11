@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "control_path.hpp"
+#include "control.hpp"
 #include <unordered_set>
 
 namespace ir = via::ir;

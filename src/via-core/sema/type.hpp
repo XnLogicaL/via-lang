@@ -143,12 +143,12 @@ struct FuncType: public Type
 {
     const Type* result;
     std::vector<const Type*> params;
-
     explicit FuncType(const Type* ret, std::vector<const Type*> parms)
         : Type(({
               bool dep = ret->is_dependent();
-              for (auto* p: parms)
+              for (auto* p: parms) {
                   dep |= p->is_dependent();
+              }
               dep ? TypeFlags::DEPENDENT : TypeFlags::NONE;
           })),
           result(ret),

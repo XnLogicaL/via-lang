@@ -11,7 +11,7 @@
 
 #include <cstddef>
 #include <via/config.hpp>
-#include "location.hpp"
+#include "source.hpp"
 #include "support/utility.hpp"
 
 namespace via {

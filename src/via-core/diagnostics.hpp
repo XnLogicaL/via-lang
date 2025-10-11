@@ -11,7 +11,7 @@
 
 #include <spdlog/spdlog.h>
 #include <via/config.hpp>
-#include "lexer/location.hpp"
+#include "source.hpp"
 #include "support/utility.hpp"
 
 namespace via {
@@ -56,7 +56,7 @@ struct Diagnosis
 class DiagContext final
 {
   public:
-    DiagContext(std::string path, std::string name, const std::string& source)
+    DiagContext(std::string path, std::string name, const SourceBuffer& source)
         : m_path(path),
           m_name(name),
           m_source(source)
@@ -75,19 +75,17 @@ class DiagContext final
         m_diags.emplace_back(Lv, location, message, footnote);
     }
 
-    [[nodiscard]] auto& diagnostics() noexcept { return m_diags; }
-    [[nodiscard]] const auto& diagnostics() const noexcept { return m_diags; }
-    [[nodiscard]] bool has_errors() const noexcept
+    auto& diagnostics() { return m_diags; }
+    bool has_errors() const
     {
         for (const auto& diag: m_diags) {
             if (diag.level == Level::ERROR)
                 return true;
         }
-
         return false;
     }
 
-    [[nodiscard]] const std::string& source() const noexcept { return m_source; }
+    auto& source() const { return m_source; }
 
   private:
     // Helper to pretty-print a single diagnosis line with source context.
@@ -95,7 +93,7 @@ class DiagContext final
 
   private:
     std::string m_path, m_name;
-    const std::string& m_source;
+    const SourceBuffer& m_source;
     std::vector<Diagnosis> m_diags{};
 };
 

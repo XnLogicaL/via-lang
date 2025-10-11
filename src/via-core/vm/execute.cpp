@@ -11,6 +11,7 @@
 #include "machine.hpp"
 #include "module/manager.hpp"
 #include "ref.hpp"
+#include "support/bit.hpp"
 #include "value.hpp"
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
@@ -1288,36 +1289,44 @@ template <bool SingleStep, bool OverridePC>
         }
         CASE(JMP)
         {
-            pc += pc->a;
-            DISPATCH();
+            pc += pack_halves<uint32_t>(pc->a, pc->b);
+            goto dispatch;
         }
         CASE(JMPIF)
         {
-            [[likely]] if (GET_REGISTER(pc->b)->as_cbool())
-                pc += pc->a;
+            if (GET_REGISTER(pc->a)->as_cbool()) {
+                pc += pack_halves<uint32_t>(pc->b, pc->c);
+                goto dispatch;
+            }
             DISPATCH();
         }
         CASE(JMPIFX)
         {
-            [[unlikely]] if (!GET_REGISTER(pc->b)->as_cbool())
-                pc += pc->a;
+            if (!GET_REGISTER(pc->a)->as_cbool()) {
+                pc += pack_halves<uint32_t>(pc->b, pc->c);
+                goto dispatch;
+            }
             DISPATCH();
         }
         CASE(JMPBACK)
         {
-            pc -= pc->a;
-            DISPATCH();
+            pc -= pack_halves<uint32_t>(pc->a, pc->b);
+            goto dispatch;
         }
         CASE(JMPBACKIF)
         {
-            [[likely]] if (GET_REGISTER(pc->b)->as_cbool())
-                pc -= pc->a;
+            if (GET_REGISTER(pc->a)->as_cbool()) {
+                pc -= pack_halves<uint32_t>(pc->b, pc->c);
+                goto dispatch;
+            }
             DISPATCH();
         }
         CASE(JMPBACKIFX)
         {
-            [[unlikely]] if (!GET_REGISTER(pc->b)->as_cbool())
-                pc -= pc->a;
+            if (!GET_REGISTER(pc->a)->as_cbool()) {
+                pc -= pack_halves<uint32_t>(pc->b, pc->c);
+                goto dispatch;
+            }
             DISPATCH();
         }
         CASE(SAVE)

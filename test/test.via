@@ -1,8 +1,12 @@
 import std::io;
 import std::math;
 
-io::printn("sin calculator");
-var input = io::input("enter a number: ");
-var result = math::sin(input as float)
-
-io::printn(result as string);
+if false {
+    io::printn("sin calculator");
+    var input = io::input("enter a number: ");
+    var result = math::sin(input as float)
+    io::printn(result as string);
+} else {
+    while true { io::printn("hi") }
+    io::printn("uhhh")
+}

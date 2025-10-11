@@ -12,8 +12,8 @@
 #include <cstddef>
 #include <vector>
 #include <via/config.hpp>
-#include "lexer/location.hpp"
 #include "lexer/token.hpp"
+#include "source.hpp"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
 #define TRY_IS(T, a) (dynamic_cast<T*>(a) != nullptr)

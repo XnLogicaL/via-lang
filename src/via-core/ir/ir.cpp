@@ -96,13 +96,13 @@ std::string ir::TrBreak::to_string(const SymbolTable* sym_tab, size_t& depth) co
 
 std::string ir::TrBranch::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
-    return INDENT + std::format("br {}", target->id);
+    return INDENT + std::format("br #{}", target->id);
 }
 
 std::string ir::TrCondBranch::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
     return INDENT + std::format(
-                        "cndbr {} ? .LB{} : .LB{}",
+                        "cndbr {} ? #{} : #{}",
                         DUMP_IF(cnd, sym_tab, ZERO),
                         iftrue->id,
                         iffalse->id
@@ -137,7 +137,7 @@ std::string ir::ExprAccess::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::ExprModuleAccess::to_string(const SymbolTable* sym_tab, size_t&) const
 {
     return std::format(
-        "module<{}>::{} def@{}",
+        "module<{}>::{}@{:p}",
         SYMBOL(mod_id),
         SYMBOL(key_id),
         reinterpret_cast<const void*>(def)
@@ -162,7 +162,7 @@ std::string ir::ExprBinary::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::ExprCall::to_string(const SymbolTable* sym_tab, size_t&) const
 {
     return std::format(
-        "call( {}, args: {} )",
+        "call {}, {}",
         DUMP_IF(callee, sym_tab, ZERO),
         debug::to_string<const Expr*>(
             args,
@@ -174,7 +174,7 @@ std::string ir::ExprCall::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::ExprSubscript::to_string(const SymbolTable* sym_tab, size_t&) const
 {
     return std::format(
-        "subscr( {}, {} )",
+        "subscript {}, {}",
         DUMP_IF(expr, sym_tab, ZERO),
         DUMP_IF(idx, sym_tab, ZERO)
     );
@@ -251,17 +251,15 @@ std::string ir::StmtFuncDecl::to_string(const SymbolTable* sym_tab, size_t& dept
 std::string ir::StmtBlock::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
     std::ostringstream oss;
-    oss << INDENT << "block .LB" << id << ":\n";
-    oss << INDENT << "{\n";
+    oss << INDENT << "block #" << id << ":\n";
     depth++;
 
     for (const Stmt* stmt: stmts) {
         oss << DUMP_IF(stmt, sym_tab, depth) << "\n";
     }
 
-    oss << INDENT << (term ? DUMP_IF(term, sym_tab, ZERO) : "<no-terminator>") << "\n";
+    oss << INDENT << (term ? DUMP_IF(term, sym_tab, ZERO) : "<no-terminator>");
     depth--;
-    oss << INDENT << "}";
     return oss.str();
 }
 

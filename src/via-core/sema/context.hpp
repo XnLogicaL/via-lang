@@ -87,30 +87,10 @@ struct UserKey
     const ast::StmtTypeDecl* decl;
 };
 
-class TypeEnv final
-{
-  public:
-    void bind(uint32_t d, uint32_t i, const Type* type)
-    {
-        m_map.emplace(key(d, i), type);
-    }
-    const Type* lookup(uint32_t d, uint32_t i) const
-    {
-        auto it = m_map.find(key(d, i));
-        return it == m_map.end() ? nullptr : it->second;
-    }
-
-  private:
-    static size_t key(uint32_t d, uint32_t i) { return (uint64_t(d) << 32) | i; }
-
-  private:
-    std::unordered_map<uint64_t, const Type*> m_map;
-};
-
 class TypeContext final
 {
   public:
-    TypeContext()
+    TypeContext() noexcept
         : m_alloc(8 * 1024 * 1024)
     {}
 
@@ -130,8 +110,6 @@ class TypeContext final
     {
         debug::unimplemented();
     }
-
-    const Type* instantiate(const Type* tp, const TypeEnv& env);
 
   private:
     BumpAllocator<> m_alloc;

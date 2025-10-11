@@ -17,8 +17,8 @@
 #include "ir.hpp"
 #include "module/manager.hpp"
 #include "module/module.hpp"
-#include "sema/ir_local.hpp"
-#include "sema/type_context.hpp"
+#include "sema/context.hpp"
+#include "sema/local_ir.hpp"
 #include "support/ansi.hpp"
 #include "support/traits.hpp"
 
@@ -115,7 +115,7 @@ class IRBuilder final
         std::ostringstream oss;
 
         if (expr != nullptr) {
-            for (const char chr: m_module->get_source_range(expr->loc)) {
+            for (const char chr: m_module->source().get_slice(expr->loc)) {
                 if (chr == '\n') {
                     oss << " ...";
                     break;
@@ -141,6 +141,7 @@ class IRBuilder final
     sema::TypeContext& m_type_ctx;
     SymbolTable& m_symbol_table;
     bool m_should_push_block;
+    uint32_t m_block_id = 0;
     ir::StmtBlock* m_current_block;
 };
 

@@ -23,15 +23,12 @@ using QualName = std::deque<std::string>;
 inline std::string to_string(const QualName& path)
 {
     std::ostringstream oss;
-
     for (size_t i = 0; i < path.size(); i++) {
         if (i > 0) {
             oss << "::";
         }
-
         oss << path[i];
     }
-
     return oss.str();
 }
 

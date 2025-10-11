@@ -17,6 +17,7 @@
 #include "debug.hpp"
 #include "ir/builder.hpp"
 #include "manager.hpp"
+#include "source.hpp"
 #include "support/ansi.hpp"
 #include "support/memory.hpp"
 #include "support/os/dl.hpp"
@@ -47,25 +48,6 @@ read_file(const std::filesystem::path& path)
     return oss.str();
 }
 // clang-format on
-
-std::string via::Module::get_source_range(size_t begin, size_t end) const
-{
-    debug::require(begin <= end, "Invalid range");
-    debug::require(begin <= m_source.size() - 1, "Invalid range: begin");
-    debug::require(end <= m_source.size() - 1, "Invalid range: end");
-
-    std::ostringstream oss;
-    for (size_t i = begin; i < end; i++) {
-        oss << m_source[i];
-    }
-
-    return oss.str();
-}
-
-std::string via::Module::get_source_range(SourceLoc loc) const
-{
-    return get_source_range(loc.begin, loc.end);
-}
 
 // Load a shared library as a native module object
 std::expected<via::Module*, std::string> via::Module::load_native_object(
@@ -102,7 +84,7 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
     }
 
     // Instantiate the module
-    auto* module = alloc.emplace<Module>(manager);
+    auto* module = alloc.emplace<Module>(manager, SourceBuffer{});
     module->m_kind = ModuleKind::NATIVE;
     module->m_importee = importee;
     module->m_perms = perms;
@@ -195,24 +177,23 @@ std::expected<via::Module*, std::string> via::Module::load_source_file(
     }
 
     // Instantiate the module
-    auto* module = manager.allocator().emplace<Module>(manager);
+    auto* module = manager.allocator().emplace<Module>(manager, std::move(*file));
     module->m_kind = ModuleKind::SOURCE;
     module->m_importee = importee;
     module->m_perms = perms;
     module->m_flags = flags;
     module->m_name = name;
     module->m_path = path;
-    module->m_source = *file;
     module->m_ast_decl = ast_decl;
 
     // Register the module with the manager
     manager.push_module(module);
 
     // Instantiate diagnostics context
-    DiagContext diags(path.string(), name, *file);
+    DiagContext diags(path.string(), name, module->m_source);
 
     // Instantiate lexer
-    Lexer lexer(*file);
+    Lexer lexer(module->m_source);
     auto ttree = lexer.tokenize();
 
     // Instantiate parser
@@ -494,8 +475,12 @@ void via::Module::start_debugger(VirtualMachine& vm) noexcept
             // Print the program counter
             std::cout << "pc:   " << (void*) snapshot.program_counter << "\n";
             std::cout << "rel:  0x" << std::hex << std::right << std::setw(4)
-                      << std::setfill('0') << snapshot.rel_program_counter << "\n";
-            std::cout << snapshot.program_counter->to_string() << "\n";
+                      << std::setfill('0') << snapshot.rel_program_counter * 8 << "\n";
+            std::cout << snapshot.program_counter->to_string(
+                             false,
+                             snapshot.rel_program_counter
+                         )
+                      << "\n";
         } else if (input == "regs") { // Register dump option
             // Iterate over the registers and print their values
             for (size_t index = 0; const auto& ptr: snapshot.registers) {

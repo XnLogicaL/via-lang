@@ -17,7 +17,7 @@
 #include <string>
 #include <via/config.hpp>
 #include "defs.hpp"
-#include "lexer/location.hpp"
+#include "source.hpp"
 #include "support/memory.hpp"
 #include "support/os/dl.hpp"
 #include "vm/executable.hpp"
@@ -98,8 +98,9 @@ class Module final
     friend class ModuleManager;
 
   public:
-    explicit Module(ModuleManager& manager)
-        : m_manager(manager)
+    explicit Module(ModuleManager& manager, SourceBuffer&& source)
+        : m_source(source),
+          m_manager(manager)
     {}
 
     static std::expected<Module*, std::string> load_source_file(
@@ -134,10 +135,6 @@ class Module final
     std::expected<Module*, std::string>
     import(const QualName& path, const ast::StmtImport* ast_decl);
 
-    // TODO: Move these functions to the SourceBuffer abstraction
-    std::string get_source_range(size_t begin, size_t end) const;
-    std::string get_source_range(SourceLoc loc) const;
-
   protected:
     static void start_debugger(VirtualMachine& vm) noexcept;
 
@@ -147,7 +144,7 @@ class Module final
     ModulePerms m_perms;
     ModuleFlags m_flags;
     std::string m_name;
-    std::string m_source;
+    SourceBuffer m_source;
     std::filesystem::path m_path;
     IRTree m_ir;
     Executable* m_exe;

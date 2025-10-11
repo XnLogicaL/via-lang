@@ -13,11 +13,13 @@
 #include <unordered_map>
 #include "debug.hpp"
 #include "diagnostics.hpp"
+#include "ir/ir.hpp"
 #include "module/manager.hpp"
 #include "module/module.hpp"
+#include "sema/context.hpp"
 #include "sema/type.hpp"
-#include "sema/type_context.hpp"
 #include "support/ansi.hpp"
+#include "support/bit.hpp"
 #include "vm/instruction.hpp"
 
 namespace ir = via::ir;
@@ -248,8 +250,9 @@ void via::detail::ir_lower_stmt<ir::StmtBlock>(
     for (const auto& stmt: ir_stmt_block->stmts) {
         exe.lower_stmt(stmt);
     }
-
-    /* TODO: Lower terminator */
+    if (ir_stmt_block->term != nullptr) {
+        exe.lower_term(ir_stmt_block->term);
+    }
 }
 
 template <>
@@ -290,6 +293,67 @@ void via::Executable::lower_stmt(const ir::Stmt* stmt) noexcept
 #undef VISIT_STMT
 }
 
+template <>
+void via::detail::ir_lower_term<ir::TrReturn>(
+    Executable& exe,
+    const ir::TrReturn* ir_term_ret
+) noexcept
+{
+    if (ir_term_ret->val) {
+        uint16_t reg = exe.m_reg_state.alloc();
+        exe.lower_expr(ir_term_ret->val, reg);
+        exe.push_instruction(OpCode::RET, {reg});
+        exe.m_reg_state.free(reg);
+    } else {
+        exe.push_instruction(OpCode::RETNIL);
+    }
+}
+
+template <>
+void via::detail::ir_lower_term<ir::TrBranch>(
+    Executable& exe,
+    const ir::TrBranch* ir_term_branch
+) noexcept
+{
+    uint16_t high, low;
+    unpack_halves(ir_term_branch->target->id, high, low);
+    exe.push_instruction(OpCode::JMP, {high, low});
+}
+
+template <>
+void via::detail::ir_lower_term<ir::TrCondBranch>(
+    Executable& exe,
+    const ir::TrCondBranch* ir_term_cond_branch
+) noexcept
+// TODO: Encode u32 jump ranges using EXTRAARGS
+{
+    uint16_t thigh, tlow, fhigh, flow;
+    unpack_halves(ir_term_cond_branch->iftrue->id, thigh, tlow);
+    unpack_halves(ir_term_cond_branch->iffalse->id, fhigh, flow);
+
+    uint16_t reg = exe.m_reg_state.alloc();
+    exe.lower_expr(ir_term_cond_branch->cnd, reg);
+    exe.push_instruction(OpCode::JMPIF, {reg, thigh, tlow});
+    exe.push_instruction(OpCode::JMP, {fhigh, flow});
+    exe.m_reg_state.free(reg);
+}
+
+void via::Executable::lower_term(const ir::Term* term) noexcept
+{
+#define VISIT_TERM(TYPE)                                                                 \
+    if TRY_COERCE (const TYPE, _INNER, term)                                             \
+        return detail::ir_lower_term<TYPE>(*this, _INNER);
+
+    VISIT_TERM(ir::TrReturn);
+    VISIT_TERM(ir::TrBranch);
+    VISIT_TERM(ir::TrCondBranch);
+    VISIT_TERM(ir::TrContinue);
+    VISIT_TERM(ir::TrBreak);
+
+    debug::unimplemented(std::format("lower_term({})", VIA_TYPENAME(*term)));
+#undef VISIT_TERM
+}
+
 via::Executable* via::Executable::build_from_ir(
     Module* module,
     DiagContext& diags,
@@ -314,20 +378,33 @@ via::Executable* via::Executable::build_from_ir(
 void via::Executable::lower_jumps() noexcept
 {
     for (size_t pc = 0; Instruction & instr: m_bytecode) {
-        auto opid = static_cast<uint16_t>(instr.op);
-        if (opid >= static_cast<uint16_t>(OpCode::JMP) &&
-            opid <= static_cast<uint16_t>(OpCode::JMPIFX)) {
-            auto address = m_labels[instr.a];
-            auto offset = static_cast<ssize_t>(address) - static_cast<ssize_t>(pc);
-
+        switch (instr.op) {
+        case OpCode::JMP: {
+            auto label = pack_halves<uint32_t>(instr.a, instr.b);
+            auto address = m_labels.at(label);
+            auto offset = static_cast<int32_t>(address) - static_cast<int32_t>(pc) + 1;
             if (offset < 0) {
-                // backward jump → bump opcode to BACK variant
-                instr.op = static_cast<OpCode>(opid + 3);
-                instr.a = static_cast<uint32_t>(-offset);
-            } else {
-                // forward jump → keep opcode
-                instr.a = static_cast<uint32_t>(offset);
+                instr.op = OpCode::JMPBACK;
             }
+
+            unpack_halves((uint32_t) offset, instr.a, instr.b);
+            break;
+        }
+        case OpCode::JMPIF:
+        case OpCode::JMPIFX: {
+            auto label = pack_halves<uint32_t>(instr.b, instr.c);
+            auto address = m_labels.at(label);
+            auto offset = static_cast<int32_t>(address) - static_cast<int32_t>(pc) + 1;
+            if (offset < 0) {
+                instr.op =
+                    instr.op == OpCode::JMPIF ? OpCode::JMPBACKIF : OpCode::JMPBACKIFX;
+            }
+
+            unpack_halves((uint32_t) offset, instr.b, instr.c);
+            break;
+        }
+        default:
+            break;
         }
         ++pc;
     }
@@ -344,17 +421,10 @@ std::string via::Executable::to_string() const
     );
 
     for (size_t pc = 0; const Instruction& insn: m_bytecode) {
-        if (auto it = std::find_if(
-                m_labels.begin(),
-                m_labels.end(),
-                [&pc](auto&& p) { return p.second == pc; }
-            );
-            it != m_labels.end())
-            oss << " .LB" << it->first << ":\n";
         oss << "  0x";
         oss << std::right << std::setw(4) << std::setfill('0') << std::hex << (pc * 8)
             << std::dec;
-        oss << "  " << insn.to_string(true) << "\n";
+        oss << "  " << insn.to_string(true, pc) << "\n";
         pc++;
     }
 
@@ -375,6 +445,5 @@ std::string via::Executable::to_string() const
                );
         oss << " " << i++ << " = " << cv.get_dump() << "\n";
     }
-
     return oss.str();
 }

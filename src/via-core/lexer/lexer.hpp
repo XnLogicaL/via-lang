@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <vector>
 #include <via/config.hpp>
+#include "source.hpp"
 #include "support/memory.hpp"
 #include "token.hpp"
 
@@ -22,10 +23,10 @@ using TokenTree = std::vector<Token*>;
 class Lexer final
 {
   public:
-    Lexer(const std::string& source)
+    Lexer(const SourceBuffer& source)
         : m_source(source),
-          m_cursor(source.data()),
-          m_end(source.data() + source.size() - 1)
+          m_cursor(source.begin()),
+          m_end(source.end() - 1)
     {}
 
   public:
@@ -42,7 +43,7 @@ class Lexer final
 
   private:
     ScopedAllocator m_alloc;
-    const std::string& m_source;
+    const SourceBuffer& m_source;
     const char* m_cursor;
     const char* m_end;
 };

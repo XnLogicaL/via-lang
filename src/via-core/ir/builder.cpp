@@ -18,7 +18,7 @@
 #include "ir/ir.hpp"
 #include "module/defs.hpp"
 #include "module/symbol.hpp"
-#include "sema/control_path.hpp"
+#include "sema/control.hpp"
 #include "sema/stack.hpp"
 #include "sema/type.hpp"
 #include "support/math.hpp"
@@ -675,6 +675,103 @@ const ir::Expr* via::IRBuilder::lower_expr(const ast::Expr* expr)
 }
 
 template <>
+const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtIf>(
+    IRBuilder& builder,
+    const ast::StmtIf* ast_stmt_if
+) noexcept
+{
+    auto* merge_block = builder.m_alloc.emplace<ir::StmtBlock>();
+    merge_block->id = builder.m_block_id++;
+
+    ir::TrCondBranch* last = nullptr;
+
+    for (size_t i = 0; const auto& branch: ast_stmt_if->brs) {
+        auto* then_block = builder.m_alloc.emplace<ir::StmtBlock>();
+        then_block->id = builder.m_block_id++;
+
+        auto* then_term = builder.m_alloc.emplace<ir::TrBranch>();
+        then_term->target = merge_block;
+        then_block->term = then_term;
+
+        auto* current_block = builder.m_current_block;
+        builder.m_current_block = then_block;
+
+        for (const auto& stmt: branch.br->stmts) {
+            builder.m_current_block->stmts.push_back(builder.lower_stmt(stmt));
+        }
+
+        builder.m_current_block = current_block;
+
+        if (branch.cnd != nullptr) {
+            auto* cond_block = builder.m_alloc.emplace<ir::StmtBlock>();
+            cond_block->id = builder.m_block_id++;
+
+            builder.m_current_block->stmts.push_back(cond_block);
+            builder.m_current_block->stmts.push_back(then_block);
+
+            auto* term = builder.m_alloc.emplace<ir::TrCondBranch>();
+            term->cnd = builder.lower_expr(branch.cnd);
+            term->iftrue = then_block;
+
+            if (i == ast_stmt_if->brs.size() - 1) {
+                term->iffalse = merge_block;
+            }
+            if (last != nullptr) {
+                last->iffalse = cond_block;
+            }
+
+            last = term;
+            cond_block->term = term;
+        } else {
+            last->iffalse = then_block;
+            builder.m_current_block->stmts.push_back(then_block);
+        }
+
+        i++;
+    }
+    return merge_block;
+}
+
+template <>
+const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
+    IRBuilder& builder,
+    const ast::StmtWhile* ast_stmt_while
+) noexcept
+{
+    auto* merge_block = builder.m_alloc.emplace<ir::StmtBlock>();
+    merge_block->id = builder.m_block_id++;
+
+    auto* cond_block = builder.m_alloc.emplace<ir::StmtBlock>();
+    cond_block->id = builder.m_block_id++;
+
+    auto* body_term = builder.m_alloc.emplace<ir::TrBranch>();
+    body_term->target = cond_block;
+
+    auto* body_block = builder.m_alloc.emplace<ir::StmtBlock>();
+    body_block->id = builder.m_block_id++;
+    body_block->term = body_term;
+
+    auto* current_block = builder.m_current_block;
+    builder.m_current_block = body_block;
+
+    for (const auto& stmt: ast_stmt_while->br->stmts) {
+        builder.m_current_block->stmts.push_back(builder.lower_stmt(stmt));
+    }
+
+    builder.m_current_block = current_block;
+
+    auto* cond_term = builder.m_alloc.emplace<ir::TrCondBranch>();
+    cond_term->cnd = builder.lower_expr(ast_stmt_while->cnd);
+    cond_term->iftrue = body_block;
+    cond_term->iffalse = merge_block;
+    cond_block->term = cond_term;
+
+    builder.m_current_block->stmts.push_back(cond_block);
+    builder.m_current_block->stmts.push_back(body_block);
+    return merge_block;
+}
+
+template <>
 const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
     IRBuilder& builder,
     const ast::StmtVarDecl* ast_stmt_var_decl
@@ -816,7 +913,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
     }
 
     auto* block = builder.m_alloc.emplace<ir::StmtBlock>();
-    block->id = iota<size_t>();
+    block->id = builder.m_block_id++;
 
     builder.m_stack.push({});
 
@@ -978,8 +1075,8 @@ const ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
 
 via::IRTree via::IRBuilder::build()
 {
-    m_stack.push({});          // Push root stack frame
-    new_block(iota<size_t>()); // Push block
+    m_stack.push({});        // Push root stack frame
+    new_block(m_block_id++); // Push block
 
     IRTree tree;
 
@@ -987,9 +1084,8 @@ via::IRTree via::IRBuilder::build()
         if (const ir::Stmt* loweredStmt = lower_stmt(astStmt)) {
             m_current_block->stmts.push_back(loweredStmt);
         }
-
         if (m_should_push_block) {
-            ir::StmtBlock* block = new_block(iota<size_t>());
+            ir::StmtBlock* block = new_block(m_block_id++);
             tree.push_back(block);
         }
     }

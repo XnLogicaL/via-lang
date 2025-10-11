@@ -7,7 +7,7 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "type_context.hpp"
+#include "context.hpp"
 #include "support/math.hpp"
 
 namespace sema = via::sema;
@@ -107,55 +107,4 @@ sema::TypeContext::get_function(const Type* ret, std::vector<const Type*> parms)
 const sema::UserType* sema::TypeContext::get_user(const ast::StmtTypeDecl* decl)
 {
     return instantiate_base<UserType>(m_alloc, m_users, decl);
-}
-
-const sema::Type* sema::TypeContext::instantiate(const Type* type, const TypeEnv& env)
-{
-    if (TRY_IS(const BuiltinType, type) || TRY_IS(const UserType, type))
-        return type; // already canonical, no params
-    else if TRY_COERCE (const TemplateParamType, parm, type) {
-        if (auto* result = env.lookup(parm->depth, parm->index))
-            return result; // fully substituted here
-        return type;       // still dependent
-    } else if TRY_COERCE (const SubstParamType, subst, type) {
-        auto* result = instantiate(subst->replacement, env);
-        if (result == subst->replacement)
-            return type;
-        return m_alloc.emplace<SubstParamType>(subst->parm, result);
-    } else if TRY_COERCE (const ArrayType, array, type) {
-        auto* tmp = instantiate(array->type, env);
-        return (tmp == array->type) ? type : get_array(tmp);
-    } else if TRY_COERCE (const DictType, dict, type) {
-        auto* key = instantiate(dict->key, env);
-        auto* val = instantiate(dict->val, env);
-        return (key == dict->key && val == dict->val) ? type : get_dict(key, val);
-    } else if TRY_COERCE (const FuncType, function, type) {
-        std::vector<const Type*> parm_types;
-        parm_types.reserve(function->params.size());
-
-        bool same = true;
-        for (auto* parm: function->params) {
-            auto* parm_inst = instantiate(parm, env);
-            same &= (parm_inst == parm);
-            parm_types.push_back(parm_inst);
-        }
-
-        auto* result = instantiate(function->result, env);
-        same &= (result == function->result);
-        return same ? type : get_function(result, parm_types);
-    } else if TRY_COERCE (const TemplateSpecType, spec, type) {
-        std::vector<const Type*> args_types;
-        args_types.reserve(spec->args.size());
-
-        bool same = true;
-        for (auto* arg: spec->args) {
-            auto* arg_inst = instantiate(arg, env);
-            same &= (arg_inst == arg);
-            args_types.push_back(arg_inst);
-        }
-
-        return same ? type : get_template_spec(spec->primary, args_types);
-    }
-
-    return type; // defensive
 }

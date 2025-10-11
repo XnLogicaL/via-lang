@@ -110,14 +110,14 @@ struct StmtBlock;
 struct TrBranch: public Term
 {
     NODE_FIELDS(Term)
-    const StmtBlock* target;
+    StmtBlock* target;
 };
 
 struct TrCondBranch: public Term
 {
     NODE_FIELDS(Term)
     const Expr* cnd;
-    const StmtBlock *iftrue, *iffalse;
+    StmtBlock *iftrue, *iffalse;
 };
 
 struct Parm
@@ -259,7 +259,7 @@ struct StmtFuncDecl: public Stmt
 struct StmtBlock: public Stmt
 {
     NODE_FIELDS()
-    size_t id;
+    uint32_t id;
     std::vector<const Stmt*> stmts;
     const Term* term;
 };
