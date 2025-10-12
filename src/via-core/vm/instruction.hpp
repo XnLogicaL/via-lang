@@ -20,9 +20,7 @@ namespace via {
 #define FOR_EACH_OPCODE(X)                                                               \
     X(NOP)                                                                               \
     X(HALT)                                                                              \
-    X(EXTRAARG1)                                                                         \
-    X(EXTRAARG2)                                                                         \
-    X(EXTRAARG3)                                                                         \
+    X(EXTRAARG)                                                                          \
     X(MOVE)                                                                              \
     X(FREE1)                                                                             \
     X(FREE2)                                                                             \

@@ -68,39 +68,4 @@ constexpr size_t hash_range(It first, It last, size_t seed, ElemHash hash)
     return seed;
 }
 
-template <std::integral Big, std::integral Small, std::integral... Smalls>
-constexpr Big pack(Small first, Smalls... rest)
-{
-    constexpr std::size_t N = 1 + sizeof...(rest);
-    static_assert(sizeof(Big) >= sizeof(Small) * N, "Values do not fit into Big");
-
-    using USmall = std::make_unsigned_t<Small>;
-    using UBig = std::make_unsigned_t<Big>;
-
-    std::array<USmall, N> vals{static_cast<USmall>(first), static_cast<USmall>(rest)...};
-
-    UBig result = 0;
-    for (std::size_t i = 0; i < N; i++) {
-        result |= static_cast<UBig>(vals[i]) << (i * sizeof(Small) * 8);
-    }
-    return static_cast<Big>(result);
-}
-
-template <std::integral Small, std::integral Big, std::size_t N>
-constexpr std::array<Small, N> unpack(Big value)
-{
-    static_assert(sizeof(Big) >= sizeof(Small) * N, "Values do not fit into Big");
-
-    using UBig = std::make_unsigned_t<Big>;
-
-    std::array<Small, N> out{};
-    for (std::size_t i = 0; i < N; i++) {
-        out[i] = static_cast<Small>(
-            (static_cast<UBig>(value) >> (i * sizeof(Small) * 8)) &
-            ((UBig{1} << (sizeof(Small) * 8)) - 1)
-        );
-    }
-    return out;
-}
-
 } // namespace via

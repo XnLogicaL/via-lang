@@ -124,9 +124,7 @@ template <bool SingleStep, bool OverridePC>
         {
             goto exit;
         }
-        CASE(EXTRAARG1)
-        CASE(EXTRAARG2)
-        CASE(EXTRAARG3)
+        CASE(EXTRAARG)
         {
             goto trap__reserved_opcode;
         }

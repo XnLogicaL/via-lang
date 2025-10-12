@@ -136,9 +136,6 @@ class Module final
     import(const QualName& path, const ast::StmtImport* ast_decl);
 
   protected:
-    static void start_debugger(VirtualMachine& vm) noexcept;
-
-  protected:
     ScopedAllocator m_alloc;
     ModuleKind m_kind;
     ModulePerms m_perms;

@@ -199,13 +199,7 @@ via::Value* via::Value::as_string() const
 
 std::string via::Value::to_string() const noexcept
 {
-    return std::format(
-        "[rc: {}, has_vm_ref: {}, {}({})]",
-        m_rc,
-        m_vm != nullptr,
-        via::to_string(m_kind),
-        as_cstring()
-    );
+    return std::format("[rc: {}, {}({})]", m_rc, via::to_string(m_kind), as_cstring());
 }
 
 via::Value*

@@ -36,9 +36,7 @@ struct OpInfo
 static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::NOP},
     {OpCode::HALT},
-    {OpCode::EXTRAARG1, LITERAL},
-    {OpCode::EXTRAARG2, LITERAL, LITERAL},
-    {OpCode::EXTRAARG3, LITERAL, LITERAL, LITERAL},
+    {OpCode::EXTRAARG, LITERAL, LITERAL, LITERAL},
     {OpCode::MOVE, REGISTER, REGISTER},
     {OpCode::FREE1, REGISTER},
     {OpCode::FREE2, REGISTER, REGISTER},
@@ -209,7 +207,8 @@ std::string via::Instruction::to_string(bool use_color, size_t pc) const
             ++i; // Skip the LOW operand since it's consumed together
         } else if (type == ADDR_HIGH && i + 1 < 3 && operand_types[i + 1] == ADDR_LOW) {
             int8_t sign =
-                op == OpCode::JMP || op == OpCode::JMPIF || op == OpCode::JMPIFX ? 1 : -1;
+                (op == OpCode::JMP || op == OpCode::JMPIF || op == OpCode::JMPIFX) ? 1
+                                                                                   : -1;
             uint16_t hi = operands[i];
             uint16_t lo = operands[i + 1];
             oss << std::setw(3) << std::hex << "#0x"

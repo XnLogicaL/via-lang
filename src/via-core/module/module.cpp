@@ -11,7 +11,6 @@
 #include <expected>
 #include <format>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <replxx.hxx>
 #include "debug.hpp"
@@ -22,9 +21,8 @@
 #include "support/memory.hpp"
 #include "support/os/dl.hpp"
 #include "symbol.hpp"
-#include "vm/instruction.hpp"
+#include "vm/debugger.hpp"
 #include "vm/machine.hpp"
-#include "vm/value.hpp"
 
 // Read a file into a string
 // clang-format off
@@ -234,7 +232,9 @@ std::expected<via::Module*, std::string> via::Module::load_source_file(
 
             // Check for debug flag
             if (flags & ModuleFlags::DEBUG) {
-                start_debugger(vm);
+                Debugger dbg(vm);
+                dbg.register_default_commands();
+                dbg.start();
             } else {
                 // Run VM in contiguous execution mode
                 vm.execute();
@@ -418,135 +418,5 @@ via::Module::import(const QualName& path, const ast::StmtImport* ast_decl)
         );
     default:
         debug::todo("module types");
-    }
-}
-
-void via::Module::start_debugger(VirtualMachine& vm) noexcept
-{
-    // Initialize the REPL
-    replxx::Replxx repl;
-
-    // Print the welcome message
-    spdlog::info("Starting interactive VM debugger...\n"
-                 "  > step      steps the interpreter\n"
-                 "  > raise     raise default error\n"
-                 "  > pc        dumps the interpreter program counter\n"
-                 "  > regs      dumps the interpreter register buffer\n"
-                 "  > stack     dumps the interpreter stack\n");
-
-    vm.set_int_hook([](VirtualMachine* vm, Interrupt in, void* arg) {
-        std::cout << "Machine interrupted\n";
-        std::cout << " code: 0x" << std::hex << size_t(in) << std::dec;
-        std::cout << " " << std::format("({})\n", via::to_string(in));
-
-        if (in == Interrupt::ERROR) {
-            auto* error = reinterpret_cast<ErrorInt*>(arg);
-            std::cout << " error info:\n";
-            std::cout << "  msg:  " << error->msg << "\n";
-            std::cout << "  out:  " << (void*) error->out << "\n";
-            std::cout << "  fp:   " << (void*) error->fp << "\n";
-            std::cout << "  pc:   " << (void*) error->pc << "\n";
-        }
-    });
-
-    // Start the REPL loop
-    while (true) {
-        // Retrieve input from the REPL
-        const char* cinput = repl.input("> ");
-        // Check for empty input
-        if (cinput == nullptr) {
-            break;
-        }
-
-        std::string input(cinput); // Input from the REPL
-        Snapshot snapshot(&vm);    // Snapshot the VM state
-
-        if (input == "step") { // Step option
-            // Step the VM
-            vm.execute_once();
-
-            // Check for trailing halt instruction
-            if (snapshot.program_counter->op == OpCode::HALT) {
-                break;
-            }
-        } else if (input == "raise") {
-            vm.raise("<repl-raised-error>", &std::cout);
-        } else if (input == "pc") { // Program counter dump option
-            // Print the program counter
-            std::cout << "pc:   " << (void*) snapshot.program_counter << "\n";
-            std::cout << "rel:  0x" << std::hex << std::right << std::setw(4)
-                      << std::setfill('0') << snapshot.rel_program_counter * 8 << "\n";
-            std::cout << snapshot.program_counter->to_string(
-                             false,
-                             snapshot.rel_program_counter
-                         )
-                      << "\n";
-        } else if (input == "regs") { // Register dump option
-            // Iterate over the registers and print their values
-            for (size_t index = 0; const auto& ptr: snapshot.registers) {
-                // Check if the register is filled
-                if (ptr != nullptr) {
-                    // Dump the register value
-                    std::cout << std::format("R{} = {}\n", index, ptr->to_string());
-                }
-                index++;
-            }
-        } else if (input == "stack") { // Stack dump option
-            // Dump the stack size
-            std::cout << std::format("size: {}\n", snapshot.stack.size());
-
-            // Check if the stack is not empty
-            if (!snapshot.stack.empty()) {
-                // Save the frame pointer and stack base
-                const uintptr_t fp = snapshot.frame_ptr;
-                const uintptr_t* stk_base;
-
-                // Check if the frame pointer is valid
-                if (fp != 0) {
-                    // Update the stack base
-                    stk_base = snapshot.stack.begin().base() + fp;
-
-                    // Save stack local state
-                    auto old_fp = (uintptr_t*) *(stk_base - 0);
-                    auto ret_pc = (Instruction*) *(stk_base - 1);
-                    auto flags = (uint64_t) *(stk_base - 2);
-                    auto callee = (Value*) *(stk_base - 3);
-
-                    // Dump stack local state
-                    std::cout << "Frame @ " << fp << "\n";
-                    std::cout << "  callee   = " << callee->to_string() << "\n";
-                    std::cout << "  flags    = " << flags << "\n";
-                    std::cout << "  ret_pc   = " << (const void*) ret_pc << "\n";
-                    std::cout << "  old_fp   = " << (const void*) old_fp << "\n";
-                } else {
-                    // Update the stack base
-                    stk_base = snapshot.stack.begin().base() - 1;
-                }
-
-                // Dump locals
-                for (auto* ptr = stk_base + 1; ptr < snapshot.stack.end().base() - 1;
-                     ++ptr) {
-                    if (fp != 0) {
-                        std::cout << "  ";
-                    }
-
-                    auto* val = (Value*) *ptr;
-                    std::cout << std::format(
-                        "local {} = {}\n",
-                        ptr - stk_base - 1,
-                        val->to_string()
-                    );
-                }
-
-                std::cout << "raw stack dump:\n";
-                for (size_t i = 0; uintptr_t ptr: snapshot.stack) {
-                    std::cout << "[" << i++ << "] ";
-                    std::cout << "0x" << std::hex << ptr << "\n";
-                }
-            }
-        } else { // Invalid option
-            // Echo the input
-            std::cout << input << "\n";
-        }
     }
 }

@@ -325,7 +325,6 @@ void via::detail::ir_lower_term<ir::TrCondBranch>(
     Executable& exe,
     const ir::TrCondBranch* ir_term_cond_branch
 ) noexcept
-// TODO: Encode u32 jump ranges using EXTRAARGS
 {
     uint16_t thigh, tlow, fhigh, flow;
     unpack_halves(ir_term_cond_branch->iftrue->id, thigh, tlow);

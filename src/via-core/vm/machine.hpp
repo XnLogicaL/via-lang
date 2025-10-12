@@ -20,7 +20,6 @@
 #include "instruction.hpp"
 #include "module/symbol.hpp"
 #include "stack.hpp"
-#include "support/math.hpp"
 #include "support/utility.hpp"
 
 namespace via {
@@ -110,7 +109,8 @@ class VirtualMachine final
     template <Interrupt>
     friend IntAction detail::handle_interrupt_impl(VirtualMachine*);
 
-    friend Snapshot;
+    friend class Snapshot;
+    friend class Debugger;
 
   public:
     VirtualMachine(Module* module, const Executable* exe)
@@ -150,11 +150,7 @@ class VirtualMachine final
     void execute_once();
 
   protected:
-    auto extraarg1() noexcept { return m_pc->a; }
-    auto extraarg2() noexcept { return pack<uint32_t>(m_pc->a, m_pc->b); }
-    auto extraarg3() noexcept { return pack<uint64_t>(m_pc->a, m_pc->b, m_pc->c); }
-
-    bool has_interrupt() const noexcept { return m_int != Interrupt::NONE; }
+    bool has_interrupt() const { return m_int != Interrupt::NONE; }
     IntAction handle_interrupt();
     Closure* unwind_stack(std::function<bool(
                               const uintptr_t* fp,
