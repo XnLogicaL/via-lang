@@ -9,6 +9,7 @@
 
 #include "ir.hpp"
 #include "module/module.hpp"
+#include "module/symbol.hpp"
 
 namespace ir = via::ir;
 using Tk = via::TokenKind;
@@ -246,6 +247,12 @@ std::string ir::StmtFuncDecl::to_string(const SymbolTable* sym_tab, size_t& dept
     depth--;
     oss << INDENT << "}";
     return oss.str();
+}
+
+std::string
+ir::StmtInstruction::to_string(const SymbolTable* sym_tab, size_t& depth) const
+{
+    return INDENT + instr.to_string(false);
 }
 
 std::string ir::StmtBlock::to_string(const SymbolTable* sym_tab, size_t& depth) const

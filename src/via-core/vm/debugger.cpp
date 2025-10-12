@@ -19,9 +19,8 @@ static std::vector<std::string> tokenize_command(const std::string& line)
     std::istringstream iss(line);
     std::vector<std::string> words;
     std::string word;
-    while (iss >> word) {
+    while (iss >> word)
         words.push_back(word);
-    }
     return words;
 }
 
@@ -37,10 +36,7 @@ static via::Argument parse_argument(const std::string& tok)
         return tok.substr(1, tok.size() - 2); // Strip quotes
     }
 
-    bool has_digit = false;
-    bool has_dot = false;
-    bool has_exp = false;
-
+    bool has_digit = false, has_dot = false, has_exp = false;
     for (size_t i = 0; i < tok.size(); ++i) {
         unsigned char c = tok[i];
         if (std::isdigit(c))
@@ -56,6 +52,14 @@ static via::Argument parse_argument(const std::string& tok)
         float val = std::strtof(tok.c_str(), &end);
         if (end != tok.c_str() && *end == '\0')
             return val;
+    }
+
+    if (tok.size() > 2 && tok[0] == '0' && (tok[1] == 'x' || tok[1] == 'X')) {
+        try {
+            return std::stoi(tok, nullptr, 16);
+        } catch (...) {
+            via::debug::bug();
+        }
     }
 
     bool numeric =
@@ -155,15 +159,15 @@ void via::CommandTable::print_help() const
 
 void via::Debugger::register_default_commands() noexcept
 {
-    m_cmds.add("help", "prints the help menu", {}, [this](const auto& args) {
+    m_cmds.register_command("help", "prints the help menu", {}, [this](const auto& args) {
         std::println(std::cout);
         m_cmds.print_help();
         std::println(std::cout);
     });
 
-    m_cmds.add(
+    m_cmds.register_command(
         "step",
-        "steps the interpreter n times",
+        "steps the interpreter a given times",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
             size_t n = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
@@ -173,21 +177,59 @@ void via::Debugger::register_default_commands() noexcept
         }
     );
 
-    m_cmds.add("pc", "display program counter information", {}, [this](const auto& args) {
-        Snapshot snapshot(&m_vm);
+    m_cmds.register_command(
+        "pc",
+        "display program counter information",
+        {},
+        [this](const auto& args) {
+            Snapshot snapshot(&m_vm);
 
-        std::println(std::cout);
-        spdlog::info("program counter:");
-        std::cout << "- raw:           " << (void*) snapshot.program_counter << "\n";
-        std::cout << "- relative:      0x" << std::hex << std::setw(4)
-                  << std::setfill('0') << (size_t) (snapshot.rel_program_counter * 8)
-                  << std::dec << " (base10: " << snapshot.rel_program_counter << ")\n";
-        std::cout << "- disassembly:   [" << snapshot.program_counter->to_string()
-                  << "]\n";
-        std::println(std::cout);
-    });
+            std::println(std::cout);
+            spdlog::info("program counter:");
+            std::cout << "- raw:           " << (void*) snapshot.program_counter << "\n";
+            std::cout << "- relative:      0x" << std::hex << std::right << std::setw(4)
+                      << std::setfill('0') << (size_t) (snapshot.rel_program_counter * 8)
+                      << std::dec << " (base10: " << snapshot.rel_program_counter
+                      << ")\n";
+            std::cout << "- disassembly:   ["
+                      << snapshot.program_counter->to_string(
+                             false,
+                             snapshot.rel_program_counter
+                         )
+                      << "]\n";
+            std::println(std::cout);
+        }
+    );
 
-    m_cmds.add(
+    m_cmds.register_command(
+        "pcat",
+        "display program counter information at the given address",
+        {ArgumentType::INTEGER},
+        [this](const auto& args) {
+            std::println(std::cout);
+
+            size_t pc = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            if (pc % 8 == 0) {
+                auto realpc = pc / 8;
+                auto bytecode = m_vm.m_exe->bytecode();
+                if (realpc < bytecode.size()) {
+                    auto* ptr = bytecode.data() + realpc;
+                    spdlog::info("program counter at 0x{:0>4x}:", pc);
+                    std::cout << "- raw:           " << (void*) ptr << "\n";
+                    std::cout << "- disassembly:   ["
+                              << ptr->to_string(false, m_vm.m_pc - m_vm.m_bp) << "]\n";
+                } else {
+                    spdlog::error("invalid pc 0x{:0>4x}: out of range", pc);
+                }
+            } else {
+                spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
+            }
+
+            std::println(std::cout);
+        }
+    );
+
+    m_cmds.register_command(
         "reg",
         "dumps the given register",
         {ArgumentType::INTEGER},
@@ -207,7 +249,7 @@ void via::Debugger::register_default_commands() noexcept
         }
     );
 
-    m_cmds.add(
+    m_cmds.register_command(
         "const",
         "dumps the given constant",
         {ArgumentType::INTEGER},
@@ -222,6 +264,30 @@ void via::Debugger::register_default_commands() noexcept
                 std::cout << "- dissassembly:  " << konst.get_dump() << "\n";
             } else {
                 spdlog::info("constant {} not found", idx);
+            }
+
+            std::println(std::cout);
+        }
+    );
+
+    m_cmds.register_command(
+        "jump",
+        "jumps to the given program counter",
+        {ArgumentType::INTEGER},
+        [this](const auto& args) {
+            std::println(std::cout);
+
+            size_t pc = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            if (pc % 8 == 0) {
+                auto realpc = pc / 8;
+                auto bytecode = m_vm.m_exe->bytecode();
+                if (realpc < bytecode.size()) {
+                    m_vm.m_pc = m_vm.m_bp + realpc;
+                } else {
+                    spdlog::error("invalid pc 0x{:0>4x}: out of range", pc);
+                }
+            } else {
+                spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
             }
 
             std::println(std::cout);
@@ -249,11 +315,11 @@ void via::Debugger::start() noexcept
         }
     });
 
-    while (auto* cinput = repl.input("=> ")) {
+    while (auto* cinput = repl.input("> ")) {
         std::string input(cinput);
 
         auto active = parse_command(input);
-        if (auto command = m_cmds.find(active.name)) {
+        if (auto command = m_cmds.find_command(active.name)) {
             if (validate_command(*command, active))
                 command->handler(active.args);
             continue;

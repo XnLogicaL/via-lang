@@ -42,11 +42,12 @@ struct Command
 class CommandTable
 {
   public:
-    void
-    add(std::string name,
+    void register_command(
+        std::string name,
         std::string help,
         std::vector<ArgumentType> args,
-        Command::Handler handler)
+        Command::Handler handler
+    )
     {
         commands[name] = Command{
             .name = name,
@@ -56,7 +57,7 @@ class CommandTable
         };
     }
 
-    const Command* find(const std::string& name) const
+    const Command* find_command(const std::string& name) const
     {
         auto it = commands.find(name);
         if (it != commands.end()) {
@@ -74,7 +75,7 @@ class CommandTable
 class Debugger final
 {
   public:
-    Debugger(VirtualMachine& vm)
+    explicit Debugger(VirtualMachine& vm)
         : m_vm(vm)
     {}
 

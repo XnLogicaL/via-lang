@@ -16,6 +16,7 @@
 #include "sema/const.hpp"
 #include "sema/type.hpp"
 #include "support/utility.hpp"
+#include "vm/instruction.hpp"
 
 namespace via {
 
@@ -254,6 +255,12 @@ struct StmtFuncDecl: public Stmt
     const StmtBlock* body;
 
     std::optional<SymbolId> get_symbol() const override { return symbol; }
+};
+
+struct StmtInstruction: public Stmt
+{
+    NODE_FIELDS()
+    Instruction instr;
 };
 
 struct StmtBlock: public Stmt

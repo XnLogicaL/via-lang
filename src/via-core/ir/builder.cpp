@@ -23,6 +23,7 @@
 #include "sema/type.hpp"
 #include "support/math.hpp"
 #include "support/traits.hpp"
+#include "vm/instruction.hpp"
 
 namespace ir = via::ir;
 namespace sema = via::sema;
@@ -695,11 +696,21 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtIf>(
 
         auto* current_block = builder.m_current_block;
         builder.m_current_block = then_block;
+        builder.m_current_block->stmts.push_back(({
+            auto* save = builder.m_alloc.emplace<ir::StmtInstruction>();
+            save->instr = {OpCode::SAVE, 0, 0, 0};
+            save;
+        }));
 
         for (const auto& stmt: branch.br->stmts) {
             builder.m_current_block->stmts.push_back(builder.lower_stmt(stmt));
         }
 
+        builder.m_current_block->stmts.push_back(({
+            auto* restore = builder.m_alloc.emplace<ir::StmtInstruction>();
+            restore->instr = {OpCode::RESTORE, 0, 0, 0};
+            restore;
+        }));
         builder.m_current_block = current_block;
 
         if (branch.cnd != nullptr) {
@@ -744,30 +755,49 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
     auto* cond_block = builder.m_alloc.emplace<ir::StmtBlock>();
     cond_block->id = builder.m_block_id++;
 
-    auto* body_term = builder.m_alloc.emplace<ir::TrBranch>();
-    body_term->target = cond_block;
-
     auto* body_block = builder.m_alloc.emplace<ir::StmtBlock>();
     body_block->id = builder.m_block_id++;
-    body_block->term = body_term;
+    body_block->term = ({
+        auto* body_term = builder.m_alloc.emplace<ir::TrBranch>();
+        body_term->target = cond_block;
+        body_term;
+    });
 
     auto* current_block = builder.m_current_block;
     builder.m_current_block = body_block;
+    builder.m_current_block->stmts.push_back(({
+        auto* save = builder.m_alloc.emplace<ir::StmtInstruction>();
+        save->instr = {OpCode::SAVE, 0, 0, 0};
+        save;
+    }));
 
     for (const auto& stmt: ast_stmt_while->br->stmts) {
         builder.m_current_block->stmts.push_back(builder.lower_stmt(stmt));
     }
 
+    builder.m_current_block->stmts.push_back(({
+        auto* restore = builder.m_alloc.emplace<ir::StmtInstruction>();
+        restore->instr = {OpCode::RESTORE, 0, 0, 0};
+        restore;
+    }));
     builder.m_current_block = current_block;
 
-    auto* cond_term = builder.m_alloc.emplace<ir::TrCondBranch>();
-    cond_term->cnd = builder.lower_expr(ast_stmt_while->cnd);
-    cond_term->iftrue = body_block;
-    cond_term->iffalse = merge_block;
-    cond_block->term = cond_term;
+    current_block->stmts.push_back(({
+        auto* restore = builder.m_alloc.emplace<ir::StmtInstruction>();
+        restore->instr = {OpCode::RESTORE, 0, 0, 0};
+        restore;
+    }));
 
-    builder.m_current_block->stmts.push_back(cond_block);
-    builder.m_current_block->stmts.push_back(body_block);
+    cond_block->term = ({
+        auto* cond_term = builder.m_alloc.emplace<ir::TrCondBranch>();
+        cond_term->cnd = builder.lower_expr(ast_stmt_while->cnd);
+        cond_term->iftrue = body_block;
+        cond_term->iffalse = merge_block;
+        cond_term;
+    });
+
+    current_block->stmts.push_back(cond_block);
+    current_block->stmts.push_back(body_block);
     return merge_block;
 }
 

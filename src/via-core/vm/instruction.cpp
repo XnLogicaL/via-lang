@@ -206,7 +206,7 @@ std::string via::Instruction::to_string(bool use_color, size_t pc) const
                 << std::to_string(pack_halves<uint32_t>(hi, lo));
             ++i; // Skip the LOW operand since it's consumed together
         } else if (type == ADDR_HIGH && i + 1 < 3 && operand_types[i + 1] == ADDR_LOW) {
-            int8_t sign =
+            int64_t sign =
                 (op == OpCode::JMP || op == OpCode::JMPIF || op == OpCode::JMPIFX) ? 1
                                                                                    : -1;
             uint16_t hi = operands[i];

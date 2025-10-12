@@ -241,6 +241,15 @@ void via::detail::ir_lower_stmt<ir::StmtVarDecl>(
 }
 
 template <>
+void via::detail::ir_lower_stmt<ir::StmtInstruction>(
+    Executable& exe,
+    const ir::StmtInstruction* ir_stmt_instr
+) noexcept
+{
+    exe.m_bytecode.push_back(ir_stmt_instr->instr);
+}
+
+template <>
 void via::detail::ir_lower_stmt<ir::StmtBlock>(
     Executable& exe,
     const ir::StmtBlock* ir_stmt_block
@@ -286,6 +295,7 @@ void via::Executable::lower_stmt(const ir::Stmt* stmt) noexcept
 
     VISIT_STMT(ir::StmtVarDecl)
     VISIT_STMT(ir::StmtFuncDecl)
+    VISIT_STMT(ir::StmtInstruction)
     VISIT_STMT(ir::StmtBlock)
     VISIT_STMT(ir::StmtExpr)
 
@@ -376,30 +386,39 @@ via::Executable* via::Executable::build_from_ir(
 
 void via::Executable::lower_jumps() noexcept
 {
-    for (size_t pc = 0; Instruction & instr: m_bytecode) {
+    size_t pc = 0;
+    for (Instruction& instr: m_bytecode) {
         switch (instr.op) {
         case OpCode::JMP: {
-            auto label = pack_halves<uint32_t>(instr.a, instr.b);
-            auto address = m_labels.at(label);
-            auto offset = static_cast<int32_t>(address) - static_cast<int32_t>(pc) + 1;
-            if (offset < 0) {
+            uint32_t label = pack_halves<uint32_t>(instr.a, instr.b);
+            uint32_t address = m_labels.at(label);
+
+            uint32_t offset;
+            if (address < pc) {
                 instr.op = OpCode::JMPBACK;
+                offset = pc - address - 1; // store positive distance
+            } else {
+                offset = address - pc + 1;
             }
 
-            unpack_halves((uint32_t) offset, instr.a, instr.b);
+            unpack_halves(offset, instr.a, instr.b);
             break;
         }
         case OpCode::JMPIF:
         case OpCode::JMPIFX: {
-            auto label = pack_halves<uint32_t>(instr.b, instr.c);
-            auto address = m_labels.at(label);
-            auto offset = static_cast<int32_t>(address) - static_cast<int32_t>(pc) + 1;
-            if (offset < 0) {
+            uint32_t label = pack_halves<uint32_t>(instr.b, instr.c);
+            uint32_t address = m_labels.at(label);
+
+            uint32_t offset;
+            if (address < pc) {
                 instr.op =
-                    instr.op == OpCode::JMPIF ? OpCode::JMPBACKIF : OpCode::JMPBACKIFX;
+                    (instr.op == OpCode::JMPIF) ? OpCode::JMPBACKIF : OpCode::JMPBACKIFX;
+                offset = pc - address - 1; // positive distance
+            } else {
+                offset = address - pc + 1;
             }
 
-            unpack_halves((uint32_t) offset, instr.b, instr.c);
+            unpack_halves(offset, instr.b, instr.c);
             break;
         }
         default:
