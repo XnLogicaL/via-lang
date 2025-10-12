@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
     try {
         ModuleFlags flags = ModuleFlags::NONE;
 
-        uint8_t verbosity;
-        bool no_execute, debugger;
+        uint8_t verbosity = 0;
+        bool no_execute = false, debugger = false;
         std::string dump;
         std::filesystem::path input;
         std::vector<std::string> imports;

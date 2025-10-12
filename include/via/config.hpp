@@ -69,14 +69,15 @@
     #define DISABLE_WARNING(w)
 #endif
 
-#ifdef VIA_PLATFORM_WINDOWS
+#ifdef VIA_COMPILER_MSVC
     #define VIA_EXPORT __declspec(dllexport)
+    #define VIA_NOINLINE __declspec(noinline)
+#elif defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
+    #define VIA_EXPORT __attribute__((visibility("default")))
+    #define VIA_NOINLINE __attribute__((noinline))
 #else
-    #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
-        #define VIA_EXPORT __attribute__((visibility("default")))
-    #else
-        #define VIA_EXPORT
-    #endif
+    #define VIA_EXPORT
+    #define VIA_NOINLINE
 #endif
 
 #define VIA_CONSTANT inline constexpr

@@ -10,7 +10,7 @@ function(load_unit NAME)
         get_filename_component(src_name ${src} NAME_WE)
         add_library(via-${src_name} SHARED ${src})
 
-        target_link_libraries(via-${src_name} PRIVATE via::core mimalloc)
+        target_link_libraries(via-${src_name} PUBLIC via::core)
         set_target_properties(via-${src_name}
             PROPERTIES
                 OUTPUT_NAME ${src_name}         # just "foo.so" instead of "libfoo.so"

@@ -11,7 +11,7 @@
 #include "manager.hpp"
 #include "sema/const.hpp"
 
-via::DefTableEntry::DefTableEntry(
+VIA_NOINLINE via::DefTableEntry::DefTableEntry(
     ModuleManager& manager,
     const char* name,
     const Def* def
@@ -20,7 +20,7 @@ via::DefTableEntry::DefTableEntry(
       def(def)
 {}
 
-via::DefParm::DefParm(
+VIA_NOINLINE via::DefParm::DefParm(
     ModuleManager& manager,
     const char* name,
     const sema::Type* type,
@@ -31,7 +31,7 @@ via::DefParm::DefParm(
       value(std::move(init))
 {}
 
-via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* node)
+VIA_NOINLINE via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* node)
 {
     if TRY_COERCE (const ir::StmtFuncDecl, fn, node) {
         auto* fndef = manager.allocator().emplace<FunctionDef>();
@@ -44,7 +44,7 @@ via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* node)
     return nullptr;
 }
 
-via::Def* via::Def::function(
+VIA_NOINLINE via::Def* via::Def::function(
     ModuleManager& manager,
     const NativeCallback callback,
     const sema::Type* ret_type,

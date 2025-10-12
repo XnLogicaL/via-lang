@@ -2,7 +2,7 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "default",
+      "name": "vcpkg-user",
       "inherits": "vcpkg",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",

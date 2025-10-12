@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <mimalloc.h>
 #include <vector>
 #include <via/config.hpp>
 #include "debug.hpp"
@@ -93,27 +92,6 @@ struct DefaultAllocator
     }
 };
 
-struct MiAllocator
-{
-    static mi_heap_t* allocator()
-    {
-        static mi_heap_t* alloc = mi_heap_new();
-        return alloc;
-    }
-
-    template <typename T>
-    static T* alloc(size_t size)
-    {
-        return (T*) mi_heap_calloc(allocator(), size, sizeof(T));
-    }
-
-    template <typename T>
-    static void free(T* ptr)
-    {
-        mi_free((void*) ptr);
-    }
-};
-
 template <typename Alloc = DefaultAllocator>
 class BumpAllocator final
 {
@@ -187,69 +165,22 @@ class BumpAllocator final
 class ScopedAllocator final
 {
   public:
-    ScopedAllocator()
-        : m_heap(mi_heap_new())
-    {}
-
-    ~ScopedAllocator()
-    {
-        detail::__destroy_registry(&m_registry);
-
-        if (m_heap) {
-            // TODO: Uncomment when fixed
-            // Causes ASan crash due to an internal bug in mimalloc
-            // See: https://github.com/microsoft/mimalloc/issues/1146
-            //
-            // mi_heap_destroy(m_heap);
-            m_heap = nullptr;
-        }
-    }
+    ScopedAllocator();
+    ~ScopedAllocator();
 
     NO_COPY(ScopedAllocator);
     NO_MOVE(ScopedAllocator);
 
   public:
-    [[nodiscard]] inline bool owns(void* ptr) noexcept
-    {
-        return m_heap && mi_heap_check_owned(m_heap, ptr);
-    }
-
-    [[nodiscard]] inline void* alloc(size_t size) noexcept
-    {
-        return mi_heap_malloc(m_heap, size);
-    }
-
-    inline void free(void* ptr)
-    {
-        debug::require(
-            owns(ptr),
-            std::format(
-                "free() called on pointer {:p} not owned by allocator {:p}",
-                (const void*) ptr,
-                (const void*) this
-            )
-        );
-
-        auto it = std::find_if(
-            m_registry.begin(),
-            m_registry.end(),
-            [&](const detail::ObjectEntry& e) { return e.ptr == static_cast<void*>(ptr); }
-        );
-
-        [[likely]] if (it != m_registry.end()) {
-            if (!it->destroyed) {
-                it->dtor(it->ptr, it->count);
-                it->destroyed = true;
-            }
-
-            m_registry.erase(it);
-        }
-        mi_free(ptr);
-    }
+    bool owns(void* ptr) noexcept;
+    void* alloc(size_t size) noexcept;
+    char* strdup(const char* str) noexcept;
+    char* strndup(const char* str, size_t n) noexcept;
+    void free(void* ptr);
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] inline T* emplace(Args&&... args)
+    [[nodiscard]] T* emplace(Args&&... args)
         noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
         T* buffer = (T*) alloc(sizeof(T));
@@ -259,7 +190,7 @@ class ScopedAllocator final
 
     template <typename T, typename... Args>
         requires std::is_constructible_v<T, Args...>
-    [[nodiscard]] inline T* emplace_array(size_t count, Args&&... args)
+    [[nodiscard]] T* emplace_array(size_t count, Args&&... args)
         noexcept(std::is_nothrow_constructible_v<T, Args...>)
     {
         T* buffer = (T*) alloc(count * sizeof(T));
@@ -272,18 +203,8 @@ class ScopedAllocator final
         return buffer;
     }
 
-    [[nodiscard]] inline char* strdup(const char* str) noexcept
-    {
-        return mi_heap_strdup(m_heap, str);
-    }
-
-    [[nodiscard]] inline char* strndup(const char* str, size_t n) noexcept
-    {
-        return mi_heap_strndup(m_heap, str, n);
-    }
-
   private:
-    mi_heap_t* m_heap;
+    void* m_heap;
     detail::ObRegistry m_registry;
 };
 

@@ -8,7 +8,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     set(MI_SECURE $<$<CONFIG:Debug>:ON>)
-    set(MI_TRACK_ASAN $<$<CONFIG:Debug>:ON>)
+    # set(MI_TRACK_ASAN $<$<CONFIG:Debug>:ON>)
     set(MI_DEBUG_FULL $<$<CONFIG:Debug>:ON>)
 
     add_compile_options(
@@ -19,11 +19,11 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-unused-parameter
         -Wno-unused-variable
         -Wno-unused-but-set-variable
-        $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
+        # $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
     )
 
     add_link_options(
-        $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
+        # $<$<CONFIG:Debug>:-fsanitize=address,undefined,leak>
     )
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/diagnostics:color)

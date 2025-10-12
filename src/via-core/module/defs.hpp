@@ -52,7 +52,7 @@ struct DefParm
     const sema::Type* type;
     sema::ConstValue value;
 
-    explicit DefParm(
+    VIA_NOINLINE explicit DefParm(
         ModuleManager& manager,
         const char* name,
         const sema::Type* type,
@@ -65,8 +65,11 @@ struct DefTableEntry
     SymbolId id;
     const Def* def;
 
-    explicit DefTableEntry(ModuleManager& manager, const char* name, const Def* def)
-        noexcept;
+    VIA_NOINLINE explicit DefTableEntry(
+        ModuleManager& manager,
+        const char* name,
+        const Def* def
+    ) noexcept;
 };
 
 using DefTable = DefTableEntry[];
@@ -76,8 +79,8 @@ struct Def
     virtual SymbolId identity() const = 0;
     virtual std::string to_string() const = 0;
 
-    static Def* from(ModuleManager& manager, const ir::Stmt* node);
-    static Def* function(
+    VIA_NOINLINE static Def* from(ModuleManager& manager, const ir::Stmt* node);
+    VIA_NOINLINE static Def* function(
         ModuleManager& manager,
         const NativeCallback callback,
         const sema::Type* ret_type,

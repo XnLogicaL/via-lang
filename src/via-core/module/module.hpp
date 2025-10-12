@@ -51,7 +51,7 @@ struct NativeModuleInfo
 
     template <size_t Count>
         requires(Count > 0)
-    static NativeModuleInfo*
+    VIA_NOINLINE static NativeModuleInfo*
     create(ScopedAllocator& alloc, const DefTableEntry (&table)[Count])
     {
         return alloc.emplace<NativeModuleInfo>(Count, table);
