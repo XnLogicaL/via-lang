@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <map>
 #include <replxx.hxx>
 #include <spdlog/spdlog.h>
-#include <unordered_map>
 #include <variant>
 #include <via/config.hpp>
 #include "machine.hpp"
@@ -69,7 +69,7 @@ class CommandTable
     void print_help() const;
 
   private:
-    std::unordered_map<std::string, Command> commands;
+    std::map<std::string, Command> commands;
 };
 
 class Debugger final

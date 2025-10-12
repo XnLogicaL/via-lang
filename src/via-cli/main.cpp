@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
         ModuleFlags flags = ModuleFlags::NONE;
 
         uint8_t verbosity;
-        bool no_execute, debug;
+        bool no_execute, debugger;
         std::string dump;
         std::filesystem::path input;
         std::vector<std::string> imports;
@@ -87,16 +87,19 @@ int main(int argc, char* argv[])
         CLI::App app;
 
         app.failure_message([](auto, const CLI::Error& e) {
-            return via::ansi::format(
-                       "error: ",
-                       via::ansi::Foreground::RED,
-                       via::ansi::Background::NONE,
-                       via::ansi::Style::BOLD
-                   ) +
-                   e.what();
+            return std::format(
+                "{}{}\n",
+                via::ansi::format(
+                    "error: ",
+                    via::ansi::Foreground::RED,
+                    via::ansi::Background::NONE,
+                    via::ansi::Style::BOLD
+                ),
+                e.what()
+            );
         });
 
-        app.add_option("input,-i", input, "Input file path")
+        app.add_option("input", input, "Input file path")
             ->required()
             ->check(CLI::ExistingFile)
             ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
@@ -107,11 +110,16 @@ int main(int argc, char* argv[])
             ->default_val(0)
             ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
 
-        app.add_option("--import-dirs,-I", imports, "Import directory list")
-            ->multi_option_policy(CLI::MultiOptionPolicy::Throw);
+        app.add_option(
+               "--import-dirs,-I",
+               imports,
+               "Comma seperated list of import directory paths"
+        )
+            ->delimiter(',')
+            ->multi_option_policy(CLI::MultiOptionPolicy::Join);
 
         app.add_flag("--no-execute", no_execute, "Disables sequential execution");
-        app.add_flag("--debug", debug, "Enables interactive VM debugger");
+        app.add_flag("--debugger", debugger, "Enables interactive VM debugger");
 
         CLI11_PARSE(app, argc, argv);
 
@@ -121,9 +129,8 @@ int main(int argc, char* argv[])
         do {
             if (no_execute)
                 flags |= ModuleFlags::NO_EXECUTION;
-            if (debug)
-                flags |= ModuleFlags::DEBUG;
-
+            if (debugger)
+                flags |= ModuleFlags::LAUNCH_DEBUGGER;
             if (dump == "ttree") {
                 flags |= ModuleFlags::DUMP_TTREE;
             } else if (dump == "ast") {

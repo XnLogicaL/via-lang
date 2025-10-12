@@ -183,6 +183,13 @@ template <bool SingleStep, bool OverridePC>
             SET_REGISTER(a, CONST_VALUE(pc->b));
             DISPATCH();
         }
+        CASE(LOADNIL)
+        {
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(a, Value::create(vm));
+            DISPATCH();
+        }
         CASE(LOADTRUE)
         {
             CSE_OPERANDS_A();
@@ -195,6 +202,19 @@ template <bool SingleStep, bool OverridePC>
             CSE_OPERANDS_A();
             FREE_REGISTER(a);
             SET_REGISTER(a, Value::create(vm, false));
+            DISPATCH();
+        }
+        CASE(LOADINT)
+        {
+            CSE_OPERANDS_A();
+            FREE_REGISTER(a);
+            SET_REGISTER(
+                a,
+                Value::create(
+                    vm,
+                    static_cast<int64_t>(pack_halves<uint32_t>(pc->b, pc->c))
+                )
+            );
             DISPATCH();
         }
         CASE(NEWSTR)

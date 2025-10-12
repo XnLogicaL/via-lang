@@ -231,7 +231,7 @@ std::expected<via::Module*, std::string> via::Module::load_source_file(
             VirtualMachine vm(module, exe);
 
             // Check for debug flag
-            if (flags & ModuleFlags::DEBUG) {
+            if (flags & ModuleFlags::LAUNCH_DEBUGGER) {
                 Debugger dbg(vm);
                 dbg.register_default_commands();
                 dbg.start();

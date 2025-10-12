@@ -8,14 +8,15 @@
 ** ===================================================== */
 
 #include "executable.hpp"
-#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <unordered_map>
 #include "debug.hpp"
 #include "diagnostics.hpp"
 #include "ir/ir.hpp"
 #include "module/manager.hpp"
 #include "module/module.hpp"
+#include "sema/const.hpp"
 #include "sema/context.hpp"
 #include "sema/type.hpp"
 #include "support/ansi.hpp"
@@ -40,8 +41,36 @@ void via::detail::ir_lower_expr<ir::ExprConstant>(
 ) noexcept
 {
     set_null_dst_trap(exe, dst);
-    exe.push_constant(ir_expr_constant->value);
-    exe.push_instruction(OpCode::LOADK, {*dst, static_cast<uint16_t>(exe.constant_id())});
+
+    const sema::ConstValue& cvalue = ir_expr_constant->value;
+
+    switch (cvalue.kind()) {
+    case ValueKind::NIL:
+        exe.push_instruction(OpCode::LOADNIL, {*dst});
+        break;
+    case ValueKind::BOOL:
+        exe.push_instruction(
+            cvalue.value<ValueKind::BOOL>() ? OpCode::LOADTRUE : OpCode::LOADFALSE,
+            {*dst}
+        );
+        break;
+    case ValueKind::INT: {
+        int64_t integer = cvalue.value<ValueKind::INT>();
+        if (integer <= std::numeric_limits<int32_t>::max() &&
+            integer >= std::numeric_limits<int32_t>::min()) {
+            uint16_t b, c;
+            int32_t val32 = static_cast<int32_t>(integer); // preserve sign
+            unpack_halves(static_cast<uint32_t>(val32), b, c);
+            exe.push_instruction(OpCode::LOADINT, {*dst, b, c});
+            break;
+        }
+        [[fallthrough]];
+    }
+    default:
+        exe.push_constant(cvalue);
+        exe.push_instruction(OpCode::LOADK, {*dst, (uint16_t) exe.constant_id()});
+        break;
+    }
 }
 
 template <>
@@ -432,22 +461,33 @@ std::string via::Executable::to_string() const
 {
     std::ostringstream oss;
     oss << ansi::format(
-        "[section .text]\n",
+        "[disassembly of program code]:\n",
         ansi::Foreground::YELLOW,
         ansi::Background::NONE,
         ansi::Style::UNDERLINE
     );
 
+    oss << ansi::format(
+        "  pc      opcode           operands\n"
+        "  ------  ---------------  ---------------\n",
+        ansi::Foreground::NONE,
+        ansi::Background::NONE,
+        ansi::Style::FAINT
+    );
+
     for (size_t pc = 0; const Instruction& insn: m_bytecode) {
-        oss << "  0x";
-        oss << std::right << std::setw(4) << std::setfill('0') << std::hex << (pc * 8)
-            << std::dec;
+        oss << "  "
+            << ansi::format(
+                   std::format("0x{:0>4x}", pc * 8),
+                   ansi::Foreground::NONE,
+                   ansi::Background::NONE,
+                   ansi::Style::FAINT
+               );
         oss << "  " << insn.to_string(true, pc) << "\n";
         pc++;
     }
-
     oss << ansi::format(
-        "[section .data]\n",
+        "\n[disassembly of program data]:\n",
         ansi::Foreground::YELLOW,
         ansi::Background::NONE,
         ansi::Style::UNDERLINE

@@ -88,7 +88,7 @@ enum class ModuleFlags : uint32_t
     DUMP_EXE = 1 << 3,
     DUMP_DEFTABLE = 1 << 4,
     NO_EXECUTION = 1 << 5,
-    DEBUG = 1 << 6,
+    LAUNCH_DEBUGGER = 1 << 6,
     ALL = 0xFFFFFFFF,
 };
 

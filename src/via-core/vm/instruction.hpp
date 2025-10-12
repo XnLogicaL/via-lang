@@ -29,8 +29,10 @@ namespace via {
     X(COPY)                                                                              \
     X(COPYREF)                                                                           \
     X(LOADK)                                                                             \
+    X(LOADNIL)                                                                           \
     X(LOADTRUE)                                                                          \
     X(LOADFALSE)                                                                         \
+    X(LOADINT)                                                                           \
     X(NEWSTR)                                                                            \
     X(NEWARR)                                                                            \
     X(NEWDICT)                                                                           \

@@ -12,7 +12,9 @@
 #include <print>
 #include <spdlog/spdlog.h>
 #include <sstream>
+#include "support/ansi.hpp"
 #include "value.hpp"
+#include "vm/machine.hpp"
 
 static std::vector<std::string> tokenize_command(const std::string& line)
 {
@@ -145,16 +147,23 @@ void via::CommandTable::print_help() const
     }
 
     spdlog::info("available commands:\n");
-    for (const auto& [name, cmd]: commands) {
-        std::ostringstream args_ss;
-        for (const auto& type: cmd.args)
-            args_ss << " [" << to_string(type) << "]";
 
+    for (const auto& [name, cmd]: commands) {
+        std::ostringstream oss;
+        for (const auto& type: cmd.args)
+            oss << " [" << to_string(type) << "]";
         std::cout << "  " << std::left << std::setw(static_cast<int>(max_name_len))
                   << name << " " << std::left << std::setw(static_cast<int>(max_args_len))
-                  << args_ss.str() << " — " << cmd.help << "\n";
+                  << oss.str() << "     ->  " << cmd.help << "\n";
     }
-    std::cout << "\nPress CTRL + C to exit...\n" << std::endl;
+
+    std::cout << ansi::format(
+                     "\nPress [CTRL+C] to exit...\n",
+                     ansi::Foreground::NONE,
+                     ansi::Background::NONE,
+                     ansi::Style::ITALIC
+                 )
+              << std::endl;
 }
 
 void via::Debugger::register_default_commands() noexcept
@@ -170,7 +179,7 @@ void via::Debugger::register_default_commands() noexcept
         "steps the interpreter a given times",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
-            size_t n = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            size_t n = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             for (size_t i = 0; i < n; i++) {
                 m_vm.execute_once();
             }
@@ -208,7 +217,7 @@ void via::Debugger::register_default_commands() noexcept
         [this](const auto& args) {
             std::println(std::cout);
 
-            size_t pc = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
                 auto bytecode = m_vm.m_exe->bytecode();
@@ -236,7 +245,7 @@ void via::Debugger::register_default_commands() noexcept
         [this](const auto& args) {
             std::println(std::cout);
 
-            size_t reg = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            size_t reg = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (auto* ptr = m_vm.m_registers[reg]) {
                 spdlog::info("register {}:", reg);
                 std::cout << "- raw:          " << (void*) ptr << "\n";
@@ -250,13 +259,38 @@ void via::Debugger::register_default_commands() noexcept
     );
 
     m_cmds.register_command(
+        "regs",
+        "dumps all occupied registers",
+        {},
+        [this](const auto& args) {
+            std::println(std::cout);
+            spdlog::info("registers:");
+
+            bool debounce = false;
+            Snapshot snapshot(&m_vm);
+
+            for (size_t i = 0; const auto& reg: snapshot.registers) {
+                if (reg != nullptr) {
+                    std::println("  [{}] = {} (@{:p})", i, reg->to_string(), (void*) reg);
+                    debounce = true;
+                } else if (debounce) {
+                    std::println("  ...");
+                    debounce = false;
+                }
+                ++i;
+            }
+            std::println(std::cout);
+        }
+    );
+
+    m_cmds.register_command(
         "const",
         "dumps the given constant",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
             std::println(std::cout);
 
-            size_t idx = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            size_t idx = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             auto& consts = m_vm.m_exe->constants();
             if (idx < consts.size()) {
                 auto konst = consts.at(idx);
@@ -277,7 +311,7 @@ void via::Debugger::register_default_commands() noexcept
         [this](const auto& args) {
             std::println(std::cout);
 
-            size_t pc = std::get<(size_t) ArgumentType::INTEGER>(args.at(0));
+            size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
                 auto bytecode = m_vm.m_exe->bytecode();

@@ -170,7 +170,8 @@ std::string via::Instruction::to_string(bool use_color, size_t pc) const
                             ansi::Background::NONE,
                             ansi::Style::BOLD
                         )
-                      : opcode);
+                      : opcode)
+        << "  ";
 
     OpInfo info;
     bool found = false;

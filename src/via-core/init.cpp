@@ -38,9 +38,24 @@ static void mimalloc_error_handler(int err, void* arg)
 static void init_mimalloc(uint8_t verbosity) noexcept
 {
     mi_option_set(mi_option_reserve_os_memory, via::config::PREALLOC_SIZE);
+
+    mi_option_set(mi_option_large_os_pages, 0);
+    mi_option_set(mi_option_reserve_huge_os_pages, 0);
+    mi_option_set(mi_option_reserve_huge_os_pages_at, -1); // any NUMA node
+
+    mi_option_set(mi_option_eager_commit, 0);
+    mi_option_set(mi_option_eager_commit_delay, 4); // commit lazily in 4-page steps
+
+    mi_option_set(mi_option_reset_delay, 0); // Disable page reset delay
     mi_option_set(mi_option_show_errors, via::config::DEBUG_ENABLED);
     mi_option_set(mi_option_show_stats, verbosity > 1);
+    mi_option_set(mi_option_verbose, verbosity > 2);
+
     mi_register_error(mimalloc_error_handler, nullptr);
+
+    if (verbosity > 1) {
+        mi_stats_print(nullptr);
+    }
 }
 
 static void trap_call() noexcept
