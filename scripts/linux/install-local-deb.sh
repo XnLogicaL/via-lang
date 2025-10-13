@@ -35,8 +35,18 @@ if [ -z "$VCPKG_ROOT" ]; then
 fi
 
 # Build everything
+build_type=${BASH_ARGV[0]}
+valid_types=("Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+if [[ ! " ${valid_types[*]} " =~ " ${build_type} " ]]; then
+    error "invalid build type: '${build_type}'"
+    info "valid options are: ${valid_types[*]}"
+    exit 1
+fi
+
 info "building via..."
-cmake -G Ninja -B build -D CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+cmake -G Ninja -B build \
+      -D CMAKE_BUILD_TYPE=$build_type \
+      -D CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 cmake --build build -j=$(nproc 2>/dev/null || echo 1)
 
 # Copy executable

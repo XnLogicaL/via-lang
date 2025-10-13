@@ -59,6 +59,20 @@ std::string via::Snapshot::to_string() const noexcept
     return oss.str();
 }
 
+void via::VirtualMachine::save_stack()
+{
+    m_sp = m_stack.end();
+}
+
+void via::VirtualMachine::restore_stack()
+{
+    for (auto* ptr = m_stack.end() - 1; ptr > m_sp; ptr--) {
+        auto* value = reinterpret_cast<Value*>(*ptr);
+        value->unref();
+    }
+    m_stack.jump(m_sp);
+}
+
 via::IntAction via::VirtualMachine::handle_interrupt()
 {
 #define DEFINE_INTERRUPT_HANDLER(INT)                                                    \

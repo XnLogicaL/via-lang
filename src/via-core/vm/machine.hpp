@@ -150,6 +150,8 @@ class VirtualMachine final
     void execute_once();
 
   protected:
+    void save_stack();
+    void restore_stack();
     bool has_interrupt() const { return m_int != Interrupt::NONE; }
     IntAction handle_interrupt();
     Closure* unwind_stack(std::function<bool(

@@ -73,7 +73,7 @@ void via::DiagContext::emit(spdlog::logger* logger) const
 
 void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) const
 {
-    ansi::Foreground foreground;
+    ansi::Foreground foreground = ansi::Foreground::NONE;
     spdlog::level::level_enum level;
 
     switch (diag.level) {

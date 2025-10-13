@@ -1349,12 +1349,12 @@ template <bool SingleStep, bool OverridePC>
         }
         CASE(SAVE)
         {
-            vm->m_sp = &stack.top() + 1;
+            vm->save_stack();
             DISPATCH();
         }
         CASE(RESTORE)
         {
-            stack.jump(vm->m_sp);
+            vm->restore_stack();
             DISPATCH();
         }
         CASE(PUSH)

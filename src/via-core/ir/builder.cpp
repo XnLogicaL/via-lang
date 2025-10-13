@@ -765,6 +765,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
 
     auto* current_block = builder.m_current_block;
     builder.m_current_block = body_block;
+
     builder.m_current_block->stmts.push_back(({
         auto* save = builder.m_alloc.emplace<ir::StmtInstruction>();
         save->instr = {OpCode::SAVE, 0, 0, 0};
@@ -780,13 +781,8 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
         restore->instr = {OpCode::RESTORE, 0, 0, 0};
         restore;
     }));
-    builder.m_current_block = current_block;
 
-    current_block->stmts.push_back(({
-        auto* restore = builder.m_alloc.emplace<ir::StmtInstruction>();
-        restore->instr = {OpCode::RESTORE, 0, 0, 0};
-        restore;
-    }));
+    builder.m_current_block = current_block;
 
     cond_block->term = ({
         auto* cond_term = builder.m_alloc.emplace<ir::TrCondBranch>();
