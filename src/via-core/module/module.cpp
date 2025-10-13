@@ -117,21 +117,19 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
         module->m_defs[entry.id] = entry.def;
     }
 
-    // Check for definition table dump flag
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        // Dump definition table header
-        std::cout << ansi::format(
-                         std::format("[deftable .{}]", name),
-                         ansi::Foreground::YELLOW,
-                         ansi::Background::NONE,
-                         ansi::Style::BOLD
-                     )
-                  << "\n";
-
-        // Dump definition table entries
+        std::cout
+            << ansi::format(
+                   std::format("[disassemly of definition table (module '{}')]:", name),
+                   ansi::Foreground::YELLOW,
+                   ansi::Background::NONE,
+                   ansi::Style::UNDERLINE
+               )
+            << "\n";
         for (const auto& def: module->m_defs) {
             std::cout << "  " << def.second->to_string() << "\n";
         }
+        std::cout << std::endl;
     }
 
     // Pop import stack
@@ -258,17 +256,18 @@ error:
         std::cout << (module->m_exe ? module->m_exe->to_string() : "<null-executable>")
                   << "\n";
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::cout << ansi::format(
-                         std::format("[deftable .{}]", name),
-                         ansi::Foreground::YELLOW,
-                         ansi::Background::NONE,
-                         ansi::Style::BOLD
-                     )
-                  << "\n";
-
+        std::cout
+            << ansi::format(
+                   std::format("[disassemly of definition table (module '{}')]:", name),
+                   ansi::Foreground::YELLOW,
+                   ansi::Background::NONE,
+                   ansi::Style::UNDERLINE
+               )
+            << "\n";
         for (const auto& def: module->m_defs) {
             std::cout << "  " << def.second->to_string() << "\n";
         }
+        std::cout << std::endl;
     }
 
     // Handle failed compilation

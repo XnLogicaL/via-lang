@@ -55,10 +55,10 @@ echo "export PATH=\$VCPKG_ROOT:\$PATH" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Now clone the repository into a prefered directory and `cd` into it:
+Clone the repository:
 ```bash
-$ git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
-$ cd /path/to/via
+git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
+cd /path/to/via
 ```
 
 Run the install script that corresponds to your installation goals; `install-deb.sh` for system-wide installation, and `install-user-deb.sh` for local installation:

@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -58,7 +59,7 @@ class InternTable
   protected:
     size_t m_next_id = 0;
     std::unordered_map<T, Id> m_map;
-    std::unordered_map<Id, T> m_reverse;
+    std::map<Id, T> m_reverse;
 };
 
 } // namespace via

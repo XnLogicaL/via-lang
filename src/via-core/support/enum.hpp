@@ -13,7 +13,7 @@
 #include "traits.hpp"
 
 namespace via {
-inline namespace literals {
+inline namespace operators {
 
 template <scoped_enum Enum>
 constexpr auto operator~(Enum a) noexcept
@@ -133,5 +133,5 @@ constexpr Enum& operator^=(Enum& a, std::underlying_type_t<Enum> b) noexcept
     return a;
 }
 
-} // namespace literals
+} // namespace operators
 } // namespace via

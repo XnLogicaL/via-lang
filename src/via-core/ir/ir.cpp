@@ -8,8 +8,8 @@
 ** ===================================================== */
 
 #include "ir.hpp"
-#include "module/module.hpp"
 #include "module/symbol.hpp"
+#include "support/ansi.hpp"
 
 namespace ir = via::ir;
 using Tk = via::TokenKind;
@@ -17,21 +17,12 @@ using Tk = via::TokenKind;
 inline size_t ZERO = 0;
 
 #define INDENT std::string(depth * 2, ' ')
-#define SYMBOL(ID) (sym_tab->lookup(ID).value_or("<unknown-symbol>"))
+#define SYMBOL(ID) (sym_tab->lookup(ID).value_or("<symbol error>"))
 #define DUMP_IF(PTR, ...)                                                                \
     (PTR ? PTR->to_string(__VA_ARGS__)                                                   \
          : [](const SymbolTable* sym_tab = nullptr, size_t& depth = ZERO) {              \
-               return INDENT + "<null>";                                                 \
+               return INDENT + "<expression error>";                                     \
            }(__VA_ARGS__))
-
-std::string ir::TrReturn::to_string(const SymbolTable* sym_tab, size_t& depth) const
-{
-    return INDENT + std::format(
-                        "return {} {}",
-                        DUMP_IF(val, sym_tab, ZERO),
-                        implicit ? "(implicit)" : ""
-                    );
-}
 
 via::UnaryOp via::to_unary_op(Tk kind) noexcept
 {
@@ -85,25 +76,34 @@ via::BinaryOp via::to_binary_op(Tk kind) noexcept
     via::debug::unimplemented("unmapped BinaryOp TokenKind");
 }
 
+std::string ir::TrReturn::to_string(const SymbolTable* sym_tab, size_t& depth) const
+{
+    return INDENT + std::format(
+                        "RETURN {} {}",
+                        DUMP_IF(val, sym_tab, ZERO),
+                        implicit ? "(implicit)" : ""
+                    );
+}
+
 std::string ir::TrContinue::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
-    return INDENT + "continue";
+    return INDENT + "CONTINUE";
 }
 
 std::string ir::TrBreak::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
-    return INDENT + "break";
+    return INDENT + "BREAK";
 }
 
 std::string ir::TrBranch::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
-    return INDENT + std::format("br #{}", target->id);
+    return INDENT + std::format("BRANCH #{}", target->id);
 }
 
 std::string ir::TrCondBranch::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
     return INDENT + std::format(
-                        "cndbr {} ? #{} : #{}",
+                        "BRANCH {} ? #{} : #{}",
                         DUMP_IF(cnd, sym_tab, ZERO),
                         iftrue->id,
                         iffalse->id
@@ -137,12 +137,7 @@ std::string ir::ExprAccess::to_string(const SymbolTable* sym_tab, size_t&) const
 
 std::string ir::ExprModuleAccess::to_string(const SymbolTable* sym_tab, size_t&) const
 {
-    return std::format(
-        "module<{}>::{}@{:p}",
-        SYMBOL(mod_id),
-        SYMBOL(key_id),
-        reinterpret_cast<const void*>(def)
-    );
+    return std::format("MODULE({})::{}", SYMBOL(mod_id), SYMBOL(key_id));
 }
 
 std::string ir::ExprUnary::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -163,9 +158,9 @@ std::string ir::ExprBinary::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::ExprCall::to_string(const SymbolTable* sym_tab, size_t&) const
 {
     return std::format(
-        "call {}, {}",
+        "CALL {}{}",
         DUMP_IF(callee, sym_tab, ZERO),
-        debug::to_string<const Expr*>(
+        debug::to_string<const Expr*, '(', ')'>(
             args,
             [&](const auto& expr) { return DUMP_IF(expr, sym_tab, ZERO); }
         )
@@ -175,7 +170,7 @@ std::string ir::ExprCall::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::ExprSubscript::to_string(const SymbolTable* sym_tab, size_t&) const
 {
     return std::format(
-        "subscript {}, {}",
+        "{}[{}]",
         DUMP_IF(expr, sym_tab, ZERO),
         DUMP_IF(idx, sym_tab, ZERO)
     );
@@ -183,7 +178,7 @@ std::string ir::ExprSubscript::to_string(const SymbolTable* sym_tab, size_t&) co
 
 std::string ir::ExprCast::to_string(const SymbolTable* sym_tab, size_t&) const
 {
-    return std::format("({} as {})", DUMP_IF(expr, sym_tab, ZERO), DUMP_IF(cast));
+    return std::format("{} AS {}", DUMP_IF(expr, sym_tab, ZERO), DUMP_IF(cast));
 }
 
 std::string ir::ExprTernary::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -216,7 +211,7 @@ std::string ir::ExprLambda::to_string(const SymbolTable* sym_tab, size_t&) const
 std::string ir::StmtVarDecl::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
     return INDENT + std::format(
-                        "local {}: {} = {}",
+                        "LOCAL {}: {} = {}",
                         SYMBOL(symbol),
                         DUMP_IF(type),
                         DUMP_IF(expr, sym_tab, ZERO)
@@ -228,7 +223,7 @@ std::string ir::StmtFuncDecl::to_string(const SymbolTable* sym_tab, size_t& dept
     std::ostringstream oss;
     oss << INDENT
         << std::format(
-               "function {} {} -> {}:\n",
+               "FUNCTION {} {} -> {}:\n",
                SYMBOL(symbol),
                debug::to_string<Parm, '(', ')'>(
                    parms,
@@ -258,14 +253,14 @@ ir::StmtInstruction::to_string(const SymbolTable* sym_tab, size_t& depth) const
 std::string ir::StmtBlock::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
     std::ostringstream oss;
-    oss << INDENT << "block #" << id << ":\n";
+    oss << INDENT << "BLOCK #" << id << ":\n";
     depth++;
 
     for (const Stmt* stmt: stmts) {
         oss << DUMP_IF(stmt, sym_tab, depth) << "\n";
     }
 
-    oss << INDENT << (term ? DUMP_IF(term, sym_tab, ZERO) : "<no-terminator>");
+    oss << INDENT << (term ? DUMP_IF(term, sym_tab, ZERO) : "<no terminator>");
     depth--;
     return oss.str();
 }
@@ -278,12 +273,18 @@ std::string ir::StmtExpr::to_string(const SymbolTable* sym_tab, size_t& depth) c
 [[nodiscard]] std::string
 via::debug::to_string(const SymbolTable& sym_tab, const IRTree& ir_tree)
 {
+    size_t depth = 1;
+
     std::ostringstream oss;
-    size_t depth = 0;
+    oss << ansi::format(
+        "[disassembly of intermediate representation]:\n",
+        ansi::Foreground::YELLOW,
+        ansi::Background::NONE,
+        ansi::Style::UNDERLINE
+    );
 
     for (const auto& node: ir_tree) {
         oss << DUMP_IF(node, &sym_tab, depth) << "\n";
     }
-
     return oss.str();
 }
