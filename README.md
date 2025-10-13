@@ -37,7 +37,7 @@
 
 ### Debian-based systems
 
-> **Warning:**
+> [!WARNING]
 > `via` requires **GCC 15** to build. As of `13/10/2025`, GCC 15 is not yet in stable `apt` repositories, so you may need to build it manually.
 
 Install the prerequisites using `apt`:
@@ -64,9 +64,9 @@ cd /path/to/via
 Run the install script that corresponds to your installation goals; `install-deb.sh` for system-wide installation, and `install-user-deb.sh` for local installation:
 ```bash
 # User-local installation (recommended):
-scripts/linux/install-user-deb.sh
+scripts/linux/install-user-deb.sh Release
 # System-wide installation:
-sudo scripts/linux/install-deb.sh
+sudo scripts/linux/install-deb.sh Release
 ```
 
 These scripts will automatically:
