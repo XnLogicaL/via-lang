@@ -50,14 +50,29 @@ static std::filesystem::path get_lang_dir()
 {
 #ifdef _WIN32
     if (const char* local = std::getenv("LOCALAPPDATA")) {
-        return std::filesystem::path(local) / "via";
+        std::filesystem::path user_dir = std::filesystem::path(local) / "via";
+        if (std::filesystem::exists(user_dir))
+            return user_dir;
     }
-    return get_home_dir() / "AppData" / "Local" / "via";
+    std::filesystem::path fallback = get_home_dir() / "AppData" / "Local" / "via";
+    if (std::filesystem::exists(fallback))
+        return fallback;
+    return fallback;
+
 #else
     if (const char* xdg = std::getenv("XDG_DATA_HOME")) {
-        return std::filesystem::path(xdg) / "via";
+        std::filesystem::path user_dir = std::filesystem::path(xdg) / "via";
+        if (std::filesystem::exists(user_dir))
+            return user_dir;
     }
-    return get_home_dir() / ".local" / "share" / "via";
+    std::filesystem::path user_dir = get_home_dir() / ".local" / "share" / "via";
+    if (std::filesystem::exists(user_dir))
+        return user_dir;
+    std::filesystem::path sys_dir = "/usr/local/share/via";
+    if (std::filesystem::exists(sys_dir))
+        return sys_dir;
+    sys_dir = "/usr/share/via";
+    return sys_dir;
 #endif
 }
 
@@ -131,27 +146,19 @@ int main(int argc, char* argv[])
                 flags |= ModuleFlags::NO_EXECUTION;
             if (debugger)
                 flags |= ModuleFlags::LAUNCH_DEBUGGER;
-            if (dump == "ttree") {
+            if (dump == "token-tree") {
                 flags |= ModuleFlags::DUMP_TTREE;
             } else if (dump == "ast") {
                 flags |= ModuleFlags::DUMP_AST;
             } else if (dump == "ir") {
                 flags |= ModuleFlags::DUMP_IR;
-            } else if (dump == "exe") {
+            } else if (dump == "executable") {
                 flags |= ModuleFlags::DUMP_EXE;
-            } else if (dump == "deftab") {
+            } else if (dump == "def-table") {
                 flags |= ModuleFlags::DUMP_DEFTABLE;
             }
         }
         while (0);
-
-        // Validate language core directory
-        if (!std::filesystem::exists(lang_dir)) {
-            spdlog::warn(
-                "Could not find language core directory (search location {})",
-                lang_dir.string()
-            );
-        }
 
         // Initialize via
         via::init(verbosity);
@@ -182,10 +189,17 @@ int main(int argc, char* argv[])
             // clang-format on
         }
 
-        // Instantiate ModuleManager
         ModuleManager manager;
-        // Push adjacent import path
         manager.push_import_path(input.parent_path());
+
+        if (std::filesystem::exists(lang_dir)) {
+            manager.push_import_path(lang_dir / "lib");
+        } else {
+            spdlog::warn(
+                "Could not find language core directory (search location {})",
+                lang_dir.string()
+            );
+        }
 
         for (const auto& path: imports) {
             manager.push_import_path(path);
@@ -209,7 +223,7 @@ int main(int argc, char* argv[])
         );
 
         // Dump global symbol table
-        if (dump == "symtab") {
+        if (dump == "symbol-table") {
             std::cout << via::ansi::format(
                              "[global symbol table]",
                              via::ansi::Foreground::YELLOW,
@@ -220,6 +234,10 @@ int main(int argc, char* argv[])
 
             for (const auto& symbol: manager.symbol_table().get_symbols()) {
                 std::cout << std::format("  {}: {}\n", symbol.second, symbol.first);
+            }
+        } else if (dump == "import-dirs") {
+            for (const auto& path: manager.get_import_paths()) {
+                std::println(std::cout, "  {}", path.string());
             }
         }
     } catch (int code) {

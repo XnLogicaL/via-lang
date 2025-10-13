@@ -29,18 +29,53 @@
 
 # Introduction
 
-**via** is a minimalistic, multi-paradigm scripting language designed for **performance-critical applications**.
+**via** is a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
 
-<img src="https://i.imgur.com/l0Yd6Ok.png" style="width:80%; aspect-ratio:1.1/1; object-fit: cover;" alt="via Language Screenshot"/>
+# Installation
 
-The language aims to address the shortcomings/pitfalls of modern interpreted languages **without adding unnecessary complexity or bloat**.
+## Linux
 
-It combines carefully selected features from established languages to create a clean, efficient, and expressive programming/scripting experience.  
+### Debian-based systems
 
-*More information coming soon…*
+> **Warning:**
+> `via` requires **GCC 15** to build. As of `13/10/2025`, GCC 15 is not yet in stable `apt` repositories, so you may need to build it manually.
+
+Install the prerequisites using `apt`:
+
+```bash
+sudo apt install cmake g++ ninja-build git
+```
+
+Install `vcpkg` using the [official Microsoft tutorial](https://vcpkg.io/en/getting-started).
+After installation, configure your environment variables:
+```bash
+# For user-local installation:
+echo "export VCPKG_ROOT=/path/to/vcpkg" >> ~/.bashrc
+echo "export PATH=\$VCPKG_ROOT:\$PATH" >> ~/.bashrc
+source ~/.bashrc
+```
+
+Now clone the repository into a prefered directory and `cd` into it:
+```bash
+$ git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
+$ cd /path/to/via
+```
+
+Run the install script that corresponds to your installation goals; `install-deb.sh` for system-wide installation, and `install-user-deb.sh` for local installation:
+```bash
+# User-local installation (recommended):
+scripts/linux/install-user-deb.sh
+# System-wide installation:
+sudo scripts/linux/install-deb.sh
+```
+
+These scripts will automatically:
+- Build the interpreter and core libraries
+- Copy the executable to your binary directory
+- Set up the core libraries in the appropriate locatio
 
 # Credits
 
-- **@XnLogicaL** – Lead maintainer  
-- **@KasenDaniels** – Project name and banner design  
+- **@XnLogicaL** – Lead maintainer
+- **@KasenDaniels** – Project name and banner design
 - [mftool-java](https://github.com/ankitwasankar/mftool-java) – README layout inspiration

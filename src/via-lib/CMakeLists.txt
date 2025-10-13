@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 function(load_unit NAME)
-    set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src/via-lib/${NAME})
+    set(LIB_OUTPUT_DIR ${CMAKE_BINARY_DIR}/src/via-lib/lib/${NAME})
 
     file(MAKE_DIRECTORY ${LIB_OUTPUT_DIR})
     file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/*.cpp")
