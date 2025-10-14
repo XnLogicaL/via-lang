@@ -20,15 +20,15 @@ struct TokenReprPair
 };
 
 static constexpr TokenReprPair KEYWORDS[] = {
-    {"var", KW_VAR},       {"const", KW_CONST},   {"fn", KW_FN},
-    {"type", KW_TYPE},     {"while", KW_WHILE},   {"for", KW_FOR},
-    {"if", KW_IF},         {"in", KW_IN},         {"of", KW_OF},
-    {"else", KW_ELSE},     {"do", KW_DO},         {"and", KW_AND},
-    {"or", KW_OR},         {"not", KW_NOT},       {"return", KW_RETURN},
-    {"as", KW_AS},         {"import", KW_IMPORT}, {"mod", KW_MODULE},
-    {"struct", KW_STRUCT}, {"enum", KW_ENUM},     {"using", KW_USING},
-    {"bool", KW_BOOL},     {"int", KW_INT},       {"float", KW_FLOAT},
-    {"string", KW_STRING},
+    {"var", KW_VAR},       {"const", KW_CONST},   {"strong", KW_STRONG},
+    {"fn", KW_FN},         {"type", KW_TYPE},     {"while", KW_WHILE},
+    {"for", KW_FOR},       {"if", KW_IF},         {"in", KW_IN},
+    {"of", KW_OF},         {"else", KW_ELSE},     {"do", KW_DO},
+    {"and", KW_AND},       {"or", KW_OR},         {"not", KW_NOT},
+    {"return", KW_RETURN}, {"as", KW_AS},         {"import", KW_IMPORT},
+    {"mod", KW_MODULE},    {"struct", KW_STRUCT}, {"enum", KW_ENUM},
+    {"using", KW_USING},   {"bool", KW_BOOL},     {"int", KW_INT},
+    {"float", KW_FLOAT},   {"string", KW_STRING},
 };
 
 static constexpr TokenReprPair OPERATORS[] = {

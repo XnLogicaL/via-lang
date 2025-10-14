@@ -9,11 +9,10 @@
 
 #include "control.hpp"
 #include <unordered_set>
+#include "ast/ast.hpp"
 
-namespace ir = via::ir;
-namespace sema = via::sema;
-
-std::vector<const ir::Term*> sema::get_control_paths(const ir::StmtBlock* entry) noexcept
+std::vector<const via::ir::Term*> via::get_control_paths(const ir::StmtBlock* entry
+) noexcept
 {
     std::unordered_set<const ir::StmtBlock*> visited;
     std::vector<const ir::Term*> terms;

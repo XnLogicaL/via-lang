@@ -13,6 +13,7 @@
 #include <vector>
 #include <via/config.hpp>
 #include "lexer/token.hpp"
+#include "sema/types.hpp"
 #include "source.hpp"
 
 #define TRY_COERCE(T, a, b) (T* a = dynamic_cast<T*>(b))
@@ -24,19 +25,20 @@ namespace ast {
 struct Expr
 {
     SourceLoc loc;
-    virtual std::string to_string(size_t& depth) const = 0;
+    virtual std::string to_string(size_t depth) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
-    virtual std::string to_string(size_t& depth) const = 0;
+    virtual std::string to_string(size_t depth) const = 0;
 };
 
 struct Type
 {
     SourceLoc loc;
-    virtual std::string to_string(size_t& depth) const = 0;
+    TypeQualifier quals;
+    virtual std::string to_string(size_t depth) const = 0;
 };
 
 struct Path
@@ -70,9 +72,10 @@ struct AttributeGroup
     std::string to_string() const;
 };
 
-#define NODE_FIELDS(base)                                                                \
-    using base::loc;                                                                     \
-    std::string to_string(size_t& depth) const override;
+#undef NODE_FIELDS
+#define NODE_FIELDS(BASE)                                                                \
+    using BASE::loc;                                                                     \
+    std::string to_string(size_t depth) const override;
 
 struct ExprLiteral: public Expr
 {
@@ -336,7 +339,7 @@ struct TypeFunc: public Type
 
 #undef NODE_FIELDS
 
-bool isLValue(const Expr* expr) noexcept;
+bool is_lvalue(const Expr* expr) noexcept;
 
 } // namespace ast
 

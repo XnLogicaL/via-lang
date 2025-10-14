@@ -23,8 +23,8 @@ VIA_NOINLINE via::DefTableEntry::DefTableEntry(
 VIA_NOINLINE via::DefParm::DefParm(
     ModuleManager& manager,
     const char* name,
-    const sema::Type* type,
-    sema::ConstValue&& init
+    const Type* type,
+    ConstValue&& init
 ) noexcept
     : symbol(manager.symbol_table().intern(name)),
       type(type),
@@ -47,7 +47,7 @@ VIA_NOINLINE via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* no
 VIA_NOINLINE via::Def* via::Def::function(
     ModuleManager& manager,
     const NativeCallback callback,
-    const sema::Type* ret_type,
+    const Type* ret_type,
     std::initializer_list<DefParm> parms
 )
 {

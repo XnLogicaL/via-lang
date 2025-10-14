@@ -14,7 +14,6 @@
 #include "module/symbol.hpp"
 
 namespace via {
-namespace sema {
 
 class BytecodeLocal final
 {
@@ -47,5 +46,4 @@ class BytecodeLocal final
     size_t m_version;
 };
 
-} // namespace sema
 } // namespace via

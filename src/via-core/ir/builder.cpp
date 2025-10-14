@@ -19,113 +19,128 @@
 #include "module/defs.hpp"
 #include "module/symbol.hpp"
 #include "sema/control.hpp"
+#include "sema/local_ir.hpp"
 #include "sema/stack.hpp"
-#include "sema/type.hpp"
-#include "support/math.hpp"
+#include "sema/types.hpp"
 #include "support/traits.hpp"
 #include "vm/instruction.hpp"
 
-namespace ir = via::ir;
-namespace sema = via::sema;
-namespace ast = via::ast;
-
-using Ak = ir::ExprAccess::Kind;
-using Btk = sema::BuiltinKind;
-using LocalQual = sema::IRLocal::Qual;
-
 #define UNARY_OP_CASE(VALID, RESULT)                                                     \
     {                                                                                    \
-        .is_valid = [](const sema::Type* type) -> bool { return VALID; },                \
-        .get_result = [](sema::TypeContext* ctx, const sema::Type* type                  \
-                      ) -> const sema::Type* { return RESULT; },                         \
+        .is_valid = [](via::QualType type) -> bool { return VALID; },                    \
+        .get_result = [](via::TypeContext& ctx, via::QualType type) -> via::QualType {   \
+            return RESULT;                                                               \
+        },                                                                               \
     }
 
 struct UnaryOpInfo
 {
-    std::function<bool(const sema::Type*)> is_valid; // predicate
-    std::function<const sema::Type*(sema::TypeContext*, const sema::Type*)>
+    std::function<bool(via::QualType)> is_valid; // predicate
+    std::function<via::QualType(via::TypeContext&, via::QualType)>
         get_result; // compute result
 };
 
 static const UnaryOpInfo UNARY_OP_TABLE[] = {
-    /* UnaryOp::NEG */ UNARY_OP_CASE(type->is_arithmetic(), type),
-    /* UnaryOp::NOT */ UNARY_OP_CASE(true, ctx->get_builtin(Btk::BOOL)),
-    /* UnaryOp::BNOT */ UNARY_OP_CASE(type->is_integral(), type),
+    /* UnaryOp::NEG */ UNARY_OP_CASE(type.unwrap()->is_arithmetic(), type),
+    /* UnaryOp::NOT */
+    UNARY_OP_CASE(true, via::BuiltinType::instance(ctx, via::BuiltinKind::BOOL)),
+    /* UnaryOp::BNOT */ UNARY_OP_CASE(type.unwrap()->is_integral(), type),
 };
 
 #define BINARY_OP_CASE(VALID, RESULT)                                                    \
     {                                                                                    \
-        .is_valid = [](const sema::Type* lhs, const sema::Type* rhs) -> bool {           \
-            return VALID;                                                                \
-        },                                                                               \
-        .get_result = [](sema::TypeContext* ctx,                                         \
-                         const sema::Type* lhs,                                          \
-                         const sema::Type* rhs) -> const sema::Type* { return RESULT; }, \
+        .is_valid = [](via::QualType lhs, via::QualType rhs) -> bool { return VALID; },  \
+        .get_result = [](via::TypeContext& ctx, via::QualType lhs, via::QualType rhs     \
+                      ) -> via::QualType { return RESULT; },                             \
     }
 
 struct BinaryOpInfo
 {
-    std::function<bool(const sema::Type*, const sema::Type*)> is_valid; // predicate
-    std::function<
-        const sema::Type*(sema::TypeContext*, const sema::Type*, const sema::Type*)>
+    std::function<bool(via::QualType, via::QualType)> is_valid; // predicate
+    std::function<via::QualType(via::TypeContext&, via::QualType, via::QualType)>
         get_result; // compute result
 };
 
 #define BINARY_OP_PROMOTE(LHS, RHS)                                                      \
-    ctx->get_builtin((LHS->is_float() || RHS->is_float()) ? Btk::FLOAT : Btk::INT)
+    via::BuiltinType::instance(                                                          \
+        ctx,                                                                             \
+        ((LHS).unwrap()->is_float() || (RHS).unwrap()->is_float())                       \
+            ? via::BuiltinKind::FLOAT                                                    \
+            : via::BuiltinKind::INT                                                      \
+    )
 
 static const BinaryOpInfo BINARY_OP_TABLE[] = {
     /* BinaryOp::ADD */
     BINARY_OP_CASE(
-        lhs->is_arithmetic() && rhs->is_arithmetic(),
+        lhs.unwrap()->is_arithmetic() && rhs.unwrap()->is_arithmetic(),
         BINARY_OP_PROMOTE(lhs, rhs)
     ),
     /* BinaryOp::SUB */
     BINARY_OP_CASE(
-        lhs->is_arithmetic() && rhs->is_arithmetic(),
+        lhs.unwrap()->is_arithmetic() && rhs.unwrap()->is_arithmetic(),
         BINARY_OP_PROMOTE(lhs, rhs)
     ),
     /* BinaryOp::MUL */
     BINARY_OP_CASE(
-        lhs->is_arithmetic() && rhs->is_arithmetic(),
+        lhs.unwrap()->is_arithmetic() && rhs.unwrap()->is_arithmetic(),
         BINARY_OP_PROMOTE(lhs, rhs)
     ),
     /* BinaryOp::DIV */
     BINARY_OP_CASE(
-        lhs->is_arithmetic() && rhs->is_arithmetic(),
-        ctx->get_builtin(Btk::FLOAT)
+        lhs.unwrap()->is_arithmetic() && rhs.unwrap()->is_arithmetic(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::BOOL)
     ),
     /* BinaryOp::POW */
     BINARY_OP_CASE(
-        lhs->is_arithmetic() && rhs->is_arithmetic(),
+        lhs.unwrap()->is_arithmetic() && rhs.unwrap()->is_arithmetic(),
         BINARY_OP_PROMOTE(lhs, rhs)
     ),
     /* BinaryOp::MOD */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
-    /* BinaryOp::AND */ BINARY_OP_CASE(true, ctx->get_builtin(Btk::BOOL)),
-    /* BinaryOp::OR */ BINARY_OP_CASE(true, ctx->get_builtin(Btk::BOOL)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
+    /* BinaryOp::AND */
+    BINARY_OP_CASE(true, via::BuiltinType::instance(ctx, via::BuiltinKind::BOOL)),
+    /* BinaryOp::OR */
+    BINARY_OP_CASE(true, via::BuiltinType::instance(ctx, via::BuiltinKind::BOOL)),
     /* BinaryOp::BAND */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
     /* BinaryOp::BOR */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
     /* BinaryOp::BXOR */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
     /* BinaryOp::BSHL */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
     /* BinaryOp::BSHR */
-    BINARY_OP_CASE(lhs->is_integral() && rhs->is_integral(), ctx->get_builtin(Btk::INT)),
+    BINARY_OP_CASE(
+        lhs.unwrap()->is_integral() && rhs.unwrap()->is_integral(),
+        via::BuiltinType::instance(ctx, via::BuiltinKind::INT)
+    ),
 };
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprLiteral>(
+via::QualType via::detail::ast_type_of<via::ast::ExprLiteral>(
     IRBuilder& builder,
     const ast::ExprLiteral* ast_expr_literal
 ) noexcept
 {
     using enum TokenKind;
-    using enum sema::BuiltinKind;
+    using enum BuiltinKind;
 
-    sema::BuiltinKind kind;
+    BuiltinKind kind;
 
     switch (ast_expr_literal->tok->kind) {
     case LIT_NIL:
@@ -149,12 +164,11 @@ const sema::Type* via::detail::ast_type_of<ast::ExprLiteral>(
     default:
         debug::bug("invalid literal expression");
     }
-
-    return builder.m_type_ctx.get_builtin(kind);
+    return BuiltinType::instance(builder.m_type_ctx, kind);
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
+via::QualType via::detail::ast_type_of<via::ast::ExprSymbol>(
     IRBuilder& builder,
     const ast::ExprSymbol* ast_expr_symbol
 ) noexcept
@@ -169,19 +183,23 @@ const sema::Type* via::detail::ast_type_of<ast::ExprSymbol>(
         if TRY_COERCE (const ir::StmtVarDecl, var_decl, ir_decl) {
             return var_decl->type;
         } else if TRY_COERCE (const ir::StmtFuncDecl, func_decl, ir_decl) {
-            std::vector<const sema::Type*> parms;
+            std::vector<via::QualType> parms;
             for (const auto& parm: func_decl->parms) {
                 parms.push_back(parm.type);
             }
 
-            return builder.m_type_ctx.get_function(func_decl->ret, std::move(parms));
+            return FunctionType::instance(
+                builder.m_type_ctx,
+                func_decl->ret,
+                std::move(parms)
+            );
         }
     }
     return nullptr;
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
+via::QualType via::detail::ast_type_of<via::ast::ExprStaticAccess>(
     IRBuilder& builder,
     const ast::ExprStaticAccess* ast_expr_st_access
 ) noexcept
@@ -195,13 +213,14 @@ const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
 
             if (auto def = module->lookup(high)) {
                 if TRY_COERCE (const FunctionDef, func_def, *def) {
-                    std::vector<const sema::Type*> parm_types;
+                    std::vector<via::QualType> parm_types;
 
                     for (const auto& parm: func_def->parms) {
                         parm_types.push_back(parm.type);
                     }
 
-                    return builder.m_type_ctx.get_function(
+                    return FunctionType::instance(
+                        builder.m_type_ctx,
                         func_def->ret,
                         std::move(parm_types)
                     );
@@ -213,46 +232,45 @@ const sema::Type* via::detail::ast_type_of<ast::ExprStaticAccess>(
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprUnary>(
+via::QualType via::detail::ast_type_of<via::ast::ExprUnary>(
     IRBuilder& builder,
     const ast::ExprUnary* ast_expr_unary
 ) noexcept
 {
     auto op = to_unary_op(ast_expr_unary->op->kind);
     auto info = UNARY_OP_TABLE[static_cast<uint8_t>(op)];
-    auto* type = builder.type_of(ast_expr_unary->expr);
-    return info.is_valid(type) ? info.get_result(&builder.m_type_ctx, type) : nullptr;
+    auto type = builder.type_of(ast_expr_unary->expr);
+    return info.is_valid(type) ? info.get_result(builder.m_type_ctx, type) : nullptr;
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprBinary>(
+via::QualType via::detail::ast_type_of<via::ast::ExprBinary>(
     IRBuilder& builder,
     const ast::ExprBinary* ast_expr_binary
 ) noexcept
 {
     auto op = to_binary_op(ast_expr_binary->op->kind);
     auto info = BINARY_OP_TABLE[static_cast<uint8_t>(op)];
-    auto *lhs = builder.type_of(ast_expr_binary->lhs),
-         *rhs = builder.type_of(ast_expr_binary->rhs);
-    return info.is_valid(lhs, rhs) ? info.get_result(&builder.m_type_ctx, lhs, rhs)
+    auto lhs = builder.type_of(ast_expr_binary->lhs),
+         rhs = builder.type_of(ast_expr_binary->rhs);
+    return info.is_valid(lhs, rhs) ? info.get_result(builder.m_type_ctx, lhs, rhs)
                                    : nullptr;
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprCall>(
+via::QualType via::detail::ast_type_of<via::ast::ExprCall>(
     IRBuilder& builder,
     const ast::ExprCall* ast_expr_call
 ) noexcept
 {
-    auto* callee = builder.type_of(ast_expr_call->lval);
-    if TRY_COERCE (const sema::FuncType, func, callee) {
-        return func->result;
-    }
+    auto callee = builder.type_of(ast_expr_call->lval);
+    if TRY_COERCE (const FunctionType, function, callee.unwrap())
+        return function->returns();
     return nullptr;
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprCast>(
+via::QualType via::detail::ast_type_of<via::ast::ExprCast>(
     IRBuilder& builder,
     const ast::ExprCast* ast_expr_cast
 ) noexcept
@@ -261,25 +279,25 @@ const sema::Type* via::detail::ast_type_of<ast::ExprCast>(
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::ExprTernary>(
+via::QualType via::detail::ast_type_of<via::ast::ExprTernary>(
     IRBuilder& builder,
     const ast::ExprTernary* ast_expr_ternary
 ) noexcept
 {
-    auto *lhs = builder.type_of(ast_expr_ternary->lhs),
-         *rhs = builder.type_of(ast_expr_ternary->rhs);
+    auto lhs = builder.type_of(ast_expr_ternary->lhs),
+         rhs = builder.type_of(ast_expr_ternary->rhs);
     return lhs == rhs ? lhs : nullptr;
 }
 
 template <>
-const sema::Type* via::detail::ast_type_of<ast::TypeBuiltin>(
+via::QualType via::detail::ast_type_of<via::ast::TypeBuiltin>(
     IRBuilder& builder,
     const ast::TypeBuiltin* ast_type_builtin
 ) noexcept
 {
     using enum TokenKind;
-    using enum sema::BuiltinKind;
-    sema::BuiltinKind kind;
+    using enum BuiltinKind;
+    BuiltinKind kind;
 
     switch (ast_type_builtin->tok->kind) {
     case LIT_NIL:
@@ -301,10 +319,10 @@ const sema::Type* via::detail::ast_type_of<ast::TypeBuiltin>(
         debug::bug("unmapped builtin type token");
     }
 
-    return builder.m_type_ctx.get_builtin(kind);
+    return BuiltinType::instance(builder.m_type_ctx, kind);
 }
 
-const sema::Type* via::IRBuilder::type_of(const ast::Expr* expr) noexcept
+via::QualType via::IRBuilder::type_of(const ast::Expr* expr) noexcept
 {
 #define VISIT_EXPR(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, expr)                                             \
@@ -331,11 +349,25 @@ const sema::Type* via::IRBuilder::type_of(const ast::Expr* expr) noexcept
 #undef VISIT_EXPR
 }
 
-const sema::Type* via::IRBuilder::type_of(const ast::Type* type) noexcept
+via::QualType via::IRBuilder::type_of(const ast::Type* type) noexcept
 {
 #define VISIT_TYPE(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, type)                                             \
         return detail::ast_type_of<TYPE>(*this, _INNER);
+
+    if ((type->quals & TypeQualifier::STRONG) &&
+        !(type->quals & TypeQualifier::REFERENCE)) {
+        m_diags.report<Level::ERROR>(
+            type->loc,
+            "Invalid usage of 'strong' qualifier",
+            Footnote(
+                FootnoteKind::HINT,
+                "'strong' must be used in conjunction with the '&' (REFERENCE) qualifier "
+                "to denote strongly referenced type"
+            )
+        );
+        return {};
+    }
 
     VISIT_TYPE(ast::TypeBuiltin)
     VISIT_TYPE(ast::TypeArray)
@@ -347,12 +379,12 @@ const sema::Type* via::IRBuilder::type_of(const ast::Type* type) noexcept
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprLiteral>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprLiteral>(
     IRBuilder& builder,
     const ast::ExprLiteral* ast_literal_expr
 ) noexcept
 {
-    auto const_value = sema::ConstValue::from_token(*ast_literal_expr->tok);
+    auto const_value = ConstValue::from_token(*ast_literal_expr->tok);
 
     debug::require(const_value.has_value());
 
@@ -364,7 +396,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprLiteral>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprSymbol>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprSymbol>(
     IRBuilder& builder,
     const ast::ExprSymbol* ast_symbol_expr
 ) noexcept
@@ -390,7 +422,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprSymbol>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprStaticAccess>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprStaticAccess>(
     IRBuilder& builder,
     const ast::ExprStaticAccess* ast_stc_access_expr
 ) noexcept
@@ -415,7 +447,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprStaticAccess>(
     }
 
     auto* access_expr = builder.m_alloc.emplace<ir::ExprAccess>();
-    access_expr->kind = Ak::STATIC;
+    access_expr->kind = ir::ExprAccess::Kind::STATIC;
     access_expr->root = builder.lower_expr(ast_stc_access_expr->root);
     access_expr->index = builder.intern_symbol(*ast_stc_access_expr->index);
     access_expr->type = ast_type_of(builder, ast_stc_access_expr);
@@ -424,13 +456,13 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprStaticAccess>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprDynAccess>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprDynAccess>(
     IRBuilder& builder,
     const ast::ExprDynAccess* ast_dyn_access_expr
 ) noexcept
 {
     auto* access_expr = builder.m_alloc.emplace<ir::ExprAccess>();
-    access_expr->kind = Ak::DYNAMIC;
+    access_expr->kind = ir::ExprAccess::Kind::DYNAMIC;
     access_expr->root = builder.lower_expr(ast_dyn_access_expr->root);
     access_expr->index = builder.intern_symbol(*ast_dyn_access_expr->index);
     access_expr->type = ast_type_of(builder, ast_dyn_access_expr);
@@ -439,7 +471,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprDynAccess>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprUnary>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprUnary>(
     IRBuilder& builder,
     const ast::ExprUnary* ast_expr_unary
 ) noexcept
@@ -451,7 +483,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprUnary>(
 
     auto op = to_unary_op(ast_expr_unary->op->kind);
     auto info = UNARY_OP_TABLE[static_cast<uint8_t>(op)];
-    auto* type = builder.type_of(ast_expr_unary->expr);
+    auto type = builder.type_of(ast_expr_unary->expr);
 
     if (!info.is_valid(type)) {
         builder.m_diags.report<Level::ERROR>(
@@ -466,12 +498,12 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprUnary>(
         );
     }
 
-    unary_expr->type = info.get_result(&builder.m_type_ctx, type);
+    unary_expr->type = info.get_result(builder.m_type_ctx, type);
     return unary_expr;
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprBinary>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprBinary>(
     IRBuilder& builder,
     const ast::ExprBinary* ast_expr_binary
 ) noexcept
@@ -484,8 +516,8 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprBinary>(
 
     auto op = to_binary_op(ast_expr_binary->op->kind);
     auto info = BINARY_OP_TABLE[static_cast<uint8_t>(op)];
-    auto *lhs = builder.type_of(ast_expr_binary->lhs),
-         *rhs = builder.type_of(ast_expr_binary->rhs);
+    auto lhs = builder.type_of(ast_expr_binary->lhs),
+         rhs = builder.type_of(ast_expr_binary->rhs);
 
     if (!info.is_valid(lhs, rhs)) {
         builder.m_diags.report<Level::ERROR>(
@@ -496,18 +528,18 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprBinary>(
                 "'{}' (RIGHT)",
                 ast_expr_binary->op->to_string(),
                 to_string(op),
-                lhs->to_string(),
-                rhs->to_string()
+                lhs.to_string(),
+                rhs.to_string()
             )
         );
     }
 
-    binary_expr->type = info.get_result(&builder.m_type_ctx, lhs, rhs);
+    binary_expr->type = info.get_result(builder.m_type_ctx, lhs, rhs);
     return binary_expr;
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprGroup>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprGroup>(
     IRBuilder& builder,
     const ast::ExprGroup* ast_expr_group
 ) noexcept
@@ -516,7 +548,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprGroup>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
     IRBuilder& builder,
     const ast::ExprCall* ast_expr_call
 ) noexcept
@@ -532,13 +564,13 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
         return args;
     }();
 
-    auto* callee = builder.type_of(ast_expr_call->lval);
+    auto callee = builder.type_of(ast_expr_call->lval);
 
-    if TRY_COERCE (const sema::FuncType, func, callee) {
+    if TRY_COERCE (const FunctionType, func, callee.unwrap()) {
         const size_t arg_count = ast_expr_call->args.size(),
-                     parm_count = func->params.size();
+                     parm_count = func->parameters().size();
 
-        for (size_t arg_id = 0; const sema::Type* parm_type: func->params) {
+        for (size_t arg_id = 0; via::QualType parm_type: func->parameters()) {
             if (arg_id >= arg_count) {
                 builder.m_diags.report<Level::ERROR>(
                     {ast_expr_call->loc.end - 1, ast_expr_call->loc.end},
@@ -551,8 +583,9 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
                 );
             } else {
                 auto* arg = ast_expr_call->args.at(arg_id);
-                auto* arg_type = builder.type_of(arg);
+                auto arg_type = builder.type_of(arg);
                 if (arg_type != parm_type) {
+                    auto cast_result = arg_type.cast_result(parm_type);
                     builder.m_diags.report<Level::ERROR>(
                         arg->loc,
                         std::format(
@@ -563,15 +596,16 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
                             builder.dump_type(arg_type),
                             builder.dump_type(parm_type)
                         ),
-                        arg_type->is_castable(parm_type)
-                            ? Footnote{
-                                FootnoteKind::NOTE,
-                                std::format(
-                                    "Conversion from '{}' to '{}' possible with explicit cast",
-                                    builder.dump_type(arg_type),
-                                    builder.dump_type(parm_type)
-                                )
-                            }
+                        cast_result != CastResult::INVALID
+                            ? Footnote(
+                                  FootnoteKind::NOTE,
+                                  std::format(
+                                      "Conversion from '{}' to '{}' possible with "
+                                      "explicit cast",
+                                      builder.dump_type(arg_type),
+                                      builder.dump_type(parm_type)
+                                  )
+                              )
                             : Footnote{}
                     );
                 }
@@ -594,7 +628,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
             );
         }
 
-        call_expr->type = func->result;
+        call_expr->type = func->returns();
     } else {
         builder.m_diags.report<Level::ERROR>(
             ast_expr_call->loc,
@@ -608,18 +642,18 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCall>(
 }
 
 template <>
-const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
+const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCast>(
     IRBuilder& builder,
     const ast::ExprCast* ast_expr_cast
 ) noexcept
 {
-    auto* cast_type = builder.type_of(ast_expr_cast->type);
+    auto cast_type = builder.type_of(ast_expr_cast->type);
     auto* cast_expr = builder.m_alloc.emplace<ir::ExprCast>();
     cast_expr->expr = builder.lower_expr(ast_expr_cast->expr);
     cast_expr->cast = cast_type;
     cast_expr->type = cast_type;
 
-    auto* expr_type = cast_expr->expr->type;
+    auto expr_type = cast_expr->expr->type;
     if (expr_type != nullptr) {
         if (expr_type == cast_type) {
             builder.m_diags.report<Level::WARNING>(
@@ -632,7 +666,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
             );
         }
 
-        if (!expr_type->is_castable(cast_type)) {
+        if (expr_type.cast_result(cast_type) == CastResult::INVALID) {
             builder.m_diags.report<Level::ERROR>(
                 ast_expr_cast->expr->loc,
                 std::format(
@@ -646,7 +680,7 @@ const ir::Expr* via::detail::ast_lower_expr<ast::ExprCast>(
     return cast_expr;
 }
 
-const ir::Expr* via::IRBuilder::lower_expr(const ast::Expr* expr)
+const via::ir::Expr* via::IRBuilder::lower_expr(const ast::Expr* expr)
 {
 #define VISIT_EXPR(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, expr)                                             \
@@ -676,7 +710,7 @@ const ir::Expr* via::IRBuilder::lower_expr(const ast::Expr* expr)
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtIf>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtIf>(
     IRBuilder& builder,
     const ast::StmtIf* ast_stmt_if
 ) noexcept
@@ -744,7 +778,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtIf>(
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtWhile>(
     IRBuilder& builder,
     const ast::StmtWhile* ast_stmt_while
 ) noexcept
@@ -798,7 +832,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtWhile>(
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtVarDecl>(
     IRBuilder& builder,
     const ast::StmtVarDecl* ast_stmt_var_decl
 ) noexcept
@@ -808,7 +842,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
     decl_stmt->loc = ast_stmt_var_decl->loc;
 
     if TRY_COERCE (const ast::ExprSymbol, lval, ast_stmt_var_decl->lval) {
-        auto* rval_type = builder.type_of(ast_stmt_var_decl->rval);
+        auto rval_type = builder.type_of(ast_stmt_var_decl->rval);
 
         if (ast_stmt_var_decl->type != nullptr) {
             decl_stmt->type = builder.type_of(ast_stmt_var_decl->type);
@@ -820,7 +854,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtVarDecl>(
                         builder.dump_type(rval_type),
                         builder.dump_type(decl_stmt->type)
                     ),
-                    rval_type->is_castable(decl_stmt->type)
+                    rval_type.cast_result(decl_stmt->type) != CastResult::INVALID
                         ? Footnote{
                             FootnoteKind::NOTE,
                             std::format(
@@ -848,7 +882,7 @@ fallback:
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtReturn>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtReturn>(
     IRBuilder& builder,
     const ast::StmtReturn* ast_stmt_return
 ) noexcept
@@ -860,7 +894,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtReturn>(
         ast_stmt_return->expr ? builder.lower_expr(ast_stmt_return->expr) : nullptr;
     term->type = ast_stmt_return->expr
                      ? builder.type_of(ast_stmt_return->expr)
-                     : builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
+                     : BuiltinType::instance(builder.m_type_ctx, BuiltinKind::NIL);
 
     auto* block = builder.end_block();
     block->term = term;
@@ -868,7 +902,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtReturn>(
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtImport>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtImport>(
     IRBuilder& builder,
     const ast::StmtImport* ast_stmt_import
 ) noexcept
@@ -910,7 +944,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtImport>(
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
     IRBuilder& builder,
     const ast::StmtFunctionDecl* ast_stmt_function_decl
 ) noexcept
@@ -949,9 +983,9 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
             term->implicit = false;
             term->loc = ret->loc;
             term->val = ret->expr ? builder.lower_expr(ret->expr) : nullptr;
-            term->type = ret->expr
-                             ? builder.type_of(ret->expr)
-                             : builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
+            term->type =
+                ret->expr ? builder.type_of(ret->expr)
+                          : BuiltinType::instance(builder.m_type_ctx, BuiltinKind::NIL);
             block->term = term;
             break;
         }
@@ -969,20 +1003,20 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
 
         auto* nil = builder.m_alloc.emplace<ir::ExprConstant>();
         nil->loc = loc;
-        nil->type = builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
-        nil->value = sema::ConstValue();
+        nil->type = BuiltinType::instance(builder.m_type_ctx, BuiltinKind::NIL);
+        nil->value = ConstValue();
 
         auto* term = builder.m_alloc.emplace<ir::TrReturn>();
         term->implicit = true;
         term->loc = loc;
         term->val = nil;
-        term->type = builder.m_type_ctx.get_builtin(sema::BuiltinKind::NIL);
+        term->type = BuiltinType::instance(builder.m_type_ctx, BuiltinKind::NIL);
         block->term = term;
     }
 
-    const sema::Type* expected_ret_type = decl_stmt->ret;
+    via::QualType expected_ret_type = decl_stmt->ret;
 
-    for (const auto& term: sema::get_control_paths(block)) {
+    for (const auto& term: get_control_paths(block)) {
         if TRY_COERCE (const ir::TrReturn, ret, term) {
             if (!ret->type) {
                 // Already failed, no need to diagnose further
@@ -996,7 +1030,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                     ret->implicit
                         ? Footnote(
                               FootnoteKind::NOTE,
-                              std::format("Implicit return here", ret->type->to_string())
+                              std::format("Implicit return here", ret->type.to_string())
                           )
                         : Footnote();
 
@@ -1006,8 +1040,8 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
                         std::format(
                             "Function return type '{}' does not match type "
                             "'{}' returned by control path",
-                            decl_stmt->ret->to_string(),
-                            ret->type->to_string()
+                            decl_stmt->ret.to_string(),
+                            ret->type.to_string()
                         ),
                         implicit_return_node
                     );
@@ -1047,7 +1081,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
         decl_stmt->symbol,
         ast_stmt_function_decl,
         decl_stmt,
-        LocalQual::CONST
+        IRLocal::Qual::CONST
     );
 
     decl_stmt->body = block;
@@ -1056,7 +1090,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtFunctionDecl>(
 }
 
 template <>
-const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtExpr>(
+const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtExpr>(
     IRBuilder& builder,
     const ast::StmtExpr* ast_stmt_expr
 ) noexcept
@@ -1067,7 +1101,7 @@ const ir::Stmt* via::detail::ast_lower_stmt<ast::StmtExpr>(
     return expr;
 }
 
-const ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
+const via::ir::Stmt* via::IRBuilder::lower_stmt(const ast::Stmt* stmt)
 {
 #define VISIT_STMT(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, stmt)                                             \

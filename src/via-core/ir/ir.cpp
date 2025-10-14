@@ -112,7 +112,7 @@ std::string ir::TrCondBranch::to_string(const SymbolTable* sym_tab, size_t& dept
 
 std::string ir::Parm::to_string(const SymbolTable* sym_tab, size_t& depth) const
 {
-    return std::format("{}: {}", SYMBOL(symbol), DUMP_IF(type));
+    return std::format("{}: {}", SYMBOL(symbol), type.to_string());
 }
 
 std::string ir::ExprConstant::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -178,7 +178,7 @@ std::string ir::ExprSubscript::to_string(const SymbolTable* sym_tab, size_t&) co
 
 std::string ir::ExprCast::to_string(const SymbolTable* sym_tab, size_t&) const
 {
-    return std::format("{} AS {}", DUMP_IF(expr, sym_tab, ZERO), DUMP_IF(cast));
+    return std::format("{} AS {}", DUMP_IF(expr, sym_tab, ZERO), cast.to_string());
 }
 
 std::string ir::ExprTernary::to_string(const SymbolTable* sym_tab, size_t&) const
@@ -213,7 +213,7 @@ std::string ir::StmtVarDecl::to_string(const SymbolTable* sym_tab, size_t& depth
     return INDENT + std::format(
                         "LOCAL {}: {} = {}",
                         SYMBOL(symbol),
-                        DUMP_IF(type),
+                        type.to_string(),
                         DUMP_IF(expr, sym_tab, ZERO)
                     );
 }
@@ -229,7 +229,7 @@ std::string ir::StmtFuncDecl::to_string(const SymbolTable* sym_tab, size_t& dept
                    parms,
                    [&](const auto& parm) { return parm.to_string(sym_tab, ZERO); }
                ),
-               ret->to_string()
+               ret.to_string()
            );
     oss << INDENT << "{\n";
     depth++;

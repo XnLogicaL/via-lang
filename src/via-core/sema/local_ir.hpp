@@ -17,7 +17,6 @@
 #include "module/symbol.hpp"
 
 namespace via {
-namespace sema {
 
 class IRLocal final
 {
@@ -70,5 +69,4 @@ class IRLocal final
     const ir::Stmt* m_ir_decl = nullptr;
 };
 
-} // namespace sema
 } // namespace via

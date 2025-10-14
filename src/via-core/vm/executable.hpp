@@ -115,7 +115,7 @@ class Executable final
         return m_labels.size() - 1;
     }
 
-    void push_constant(sema::ConstValue cv) noexcept
+    void push_constant(ConstValue cv) noexcept
     {
         if (m_constants.size() >= std::numeric_limits<uint16_t>::max()) {
         }
@@ -135,10 +135,10 @@ class Executable final
   private:
     Module* m_module;
     ExeFlags m_flags;
-    sema::RegisterState m_reg_state;
-    sema::StackState<sema::BytecodeLocal> m_stack;
+    RegisterState m_reg_state;
+    StackState<BytecodeLocal> m_stack;
     std::vector<Instruction> m_bytecode;
-    std::vector<sema::ConstValue> m_constants;
+    std::vector<ConstValue> m_constants;
     std::unordered_map<size_t, size_t> m_labels;
 };
 

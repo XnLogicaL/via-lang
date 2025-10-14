@@ -17,7 +17,6 @@
 #include "ir.hpp"
 #include "module/manager.hpp"
 #include "module/module.hpp"
-#include "sema/context.hpp"
 #include "sema/local_ir.hpp"
 #include "support/ansi.hpp"
 #include "support/traits.hpp"
@@ -29,7 +28,7 @@ class IRBuilder;
 namespace detail {
 
 template <derived_from<ast::Expr, ast::Type> Type>
-const sema::Type* ast_type_of(IRBuilder&, const Type*) noexcept
+QualType ast_type_of(IRBuilder&, const Type*) noexcept
 {
     debug::todo(std::format("ast_type_of<{}>()", VIA_TYPENAME(Type)));
 }
@@ -53,7 +52,7 @@ class IRBuilder final
 {
   public:
     template <derived_from<ast::Expr, ast::Type> Type>
-    friend const sema::Type* detail::ast_type_of(IRBuilder&, const Type*) noexcept;
+    friend QualType detail::ast_type_of(IRBuilder&, const Type*) noexcept;
 
     template <derived_from<ast::Expr> Expr>
     friend const ir::Expr* detail::ast_lower_expr(IRBuilder&, const Expr*) noexcept;
@@ -75,8 +74,8 @@ class IRBuilder final
     IRTree build();
 
   private:
-    const sema::Type* type_of(const ast::Expr* expr) noexcept;
-    const sema::Type* type_of(const ast::Type* type) noexcept;
+    QualType type_of(const ast::Expr* expr) noexcept;
+    QualType type_of(const ast::Type* type) noexcept;
     const ir::Expr* lower_expr(const ast::Expr* expr);
     const ir::Stmt* lower_stmt(const ast::Stmt* stmt);
 
@@ -100,10 +99,10 @@ class IRBuilder final
         return block;
     }
 
-    inline std::string dump_type(const sema::Type* type) noexcept
+    inline std::string dump_type(QualType type) noexcept
     {
         return ansi::format(
-            type ? type->to_string() : "<type error>",
+            type.unwrap() ? type.to_string() : "<type error>",
             ansi::Foreground::MAGENTA,
             ansi::Background::NONE,
             ansi::Style::BOLD
@@ -137,8 +136,8 @@ class IRBuilder final
     const SyntaxTree& m_ast;
     ScopedAllocator& m_alloc;
     DiagContext& m_diags;
-    sema::StackState<sema::IRLocal> m_stack;
-    sema::TypeContext& m_type_ctx;
+    StackState<IRLocal> m_stack;
+    TypeContext& m_type_ctx;
     SymbolTable& m_symbol_table;
     bool m_should_push_block;
     uint32_t m_block_id = 0;

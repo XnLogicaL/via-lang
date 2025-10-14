@@ -34,6 +34,8 @@ std::string via::to_string(Level level) noexcept
             ansi::Background::NONE,
             ansi::Style::BOLD
         );
+    default:
+        break;
     }
 }
 
@@ -61,6 +63,8 @@ std::string via::to_string(FootnoteKind kind) noexcept
             ansi::Background::NONE,
             ansi::Style::BOLD
         );
+    default:
+        break;
     }
 }
 

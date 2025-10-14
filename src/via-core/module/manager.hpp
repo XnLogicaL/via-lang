@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <via/config.hpp>
 #include "module.hpp"
-#include "sema/context.hpp"
 #include "symbol.hpp"
 
 namespace via {
@@ -74,7 +73,7 @@ class ModuleManager
   private:
     ScopedAllocator m_alloc;
     SymbolTable m_symbol_table;
-    sema::TypeContext m_type_ctx;
+    TypeContext m_type_ctx;
     std::vector<std::string> m_imports;
     std::vector<std::filesystem::path> m_import_paths;
     std::unordered_map<std::filesystem::path, Module*> m_modules;

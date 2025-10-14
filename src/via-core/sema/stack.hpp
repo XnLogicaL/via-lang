@@ -18,7 +18,6 @@
 #include "module/symbol.hpp"
 
 namespace via {
-namespace sema {
 
 class Module;
 
@@ -66,5 +65,4 @@ class Frame final
 template <typename Local>
 using StackState = std::stack<Frame<Local>>;
 
-} // namespace sema
 } // namespace via

@@ -68,6 +68,7 @@ class Parser final
     const ast::TypeArray* parse_type_array();
     const ast::TypeDict* parse_type_dict();
     const ast::TypeFunc* parse_type_function();
+    const ast::Type* parse_type_primary();
     const ast::Type* parse_type();
 
     // Statement

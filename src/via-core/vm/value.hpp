@@ -44,7 +44,7 @@ class Value final
     static Value* create(VirtualMachine* vm, bool boolean);
     static Value* create(VirtualMachine* vm, char* string);
     static Value* create(VirtualMachine* vm, Closure* closure);
-    static Value* create(VirtualMachine* vm, const sema::ConstValue& cv);
+    static Value* create(VirtualMachine* vm, const ConstValue& cv);
 
   public:
     auto kind() const { return m_kind; }

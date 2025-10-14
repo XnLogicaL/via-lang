@@ -9,8 +9,7 @@
 
 #include <cmath>
 #include <via/via.hpp>
-
-using via::ValueRef;
+#include "sema/types.hpp"
 
 namespace math {
 
@@ -18,15 +17,13 @@ VIA_MODULE_FUNCTION(sin, vm, call_info)
 {
     auto x = call_info.args.at(0);
     auto result = std::sin(x->float_value());
-    return ValueRef(vm, result);
+    return via::ValueRef(vm, result);
 }
 
 } // namespace math
 
 VIA_MODULE_ENTRY(math, manager)
 {
-    using enum via::sema::BuiltinKind;
-
     auto& types = manager->type_context();
 
     static via::DefTable table = {
@@ -36,9 +33,13 @@ VIA_MODULE_ENTRY(math, manager)
             via::Def::function(
                 *manager,
                 math::sin,
-                types.get_builtin(FLOAT),
+                via::BuiltinType::instance(types, via::BuiltinKind::FLOAT),
                 {
-                    via::DefParm(*manager, "__x", types.get_builtin(FLOAT)),
+                    via::DefParm(
+                        *manager,
+                        "__x",
+                        via::BuiltinType::instance(types, via::BuiltinKind::FLOAT)
+                    ),
                 }
             )
         ),

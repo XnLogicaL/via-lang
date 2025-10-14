@@ -13,9 +13,7 @@
 #include "debug.hpp"
 #include "support/conv.hpp"
 
-namespace sema = via::sema;
-
-std::optional<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
+std::optional<via::ConstValue> via::ConstValue::from_token(const Token& tok)
 {
     switch (tok.kind) {
     case TokenKind::LIT_NIL:
@@ -46,7 +44,7 @@ std::optional<sema::ConstValue> sema::ConstValue::from_token(const Token& tok)
     return std::nullopt;
 }
 
-std::string sema::ConstValue::to_string() const
+std::string via::ConstValue::to_string() const
 {
     switch (kind()) {
     case ValueKind::NIL:
@@ -64,9 +62,4 @@ std::string sema::ConstValue::to_string() const
     }
 
     debug::bug("unmapped cv type");
-}
-
-std::string sema::ConstValue::get_dump() const
-{
-    return std::format("{}({})", via::to_string(kind()), to_string());
 }

@@ -35,8 +35,6 @@ enum class ValueKind : uint8_t
 
 DEFINE_TO_STRING(ValueKind, FOR_EACH_VALUE_KIND(DEFINE_CASE_TO_STRING))
 
-namespace sema {
-
 class ConstValue final
 {
   public:
@@ -79,11 +77,9 @@ class ConstValue final
     }
 
     std::string to_string() const;
-    std::string get_dump() const;
 
   private:
     Union m_data;
 };
 
-} // namespace sema
 } // namespace via

@@ -17,8 +17,7 @@
 #include "module/manager.hpp"
 #include "module/module.hpp"
 #include "sema/const.hpp"
-#include "sema/context.hpp"
-#include "sema/type.hpp"
+#include "sema/types.hpp"
 #include "support/ansi.hpp"
 #include "support/bit.hpp"
 #include "vm/instruction.hpp"
@@ -42,7 +41,7 @@ void via::detail::ir_lower_expr<ir::ExprConstant>(
 {
     set_null_dst_trap(exe, dst);
 
-    const sema::ConstValue& cvalue = ir_expr_constant->value;
+    const ConstValue& cvalue = ir_expr_constant->value;
 
     switch (cvalue.kind()) {
     case ValueKind::NIL:
@@ -129,15 +128,15 @@ void via::detail::ir_lower_expr<ir::ExprBinary>(
         uint16_t base = static_cast<uint16_t>(OpCode::IADD) +
                         static_cast<uint16_t>(ir_expr_binary->op);
 
-        if (ir_expr_binary->lhs->type->is_integral()) {
-            if (ir_expr_binary->rhs->type->is_float()) {
+        if (ir_expr_binary->lhs->type.unwrap()->is_integral()) {
+            if (ir_expr_binary->rhs->type.unwrap()->is_float()) {
                 base += 2; // FP mode
                 exe.push_instruction(OpCode::TOFLOAT, {rlhs, rlhs});
             }
         } else {
             base += 2; // FP mode
 
-            if (ir_expr_binary->rhs->type->is_integral()) {
+            if (ir_expr_binary->rhs->type.unwrap()->is_integral()) {
                 exe.push_instruction(OpCode::TOFLOAT, {rrhs, rrhs});
             }
         }
@@ -196,7 +195,7 @@ void via::detail::ir_lower_expr<ir::ExprCast>(
     std::optional<uint16_t> dst
 ) noexcept
 {
-    using enum sema::BuiltinKind;
+    using enum BuiltinKind;
 
     set_null_dst_trap(exe, dst);
     exe.lower_expr(ir_expr_cast->expr, dst);
@@ -208,15 +207,15 @@ void via::detail::ir_lower_expr<ir::ExprCast>(
 
     auto& type_ctx = exe.m_module->manager().type_context();
 
-    if TRY_COERCE (const sema::BuiltinType, cast_bultin_type, ir_expr_cast->cast) {
-        if TRY_COERCE (const sema::BuiltinType,
+    if TRY_COERCE (const BuiltinType, cast_bultin_type, ir_expr_cast->cast.unwrap()) {
+        if TRY_COERCE (const BuiltinType,
                        expr_builtin_type,
-                       ir_expr_cast->expr->type) {
-            static std::unordered_map<const sema::Type*, OpCode> cast_rules = {
-                {type_ctx.get_builtin(sema::BuiltinKind::INT), OpCode::TOINT},
-                {type_ctx.get_builtin(sema::BuiltinKind::FLOAT), OpCode::TOFLOAT},
-                {type_ctx.get_builtin(sema::BuiltinKind::BOOL), OpCode::TOBOOL},
-                {type_ctx.get_builtin(sema::BuiltinKind::STRING), OpCode::TOSTRING},
+                       ir_expr_cast->expr->type.unwrap()) {
+            static std::unordered_map<const Type*, OpCode> cast_rules = {
+                {BuiltinType::instance(type_ctx, BuiltinKind::INT), OpCode::TOINT},
+                {BuiltinType::instance(type_ctx, BuiltinKind::FLOAT), OpCode::TOFLOAT},
+                {BuiltinType::instance(type_ctx, BuiltinKind::BOOL), OpCode::TOBOOL},
+                {BuiltinType::instance(type_ctx, BuiltinKind::STRING), OpCode::TOSTRING},
             };
 
             if (auto it = cast_rules.find(cast_bultin_type); it != cast_rules.end()) {
@@ -501,7 +500,7 @@ std::string via::Executable::to_string() const
                    ansi::Background::NONE,
                    ansi::Style::BOLD
                );
-        oss << " " << i++ << " = " << cv.get_dump() << "\n";
+        oss << " " << i++ << " = " << cv.to_string() << "\n";
     }
     return oss.str();
 }

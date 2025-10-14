@@ -13,7 +13,7 @@
 #include "ir/ir.hpp"
 #include "module/symbol.hpp"
 #include "sema/const.hpp"
-#include "sema/type.hpp"
+#include "sema/types.hpp"
 #include "support/utility.hpp"
 #include "vm/closure.hpp"
 
@@ -49,14 +49,14 @@ struct SymbolInfo
 struct DefParm
 {
     SymbolId symbol;
-    const sema::Type* type;
-    sema::ConstValue value;
+    const Type* type;
+    ConstValue value;
 
     VIA_NOINLINE explicit DefParm(
         ModuleManager& manager,
         const char* name,
-        const sema::Type* type,
-        sema::ConstValue&& init = sema::ConstValue{}
+        const Type* type,
+        ConstValue&& init = ConstValue{}
     ) noexcept;
 };
 
@@ -83,7 +83,7 @@ struct Def
     VIA_NOINLINE static Def* function(
         ModuleManager& manager,
         const NativeCallback callback,
-        const sema::Type* ret_type,
+        const Type* ret_type,
         std::initializer_list<DefParm> parms
     );
 };
@@ -94,7 +94,7 @@ struct FunctionDef: public Def
     ImplStorage code;
     SymbolId symbol;
     std::vector<DefParm> parms;
-    const sema::Type* ret;
+    const Type* ret;
 
     SymbolId identity() const override { return symbol; }
     std::string to_string() const override;

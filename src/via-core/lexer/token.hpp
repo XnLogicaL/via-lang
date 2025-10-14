@@ -30,6 +30,7 @@ namespace via {
     X(LIT_STRING)                                                                        \
     X(KW_VAR)                                                                            \
     X(KW_CONST)                                                                          \
+    X(KW_STRONG)                                                                         \
     X(KW_FN)                                                                             \
     X(KW_TYPE)                                                                           \
     X(KW_WHILE)                                                                          \

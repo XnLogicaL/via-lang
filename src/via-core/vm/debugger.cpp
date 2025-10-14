@@ -295,7 +295,7 @@ void via::Debugger::register_default_commands() noexcept
             if (idx < consts.size()) {
                 auto konst = consts.at(idx);
                 spdlog::info("constant {}:", idx);
-                std::cout << "- dissassembly:  " << konst.get_dump() << "\n";
+                std::cout << "- dissassembly:  " << konst.to_string() << "\n";
             } else {
                 spdlog::info("constant {} not found", idx);
             }

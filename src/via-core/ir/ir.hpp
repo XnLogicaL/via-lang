@@ -14,7 +14,7 @@
 #include <via/config.hpp>
 #include "module/symbol.hpp"
 #include "sema/const.hpp"
-#include "sema/type.hpp"
+#include "sema/types.hpp"
 #include "support/utility.hpp"
 #include "vm/instruction.hpp"
 
@@ -64,7 +64,7 @@ namespace ir {
 struct Expr
 {
     SourceLoc loc;
-    const sema::Type* type;
+    QualType type;
 
     virtual std::string to_string(const SymbolTable* sym_tab, size_t& depth) const = 0;
 };
@@ -93,7 +93,7 @@ struct TrReturn: public Term
     NODE_FIELDS(Term)
     bool implicit;
     const Expr* val;
-    const sema::Type* type;
+    QualType type;
 };
 
 struct TrContinue: public Term
@@ -124,7 +124,7 @@ struct TrCondBranch: public Term
 struct Parm
 {
     SymbolId symbol;
-    const sema::Type* type;
+    QualType type;
     std::string to_string(const SymbolTable* sym_tab, size_t& depth) const;
 };
 
@@ -137,7 +137,7 @@ struct Parm
 struct ExprConstant: public Expr
 {
     NODE_FIELDS(Expr)
-    sema::ConstValue value;
+    ConstValue value;
 };
 
 struct ExprSymbol: public Expr
@@ -199,7 +199,7 @@ struct ExprCast: public Expr
 {
     NODE_FIELDS(Expr)
     const Expr* expr;
-    const sema::Type* cast;
+    QualType cast;
 };
 
 struct ExprTernary: public Expr
@@ -235,7 +235,7 @@ struct StmtVarDecl: public Stmt
     NODE_FIELDS()
     SymbolId symbol;
     const Expr* expr;
-    const sema::Type* type;
+    QualType type;
 };
 
 struct StmtBlock;
@@ -250,7 +250,7 @@ struct StmtFuncDecl: public Stmt
     } kind;
 
     SymbolId symbol;
-    const sema::Type* ret;
+    QualType ret;
     std::vector<Parm> parms;
     const StmtBlock* body;
 

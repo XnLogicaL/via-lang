@@ -54,7 +54,7 @@ via::Value* via::Value::create(VirtualMachine* vm, Closure* closure)
     return construct_impl(vm, ValueKind::FUNCTION, {.function = closure});
 }
 
-via::Value* via::Value::create(VirtualMachine* vm, const sema::ConstValue& cv)
+via::Value* via::Value::create(VirtualMachine* vm, const ConstValue& cv)
 {
     auto& alloc = vm->allocator();
 

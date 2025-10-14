@@ -14,9 +14,7 @@
 #include "ir/ir.hpp"
 
 namespace via {
-namespace sema {
 
 std::vector<const ir::Term*> get_control_paths(const ir::StmtBlock* entry) noexcept;
 
-}
 } // namespace via

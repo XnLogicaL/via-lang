@@ -23,8 +23,6 @@ VIA_CONSTANT size_t REGISTER_COUNT = UINT16_MAX;
 
 }
 
-namespace sema {
-
 class RegisterState
 {
   public:
@@ -69,5 +67,4 @@ class RegisterState
     std::bitset<config::REGISTER_COUNT> m_buffer;
 };
 
-} // namespace sema
 } // namespace via

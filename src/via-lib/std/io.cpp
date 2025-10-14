@@ -9,8 +9,7 @@
 
 #include <iostream>
 #include <via/via.hpp>
-
-using via::ValueRef;
+#include "sema/types.hpp"
 
 namespace io {
 
@@ -23,29 +22,27 @@ VIA_MODULE_FUNCTION(input, vm, call_info)
     std::cin >> in;
 
     char* in_str = vm->allocator().strdup(in.c_str());
-    return ValueRef(vm, in_str);
+    return via::ValueRef(vm, in_str);
 }
 
 VIA_MODULE_FUNCTION(print, vm, call_info)
 {
     auto str = call_info.args.at(0);
     std::cout << str->string_value();
-    return ValueRef(vm);
+    return via::ValueRef(vm);
 }
 
 VIA_MODULE_FUNCTION(printn, vm, call_info)
 {
     auto str = call_info.args.at(0);
     std::cout << str->string_value() << "\n";
-    return ValueRef(vm);
+    return via::ValueRef(vm);
 }
 
 } // namespace io
 
 VIA_MODULE_ENTRY(io, manager)
 {
-    using enum via::sema::BuiltinKind;
-
     auto& types = manager->type_context();
 
     static via::DefTable table = {
@@ -55,9 +52,13 @@ VIA_MODULE_ENTRY(io, manager)
             via::Def::function(
                 *manager,
                 io::input,
-                types.get_builtin(STRING),
+                via::BuiltinType::instance(types, via::BuiltinKind::STRING),
                 {
-                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
+                    via::DefParm(
+                        *manager,
+                        "__str",
+                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
+                    ),
                 }
             )
         ),
@@ -67,9 +68,13 @@ VIA_MODULE_ENTRY(io, manager)
             via::Def::function(
                 *manager,
                 io::print,
-                types.get_builtin(NIL),
+                via::BuiltinType::instance(types, via::BuiltinKind::NIL),
                 {
-                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
+                    via::DefParm(
+                        *manager,
+                        "__str",
+                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
+                    ),
                 }
             )
         ),
@@ -79,9 +84,13 @@ VIA_MODULE_ENTRY(io, manager)
             via::Def::function(
                 *manager,
                 io::printn,
-                types.get_builtin(NIL),
+                via::BuiltinType::instance(types, via::BuiltinKind::NIL),
                 {
-                    via::DefParm(*manager, "__str", types.get_builtin(STRING)),
+                    via::DefParm(
+                        *manager,
+                        "__str",
+                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
+                    ),
                 }
             )
         ),

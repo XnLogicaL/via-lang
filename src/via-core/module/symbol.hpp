@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <format>
 #include <sstream>
 #include <string>
 #include "support/ansi.hpp"
