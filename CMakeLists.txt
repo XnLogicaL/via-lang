@@ -37,6 +37,6 @@ find_package(cpptrace CONFIG REQUIRED)
 find_package(replxx CONFIG REQUIRED)
 
 # Modules
-add_subdirectory(src/via-core)
-add_subdirectory(src/via-cli)
-add_subdirectory(src/via-lib)
+add_subdirectory(core)
+add_subdirectory(cli)
+add_subdirectory(lib)
