@@ -13,23 +13,18 @@
 #ifdef VIA_PLATFORM_UNIX
     #include <unistd.h>
 
-static bool checkTerminalSupport()
+bool via::ansi::detail::is_ansi_supported() noexcept
 {
-    if (!isatty(fileno(stdout))) {
-        return false;
-    }
-
-    const char* term = std::getenv("TERM");
-    if (term == nullptr) {
-        return false;
-    }
-
-    return strcmp(term, "dumb") != 0;
+    if (isatty(fileno(stdout)))
+        return true;
+    if (const char* term = std::getenv("TERM"))
+        return strcmp(term, "dumb") != 0;
+    return false;
 }
 #elifdef VIA_PLATFORM_WINDOWS
     #include <windows.h>
 
-static bool checkTerminalSupport()
+bool via::ansi::detail::is_ansi_supported() noexcept
 {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hOut == INVALID_HANDLE_VALUE) {
@@ -50,7 +45,7 @@ static bool checkTerminalSupport()
     return true;
 }
 #else
-static bool checkTerminalSupport()
+bool via::ansi::detail::is_ansi_supported() noexcept
 {
     spdlog::warn(
         "host terminal does not support ANSI escape codes, compiler output may be "
@@ -63,32 +58,28 @@ static bool checkTerminalSupport()
 std::string
 via::ansi::format(std::string string, Foreground fg, Background bg, Style style)
 {
-    static bool hasTerminalSupport = checkTerminalSupport();
-    if (hasTerminalSupport) {
-        std::string codes;
-
-        if (style != Style::NONE)
-            codes += std::to_string(static_cast<int>(style));
-
-        if (fg != Foreground::NONE) {
-            if (!codes.empty())
-                codes += ";";
-            codes += std::to_string(static_cast<int>(fg));
-        }
-
-        if (bg != Background::NONE) {
-            if (!codes.empty())
-                codes += ";";
-            codes += std::to_string(static_cast<int>(bg));
-        }
-
-        if (!codes.empty()) {
-            return "\033[" + codes + "m" + string + "\033[0m";
-        } else {
-            // no formatting at all
-            return string;
-        }
-    } else {
+    static bool supported = detail::is_ansi_supported();
+    if (!supported)
         return string;
+
+    std::string codes;
+
+    if (style != Style::NONE)
+        codes += std::to_string(static_cast<int>(style));
+
+    if (fg != Foreground::NONE) {
+        if (!codes.empty())
+            codes += ";";
+        codes += std::to_string(static_cast<int>(fg));
     }
+
+    if (bg != Background::NONE) {
+        if (!codes.empty())
+            codes += ";";
+        codes += std::to_string(static_cast<int>(bg));
+    }
+
+    if (!codes.empty())
+        return "\033[" + codes + "m" + string + "\033[0m";
+    return string;
 }

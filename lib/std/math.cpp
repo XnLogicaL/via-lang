@@ -29,18 +29,18 @@ VIA_MODULE_ENTRY(math, manager)
     static via::DefTable table = {
         via::DefTableEntry(
             *manager,
-            "sin",
             via::Def::function(
                 *manager,
-                math::sin,
+                "sin",
                 via::BuiltinType::instance(types, via::BuiltinKind::FLOAT),
                 {
-                    via::DefParm(
+                    via::DefParameter(
                         *manager,
                         "__x",
                         via::BuiltinType::instance(types, via::BuiltinKind::FLOAT)
                     ),
-                }
+                },
+                math::sin
             )
         ),
     };

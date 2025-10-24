@@ -66,8 +66,9 @@ class SymbolTable final: public InternTable<std::string, SymbolId>
                        ansi::Foreground::NONE,
                        ansi::Background::NONE,
                        ansi::Style::FAINT
-                   );
-            oss << "    \"" << symbol.second << "\"\n";
+                   )
+                << "    ";
+            oss << "\"" << symbol.second << "\"\n";
         }
         return oss.str();
     }

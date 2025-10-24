@@ -21,7 +21,7 @@ inline size_t ZERO = 0;
 #define DUMP_IF(PTR, ...)                                                                \
     (PTR ? PTR->to_string(__VA_ARGS__)                                                   \
          : [](const SymbolTable* sym_tab = nullptr, size_t& depth = ZERO) {              \
-               return INDENT + "<expression error>";                                     \
+               return INDENT + "<node error>";                                           \
            }(__VA_ARGS__))
 
 via::UnaryOp via::to_unary_op(Tk kind) noexcept

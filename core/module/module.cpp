@@ -17,7 +17,6 @@
 #include "ir/builder.hpp"
 #include "manager.hpp"
 #include "source.hpp"
-#include "support/ansi.hpp"
 #include "support/memory.hpp"
 #include "support/os/dl.hpp"
 #include "symbol.hpp"
@@ -117,19 +116,10 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
         module->m_defs[entry.id] = entry.def;
     }
 
+    std::cout << std::format("({}) ", module->m_name);
     if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::cout
-            << ansi::format(
-                   std::format("[disassemly of definition table (module '{}')]:", name),
-                   ansi::Foreground::YELLOW,
-                   ansi::Background::NONE,
-                   ansi::Style::UNDERLINE
-               )
-            << "\n";
-        for (const auto& def: module->m_defs) {
-            std::cout << "  " << def.second->to_string() << "\n";
-        }
-        std::cout << std::endl;
+        std::cout << std::format("({}) ", module->m_name);
+        std::cout << to_string(module->m_manager.symbol_table(), module->m_defs);
     }
 
     // Pop import stack
@@ -246,6 +236,7 @@ error:
     diags.clear();
 
     // Handle flags
+    std::cout << std::format("({}) ", module->m_name);
     if (flags & ModuleFlags::DUMP_TTREE)
         std::cout << to_string(ttree) << "\n";
     if (flags & ModuleFlags::DUMP_AST)
@@ -253,22 +244,10 @@ error:
     if (flags & ModuleFlags::DUMP_IR)
         std::cout << to_string(manager.symbol_table(), module->m_ir) << "\n";
     if (flags & ModuleFlags::DUMP_EXE)
-        std::cout << (module->m_exe ? module->m_exe->to_string() : "<null-executable>")
+        std::cout << (module->m_exe ? module->m_exe->to_string() : "<executable error>")
                   << "\n";
-    if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::cout
-            << ansi::format(
-                   std::format("[disassemly of definition table (module '{}')]:", name),
-                   ansi::Foreground::YELLOW,
-                   ansi::Background::NONE,
-                   ansi::Style::UNDERLINE
-               )
-            << "\n";
-        for (const auto& def: module->m_defs) {
-            std::cout << "  " << def.second->to_string() << "\n";
-        }
-        std::cout << std::endl;
-    }
+    if (flags & ModuleFlags::DUMP_DEFTABLE)
+        std::cout << to_string(module->m_manager.symbol_table(), module->m_defs);
 
     // Handle failed compilation
     if (failed) {

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <string>
 #include <via/config.hpp>
 #include "ir/ir.hpp"
 #include "module/symbol.hpp"
@@ -46,18 +47,20 @@ struct SymbolInfo
     const Module* module;
 };
 
-struct DefParm
+struct DefParameter
 {
     SymbolId symbol;
-    const Type* type;
+    QualType type;
     ConstValue value;
 
-    VIA_NOINLINE explicit DefParm(
+    VIA_NOINLINE explicit DefParameter(
         ModuleManager& manager,
-        const char* name,
-        const Type* type,
+        std::string name,
+        QualType type,
         ConstValue&& init = ConstValue{}
     ) noexcept;
+
+    std::string to_string(const SymbolTable& table) const;
 };
 
 struct DefTableEntry
@@ -65,26 +68,24 @@ struct DefTableEntry
     SymbolId id;
     const Def* def;
 
-    VIA_NOINLINE explicit DefTableEntry(
-        ModuleManager& manager,
-        const char* name,
-        const Def* def
-    ) noexcept;
+    VIA_NOINLINE explicit DefTableEntry(ModuleManager& manager, const Def* def) noexcept;
 };
 
 using DefTable = DefTableEntry[];
 
 struct Def
 {
+    virtual ~Def() = default;
     virtual SymbolId identity() const = 0;
-    virtual std::string to_string() const = 0;
+    virtual std::string signature(const SymbolTable&) const { return "<no identity>"; }
 
     VIA_NOINLINE static Def* from(ModuleManager& manager, const ir::Stmt* node);
     VIA_NOINLINE static Def* function(
         ModuleManager& manager,
-        const NativeCallback callback,
-        const Type* ret_type,
-        std::initializer_list<DefParm> parms
+        std::string name,
+        QualType ret,
+        std::initializer_list<DefParameter> parms,
+        NativeCallback callback
     );
 };
 
@@ -93,11 +94,16 @@ struct FunctionDef: public Def
     ImplKind kind;
     ImplStorage code;
     SymbolId symbol;
-    std::vector<DefParm> parms;
-    const Type* ret;
+    QualType ret;
+    std::vector<DefParameter> parms;
 
     SymbolId identity() const override { return symbol; }
-    std::string to_string() const override;
+    std::string signature(const SymbolTable& table) const override;
 };
+
+std::string to_string(
+    const SymbolTable& table,
+    const std::unordered_map<SymbolId, const Def*>& map
+) noexcept;
 
 } // namespace via

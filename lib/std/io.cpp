@@ -48,53 +48,52 @@ VIA_MODULE_ENTRY(io, manager)
     static via::DefTable table = {
         via::DefTableEntry(
             *manager,
-            "input",
             via::Def::function(
                 *manager,
-                io::input,
+                "input",
                 via::BuiltinType::instance(types, via::BuiltinKind::STRING),
                 {
-                    via::DefParm(
+                    via::DefParameter(
                         *manager,
                         "__str",
                         via::BuiltinType::instance(types, via::BuiltinKind::STRING)
                     ),
-                }
+                },
+                io::input
             )
         ),
         via::DefTableEntry(
             *manager,
-            "print",
             via::Def::function(
                 *manager,
-                io::print,
+                "print",
                 via::BuiltinType::instance(types, via::BuiltinKind::NIL),
                 {
-                    via::DefParm(
+                    via::DefParameter(
                         *manager,
                         "__str",
                         via::BuiltinType::instance(types, via::BuiltinKind::STRING)
                     ),
-                }
+                },
+                io::print
             )
         ),
         via::DefTableEntry(
             *manager,
-            "printn",
             via::Def::function(
                 *manager,
-                io::printn,
+                "printn",
                 via::BuiltinType::instance(types, via::BuiltinKind::NIL),
                 {
-                    via::DefParm(
+                    via::DefParameter(
                         *manager,
                         "__str",
                         via::BuiltinType::instance(types, via::BuiltinKind::STRING)
                     ),
-                }
+                },
+                io::printn
             )
         ),
     };
-
     return via::NativeModuleInfo::create(manager->allocator(), table);
 }

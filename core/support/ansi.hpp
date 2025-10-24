@@ -14,6 +14,11 @@
 
 namespace via {
 namespace ansi {
+namespace detail {
+
+bool is_ansi_supported() noexcept;
+
+}
 
 enum class Foreground
 {
