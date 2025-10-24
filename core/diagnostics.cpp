@@ -11,54 +11,26 @@
 #include "debug.hpp"
 #include "support/ansi.hpp"
 
-std::string via::to_string(Level level) noexcept
-{
-    switch (level) {
-    case Level::INFO:
-        return ansi::format(
-            "info:",
-            ansi::Foreground::CYAN,
-            ansi::Background::NONE,
-            ansi::Style::BOLD
-        );
-    case Level::WARNING:
-        return ansi::format(
-            "warning:",
-            ansi::Foreground::YELLOW,
-            ansi::Background::NONE,
-            ansi::Style::BOLD
-        );
-    case Level::ERROR:
-        return ansi::format(
-            "error:",
-            ansi::Foreground::RED,
-            ansi::Background::NONE,
-            ansi::Style::BOLD
-        );
-    }
-    debug::unimplemented();
-}
-
 std::string via::to_string(FootnoteKind kind) noexcept
 {
     switch (kind) {
     case FootnoteKind::HINT:
         return ansi::format(
-            "hint:",
+            "HINT",
             ansi::Foreground::GREEN,
             ansi::Background::NONE,
             ansi::Style::BOLD
         );
     case FootnoteKind::NOTE:
         return ansi::format(
-            "note:",
+            "NOTE",
             ansi::Foreground::BLUE,
             ansi::Background::NONE,
             ansi::Style::BOLD
         );
     case FootnoteKind::SUGGESTION:
         return ansi::format(
-            "suggestion:",
+            "SUGGESTION",
             ansi::Foreground::MAGENTA,
             ansi::Background::NONE,
             ansi::Style::BOLD
@@ -158,7 +130,6 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
         hl_line = std::string(line_view);
     }
 
-    spdlog::set_pattern("%v");
     size_t line_width = static_cast<size_t>(std::log10(line)) + 1;
     logger->log(spdlog::level::off, " {} | {}", line, hl_line);
 
@@ -186,13 +157,11 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
             std::string(line_width, ' '),
             ansi::format(caret, foreground, ansi::Background::NONE, ansi::Style::BOLD),
             diag.footnote.valid ? std::format(
-                                      "-- {} {}",
+                                      "--=[{}]=> {}",
                                       to_string(diag.footnote.kind),
                                       diag.footnote.message
                                   )
                                 : ""
         )
     );
-
-    spdlog::set_pattern("%^%l:%$ %v");
 }

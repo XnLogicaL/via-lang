@@ -116,11 +116,9 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
         module->m_defs[entry.id] = entry.def;
     }
 
-    std::cout << std::format("({}) ", module->m_name);
-    if (flags & ModuleFlags::DUMP_DEFTABLE) {
-        std::cout << std::format("({}) ", module->m_name);
-        std::cout << to_string(module->m_manager.symbol_table(), module->m_defs);
-    }
+    if (flags & ModuleFlags::DUMP_DEFTABLE)
+        std::cout << std::format("({}) ", module->m_name)
+                  << to_string(module->m_manager.symbol_table(), module->m_defs);
 
     // Pop import stack
     manager.pop_import();
@@ -235,39 +233,32 @@ error:
     diags.emit();
     diags.clear();
 
-    // Handle flags
-    std::cout << std::format("({}) ", module->m_name);
     if (flags & ModuleFlags::DUMP_TTREE)
-        std::cout << to_string(ttree) << "\n";
+        std::cout << std::format("({}) ", module->m_name) << to_string(ttree) << "\n";
     if (flags & ModuleFlags::DUMP_AST)
-        std::cout << to_string(ast) << "\n";
+        std::cout << std::format("({}) ", module->m_name) << to_string(ast) << "\n";
     if (flags & ModuleFlags::DUMP_IR)
-        std::cout << to_string(manager.symbol_table(), module->m_ir) << "\n";
+        std::cout << std::format("({}) ", module->m_name)
+                  << to_string(manager.symbol_table(), module->m_ir) << "\n";
     if (flags & ModuleFlags::DUMP_EXE)
-        std::cout << (module->m_exe ? module->m_exe->to_string() : "<executable error>")
+        std::cout << std::format("({}) ", module->m_name)
+                  << (module->m_exe ? module->m_exe->to_string() : "<executable error>")
                   << "\n";
     if (flags & ModuleFlags::DUMP_DEFTABLE)
-        std::cout << to_string(module->m_manager.symbol_table(), module->m_defs);
+        std::cout << std::format("({}) ", module->m_name)
+                  << to_string(module->m_manager.symbol_table(), module->m_defs);
 
     // Handle failed compilation
     if (failed) {
-        // Dump importee
-        // TODO: Replace this with an import chain rather than a single module
         for (Module* module = importee; module != nullptr; module = module->m_importee)
             spdlog::info(std::format("Imported by module '{}'", module->m_name));
-
-        // Print warning message about compilation failure
         if ((flags & (ModuleFlags::DUMP_TTREE | ModuleFlags::DUMP_AST |
-                      ModuleFlags::DUMP_IR | ModuleFlags::DUMP_EXE)) != 0u) {
+                      ModuleFlags::DUMP_IR | ModuleFlags::DUMP_EXE)) != 0u)
             spdlog::warn("Dump may be invalid due to compilation failure");
-        }
     } else {
-        // Pop import stack
         manager.pop_import();
         return module;
     }
-
-    // Pop import stack
     manager.pop_import();
     return nullptr;
 }

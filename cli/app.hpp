@@ -50,6 +50,7 @@ struct ProgramOptions
     uint8_t verbosity = 0;
     bool no_execute = false;
     bool debugger = false;
+    bool supress_missing_core_warning = false;
     std::filesystem::path input;
     std::set<std::string> dump;
     std::vector<std::string> imports;
@@ -107,29 +108,34 @@ inline CLI::App& initialize_app(ProgramOptions& options) noexcept
         );
     });
 
-    app.add_option("input", options.input, "Input file path")
+    app.add_option("input", options.input, "input file path")
         ->required()
         ->check(CLI::ExistingFile);
 
-    app.add_option("--dump,-D", options.dump, "Compilation dump mode(s)")
+    app.add_option("--dump,-D", options.dump, "compilation dump mode(s)")
         ->check(dump_validator)
         ->delimiter(',')
         ->type_name("MODE")
         ->multi_option_policy(CLI::MultiOptionPolicy::TakeLast);
 
-    app.add_option("--verbosity,-V", options.verbosity, "Controls verbosity level (0–3)")
+    app.add_option("--verbosity,-V", options.verbosity, "controls verbosity level (0–3)")
         ->default_val(0);
 
     app.add_option(
            "--import-dir,-I",
            options.imports,
-           "Comma-separated list of import directories"
+           "comma-separated list of import directories"
     )
         ->delimiter(',');
 
-    app.add_flag("--no-execute", options.no_execute, "Disables sequential execution");
-    app.add_flag("--debugger", options.debugger, "Enables interactive VM debugger");
+    app.add_flag("--no-execute", options.no_execute, "disables sequential execution");
+    app.add_flag("--debugger", options.debugger, "enables interactive VM debugger");
 
+    app.add_flag(
+        "--i-am-stupid",
+        options.supress_missing_core_warning,
+        "disables missing core directory warning"
+    );
     return app;
 }
 

@@ -65,28 +65,27 @@ struct Expr
 {
     SourceLoc loc;
     QualType type;
-
-    virtual std::string to_string(const SymbolTable* sym_tab, size_t& depth) const = 0;
+    virtual ~Expr() = default;
+    virtual std::string to_string(const SymbolTable* sym_tab, size_t depth = 0) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
-
+    virtual ~Stmt() = default;
     virtual std::optional<SymbolId> get_symbol() const { return std::nullopt; }
-    virtual std::string to_string(const SymbolTable* sym_tab, size_t& depth) const = 0;
+    virtual std::string to_string(const SymbolTable* sym_tab, size_t depth = 0) const = 0;
 };
 
 struct Term
 {
     SourceLoc loc;
-
-    virtual std::string to_string(const SymbolTable* sym_tab, size_t& depth) const = 0;
+    virtual ~Term() = default;
+    virtual std::string to_string(const SymbolTable* sym_tab, size_t depth = 0) const = 0;
 };
 
 #define NODE_FIELDS(BASE)                                                                \
-    using BASE::loc;                                                                     \
-    std::string to_string(const SymbolTable* sym_tab, size_t& depth) const override;
+    std::string to_string(const SymbolTable* sym_tab, size_t depth) const override;
 
 struct TrReturn: public Term
 {
@@ -121,18 +120,12 @@ struct TrCondBranch: public Term
     StmtBlock *iftrue, *iffalse;
 };
 
-struct Parm
+struct Parameter
 {
     SymbolId symbol;
     QualType type;
-    std::string to_string(const SymbolTable* sym_tab, size_t& depth) const;
+    std::string to_string(const SymbolTable* sym_tab, size_t depth = 0) const;
 };
-
-#undef NODE_FIELDS
-#define NODE_FIELDS(BASE)                                                                \
-    using BASE::type;                                                                    \
-    using BASE::loc;                                                                     \
-    std::string to_string(const SymbolTable* sym_tab, size_t& depth) const override;
 
 struct ExprConstant: public Expr
 {
@@ -226,10 +219,6 @@ struct ExprLambda: public Expr
     NODE_FIELDS(Expr)
 };
 
-#undef NODE_FIELDS
-#define NODE_FIELDS()                                                                    \
-    std::string to_string(const SymbolTable* sym_tab, size_t& depth) const override;
-
 struct StmtVarDecl: public Stmt
 {
     NODE_FIELDS()
@@ -251,7 +240,7 @@ struct StmtFuncDecl: public Stmt
 
     SymbolId symbol;
     QualType ret;
-    std::vector<Parm> parms;
+    std::vector<Parameter> parms;
     const StmtBlock* body;
 
     std::optional<SymbolId> get_symbol() const override { return symbol; }

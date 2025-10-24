@@ -11,10 +11,8 @@
 
 #include <cstdint>
 #include <deque>
-#include <format>
 #include <sstream>
 #include <string>
-#include "support/ansi.hpp"
 #include "support/intern.hpp"
 
 namespace via {
@@ -40,38 +38,7 @@ class SymbolTable final: public InternTable<std::string, SymbolId>
     using InternTable::intern;
 
     SymbolId intern(const QualName& path) { return intern(via::to_string(path)); }
-
-    std::string to_string() const noexcept
-    {
-        std::ostringstream oss;
-        oss << ansi::format(
-            "[disassembly of global symbol table]:\n",
-            ansi::Foreground::YELLOW,
-            ansi::Background::NONE,
-            ansi::Style::UNDERLINE
-        );
-
-        oss << ansi::format(
-            "  id      symbol\n"
-            "  ----    ----------\n",
-            ansi::Foreground::NONE,
-            ansi::Background::NONE,
-            ansi::Style::FAINT
-        );
-
-        for (const auto& symbol: m_reverse) {
-            oss << "  "
-                << ansi::format(
-                       std::format("{:0>4}", symbol.first),
-                       ansi::Foreground::NONE,
-                       ansi::Background::NONE,
-                       ansi::Style::FAINT
-                   )
-                << "    ";
-            oss << "\"" << symbol.second << "\"\n";
-        }
-        return oss.str();
-    }
+    std::string to_string() const noexcept;
 };
 
 } // namespace via

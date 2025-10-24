@@ -34,6 +34,8 @@ static const T* instantiate_base(
 
 via::CastResult via::QualType::cast_result(QualType to) const
 {
+    if (m_type == nullptr)
+        return INVALID;
     if (is_const() && !to.is_const())
         return INVALID; // No casting away const qualifier
     if (is_strong() != to.is_strong())

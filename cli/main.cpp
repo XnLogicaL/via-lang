@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
 
     if (std::filesystem::exists(lang_dir)) {
         manager.push_import_path(lang_dir / "lib");
-    } else {
+    } else if (!options.supress_missing_core_warning) {
         spdlog::warn(
-            "Could not find language core directory, core libraries and tooling {} work "
+            "could not find language core directory, core libraries and tooling {} work "
             "as intended!",
             via::ansi::format(
                 "WILL NOT",
@@ -76,6 +76,10 @@ int main(int argc, char* argv[])
                 via::ansi::Background::NONE,
                 via::ansi::Style::BOLD
             )
+        );
+        spdlog::info(
+            "pass in the `--i-am-stupid` flag to supress this warning "
+            "(only if you are stupid or hacking the binary)"
         );
     }
 
@@ -102,8 +106,9 @@ int main(int argc, char* argv[])
     if (options.dump.contains("symbol-table")) {
         std::cout << manager.symbol_table().to_string();
     } else if (options.dump.contains("import-dirs")) {
+        std::cout << "(global) ";
         std::cout << via::ansi::format(
-            "[global import directories]:\n",
+            "[import directories]:\n",
             via::ansi::Foreground::YELLOW,
             via::ansi::Background::NONE,
             via::ansi::Style::UNDERLINE

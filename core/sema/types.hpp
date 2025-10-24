@@ -39,6 +39,9 @@ enum class TypeFlags : uint8_t
 class Type
 {
   public:
+    virtual ~Type() = default;
+
+  public:
     bool is_dependent() const { return flags & 0x1; }
 
     virtual bool is_integral() const { return false; }

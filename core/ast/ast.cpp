@@ -12,7 +12,7 @@
 #include "support/ansi.hpp"
 #include "support/utility.hpp"
 
-#define INDENT(depth) std::string(depth * 2, ' ')
+#define INDENT(DEPTH) std::string(DEPTH * 2, ' ')
 
 std::string via::ast::Path::to_string() const
 {

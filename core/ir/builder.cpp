@@ -22,6 +22,7 @@
 #include "sema/local_ir.hpp"
 #include "sema/stack.hpp"
 #include "sema/types.hpp"
+#include "support/ansi.hpp"
 #include "support/traits.hpp"
 #include "vm/instruction.hpp"
 
@@ -413,9 +414,10 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprSymbol>(
     ast_expr_symbol->type = ast_type_of(builder, ast_symbol_expr);
 
     if (!frame.get_local(ast_expr_symbol->symbol).has_value()) {
+        builder.poison_symbol(ast_expr_symbol->symbol);
         builder.m_diags.report<Level::ERROR>(
             ast_expr_symbol->loc,
-            std::format("Use of undefined symbol '{}'", symbol),
+            std::format("use of undefined symbol '{}'", symbol),
             Footnote(
                 FootnoteKind::HINT,
                 std::format("did you mistype '{}' or forget to declare it?", symbol)
@@ -496,7 +498,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprUnary>(
         builder.m_diags.report<Level::ERROR>(
             ast_expr_unary->loc,
             std::format(
-                "Invalid unary operation '{}' ({}) on "
+                "invalid unary operation '{}' ({}) on "
                 "incompatible type '{}'",
                 ast_expr_unary->op->to_string(),
                 to_string(op),
@@ -530,7 +532,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprBinary>(
         builder.m_diags.report<Level::ERROR>(
             ast_expr_binary->loc,
             std::format(
-                "Invalid binary operation '{}' ({}) on "
+                "invalid binary operation '{}' ({}) on "
                 "incompatible types '{}' (LEFT) "
                 "'{}' (RIGHT)",
                 ast_expr_binary->op->to_string(),
@@ -584,8 +586,8 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
                 builder.m_diags.report<Level::ERROR>(
                     {ast_expr_call->loc.end - 1, ast_expr_call->loc.end},
                     std::format(
-                        "In function call to '{}': missing required argument for "
-                        "parameter #{}",
+                        "in function call to '{}': "
+                        "missing required argument for parameter #{}",
                         builder.dump_expr(ast_expr_call->callee),
                         arg_id
                     )
@@ -593,13 +595,14 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
             } else {
                 auto* arg = ast_expr_call->args.at(arg_id);
                 auto arg_type = builder.type_of(arg);
-                if (arg_type != parm_type) {
+                if (arg_type != parm_type && arg_type && parm_type) {
                     auto cast_result = arg_type.cast_result(parm_type);
                     builder.m_diags.report<Level::ERROR>(
                         arg->loc,
                         std::format(
-                            "In function call to '{}': argument #{} of type '{}' is "
-                            "incompatible with parameter that expects type '{}'",
+                            "in function call to '{}': "
+                            "argument #{} of type '{}' is incompatible with parameter "
+                            "that expects type '{}'",
                             builder.dump_expr(ast_expr_call->callee),
                             arg_id,
                             builder.dump_type(arg_type),
@@ -609,7 +612,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
                             ? Footnote(
                                   FootnoteKind::NOTE,
                                   std::format(
-                                      "Conversion from '{}' to '{}' possible with "
+                                      "conversion from '{}' to '{}' possible with "
                                       "explicit cast",
                                       builder.dump_type(arg_type),
                                       builder.dump_type(parm_type)
@@ -628,12 +631,12 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
             builder.m_diags.report<Level::ERROR>(
                 {first->loc.begin, last->loc.end},
                 std::format(
-                    "In function call to '{}': expected {} arguments, got {}",
+                    "in function call to '{}': expected {} arguments, got {}",
                     builder.dump_expr(ast_expr_call->callee),
                     parm_count,
                     arg_count
                 ),
-                {FootnoteKind::SUGGESTION, "Remove argument(s)"}
+                {FootnoteKind::SUGGESTION, "remove argument(s)"}
             );
         }
 
@@ -642,7 +645,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCall>(
         builder.m_diags.report<Level::ERROR>(
             ast_expr_call->loc,
             std::format(
-                "Attempt to call non-function type '{}'",
+                "attempt to call non-function type '{}'",
                 builder.dump_type(callee)
             )
         );
@@ -668,7 +671,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCast>(
             builder.m_diags.report<Level::WARNING>(
                 ast_expr_cast->expr->loc,
                 std::format(
-                    "Redundant type cast: expression is already of type '{}'",
+                    "redundant type cast: expression is already of type '{}'",
                     builder.dump_type(cast_type)
                 ),
                 {FootnoteKind::SUGGESTION, "Remove cast"}
@@ -679,7 +682,7 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCast>(
             builder.m_diags.report<Level::ERROR>(
                 ast_expr_cast->expr->loc,
                 std::format(
-                    "Expression of type '{}' cannot be casted into type '{}'",
+                    "expression of type '{}' cannot be casted into type '{}'",
                     builder.dump_type(expr_type),
                     builder.dump_type(cast_type)
                 )
@@ -859,7 +862,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtVarDecl>(
                 builder.m_diags.report<Level::ERROR>(
                     ast_stmt_var_decl->rval->loc,
                     std::format(
-                        "Expression of type '{}' does not match declaration type '{}'",
+                        "expression of type '{}' does not match declaration type '{}'",
                         builder.dump_type(rval_type),
                         builder.dump_type(decl_stmt->type)
                     ),
@@ -867,7 +870,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtVarDecl>(
                         ? Footnote{
                             FootnoteKind::NOTE,
                             std::format(
-                                "Conversion from '{}' to '{}' possible with explicit cast",
+                                "conversion from '{}' to '{}' possible with explicit cast",
                                 builder.dump_type(rval_type),
                                 builder.dump_type(decl_stmt->type)
                             )
@@ -926,7 +929,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtImport>(
         builder.poison_symbol(name);
         builder.m_diags.report<Level::ERROR>(
             ast_stmt_import->loc,
-            "Import statements are only allowed in root scope of a module"
+            "import statements cannot be nested"
         );
         return nullptr;
     }
@@ -935,13 +938,13 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtImport>(
         builder.poison_symbol(name);
         builder.m_diags.report<Level::ERROR>(
             ast_stmt_import->loc,
-            std::format("Module '{}' imported more than once", name)
+            std::format("module '{}' imported more than once", name)
         );
 
         if (auto* import_decl = module->ast_decl()) {
             builder.m_diags.report<Level::INFO>(
                 import_decl->loc,
-                "Previously imported here"
+                "previously imported here"
             );
         }
     }
@@ -972,13 +975,13 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
         builder.poison_symbol(decl_stmt->symbol);
         builder.m_diags.report<Level::ERROR>(
             ast_stmt_function_decl->loc,
-            "Compiler infered return types are not implemented"
+            "compiler infered return types are not implemented"
         );
         return nullptr;
     }
 
     for (const auto& parm: ast_stmt_function_decl->parms) {
-        ir::Parm new_parm;
+        ir::Parameter new_parm;
         new_parm.symbol = builder.intern_symbol(parm->symbol->to_string());
         new_parm.type = builder.type_of(parm->type);
         decl_stmt->parms.push_back(new_parm);
@@ -1042,7 +1045,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
                     ret->implicit
                         ? Footnote(
                               FootnoteKind::NOTE,
-                              std::format("Implicit return here", ret->type.to_string())
+                              std::format("implicit return here", ret->type.to_string())
                           )
                         : Footnote();
 
@@ -1051,7 +1054,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
                     builder.m_diags.report<Level::ERROR>(
                         ret->loc,
                         std::format(
-                            "Function return type '{}' does not match type "
+                            "function return type '{}' does not match type "
                             "'{}' returned by control path",
                             decl_stmt->ret.to_string(),
                             ret->type.to_string()
@@ -1062,7 +1065,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
                     builder.poison_symbol(decl_stmt->symbol);
                     builder.m_diags.report<Level::ERROR>(
                         ret->loc,
-                        "All code paths must return the same type "
+                        "all code paths must return the same type "
                         "in function with inferred return type",
                         implicit_return_node
                     );
@@ -1073,7 +1076,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
             builder.poison_symbol(decl_stmt->symbol);
             builder.m_diags.report<Level::ERROR>(
                 term->loc,
-                "All control paths must return from function"
+                "all control paths must return from function"
             );
             break;
         }

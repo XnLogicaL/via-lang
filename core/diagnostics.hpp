@@ -65,7 +65,7 @@ class DiagContext final
     NO_COPY(DiagContext)
 
   public:
-    void emit(spdlog::logger* logger = spdlog::default_logger().get()) const;
+    void emit(spdlog::logger* logger = spdlog::default_logger_raw()) const;
     void clear() noexcept { m_diags.clear(); }
     void report(Diagnosis diag) noexcept { m_diags.push_back(std::move(diag)); }
 
@@ -97,7 +97,6 @@ class DiagContext final
     std::vector<Diagnosis> m_diags{};
 };
 
-std::string to_string(Level level) noexcept;
 std::string to_string(FootnoteKind kind) noexcept;
 
 } // namespace via

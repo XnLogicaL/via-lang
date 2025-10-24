@@ -25,12 +25,14 @@ namespace ast {
 struct Expr
 {
     SourceLoc loc;
+    virtual ~Expr() = default;
     virtual std::string to_string(size_t depth = 0) const = 0;
 };
 
 struct Stmt
 {
     SourceLoc loc;
+    virtual ~Stmt() = default;
     virtual std::string to_string(size_t depth = 0) const = 0;
 };
 
@@ -38,6 +40,7 @@ struct Type
 {
     SourceLoc loc;
     TypeQualifier quals;
+    virtual ~Type() = default;
     virtual std::string to_string(size_t depth = 0) const = 0;
 };
 
