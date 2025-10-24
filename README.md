@@ -42,14 +42,14 @@
 
 ### From Source
 
-> [!WARNING]
+> [!NOTE]
 > The only tested compiler on Linux is **GCC**.
 > **via** requires **GCC 15** or above to build.
 > You can use `g++ --version` to check your compiler version.
 
 #### Prerequisites
 
-> [!INFO]
+> [!TIP]
 > Most people with established systems can safely skip this process.
 > However, it is still highly recommended to follow these steps to ensure a proper build environment.
 
