@@ -28,7 +28,7 @@ class LabelFormatter: public spdlog::formatter
         switch (msg.level) {
         case spdlog::level::info:
             label = via::ansi::format(
-                "INF",
+                "info:",
                 via::ansi::Foreground::GREEN,
                 via::ansi::Background::NONE,
                 via::ansi::Style::BOLD
@@ -36,7 +36,7 @@ class LabelFormatter: public spdlog::formatter
             break;
         case spdlog::level::warn:
             label = via::ansi::format(
-                "WRN",
+                "warning:",
                 via::ansi::Foreground::YELLOW,
                 via::ansi::Background::NONE,
                 via::ansi::Style::BOLD
@@ -44,7 +44,7 @@ class LabelFormatter: public spdlog::formatter
             break;
         case spdlog::level::err:
             label = via::ansi::format(
-                "ERR",
+                "error:",
                 via::ansi::Foreground::RED,
                 via::ansi::Background::NONE,
                 via::ansi::Style::BOLD
@@ -52,7 +52,7 @@ class LabelFormatter: public spdlog::formatter
             break;
         case spdlog::level::debug:
             label = via::ansi::format(
-                "DBG",
+                "debug:",
                 via::ansi::Foreground::CYAN,
                 via::ansi::Background::NONE,
                 via::ansi::Style::BOLD
@@ -65,7 +65,7 @@ class LabelFormatter: public spdlog::formatter
         if (label.empty()) {
             fmt::format_to(std::back_inserter(dest), "{}\n", msg.payload);
         } else {
-            fmt::format_to(std::back_inserter(dest), "[{}] {}\n", label, msg.payload);
+            fmt::format_to(std::back_inserter(dest), "{} {}\n", label, msg.payload);
         }
     }
 

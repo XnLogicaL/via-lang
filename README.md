@@ -35,44 +35,95 @@
 
 ## Linux
 
-### Debian-based systems
+### Pre-built
 
 > [!WARNING]
-> `via` requires **GCC 15** to build. As of `13/10/2025`, GCC 15 is not yet in stable `apt` repositories, so you may need to build it manually.
+> **via** currently does not ship pre-built binaries on Linux.
 
-Install the prerequisites using `apt`:
+### From Source
 
-```bash
-sudo apt install cmake g++ ninja-build git
+> [!WARNING]
+> The only tested compiler on Linux is **GCC**.
+> **via** requires **GCC 15** or above to build.
+> You can use `g++ --version` to check your compiler version.
+
+#### Prerequisites
+
+> [!INFO]
+> Most people with established systems can safely skip this process.
+> However, it is still highly recommended to follow these steps to ensure a proper build environment.
+
+Install the following binaries with your systems official package manager:
+- `g++`
+- `cmake`
+- `ninja` (`ninja-build` in some repos)
+
+Setup `vcpkg` using the [official vcpkg installation instructions](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell) and add these to your `~/.bashrc` (or similar):
+```sh
+export VCPKG_ROOT=/path/to/vcpkg
+export PATH=$VCPKG_ROOT:$PATH
 ```
 
-Install `vcpkg` using the [official Microsoft tutorial](https://vcpkg.io/en/getting-started).
-After installation, configure your environment variables:
-```bash
-# For user-local installation:
-echo "export VCPKG_ROOT=/path/to/vcpkg" >> ~/.bashrc
-echo "export PATH=\$VCPKG_ROOT:\$PATH" >> ~/.bashrc
-source ~/.bashrc
+Finally, restart your shell and optionally run these commands to test your `vcpkg` installation:
+```sh
+$ echo $VCPKG_ROOT
+/path/to/vcpkg
+$ which vcpkg
+/path/to/vcpkg/vcpkg
 ```
 
-Clone the repository:
-```bash
-git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
-cd /path/to/via
+---
+
+First, clone the official git repository and `cd` into it:
+```sh
+$ git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
+$ cd /path/to/via
 ```
 
-Run the install script that corresponds to your installation goals; `install-deb.sh` for system-wide installation, and `install-user-deb.sh` for local installation:
-```bash
-# User-local installation (recommended):
-scripts/linux/install-user-deb.sh Release
-# System-wide installation:
-sudo scripts/linux/install-deb.sh Release
+Now generate build files using `cmake` and build & install the binaries:
+```sh
+$ cmake -B build -G Ninja -D CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+$ cmake --build build
+$ cmake --install build
 ```
 
-These scripts will automatically:
-- Build the interpreter and core libraries
-- Copy the executable to your binary directory
-- Set up the core libraries in the appropriate locatio
+You can test your installation with this command:
+```sh
+$ which via
+/bin/via
+$ via
+error: no input files
+```
+
+If you get a warning about the language core directory not being found or don't get output from one or more command, it probably means that the installation process failed. Try restarting your shell or creating an issue with appropriate information attached.
+
+## Windows
+
+> [!WARNING]
+> Windows support is currently not tested.
+
+### Pre-built
+
+> [!WARNING]
+> **via** currently does not ship pre-built binaries on Windows.
+
+### From Source
+
+TODO
+
+## MacOS
+
+> [!WARNING]
+> **via** on MacOS is not officially supported, as I am too broke to affored a Mac.
+
+### Pre-built
+
+> [!WARNING]
+> **via** currently does not ship pre-built binaries on MacOS.
+
+### From Source
+
+TODO
 
 # Credits
 
