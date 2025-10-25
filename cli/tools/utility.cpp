@@ -7,15 +7,10 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#pragma once
-
-#include <filesystem>
-
-namespace via {
-namespace cli {
+#include "utility.hpp"
 
 // Expand $HOME on Unix, %USERPROFILE% on Windows.
-inline std::filesystem::path get_home_dir()
+std::filesystem::path via::cli::get_home_dir()
 {
 #ifdef _WIN32
     if (const char* profile = std::getenv("USERPROFILE")) {
@@ -37,7 +32,7 @@ inline std::filesystem::path get_home_dir()
 }
 
 // Gets the base directory where via stores core stuff
-inline std::filesystem::path get_lang_dir()
+std::filesystem::path via::cli::get_lang_dir()
 {
 #ifdef _WIN32
     if (const char* local = std::getenv("LOCALAPPDATA")) {
@@ -66,6 +61,3 @@ inline std::filesystem::path get_lang_dir()
     return sys_dir;
 #endif
 }
-
-} // namespace cli
-} // namespace via

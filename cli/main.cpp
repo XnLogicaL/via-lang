@@ -12,7 +12,7 @@
 #include "app.hpp"
 #include "module/module.hpp"
 #include "support/ansi.hpp"
-#include "tooling.hpp"
+#include "tools/utility.hpp"
 
 static void
 translate_module_flags(via::ModuleFlags& flags, via::cli::ProgramOptions& options)

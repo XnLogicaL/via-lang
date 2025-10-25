@@ -37,21 +37,16 @@
 
 ### Pre-built
 
-> [!WARNING]
-> **via** currently does not ship pre-built binaries on Linux.
+TODO
 
 ### From Source
 
-> [!NOTE]
+> [!WARNING]
 > The only tested compiler on Linux is **GCC**.
 > **via** requires **GCC 15** or above to build.
 > You can use `g++ --version` to check your compiler version.
 
 #### Prerequisites
-
-> [!TIP]
-> Most people with established systems can safely skip this process.
-> However, it is still highly recommended to follow these steps to ensure a proper build environment.
 
 Install the following binaries with your systems official package manager:
 - `g++`
@@ -99,13 +94,9 @@ If you get a warning about the language core directory not being found or don't 
 
 ## Windows
 
-> [!WARNING]
-> Windows support is currently not tested.
-
 ### Pre-built
 
-> [!WARNING]
-> **via** currently does not ship pre-built binaries on Windows.
+TODO
 
 ### From Source
 
@@ -118,8 +109,7 @@ TODO
 
 ### Pre-built
 
-> [!WARNING]
-> **via** currently does not ship pre-built binaries on MacOS.
+TODO
 
 ### From Source
 

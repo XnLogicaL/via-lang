@@ -13,6 +13,7 @@
 #include "sema/const.hpp"
 #include "support/conv.hpp"
 #include "support/memory.hpp"
+#include "support/utility.hpp"
 
 via::Value* via::Value::create(VirtualMachine* vm)
 {
@@ -132,6 +133,7 @@ std::optional<double_t> via::Value::as_cfloat() const
     case ValueKind::STRING:
         return stof<double_t>(string_value());
     default:
+        spdlog::warn("as_cfloat({} 0x{:x})", via::to_string(m_kind), (int) m_kind);
         return std::nullopt;
     }
 }
