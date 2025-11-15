@@ -60,22 +60,22 @@ via::os::DynamicLibrary::load_library(std::filesystem::path path)
     }
 
     if (path.extension().string() != DL_EXTENSION) {
-        return std::unexpected(std::format(
-            "Dynamic library has invalid extension (expected {})",
-            DL_EXTENSION
-        ));
+        return std::unexpected(
+            std::format(
+                "Dynamic library has invalid extension (expected {})",
+                DL_EXTENSION
+            )
+        );
     }
 
 #if USE_DLFCN
-    if (void* handle = dlopen(path_str.c_str(), RTLD_NOW)) {
+    if (void* handle = dlopen(path_str.c_str(), RTLD_NOW))
         return DynamicLibrary(handle);
-    }
     const char* err = dlerror();
     return std::unexpected(err ? err : "Unknown dlopen error");
 #else
-    if (HMODULE handle = LoadLibraryA(path_str.c_str())) {
+    if (HMODULE handle = LoadLibraryA(path_str.c_str()))
         return DynamicLibrary(reinterpret_cast<void*>(handle));
-    }
     return std::unexpected(dlerror_win());
 #endif
 }

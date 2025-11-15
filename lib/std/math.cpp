@@ -25,23 +25,18 @@ VIA_MODULE_FUNCTION(sin, vm, call_info)
 VIA_MODULE_ENTRY(math, manager)
 {
     auto& types = manager->type_context();
+    auto& symbol = manager->symbol_table();
 
     static via::DefTable table = {
-        via::DefTableEntry(
+        via::Def::function(
             *manager,
-            via::Def::function(
-                *manager,
-                "sin",
-                via::BuiltinType::instance(types, via::BuiltinKind::FLOAT),
-                {
-                    via::DefParameter(
-                        *manager,
-                        "__x",
-                        via::BuiltinType::instance(types, via::BuiltinKind::FLOAT)
-                    ),
-                },
-                math::sin
-            )
+            "sin",
+            via::BuiltinType::instance(types, via::BuiltinKind::FLOAT),
+            {
+                {symbol.intern("__x"),
+                 via::BuiltinType::instance(types, via::BuiltinKind::FLOAT)},
+            },
+            math::sin
         ),
     };
 

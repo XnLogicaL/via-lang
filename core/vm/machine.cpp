@@ -18,18 +18,14 @@
 #include "ref.hpp"
 #include "value.hpp"
 
-using Vk = via::ValueKind;
-
 template <>
-via::IntAction via::detail::handle_interrupt_impl<via::Interrupt::NONE>(VirtualMachine* vm
-)
+via::IntAction via::detail::handle_interrupt<via::Interrupt::NONE>(VirtualMachine* vm)
 {
-    debug::bug("attempt to handle interrupt NONE");
+    debug::bug("handle_interrupt<Interrupt::NONE> called");
 }
 
 template <>
-via::IntAction
-via::detail::handle_interrupt_impl<via::Interrupt::ERROR>(VirtualMachine* vm)
+via::IntAction via::detail::handle_interrupt<via::Interrupt::ERROR>(VirtualMachine* vm)
 {
     Closure* handler = vm->unwind_stack([&](auto, auto, auto flags, auto) {
         return flags & CallFlags::PROTECT;
@@ -38,7 +34,6 @@ via::detail::handle_interrupt_impl<via::Interrupt::ERROR>(VirtualMachine* vm)
     if (handler == nullptr) {
         auto* error = reinterpret_cast<ErrorInt*>(vm->m_int_arg);
         (*error->out) << error->msg;
-
         return IntAction::EXIT;
     }
     return IntAction::RESUME;
@@ -73,32 +68,24 @@ void via::VirtualMachine::restore_stack()
     m_stack.jump(m_sp);
 }
 
-via::IntAction via::VirtualMachine::handle_interrupt()
-{
 #define DEFINE_INTERRUPT_HANDLER(INT)                                                    \
     case Interrupt::INT:                                                                 \
-        return detail::handle_interrupt_impl<Interrupt::INT>(this);
+        return detail::handle_interrupt<Interrupt::INT>(this);
 
-    if (m_int_hook != nullptr) {
+via::IntAction via::VirtualMachine::handle_interrupt()
+{
+    if (m_int_hook != nullptr)
         m_int_hook(this, m_int, m_int_arg);
-    }
 
     switch (m_int) {
         FOR_EACH_INTERRUPT(DEFINE_INTERRUPT_HANDLER)
     default:
         break;
     }
-
     return IntAction::RESUME;
-#undef DEFINE_INTERRUPT_HANDLER
 }
 
-via::Closure* via::VirtualMachine::unwind_stack(std::function<bool(
-                                                    const uintptr_t* fp,
-                                                    const Instruction* pc,
-                                                    const CallFlags flags,
-                                                    ValueRef callee
-                                                )> pred)
+via::Closure* via::VirtualMachine::unwind_stack(StackUnwindCallback pred)
 {
     for (uintptr_t* fp = m_fp; fp != nullptr;) {
         m_stack.jump(fp + 1);
@@ -121,7 +108,6 @@ via::Closure* via::VirtualMachine::unwind_stack(std::function<bool(
 via::ValueRef via::VirtualMachine::get_import(SymbolId module_id, SymbolId key_id)
 {
     auto& manager = m_module->manager();
-
     if (auto module = manager.get_module_by_name(module_id)) {
         if (auto def = module->lookup(key_id)) {
             if TRY_COERCE (const FunctionDef, fn_def, *def) {
@@ -142,6 +128,14 @@ via::ValueRef via::VirtualMachine::get_import(SymbolId module_id, SymbolId key_i
 // TODO: Better error handling
 error:
     debug::bug("invalid call to VirtualMachine::get_import");
+}
+
+void via::VirtualMachine::set_interrupt(Interrupt code, void* arg) noexcept
+{
+    if (m_int_arg != nullptr)
+        m_alloc.free(m_int_arg);
+    m_int = code;
+    m_int_arg = arg;
 }
 
 void via::VirtualMachine::push_local(ValueRef val)
@@ -169,36 +163,35 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
     callee->m_rc++; // Keep callee alive just in case
 
     // Get the closure from the callee value
-    Closure* cl = callee->function_value();
-    uintptr_t* base = &m_stack.top();
+    auto* closure = callee->function_value();
+    auto* base = &m_stack.top();
 
-    m_stack.push((uintptr_t) callee.get());            // Save callee pointer
-    m_stack.push((uintptr_t) flags);                   // Save flags
-    m_stack.push((uintptr_t) m_pc + !cl->is_native()); // Save return PC
-    m_stack.push((uintptr_t) m_fp);                    // Save old FP
+    std::cout << "call closure at " << (void*) closure
+              << ": is_native=" << closure->is_native()
+              << " ptr=" << (void*) closure->get_bytecode() << "\n";
+
+    m_stack.push((uintptr_t) callee.get());                 // Save callee pointer
+    m_stack.push((uintptr_t) flags);                        // Save flags
+    m_stack.push((uintptr_t) m_pc + !closure->is_native()); // Save return PC
+    m_stack.push((uintptr_t) m_fp);                         // Save old FP
 
     // Set the new frame pointer
     m_fp = &m_stack.top();
 
-    if (cl->is_native()) {
-        CallInfo ci; // Initialize the CallInfo structure
-        ci.callee = callee.get();
-        ci.flags = flags; // Propagate flags
+    if (closure->is_native()) {
+        CallInfo call_info; // Initialize the CallInfo structure
+        call_info.callee = callee.get();
+        call_info.flags = flags; // Propagate flags
 
-        // Iterate over the arguments in reverse order
-        for (uintptr_t* ptr = base; ptr > base - (ptrdiff_t) cl->get_argc(); --ptr) {
-            // Get the argument value
+        for (uintptr_t* ptr = base; ptr > base - (ptrdiff_t) closure->argc(); --ptr) {
             Value* arg = reinterpret_cast<Value*>(*ptr);
-            // Push it onto the CallInfo object
-            ci.args.push_back(ValueRef(this, arg));
+            call_info.args.push_back(ValueRef(this, arg));
         }
 
-        // Call the native function
-        auto result = cl->get_callback()(this, ci);
+        auto result = closure->get_callback()(this, call_info);
         return_(result); // Return the result of the native function call
     } else {
-        // Call the non-native function by setting the program counter
-        m_pc = cl->get_bytecode();
+        m_pc = closure->get_bytecode();
     }
 }
 
@@ -234,11 +227,11 @@ void via::VirtualMachine::return_(ValueRef value)
     push_local(value.is_null() ? ValueRef(this, Value::create(this)) : value);
 }
 
-void via::VirtualMachine::raise(std::string msg, std::ostream* out)
+void via::VirtualMachine::raise(std::string msg, std::ostream& out)
 {
     auto* error = m_alloc.emplace<ErrorInt>();
     error->msg = msg;
-    error->out = out;
+    error->out = &out;
     error->fp = m_fp;
     error->pc = m_pc;
     set_interrupt(Interrupt::ERROR, error);

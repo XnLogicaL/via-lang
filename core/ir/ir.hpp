@@ -20,6 +20,17 @@
 
 namespace via {
 
+#define FOR_EACH_IMPL_KIND(X)                                                            \
+    X(SOURCE)                                                                            \
+    X(NATIVE)
+
+enum class ImplKind
+{
+    FOR_EACH_IMPL_KIND(DEFINE_ENUM)
+};
+
+DEFINE_TO_STRING(ImplKind, FOR_EACH_IMPL_KIND(DEFINE_CASE_TO_STRING));
+
 class Module;
 struct Def;
 
@@ -232,12 +243,7 @@ struct StmtFuncDecl: public Stmt
 {
     NODE_FIELDS()
 
-    enum class Kind
-    {
-        IR,
-        NATIVE,
-    } kind;
-
+    ImplKind kind;
     SymbolId symbol;
     QualType ret;
     std::vector<Parameter> parms;

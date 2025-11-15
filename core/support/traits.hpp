@@ -26,19 +26,22 @@ template <typename Derived, typename... Bases>
 concept derived_from = (std::derived_from<Derived, Bases> || ...);
 
 template <typename T>
-concept default_constructible = std::is_default_constructible_v<T>;
-
-template <typename T>
-concept trivially_default_constructible = std::is_trivially_default_constructible_v<T>;
-
-template <typename T, typename Ret, typename... Args>
-concept invocable_r = std::is_invocable_r_v<Ret, T, Args...>;
-
-template <typename T>
 concept scoped_enum = std::is_scoped_enum_v<T>;
 
-template <typename T, template <typename> typename... Concepts>
-concept all = (Concepts<T>::value && ...);
+template <typename T>
+struct function_traits;
+
+template <typename Ret, typename... Args>
+struct function_traits<Ret(Args...)>
+{
+    static constexpr std::size_t argc = sizeof...(Args);
+    using returns = Ret;
+    using parameters = std::tuple<Args...>;
+};
+
+template <typename Ret, typename... Args>
+struct function_traits<Ret (*)(Args...)>: function_traits<Ret(Args...)>
+{};
 
 namespace detail {
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)

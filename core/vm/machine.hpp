@@ -44,16 +44,12 @@ enum class Interrupt : uint8_t
     FOR_EACH_INTERRUPT(DEFINE_ENUM)
 };
 
-DEFINE_TO_STRING(Interrupt, FOR_EACH_INTERRUPT(DEFINE_CASE_TO_STRING));
-
 enum class IntAction
 {
     RESUME,
     REINTERP,
     EXIT,
 };
-
-using InterruptHook = void (*)(VirtualMachine*, Interrupt, void*);
 
 enum class CallFlags : uint8_t
 {
@@ -62,13 +58,23 @@ enum class CallFlags : uint8_t
     ALL = 0xFF,
 };
 
+DEFINE_TO_STRING(Interrupt, FOR_EACH_INTERRUPT(DEFINE_CASE_TO_STRING));
+
+using InterruptHook = void (*)(VirtualMachine*, Interrupt, void*);
+using StackUnwindCallback = std::function<bool(
+    const uintptr_t* fp,
+    const Instruction* pc,
+    const CallFlags flags,
+    ValueRef callee
+)>;
+
 namespace detail {
 
 template <bool SingleStep, bool OverridePC>
-void execute_impl(VirtualMachine* vm);
+void execute(VirtualMachine* vm);
 
 template <Interrupt Int>
-IntAction handle_interrupt_impl(VirtualMachine* vm);
+IntAction handle_interrupt(VirtualMachine* vm);
 
 } // namespace detail
 
@@ -104,16 +110,16 @@ class VirtualMachine final
 {
   public:
     template <bool, bool>
-    friend void detail::execute_impl(VirtualMachine*);
+    friend void detail::execute(VirtualMachine*);
 
     template <Interrupt>
-    friend IntAction detail::handle_interrupt_impl(VirtualMachine*);
+    friend IntAction detail::handle_interrupt(VirtualMachine*);
 
     friend class Snapshot;
     friend class Debugger;
 
   public:
-    VirtualMachine(Module* module, const Executable* exe)
+    explicit VirtualMachine(Module* module, const Executable* exe)
         : m_exe(exe),
           m_alloc(),
           m_module(module),
@@ -130,36 +136,22 @@ class VirtualMachine final
     ScopedAllocator& allocator() { return m_alloc; }
     ValueRef get_import(SymbolId module_id, SymbolId key_id);
     ValueRef get_constant(uint16_t id);
-
-    void set_int_hook(InterruptHook hook) { m_int_hook = hook; }
-    void set_interrupt(Interrupt code, void* arg = nullptr) noexcept
-    {
-        if (m_int_arg != nullptr) {
-            m_alloc.free(m_int_arg);
-        }
-        m_int = code;
-        m_int_arg = arg;
-    }
-
+    void set_interrupt_hook(InterruptHook hook) { m_int_hook = hook; }
+    void set_interrupt(Interrupt code, void* arg = nullptr) noexcept;
     void push_local(ValueRef val);
     ValueRef get_local(size_t sp);
     void call(ValueRef callee, CallFlags flags = CallFlags::NONE);
     void return_(ValueRef value);
-    void raise(std::string msg, std::ostream* out = &std::cerr);
+    void raise(std::string msg, std::ostream& out = std::cerr);
     void execute();
     void execute_once();
 
   protected:
     void save_stack();
     void restore_stack();
+    Closure* unwind_stack(StackUnwindCallback pred);
     bool has_interrupt() const { return m_int != Interrupt::NONE; }
     IntAction handle_interrupt();
-    Closure* unwind_stack(std::function<bool(
-                              const uintptr_t* fp,
-                              const Instruction* pc,
-                              const CallFlags flags,
-                              ValueRef callee
-                          )> pred);
 
   protected:
     const Executable* m_exe;

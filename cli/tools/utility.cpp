@@ -10,7 +10,7 @@
 #include "utility.hpp"
 
 // Expand $HOME on Unix, %USERPROFILE% on Windows.
-std::filesystem::path via::cli::get_home_dir()
+std::filesystem::path via::get_home_dir()
 {
 #ifdef _WIN32
     if (const char* profile = std::getenv("USERPROFILE")) {
@@ -32,7 +32,7 @@ std::filesystem::path via::cli::get_home_dir()
 }
 
 // Gets the base directory where via stores core stuff
-std::filesystem::path via::cli::get_lang_dir()
+std::filesystem::path via::get_lang_dir()
 {
 #ifdef _WIN32
     if (const char* local = std::getenv("LOCALAPPDATA")) {

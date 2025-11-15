@@ -14,7 +14,6 @@
 #include <unordered_set>
 #include <via/config.hpp>
 #include "ast/ast.hpp"
-#include "ir.hpp"
 #include "module/manager.hpp"
 #include "module/module.hpp"
 #include "module/symbol.hpp"

@@ -9,11 +9,21 @@
 
 #pragma once
 
-#include <filesystem>
-
 namespace via {
 
-std::filesystem::path get_home_dir();
-std::filesystem::path get_lang_dir();
+class RepairTool final
+{
+  public:
+    void scan_all();
+
+  private:
+    void log_category(const char* message);
+    void log_check(const char* message);
+    void log_result(bool ok);
+
+    void scan_core();
+
+  private:
+};
 
 } // namespace via

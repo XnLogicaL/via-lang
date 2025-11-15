@@ -15,22 +15,27 @@
 #include "tools/utility.hpp"
 
 static void
-translate_module_flags(via::ModuleFlags& flags, via::cli::ProgramOptions& options)
+translate_module_flags(via::ModuleFlags& flags, const via::ProgramOptions& options)
 {
+    using enum via::ModuleFlags;
+    flags = (via::ModuleFlags) 0;
+
     if (options.no_execute)
-        flags |= via::ModuleFlags::NO_EXECUTION;
+        flags |= NO_EXECUTION;
     if (options.debugger)
-        flags |= via::ModuleFlags::LAUNCH_DEBUGGER;
-    if (options.dump.contains("token-tree"))
-        flags |= via::ModuleFlags::DUMP_TTREE;
-    if (options.dump.contains("ast"))
-        flags |= via::ModuleFlags::DUMP_AST;
-    if (options.dump.contains("ir"))
-        flags |= via::ModuleFlags::DUMP_IR;
-    if (options.dump.contains("executable"))
-        flags |= via::ModuleFlags::DUMP_EXE;
-    if (options.dump.contains("def-table"))
-        flags |= via::ModuleFlags::DUMP_DEFTABLE;
+        flags |= LAUNCH_DEBUGGER;
+
+    constexpr std::pair<std::string_view, via::ModuleFlags> dump_flags[] = {
+        {"token-tree", DUMP_TTREE},
+        {"ast", DUMP_AST},
+        {"ir", DUMP_IR},
+        {"executable", DUMP_EXE},
+        {"def-table", DUMP_DEFTABLE},
+    };
+
+    for (auto&& [name, flag]: dump_flags)
+        if (options.dump.contains(std::string(name)))
+            flags |= flag;
 }
 
 int main(int argc, char* argv[])
@@ -39,13 +44,12 @@ int main(int argc, char* argv[])
     using via::ModuleFlags;
     using via::ModuleManager;
     using via::ModulePerms;
-    using namespace via::cli;
     using namespace via::operators;
 
     // Temporary spdlog config
     spdlog::set_pattern("%^%l:%$ %v");
 
-    ProgramOptions options;
+    via::ProgramOptions options;
     CLI::App& app = initialize_app(options);
 
     CLI11_PARSE(app, argc, argv);
@@ -56,13 +60,13 @@ int main(int argc, char* argv[])
     via::init(options.verbosity);
 
     if (options.verbosity > 0) {
-        std::println(std::cout, "{}", options.to_string());
+        std::cout << options.to_string();
     }
 
     ModuleManager manager;
     manager.push_import_path(options.input.parent_path());
 
-    static auto lang_dir = get_lang_dir();
+    static auto lang_dir = via::get_lang_dir();
 
     if (std::filesystem::exists(lang_dir)) {
         manager.push_import_path(lang_dir / "lib");
@@ -70,12 +74,7 @@ int main(int argc, char* argv[])
         spdlog::warn(
             "could not find language core directory, core libraries and tooling {} work "
             "as intended!",
-            via::ansi::format(
-                "WILL NOT",
-                via::ansi::Foreground::NONE,
-                via::ansi::Background::NONE,
-                via::ansi::Style::BOLD
-            )
+            via::ansi::bold("WILL NOT")
         );
         spdlog::info(
             "pass in the `--i-am-stupid` flag to supress this warning "

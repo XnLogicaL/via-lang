@@ -15,23 +15,6 @@
 #include "sema/types.hpp"
 #include "support/ansi.hpp"
 
-VIA_NOINLINE
-via::DefTableEntry::DefTableEntry(ModuleManager& manager, const Def* def) noexcept
-    : id(def->identity()),
-      def(def)
-{}
-
-VIA_NOINLINE via::DefParameter::DefParameter(
-    ModuleManager& manager,
-    std::string name,
-    QualType type,
-    ConstValue&& init
-) noexcept
-    : symbol(manager.symbol_table().intern(name)),
-      type(type),
-      value(std::move(init))
-{}
-
 std::string via::DefParameter::to_string(const SymbolTable& table) const
 {
     return std::format(
@@ -51,13 +34,10 @@ VIA_NOINLINE via::Def* via::Def::from(ModuleManager& manager, const ir::Stmt* no
         function->symbol = decl->symbol;
 
         for (const auto& parm: decl->parms) {
-            function->parms.emplace_back(
-                manager,
-                std::string(
-                    manager.symbol_table().lookup(parm.symbol).value_or("<parameter>")
-                ),
-                parm.type
-            );
+            function->parms.push_back({
+                .symbol = parm.symbol,
+                .type = parm.type,
+            });
         }
         return function;
     }

@@ -7,13 +7,23 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#pragma once
+#include "repair.hpp"
+#include <iostream>
+#include <spdlog/spdlog.h>
 
-#include <filesystem>
+void via::RepairTool::scan_all()
+{
+    scan_core();
+}
 
-namespace via {
+void via::RepairTool::log_category(const char* message)
+{}
 
-std::filesystem::path get_home_dir();
-std::filesystem::path get_lang_dir();
+void via::RepairTool::log_check(const char* message)
+{}
 
-} // namespace via
+void via::RepairTool::log_result(bool ok)
+{}
+
+void via::RepairTool::scan_core()
+{}

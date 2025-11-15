@@ -40,7 +40,6 @@ std::optional<via::ConstValue> via::ConstValue::from_token(const Token& tok)
     default:
         break;
     }
-
     return std::nullopt;
 }
 
@@ -60,6 +59,5 @@ std::string via::ConstValue::to_string() const
     default:
         break;
     }
-
-    debug::bug("unmapped cv type");
+    debug::unimplemented("unmapped const value type");
 }

@@ -36,72 +36,12 @@ enum class TypeFlags : uint8_t
     DEPENDENT = 1 << 0,
 };
 
-class Type
-{
-  public:
-    virtual ~Type() = default;
-
-  public:
-    bool is_dependent() const { return flags & 0x1; }
-
-    virtual bool is_integral() const { return false; }
-    virtual bool is_float() const { return false; }
-    virtual bool is_arithmetic() const { return false; }
-    virtual bool is_callable() const { return false; }
-    virtual bool is_subscriptable() const { return false; }
-
-    virtual CastResult cast_result(const Type* to) const = 0;
-
-    virtual std::string to_string() const { debug::unimplemented(); }
-
-  public:
-    const TypeFlags flags;
-
-  protected:
-    explicit Type(TypeFlags flags = TypeFlags::NONE)
-        : flags(flags)
-    {}
-};
-
 enum class TypeQualifier
 {
     NONE = 0,
     CONST = 1 << 0,
     STRONG = 1 << 1,
     REFERENCE = 1 << 2,
-};
-
-class QualType final
-{
-  public:
-    QualType() = default;
-    QualType(const Type* type)
-        : m_type(type)
-    {}
-
-    // clang-format off
-    bool operator==(const QualType& other) const noexcept { return m_type == other.m_type; }
-    bool operator!=(const QualType& other) const noexcept { return m_type != other.m_type; }
-    // clang-format on
-
-    operator bool() const { return m_type != nullptr; }
-
-  public:
-    auto unwrap() const { return m_type; }
-    auto qualifiers() const { return m_quals; }
-
-    bool is_dependent() const { return m_type->is_dependent(); }
-    bool is_const() const { return m_quals & TypeQualifier::CONST; }
-    bool is_strong() const { return m_quals & TypeQualifier::STRONG; }
-    bool is_reference() const { return m_quals & TypeQualifier::REFERENCE; }
-
-    CastResult cast_result(QualType to) const;
-
-    std::string to_string() const;
-
-  private:
-    const Type* m_type = nullptr;
-    TypeQualifier m_quals = TypeQualifier::NONE;
 };
 
 #define FOR_EACH_BUILTIN_KIND(X)                                                         \
@@ -118,6 +58,58 @@ enum class BuiltinKind : uint8_t
 
 DEFINE_TO_STRING(BuiltinKind, FOR_EACH_BUILTIN_KIND(DEFINE_CASE_TO_STRING))
 
+class Type
+{
+  public:
+    virtual ~Type() = default;
+
+  public:
+    bool is_dependent() const { return flags & 0x1; }
+
+    virtual bool is_integral() const { return false; }
+    virtual bool is_float() const { return false; }
+    virtual bool is_arithmetic() const { return false; }
+    virtual bool is_callable() const { return false; }
+    virtual bool is_subscriptable() const { return false; }
+    virtual CastResult cast_result(const Type* to) const = 0;
+    virtual std::string to_string() const { debug::unimplemented(); }
+
+  public:
+    const TypeFlags flags;
+
+  protected:
+    explicit Type(TypeFlags flags = TypeFlags::NONE)
+        : flags(flags)
+    {}
+};
+
+class QualType final
+{
+  public:
+    QualType() = default;
+    QualType(const Type* type)
+        : m_type(type)
+    {}
+
+    bool operator==(const QualType& other) const { return m_type == other.m_type; }
+    bool operator!=(const QualType& other) const { return m_type != other.m_type; }
+    operator bool() const { return m_type != nullptr; }
+
+  public:
+    auto unwrap() const { return m_type; }
+    auto qualifiers() const { return m_quals; }
+    bool is_dependent() const { return m_type->is_dependent(); }
+    bool is_const() const { return m_quals & TypeQualifier::CONST; }
+    bool is_strong() const { return m_quals & TypeQualifier::STRONG; }
+    bool is_reference() const { return m_quals & TypeQualifier::REFERENCE; }
+    CastResult cast_result(QualType to) const;
+    std::string to_string() const;
+
+  private:
+    const Type* m_type = nullptr;
+    TypeQualifier m_quals = TypeQualifier::NONE;
+};
+
 class BuiltinType final: public Type
 {
   public:
@@ -129,17 +121,15 @@ class BuiltinType final: public Type
     static const BuiltinType* instance(TypeContext& ctx, BuiltinKind kind);
 
   public:
-    auto kind() const { return m_kind; }
+    BuiltinKind kind() const { return m_kind; }
+    CastResult cast_result(const Type* to) const override;
+    std::string to_string() const override;
 
     template <BuiltinKind... Kinds>
     bool is_one_of() const
     {
         return ((m_kind == Kinds) || ...);
     }
-
-    CastResult cast_result(const Type* to) const override;
-
-    std::string to_string() const override;
 
   private:
     const BuiltinKind m_kind;
@@ -157,9 +147,7 @@ class OptionalType final: public Type
 
   public:
     QualType unwrap() const { return m_type; }
-
     CastResult cast_result(const Type* to) const override;
-
     std::string to_string() const override;
 
   private:
@@ -178,9 +166,7 @@ class ArrayType final: public Type
 
   public:
     QualType unwrap() const { return m_type; }
-
     CastResult cast_result(const Type* to) const override;
-
     std::string to_string() const override;
 
   private:
@@ -201,9 +187,7 @@ struct MapType: public Type
   public:
     QualType key() const { return m_key; }
     QualType value() const { return m_value; }
-
     CastResult cast_result(const Type* to) const override;
-
     std::string to_string() const override;
 
   private:
@@ -230,9 +214,7 @@ struct FunctionType: public Type
   public:
     auto returns() const { return m_return; }
     auto parameters() const { return m_parms; }
-
     CastResult cast_result(const Type* to) const override;
-
     std::string to_string() const override;
 
   private:

@@ -165,9 +165,9 @@ std::string via::Value::as_cstring() const
         return m_data.string;
     case ValueKind::FUNCTION:
         return std::format(
-            "{}@{}",
-            m_data.function->is_native() ? "native" : "function",
-            (const void*) m_data.function
+            "closure({})@{}",
+            m_data.function->is_native() ? "native" : "bytecode",
+            reinterpret_cast<void*>(m_data.function)
         );
     }
     debug::unimplemented();

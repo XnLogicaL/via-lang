@@ -37,13 +37,13 @@
 
 // Enum utils
 #define DEFINE_TO_STRING(ENUM, ...)                                                      \
-    constexpr const char* to_string(ENUM val) noexcept                                   \
+    constexpr std::string_view to_string(ENUM val) noexcept                              \
     {                                                                                    \
         using enum ENUM;                                                                 \
         switch (val) {                                                                   \
             __VA_ARGS__                                                                  \
         default:                                                                         \
-            std::unreachable();                                                          \
+            return "<error enum " #ENUM ">";                                             \
         }                                                                                \
     }
 

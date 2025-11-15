@@ -44,56 +44,40 @@ VIA_MODULE_FUNCTION(printn, vm, call_info)
 VIA_MODULE_ENTRY(io, manager)
 {
     auto& types = manager->type_context();
+    auto& symbol = manager->symbol_table();
 
     static via::DefTable table = {
-        via::DefTableEntry(
+        via::Def::function(
             *manager,
-            via::Def::function(
-                *manager,
-                "input",
-                via::BuiltinType::instance(types, via::BuiltinKind::STRING),
-                {
-                    via::DefParameter(
-                        *manager,
-                        "__str",
-                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
-                    ),
-                },
-                io::input
-            )
+            "input",
+            via::BuiltinType::instance(types, via::BuiltinKind::STRING),
+            {
+                {symbol.intern("__str"),
+                 via::BuiltinType::instance(types, via::BuiltinKind::STRING)},
+            },
+            io::input
         ),
-        via::DefTableEntry(
+        via::Def::function(
             *manager,
-            via::Def::function(
-                *manager,
-                "print",
-                via::BuiltinType::instance(types, via::BuiltinKind::NIL),
-                {
-                    via::DefParameter(
-                        *manager,
-                        "__str",
-                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
-                    ),
-                },
-                io::print
-            )
+            "print",
+            via::BuiltinType::instance(types, via::BuiltinKind::NIL),
+            {
+                {symbol.intern("__str"),
+                 via::BuiltinType::instance(types, via::BuiltinKind::STRING)},
+            },
+            io::print
         ),
-        via::DefTableEntry(
+        via::Def::function(
             *manager,
-            via::Def::function(
-                *manager,
-                "printn",
-                via::BuiltinType::instance(types, via::BuiltinKind::NIL),
-                {
-                    via::DefParameter(
-                        *manager,
-                        "__str",
-                        via::BuiltinType::instance(types, via::BuiltinKind::STRING)
-                    ),
-                },
-                io::printn
-            )
+            "printn",
+            via::BuiltinType::instance(types, via::BuiltinKind::NIL),
+            {
+                {symbol.intern("__str"),
+                 via::BuiltinType::instance(types, via::BuiltinKind::STRING)},
+            },
+            io::printn
         ),
     };
+
     return via::NativeModuleInfo::create(manager->allocator(), table);
 }

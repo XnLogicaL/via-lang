@@ -11,6 +11,7 @@
 
 #include <expected>
 #include <filesystem>
+#include <type_traits>
 #include <via/config.hpp>
 #include "support/utility.hpp"
 
@@ -46,12 +47,12 @@ class DynamicLibrary final
     std::expected<void*, std::string> load_symbol_raw(const char* symbol);
 
     template <typename T>
+        requires std::is_pointer_v<T>
     std::expected<T, std::string> load_symbol(const char* symbol)
     {
         auto result = load_symbol_raw(symbol);
-        if (result.has_value()) {
+        if (result.has_value())
             return reinterpret_cast<T>(*result);
-        }
         return std::unexpected(result.error());
     }
 

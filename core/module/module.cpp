@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <replxx.hxx>
+#include <type_traits>
 #include "debug.hpp"
 #include "ir/builder.hpp"
 #include "manager.hpp"
@@ -75,9 +76,9 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
     }
 
     auto& alloc = manager.allocator();
-    auto dylib = os::DynamicLibrary::load_library(path);
-    if (!dylib.has_value()) {
-        return std::unexpected(dylib.error());
+    auto dll = os::DynamicLibrary::load_library(path);
+    if (!dll.has_value()) {
+        return std::unexpected(dll.error());
     }
 
     // Instantiate the module
@@ -95,25 +96,26 @@ std::expected<via::Module*, std::string> via::Module::load_native_object(
 
     // Find the module's entry point
     auto symbol = std::format("{}{}", config::MODULE_ENTRY_PREFIX, name);
-    auto callback = dylib->load_symbol<NativeModuleInitCallback>(symbol.c_str());
+    auto callback = dll->load_symbol<NativeModuleInitCallback>(symbol.c_str());
     if (!callback.has_value()) {
         return std::unexpected(
             std::format("Failed to load native module: {}", callback.error())
         );
     }
 
-    module->m_dl = std::move(*dylib);
+    module->m_dl = std::move(*dll);
 
     // Retrieve module information
     auto* module_info = (*callback)(&manager);
 
     // Validate module information
-    debug::require(module_info->begin != nullptr);
+    debug::require(module_info->span.size() != 0);
 
     // Map module definitions
-    for (size_t i = 0; i < module_info->size; i++) {
-        const auto& entry = module_info->begin[i];
-        module->m_defs[entry.id] = entry.def;
+    for (const auto& entry: module_info->span) {
+        if (auto identity = entry->identity()) {
+            module->m_defs[*identity] = entry;
+        }
     }
 
     if (flags & ModuleFlags::DUMP_DEFTABLE)

@@ -23,8 +23,8 @@ enum Operand
     CONSTANT,
     HIGH,
     LOW,
-    ADDR_HIGH,
-    ADDR_LOW,
+    OFFSET_HIGH,
+    OFFSET_LOW,
 };
 
 struct OpInfo
@@ -45,13 +45,14 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::COPY, REGISTER, REGISTER},
     {OpCode::COPYREF, REGISTER, REGISTER},
     {OpCode::LOADK, REGISTER, CONSTANT},
+    {OpCode::LOADNIL, REGISTER},
     {OpCode::LOADTRUE, REGISTER},
     {OpCode::LOADFALSE, REGISTER},
     {OpCode::NEWSTR},
     {OpCode::NEWARR},
     {OpCode::NEWDICT},
     {OpCode::NEWTUPLE},
-    {OpCode::NEWCLOSURE, REGISTER, LITERAL, LITERAL},
+    {OpCode::NEWCLOSURE, REGISTER, OFFSET_HIGH, OFFSET_LOW},
     {OpCode::IADD, REGISTER, REGISTER, REGISTER},
     {OpCode::IADDK, REGISTER, REGISTER, CONSTANT},
     {OpCode::FADD, REGISTER, REGISTER, REGISTER},
@@ -126,12 +127,12 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::FGTEQ, REGISTER, REGISTER, REGISTER},
     {OpCode::FGTEQK, REGISTER, REGISTER, CONSTANT},
     {OpCode::NOT, REGISTER, REGISTER},
-    {OpCode::JMP, ADDR_HIGH, ADDR_LOW},
-    {OpCode::JMPIF, REGISTER, ADDR_HIGH, ADDR_LOW},
-    {OpCode::JMPIFX, REGISTER, ADDR_HIGH, ADDR_LOW},
-    {OpCode::JMPBACK, ADDR_HIGH, ADDR_LOW},
-    {OpCode::JMPBACKIF, REGISTER, ADDR_HIGH, ADDR_LOW},
-    {OpCode::JMPBACKIFX, REGISTER, ADDR_HIGH, ADDR_LOW},
+    {OpCode::JMP, OFFSET_HIGH, OFFSET_LOW},
+    {OpCode::JMPIF, REGISTER, OFFSET_HIGH, OFFSET_LOW},
+    {OpCode::JMPIFX, REGISTER, OFFSET_HIGH, OFFSET_LOW},
+    {OpCode::JMPBACK, OFFSET_HIGH, OFFSET_LOW},
+    {OpCode::JMPBACKIF, REGISTER, OFFSET_HIGH, OFFSET_LOW},
+    {OpCode::JMPBACKIFX, REGISTER, OFFSET_HIGH, OFFSET_LOW},
     {OpCode::SAVE},
     {OpCode::RESTORE},
     {OpCode::PUSH, REGISTER},
@@ -157,20 +158,20 @@ static OpInfo OPERAND_INFO_MAP[] = {
     {OpCode::GETIMPORT, REGISTER, LITERAL, LITERAL},
 };
 
-std::string via::Instruction::to_string(bool use_color, size_t pc) const
+std::string via::Instruction::to_string(bool color, size_t pc) const
 {
     std::string opcode(via::to_string(op));
     std::array<int, 3> operands{a, b, c};
 
     std::ostringstream oss;
-    oss << std::left << std::setw(use_color ? 24 : 16) << std::setfill(' ')
-        << (use_color ? ansi::format(
-                            opcode,
-                            ansi::Foreground::MAGENTA,
-                            ansi::Background::NONE,
-                            ansi::Style::BOLD
-                        )
-                      : opcode)
+    oss << std::left << std::setw(color ? 24 : 16) << std::setfill(' ')
+        << (color ? ansi::format(
+                        opcode,
+                        ansi::Foreground::MAGENTA,
+                        ansi::Background::NONE,
+                        ansi::Style::BOLD
+                    )
+                  : opcode)
         << "  ";
 
     OpInfo info;
@@ -186,7 +187,7 @@ std::string via::Instruction::to_string(bool use_color, size_t pc) const
 
     if (!found) {
         oss << std::right << std::setw(3) << a << std::setw(3) << b << std::setw(3) << c;
-        oss << " (MISSING OPERAND INFO!)";
+        oss << ansi::format(" <info error>", ansi::Foreground::RED);
         return oss.str();
     }
 
@@ -206,10 +207,12 @@ std::string via::Instruction::to_string(bool use_color, size_t pc) const
             oss << std::setw(3) << std::hex << "0x"
                 << std::to_string(pack_halves<uint32_t>(hi, lo));
             ++i; // Skip the LOW operand since it's consumed together
-        } else if (type == ADDR_HIGH && i + 1 < 3 && operand_types[i + 1] == ADDR_LOW) {
-            int64_t sign =
-                (op == OpCode::JMP || op == OpCode::JMPIF || op == OpCode::JMPIFX) ? 1
-                                                                                   : -1;
+        } else if (type == OFFSET_HIGH && i + 1 < 3 &&
+                   operand_types[i + 1] == OFFSET_LOW) {
+            int64_t sign = (op == OpCode::JMPBACK || op == OpCode::JMPBACKIF ||
+                            op == OpCode::JMPBACKIFX)
+                               ? -1
+                               : 1;
             uint16_t hi = operands[i];
             uint16_t lo = operands[i + 1];
             oss << std::setw(3) << std::hex << "#0x"

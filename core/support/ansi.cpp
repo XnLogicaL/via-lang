@@ -83,3 +83,18 @@ via::ansi::format(std::string string, Foreground fg, Background bg, Style style)
         return "\033[" + codes + "m" + string + "\033[0m";
     return string;
 }
+
+std::string via::ansi::bold(std::string string)
+{
+    return format(string, Foreground::NONE, Background::NONE, Style::BOLD);
+}
+
+std::string via::ansi::italic(std::string string)
+{
+    return format(string, Foreground::NONE, Background::NONE, Style::ITALIC);
+}
+
+std::string via::ansi::faint(std::string string)
+{
+    return format(string, Foreground::NONE, Background::NONE, Style::FAINT);
+}

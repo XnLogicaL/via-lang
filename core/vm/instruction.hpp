@@ -143,14 +143,14 @@ enum class OpCode : uint16_t
     FOR_EACH_OPCODE(DEFINE_ENUM)
 };
 
-DEFINE_TO_STRING(OpCode, FOR_EACH_OPCODE(DEFINE_CASE_TO_STRING));
-
 struct Instruction
 {
     OpCode op = OpCode::NOP;
     uint16_t a, b, c;
 
-    std::string to_string(bool use_color = false, size_t pc = 0x0) const;
+    std::string to_string(bool color = false, size_t pc = 0x0) const;
 };
+
+DEFINE_TO_STRING(OpCode, FOR_EACH_OPCODE(DEFINE_CASE_TO_STRING));
 
 } // namespace via

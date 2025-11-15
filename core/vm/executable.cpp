@@ -8,6 +8,8 @@
 ** ===================================================== */
 
 #include "executable.hpp"
+#include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <unordered_map>
@@ -24,8 +26,10 @@
 
 namespace ir = via::ir;
 
-void via::detail::set_null_dst_trap(Executable& exe, const std::optional<uint16_t>& dst)
-    noexcept
+void via::detail::set_null_dst_trap(
+    Executable& exe,
+    const std::optional<uint16_t>& dst
+) noexcept
 {
     if (!dst.has_value()) {
         debug::bug("destination register must not be null in this context");
@@ -227,8 +231,10 @@ void via::detail::ir_lower_expr<ir::ExprCast>(
     }
 }
 
-void via::Executable::lower_expr(const ir::Expr* expr, std::optional<uint16_t> dst)
-    noexcept
+void via::Executable::lower_expr(
+    const ir::Expr* expr,
+    std::optional<uint16_t> dst
+) noexcept
 {
 #define VISIT_EXPR(TYPE)                                                                 \
     if TRY_COERCE (const TYPE, _INNER, expr)                                             \
@@ -299,10 +305,17 @@ void via::detail::ir_lower_stmt<ir::StmtFuncDecl>(
 ) noexcept
 {
     auto dst = exe.m_reg_state.alloc();
-    exe.push_instruction(OpCode::NEWCLOSURE, {dst});
+    auto pc = exe.push_instruction(OpCode::NOP);
     exe.lower_stmt(ir_stmt_func_decl->body);
+
+    size_t offset = exe.program_counter() - pc + 1;
+    uint16_t high, low;
+
+    unpack_halves(static_cast<uint32_t>(offset), high, low);
+
     exe.push_instruction(OpCode::PUSH, {dst});
     exe.push_instruction(OpCode::FREE1, {dst});
+    exe.set_instruction(pc, OpCode::NEWCLOSURE, {dst, high, low});
     exe.m_reg_state.free(dst);
 }
 
@@ -492,15 +505,31 @@ std::string via::Executable::to_string() const
         ansi::Style::UNDERLINE
     );
 
+    oss << ansi::format(
+        "  id      type        data\n"
+        "  ------  ----------  ---------------\n",
+        ansi::Foreground::NONE,
+        ansi::Background::NONE,
+        ansi::Style::FAINT
+    );
+
     for (size_t i = 0; const auto& cv: m_constants) {
         oss << "  "
             << ansi::format(
-                   "CONSTANT",
+                   std::format("0x{:0>4x}", i++),
+                   ansi::Foreground::NONE,
+                   ansi::Background::NONE,
+                   ansi::Style::FAINT
+               );
+        oss << "  " << std::left << std::setw(21)
+            << ansi::format(
+                   std::string(via::to_string(cv.kind())),
                    ansi::Foreground::MAGENTA,
                    ansi::Background::NONE,
                    ansi::Style::BOLD
                );
-        oss << " " << i++ << " = " << cv.to_string() << "\n";
+        oss << "  " << ansi::format(std::string(cv.to_string()), ansi::Foreground::GREEN);
+        oss << "\n";
     }
     return oss.str();
 }

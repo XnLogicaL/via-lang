@@ -35,7 +35,7 @@ class Value final
     friend class VirtualMachine;
 
     template <bool, bool>
-    friend void detail::execute_impl(VirtualMachine*);
+    friend void detail::execute(VirtualMachine*);
 
   public:
     static Value* create(VirtualMachine* vm);
@@ -51,27 +51,22 @@ class Value final
     auto& data() { return m_data; }
     const auto& data() const { return m_data; }
     auto* context() const { return m_vm; }
-
     bool unref() noexcept;
     void free() noexcept;
     Value* clone() noexcept;
-
     auto bool_value() const noexcept { return m_data.boolean; }
     auto int_value() const noexcept { return m_data.integer; }
     auto float_value() const noexcept { return m_data.float_; }
     auto string_value() const noexcept { return m_data.string; }
     auto function_value() const noexcept { return m_data.function; }
-
     std::optional<int64_t> as_cint() const;
     std::optional<double_t> as_cfloat() const;
     bool as_cbool() const;
     std::string as_cstring() const;
-
     Value* as_int() const;
     Value* as_float() const;
     Value* as_bool() const;
     Value* as_string() const;
-
     std::string to_string() const noexcept;
 
   private:

@@ -13,7 +13,6 @@
 #include <via/via.hpp>
 
 namespace via {
-namespace cli {
 
 static struct DumpValidator: public CLI::Validator
 {
@@ -139,5 +138,4 @@ inline CLI::App& initialize_app(ProgramOptions& options) noexcept
     return app;
 }
 
-} // namespace cli
 } // namespace via

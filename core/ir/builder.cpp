@@ -665,8 +665,8 @@ const via::ir::Expr* via::detail::ast_lower_expr<via::ast::ExprCast>(
     cast_expr->cast = cast_type;
     cast_expr->type = cast_type;
 
-    auto expr_type = cast_expr->expr->type;
-    if (expr_type != nullptr) {
+    if (cast_expr->expr != nullptr && cast_expr->expr->type != nullptr) {
+        auto expr_type = cast_expr->expr->type;
         if (expr_type == cast_type) {
             builder.m_diags.report<Level::WARNING>(
                 ast_expr_cast->expr->loc,
@@ -964,7 +964,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
 ) noexcept
 {
     auto* decl_stmt = builder.m_alloc.emplace<ir::StmtFuncDecl>();
-    decl_stmt->kind = ir::StmtFuncDecl::Kind::IR;
+    decl_stmt->kind = ImplKind::SOURCE;
     decl_stmt->symbol = builder.intern_symbol(ast_stmt_function_decl->name->to_string());
     decl_stmt->ret = ast_stmt_function_decl->ret
                          ? builder.type_of(ast_stmt_function_decl->ret)
@@ -1029,7 +1029,7 @@ const via::ir::Stmt* via::detail::ast_lower_stmt<via::ast::StmtFunctionDecl>(
         block->term = term;
     }
 
-    via::QualType expected_ret_type = decl_stmt->ret;
+    QualType expected_ret_type = decl_stmt->ret;
 
     for (const auto& term: get_control_paths(block)) {
         if TRY_COERCE (const ir::TrReturn, ret, term) {

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -37,8 +38,11 @@ namespace detail {
 void set_null_dst_trap(Executable& exe, const std::optional<uint16_t>& dst) noexcept;
 
 template <derived_from<ir::Expr> Expr>
-void ir_lower_expr(Executable& exe, const Expr* expr, std::optional<uint16_t> dst)
-    noexcept
+void ir_lower_expr(
+    Executable& exe,
+    const Expr* expr,
+    std::optional<uint16_t> dst
+) noexcept
 {
     debug::todo(std::format("lower_expr<{}>()", VIA_TYPENAME(Expr)));
 }
@@ -117,14 +121,26 @@ class Executable final
 
     void push_constant(ConstValue cv) noexcept
     {
-        if (m_constants.size() >= std::numeric_limits<uint16_t>::max()) {
-        }
+        debug::require(
+            m_constants.size() < (size_t) std::numeric_limits<uint16_t>::max(),
+            "Constant count exceeds limit"
+        );
         m_constants.push_back(std::move(cv));
     }
 
-    void push_instruction(OpCode op, std::array<uint16_t, 3>&& ops = {}) noexcept
+    size_t push_instruction(OpCode op, std::array<uint16_t, 3> ops = {}) noexcept
     {
         m_bytecode.emplace_back(op, ops[0], ops[1], ops[2]);
+        return program_counter();
+    }
+
+    void set_instruction(size_t pc, OpCode op, std::array<uint16_t, 3> ops = {}) noexcept
+    {
+        auto& insn = m_bytecode[pc];
+        insn.op = op;
+        insn.a = ops[0];
+        insn.b = ops[1];
+        insn.c = ops[2];
     }
 
     void lower_expr(const ir::Expr* expr, std::optional<uint16_t> dst) noexcept;

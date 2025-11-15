@@ -33,13 +33,13 @@
 
 # Installation
 
-## Linux
+## Prebuilt
 
-### Pre-built
+TODO: Create an automatic installer and setup releases page with the appropriate binaries
 
-TODO
+## Source
 
-### From Source
+### Linux
 
 > [!WARNING]
 > The only tested compiler on Linux is **GCC**.
@@ -92,26 +92,11 @@ error: no input files
 
 If you get a warning about the language core directory not being found or don't get output from one or more command, it probably means that the installation process failed. Try restarting your shell or creating an issue with appropriate information attached.
 
-## Windows
-
-### Pre-built
+### Windows
 
 TODO
 
-### From Source
-
-TODO
-
-## MacOS
-
-> [!WARNING]
-> **via** on MacOS is not officially supported, as I am too broke to affored a Mac.
-
-### Pre-built
-
-TODO
-
-### From Source
+### MacOS
 
 TODO
 

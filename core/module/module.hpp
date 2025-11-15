@@ -41,18 +41,16 @@ VIA_CONSTANT const char MODULE_ENTRY_PREFIX[] = EXPAND_STRING(VIA_MODULE_ENTRY_P
 
 struct NativeModuleInfo
 {
-    const size_t size;
-    const DefTableEntry* begin;
+    const std::span<const Def*> span;
 
-    explicit NativeModuleInfo(const size_t size, const DefTableEntry* begin)
-        : size(size),
-          begin(begin)
+    explicit NativeModuleInfo(size_t count, const Def** begin)
+        : span(begin, count)
     {}
 
     template <size_t Count>
         requires(Count > 0)
     VIA_NOINLINE static NativeModuleInfo*
-    create(ScopedAllocator& alloc, const DefTableEntry (&table)[Count])
+    create(ScopedAllocator& alloc, const Def* (&table)[Count])
     {
         return alloc.emplace<NativeModuleInfo>(Count, table);
     }

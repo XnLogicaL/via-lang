@@ -28,10 +28,11 @@
     {                                                                                    \
         if constexpr (!OverridePC)                                                       \
             pc++;                                                                        \
-        if constexpr (SingleStep)                                                        \
+        if constexpr (SingleStep) {                                                      \
             goto exit;                                                                   \
-        else                                                                             \
+        } else {                                                                         \
             goto dispatch;                                                               \
+        }                                                                                \
     }
 
 #define CONST_VALUE(ID)                                                                  \
@@ -62,6 +63,9 @@
         GET_REGISTER(ID)->unref();                                                       \
         SET_REGISTER(ID, nullptr);                                                       \
     }
+
+#define JUMP_FWD(OFF) pc += (OFF)
+#define JUMP_BACK(OFF) pc -= (OFF)
 
 // Common Subexpression Elimination utility
 #define CSE_OPERANDS_A() const uint16_t a = pc->a;
@@ -102,7 +106,7 @@ template <bool SingleStep, bool OverridePC>
         case IntAction::EXIT:
             goto exit;
         case IntAction::REINTERP:
-            goto dispatch;
+            DISPATCH();
         case IntAction::RESUME:
             DISPATCH();
         default:
@@ -221,9 +225,15 @@ template <bool SingleStep, bool OverridePC>
         CASE(NEWARR)
         CASE(NEWDICT)
         CASE(NEWTUPLE)
-        CASE(NEWCLOSURE)
         {
             goto trap__unimplemented_opcode;
+        }
+        CASE(NEWCLOSURE)
+        {
+            auto closure = Closure::create(vm, vm->m_pc + 1);
+            SET_REGISTER(pc->a, Value::create(vm, closure));
+            JUMP_FWD(pack_halves<uint32_t>(pc->b, pc->c) - 1);
+            DISPATCH();
         }
         CASE(IADD)
         {
@@ -1307,43 +1317,43 @@ template <bool SingleStep, bool OverridePC>
         }
         CASE(JMP)
         {
-            pc += pack_halves<uint32_t>(pc->a, pc->b);
-            goto dispatch;
+            JUMP_FWD(pack_halves<uint32_t>(pc->a, pc->b));
+            DISPATCH();
         }
         CASE(JMPIF)
         {
             if (GET_REGISTER(pc->a)->as_cbool()) {
-                pc += pack_halves<uint32_t>(pc->b, pc->c);
-                goto dispatch;
+                JUMP_FWD(pack_halves<uint32_t>(pc->b, pc->c));
+                DISPATCH();
             }
             DISPATCH();
         }
         CASE(JMPIFX)
         {
             if (!GET_REGISTER(pc->a)->as_cbool()) {
-                pc += pack_halves<uint32_t>(pc->b, pc->c);
-                goto dispatch;
+                JUMP_FWD(pack_halves<uint32_t>(pc->b, pc->c));
+                DISPATCH();
             }
             DISPATCH();
         }
         CASE(JMPBACK)
         {
-            pc -= pack_halves<uint32_t>(pc->a, pc->b);
-            goto dispatch;
+            JUMP_BACK(pack_halves<uint32_t>(pc->a, pc->b));
+            DISPATCH();
         }
         CASE(JMPBACKIF)
         {
             if (GET_REGISTER(pc->a)->as_cbool()) {
-                pc -= pack_halves<uint32_t>(pc->b, pc->c);
-                goto dispatch;
+                JUMP_BACK(pack_halves<uint32_t>(pc->b, pc->c));
+                DISPATCH();
             }
             DISPATCH();
         }
         CASE(JMPBACKIFX)
         {
             if (!GET_REGISTER(pc->a)->as_cbool()) {
-                pc -= pack_halves<uint32_t>(pc->b, pc->c);
-                goto dispatch;
+                JUMP_BACK(pack_halves<uint32_t>(pc->b, pc->c));
+                DISPATCH();
             }
             DISPATCH();
         }

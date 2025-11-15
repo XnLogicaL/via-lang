@@ -9,11 +9,26 @@
 
 #pragma once
 
-#include <filesystem>
+#include <functional>
+
+#define defer ::via::detail::DeferImpl _ = [&]
 
 namespace via {
+namespace detail {
 
-std::filesystem::path get_home_dir();
-std::filesystem::path get_lang_dir();
+using DeferCallback = std::function<void()>;
 
+class DeferImpl final
+{
+  public:
+    ~DeferImpl() { m_callback(); }
+    DeferImpl(DeferCallback callback)
+        : m_callback(std::move(callback))
+    {}
+
+  private:
+    DeferCallback m_callback;
+};
+
+} // namespace detail
 } // namespace via

@@ -63,5 +63,9 @@ std::string format(
     Style style = Style::NONE
 );
 
+std::string bold(std::string string);
+std::string italic(std::string string);
+std::string faint(std::string string);
+
 } // namespace ansi
 } // namespace via

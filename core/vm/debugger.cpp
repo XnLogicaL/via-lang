@@ -14,6 +14,7 @@
 #include <sstream>
 #include "support/ansi.hpp"
 #include "value.hpp"
+#include "vm/instruction.hpp"
 #include "vm/machine.hpp"
 
 static std::vector<std::string> tokenize_command(const std::string& line)
@@ -183,6 +184,30 @@ void via::Debugger::register_default_commands() noexcept
             for (size_t i = 0; i < n; i++) {
                 m_vm.execute_once();
             }
+        }
+    );
+
+    m_cmds.register_command(
+        "continue",
+        "contniously steps the interpreter while dumping instruction data",
+        {},
+        [this](const auto& args) {
+            std::println();
+
+            while (true) {
+                size_t counter = m_vm.m_pc - m_vm.m_bp;
+                std::println(
+                    "0x{:0>4x}  {}",
+                    counter * 8,
+                    m_vm.m_pc->to_string(true, counter)
+                );
+
+                if (m_vm.m_pc->op == OpCode::HALT)
+                    break;
+                m_vm.execute_once();
+            }
+
+            std::println();
         }
     );
 
