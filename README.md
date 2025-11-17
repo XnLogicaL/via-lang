@@ -33,7 +33,7 @@
 
 ## Legend
 
-<div align="center">
+<div>
   <a href="#introduction">Introduction</a><br>
   &nbsp;&nbsp;• <a href="#features">Features</a><br>
   <a href="#installation">Installation</a><br>
