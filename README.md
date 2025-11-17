@@ -31,25 +31,23 @@
 
 **via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
 
-## Legend
-
 <div>
-  <a href="#introduction">Introduction</a><br>
+  &nbsp;<a href="#introduction">Introduction</a><br>
   &nbsp;&nbsp;• <a href="#features">Features</a><br>
-  <a href="#installation">Installation</a><br>
+  &nbsp;<a href="#installation">Installation</a><br>
   &nbsp;&nbsp;• <a href="#prebuilt">Prebuilt</a><br>
   &nbsp;&nbsp;• <a href="#source">Source</a><br>
   &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#linux">Linux</a><br>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <a href="#prerequisites">Prerequisites</a><br>
   &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#windows">Windows</a><br>
   &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#macos">MacOS</a><br>
-  <a href="#credits">Credits</a>
+  &nbsp;<a href="#credits">Credits</a>
 </div>
 
 ## Features
 
 - Static typing
-- __NO__ garbage collector*
+- No garbage collector*
 - Modern syntax & standard library
 - Template metaprogramming
 - High performance
