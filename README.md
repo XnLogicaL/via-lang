@@ -25,16 +25,16 @@
 </p>
 
 <p align="center">
-  - #Introduction
-    - ##Features
-  - #Installation
-    - ##Prebuilt
-    - ##Source
-      - ###Linux
-        - ####Prerequisites
-      - ###Windows
-      - ###MacOS
-  - #Credits
+  - <a href="#introduction">Introduction</a>
+    - <a href="#features">Features</a>
+  - <a href="#installation">Installation</a>
+    - <a href="#prebuilt">Prebuilt</a>
+    - <a href="#source">Source</a>
+      - <a href="#linux">Linux</a>
+        - <a href="#prerequisites">Prerequisites</a>
+      - <a href="#windows">Windows</a>
+      - <a href="#macos">MacOS</a>
+  - <a href="#credits">Credits</a>
 </p>
 
 >[!WARNING]
