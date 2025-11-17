@@ -24,6 +24,15 @@
   <a href="#credits">Credits</a>
 </p>
 
+>[!WARNING]
+> via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
+
+# Introduction
+
+**via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
+
+## Legend
+
 <div align="center">
   <a href="#introduction">Introduction</a><br>
   &nbsp;&nbsp;• <a href="#features">Features</a><br>
@@ -36,13 +45,6 @@
   &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#macos">MacOS</a><br>
   <a href="#credits">Credits</a>
 </div>
-
->[!WARNING]
-> via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
-
-# Introduction
-
-**via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
 
 ## Features
 
