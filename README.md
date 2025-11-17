@@ -24,18 +24,18 @@
   <a href="#credits">Credits</a>
 </p>
 
-<p align="center">
-  - [Introduction](#introduction)
-    - [Features](##features)
-  - [Installation](#installation)
-    - [Prebuilt](##prebuilt)
-    - [Source](##source)
-      - [Linux](###linux)
-        - [Prerequisites](####prerequisites)
-      - [Windows](###windows)
-      - [MacOS](###macos)
-  - [Credits](#credits)
-</p>
+<div align="center">
+  <a href="#introduction">Introduction</a><br>
+  &nbsp;&nbsp;• <a href="#features">Features</a><br>
+  <a href="#installation">Installation</a><br>
+  &nbsp;&nbsp;• <a href="#prebuilt">Prebuilt</a><br>
+  &nbsp;&nbsp;• <a href="#source">Source</a><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#linux">Linux</a><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <a href="#prerequisites">Prerequisites</a><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#windows">Windows</a><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#macos">MacOS</a><br>
+  <a href="#credits">Credits</a>
+</div>
 
 >[!WARNING]
 > via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
