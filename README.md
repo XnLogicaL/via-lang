@@ -25,16 +25,16 @@
 </p>
 
 <p align="center">
-  - <a href="#introduction">Introduction</a>
-    - <a href="#features">Features</a>
-  - <a href="#installation">Installation</a>
-    - <a href="#prebuilt">Prebuilt</a>
-    - <a href="#source">Source</a>
-      - <a href="#linux">Linux</a>
-        - <a href="#prerequisites">Prerequisites</a>
-      - <a href="#windows">Windows</a>
-      - <a href="#macos">MacOS</a>
-  - <a href="#credits">Credits</a>
+  - [Introduction](#introduction)
+    - [Features](##features)
+  - [Installation](#installation)
+    - [Prebuilt](##prebuilt)
+    - [Source](##source)
+      - [Linux](###linux)
+        - [Prerequisites](####prerequisites)
+      - [Windows](###windows)
+      - [MacOS](###macos)
+  - [Credits](#credits)
 </p>
 
 >[!WARNING]
