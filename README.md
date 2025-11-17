@@ -25,105 +25,85 @@
 </p>
 
 >[!WARNING]
-> via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
+> via is an **experimental** project and not yet production-ready. Core features are under conception/development and may be incomplete or unstable. Implementations are subject to change as the project evolves.
 
 # Introduction
 
 **via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
 
-<div>
-  &nbsp;<a href="#introduction">Introduction</a><br>
-  &nbsp;&nbsp;• <a href="#features">Features</a><br>
-  &nbsp;<a href="#installation">Installation</a><br>
-  &nbsp;&nbsp;• <a href="#prebuilt">Prebuilt</a><br>
-  &nbsp;&nbsp;• <a href="#source">Source</a><br>
-  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#linux">Linux</a><br>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <a href="#prerequisites">Prerequisites</a><br>
-  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#windows">Windows</a><br>
-  &nbsp;&nbsp;&nbsp;&nbsp;• <a href="#macos">MacOS</a><br>
-  &nbsp;<a href="#credits">Credits</a>
-</div>
-
 ## Features
 
 - Static typing
 - No garbage collector*
-- Modern syntax & standard library
+- Modern, clean and sane standard library and syntax
+- Built-in types for strings, arrays, maps, tuples, optionals, variants, etc.
 - Template metaprogramming
+- Multi-paradigm design, including OOP and functional programming
 - High performance
-- Rich C++ API
+- Platform independence*
+- Rich C++ backend API
 
 # Installation
-
-## Prebuilt
-
-TODO: Create an automatic installer and setup releases page with the appropriate binaries
 
 ## Source
 
 ### Linux
 
-> [!WARNING]
-> The only tested compiler on Linux is **GCC**.
-> **via** requires **GCC 15** or above to build.
-> You can use `g++ --version` to check your compiler version.
-
 #### Prerequisites
 
 Install the following binaries with your systems official package manager:
-- `g++`
+- `g++` (GCC 15 or above)
 - `cmake`
 - `ninja` (`ninja-build` in some repos)
 
-Setup `vcpkg` using the [official vcpkg installation instructions](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell) and add these to your `~/.bashrc` (or similar):
+Setup `vcpkg` using the [official vcpkg installation instructions](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell) and add these to your `~/.bashrc`/`~/.zshrc` (or similar):
 ```sh
 export VCPKG_ROOT=/path/to/vcpkg
 export PATH=$VCPKG_ROOT:$PATH
 ```
+Or to define these variables temporarily, run these commands directly in the terminal instead.
 
 Finally, restart your shell and optionally run these commands to test your `vcpkg` installation:
 ```sh
-$ echo $VCPKG_ROOT
-/path/to/vcpkg
-$ which vcpkg
-/path/to/vcpkg/vcpkg
+echo $VCPKG_ROOT
+#> /path/to/vcpkg
+which vcpkg
+#> /path/to/vcpkg/vcpkg
 ```
 
 ---
 
 First, clone the official git repository and `cd` into it:
 ```sh
-$ git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
-$ cd /path/to/via
+git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
+cd /path/to/via
+```
+
+Install dependency packages with the following command:
+```sh
+vcpkg install
 ```
 
 Now generate build files using `cmake` and build & install the binaries:
 ```sh
-$ cmake -B build -G Ninja -D CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
-$ cmake --build build
-$ cmake --install build
+cmake -B build -G Ninja -D CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+cmake --build build # -j$(nproc) <- optional but recommended, as it significantly speeds up build times
+# Optional:
+cmake --install build
 ```
 
 You can test your installation with this command:
 ```sh
-$ which via
-/bin/via
-$ via
-error: no input files
+which via
+#> /bin/via
+via
+#> error: no input files
 ```
 
 If you get a warning about the language core directory not being found or don't get output from one or more command, it probably means that the installation process failed. Try restarting your shell or creating an issue with appropriate information attached.
 
-### Windows
-
-TODO
-
-### MacOS
-
-TODO
-
 # Credits
 
-- **@XnLogicaL** – Lead maintainer
+- **@XnLogicaL** – Lead developer
 - **@KasenDaniels** – Project name and banner design
-- [mftool-java](https://github.com/ankitwasankar/mftool-java) – README layout inspiration
+- [MF TOOL - JAVA](https://github.com/ankitwasankar/mftool-java) – README layout inspiration
