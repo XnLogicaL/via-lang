@@ -64,8 +64,8 @@
         SET_REGISTER(ID, nullptr);                                                       \
     }
 
-#define JUMP_FWD(OFF) pc += (OFF)
-#define JUMP_BACK(OFF) pc -= (OFF)
+#define JUMP_FWD(OFF) pc += (OFF) - 1
+#define JUMP_BACK(OFF) pc -= (OFF) + 1
 
 // Common Subexpression Elimination utility
 #define CSE_OPERANDS_A() const uint16_t a = pc->a;
@@ -75,7 +75,7 @@
 #define DEBUG_TRAP(FORMAT, ...) debug::bug(std::format(FORMAT, __VA_ARGS__));
 
 template <bool SingleStep, bool OverridePC>
-[[gnu::flatten]] void via::detail::execute_impl(VirtualMachine* vm)
+[[gnu::flatten]] void via::detail::execute(VirtualMachine* vm)
 {
 #ifdef HAS_CGOTO
     [[gnu::aligned(64)]] static void* dispatch_table[] = {
@@ -230,9 +230,9 @@ template <bool SingleStep, bool OverridePC>
         }
         CASE(NEWCLOSURE)
         {
-            auto closure = Closure::create(vm, vm->m_pc + 1);
+            auto closure = Closure::create(vm, vm->m_pc);
             SET_REGISTER(pc->a, Value::create(vm, closure));
-            JUMP_FWD(pack_halves<uint32_t>(pc->b, pc->c) - 1);
+            JUMP_FWD(pack_halves<uint32_t>(pc->b, pc->c));
             DISPATCH();
         }
         CASE(IADD)
@@ -1502,10 +1502,10 @@ exit:;
 
 void via::VirtualMachine::execute()
 {
-    detail::execute_impl<false, false>(this);
+    detail::execute<false, false>(this);
 }
 
 void via::VirtualMachine::execute_once()
 {
-    detail::execute_impl<true, false>(this);
+    detail::execute<true, false>(this);
 }

@@ -15,14 +15,15 @@ namespace io {
 
 VIA_MODULE_FUNCTION(input, vm, call_info)
 {
-    auto str = call_info.args.at(0);
+    auto& alloc = vm->allocator();
+    auto string = call_info.args.at(0);
 
     std::string in;
-    std::cout << str->string_value();
+    std::cout << string->string_value();
     std::cin >> in;
 
-    char* in_str = vm->allocator().strdup(in.c_str());
-    return via::ValueRef(vm, in_str);
+    char* cstring = alloc.strdup(in.c_str());
+    return via::ValueRef(vm, cstring);
 }
 
 VIA_MODULE_FUNCTION(print, vm, call_info)

@@ -24,7 +24,7 @@ import vendor::raylib as rl;
   var ballPosition = rl::Vector2::new(
     (screenWidth / 2) as float,
     (screenHeight / 2) as float
-  ); 
+  );
 
   whilex rl::WindowShouldClose() {
     if rl::IsKeyDown(KEY_RIGHT): ballPosition.x += 2;

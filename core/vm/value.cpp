@@ -8,32 +8,21 @@
 ** ===================================================== */
 
 #include "value.hpp"
-#include <cmath>
 #include "debug.hpp"
 #include "sema/const.hpp"
 #include "support/conv.hpp"
 #include "support/memory.hpp"
-#include "support/utility.hpp"
 
+// clang-format off
 via::Value* via::Value::create(VirtualMachine* vm)
-{
-    return construct_impl(vm, ValueKind::NIL);
-}
-
+    { return create(vm, ValueKind::NIL); }
 via::Value* via::Value::create(VirtualMachine* vm, int64_t integer)
-{
-    return construct_impl(vm, ValueKind::INT, {.integer = integer});
-}
-
-via::Value* via::Value::create(VirtualMachine* vm, double_t float_)
-{
-    return construct_impl(vm, ValueKind::FLOAT, {.float_ = float_});
-}
-
+    { return create(vm, ValueKind::INT, {.integer = integer}); }
+via::Value* via::Value::create(VirtualMachine* vm, float64 float_)
+    { return create(vm, ValueKind::FLOAT, {.float_ = float_}); }
 via::Value* via::Value::create(VirtualMachine* vm, bool boolean)
-{
-    return construct_impl(vm, ValueKind::BOOL, {.boolean = boolean});
-}
+    { return create(vm, ValueKind::BOOL, {.boolean = boolean}); }
+// clang-format on
 
 via::Value* via::Value::create(VirtualMachine* vm, char* string)
 {
@@ -42,7 +31,7 @@ via::Value* via::Value::create(VirtualMachine* vm, char* string)
         "Value construction via string requires it to be allocated by "
         "the corresponding Value::vm"
     );
-    return construct_impl(vm, ValueKind::STRING, {.string = string});
+    return create(vm, ValueKind::STRING, {.string = string});
 }
 
 via::Value* via::Value::create(VirtualMachine* vm, Closure* closure)
@@ -52,7 +41,7 @@ via::Value* via::Value::create(VirtualMachine* vm, Closure* closure)
         "Value construction via closure object requires it to be allocated by "
         "the corresponding Value::vm"
     );
-    return construct_impl(vm, ValueKind::FUNCTION, {.function = closure});
+    return create(vm, ValueKind::FUNCTION, {.function = closure});
 }
 
 via::Value* via::Value::create(VirtualMachine* vm, const ConstValue& cv)
@@ -69,13 +58,13 @@ via::Value* via::Value::create(VirtualMachine* vm, const ConstValue& cv)
     case ValueKind::FLOAT:
         return create(vm, cv.value<ValueKind::FLOAT>());
     case ValueKind::STRING: {
-        auto buf = alloc.strdup(cv.value<ValueKind::STRING>().c_str());
-        return create(vm, buf);
+        auto string = cv.value<ValueKind::STRING>();
+        auto buffer = alloc.strdup(string.c_str());
+        return create(vm, buffer);
     }
     default:
         break;
     }
-
     debug::unimplemented();
 }
 
@@ -106,7 +95,7 @@ void via::Value::free() noexcept
 
 via::Value* via::Value::clone() noexcept
 {
-    return construct_impl(m_vm, m_kind, m_data);
+    return create(m_vm, m_kind, m_data);
 }
 
 std::optional<int64_t> via::Value::as_cint() const
@@ -123,15 +112,15 @@ std::optional<int64_t> via::Value::as_cint() const
     }
 }
 
-std::optional<double_t> via::Value::as_cfloat() const
+std::optional<via::float64> via::Value::as_cfloat() const
 {
     switch (m_kind) {
     case ValueKind::INT:
-        return (double_t) int_value();
+        return (float64) int_value();
     case ValueKind::FLOAT:
         return float_value();
     case ValueKind::STRING:
-        return stof<double_t>(string_value());
+        return stof<float64>(string_value());
     default:
         spdlog::warn("as_cfloat({} 0x{:x})", via::to_string(m_kind), (int) m_kind);
         return std::nullopt;
@@ -165,7 +154,7 @@ std::string via::Value::as_cstring() const
         return m_data.string;
     case ValueKind::FUNCTION:
         return std::format(
-            "closure({})@{}",
+            "closure<{}>@{}",
             m_data.function->is_native() ? "native" : "bytecode",
             reinterpret_cast<void*>(m_data.function)
         );
@@ -195,17 +184,17 @@ via::Value* via::Value::as_bool() const
 via::Value* via::Value::as_string() const
 {
     auto& alloc = m_vm->allocator();
-    auto val = as_cstring();
-    return Value::create(m_vm, alloc.strdup(val.c_str()));
+    auto string = as_cstring();
+    auto buffer = alloc.strdup(string.c_str());
+    return Value::create(m_vm, buffer);
 }
 
 std::string via::Value::to_string() const noexcept
 {
-    return std::format("[rc: {}, {}({})]", m_rc, via::to_string(m_kind), as_cstring());
+    return std::format("&{} {}({}) ", m_rc, via::to_string(m_kind), as_cstring());
 }
 
-via::Value*
-via::Value::construct_impl(VirtualMachine* vm, ValueKind kind, Value::Union data)
+via::Value* via::Value::create(VirtualMachine* vm, ValueKind kind, Union data)
 {
     Value* ptr = vm->allocator().emplace<Value>();
     ptr->m_kind = kind;

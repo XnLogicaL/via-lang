@@ -88,7 +88,10 @@ void via::detail::ir_lower_expr<ir::ExprSymbol>(
     auto& frame = exe.m_stack.top();
     if (auto lref = frame.get_local(ir_expr_symbol->symbol)) {
         exe.push_instruction(OpCode::GETLOCAL, {*dst, lref->id});
+        return;
     }
+
+    debug::unimplemented("ir symbol lookup");
 }
 
 template <>
@@ -304,6 +307,8 @@ void via::detail::ir_lower_stmt<ir::StmtFuncDecl>(
     const ir::StmtFuncDecl* ir_stmt_func_decl
 ) noexcept
 {
+    exe.m_stack.push({});
+
     auto dst = exe.m_reg_state.alloc();
     auto pc = exe.push_instruction(OpCode::NOP);
     exe.lower_stmt(ir_stmt_func_decl->body);
@@ -317,6 +322,10 @@ void via::detail::ir_lower_stmt<ir::StmtFuncDecl>(
     exe.push_instruction(OpCode::FREE1, {dst});
     exe.set_instruction(pc, OpCode::NEWCLOSURE, {dst, high, low});
     exe.m_reg_state.free(dst);
+    exe.m_stack.pop();
+
+    auto& frame = exe.m_stack.top();
+    frame.set_local(ir_stmt_func_decl->symbol);
 }
 
 template <>

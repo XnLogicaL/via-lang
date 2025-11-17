@@ -24,12 +24,34 @@
   <a href="#credits">Credits</a>
 </p>
 
+<p align="center">
+  - #Introduction
+    - ##Features
+  - #Installation
+    - ##Prebuilt
+    - ##Source
+      - ###Linux
+        - ####Prerequisites
+      - ###Windows
+      - ###MacOS
+  - #Credits
+</p>
+
 >[!WARNING]
 > via is an **experimental** project and not yet production-ready. Core features are under development and may be incomplete or untested. Implementations are subject to change as the project evolves.
 
 # Introduction
 
-**via** is a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
+**via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
+
+## Features
+
+- Static typing
+- __NO__ garbage collector*
+- Modern syntax & standard library
+- Template metaprogramming
+- High performance
+- Rich C++ API
 
 # Installation
 

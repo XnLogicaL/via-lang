@@ -1,14 +1,9 @@
 import std::io;
 import std::math;
 
-fn prompt_and_eval() -> nil {
-    var printn = io::printn;
-    var input = io::input;
-
-    printn("sine calculator");
-    var input = input("enter a number: ");
-    var result = math::sin(input as float)
-    printn(result as string);
+while true {
+    var raw = io::input("enter a number: ");
+    var result = math::sin(raw as float)
+    io::print("sin x = ");
+    io::printn(result as string);
 }
-
-while true: prompt_and_eval();

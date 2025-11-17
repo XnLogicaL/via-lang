@@ -121,7 +121,7 @@ inline CLI::App& initialize_app(ProgramOptions& options) noexcept
         ->default_val(0);
 
     app.add_option(
-           "--import-dir,-I",
+           "--import,-I",
            options.imports,
            "comma-separated list of import directories"
     )

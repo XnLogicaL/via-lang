@@ -9,10 +9,9 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <stdfloat>
 #include <via/config.hpp>
 #include "closure.hpp"
 #include "machine.hpp"
@@ -20,12 +19,18 @@
 
 namespace via {
 
+#if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
+using float64 = _Float64;
+#else
+using float64 = double;
+#endif
+
 class Value final
 {
   public:
     union Union {
         int64_t integer;
-        double_t float_;
+        float64 float_;
         bool boolean;
         char* string;
         Closure* function;
@@ -40,7 +45,7 @@ class Value final
   public:
     static Value* create(VirtualMachine* vm);
     static Value* create(VirtualMachine* vm, int64_t integer);
-    static Value* create(VirtualMachine* vm, double_t float_);
+    static Value* create(VirtualMachine* vm, float64 float_);
     static Value* create(VirtualMachine* vm, bool boolean);
     static Value* create(VirtualMachine* vm, char* string);
     static Value* create(VirtualMachine* vm, Closure* closure);
@@ -60,7 +65,7 @@ class Value final
     auto string_value() const noexcept { return m_data.string; }
     auto function_value() const noexcept { return m_data.function; }
     std::optional<int64_t> as_cint() const;
-    std::optional<double_t> as_cfloat() const;
+    std::optional<float64> as_cfloat() const;
     bool as_cbool() const;
     std::string as_cstring() const;
     Value* as_int() const;
@@ -70,13 +75,12 @@ class Value final
     std::string to_string() const noexcept;
 
   private:
-    static Value*
-    construct_impl(VirtualMachine* vm, ValueKind kind, Value::Union data = {});
+    static Value* create(VirtualMachine* vm, ValueKind kind, Union data = {});
 
   private:
     ValueKind m_kind = ValueKind::NIL;
     Union m_data = {};
-    size_t m_rc = 1;
+    uint64_t m_rc = 1;
     VirtualMachine* m_vm;
 };
 

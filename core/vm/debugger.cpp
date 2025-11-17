@@ -170,9 +170,7 @@ void via::CommandTable::print_help() const
 void via::Debugger::register_default_commands() noexcept
 {
     m_cmds.register_command("help", "prints the help menu", {}, [this](const auto& args) {
-        std::println(std::cout);
         m_cmds.print_help();
-        std::println(std::cout);
     });
 
     m_cmds.register_command(
@@ -192,8 +190,6 @@ void via::Debugger::register_default_commands() noexcept
         "contniously steps the interpreter while dumping instruction data",
         {},
         [this](const auto& args) {
-            std::println();
-
             while (true) {
                 size_t counter = m_vm.m_pc - m_vm.m_bp;
                 std::println(
@@ -206,8 +202,6 @@ void via::Debugger::register_default_commands() noexcept
                     break;
                 m_vm.execute_once();
             }
-
-            std::println();
         }
     );
 
@@ -218,20 +212,16 @@ void via::Debugger::register_default_commands() noexcept
         [this](const auto& args) {
             Snapshot snapshot(&m_vm);
 
-            std::println(std::cout);
-            spdlog::info("program counter:");
-            std::cout << "- raw:           " << (void*) snapshot.program_counter << "\n";
-            std::cout << "- relative:      0x" << std::hex << std::right << std::setw(4)
-                      << std::setfill('0') << (size_t) (snapshot.rel_program_counter * 8)
-                      << std::dec << " (base10: " << snapshot.rel_program_counter
-                      << ")\n";
-            std::cout << "- disassembly:   ["
-                      << snapshot.program_counter->to_string(
-                             false,
-                             snapshot.rel_program_counter
-                         )
-                      << "]\n";
-            std::println(std::cout);
+            std::cout << ansi::format(
+                std::format("0x{:0>4x}  ", snapshot.rel_program_counter * 8),
+                ansi::Foreground::NONE,
+                ansi::Background::NONE,
+                ansi::Style::FAINT
+            );
+
+            std::cout
+                << snapshot.program_counter->to_string(true, snapshot.rel_program_counter)
+                << "\n";
         }
     );
 
@@ -240,26 +230,19 @@ void via::Debugger::register_default_commands() noexcept
         "display program counter information at the given address",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
-            std::println(std::cout);
-
             size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
                 auto bytecode = m_vm.m_exe->bytecode();
                 if (realpc < bytecode.size()) {
                     auto* ptr = bytecode.data() + realpc;
-                    spdlog::info("program counter at 0x{:0>4x}:", pc);
-                    std::cout << "- raw:           " << (void*) ptr << "\n";
-                    std::cout << "- disassembly:   ["
-                              << ptr->to_string(false, m_vm.m_pc - m_vm.m_bp) << "]\n";
+                    std::cout << ptr->to_string(true, m_vm.m_pc - m_vm.m_bp) << "\n";
                 } else {
                     spdlog::error("invalid pc 0x{:0>4x}: out of range", pc);
                 }
             } else {
                 spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
             }
-
-            std::println(std::cout);
         }
     );
 
@@ -268,18 +251,13 @@ void via::Debugger::register_default_commands() noexcept
         "dumps the given register",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
-            std::println(std::cout);
-
             size_t reg = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (auto* ptr = m_vm.m_registers[reg]) {
-                spdlog::info("register {}:", reg);
-                std::cout << "- raw:          " << (void*) ptr << "\n";
-                std::cout << "- disassembly:  " << ptr->to_string() << "\n";
+                std::cout << (void*) ptr << "\n";
+                std::cout << ptr->to_string() << "\n";
             } else {
-                spdlog::info("register {} unoccupied", reg);
+                std::cout << "unoccupied\n";
             }
-
-            std::println(std::cout);
         }
     );
 
@@ -288,23 +266,30 @@ void via::Debugger::register_default_commands() noexcept
         "dumps all occupied registers",
         {},
         [this](const auto& args) {
-            std::println(std::cout);
-            spdlog::info("registers:");
-
-            bool debounce = false;
+            bool debounce = true;
+            size_t index = 0;
             Snapshot snapshot(&m_vm);
 
-            for (size_t i = 0; const auto& reg: snapshot.registers) {
+            for (const auto& reg: snapshot.registers) {
                 if (reg != nullptr) {
-                    std::println("  [{}] = {} (@{:p})", i, reg->to_string(), (void*) reg);
+                    std::println(
+                        "R{} [{}]: {}",
+                        index,
+                        ansi::format(
+                            std::format("@0x{:0>16x}", (uintptr_t) reg),
+                            ansi::Foreground::NONE,
+                            ansi::Background::NONE,
+                            ansi::Style::FAINT
+                        ),
+                        reg->to_string()
+                    );
                     debounce = true;
                 } else if (debounce) {
-                    std::println("  ...");
+                    std::println("...");
                     debounce = false;
                 }
-                ++i;
+                ++index;
             }
-            std::println(std::cout);
         }
     );
 
@@ -313,19 +298,14 @@ void via::Debugger::register_default_commands() noexcept
         "dumps the given constant",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
-            std::println(std::cout);
-
-            size_t idx = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
+            size_t index = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             auto& consts = m_vm.m_exe->constants();
-            if (idx < consts.size()) {
-                auto konst = consts.at(idx);
-                spdlog::info("constant {}:", idx);
-                std::cout << "- dissassembly:  " << konst.to_string() << "\n";
+            if (index < consts.size()) {
+                auto konst = consts.at(index);
+                std::cout << konst.to_string() << "\n";
             } else {
-                spdlog::info("constant {} not found", idx);
+                std::cout << "not found\n";
             }
-
-            std::println(std::cout);
         }
     );
 
@@ -334,8 +314,6 @@ void via::Debugger::register_default_commands() noexcept
         "jumps to the given program counter",
         {ArgumentType::INTEGER},
         [this](const auto& args) {
-            std::println(std::cout);
-
             size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
@@ -348,23 +326,27 @@ void via::Debugger::register_default_commands() noexcept
             } else {
                 spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
             }
-
-            std::println(std::cout);
         }
     );
 }
 
 void via::Debugger::start() noexcept
 {
-    replxx::Replxx repl;
+    static std::string cursor = ansi::format(
+        ">> ",
+        ansi::Foreground::GREEN,
+        ansi::Background::NONE,
+        ansi::Style::BOLD
+    );
 
     m_cmds.print_help();
-    m_vm.set_int_hook([](VirtualMachine* vm, Interrupt in, void* arg) {
+    m_vm.set_interrupt_hook([](VirtualMachine* vm, Interrupt inte, void* arg) {
         spdlog::warn("machine interrupted");
-        std::cout << " code: 0x" << std::hex << size_t(in) << std::dec;
-        std::cout << " " << std::format("({})\n", via::to_string(in));
+        std::cout << " code: 0x" << std::hex << size_t(inte) << std::dec;
+        std::cout << " " << std::format("({})\n", via::to_string(inte));
 
-        if (in == Interrupt::ERROR) {
+        switch (inte) {
+        case Interrupt::ERROR: {
             auto* error = reinterpret_cast<ErrorInt*>(arg);
             std::cout << " error info:\n";
             std::cout << "  msg:  " << error->msg << "\n";
@@ -372,9 +354,14 @@ void via::Debugger::start() noexcept
             std::cout << "  fp:   " << (void*) error->fp << "\n";
             std::cout << "  pc:   " << (void*) error->pc << "\n";
         }
+        default:
+            break;
+        }
     });
 
-    while (auto* cinput = repl.input("> ")) {
+    replxx::Replxx repl;
+
+    while (auto* cinput = repl.input(cursor)) {
         std::string input(cinput);
 
         auto active = parse_command(input);

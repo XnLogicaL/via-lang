@@ -166,10 +166,6 @@ void via::VirtualMachine::call(ValueRef callee, CallFlags flags)
     auto* closure = callee->function_value();
     auto* base = &m_stack.top();
 
-    std::cout << "call closure at " << (void*) closure
-              << ": is_native=" << closure->is_native()
-              << " ptr=" << (void*) closure->get_bytecode() << "\n";
-
     m_stack.push((uintptr_t) callee.get());                 // Save callee pointer
     m_stack.push((uintptr_t) flags);                        // Save flags
     m_stack.push((uintptr_t) m_pc + !closure->is_native()); // Save return PC
