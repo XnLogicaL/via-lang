@@ -24,20 +24,21 @@
   <a href="#credits">Credits</a>
 </p>
 
->[!WARNING]
-> via is an **experimental** project and not yet production-ready. Core features are under conception/development and may be incomplete or unstable. Implementations are subject to change as the project evolves.
-
 # Introduction
 
 **via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
 
-## Features
+>[!WARNING]
+> via is an **experimental** project and not yet production-ready. Core features are under conception/development and may be incomplete or unstable. Implementations are subject to change as the project evolves.
+
+# Features
 
 - Static typing
 - No garbage collector*
 - Modern, clean and sane standard library and syntax
-- Built-in types for strings, arrays, maps, tuples, optionals, variants, etc.
-- Template metaprogramming
+- Built-in types for strings, arrays, maps, tuples, optionals, unions, etc.
+- Powerful metaprogramming
+- Advanced compiler hints & intrinsics
 - Multi-paradigm design, including OOP and functional programming
 - High performance
 - Platform independence*
@@ -45,11 +46,9 @@
 
 # Installation
 
-## Source
+## Linux
 
-### Linux
-
-#### Prerequisites
+### From source
 
 Install the following binaries with your systems official package manager:
 - `g++` (GCC 15 or above)
