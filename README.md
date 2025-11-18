@@ -19,30 +19,43 @@
 
 <p align="center">
   <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
-  <a href="#design">Design</a> &nbsp;&bull;&nbsp;
+  <a href="#features">Features</a> &nbsp;&bull;&nbsp;
   <a href="#installation">Installation</a> &nbsp;&bull;&nbsp;
   <a href="#credits">Credits</a>
 </p>
 
 # Introduction
 
-**via** is (going to be) a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
+**via** is a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
+
+```go
+import std::io
+
+fn ask_for_age_10_times() -> nil {
+	for var i = 0, i < 10, i++ {
+		var input = io::input("Enter your age: ")
+		io::printn("You are {} years old!", input)
+	}
+}
+
+ask_for_age_10_times()
+```
 
 >[!WARNING]
-> via is an **experimental** project and not yet production-ready. Core features are under conception/development and may be incomplete or unstable. Implementations are subject to change as the project evolves.
+> This is an **experimental** project and not yet production-ready. Most features are under conception/development and may be incomplete/unstable. Implementations are subject to change as the project evolves.
 
 # Features
 
-- Static typing
+- Non-intrusive static typing
 - No garbage collector*
 - Modern, clean and sane standard library and syntax
 - Built-in types for strings, arrays, maps, tuples, optionals, unions, etc.
 - Powerful metaprogramming
 - Advanced compiler hints & intrinsics
-- Multi-paradigm design, including OOP and functional programming
+- Multi-paradigm design, including object-oriented and functional programming
 - High performance
 - Platform independence*
-- Rich C++ backend API
+- Rich C++ interface
 
 # Installation
 
@@ -70,9 +83,7 @@ which vcpkg
 #> /path/to/vcpkg/vcpkg
 ```
 
----
-
-First, clone the official git repository and `cd` into it:
+Clone the official git repository and `cd` into it:
 ```sh
 git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
 cd /path/to/via
