@@ -18,31 +18,21 @@
 </p>
 
 <p align="center">
-  <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
-  <a href="#features">Features</a> &nbsp;&bull;&nbsp;
-  <a href="#installation">Installation</a> &nbsp;&bull;&nbsp;
+  <a href="#introduction">Introduction</a>
+    &nbsp;&bull;&nbsp;
+  <a href="#features">Features</a>
+    &nbsp;&bull;&nbsp;
+  <a href="#installation">Installation</a>
+    &nbsp;&bull;&nbsp;
   <a href="#credits">Credits</a>
 </p>
 
-# Introduction
-
-**via** is a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications**.
-
-```go
-import std::io
-
-fn ask_for_age_10_times() -> nil {
-	for var i = 0, i < 10, i++ {
-		var input = io::input("Enter your age: ")
-		io::printn("You are {} years old!", input)
-	}
-}
-
-ask_for_age_10_times()
-```
-
 >[!WARNING]
 > This is an **experimental** project and not yet production-ready. Most features are under conception/development and may be incomplete/unstable. Implementations are subject to change as the project evolves.
+
+# Introduction
+
+**via** is a performant, multi-paradigm, deterministic scripting language designed for **performance-critical applications** and **embeddability**.
 
 # Features
 
