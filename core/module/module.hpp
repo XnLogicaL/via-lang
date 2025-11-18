@@ -135,6 +135,7 @@ class Module final
 
   protected:
     ScopedAllocator m_alloc;
+    Logger& m_logger = Logger::stdout_logger(); // TODO: Modularize
     ModuleKind m_kind;
     ModulePerms m_perms;
     ModuleFlags m_flags;

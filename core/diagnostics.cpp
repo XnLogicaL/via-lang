@@ -8,7 +8,9 @@
 ** ===================================================== */
 
 #include "diagnostics.hpp"
+#include <cmath>
 #include "debug.hpp"
+#include "logger.hpp"
 #include "support/ansi.hpp"
 
 std::string via::to_string(FootnoteKind kind) noexcept
@@ -39,35 +41,35 @@ std::string via::to_string(FootnoteKind kind) noexcept
     debug::unimplemented();
 }
 
-void via::DiagContext::emit(spdlog::logger* logger) const
+void via::DiagContext::emit(Logger& logger) const
 {
     for (const auto& diag: m_diags) {
         emit_one(diag, logger);
     }
 }
 
-void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) const
+void via::DiagContext::emit_one(const Diagnosis& diag, Logger& logger) const
 {
     ansi::Foreground foreground = ansi::Foreground::NONE;
-    spdlog::level::level_enum level;
+    LogLevel level;
 
     switch (diag.level) {
     case Level::INFO:
-        level = spdlog::level::info;
+        level = LogLevel::INFO;
         foreground = ansi::Foreground::CYAN;
         break;
     case Level::WARNING:
-        level = spdlog::level::warn;
+        level = LogLevel::WARN;
         foreground = ansi::Foreground::YELLOW;
         break;
     case Level::ERROR:
-        level = spdlog::level::err;
+        level = LogLevel::ERROR;
         foreground = ansi::Foreground::RED;
         break;
     }
 
     if (!m_source.is_valid_range(diag.location)) {
-        logger->log(level, "{}", diag.message);
+        logger.log(level, "{}", diag.message);
         return;
     }
 
@@ -91,7 +93,7 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
 
     std::string_view line_view(line_begin, static_cast<size_t>(line_end - line_begin));
 
-    logger->log(
+    logger.log(
         level,
         "{} {} {}",
         diag.message,
@@ -131,7 +133,7 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
     }
 
     size_t line_width = static_cast<size_t>(std::log10(line)) + 1;
-    logger->log(spdlog::level::off, " {} | {}", line, hl_line);
+    logger.log(LogLevel::NONE, " {} | {}", line, hl_line);
 
     std::string caret(line_view.size(), ' ');
     if (span_begin < span_end) {
@@ -150,18 +152,16 @@ void via::DiagContext::emit_one(const Diagnosis& diag, spdlog::logger* logger) c
         caret.end()
     );
 
-    logger->log(
-        spdlog::level::off,
-        std::format(
-            " {0} | {1}{2}\n {0} |",
-            std::string(line_width, ' '),
-            ansi::format(caret, foreground, ansi::Background::NONE, ansi::Style::BOLD),
-            diag.footnote.valid ? std::format(
-                                      "--=[{}]=> {}",
-                                      to_string(diag.footnote.kind),
-                                      diag.footnote.message
-                                  )
-                                : ""
-        )
+    logger.log(
+        LogLevel::NONE,
+        " {0} | {1}{2}\n {0} |",
+        std::string(line_width, ' '),
+        ansi::format(caret, foreground, ansi::Background::NONE, ansi::Style::BOLD),
+        diag.footnote.valid ? std::format(
+                                  "--=[{}]=> {}",
+                                  to_string(diag.footnote.kind),
+                                  diag.footnote.message
+                              )
+                            : ""
     );
 }

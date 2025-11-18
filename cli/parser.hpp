@@ -7,22 +7,25 @@
 **         https://github.com/XnLogicaL/via-lang         **
 ** ===================================================== */
 
-#include "repair.hpp"
-#include <iostream>
+#pragma once
 
-void via::RepairTool::scan_all()
+#include <span>
+#include <via/via.hpp>
+
+namespace via {
+
+class ArgumentParser final
 {
-    scan_core();
-}
+  public:
+    explicit ArgumentParser(int argc, char** argv)
+        : args((const char**) argv, (size_t) argc)
+    {}
 
-void via::RepairTool::log_category(const char* message)
-{}
+  public:
+    bool parse_args();
 
-void via::RepairTool::log_check(const char* message)
-{}
+  private:
+    std::span<const char*> args;
+};
 
-void via::RepairTool::log_result(bool ok)
-{}
-
-void via::RepairTool::scan_core()
-{}
+} // namespace via

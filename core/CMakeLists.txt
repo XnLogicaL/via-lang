@@ -12,8 +12,6 @@ target_include_directories(via
 
 target_link_libraries(via
     PUBLIC
-        replxx::replxx
-        spdlog::spdlog
         cpptrace::cpptrace
     PRIVATE
         mimalloc

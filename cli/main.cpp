@@ -9,8 +9,10 @@
 
 #include <string>
 #include <via/via.hpp>
-#include "app.hpp"
+#include "logger.hpp"
 #include "module/module.hpp"
+#include "options.hpp"
+#include "parser.hpp"
 #include "support/ansi.hpp"
 #include "tools/utility.hpp"
 
@@ -46,13 +48,14 @@ int main(int argc, char* argv[])
     using via::ModulePerms;
     using namespace via::operators;
 
-    // Temporary spdlog config
-    spdlog::set_pattern("%^%l:%$ %v");
-
+    via::Logger& logger = via::Logger::stdout_logger();
+    via::ArgumentParser parser(argc, argv);
     via::ProgramOptions options;
-    CLI::App& app = initialize_app(options);
+    options.register_to(parser);
 
-    CLI11_PARSE(app, argc, argv);
+    if (!parser.parse_args()) {
+        return 1;
+    }
 
     ModuleFlags flags = ModuleFlags::NONE;
     translate_module_flags(flags, options);
@@ -71,12 +74,12 @@ int main(int argc, char* argv[])
     if (std::filesystem::exists(lang_dir)) {
         manager.push_import_path(lang_dir / "lib");
     } else if (!options.supress_missing_core_warning) {
-        spdlog::warn(
+        logger.warn(
             "could not find language core directory, core libraries and tooling {} work "
             "as intended!",
             via::ansi::bold("WILL NOT")
         );
-        spdlog::info(
+        logger.info(
             "pass in the `--i-am-stupid` flag to supress this warning "
             "(only if you are stupid or hacking the binary)"
         );
@@ -98,7 +101,7 @@ int main(int argc, char* argv[])
     );
 
     if (!module.has_value()) {
-        spdlog::error(module.error());
+        logger.error("{}", module.error());
         return 1;
     }
 

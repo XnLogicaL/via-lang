@@ -9,15 +9,11 @@
 
 #pragma once
 
-#include <cstddef>
-#include <spdlog/spdlog.h>
+#include <string>
 #include <via/config.hpp>
 
 namespace via {
 namespace config {
-
-// Logging level for crashes
-VIA_CONSTANT const auto CRASH_LOGGER_LEVEL = spdlog::level::err;
 
 #ifdef NDEBUG
 VIA_CONSTANT bool DEBUG_ENABLED = false;

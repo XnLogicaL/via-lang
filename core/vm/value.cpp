@@ -122,7 +122,11 @@ std::optional<via::float64> via::Value::as_cfloat() const
     case ValueKind::STRING:
         return stof<float64>(string_value());
     default:
-        spdlog::warn("as_cfloat({} 0x{:x})", via::to_string(m_kind), (int) m_kind);
+        std::cout << std::format(
+            "as_cfloat({} 0x{:x})\n",
+            via::to_string(m_kind),
+            (int) m_kind
+        );
         return std::nullopt;
     }
 }

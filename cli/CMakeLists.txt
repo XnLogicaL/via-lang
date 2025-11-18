@@ -8,7 +8,5 @@ target_include_directories(via-cli
 target_link_libraries(via-cli
     PUBLIC
         via::core
-        CLI11::CLI11
-        spdlog::spdlog
 )
 add_executable(via::cli ALIAS via-cli)

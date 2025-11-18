@@ -47,7 +47,7 @@ bool via::ansi::detail::is_ansi_supported() noexcept
 #else
 bool via::ansi::detail::is_ansi_supported() noexcept
 {
-    spdlog::warn(
+    Logger::stdout_logger().warn(
         "host terminal does not support ANSI escape codes, compiler output may be "
         "unreadable"
     );

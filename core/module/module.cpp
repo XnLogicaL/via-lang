@@ -12,8 +12,6 @@
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <replxx.hxx>
-#include <type_traits>
 #include "debug.hpp"
 #include "ir/builder.hpp"
 #include "manager.hpp"
@@ -253,10 +251,10 @@ error:
     // Handle failed compilation
     if (failed) {
         for (Module* module = importee; module != nullptr; module = module->m_importee)
-            spdlog::info(std::format("Imported by module '{}'", module->m_name));
+            module->m_logger.info("Imported by module '{}'", module->m_name);
         if ((flags & (ModuleFlags::DUMP_TTREE | ModuleFlags::DUMP_AST |
                       ModuleFlags::DUMP_IR | ModuleFlags::DUMP_EXE)) != 0u)
-            spdlog::warn("Dump may be invalid due to compilation failure");
+            module->m_logger.info("Dump may be invalid due to compilation failure");
     } else {
         manager.pop_import();
         return module;

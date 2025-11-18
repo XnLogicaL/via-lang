@@ -10,7 +10,6 @@
 #include "debugger.hpp"
 #include <iomanip>
 #include <print>
-#include <spdlog/spdlog.h>
 #include <sstream>
 #include "support/ansi.hpp"
 #include "value.hpp"
@@ -27,7 +26,7 @@ static std::vector<std::string> tokenize_command(const std::string& line)
     return words;
 }
 
-static via::Argument parse_argument(const std::string& tok)
+static via::CommandArgument parse_argument(const std::string& tok)
 {
     if (tok == "true" || tok == "on")
         return true;
@@ -79,9 +78,10 @@ static via::Argument parse_argument(const std::string& tok)
     return tok;
 }
 
-static std::vector<via::Argument> parse_arguments(const std::vector<std::string>& tokens)
+static std::vector<via::CommandArgument>
+parse_arguments(const std::vector<std::string>& tokens)
 {
-    std::vector<via::Argument> args;
+    std::vector<via::CommandArgument> args;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (i == 0) // Skip command name
@@ -96,7 +96,7 @@ static std::vector<via::Argument> parse_arguments(const std::vector<std::string>
 struct ActiveCommand
 {
     std::string name;
-    std::vector<via::Argument> args;
+    std::vector<via::CommandArgument> args;
 };
 
 static ActiveCommand parse_command(const std::string& command)
@@ -115,7 +115,7 @@ static bool validate_command(const via::Command& command, const ActiveCommand& a
     if (command.name != active.name)
         return false;
     if (command.args.size() != active.args.size()) {
-        spdlog::error(
+        command.logger->error(
             "missing arguments (expected {}, got {})",
             command.args.size(),
             active.args.size()
@@ -135,21 +135,21 @@ static bool validate_command(const via::Command& command, const ActiveCommand& a
 void via::CommandTable::print_help() const
 {
     size_t max_name_len = 0;
-    for (const auto& [name, _]: commands) {
+    for (const auto& [name, _]: m_commands) {
         max_name_len = std::max(max_name_len, name.size());
     }
 
     size_t max_args_len = 0;
-    for (const auto& [_, cmd]: commands) {
+    for (const auto& [_, cmd]: m_commands) {
         std::ostringstream oss;
         for (const auto& type: cmd.args)
             oss << " [" << to_string(type) << "]";
         max_args_len = std::max(max_args_len, oss.str().size());
     }
 
-    spdlog::info("available commands:\n");
+    m_logger.info("available commands:\n");
 
-    for (const auto& [name, cmd]: commands) {
+    for (const auto& [name, cmd]: m_commands) {
         std::ostringstream oss;
         for (const auto& type: cmd.args)
             oss << " [" << to_string(type) << "]";
@@ -169,19 +169,28 @@ void via::CommandTable::print_help() const
 
 void via::Debugger::register_default_commands() noexcept
 {
-    m_cmds.register_command("help", "prints the help menu", {}, [this](const auto& args) {
+    m_cmds.register_command(
+        "quit",
+        "exits the interactive debugger",
+        {},
+        [&](const auto& args) { return false; }
+    );
+
+    m_cmds.register_command("help", "prints the help menu", {}, [&](const auto& args) {
         m_cmds.print_help();
+        return true;
     });
 
     m_cmds.register_command(
         "step",
         "steps the interpreter a given times",
         {ArgumentType::INTEGER},
-        [this](const auto& args) {
+        [&](const auto& args) {
             size_t n = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             for (size_t i = 0; i < n; i++) {
                 m_vm.execute_once();
             }
+            return true;
         }
     );
 
@@ -189,7 +198,7 @@ void via::Debugger::register_default_commands() noexcept
         "continue",
         "contniously steps the interpreter while dumping instruction data",
         {},
-        [this](const auto& args) {
+        [&](const auto& args) {
             while (true) {
                 size_t counter = m_vm.m_pc - m_vm.m_bp;
                 std::println(
@@ -202,6 +211,7 @@ void via::Debugger::register_default_commands() noexcept
                     break;
                 m_vm.execute_once();
             }
+            return true;
         }
     );
 
@@ -209,7 +219,7 @@ void via::Debugger::register_default_commands() noexcept
         "pc",
         "display program counter information",
         {},
-        [this](const auto& args) {
+        [&](const auto& args) {
             Snapshot snapshot(&m_vm);
 
             std::cout << ansi::format(
@@ -222,6 +232,7 @@ void via::Debugger::register_default_commands() noexcept
             std::cout
                 << snapshot.program_counter->to_string(true, snapshot.rel_program_counter)
                 << "\n";
+            return true;
         }
     );
 
@@ -229,7 +240,7 @@ void via::Debugger::register_default_commands() noexcept
         "pcat",
         "display program counter information at the given address",
         {ArgumentType::INTEGER},
-        [this](const auto& args) {
+        [&](const auto& args) {
             size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
@@ -238,11 +249,12 @@ void via::Debugger::register_default_commands() noexcept
                     auto* ptr = bytecode.data() + realpc;
                     std::cout << ptr->to_string(true, m_vm.m_pc - m_vm.m_bp) << "\n";
                 } else {
-                    spdlog::error("invalid pc 0x{:0>4x}: out of range", pc);
+                    m_logger.error("invalid pc 0x{:0>4x}: out of range", pc);
                 }
             } else {
-                spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
+                m_logger.error("invalid pc 0x{:0>4x}: not a valid address", pc);
             }
+            return true;
         }
     );
 
@@ -250,7 +262,7 @@ void via::Debugger::register_default_commands() noexcept
         "reg",
         "dumps the given register",
         {ArgumentType::INTEGER},
-        [this](const auto& args) {
+        [&](const auto& args) {
             size_t reg = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (auto* ptr = m_vm.m_registers[reg]) {
                 std::cout << (void*) ptr << "\n";
@@ -258,6 +270,7 @@ void via::Debugger::register_default_commands() noexcept
             } else {
                 std::cout << "unoccupied\n";
             }
+            return true;
         }
     );
 
@@ -265,7 +278,7 @@ void via::Debugger::register_default_commands() noexcept
         "regs",
         "dumps all occupied registers",
         {},
-        [this](const auto& args) {
+        [&](const auto& args) {
             bool debounce = true;
             size_t index = 0;
             Snapshot snapshot(&m_vm);
@@ -290,6 +303,7 @@ void via::Debugger::register_default_commands() noexcept
                 }
                 ++index;
             }
+            return true;
         }
     );
 
@@ -297,7 +311,7 @@ void via::Debugger::register_default_commands() noexcept
         "const",
         "dumps the given constant",
         {ArgumentType::INTEGER},
-        [this](const auto& args) {
+        [&](const auto& args) {
             size_t index = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             auto& consts = m_vm.m_exe->constants();
             if (index < consts.size()) {
@@ -306,6 +320,7 @@ void via::Debugger::register_default_commands() noexcept
             } else {
                 std::cout << "not found\n";
             }
+            return true;
         }
     );
 
@@ -313,7 +328,7 @@ void via::Debugger::register_default_commands() noexcept
         "jump",
         "jumps to the given program counter",
         {ArgumentType::INTEGER},
-        [this](const auto& args) {
+        [&](const auto& args) {
             size_t pc = std::get<size_t(ArgumentType::INTEGER)>(args.at(0));
             if (pc % 8 == 0) {
                 auto realpc = pc / 8;
@@ -321,17 +336,19 @@ void via::Debugger::register_default_commands() noexcept
                 if (realpc < bytecode.size()) {
                     m_vm.m_pc = m_vm.m_bp + realpc;
                 } else {
-                    spdlog::error("invalid pc 0x{:0>4x}: out of range", pc);
+                    m_logger.error("invalid pc 0x{:0>4x}: out of range", pc);
                 }
             } else {
-                spdlog::error("invalid pc 0x{:0>4x}: not a valid address", pc);
+                m_logger.error("invalid pc 0x{:0>4x}: not a valid address", pc);
             }
+            return true;
         }
     );
 }
 
 void via::Debugger::start() noexcept
 {
+    std::string input;
     static std::string cursor = ansi::format(
         ">> ",
         ansi::Foreground::GREEN,
@@ -341,7 +358,7 @@ void via::Debugger::start() noexcept
 
     m_cmds.print_help();
     m_vm.set_interrupt_hook([](VirtualMachine* vm, Interrupt inte, void* arg) {
-        spdlog::warn("machine interrupted");
+        std::cout << "machine interrupted\n";
         std::cout << " code: 0x" << std::hex << size_t(inte) << std::dec;
         std::cout << " " << std::format("({})\n", via::to_string(inte));
 
@@ -359,18 +376,18 @@ void via::Debugger::start() noexcept
         }
     });
 
-    replxx::Replxx repl;
-
-    while (auto* cinput = repl.input(cursor)) {
-        std::string input(cinput);
+    while (true) {
+        std::cout << cursor;
+        std::cin >> input;
 
         auto active = parse_command(input);
         if (auto command = m_cmds.find_command(active.name)) {
             if (validate_command(*command, active))
-                command->handler(active.args);
+                if (!command->handler(active.args))
+                    break;
             continue;
         }
 
-        spdlog::error("command not found: '{}'", active.name);
+        m_logger.error("command not found: '{}'", active.name);
     }
 }

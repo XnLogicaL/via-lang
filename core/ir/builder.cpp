@@ -10,7 +10,6 @@
 #include "builder.hpp"
 #include <cpptrace/basic.hpp>
 #include <format>
-#include <spdlog/spdlog.h>
 #include <vector>
 #include "ast/ast.hpp"
 #include "debug.hpp"

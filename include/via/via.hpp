@@ -18,6 +18,7 @@
 #include <init.hpp>
 #include <lexer/lexer.hpp>
 #include <lexer/token.hpp>
+#include <logger.hpp>
 #include <module/defs.hpp>
 #include <module/manager.hpp>
 #include <module/module.hpp>

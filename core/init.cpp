@@ -12,82 +12,12 @@
 #include <fmt/base.h>
 #include <iostream>
 #include <mimalloc.h>
-#include <spdlog/common.h>
-#include <spdlog/sinks/ansicolor_sink.h>
-#include <spdlog/spdlog.h>
 #include "debug.hpp"
-#include "support/ansi.hpp"
-
-class LabelFormatter: public spdlog::formatter
-{
-  public:
-    void format(const spdlog::details::log_msg& msg, spdlog::memory_buf_t& dest) override
-    {
-        std::string label;
-
-        switch (msg.level) {
-        case spdlog::level::info:
-            label = via::ansi::format(
-                "info:",
-                via::ansi::Foreground::GREEN,
-                via::ansi::Background::NONE,
-                via::ansi::Style::BOLD
-            );
-            break;
-        case spdlog::level::warn:
-            label = via::ansi::format(
-                "warning:",
-                via::ansi::Foreground::YELLOW,
-                via::ansi::Background::NONE,
-                via::ansi::Style::BOLD
-            );
-            break;
-        case spdlog::level::err:
-            label = via::ansi::format(
-                "error:",
-                via::ansi::Foreground::RED,
-                via::ansi::Background::NONE,
-                via::ansi::Style::BOLD
-            );
-            break;
-        case spdlog::level::debug:
-            label = via::ansi::format(
-                "debug:",
-                via::ansi::Foreground::CYAN,
-                via::ansi::Background::NONE,
-                via::ansi::Style::BOLD
-            );
-            break;
-        default:
-            break;
-        }
-
-        if (label.empty()) {
-            fmt::format_to(std::back_inserter(dest), "{}\n", msg.payload);
-        } else {
-            fmt::format_to(std::back_inserter(dest), "{} {}\n", label, msg.payload);
-        }
-    }
-
-    std::unique_ptr<spdlog::formatter> clone() const override
-    {
-        return std::make_unique<LabelFormatter>();
-    }
-};
-
-static void init_spdlog() noexcept
-{
-    auto sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
-    auto logger = std::make_shared<spdlog::logger>("main", sink);
-    logger->set_pattern("%^%l%$ :: %v");
-    logger->set_formatter(std::make_unique<LabelFormatter>());
-
-    spdlog::set_default_logger(std::move(logger));
-}
+#include "logger.hpp"
 
 static void mimalloc_error_handler(int err, void* arg)
 {
-    spdlog::error("mimalloc: error code {}", err);
+    via::Logger::stderr_logger().error("mimalloc: error code {}", err);
     cpptrace::generate_trace().print(std::cerr);
 }
 
@@ -125,5 +55,4 @@ void via::init(uint8_t verbosity) noexcept
 {
     trap_call();
     init_mimalloc(verbosity);
-    init_spdlog();
 }

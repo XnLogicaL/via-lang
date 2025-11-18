@@ -10,7 +10,7 @@
 #include "debug.hpp"
 #include <cpptrace/cpptrace.hpp>
 #include <iostream>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include "logger.hpp"
 
 #ifdef NDEBUG
     #define __CRASH_IMPL(MSG)
@@ -24,8 +24,8 @@
 
 static void log_error(std::string message)
 {
-    static auto stderrLogger = spdlog::stderr_color_mt("std::cerr");
-    stderrLogger->log(via::config::CRASH_LOGGER_LEVEL, message);
+    static auto logger = via::Logger::stderr_logger();
+    logger.error("{}", message);
 }
 
 [[noreturn]] void via::debug::panic() noexcept

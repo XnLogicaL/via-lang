@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include <spdlog/spdlog.h>
 #include <via/config.hpp>
+#include "logger.hpp"
 #include "source.hpp"
 #include "support/utility.hpp"
 
@@ -65,7 +65,7 @@ class DiagContext final
     NO_COPY(DiagContext)
 
   public:
-    void emit(spdlog::logger* logger = spdlog::default_logger_raw()) const;
+    void emit(Logger& logger = Logger::stdout_logger()) const;
     void clear() noexcept { m_diags.clear(); }
     void report(Diagnosis diag) noexcept { m_diags.push_back(std::move(diag)); }
 
@@ -88,8 +88,7 @@ class DiagContext final
     auto& source() const { return m_source; }
 
   private:
-    // Helper to pretty-print a single diagnosis line with source context.
-    void emit_one(const Diagnosis& diag, spdlog::logger* logger) const;
+    void emit_one(const Diagnosis& diag, Logger& logger) const;
 
   private:
     std::string m_path, m_name;

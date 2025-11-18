@@ -10,10 +10,9 @@
 #pragma once
 
 #include <map>
-#include <replxx.hxx>
-#include <spdlog/spdlog.h>
 #include <variant>
 #include <via/config.hpp>
+#include "logger.hpp"
 #include "machine.hpp"
 #include "support/utility.hpp"
 
@@ -28,55 +27,63 @@ enum class ArgumentType : uint8_t
 
 DEFINE_TO_STRING(ArgumentType, FOR_EACH_ARG_TYPE(DEFINE_CASE_TO_STRING));
 
-using Argument = std::variant<int, float, bool, std::string>;
+using CommandArgument = std::variant<int, float, bool, std::string>;
+using CommandHandler = std::function<bool(const std::vector<CommandArgument>& args)>;
 
 struct Command
 {
-    using Handler = std::function<void(const std::vector<Argument>& args)>;
     std::string name;
     std::string help;
     std::vector<ArgumentType> args;
-    Handler handler;
+    CommandHandler handler;
+    Logger* logger;
 };
 
 class CommandTable
 {
   public:
+    CommandTable(Logger& logger)
+        : m_logger(logger)
+    {}
+
+  public:
     void register_command(
         std::string name,
         std::string help,
         std::vector<ArgumentType> args,
-        Command::Handler handler
+        CommandHandler handler
     )
     {
-        commands[name] = Command{
+        m_commands[name] = Command{
             .name = name,
             .help = help,
             .args = args,
             .handler = handler,
+            .logger = &m_logger,
         };
     }
 
     const Command* find_command(const std::string& name) const
     {
-        auto it = commands.find(name);
-        if (it != commands.end()) {
+        auto it = m_commands.find(name);
+        if (it != m_commands.end())
             return &it->second;
-        }
         return nullptr;
     }
 
     void print_help() const;
 
   private:
-    std::map<std::string, Command> commands;
+    Logger& m_logger;
+    std::map<std::string, Command> m_commands;
 };
 
 class Debugger final
 {
   public:
     explicit Debugger(VirtualMachine& vm)
-        : m_vm(vm)
+        : m_vm(vm),
+          m_cmds(m_logger)
     {}
 
   public:
@@ -86,6 +93,7 @@ class Debugger final
     void start() noexcept;
 
   private:
+    Logger& m_logger = Logger::stdout_logger(); // TODO: Modularize
     VirtualMachine& m_vm;
     CommandTable m_cmds;
 };

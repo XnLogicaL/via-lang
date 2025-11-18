@@ -30,8 +30,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Dependencies
-find_package(spdlog CONFIG REQUIRED)
-find_package(CLI11 CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(cpptrace CONFIG REQUIRED)
 find_package(replxx CONFIG REQUIRED)
