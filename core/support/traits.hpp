@@ -11,6 +11,7 @@
 
 #include <concepts>
 #include <type_traits>
+#include <variant>
 #include <via/config.hpp>
 
 #if defined(VIA_COMPILER_GCC) || defined(VIA_COMPILER_CLANG)
@@ -27,6 +28,18 @@ concept derived_from = (std::derived_from<Derived, Bases> || ...);
 
 template <typename T>
 concept scoped_enum = std::is_scoped_enum_v<T>;
+
+template <typename T, typename Variant>
+struct is_variant_alternative: std::false_type
+{};
+
+template <typename T, typename... Ts>
+struct is_variant_alternative<T, std::variant<Ts...>>
+    : std::bool_constant<(std::is_same_v<T, Ts> || ...)>
+{};
+
+template <typename T, typename V>
+concept variant_alternative = is_variant_alternative<T, V>::value;
 
 template <typename T>
 struct function_traits;

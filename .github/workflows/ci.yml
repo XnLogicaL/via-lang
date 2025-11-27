@@ -2,42 +2,44 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build_and_test:
+    if: ${{ vars.CI_ENABLED == 'true' }}
+
     runs-on: ubuntu-latest
+    container: # arch btw
+      image: archlinux:latest
 
     steps:
-      # Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: 'true'  # Ensure submodules are fetched
-
-      # Set up Python
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.12'
-
-      # Install dependencies
-      - name: Install Python dependencies
+      - name: Update system
         run: |
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
+          pacman -Syu --noconfirm
+
+      - name: Install system dependencies
+        run: |
+          pacman -S --noconfirm \
+            g++ \
+            cmake \
+            ninja \
+            python \
+            git \
+            base-devel
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
 
       - name: Build interpreter
         run: |
           mkdir build
-          cmake -S . -B build -D DEBUG_MODE=ON
-          cmake --build build -j$(nproc) 
+          cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug
+          cmake --build build -j$(nproc)
 
-      # Run Python tests
       - name: Run tests
         run: |
           python scripts/run_tests.py

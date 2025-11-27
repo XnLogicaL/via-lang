@@ -1,36 +1,41 @@
 #!/usr/bin/env python3
-# This file is a part of the via Programming Language project
-# Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+# ===================================================== #
+#  This file is a part of the via Programming Language  #
+# ----------------------------------------------------- #
+#           Copyright (C) XnLogicaL 2024-2025           #
+#              Licensed under GNU GPLv3.0               #
+# ----------------------------------------------------- #
+#         https://github.com/XnLogicaL/via-lang         #
+# ===================================================== #
 
 import os
 import subprocess
 import sys
-from utils import run_command
 
-def format_files_in_directory(directory):
-    # Check if the directory exists
+from utils import command, error, info
+
+
+def format_recursive(directory):
     if not os.path.isdir(directory):
-        print(f"Error: Directory '{directory}' does not exist.")
+        error(f"no such file or directory: '{directory}'")
         sys.exit(1)
 
-    # Iterate through files in the directory and its subdirectories
     for root, _, files in os.walk(directory):
         for file in files:
-            # Target only specific file extensions
-            if file.endswith(('.cpp', '.hpp', '.c', '.h')):
+            if file.endswith((".cpp", ".hpp")):
                 file_path = os.path.join(root, file)
                 try:
-                    # Run clang-format on the file
-                    run_command(f"clang-format-19 -i {file_path}")
-                    print(f"Formatted: {file_path}")
+                    command(f"clang-format -i {file_path}")
+                    info(f"formatted: {file_path}")
                 except subprocess.CalledProcessError as e:
-                    print(f"Error formatting file: {file_path}")
-                    print(e)
+                    error(f"error formatting file: {file_path}")
+                    print(f" |-> {e}")
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python format_directory.py <directory>")
-        sys.exit(1)
+    if len(sys.argv) < 2:
+        info("usage: format.py <directory>")
+        exit(1)
 
-    target_directory = sys.argv[1]
-    format_files_in_directory(target_directory)
+    directory = sys.argv[1]
+    format_recursive(directory)

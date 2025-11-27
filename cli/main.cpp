@@ -12,12 +12,11 @@
 #include "logger.hpp"
 #include "module/module.hpp"
 #include "options.hpp"
-#include "parser.hpp"
 #include "support/ansi.hpp"
 #include "tools/utility.hpp"
 
 static void
-translate_module_flags(via::ModuleFlags& flags, const via::ProgramOptions& options)
+translate_module_flags(via::ModuleFlags& flags, const via::cli::ProgramOptions& options)
 {
     using enum via::ModuleFlags;
     flags = (via::ModuleFlags) 0;
@@ -46,16 +45,11 @@ int main(int argc, char* argv[])
     using via::ModuleFlags;
     using via::ModuleManager;
     using via::ModulePerms;
+    using namespace via::cli;
     using namespace via::operators;
 
     via::Logger& logger = via::Logger::stdout_logger();
-    via::ArgumentParser parser(argc, argv);
-    via::ProgramOptions options;
-    options.register_to(parser);
-
-    if (!parser.parse_args()) {
-        return 1;
-    }
+    ProgramOptions options;
 
     ModuleFlags flags = ModuleFlags::NONE;
     translate_module_flags(flags, options);

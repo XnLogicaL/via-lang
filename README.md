@@ -54,39 +54,20 @@
 ### From source
 
 Install the following binaries with your systems official package manager:
-- `g++` (GCC 15 or above)
+- `git`
+- `g++` (15.x+)
 - `cmake`
 - `ninja` (`ninja-build` in some repos)
 
-Setup `vcpkg` using the [official vcpkg installation instructions](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell) and add these to your `~/.bashrc`/`~/.zshrc` (or similar):
-```sh
-export VCPKG_ROOT=/path/to/vcpkg
-export PATH=$VCPKG_ROOT:$PATH
-```
-Or to define these variables temporarily, run these commands directly in the terminal instead.
-
-Finally, restart your shell and optionally run these commands to test your `vcpkg` installation:
-```sh
-echo $VCPKG_ROOT
-#> /path/to/vcpkg
-which vcpkg
-#> /path/to/vcpkg/vcpkg
-```
-
 Clone the official git repository and `cd` into it:
 ```sh
-git clone https://github.com/XnLogicaL/via-lang.git /path/to/via
+git clone --recursive https://github.com/XnLogicaL/via-lang.git /path/to/via
 cd /path/to/via
-```
-
-Install dependency packages with the following command:
-```sh
-vcpkg install
 ```
 
 Now generate build files using `cmake` and build & install the binaries:
 ```sh
-cmake -B build -G Ninja -D CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+cmake -B build -G Ninja
 cmake --build build # -j$(nproc) <- optional but recommended, as it significantly speeds up build times
 # Optional:
 cmake --install build

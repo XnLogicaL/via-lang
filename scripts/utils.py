@@ -1,21 +1,40 @@
 #!/usr/bin/env python3
-# This file is a part of the via Programming Language project
-# Copyright (C) 2024-2025 XnLogical - Licensed under GNU GPL v3.0
+# ===================================================== #
+#  This file is a part of the via Programming Language  #
+# ----------------------------------------------------- #
+#           Copyright (C) XnLogicaL 2024-2025           #
+#              Licensed under GNU GPLv3.0               #
+# ----------------------------------------------------- #
+#         https://github.com/XnLogicaL/via-lang         #
+# ===================================================== #
 
-import sys
 import subprocess
-import pkg_resources
-import pip
+import sys
 
-def log_message(message):
-    print("(): %s" % (message))
 
-def run_command(command):
+def info(message):
+    print(f"[+] {message}")
+
+
+def warn(message):
+    print(f"[!] {message}")
+
+
+def error(message):
+    print(f"[X] {message}")
+
+
+def command(cmd):
     try:
-        result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return result.stdout.decode('utf-8'), result.stderr.decode('utf-8')
+        result = subprocess.run(
+            cmd,
+            check=True,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return result.stdout.decode("utf-8"), result.stderr.decode("utf-8")
     except subprocess.CalledProcessError as e:
-        log_message(f"Error while running command '{command}'")
-        log_message(f"  stderr: {e.stderr.decode('utf-8')}")
+        error(f"Failed to run '{command}'")
+        print(f" |-> stderr: {e.stderr.decode('utf-8')}")
         sys.exit(1)
-        

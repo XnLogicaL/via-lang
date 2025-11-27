@@ -14,9 +14,9 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "parser.hpp"
 
 namespace via {
+namespace cli {
 
 struct ProgramOptions
 {
@@ -28,8 +28,8 @@ struct ProgramOptions
     std::set<std::string> dump;
     std::vector<std::string> imports;
 
-    void register_to(ArgumentParser& parser);
     std::string to_string() const;
 };
 
+} // namespace cli
 } // namespace via

@@ -29,10 +29,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/diagnostics:color)
 endif()
 
-# Dependencies
-find_package(mimalloc CONFIG REQUIRED)
-find_package(cpptrace CONFIG REQUIRED)
-find_package(replxx CONFIG REQUIRED)
+add_subdirectory(thirdparty/mimalloc)
+add_subdirectory(thirdparty/cpptrace)
 
 # Modules
 add_subdirectory(core)

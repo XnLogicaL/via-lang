@@ -10,10 +10,10 @@
 #include "options.hpp"
 #include <numeric>
 
-void via::ProgramOptions::register_to(ArgumentParser& parser)
+void via::cli::ProgramOptions::register_to(ArgumentParser& parser)
 {}
 
-std::string via::ProgramOptions::to_string() const
+std::string via::cli::ProgramOptions::to_string() const
 {
     return std::format(
         "ProgramOptions:\n"
